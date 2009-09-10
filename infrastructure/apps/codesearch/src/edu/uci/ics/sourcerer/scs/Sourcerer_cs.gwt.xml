@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC "-//Google Inc.//DTD Google Web Toolkit 1.7.0//EN" "http://google-web-toolkit.googlecode.com/svn/tags/1.7.0/distro-source/core/src/gwt-module.dtd">
+<module rename-to='sourcerer_cs'>
+  <!-- Inherit the core Web Toolkit stuff.                        -->
+  <inherits name='com.google.gwt.user.User'/>
+
+  <!-- Inherit the default GWT style sheet.  You can change       -->
+  <!-- the theme of your GWT application by uncommenting          -->
+  <!-- any one of the following lines.                            -->
+  <!-- inherits name='com.google.gwt.user.theme.standard.Standard' /-->
+  <!-- <inherits name='com.google.gwt.user.theme.chrome.Chrome'/> -->
+  <!-- <inherits name='com.google.gwt.user.theme.dark.Dark'/>     -->
+  
+  <inherits name="com.google.gwt.http.HTTP"/>
+  <inherits name="com.google.gwt.xml.XML" />
+
+  <!-- Other module inherits                                      -->
+  <inherits name="com.smartgwt.SmartGwt"/>
+  <!-- inherits name="com.smartgwt.SmartGwtNoScript" / -->
+  <!-- inherits name="com.smartgwt.SmartGwtNoTheme" / -->
+  <inherits name="com.smartclient.theme.enterprise.Enterprise"/>
+  <!-- Specify the app entry point class.                         -->
+  
+  <inherits name="edu.uci.ics.sourcerer.db.adapter.Sourcerer_cs_dba"/>
+  <inherits name="edu.uci.ics.sourcerer.scs.common.Sourcerer_cs_common"/>
+  
+  <entry-point class='edu.uci.ics.sourcerer.scs.client.Sourcerer_cs'/>
+  
+  <stylesheet src="Sourcerer_cs.css"/> 
+</module>
+
+
+<!-- 
+  Sourcerer: An infrastructure for large-scale source code analysis.
+  Copyright (C) by contributors. See CONTRIBUTORS.txt for full list. 
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ -->

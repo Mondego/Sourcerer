@@ -1,0 +1,215 @@
+/*
+ * Sourcerer: An infrastructure for large-scale source code analysis.
+ * Copyright (C) by contributors. See CONTRIBUTORS.txt for full list.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */
+
+@import url("source-viewer.css");
+
+/** Add css rules here for your application. */
+	/** Example rules used by the template application (remove for your app) */
+
+body {
+	overflow: hidden;
+	}
+
+
+h1 {
+	font-size: 2em;
+	font-weight: bold;
+	color: #777777;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	margin-right: 15px;
+	margin-left: 10px;
+	text-align: left;
+}
+
+.sc-label {
+	font-size: 10px;
+	font-family: Verdana, sans-serif;
+	padding: 4px;
+	padding-top: 4px;	
+}
+
+.sc-number {
+	font-size: 11px;
+	font-weight: bold;
+	font-family: Verdana, sans-serif;
+	padding-right: 4px;
+	align: right;
+	text-align: right;
+	position: relative;
+	
+}
+
+.plain-button {
+	font-size: 8px;
+	font-weight: normal;
+	border: 0px;
+	padding: 4px;
+	background-color: red;
+	
+}
+	
+
+.sc-navbar {
+	padding-left: 4px;
+	padding-right: 4px;
+
+	border-top: 1px solid silver;
+		
+	background-color: #efefef;
+}
+
+.scs {
+    font-size: 11px;
+	/*font-weight: bold;*/
+	color: #cccccc;
+	/*margin: 2px;*/
+	text-align: right;
+}
+
+.searchButton {
+	display: block;
+	font-size: 16pt;
+	margin: 2px;
+}
+
+/** Most GWT widgets already have a style name defined */
+.gwt-DialogBox {
+	width: 400px;
+}
+
+.dialogVPanel {
+	margin: 5px;
+}
+
+.serverResponseLabelError {
+	color: red;
+}
+
+.vlHitsContainer {
+	
+}
+
+.hit-details {
+	border-top: 1px solid #efefef;	
+
+}
+
+.selected-hit{
+	
+	border: 1px solid #FEDCCF;
+	background: #FEDCCF;
+	
+	}
+
+.hfDet{
+	
+	margin: 12px;
+	
+	}
+
+.hits-detail{
+
+	background-color: #FEDCCF;
+	
+}	
+	
+.hover-hit{
+	
+	
+	background: #FEFBB6;
+	
+	}
+
+.ts-code{
+	
+}
+
+.ts-separator{
+	color: #FEDCCF;
+}
+
+.deselected-hit{
+	
+	border: 0px;
+	background: #FFFFFF;
+	
+	}
+	
+.eval-form{
+	font-size: 8px;
+	
+	}
+
+.entity {
+	color: #666699;
+	padding-bottom: 4px;
+		
+	font-family: courier;
+	margin-top: 2px;
+	margin-left: 2px;
+	margin-right: 2px;
+	margin-bottom: 4px;
+	border-top: 2px solid #efefef;
+	
+}
+
+.result {
+	margin: 4px;
+	padding: 2px;
+	border: 4px solid #efefef;
+}
+
+span.entity-container {
+	font-family: courier;
+	font-size: 12px;
+	margin-top: 8px;
+}
+
+span.entity-sname {
+	font-family: courier;
+	font-size: 16px;
+	font-weight: bold;
+	color:#666699;
+}
+
+
+span.entity-args {
+	font-family: courier;
+	font-size: 12px;
+}
+
+
+
+/** Set ids using widget.getElement().setId("idOfElement") */
+#closeButton {
+	margin: 15px 6px 6px;
+}
+
+.selected {
+	background: #C8FCB7;
+}
+
+.hover {
+	background: #FEFBB6;
+}
+
+.not-selected {
+	background: white;
+}

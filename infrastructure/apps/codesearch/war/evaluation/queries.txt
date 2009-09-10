@@ -1,0 +1,24 @@
+Q1|convert pdf to image|Convert a pdf document to an image
+Q2|extract file from archive|Extract file from a compressed archive file
+Q3|current time hour minute|Get the hour and minute for current time
+Q4|plot bar chart|Plot a bar char
+Q5|export table to pdf|Export a tabular data into pdf
+Q6|hibernate update|Update a database field using hibernate
+Q7|flickr upload|Upload an image to Flickr
+Q8|csv file convert xml|Convert a csv file to xml
+Q9|dom parse from string|Parse xml stored in a string into a DOM
+Q10|rectangle over image|Draw a rectangle over an image, possibly to obfuscate or generate a tool tip
+Q11|mail store connect|Connect to a mail store to send an email
+Q12|recursive find files|Find files recursively inside a folder
+Q13|split string limit regex|Split string using regular expression
+Q14|save excel|Save a tabular data to an Excel file
+Q15|video file transmission|Transmit video file over network
+Q16|runtime process exec timeout|Execute an operating system command with a timeout, (ie it times out after certain time)
+Q17|traverse xml document|Traverse a XML document and visit its nodes
+Q18|eclipse highlight text|Highlight text in an eclipse widget
+Q19|sql exec file|Execute SQL commands stored in a file
+Q20|draw text along line|Draw text stored in a string along with a line (eg: useful as a label for a line in graphs)
+Q21|days date diff|Calculate the difference between two dates in days
+Q22|ftp client upload files|Upload local files to a FTP location as a FTP client
+Q23|resize jpg|Resize an image to a smaller resolution, preferable jpg. Other image formats ok too.
+Q24|ddmmyyyy format|Print date in ddmmyyyy format
