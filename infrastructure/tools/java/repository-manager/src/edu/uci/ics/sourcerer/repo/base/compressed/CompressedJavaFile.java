@@ -76,7 +76,7 @@ public class CompressedJavaFile extends AbstractJavaFile {
   }
   
   @Override
-  public String getRelativePath() {
+  public String getProjectRelativePath() {
     return relativePath;
   }
   

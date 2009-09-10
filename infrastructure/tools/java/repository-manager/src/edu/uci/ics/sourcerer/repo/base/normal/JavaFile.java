@@ -68,7 +68,7 @@ public class JavaFile extends AbstractJavaFile {
   }
   
   @Override
-  public String getRelativePath() {
+  public String getProjectRelativePath() {
     return relativePath;
   }
   

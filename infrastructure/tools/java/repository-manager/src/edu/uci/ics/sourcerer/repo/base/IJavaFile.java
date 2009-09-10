@@ -25,7 +25,7 @@ public interface IJavaFile {
   
   public String getName();
 
-  public String getRelativePath();
+  public String getProjectRelativePath();
   
   public String getPath();
   

@@ -47,7 +47,7 @@ public abstract class AbstractFileSet implements IFileSet {
   }
   
   protected final void addJavaFile(IJavaFile file) {
-    String dir = file.getRelativePath();
+    String dir = file.getProjectRelativePath();
     RepoDir repoDir = repoMap.get(dir);
     if (repoDir == null) {
       Deque<String> dirStack = Helper.newStack();
@@ -185,7 +185,7 @@ public abstract class AbstractFileSet implements IFileSet {
   }
   
   private int getValue(IJavaFile file) {
-    RepoDir repoDir = repoMap.get(file.getRelativePath());
+    RepoDir repoDir = repoMap.get(file.getProjectRelativePath());
     int count = 0;
     while (repoDir != null) {
       count += repoDir.getCount();

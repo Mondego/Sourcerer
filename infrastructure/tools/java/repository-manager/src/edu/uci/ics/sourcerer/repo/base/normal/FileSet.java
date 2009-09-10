@@ -15,36 +15,33 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 package edu.uci.ics.sourcerer.repo.base.normal;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Deque;
-import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.RepoJar;
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
+import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FileSet extends AbstractFileSet {
-  private String root;
-  public FileSet(File content, String rootPath) {
+  private Repository repo;
+  public FileSet(File content, Repository repo) {
     populateFileSet(content);
-    this.root = rootPath;
+    this.repo = repo;
   }
   
   public String getBasePath() {
-    return root;
+    return repo.getBaseDir().getPath();
   }
   
   private void populateFileSet(File content) {
     Deque<File> fileStack = Helper.newStack();
     fileStack.add(content);
-    String contentPath = content.getPath();
     while (!fileStack.isEmpty()) {
       File next = fileStack.pop();
       if (next.exists()) {
@@ -54,13 +51,7 @@ public class FileSet extends AbstractFileSet {
           } else if (file.getName().endsWith(".jar")) {
             addJarFile(new JarFile(file, RepoJar.getHash(file)));
           } else if (file.getName().endsWith(".java")) {
-            String relativePath = file.getPath();
-            if (relativePath.startsWith(contentPath)) {
-              relativePath = relativePath.substring(contentPath.length() + 1).replace('\\', '/');
-              addJavaFile(new JavaFile(relativePath, file));
-            } else {
-              logger.log(Level.SEVERE, "Unexpected file location: " + relativePath);
-            }
+            addJavaFile(new JavaFile(repo.convertToRelativePath(file, content), file));
           }
         }
       }

@@ -48,7 +48,7 @@ public class RepoProject {
   
   public IFileSet getFileSet() {
     if (content.isDirectory()) {
-      return new FileSet(content, repo.getRoot().getPath());
+      return new FileSet(content, repo);
     } else {
       return CompressedFileSet.getFileSet(this);
     }

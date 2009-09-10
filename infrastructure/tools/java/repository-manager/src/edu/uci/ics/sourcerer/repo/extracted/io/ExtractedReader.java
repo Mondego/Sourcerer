@@ -38,12 +38,14 @@ import edu.uci.ics.sourcerer.model.extracted.JarEX;
 import edu.uci.ics.sourcerer.model.extracted.JarExParser;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableExJarParser;
+import edu.uci.ics.sourcerer.model.extracted.LocalVariableExParser;
 import edu.uci.ics.sourcerer.model.extracted.ModelEX;
 import edu.uci.ics.sourcerer.model.extracted.ModelExParser;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.model.extracted.ProblemExParser;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationExJarParser;
+import edu.uci.ics.sourcerer.model.extracted.RelationExParser;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 
@@ -176,7 +178,7 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
     try {
       return new ExtractedReader<JarEX>(JarExParser.getParser(), project.getJarInputStream());
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to create entity reader", e);
+      logger.log(Level.SEVERE, "Unable to create jar reader", e);
       return null;
     }
   }
@@ -185,7 +187,25 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
     try {
       return new ExtractedReader<ImportEX>(ImportExParser.getParser(), project.getImportInputStream());
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to create entity reader", e);
+      logger.log(Level.SEVERE, "Unable to create import reader", e);
+      return null;
+    }
+  }
+  
+  public static ExtractedReader<RelationEX> getRelationReader(ExtractedProject project) {
+    try {
+      return new ExtractedReader<RelationEX>(RelationExParser.getParser(), project.getRelationInputStream());
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to create relation reader", e);
+      return null;
+    }
+  }
+  
+  public static ExtractedReader<LocalVariableEX> getLocalVariableReader(ExtractedProject project) {
+    try {
+      return new ExtractedReader<LocalVariableEX>(LocalVariableExParser.getParser(), project.getLocalVariableInputStream());
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to create local variable reader", e);
       return null;
     }
   }
