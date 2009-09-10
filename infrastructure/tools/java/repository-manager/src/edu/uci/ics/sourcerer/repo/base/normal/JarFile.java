@@ -23,14 +23,20 @@ import edu.uci.ics.sourcerer.repo.base.IJarFile;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarFile implements IJarFile {
-  private String dir;
   private File file;
   private String hash;
   
-  protected JarFile(String dir, File file, String hash) {
-    this.dir = dir;
+  protected JarFile(File file, String hash) {
     this.file = file;
     this.hash = hash;
+  }
+  
+  public String getHash() {
+    return hash;
+  }
+  
+  public String getName() {
+    return file.getName();
   }
   
   public String getPath() {
@@ -39,13 +45,5 @@ public class JarFile implements IJarFile {
   
   public File getFile() {
     return file;
-  }
-  
-  public String getName() {
-    return file.getName();
-  }
-  
-  public String getHash() {
-    return hash;
   }
 }

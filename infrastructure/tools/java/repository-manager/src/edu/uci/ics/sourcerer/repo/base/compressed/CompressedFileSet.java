@@ -21,22 +21,18 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
-import edu.uci.ics.sourcerer.repo.base.IJavaFile;
-import edu.uci.ics.sourcerer.repo.base.JavaFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class CompressedFileSet extends AbstractFileSet<CompressedJarFile, CompressedVirtualJavaFile> {
+public class CompressedFileSet extends AbstractFileSet {
   private RepoProject project;
   private CompressedFileSet(RepoProject project) {
     this.project = project;
@@ -50,9 +46,9 @@ public class CompressedFileSet extends AbstractFileSet<CompressedJarFile, Compre
       return null;
     }
   }
+  
   public String getBasePath() {
     return project.getRepository().getTempDir().getPath();
-//    return project.getRepository().getRoot().getPath();
   }
   
   private boolean populateFileSet() {
@@ -67,9 +63,9 @@ public class CompressedFileSet extends AbstractFileSet<CompressedJarFile, Compre
         ZipEntry entry = en.nextElement();
         String path = entry.getName();
         if (path.endsWith(".jar")) {
-          addJarFile(new CompressedJarFile(project.getRepository(), path, entry.getSize(), entry.getComment()));
+          addJarFile(new CompressedJarFile(path, entry.getComment(), this));
         } else if (path.endsWith(".java")) {
-          addJavaFile(new CompressedVirtualJavaFile(path, zip.getInputStream(entry)));
+          addJavaFile(new CompressedJavaFile(path, zip.getInputStream(entry), this));
         }
       }
       return true;
@@ -84,107 +80,23 @@ public class CompressedFileSet extends AbstractFileSet<CompressedJarFile, Compre
       } catch (IOException e) {}
     }
   }
-
-  public Iterable<ReadableCompressedJarFile> getCompressedJarFiles() {
-    return new Iterable<ReadableCompressedJarFile>(){
-      @Override
-      public Iterator<ReadableCompressedJarFile> iterator() {
-        try {
-          return new Iterator<ReadableCompressedJarFile>() {
-            ZipFile zip = new ZipFile(project.getContent());
-            @SuppressWarnings("unchecked")
-            Iterator<CompressedJarFile> iter = ((Collection<CompressedJarFile>)(Object)getJarFiles()).iterator();
-            @Override
-            public void remove() {
-              throw new UnsupportedOperationException();
-            }
-           
-            @Override
-            public ReadableCompressedJarFile next() {
-              try {
-                CompressedJarFile next = iter.next();
-                ZipEntry entry = zip.getEntry(next.getZipPath());
-                return new ReadableCompressedJarFile(next, zip.getInputStream(entry));
-              } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error reading from zip file: " + project.getContent().getPath(), e);
-                return null;
-              }
-            }
-          
-            @Override
-            public boolean hasNext() {
-              boolean hasNext = iter.hasNext();
-              if (!hasNext) {
-                try {
-                  zip.close();
-                } catch(IOException e) {}
-              }
-              return hasNext;
-            }
-          };
-        } catch (IOException e) {
-          logger.log(Level.SEVERE, "Unable to open content file: " + project.getContent().getPath());
-          return null;
-        }
-      }
-    };
-  }
   
-  @Override
-  protected Iterable<IJavaFile> convertJavaToConcrete(final Collection<CompressedVirtualJavaFile> files) {
-    return new Iterable<IJavaFile>() {
-      @Override
-      public Iterator<IJavaFile> iterator() {
-        try {
-          return new Iterator<IJavaFile>() {
-            Iterator<CompressedVirtualJavaFile> javaFiles = files.iterator();
-            ZipFile zip = new ZipFile(project.getContent());
-            @Override
-            public void remove() {
-              throw new UnsupportedOperationException();
-            }
-            
-            @Override
-            public IJavaFile next() {
-              try {
-                CompressedVirtualJavaFile next = javaFiles.next();
-                ZipEntry entry = zip.getEntry(next.getPath());
-                File tempFile = createTempFile(zip.getInputStream(entry), next);
-                return new JavaFile(next.getDir(), next.getPackage(), tempFile);
-              } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error reading from zip: " + project.getContent());
-                return null;
-              }
-            }
-          
-            @Override
-            public boolean hasNext() {
-              boolean hasNext = javaFiles.hasNext();
-              if (!hasNext) {
-                try {
-                  zip.close();
-                } catch (IOException e) {}
-              }
-              return hasNext;
-            }
-          };
-        } catch (IOException e) {
-          logger.log(Level.SEVERE, "Unable to open content file: " + project.getContent().getPath());
-          return null;
-        }
-      }
-    };
-  }
-  
-  private File createTempFile(InputStream is, CompressedVirtualJavaFile file) {
-    File tmp = new File(project.getRepository().getTempDir(), file.getPath());
+  protected File extractFileToTemp(String relativePath) {
+    File tmp = new File(project.getRepository().getTempDir(), relativePath);
     tmp.getParentFile().mkdirs();
+    
+    ZipFile zip = null;
     FileOutputStream fos = null;
     try {
-      fos = new FileOutputStream(tmp);
-      byte[] buff = new byte[2048];
-      for (int read = is.read(buff); read != -1; read = is.read(buff)) {
-        fos.write(buff, 0, read);
+      zip = new ZipFile(project.getContent());
+      ZipEntry entry = zip.getEntry(relativePath);
+      if (entry != null) {
+        InputStream is = zip.getInputStream(entry);
+        fos = new FileOutputStream(tmp);
+        byte[] buff = new byte[2048];
+        for (int read = is.read(buff); read != -1; read = is.read(buff)) {
+          fos.write(buff, 0, read);
+        }
       }
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to write temp file: " + tmp.getPath(), e);
@@ -194,7 +106,7 @@ public class CompressedFileSet extends AbstractFileSet<CompressedJarFile, Compre
         fos.close();
       } catch (IOException e) {}
       try {
-        is.close();
+        fos.close();
       } catch (IOException e) {}
     }
     return tmp;

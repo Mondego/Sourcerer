@@ -15,64 +15,60 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 package edu.uci.ics.sourcerer.repo.base.compressed;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
 import java.io.File;
 
-import edu.uci.ics.sourcerer.repo.IndexedJar;
 import edu.uci.ics.sourcerer.repo.base.IJarFile;
-import edu.uci.ics.sourcerer.repo.base.Repository;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class CompressedJarFile implements IJarFile {
-  private Repository repo;
-  private String path;
-  private long length;
   private String hash;
+  private String name;
+  private String relativePath;
   
-  protected CompressedJarFile(Repository repo, String path, long length, String hash) {
-    this.repo = repo;
-    this.path = path;
-    this.length = length;
+  private CompressedFileSet fileSet;
+  
+  private File file;
+  private boolean fileRetrieved;
+  
+  protected CompressedJarFile(String relativePath, String hash, CompressedFileSet fileSet) {
     this.hash = hash;
+    this.relativePath = relativePath;
+    int index = relativePath.lastIndexOf('/');
+    if (index == -1) {
+      name = relativePath;
+    } else {
+      name = relativePath.substring(index + 1);
+    }
+    this.fileSet = fileSet;
   }
 
-  public String getZipPath() {
-    return path;
+  @Override
+  public String getHash() {
+    return hash;
+  }
+  
+  @Override
+  public String getName() {
+    return name;
   }
   
   @Override
   public String getPath() {
-    return getFile().getPath();
-  }
-  
-  public File getFile() {
-    IndexedJar jar = repo.getJarIndex().getIndexedJar(hash);
-    if (jar == null) {
-      logger.severe("Unable to locate jar in index: " + path);
+    if (getFile() == null) {
       return null;
     } else {
-      return jar.getFile();
+      return file.getPath();
     }
-  }
-  
-  public String getName() {
-    int index = path.lastIndexOf('/');
-    if (index == -1) {
-      return path;
-    } else {
-      return path.substring(index + 1);
-    }
-  }
-  
-  public long getLength() {
-    return length;
   }
   
   @Override
-  public String getHash() {
-    return hash;
+  public File getFile() {
+    if (!fileRetrieved) {
+      file = fileSet.extractFileToTemp(relativePath);
+      fileRetrieved = true;
+    }
+    return file;
   }
 }

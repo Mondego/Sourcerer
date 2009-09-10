@@ -27,14 +27,14 @@ import edu.uci.ics.sourcerer.util.Helper;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class AbstractFileSet <JAR extends IJarFile, JAVA extends IVirtualJavaFile> implements IFileSet {
-  private Collection<JAR> jarFiles;
+public abstract class AbstractFileSet implements IFileSet {
+  private Collection<IJarFile> jarFiles;
   
   private Collection<RepoDir> roots;
   private Map<String, RepoDir> repoMap;
   
-  Collection<JAVA> uniqueFiles = null;
-  Collection<JAVA> bestDuplicateFiles = null; 
+  Collection<IJavaFile> uniqueFiles = null;
+  Collection<IJavaFile> bestDuplicateFiles = null; 
   
   protected AbstractFileSet() {
     jarFiles = Helper.newLinkedList();
@@ -42,12 +42,12 @@ public abstract class AbstractFileSet <JAR extends IJarFile, JAVA extends IVirtu
     repoMap = Helper.newHashMap();
   }
   
-  protected final void addJarFile(JAR file) {
+  protected final void addJarFile(IJarFile file) {
     jarFiles.add(file);
   }
   
-  protected final void addJavaFile(JAVA file) {
-    String dir = file.getDir();
+  protected final void addJavaFile(IJavaFile file) {
+    String dir = file.getRelativePath();
     RepoDir repoDir = repoMap.get(dir);
     if (repoDir == null) {
       Deque<String> dirStack = Helper.newStack();
@@ -76,12 +76,9 @@ public abstract class AbstractFileSet <JAR extends IJarFile, JAVA extends IVirtu
   }
   
   @Override
-  @SuppressWarnings("unchecked")
   public final Iterable<IJarFile> getJarFiles() {
-    return (Iterable<IJarFile>)jarFiles;
+    return jarFiles;
   }
-
-  protected abstract Iterable<IJavaFile> convertJavaToConcrete(Collection<JAVA> files);
   
   private void computeFiles() {
     uniqueFiles = Helper.newLinkedList();
@@ -119,12 +116,12 @@ public abstract class AbstractFileSet <JAR extends IJarFile, JAVA extends IVirtu
       start.addAll(roots);
     }
     
-    Map<String, Collection<JAVA>> javaFiles = Helper.newHashMap();
+    Map<String, Collection<IJavaFile>> javaFiles = Helper.newHashMap();
     
     while (!start.isEmpty()) {
       RepoDir next = start.pop();
-      for (JAVA java : next.getJavaFiles()) {
-        Collection<JAVA> files = javaFiles.get(java.getKey());
+      for (IJavaFile java : next.getJavaFiles()) {
+        Collection<IJavaFile> files = javaFiles.get(java.getKey());
         if (files == null) {
           files = Helper.newLinkedList();
           javaFiles.put(java.getKey(), files);
@@ -134,14 +131,14 @@ public abstract class AbstractFileSet <JAR extends IJarFile, JAVA extends IVirtu
       start.addAll(next.getSubdirs());
     }
   
-    for (Collection<JAVA> files : javaFiles.values()) {
+    for (Collection<IJavaFile> files : javaFiles.values()) {
       if (files.size() == 1) {
-        JAVA next = files.iterator().next();
+        IJavaFile next = files.iterator().next();
         uniqueFiles.add(next);
       } else {
-        JAVA best = null;
+        IJavaFile best = null;
         int bestValue = 0;
-        for (JAVA file : files) {
+        for (IJavaFile file : files) {
           int value = getValue(file);
           if (value > bestValue) {
             best = file;
@@ -169,7 +166,7 @@ public abstract class AbstractFileSet <JAR extends IJarFile, JAVA extends IVirtu
     if (uniqueFiles == null) {
       computeFiles();
     }
-    return convertJavaToConcrete(uniqueFiles);
+    return uniqueFiles;
   }
   
   public final int getBestDuplicateJavaFileCount() {
@@ -184,11 +181,11 @@ public abstract class AbstractFileSet <JAR extends IJarFile, JAVA extends IVirtu
     if (bestDuplicateFiles == null) {
       computeFiles();
     }
-    return convertJavaToConcrete(bestDuplicateFiles);
+    return bestDuplicateFiles;
   }
   
-  private int getValue(JAVA file) {
-    RepoDir repoDir = repoMap.get(file.getDir());
+  private int getValue(IJavaFile file) {
+    RepoDir repoDir = repoMap.get(file.getRelativePath());
     int count = 0;
     while (repoDir != null) {
       count += repoDir.getCount();
@@ -201,7 +198,7 @@ public abstract class AbstractFileSet <JAR extends IJarFile, JAVA extends IVirtu
     private String name;
     private RepoDir parent;
     private Collection<RepoDir> subDirs;
-    private Collection<JAVA> javaFiles;
+    private Collection<IJavaFile> javaFiles;
     
     public RepoDir(String name) {
       this.name = name;
@@ -223,11 +220,11 @@ public abstract class AbstractFileSet <JAR extends IJarFile, JAVA extends IVirtu
       return subDirs;
     }
     
-    public void addJavaFile(JAVA file) {
+    public void addJavaFile(IJavaFile file) {
       javaFiles.add(file);
     }
     
-    public Collection<JAVA> getJavaFiles() {
+    public Collection<IJavaFile> getJavaFiles() {
       return javaFiles;
     }
     

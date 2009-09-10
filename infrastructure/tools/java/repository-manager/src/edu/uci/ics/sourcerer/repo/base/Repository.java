@@ -34,8 +34,6 @@ import edu.uci.ics.sourcerer.repo.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.IndexedJar;
 import edu.uci.ics.sourcerer.repo.JarIndex;
 import edu.uci.ics.sourcerer.repo.RepoJar;
-import edu.uci.ics.sourcerer.repo.base.compressed.CompressedFileSet;
-import edu.uci.ics.sourcerer.repo.base.compressed.ReadableCompressedJarFile;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -126,32 +124,17 @@ public class Repository extends AbstractRepository {
         continue;
       logger.info("Extracting " + fileSet.getJarFileCount() + " jar files from project " + projectCount + " of " + repo.projects.size());
       
-      if (fileSet instanceof CompressedFileSet) {
-        for (ReadableCompressedJarFile file : ((CompressedFileSet)fileSet).getCompressedJarFiles()) {
-          RepoJar newJar = new RepoJar(file.getLength(), file.getHash());
-          JarNamer namer = nameIndex.get(newJar);
-          if (namer == null) {
-            File tmpFile = new File(jarFolder, uniqueFiles++ + ".jar");
-            FileUtils.writeStreamToFile(file.getInputStream(), tmpFile);
-            namer = new JarNamer(tmpFile);
-            nameIndex.put(newJar, namer);
-          }
-          totalFiles++;
-          namer.addName(file.getName());
+      for (IJarFile jar : fileSet.getJarFiles()) {
+        RepoJar newJar = new RepoJar(jar.getFile());
+        JarNamer namer = nameIndex.get(newJar);
+        if (namer == null) {
+          File tmpFile = new File(jarFolder, uniqueFiles++ + ".jar");
+          FileUtils.copyFile(jar.getFile(), tmpFile);
+          namer = new JarNamer(tmpFile);
+          nameIndex.put(newJar, namer);
         }
-      } else {
-        for (IJarFile jar : fileSet.getJarFiles()) {
-          RepoJar newJar = new RepoJar(jar.getFile());
-          JarNamer namer = nameIndex.get(newJar);
-          if (namer== null) {
-            File tmpFile = new File(jarFolder, uniqueFiles++ + ".jar");
-            FileUtils.copyFile(jar.getFile(), tmpFile);
-            namer = new JarNamer(tmpFile);
-            nameIndex.put(newJar, namer);
-          }
-          totalFiles++;
-          namer.addName(jar.getName());
-        }
+        totalFiles++;
+        namer.addName(jar.getName());
       }
     }
       

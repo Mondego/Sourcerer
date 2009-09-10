@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
-package edu.uci.ics.sourcerer.repo.base;
+package edu.uci.ics.sourcerer.repo.base.normal;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
@@ -23,15 +23,17 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.repo.base.AbstractJavaFile;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JavaFile implements IVirtualJavaFile, IJavaFile {
-  private String dir;
+public class JavaFile extends AbstractJavaFile {
+  private String relativePath;
   private File file;
   private String pkg;
-  public JavaFile(String dir, File file) {
-    this.dir = dir;
+  public JavaFile(String relativePath, File file) {
+    this.relativePath = relativePath;
     this.file = file;
     
     try {
@@ -55,33 +57,28 @@ public class JavaFile implements IVirtualJavaFile, IJavaFile {
     }
   }
   
-  public JavaFile(String dir, String pkg, File file) {
-    this.dir = dir;
-    this.pkg = pkg;
-    this.file = file;
-  }
-  
   @Override
-  public String getDir() {
-    return dir;
-  }
-  
   public String getPackage() {
     return pkg;
   }
   
+  @Override
   public String getName() {
     return file.getName();
   }
   
-
   @Override
-  public String getKey() {
-    return pkg + file.getName();
+  public String getRelativePath() {
+    return relativePath;
   }
-
+  
   @Override
   public String getPath() {
     return file.getPath();
+  }
+  
+  @Override
+  public File getFile() {
+    return file;
   }
 }

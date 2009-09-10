@@ -21,8 +21,11 @@ import java.io.File;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface IJarFile {
-  public String getPath();
-  public File getFile();
-  public String getName();
   public String getHash();
-}
+  
+  public String getName();
+  
+  public String getPath();
+  
+  public File getFile();
+  }

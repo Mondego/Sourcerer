@@ -18,10 +18,9 @@ package edu.uci.ics.sourcerer.repo.base;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IVirtualJavaFile {
-  public String getKey();
-  
-  public String getDir();
-  
-  public String getPath();
+public abstract class AbstractJavaFile implements IJavaFile {
+  @Override
+  public final String getKey() {
+    return getPackage() + getName();
+  }
 }

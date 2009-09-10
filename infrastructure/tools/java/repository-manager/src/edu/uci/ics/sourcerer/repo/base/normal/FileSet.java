@@ -25,13 +25,12 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.repo.RepoJar;
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
-import edu.uci.ics.sourcerer.repo.base.JavaFile;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FileSet extends AbstractFileSet<JarFile, JavaFile> {
+public class FileSet extends AbstractFileSet {
   private String root;
   public FileSet(File content, String rootPath) {
     populateFileSet(content);
@@ -53,20 +52,14 @@ public class FileSet extends AbstractFileSet<JarFile, JavaFile> {
           if (file.isDirectory()) {
             fileStack.push(file);
           } else if (file.getName().endsWith(".jar")) {
-            String dir = file.getPath();
-            if (dir.startsWith(contentPath)) {
-              dir = dir.substring(contentPath.length() +1).replace('\\', '/');
-              addJarFile(new JarFile(dir, file, RepoJar.getHash(file)));
-            } else {
-              logger.log(Level.SEVERE, "Unexpected file location: " + dir);
-            }
+            addJarFile(new JarFile(file, RepoJar.getHash(file)));
           } else if (file.getName().endsWith(".java")) {
-            String dir = file.getPath();
-            if (dir.startsWith(contentPath)) {
-              dir = dir.substring(contentPath.length() + 1).replace('\\', '/');
-              addJavaFile(new JavaFile(dir, file));
+            String relativePath = file.getPath();
+            if (relativePath.startsWith(contentPath)) {
+              relativePath = relativePath.substring(contentPath.length() + 1).replace('\\', '/');
+              addJavaFile(new JavaFile(relativePath, file));
             } else {
-              logger.log(Level.SEVERE, "Unexpected file location: " + dir);
+              logger.log(Level.SEVERE, "Unexpected file location: " + relativePath);
             }
           }
         }

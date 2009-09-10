@@ -18,27 +18,33 @@ package edu.uci.ics.sourcerer.repo.base.compressed;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.repo.base.IVirtualJavaFile;
+import edu.uci.ics.sourcerer.repo.base.AbstractJavaFile;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class CompressedVirtualJavaFile implements IVirtualJavaFile {
-  private String name;
-  private String dir;
+public class CompressedJavaFile extends AbstractJavaFile {
   private String pkg;
-  private String path;
+  private String name;
+  private String relativePath;
   
-  protected CompressedVirtualJavaFile(String path, InputStream is) {
-    this.path = path;
-    dir = path.substring(0, path.lastIndexOf('/') + 1);
-    name = path.substring(path.lastIndexOf('/') + 1);
-        
+  private CompressedFileSet fileSet;
+  
+  private File file;
+  private boolean fileRetrieved;
+  
+  protected CompressedJavaFile(String relativePath, InputStream is, CompressedFileSet fileSet) {
+    file = null;
+    fileRetrieved = false;
+    this.relativePath = relativePath;
+    name = relativePath.substring(relativePath.lastIndexOf('/') + 1);
+    
     try {
       BufferedReader br = new BufferedReader(new InputStreamReader(is));
       String line = null;
@@ -59,41 +65,36 @@ public class CompressedVirtualJavaFile implements IVirtualJavaFile {
     }
   }
   
-  protected CompressedVirtualJavaFile() {}
-  
-  protected void setPath(String path) {
-    this.path = path;
-  }
-
   @Override
-  public String getDir() {
-    return dir;
-  }
-  
-  @Override
-  public String getPath() {
-    return path;
-  }
-
-  @Override
-  public String getKey() {
-    return pkg + name;
-  }
-  
-  public String getName() {
-    return name;
-  }
-  
   public String getPackage() {
     return pkg;
   }
   
-  public boolean equals(Object o) {
-    if (o instanceof CompressedVirtualJavaFile) {
-      CompressedVirtualJavaFile other = (CompressedVirtualJavaFile)o;
-      return path.equals(other.path);
+  @Override
+  public String getName() {
+    return name;
+  }
+  
+  @Override
+  public String getRelativePath() {
+    return relativePath;
+  }
+  
+  @Override
+  public String getPath() {
+    if (getFile() == null) {
+      return null;
     } else {
-      return false;
+      return file.getPath();
     }
+  }
+  
+  @Override
+  public File getFile() {
+    if (!fileRetrieved) {
+      file = fileSet.extractFileToTemp(relativePath);
+      fileRetrieved = true;
+    }
+    return file;
   }
 }

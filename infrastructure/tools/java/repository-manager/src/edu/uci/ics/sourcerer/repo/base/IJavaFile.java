@@ -15,6 +15,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 package edu.uci.ics.sourcerer.repo.base;
 
+import java.io.File;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
@@ -23,5 +25,11 @@ public interface IJavaFile {
   
   public String getName();
 
+  public String getRelativePath();
+  
   public String getPath();
+  
+  public File getFile();
+  
+  public String getKey();
 }
