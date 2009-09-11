@@ -1,1 +1,8 @@
-repository-manager is used to create the directory layout, and download the contents from remote source repositories. It depends on the list produced by the crawler.
+@author Sushil Bajracharya
+@created Sep 11, 2009
+
+ABOUT
+=====
+core-repository-manager is used to create the directory layout, 
+and download the contents from remote source repositories. 
+It depends on the list produced by the crawler.
