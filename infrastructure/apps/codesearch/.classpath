@@ -10,5 +10,7 @@
 	<classpathentry kind="lib" path="/lib/smartgwt-skins.jar"/>
 	<classpathentry kind="lib" path="/lib/smartgwt.jar"/>
 	<classpathentry kind="lib" path="/lib/gwt-servlet.jar"/>
+	<classpathentry kind="lib" path="/lib/commons-codec-1.3.jar"/>
+	<classpathentry kind="lib" path="/lib/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>
