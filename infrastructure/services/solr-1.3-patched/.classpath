@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/test"/>
+	<classpathentry kind="src" path="contrib/dataimporthandler/src/main/java"/>
+	<classpathentry kind="src" path="contrib/dataimporthandler/src/test/java"/>
+	<classpathentry kind="src" path="client/java/solrj/test"/>
+	<classpathentry kind="src" path="client/java/solrj/src"/>
+	<classpathentry kind="src" path="src/webapp/src"/>
+	<classpathentry kind="src" path="src/java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/commons-codec-1.3.jar"/>
+	<classpathentry kind="lib" path="lib/commons-csv-1.0-SNAPSHOT-r609327.jar"/>
+	<classpathentry kind="lib" path="lib/commons-fileupload-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/commons-io-1.3.1.jar"/>
+	<classpathentry kind="lib" path="lib/easymock.jar"/>
+	<classpathentry kind="lib" path="lib/geronimo-stax-api_1.0_spec-1.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/junit-4.3.jar"/>
+	<classpathentry kind="lib" path="lib/lucene-analyzers-2.4-dev.jar" sourcepath="/lucene_2_4_0"/>
+	<classpathentry kind="lib" path="lib/lucene-core-2.4-dev.jar" sourcepath="/lucene_2_4_0"/>
+	<classpathentry kind="lib" path="lib/lucene-highlighter-2.4-dev.jar"/>
+	<classpathentry kind="lib" path="lib/lucene-memory-2.4-dev.jar"/>
+	<classpathentry kind="lib" path="lib/lucene-queries-2.4-dev.jar"/>
+	<classpathentry kind="lib" path="lib/lucene-snowball-2.4-dev.jar"/>
+	<classpathentry kind="lib" path="lib/lucene-spellchecker-2.4-dev.jar"/>
+	<classpathentry kind="lib" path="lib/servlet-api-2.4.jar"/>
+	<classpathentry kind="lib" path="lib/stax-utils.jar"/>
+	<classpathentry kind="lib" path="lib/wstx-asl-3.2.7.jar"/>
+	<classpathentry kind="lib" path="client/java/solrj/lib/commons-httpclient-3.1.jar"/>
+	<classpathentry kind="lib" path="client/java/solrj/lib/commons-logging-1.0.4.jar"/>
+	<classpathentry kind="lib" path="example/lib/jetty-6.1.3.jar"/>
+	<classpathentry kind="lib" path="example/lib/jetty-util-6.1.3.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
