@@ -66,7 +66,7 @@ public class SourcererSearchAdapter {
 		j2h.reset();
 		// System.out.print(j2h.process(javaCode));
 		
-		List<String> listQTerms = Arrays.asList(qterms.toArray(new String[qterms.size()]));
+//		List<String> listQTerms = Arrays.asList(qterms.toArray(new String[qterms.size()]));
 		
 		String result = "<div class=\"result_code\">" + j2h.process(rawCode) + "</div>";
 //		
