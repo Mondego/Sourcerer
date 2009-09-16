@@ -1,0 +1,7 @@
+@author Sushil Bajrachrya (bajracharya@gmail.com)
+@created Sep 15, 2009
+
+The files under this package are copied from Doug Cutting's 
+implementation in Hadoop's package org.apache.hadoop.io
+
+Refer to the @author information for additional modifications
