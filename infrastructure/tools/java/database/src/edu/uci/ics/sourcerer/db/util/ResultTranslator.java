@@ -15,19 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model;
+package edu.uci.ics.sourcerer.db.util;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import edu.uci.ics.sourcerer.util.Pair;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public enum Comment {
-    BLOCK,
-    LINE,
-    JAVADOC,
-    UJAVADOC;
-    
-    public static Comment[] getValues() {
-      Comment[] values = { BLOCK, LINE, JAVADOC };
-      return values;
+public interface ResultTranslator <T> {
+  public T translate(ResultSet result) throws SQLException;
+  
+  public static final ResultTranslator<String> SIMPLE_RESULT_TRANSLATOR = new ResultTranslator<String>() {
+    public String translate(ResultSet result) throws SQLException {
+      return result.getString(1);
     }
-  }
+  };
+  
+  public static final ResultTranslator<Pair<String, String>> PAIR_RESULT_TRANSLATOR = new ResultTranslator<Pair<String, String>>() {
+    public Pair<String, String> translate(ResultSet result) throws SQLException {
+      return new Pair<String, String>(result.getString(1), result.getString(2));
+    }
+  };  
+}
+

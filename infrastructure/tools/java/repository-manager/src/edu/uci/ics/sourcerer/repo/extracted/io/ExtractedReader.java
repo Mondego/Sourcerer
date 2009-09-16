@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.model.extracted.CommentEX;
+import edu.uci.ics.sourcerer.model.extracted.CommentExParser;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.EntityExJarParser;
 import edu.uci.ics.sourcerer.model.extracted.EntityExParser;
@@ -208,6 +210,15 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
       return new ExtractedReader<LocalVariableEX>(LocalVariableExParser.getParser(), project.getLocalVariableInputStream());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to create local variable reader", e);
+      return null;
+    }
+  }
+  
+  public static ExtractedReader<CommentEX> getCommentReader(ExtractedProject project) {
+    try {
+      return new ExtractedReader<CommentEX>(CommentExParser.getParser(), project.getCommentFile());
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to create comment reader", e);
       return null;
     }
   }

@@ -37,6 +37,7 @@ public enum Entity {
     PRIMITIVE,
     ARRAY,
     TYPE_VARIABLE,
+    WILDCARD,
     PARAMETRIZED_TYPE,
     DUPLICATE,
     UNKNOWN,
@@ -59,6 +60,7 @@ public enum Entity {
           ARRAY,
           TYPE_VARIABLE,
           PARAMETRIZED_TYPE,
+          WILDCARD,
           UNKNOWN };
       return values;
     }
@@ -79,6 +81,7 @@ public enum Entity {
           ARRAY,
           TYPE_VARIABLE,
           PARAMETRIZED_TYPE,
+          WILDCARD,
           UNKNOWN };
       return values;
     }
@@ -180,18 +183,5 @@ public enum Entity {
       }
     }
     
-    public static String getBaseType(String parametrizedType) {
-      StringBuilder builder = new StringBuilder();
-      int depth = 0;
-      for (char c : parametrizedType.toCharArray()) {
-        if (c == '<') {
-          depth++;
-        } else if (c == '>') {
-          depth--;
-        } else if (depth == 0) {
-          builder.append(c);
-        }
-      }
-      return builder.toString();
-    }
+
   }

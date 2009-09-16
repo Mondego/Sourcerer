@@ -15,19 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model;
+package edu.uci.ics.sourcerer.db.util;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public enum Comment {
-    BLOCK,
-    LINE,
-    JAVADOC,
-    UJAVADOC;
-    
-    public static Comment[] getValues() {
-      Comment[] values = { BLOCK, LINE, JAVADOC };
-      return values;
-    }
+public abstract class DatabaseAccessor {
+  protected QueryExecutor executor;
+
+  protected DatabaseAccessor(DatabaseConnection connection) {
+    executor = new QueryExecutor(connection.getConnection());
   }
+  
+  public void close() {
+    executor.close();
+  }
+}

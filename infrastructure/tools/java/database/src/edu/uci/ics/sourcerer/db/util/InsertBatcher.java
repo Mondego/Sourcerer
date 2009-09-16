@@ -15,19 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model;
+package edu.uci.ics.sourcerer.db.util;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public enum Comment {
-    BLOCK,
-    LINE,
-    JAVADOC,
-    UJAVADOC;
-    
-    public static Comment[] getValues() {
-      Comment[] values = { BLOCK, LINE, JAVADOC };
-      return values;
-    }
+public class InsertBatcher extends AbstractInsertBatcher {
+
+  protected InsertBatcher(QueryExecutor executor, String table) {
+    super(executor, table);
   }
+
+  public void addValue(String value) {
+    appendValue(value);
+    incrementCount();
+  }
+  
+  @Override
+  public void insert(String value) {
+    executor.executeUpdate(value);
+  }
+}

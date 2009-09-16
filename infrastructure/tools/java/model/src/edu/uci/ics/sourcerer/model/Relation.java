@@ -38,8 +38,12 @@ public enum Relation {
   HAS_ELEMENTS_OF,
   PARAMETRIZED_BY,
   HAS_BASE_TYPE,
+  HAS_TYPE_ARGUMENT,
+  HAS_UPPER_BOUND,
+  HAS_LOWER_BOUND,
   OVERRIDES,
-  MATCHES;
+  MATCHES,
+  ;
 
   public static Relation[] getLibraryValues() {
     Relation[] values = {
@@ -50,7 +54,10 @@ public enum Relation {
         RETURNS,
         HAS_ELEMENTS_OF,
         PARAMETRIZED_BY,
-        HAS_BASE_TYPE };
+        HAS_BASE_TYPE,
+        HAS_TYPE_ARGUMENT,
+        HAS_UPPER_BOUND,
+        HAS_LOWER_BOUND };
     return values;
   }
   
@@ -63,7 +70,10 @@ public enum Relation {
         RETURNS,
         HAS_ELEMENTS_OF,
         PARAMETRIZED_BY,
-        HAS_BASE_TYPE };
+        HAS_BASE_TYPE,
+        HAS_TYPE_ARGUMENT,
+        HAS_UPPER_BOUND,
+        HAS_LOWER_BOUND };
     return values;
   }
   
