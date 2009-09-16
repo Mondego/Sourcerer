@@ -71,6 +71,7 @@
         <include name="mysql*.jar" />
         <include name="smartgwt*.jar" />
         <include name="commons*.jar" />
+        <include name="gwt*.jar" />
       </lib>
       <exclude name="**/.gitignore" />
       <exclude name="evaluation/results/**/*" />

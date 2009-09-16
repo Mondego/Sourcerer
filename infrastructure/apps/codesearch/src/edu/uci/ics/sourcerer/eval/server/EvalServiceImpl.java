@@ -45,18 +45,17 @@ public class EvalServiceImpl extends RemoteServiceServlet implements EvalService
   public Vote[] getVoteOptions() {
     Vote[] options = new Vote[3];
     options[0] = new Vote("2", "The result fully solves the problem", 
-        "I can copy some code with little modifiction to solve the problem",
-        "I learnt everything I needed to know to solve the problem",
-        "I found all the APIs needed to solve the problem",
-        "This result was more useful than I expected");
+        "Code can be copied with little modifiction",
+        "Contains everything I needed to know",
+        "Contains all the APIs needed",
+        "Contains additional related information");
     options[1] = new Vote("1", "The result partially solves the problem",
-        "I believe if I explore this result's references I can solve the problem",
-        "I learnt something I needed to know to solve the problem",
-        "I found some of the APIs needed to solve the problem",
-        "This result was more useful than I expected");
+        "Following references looks promising",
+        "Contains something I needed to know",
+        "Contains some of the APIs needed");
     options[2] = new Vote("0", "The result is not useful at all",
-        "This result is an implementation of the functionality rather than an API usage example",
-        "This result is too complicated, I could not understand it");
+        "Too long, did not read",
+        "An implementation of the functionality rather than an API usage example");
     return options;
   }
   
