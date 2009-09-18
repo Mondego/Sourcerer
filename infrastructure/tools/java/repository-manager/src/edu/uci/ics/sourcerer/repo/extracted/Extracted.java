@@ -52,4 +52,8 @@ public abstract class Extracted {
   public InputStream getLocalVariableInputStream() throws IOException {
     return getInputStream(Property.LOCAL_VARIABLE_FILE);
   }
+  
+  public InputStream getCommentFile() throws IOException {
+    return getInputStream(Property.COMMENT_FILE);
+  }
 }
