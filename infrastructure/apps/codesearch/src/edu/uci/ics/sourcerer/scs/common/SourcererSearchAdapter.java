@@ -22,8 +22,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -40,7 +38,11 @@ import edu.uci.ics.sourcerer.scs.common.client.SearchHeuristic;
  */
 public class SourcererSearchAdapter {
 
-
+	private static String SEARCH_SERVER = "http://nile.ics.uci.edu:8984";
+	private static String FACET_SERVER  = "http://nile.ics.uci.edu:8983"; 
+	private static String MLT_SERVER    = "http://nile.ics.uci.edu:8983";
+	private static String FILE_SERVER   = "http://nile.ics.uci.edu:9180";
+	
 	private static String QUERY_PART_SNAME_CONTENTS = "sname_contents^40.0%20";
 	private static String QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS =   // "sim_sname_contents_via_jdk_use^10.0%20sim_sname_contents_via_lib_use^10.0%20sim_sname_contents_via_local_use^10.0%20";
 										   			//  "sim_sname_contents_via_jdk_use^20.0%20sim_sname_contents_via_lib_use^20.0%20sim_sname_contents_via_local_use^20.0%20";
@@ -80,7 +82,7 @@ public class SourcererSearchAdapter {
 	
 	public static String getEntityCode(String entityId){
 		
-		String urlPart = "http://nile.ics.uci.edu:9180/repofileserver/" ;//?entityID=5096973";
+		String urlPart = FILE_SERVER + "/repofileserver/" ;//?entityID=5096973";
 		String queryString = "entityID=" + entityId;
 		
 		try {
@@ -96,8 +98,7 @@ public class SourcererSearchAdapter {
 
 	private static String getGETResult(String query, long start, int rows, SearchHeuristic heuristic) {
 		
-		// TODO move this to config (web.xml)
-		String urlPart = "http://kathmandu.ics.uci.edu:8984/solr/scs/select/";
+		String urlPart = SEARCH_SERVER + "/solr/scs/select/";
 		
 		String queryString = "start=" + start + "&rows=" + rows 
 			// TODO refactor out as constant 
@@ -329,9 +330,6 @@ public class SourcererSearchAdapter {
 		
 		return queryPart;
 	}
-	
-	
-	
 
 	public static String searchSCSServer(String query, long start, int rows,
 			SearchHeuristic heuristic) {
@@ -347,8 +345,7 @@ public class SourcererSearchAdapter {
 		// TODO: #2 Remove this
 		query = query.replaceAll("\\s", "%20");
 		
-		// TODO move this to config (web.xml)
-		String urlPart = "http://kathmandu.ics.uci.edu:8983/solr/scs/select/";
+		String urlPart = FACET_SERVER + "/solr/scs/select/";
 		
 		String queryString = "start=" + 1 + "&rows=" + 0 
 			
@@ -374,8 +371,7 @@ public class SourcererSearchAdapter {
 	
 	private static String searchMlt(String entityId, String mltFields){
 		
-		//TODO externalize
-		String urlPart = "http://kathmandu.ics.uci.edu:8983/solr/scs/mlt";
+		String urlPart = MLT_SERVER + "/solr/scs/mlt";
 		
 		String queryString = "start=0&rows=10&q=entity_id:" 
 			+ entityId 
