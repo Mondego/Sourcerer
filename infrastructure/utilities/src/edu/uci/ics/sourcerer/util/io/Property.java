@@ -79,7 +79,7 @@ public enum Property {
   
   CRAWL_MAVEN("crawl-maven", true),
   DOWNLOAD_MAVEN("download-maven", true),
-  LINK_FILE("link-file", "link-file.txt"),
+  LINKS_FILE("links-file", "links.txt"),
   MAVEN_URL("maven-url"),
   ADD_MAVEN_JARS("add-maven-jars", true),
   
