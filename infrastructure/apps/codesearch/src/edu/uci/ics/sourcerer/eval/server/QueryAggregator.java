@@ -185,7 +185,7 @@ public class QueryAggregator {
           for (String line = br.readLine(); line != null; line = br.readLine()) {
             String entityID = line.substring(0, line.indexOf(' '));
             String fqn = line.substring(line.indexOf(' ') + 1);
-            String formattedCode = SourcererSearchAdapter.getEntityCode(entityID);
+            String formattedCode = SourcererSearchAdapter.getEntityCode(entityID, null, null);
             Result result = Result.getResult(entityID, fqn, formattedCode);
             results.add(result);
           }
