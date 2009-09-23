@@ -20,6 +20,8 @@ package edu.uci.ics.sourcerer.repomanager;
 /**
 
  */
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 
 import org.junit.After;
@@ -56,6 +58,11 @@ public class CrawlerEntryFilterSourceforgeTest {
 		System.out.println(p.size());
 		// p is now filtered
 		
+//		ArrayList<String> _projectNames = new ArrayList<String>(p.keySet()); 
+//		Collections.sort(_projectNames);
+//		for(String _p: _projectNames){
+//			System.out.print(_p + "\t");
+//		}
 	}
 
 }

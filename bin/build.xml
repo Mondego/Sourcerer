@@ -29,6 +29,7 @@
   <property name="core-repository-manager" location="../infrastructure/tools/core/core-repository-manager/src" />
   <property name="search-server" location="../infrastructure/services/search-server/src" />
   <property name="solr-root" location="../infrastructure/services/solr-1.3-patched" />
+  <property name="codecrawler" location="../infrastructure/tools/core/codecrawler/src" />
 
   <property name="lib" location="../lib" />
 
@@ -122,6 +123,28 @@
     <copy file="${core-repository-manager}/../scripts/content-fetcher.sh" todir="."/>
     <copy file="${core-repository-manager}/../scripts/repo-folder-creator.sh" todir="."/>
   </target>
+  
+  <target name="compile-codecrawler" depends="init">
+    <javac destdir="${build}" debug="on" source="1.5">
+	 <classpath>
+	 	<pathelement path="${classpath}"/>
+		<fileset dir="${lib}">
+            <include name="**/htmlparser-*.jar"/>
+            <include name="**/log4j-*.jar"/>
+	    </fileset>
+      </classpath>	
+      <src path="${codecrawler}" />
+    </javac>
+    <copy todir="${build}">
+      <fileset dir="${codecrawler}" includes="**/*.java" />
+    </copy>
+  </target>
+
+  <target name="codecrawler" depends="compile-codecrawler">
+    <jar destfile="codecrawler.jar" basedir="${build}" />
+    <copy file="${codecrawler}/../scripts/run-codecrawler.sh" todir="."/>
+  </target>
+
   
   <target name="fetch-patch-solr" depends="init">
     <get src="http://www.apache.org/dist/lucene/solr/1.3.0/apache-solr-1.3.0.tgz" dest="${build}/apache-solr-1.3.0.tgz"/>

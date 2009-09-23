@@ -30,6 +30,8 @@ import java.util.Map;
  */
 public class CrawlerEntryFilterSourceforge implements ICrawlerEntryFilter {
 
+	//Logger logger = LogFactory.getFileLogger(CrawlerEntryFilterSourceforge.class.getName(), repoRoot + File.separator + "content-fetcher.log", true);
+	
 	public void filter(Map<String, ProjectProperties> projects) {
 		
 		// HashMap<String, ProjectProperties> uniqProjects = new HashMap<String, ProjectProperties>();
