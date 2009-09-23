@@ -18,20 +18,24 @@
 package edu.uci.ics.sourcerer.repo.maven;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Deque;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
@@ -43,42 +47,61 @@ public class MavenCrawler {
     Pattern linkPattern = Pattern.compile("<a\\shref=\"(.*?)\">");
     PropertyManager properties = PropertyManager.getProperties();
     
-    Deque<String> links = Helper.newLinkedList();
-    links.add(properties.getValue(Property.INPUT));
+    Set<String> completed = Logging.initializeResumeLogger();
     
+    File outputDir = properties.getValueAsFile(Property.OUTPUT);
     try {
-      File outputFile = new File(properties.getValue(Property.OUTPUT), properties.getValue(Property.LINK_FILE));
-      BufferedWriter out = new BufferedWriter(new FileWriter(outputFile));
+      Deque<String> links = Helper.newLinkedList();
+      
+      File linksFile = new File(outputDir, properties.getValue(Property.LINKS_FILE));
+      if (linksFile.exists()) {
+        BufferedReader br = new BufferedReader(new FileReader(linksFile));
+        for (String line = br.readLine(); line != null; line = br.readLine()) {
+          links.add(line);
+        }
+        br.close();
+      }
+      if (links.isEmpty()) {
+        links.add(properties.getValue(Property.INPUT));
+      }
+      
+      BufferedWriter progress = new BufferedWriter(new FileWriter(linksFile, true));
       
       while (!links.isEmpty()) {
         String link = links.pop();
-        if (link.endsWith("/")) {
-          try {
-            logger.info("Getting " + link);
-            URL url = new URL(link);
-            BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-            for (String line = br.readLine(); line != null; line = br.readLine()) {
-              Matcher matcher = linkPattern.matcher(line);
-              if (matcher.find()) {
-                String part = matcher.group(1);
-                if (!part.equals("../")) {
-                  logger.info("Adding " + link + part);
-                  links.push(link + part);
+        if (!completed.contains(link)) {
+          if (link.endsWith("/")) {
+            try {
+              logger.info("Getting " + link);
+              URL url = new URL(link);
+              BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
+              for (String line = br.readLine(); line != null; line = br.readLine()) {
+                Matcher matcher = linkPattern.matcher(line);
+                if (matcher.find()) {
+                  String part = matcher.group(1);
+                  if (!part.equals("../")) {
+                    String newLink = link + part;
+                    logger.info("Adding " + newLink);
+                    links.push(newLink);
+                    progress.write(newLink + "\n");
+                    progress.flush();
+                  }
                 }
               }
+              br.close();
+              logger.log(RESUME, link);
+              Thread.sleep(1000);
+            } catch (Exception e) {
+              logger.log(Level.SEVERE, "Error getting new links", e);
             }
-            br.close();
-            Thread.sleep(1000);
-          } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error getting new links", e);
           }
-        } else if (link.endsWith(".jar")) {
-          out.write(link + "\n");
         }
       }
-      out.close();
+      progress.close();
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error writing links", e);
     }
+    
+    logger.info("Done!");
   }
 }

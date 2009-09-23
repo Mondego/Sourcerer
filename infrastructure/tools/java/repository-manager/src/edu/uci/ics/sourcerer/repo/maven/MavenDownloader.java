@@ -41,7 +41,7 @@ public class MavenDownloader {
     try {
       Set<String> resume = Logging.initializeResumeLogger();
       PropertyManager properties = PropertyManager.getProperties();
-      File input = new File(properties.getValue(Property.INPUT), properties.getValue(Property.LINK_FILE));
+      File input = new File(properties.getValue(Property.INPUT), properties.getValue(Property.LINKS_FILE));
      
       Repository repo = Repository.getUninitializedRepository();
       File outputDir = repo.getJarsDir();
@@ -52,7 +52,7 @@ public class MavenDownloader {
       outputDir.mkdirs();
       BufferedReader br = new BufferedReader(new FileReader(input));
       for (String line = br.readLine(); line != null; line = br.readLine()) {
-        if (!resume.contains(line)) {
+        if (line.endsWith(".jar") && !resume.contains(line)) {
           URL url = new URL(line);
           if (line.startsWith(baseUrl)) {
             String path = line.substring(baseUrl.length());
@@ -63,6 +63,8 @@ public class MavenDownloader {
               logger.log(RESUME, line);
             }
             Thread.sleep(10000);
+          } else {
+            logger.log(Level.SEVERE, "Unexpected line: " + line);
           }
         }
       }
