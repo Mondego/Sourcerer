@@ -214,7 +214,7 @@ public class RepoFolderCreatorRunner {
 	}
 
 	private void exit() {
-		formatter.printHelp("repo-folder-creator", "", options, "(Built on 2009/09/11 12:24 AM)");
+		formatter.printHelp("repo-folder-creator", "", options, "(Built on 2009/09/24 03:14 PM)");
 		System.exit(-1);
 	}
 

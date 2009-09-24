@@ -86,21 +86,24 @@ public class SourceForgeParserPluginTest extends TestCase {
 		Parser parser = new Parser("http://sourceforge.net/cvs/?group_id=84122");
 		Set<Hit> hits = plugin.parseRepositoryPage(parser);
 		for (Hit hit : hits) {
-			System.out.println(hit.getCheckoutString() + "\t" + hit.getLanguage() + "\t" + hit.getVersion() + "\t" + hit.getReleaseDate());
+			System.out.println(hit.getCheckoutString() + "\t" + hit.getLanguage() + "\t" + hit.getVersion() 
+					+ "\t" + hit.getReleaseDate() + "\t" + hit.getDescription());
 		}
 		
 		// http://sourceforge.net/svn/?group_id=152431
 		parser = new Parser("http://sourceforge.net/svn/?group_id=152431");
 		hits = plugin.parseRepositoryPage(parser);
 		for (Hit hit : hits) {
-			System.out.println(hit.getCheckoutString() + "\t" + hit.getLanguage() + "\t" + hit.getVersion() + "\t" + hit.getReleaseDate());
+			System.out.println(hit.getCheckoutString() + "\t" + hit.getLanguage() + "\t" + hit.getVersion() + "\t" 
+					+ hit.getReleaseDate() + "\t" + hit.getDescription());
 		}
 		
 		//http://sourceforge.net/svn/?group_id=135469 (has "-" in project name)
 		parser = new Parser("http://sourceforge.net/svn/?group_id=135469");
 		hits = plugin.parseRepositoryPage(parser);
 		for (Hit hit : hits) {
-			System.out.println(hit.getCheckoutString() + "\t" + hit.getLanguage() + "\t" + hit.getVersion() + "\t" + hit.getReleaseDate());
+			System.out.println(hit.getCheckoutString() + "\t" + hit.getLanguage() + "\t" + hit.getVersion() + "\t" 
+					+ hit.getReleaseDate() + "\t" + hit.getDescription());
 		}
 	}
 	

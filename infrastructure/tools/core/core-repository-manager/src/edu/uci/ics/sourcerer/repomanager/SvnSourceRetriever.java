@@ -44,7 +44,7 @@ public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 
 	protected void checkout(String sourceRetrieveExpression, String projectFolder) {
 		
-		String _url = sourceRetrieveExpression.split("\\s")[2];
+		String _url = sourceRetrieveExpression.replaceAll("\\s+", " ").split("\\s")[2];
 		
 		ISVNInfo _info = null;
 		

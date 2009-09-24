@@ -28,7 +28,8 @@ public enum Repositories {
 	SOURCEFORGE("http://sourceforge.net"),
 	TIGRIS("http://tigris.net"),
 	JAVANET("http://java.net"),
-	APACHE("http://archive.apache.org");
+	APACHE("http://archive.apache.org"),
+	GOOGLECODE("http://code.google.com");
 	
 	private String URL;
 	Repositories(String url){

@@ -37,7 +37,9 @@ public class CvsSourceRetrieverTest {
 		
 		String sourceRetrieveExpression = 
 			// "cvs -d :pserver:guest@cvs.dev.java.net:/cvs login;cvs -d :pserver:guest@cvs.dev.java.net:/cvs checkout ss74j";
-			"cvs -d:pserver:anonymous@aft.cvs.sourceforge.net:/cvsroot/aft login; cvs -z3 -d:pserver:anonymous@aft.cvs.sourceforge.net:/cvsroot/aft co -P modulename";
+			// "cvs -d:pserver:anonymous@aft.cvs.sourceforge.net:/cvsroot/aft login; cvs -z3 -d:pserver:anonymous@aft.cvs.sourceforge.net:/cvsroot/aft co -P modulename";
+			 "cvs -d:pserver:anonymous@merlingenerator.cvs.sourceforge.net:/cvsroot/merlingenerator login; cvs -z3 -d:pserver:anonymous@merlingenerator.cvs.sourceforge.net:/cvsroot/merlingenerator co -P modulename";
+		
 		String projectFolder = "./test/resources/cvsco";
 		
 			

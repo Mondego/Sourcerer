@@ -22,6 +22,8 @@ import java.util.Date;
 
 /**
  * @author <a href="mailto:hahrot@yahoo.com">Huy A. Huynh</a>
+ * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
+ *
  */
 public class Hit {
 
@@ -31,7 +33,7 @@ public class Hit {
 	
 	private String projectName;
 	private String projectDescription;
-	private String projectCategory;		//multiple entries is possible, separated by semicolons
+	private String projectCategory;		//multiple entries is possible, separated by semicolons (TODO check semicolons being used as delimiters)
 	private String projectLicense;
 	
 	private String version;

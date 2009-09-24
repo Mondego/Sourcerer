@@ -319,7 +319,7 @@ public class SourceForgeParserPlugin extends ParserPlugin {
 			hit.setReleaseDate(projectInfo.releaseDate);
 			hit.setHitDate(new Date());
 			hit.setSourceCode("");
-			hit.setDescription(matcher.group(2));		//CVS or SVN
+			hit.setDescription("scm:" + matcher.group(2));		//CVS or SVN
 			
 			result.add(hit);
 			
@@ -431,7 +431,7 @@ public class SourceForgeParserPlugin extends ParserPlugin {
 			sourceLink = _l.getLink();
 			fileName = _l.getLinkText();
 			platform = _cols[1].getStringText().trim();
-			if (platform.equals("")) platform = "?";
+			
 			releaseDate = _cols[3].getStringText().trim();
 			downloads = _cols[4].getStringText().trim();
 			
@@ -459,7 +459,8 @@ public class SourceForgeParserPlugin extends ParserPlugin {
 				hit.setHitDate(new Date());
 				hit.setSourceCode((source) ? CertaintyUtils
 						.addCertaintyToValue("yes", 0.9) : "");
-				hit.setDescription("platform:" + platform + " / " + "filename:" + fileName + " / " + "downloads:" + downloads );
+				String _platform = (platform.equals(""))?"platform:" + platform + " / ":"";
+				hit.setDescription(_platform + "filename:" + fileName + " / " + "downloads:" + downloads );
 				result.add(hit);
 
 			} catch (NullPointerException e) {
