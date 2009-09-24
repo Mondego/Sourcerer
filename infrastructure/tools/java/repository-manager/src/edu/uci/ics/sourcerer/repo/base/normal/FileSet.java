@@ -33,8 +33,8 @@ import edu.uci.ics.sourcerer.util.Helper;
 public class FileSet extends AbstractFileSet {
   private Repository repo;
   public FileSet(File content, Repository repo) {
-    populateFileSet(content);
     this.repo = repo;
+    populateFileSet(content);
   }
   
   public String getBasePath() {

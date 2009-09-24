@@ -50,8 +50,6 @@ public class Repository extends AbstractRepository {
   
   private Repository(File repoRoot, File tempDir) {
     super(repoRoot);
-    PropertyManager properties = PropertyManager.getProperties();
-    this.jarIndexFile = new File(getJarsDir(), properties.getValue(Property.JAR_INDEX_FILE)); 
     this.tempDir = tempDir;
     projects = Helper.newHashMap();
   }

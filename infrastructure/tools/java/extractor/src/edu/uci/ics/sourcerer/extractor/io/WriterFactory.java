@@ -40,7 +40,7 @@ public final class WriterFactory {
       try {
         Class<?> klass = Class.forName(name);
         Constructor<?> constructor = klass.getConstructor(Repository.class);
-        return (T)constructor.newInstance();
+        return (T)constructor.newInstance(input);
       } catch (Exception e) {
         logger.log(Level.SEVERE, "Unable to create writer: " + name, e);
       }
