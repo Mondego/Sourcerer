@@ -33,11 +33,6 @@ public class UnarchiverCommand extends AbstractRepoCommand {
 
 	Unarchiver unarchiver = new Unarchiver();
 	
-	/*
-	 * will unarchive the first archive file found inside the projectFolder's
-	 * download folder.
-	 * 
-	 */
 	public void execute(File projectFolder) {
 		
 		// skip if code folder is not empty
@@ -119,5 +114,4 @@ public class UnarchiverCommand extends AbstractRepoCommand {
 			}
 		}
 	}
-
 }

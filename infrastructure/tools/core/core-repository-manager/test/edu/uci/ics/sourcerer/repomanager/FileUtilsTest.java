@@ -20,13 +20,31 @@ package edu.uci.ics.sourcerer.repomanager;
 
 import java.io.File;
 
+import junit.framework.TestCase;
+
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
- * @created Jan 12, 2009
+ * @created Sep 25, 2009
  *
  */
-public interface RepoCommand {
-	public void execute(File projectFolder);
-	public long getPauseInMiliSec();
-	public void setPauseInMiliSec(long pause);
+public class FileUtilsTest extends TestCase {
+	public void testCountChildren(){
+		String dir = "./test/tempRepo";
+		assertEquals(-1, FileUtils.countChildren(dir));
+	}
+	
+	public void testLastNonEmptyLine(){
+		String file = "./test/resources/cvsco/cvs.error.test";
+		assertEquals("cvs [status aborted]: no repository",FileUtils.getLastNonEmptyLine(file));
+	}
+	
+	public void testCleanDir(){
+		File dir = new File("./test/resources/testrepo.withretry/44/20/content");
+		FileUtils.cleanDirectory(dir);
+		assertEquals(0, FileUtils.countChildren(dir.getAbsolutePath()));
+		
+		dir = new File("./test/resources/testrepo.withretry/44/22/content");
+		FileUtils.cleanDirectory(dir);
+		assertEquals(0, FileUtils.countChildren(dir.getAbsolutePath()));
+	}
 }

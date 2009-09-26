@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 public abstract class AbstractRepoCommand implements RepoCommand {
 
 	protected Logger logger = null;
+	protected long pause = 0;
 	
 	abstract public void execute(File projectFolder);
 	
@@ -68,12 +69,13 @@ public abstract class AbstractRepoCommand implements RepoCommand {
 		
 		if(codeFiles == null){
 			// should never happen
-			logger.log(Level.SEVERE, "Cannot list the contents of source folder in " + projectFolderName);
+			if(logger!=null){
+				logger.log(Level.SEVERE, "Cannot list the contents of source folder in " + projectFolderName);
+			}
 			_processCodeFolder = false;
 		}
 		
 		if(codeFiles.length>0){
-			logger.log(Level.INFO, "Source folder " + codeFolder.getAbsolutePath() + " not empty.");
 			_processCodeFolder = false;
 		}
 
@@ -82,5 +84,27 @@ public abstract class AbstractRepoCommand implements RepoCommand {
 	
 	public void setLogger(Logger logger) {
 		this.logger = logger;
+	}
+	
+	protected void pauseCommand(){
+		if(pause > 0)
+			try {
+				Thread.sleep(pause);
+			} catch (InterruptedException e) {
+				// e.printStackTrace();
+				if(logger!=null){
+					logger.log(Level.WARNING, "Cannot pause command.");
+				}
+			}
+	}
+	
+	@Override
+	public long getPauseInMiliSec() {
+		return this.pause;
+	}
+
+	@Override
+	public void setPauseInMiliSec(long pause) {
+		this.pause = pause;
 	}
 }
