@@ -64,8 +64,9 @@ public class CvsSourceRetriever extends AbstractScmSourceRetriever {
 		
 		String _module = _moduleExpr[ _moduleExpr.length - 1 ];
 		
-		// if sourceforge extract projectname and use it as the modulename 
-		if(sourceRetrieveExpression.indexOf("cvs.sourceforge.net") > -1)
+		// if sourceforge and the cvs expression uses "modulename" 
+		// extract the project name and use it as the modulename 
+		if(sourceRetrieveExpression.indexOf("cvs.sourceforge.net") > -1 && _module.equals("modulename"))
 			_module = _moduleExpr[2].substring(_moduleExpr[2].lastIndexOf("/") + 1, _moduleExpr[2].length());
 		
 		File dest = new File(this.getCheckoutFolder());

@@ -53,4 +53,16 @@ public class RepoFoldersListerCommand implements RepoCommand {
 		this.logger = logger;
 		
 	}
+
+	@Override
+	public long getPauseInMiliSec() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setPauseInMiliSec(long pause) {
+		// TODO Auto-generated method stub
+		
+	}
 }

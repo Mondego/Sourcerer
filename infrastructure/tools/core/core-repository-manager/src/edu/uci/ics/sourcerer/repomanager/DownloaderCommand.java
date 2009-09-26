@@ -94,6 +94,7 @@ public class DownloaderCommand extends AbstractRepoCommand {
 			if(logger!=null){
 				logger.log(Level.INFO, "Downloaded source file from " + downloadUrl + " to " + projectFolderName);
 			}
+			pauseCommand();
 		} catch (Exception e){
 			if(logger!=null){
 				logger.log(Level.SEVERE, "Exception while downloading source file from " + downloadUrl + 
@@ -102,6 +103,5 @@ public class DownloaderCommand extends AbstractRepoCommand {
 			
 			e.printStackTrace();
 		}
-	}
-	
+	}	
 }

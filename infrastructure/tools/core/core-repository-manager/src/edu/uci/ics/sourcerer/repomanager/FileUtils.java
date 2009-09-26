@@ -18,11 +18,13 @@
  */
 package edu.uci.ics.sourcerer.repomanager;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
 
 /**
@@ -87,7 +89,25 @@ public class FileUtils {
 			return fileName.substring(k + 1);
 
 	}
+	
+	/**
+	 * returns the number of child entries inside a directory
+	 * if the directory does not exist, return -1
+	 * Note: does not count . and .. as children
+	 * @param dirName
+	 * @return
+	 */
+	public static int countChildren(String dirName){
+		File dir = new File(dirName);
+	    
+	    String[] children = dir.list();
+	    if (children == null) {
+	    	return -1;
+	    } else {
+	       return children.length;
+	    }
 
+	}
 
 
 	/**
@@ -140,7 +160,32 @@ public class FileUtils {
 		return !toTest.getAbsolutePath().equals(toTest.getCanonicalPath());
 	}
 
+	/**
+	 * takes a file name and returns the last non-empty line in the file
+	 * an empty line is a line with no non-whitespace characters
+	 * @param fileName name of the file to open
+	 * @return the last line of a text file as a string; if
+	 * 			errors are encountered or no non-empty line exists in the file, 
+	 * 			returns null
+	 */
+	public static String getLastNonEmptyLine(String fileName){
+		FileInputStream in;
+		try {
+			in = new FileInputStream(fileName);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String strLine = null, tmp;
+			while ((tmp = br.readLine()) != null) {
+				if(tmp.trim().length()>0)
+					strLine = tmp;
+			}
+			return strLine;
+		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
+		}
 
+		return null;
+	}
+	
 	/**
 	 * TODO comment this
 	 * @param parentDir
@@ -166,15 +211,22 @@ public class FileUtils {
 			throw new RuntimeException("Unable to delete : "  + dir.getAbsolutePath());
 		}
 	}
+	
+	/**
+	 * delete the directory and create an empty one with same name
+	 * at the same path
+	 * @param dir
+	 */
+	public static void cleanDirectory(File dir) {
+		deleteDir(dir);
+		dir.mkdir();
+	}
 
 	/**
 	 * delete an existing directory (recursively delete all of its content too)
 	 * @param dir the directory to delete
 	 */
 	private static void recursiveDeleteDir(File dir) throws IOException {
-//		if (debugEnabled) {
-//			LoggerUtils.debug(FileUtils.class, "---DeleteDir:" + dir.getAbsolutePath());
-//		}
 
 		if (!dir.exists()) {
 			// cannot delete an empty directory

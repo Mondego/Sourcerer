@@ -46,7 +46,13 @@ public class SvnSourceRetrieverTest extends TestCase {
 			/// works with guest guest
 			// "svn co http://svn.apache.org/repos/asf/commons/proper/io/trunk/src/main/"; 
 		
-			"svn co https://agentopia.svn.sourceforge.net/svnroot/agentopia agentopia";
+			// "svn co https://agentopia.svn.sourceforge.net/svnroot/agentopia agentopia";
+			
+			"svn checkout https://pdftable.dev.java.net/svn/pdftable/trunk pdftable --username username";
+			
+			//   "svn co https://j-wings.svn.sourceforge.net/svnroot/j-wings j-wings";
+			// "svn co https://itext.svn.sourceforge.net/svnroot/itext itext";
+			// "svn checkout  http://orzjisp.googlecode.com/svn/trunk/ orzjisp-read-only";
 		
 		SvnSourceRetriever r = new SvnSourceRetriever();
 		r.retreive(link, svncoFolder);

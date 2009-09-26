@@ -62,15 +62,6 @@ public class RepoWalker extends AbstractFileScanner {
 				_folderContents.add(Constants.getSourceFolderName());
 		
 				if(depth==1 && hasChildren(f, _folderContents)){
-					
-					if(pauseDuration > 0)
-						try {
-							Thread.sleep(pauseDuration);
-						} catch (InterruptedException e) {
-							// e.printStackTrace();
-							logger.log(Level.WARNING, "Cannot pause walk..");
-						}
-					
 					operateOn(f);
 				} 
 					
@@ -94,6 +85,7 @@ public class RepoWalker extends AbstractFileScanner {
 	 * 			for each command they are adding
 	 */
 	public void addCommand(RepoCommand command, int index){
+		command.setPauseInMiliSec(pauseDuration);
 		repoCommands.add(index, command);
 	}
 	

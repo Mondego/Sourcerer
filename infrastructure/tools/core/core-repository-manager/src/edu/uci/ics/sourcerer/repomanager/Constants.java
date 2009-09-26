@@ -58,6 +58,10 @@ public class Constants {
 		return "svnstat.properties";
 	}
 	
+	public static final String getSvncoFolderNamePrefix(){
+		return "svnco.folder." ;
+	}
+	
 	public static final String getDownloadOutputFileName(){
 		return "download.out";
 	}
