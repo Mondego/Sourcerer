@@ -19,12 +19,9 @@
 package edu.uci.ics.sourcerer.repomanager;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
