@@ -158,7 +158,7 @@ public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 		long rev = Long.parseLong(revision);
 		
 		int depth = 1;
-		ISVNDirEntry[] entries = ca.getList(new SVNUrl(url), new SVNRevision.Number(rev), false);
+		LinkedList<ISVNDirEntry> entries = getSvnEntries(ca, rev, url); 
 		LinkedList<String> currentLevelNodes = new LinkedList<String>();
 		for(ISVNDirEntry entry : entries){
 			currentLevelNodes.add(url 
@@ -168,9 +168,11 @@ public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 		LinkedList<String> trunks = getTrunksFromNodes(currentLevelNodes);
 		
 		depth = 2;
-		while (depth<=3) {
+		while (depth<=4) {
 			if (trunks.size() == 0) {
 				LinkedList<String> _parents = currentLevelNodes;
+				if(_parents.size()==0)
+					break;
 				currentLevelNodes = new LinkedList<String>(); 
 				for (String _url : _parents) {
 					LinkedList<ISVNDirEntry> _entries = getSvnEntries(ca, rev, _url);
@@ -204,8 +206,8 @@ public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 		LinkedList<ISVNDirEntry> dirs = new LinkedList<ISVNDirEntry>();
 		
 		for(ISVNDirEntry entry: entries){
-			if (entry.getNodeKind() == SVNNodeKind.DIR);
-			dirs.add(entry);
+			if (entry.getNodeKind() == SVNNodeKind.DIR)
+				dirs.add(entry);
 		}
 		
 		return dirs;

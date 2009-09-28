@@ -122,7 +122,7 @@ public class ContentFetcherRunner {
 	}
 	
 	private void exit() {
-		formatter.printHelp("content-fetcher", "", options, "(Built on 2009/09/28 02:55 AM)");
+		formatter.printHelp("content-fetcher", "", options, "(Built on 2009/09/28 06:26 AM)");
 		System.exit(-1);
 	}
 	
