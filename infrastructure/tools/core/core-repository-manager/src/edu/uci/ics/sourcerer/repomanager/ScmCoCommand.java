@@ -94,14 +94,17 @@ public class ScmCoCommand extends AbstractRepoCommand  {
 			
 		} else if(sourceRetrieveExpression.startsWith("svn")){
 			
-			svnRetriever.retreive(sourceRetrieveExpression, projectFolderName);
+			boolean svnHasError = ! svnRetriever.retreive(sourceRetrieveExpression, projectFolderName);
 
 			if(logger!=null){
 				logger.log(Level.INFO, "SVN CO executed from " + propertiesFileName);
 			}
 			pauseCommand();
 			
-			cleanContentFolderForFailedSvnCo(projectFolderName);
+			if(svnHasError) {
+				if(logger!=null) logger.log(Level.INFO, "SVN CO failed, cleaning content folder: " + svnRetriever.getCheckoutFolder() );
+				cleanContentFolderForFailedSvnCo(projectFolderName);
+			}
 			
 		} else {
 
@@ -150,16 +153,19 @@ public class ScmCoCommand extends AbstractRepoCommand  {
 //		return FileUtils.exists(svnStatFilePath);
 //	}
 
+	
 	private void cleanContentFolderForFailedSvnCo(String projectFolderName) {
 		
 		String contentFolderName = svnRetriever.getCheckoutFolder();
-		String svnFolderName = contentFolderName + File.separator + ".svn";
+		FileUtils.cleanDirectory(new File(contentFolderName));
 		
-		if(FileUtils.exists(svnFolderName) && FileUtils.countChildren(contentFolderName)==1){
-			if(logger!=null) logger.log(Level.INFO, "SVN CO brought nothing, cleaning content folder: " + svnRetriever.getCheckoutFolder());
-			// delete .svn folder inside the content folder
-			FileUtils.deleteDir(new File(svnFolderName));
-			
-		} 
+//		String svnFolderName = contentFolderName + File.separator + ".svn";
+//		
+//		if(FileUtils.exists(svnFolderName) && FileUtils.countChildren(contentFolderName)==1){
+//			if(logger!=null) logger.log(Level.INFO, "SVN CO brought nothing, cleaning content folder: " + svnRetriever.getCheckoutFolder());
+//			// delete .svn folder inside the content folder
+//			FileUtils.deleteDir(new File(svnFolderName));
+//			
+//		} 
 	}
 }

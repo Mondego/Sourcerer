@@ -48,9 +48,9 @@ public class SvnSourceRetrieverTest extends TestCase {
 		
 			// "svn co https://agentopia.svn.sourceforge.net/svnroot/agentopia agentopia";
 			
-			"svn checkout https://pdftable.dev.java.net/svn/pdftable/trunk pdftable --username username";
+			// "svn checkout https://pdftable.dev.java.net/svn/pdftable/trunk pdftable --username username";
 			
-			//   "svn co https://j-wings.svn.sourceforge.net/svnroot/j-wings j-wings";
+			 "svn co https://j-wings.svn.sourceforge.net/svnroot/j-wings j-wings";
 			// "svn co https://itext.svn.sourceforge.net/svnroot/itext itext";
 			// "svn checkout  http://orzjisp.googlecode.com/svn/trunk/ orzjisp-read-only";
 		

@@ -40,12 +40,10 @@ import org.tigris.subversion.svnclientadapter.commandline.CmdLineNotificationHan
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
  * @created Jan 12, 2009
  * 
- * TODO check why this is sometimes slow on 'svn info'
- * 		possibly replace this with svn ant task
  */
 public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 
-	protected void checkout(String sourceRetrieveExpression, String projectFolder) {
+	protected boolean checkout(String sourceRetrieveExpression, String projectFolder) {
 		
 		String _url = sourceRetrieveExpression.replaceAll("\\s+", " ").split("\\s")[2];
 		
@@ -88,9 +86,6 @@ public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 		svninfoProperties.setProperty("url", _info.getUrlString());
 		svninfoProperties.setProperty("uuid", _info.getUuid());
 		
-		String _path = _info.getUrlString().replaceFirst(_info.getRepository().toString(), "");
-		svninfoProperties.setProperty("path", _path);
-		
 		LinkedList<String> trunks = new LinkedList<String>();
 		
 		if (_url.trim().endsWith("/trunk/") || _url.trim().endsWith("/trunk")) {
@@ -113,6 +108,7 @@ public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 			}
 		}
 		
+		boolean allCheckoutFailed = true;
 		int i = 0;
 		for(String trunk: trunks){
 			boolean createdCoFolder = new File(FileUtils.makePath(this.getCheckoutFolder(), Constants.getSvncoFolderNamePrefix() + i)).mkdir();
@@ -124,6 +120,9 @@ public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 					ca.checkout(new SVNUrl(trunk), new File(svncoFolderName), SVNRevision.HEAD, true);
 					// add this checkout folder into the properties file
 					svninfoProperties.put(Constants.getSvncoFolderNamePrefix() + i, trunk);
+					
+					// at least one of the checkouts worked
+					allCheckoutFailed = false;
 				} catch (MalformedURLException e) {
 					// TODO log
 					e.printStackTrace();
@@ -151,6 +150,8 @@ public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 			// TODO log
 			e.printStackTrace();
 		}
+		
+		return !allCheckoutFailed;
 	}
 	
 	private LinkedList<String> getTrunks(CmdLineClientAdapter ca, String revision, String url, String projectFolder) throws MalformedURLException, SVNClientException{
@@ -160,7 +161,9 @@ public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 		ISVNDirEntry[] entries = ca.getList(new SVNUrl(url), new SVNRevision.Number(rev), false);
 		LinkedList<String> currentLevelNodes = new LinkedList<String>();
 		for(ISVNDirEntry entry : entries){
-			currentLevelNodes.add(url + "/" + entry.getPath());
+			currentLevelNodes.add(url 
+					+ (url.endsWith("/")?"":"/") 
+					+ entry.getPath());
 		}
 		LinkedList<String> trunks = getTrunksFromNodes(currentLevelNodes);
 		
@@ -172,7 +175,9 @@ public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 				for (String _url : _parents) {
 					LinkedList<ISVNDirEntry> _entries = getSvnEntries(ca, rev, _url);
 					for(ISVNDirEntry entry : _entries){
-						currentLevelNodes.add(_url + "/" + entry.getPath());
+						currentLevelNodes.add(_url 
+								+ (_url.endsWith("/")?"":"/") 
+								+ entry.getPath());
 					}
 				}
 				trunks = getTrunksFromNodes(currentLevelNodes);

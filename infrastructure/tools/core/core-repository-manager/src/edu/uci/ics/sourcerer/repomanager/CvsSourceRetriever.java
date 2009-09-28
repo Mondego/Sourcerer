@@ -31,7 +31,7 @@ import org.apache.tools.ant.taskdefs.AbstractCvsTask;
  */
 public class CvsSourceRetriever extends AbstractScmSourceRetriever {
 
-	protected void checkout(String sourceRetrieveExpression, String projectFolder) {
+	protected boolean checkout(String sourceRetrieveExpression, String projectFolder) {
 		
 		//BuildListener antLogListener = new AntLogListener(projectFolder + File.separator + Constants.getCvsTaskLogFileName());
 		
@@ -105,6 +105,8 @@ public class CvsSourceRetriever extends AbstractScmSourceRetriever {
 		// cvsco.setCommand("rlog -bh");
 		/// history does not work
 		// cvsco.setCommand("history -al -m " + _module);
+		
+		return true;
 		
 	}
 	

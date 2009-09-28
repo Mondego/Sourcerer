@@ -47,7 +47,7 @@ public class DownloaderCommand extends AbstractRepoCommand {
 		// already has a scm checkout
 		if(Arrays.asList(projectFolder.list()).contains(Constants.getCvsCoOutputFileName()) 
 				|| Arrays.asList(projectFolder.list()).contains(Constants.getSvnStatOutputFileName())) {
-			logger.log(Level.INFO, "Code Folder empty while SCM command already executed. Now, attempting download in project folder: " + projectFolderName);
+			logger.log(Level.INFO, "Content folder empty. Now, attempting download in project folder: " + projectFolderName);
 		}
 	
 		
@@ -88,9 +88,10 @@ public class DownloaderCommand extends AbstractRepoCommand {
 		
 	}
 
-	private void download(String projectFolderName, String downloadUrl, String packageFolderName) {
+	private boolean download(String projectFolderName, String downloadUrl, String packageFolderName) {
+		boolean success = false;
 		try{
-			downloader.download(downloadUrl, projectFolderName, packageFolderName);
+			success = downloader.download(downloadUrl, projectFolderName, packageFolderName);
 			if(logger!=null){
 				logger.log(Level.INFO, "Downloaded source file from " + downloadUrl + " to " + projectFolderName);
 			}
@@ -103,5 +104,7 @@ public class DownloaderCommand extends AbstractRepoCommand {
 			
 			e.printStackTrace();
 		}
+		
+		return success;
 	}	
 }

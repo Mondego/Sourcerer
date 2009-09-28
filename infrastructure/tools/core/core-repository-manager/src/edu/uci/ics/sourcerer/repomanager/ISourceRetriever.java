@@ -29,6 +29,7 @@ public interface ISourceRetriever {
 	 * repository
 	 * @param sourceRetrieveExpression
 	 * @param projectFolder
+	 * @return true if retrieval is error free
 	 */
-	public void retreive(String sourceRetrieveExpression, String projectFolder);
+	public boolean retreive(String sourceRetrieveExpression, String projectFolder);
 }

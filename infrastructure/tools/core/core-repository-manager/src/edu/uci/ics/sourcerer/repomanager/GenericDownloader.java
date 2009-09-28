@@ -50,13 +50,21 @@ public class GenericDownloader {
 		
 	}
 	
-	public void download(String resourceLink, String projectFolder, String packageFolder){
+	/**
+	 * 
+	 * @param resourceLink
+	 * @param projectFolder
+	 * @param packageFolder
+	 * @return true if the downloaded file exists inside the content folder, 
+	 * 	false if the downloaded file does not exist inside the content folder
+	 */
+	public boolean download(String resourceLink, String projectFolder, String packageFolder){
 		BuildListener antLogListener = new AntLogListener(projectFolder + File.separator + Constants.getDownloaderLogFileName());
 		
 		ArchivedFileExtensions ext = ArchivedFileExtensions.extractSupportedArchiveExtension(resourceLink);
 		if(ext == null){
 			// TODO log skipped/error
-			return;
+			return false;
 		}
 		
 		Get downloadTask = new Get();
@@ -94,6 +102,8 @@ public class GenericDownloader {
 		
 		downloadTask.setDest(new File( _destFolder +  _downloadFileName));
 		downloadTask.execute();
+		
+		return FileUtils.exists(_destFolder + _downloadFileName);
 	}
 	
 	public static String produceDownloadFileName(String urlString){

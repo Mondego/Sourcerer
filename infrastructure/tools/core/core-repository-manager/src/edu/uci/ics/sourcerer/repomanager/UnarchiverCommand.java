@@ -48,7 +48,14 @@ public class UnarchiverCommand extends AbstractRepoCommand {
 		
 		if (_packagesSize==null) {
 			
-			unarchive(_downloadFolder, _projectFolderPath, null);
+			boolean success = unarchive(_downloadFolder, _projectFolderPath, null);
+			if(!success) { 
+				String _contentFolderName = _projectFolderPath + File.separator + Constants.getSourceFolderName(); 
+				if (logger != null) {
+					logger.log(Level.INFO, "Extraction failed. Cleaning: " + _contentFolderName);
+				}
+				FileUtils.cleanDirectory(new File(_contentFolderName));
+			}
 
 		} else {
 		
@@ -66,17 +73,26 @@ public class UnarchiverCommand extends AbstractRepoCommand {
 				String packageFolderDest = _codeFolderPath + File.separator 
 					+ _packageSuffix;  
 				
-				if(!new File(packageFolderDest).exists())
+				if(FileUtils.countChildren(packageFolderSrc)>0 && 
+						!new File(packageFolderDest).exists())
 					new File(packageFolderDest).mkdir();
 				
-				unarchive(new File(packageFolderSrc), _projectFolderPath, _packageSuffix);
+				boolean success = unarchive(new File(packageFolderSrc), _projectFolderPath, _packageSuffix);
+				if(!success && new File(packageFolderDest).exists()) {
+					if (logger != null) {
+						logger.log(Level.INFO, "Extraction failed. Deleting: " + packageFolderDest);
+					}
+					FileUtils.deleteDir(new File(packageFolderDest));
+				}
 				
 			}
 		}
 
 	}
 
-	private void unarchive(File source, String destination, String packagePath) {
+	private boolean unarchive(File source, String destination, String packagePath) {
+		boolean success = false;
+		
 		String[] _archives = source.list(new FilenameFilter() {
 
 			public boolean accept(File dir, String name) {
@@ -87,6 +103,7 @@ public class UnarchiverCommand extends AbstractRepoCommand {
 			}
 
 		});
+		
 		if (_archives != null && _archives.length > 0) {
 			
 			String _archiveFilePath = source.getAbsolutePath()
@@ -100,6 +117,7 @@ public class UnarchiverCommand extends AbstractRepoCommand {
 							+ " to " + destination
 							+ "'s content folder");
 				}
+				success = true;
 				
 			} catch (Exception e) {
 				if (logger != null) {
@@ -113,5 +131,7 @@ public class UnarchiverCommand extends AbstractRepoCommand {
 				e.printStackTrace();
 			}
 		}
+		
+		return success;
 	}
 }

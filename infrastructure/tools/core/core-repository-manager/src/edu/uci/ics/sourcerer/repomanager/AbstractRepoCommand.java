@@ -62,24 +62,7 @@ public abstract class AbstractRepoCommand implements RepoCommand {
 	}
 	
 	protected boolean processCodeFolder(String projectFolderName) {
-		boolean _processCodeFolder = true;
-		
-		File codeFolder = new File( new File(projectFolderName) , Constants.getSourceFolderName());
-		String[] codeFiles = codeFolder.list();
-		
-		if(codeFiles == null){
-			// should never happen
-			if(logger!=null){
-				logger.log(Level.SEVERE, "Cannot list the contents of source folder in " + projectFolderName);
-			}
-			_processCodeFolder = false;
-		}
-		
-		if(codeFiles.length>0){
-			_processCodeFolder = false;
-		}
-
-		return _processCodeFolder;
+		return RepoWalker.isContentFolderEmpty(projectFolderName, logger);
 	}
 	
 	public void setLogger(Logger logger) {
