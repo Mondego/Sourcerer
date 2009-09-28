@@ -56,16 +56,51 @@ public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 		ca.setUsername("guest");
 		ca.setPassword("guest");
 		
+		boolean errorInRootUrl = false;
 		// get svn info
 		try {
 			_info = ca.getInfo(new SVNUrl(_url));
 		} catch (MalformedURLException e) {
 			// TODO log
+			errorInRootUrl = true;
+			System.err.println("ERROR in svn url:" + projectFolder);
 			e.printStackTrace();
 		} catch (SVNClientException e) {
 			// TODO log
+			System.err.println("ERROR in svn url:" + projectFolder);
+			errorInRootUrl = true;
 			e.printStackTrace();
 		}
+		
+		// url picked by crawler failed
+		// try again with one step up in the url, if the url ends with trunk
+		if( (_url.trim().endsWith("/trunk/") || _url.trim().endsWith("/trunk")) &&
+				errorInRootUrl){
+			
+			errorInRootUrl = false;
+			
+			// fixes the non existent trunk in google code
+			// will use the root instead
+			_url = _url.replaceAll("/trunk[/]{0,1}+$", "");
+		
+			try {
+				_info = ca.getInfo(new SVNUrl(_url));
+			} catch (MalformedURLException e) {
+				// TODO log
+				errorInRootUrl = true;
+				System.err.println("ERROR in svn url, one step up:" + projectFolder);
+				e.printStackTrace();
+			} catch (SVNClientException e) {
+				// TODO log
+				System.err.println("ERROR in svn url, one step up:" + projectFolder);
+				errorInRootUrl = true;
+				e.printStackTrace();
+			}
+		
+		}
+		
+		if(errorInRootUrl) // assume all checkout failed
+			return false;
 		
 		Properties svninfoProperties = new Properties();
 		
@@ -87,6 +122,8 @@ public class SvnSourceRetriever extends AbstractScmSourceRetriever {
 		svninfoProperties.setProperty("uuid", _info.getUuid());
 		
 		LinkedList<String> trunks = new LinkedList<String>();
+		
+		
 		
 		if (_url.trim().endsWith("/trunk/") || _url.trim().endsWith("/trunk")) {
 			trunks.add(_url);

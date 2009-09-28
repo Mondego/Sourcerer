@@ -48,13 +48,21 @@ public class SvnSourceRetrieverTest extends TestCase {
 		
 			// "svn co https://agentopia.svn.sourceforge.net/svnroot/agentopia agentopia";
 			
-			 // "svn checkout https://pdftable.dev.java.net/svn/pdftable pdftable --username username";
+			 "svn checkout https://pdftable.dev.java.net/svn/pdftable pdftable --username username";
 			
 			// "svn co https://j-wings.svn.sourceforge.net/svnroot/j-wings j-wings";
-			"svn co https://itext.svn.sourceforge.net/svnroot/itext itext";
+			//"svn co https://itext.svn.sourceforge.net/svnroot/itext itext";
 			// "svn checkout  http://orzjisp.googlecode.com/svn/trunk/ orzjisp-read-only";
 			// "svn co https://cml.svn.sourceforge.net/svnroot/cml/chemdraw/branches/chemdraw-0.1/src/main/java/org/xmlcml/cml/chemdraw/components/";
 			//"svn co https://cml.svn.sourceforge.net/svnroot/cml cml";
+		
+			// "svn co http://turanar.googlecode.com/svn2/trunk";
+			
+			/* has no trunk, just branches*/
+			// "svn checkout  http://ganttproject.googlecode.com/svn/trunk/ ganttproject-read-only";
+		
+			// has multiple trunks inside subprojects
+			// "svn checkout  http://creativecrew.googlecode.com/svn/trunk/ folder";
 			
 		SvnSourceRetriever r = new SvnSourceRetriever();
 		r.retreive(link, svncoFolder);
