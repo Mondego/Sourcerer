@@ -22,10 +22,12 @@
     Build file for the library jar.
   </description>
   <property name="build" location="build" />
+  <property name="build-search-eval" location="build/search-eval" />
 
   <property name="utilities" location="../infrastructure/utilities/src" />
   <property name="repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
   <property name="model" location="../infrastructure/tools/java/model/src" />
+  <property name="search-eval" location="../infrastructure/apps/codesearch/src" />
   <property name="core-repository-manager" location="../infrastructure/tools/core/core-repository-manager/src" />
   <property name="search-server" location="../infrastructure/services/search-server/src" />
   <property name="solr-root" location="../infrastructure/services/solr-1.3-patched" />
@@ -34,6 +36,10 @@
 
   <target name="init">
     <mkdir dir="${build}" />
+  </target>
+  
+  <target name="init-search-eval" depends="init">
+    <mkdir dir="${build-search-eval}" />
   </target>
 
   <target name="compile-sourcerer" depends="init">
@@ -76,6 +82,35 @@
       <exclude name="**/.gitignore" />
       <exclude name="evaluation/results/**/*" />
     </war>
+  </target>
+  
+  <target name="compile-search-eval" depends="init-search-eval">
+    <javac destdir="${build-search-eval}" debug="on" excludes="**/sourcerer/db/**/*.java,**/sourcerer/scs/**/*.java,**/sourcerer/eval/client/**/*.java,**/sourcerer/eval/server/**/*.java">
+      <src path="${utilities}" />
+      <src path="${repository-manager}" />
+      <src path="${model}" />
+      <src path="${search-eval}" />
+    </javac>
+    <copy todir="${build-search-eval}">
+      <fileset dir="${utilities}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-search-eval}">
+      <fileset dir="${repository-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-search-eval}">
+      <fileset dir="${model}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-search-eval}">
+      <fileset dir="${search-eval}" includes="**/*.java" />
+    </copy>
+  </target>
+  
+  <target name="search-eval" depends="compile-search-eval">
+    <jar destfile="search-eval.jar" basedir="${build-search-eval}">
+      <manifest>
+        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.eval.CalculateTopStats" />
+      </manifest>
+    </jar>
   </target>
 
  <target name="compile-search-server" depends="init">

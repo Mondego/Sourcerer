@@ -24,6 +24,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -53,6 +54,40 @@ public class Helper {
 	
 	public static <K,V> HashMap<K,V> newHashMap() {
 		return new HashMap<K, V>();
+	}
+	
+	@SuppressWarnings("unchecked")
+  public static <A,B,K,V extends Map<A,B>> Map<A,B> getHashMapFromMap(Map<K,V> map, K key) {
+	  Map<A,B> value = map.get(key);
+	  if (value == null) {
+	    value = newHashMap();
+	    map.put(key, (V)value);
+	  }
+	  return value;
+	}
+	
+	@SuppressWarnings("unchecked")
+  public static <A,K,V extends LinkedList<A>> LinkedList<A> getLinkedListFromMap(Map<K,V> map, K key) {
+    LinkedList<A> value = map.get(key);
+    if (value == null) {
+      value = newLinkedList();
+      map.put(key, (V)value);
+    }
+    return value;
+  }
+	
+	@SuppressWarnings("unchecked")
+  public static <K,V> V getFromMap(Map<K, V> map, K key, Class<?> klass) {
+	  V value = map.get(key);
+	  if (value == null) {
+	    try {
+        value = (V) klass.newInstance();
+      } catch (Exception e) {
+        return null;
+      }
+	    map.put(key, value);
+	  }
+	  return value;
 	}
 	
 	public static <K,V> TreeMap<K,V> newTreeMap() {

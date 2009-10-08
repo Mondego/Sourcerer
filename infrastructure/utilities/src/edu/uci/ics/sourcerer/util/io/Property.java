@@ -65,7 +65,6 @@ public enum Property {
   COMMENT_FILE("comment-file", "comments.txt"),
   FILE_FILE("file-file", "files.txt"),
   JAR_FILE_FILE("jar-file-file", "jar-files.txt"),
-  
   // -- End Extractor Properties --
   
   // -- Begin Repository Manager Properties --
@@ -85,7 +84,6 @@ public enum Property {
   
   CLEAN_REPOSITORY("clean-repository", true),
   MIGRATE_REPOSITORY("migrate-repository", true),
-  
   // -- End Repository Manager Properties --
   
   // -- Begin Repository File Server Properties --
@@ -121,8 +119,11 @@ public enum Property {
   // -- End Automated Slice Tester Properties --
   
   // -- Begin Calculate Precision Recall Properties --
+  STATS_FILE("top-stats-file", "top-stats.txt"),
+  TOP_K("top-k", "10"),
   PR_FILE("precision-recall-file", "precision-recall.txt"),
   PR_THRESHOLD("pr-relevant-threshold", "0"),
+  CSV_MODE("csv-mode", true),
   // -- End Calculate Precision Recall Properties --
   ;
     
