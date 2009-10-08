@@ -46,7 +46,11 @@ public class RepoFolderCreatorBinderModule extends AbstractModule {
 		case APACHE:
 			binder().bind(ICrawlerEntryFilter.class).to(CrawlerEntryFilterApache.class);
 			break;
-		
+			
+		case GOOGLECODE:
+			binder().bind(ICrawlerEntryFilter.class).to(CrawlerEntryFilterGoogleCode.class);
+			break;
+			
 		case JAVANET:
 			binder().bind(ICrawlerEntryFilter.class).to(CrawlerEntryFilterJavanet.class);
 			break;
@@ -57,7 +61,6 @@ public class RepoFolderCreatorBinderModule extends AbstractModule {
 			
 		case TIGRIS:
 			throw new RuntimeException("Not implemented");
-			
 			
 		default:
 			binder().bind(ICrawlerEntryFilter.class).to(CrawlerEntryFilterApache.class);

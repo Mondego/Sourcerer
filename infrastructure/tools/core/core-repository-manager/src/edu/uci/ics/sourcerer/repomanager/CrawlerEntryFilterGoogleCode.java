@@ -18,35 +18,36 @@
  */
 package edu.uci.ics.sourcerer.repomanager;
 
+import java.util.Iterator;
+import java.util.Map;
+
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
- * @created Jan 12, 2009
+ * @created Sep 23, 2009
  *
  */
-public enum Repositories {
-	
-	SOURCEFORGE("http://sourceforge.net"),
-	TIGRIS("http://tigris.net"),
-	JAVANET("http://java.net"),
-	APACHE("http://archive.apache.org"),
-	GOOGLECODE("http://code.google.com");
-	
-	private String URL;
-	Repositories(String url){
-		this.URL = url;
-	}
-	
-	public String getUrl(){
-		return URL;
-	}
-	
-	public static boolean isRepositoryName(String name){
-		
-		for(Repositories repo: Repositories.values()){
-			if(repo.name().equals(name))
-				return true;
+public class CrawlerEntryFilterGoogleCode implements ICrawlerEntryFilter {
+
+
+	@Override
+	public void filter(Map<String, ProjectProperties> projects) {
+		// - filter mercurial entries for now
+		// - googlecode has only svn and mrcurial
+		// - each entry from the crawler's ouput is already unique
+		final Iterator<String> _projIter = projects.keySet().iterator();
+		while (_projIter.hasNext()) {
+			
+			String _projectKey = _projIter.next();
+			ProjectProperties _properties = projects.get(_projectKey);
+			
+			if(!_properties.scmUrl.startsWith("svn")){
+				_projIter.remove();
+			}
+			
+			_properties.extractedVersion = "$SCM";
+			_properties.versionGuessed = "$SCM";
 		}
-		
-		return false;
+
 	}
+
 }

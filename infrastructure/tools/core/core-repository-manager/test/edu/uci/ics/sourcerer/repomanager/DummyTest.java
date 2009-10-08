@@ -72,4 +72,44 @@ public class DummyTest {
 		path = "./parent/child";
 		assertEquals("./parent/", FileUtility.extractParentFolderName(path));
 	}
+	
+	@Test
+	public void testRegex(){
+		String _url = "https://itext.svn.sourceforge.net/trunk/svnroot/trunk";
+		_url = _url.replaceAll("/trunk[/]{0,1}+$", "");
+		assertEquals("https://itext.svn.sourceforge.net/trunk/svnroot", _url);
+		
+		_url = "https://itext.svn.sourceforge.net/trunk/svnroot/trunk2";
+		_url = _url.replaceAll("/trunk[/]{0,1}+$", "");
+		assertEquals("https://itext.svn.sourceforge.net/trunk/svnroot/trunk2", _url);
+		
+		_url = "https://itext.svn.sourceforge.net/trunk/svnroot/trunk2/";
+		_url = _url.replaceAll("/trunk[/]{0,1}+$", "");
+		assertEquals("https://itext.svn.sourceforge.net/trunk/svnroot/trunk2/", _url);
+		
+		_url = "https://itext.svn.sourceforge.net/trunk/svnroot/trunk/2";
+		_url = _url.replaceAll("/trunk[/]{0,1}+$", "");
+		assertEquals("https://itext.svn.sourceforge.net/trunk/svnroot/trunk/2", _url);
+		
+		_url = "https://itext.svn.sourceforge.net/trunk/svnroot/trunk/";
+		_url = _url.replaceAll("/trunk[/]{0,1}+$", "");
+		assertEquals("https://itext.svn.sourceforge.net/trunk/svnroot", _url);
+		
+		_url = "https://itext.svn.sourceforge.net/svnroot";
+		_url = _url.replaceAll("/trunk[/]{0,1}+$", "");
+		assertEquals("https://itext.svn.sourceforge.net/svnroot", _url);
+		
+		_url = "https://itext.svn.sourceforge.net/svnroot/trunk/trunk";
+		_url = _url.replaceAll("/trunk[/]{0,1}+$", "");
+		assertEquals("https://itext.svn.sourceforge.net/svnroot/trunk", _url);
+		
+		_url = "https://itext.svn.sourceforge.net/trunk/svnroot/trunk/";
+		_url = _url.replaceAll("(/trunk$)|(/trunk/$)", "");
+		assertEquals("https://itext.svn.sourceforge.net/trunk/svnroot", _url);
+		
+		_url = "https://itext.svn.sourceforge.net/trunk/svnroot/trunk";
+		_url = _url.replaceAll("(/trunk$)|(/trunk/$)", "");
+		assertEquals("https://itext.svn.sourceforge.net/trunk/svnroot", _url);
+		
+	}
 }

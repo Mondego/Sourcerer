@@ -18,35 +18,33 @@
  */
 package edu.uci.ics.sourcerer.repomanager;
 
+import java.io.File;
+
+import junit.framework.TestCase;
+
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
- * @created Jan 12, 2009
+ * @created Sep 25, 2009
  *
  */
-public enum Repositories {
-	
-	SOURCEFORGE("http://sourceforge.net"),
-	TIGRIS("http://tigris.net"),
-	JAVANET("http://java.net"),
-	APACHE("http://archive.apache.org"),
-	GOOGLECODE("http://code.google.com");
-	
-	private String URL;
-	Repositories(String url){
-		this.URL = url;
+public class FileUtilsTest extends TestCase {
+	public void testCountChildren(){
+		String dir = "./test/tempRepo";
+		assertEquals(-1, FileUtils.countChildren(dir));
 	}
 	
-	public String getUrl(){
-		return URL;
+	public void testLastNonEmptyLine(){
+		String file = "./test/resources/cvsco/cvs.error.test";
+		assertEquals("cvs [status aborted]: no repository",FileUtils.getLastNonEmptyLine(file));
 	}
 	
-	public static boolean isRepositoryName(String name){
+	public void testCleanDir(){
+		File dir = new File("./test/resources/testrepo.withretry/44/20/content");
+		FileUtils.cleanDirectory(dir);
+		assertEquals(0, FileUtils.countChildren(dir.getAbsolutePath()));
 		
-		for(Repositories repo: Repositories.values()){
-			if(repo.name().equals(name))
-				return true;
-		}
-		
-		return false;
+		dir = new File("./test/resources/testrepo.withretry/44/22/content");
+		FileUtils.cleanDirectory(dir);
+		assertEquals(0, FileUtils.countChildren(dir.getAbsolutePath()));
 	}
 }

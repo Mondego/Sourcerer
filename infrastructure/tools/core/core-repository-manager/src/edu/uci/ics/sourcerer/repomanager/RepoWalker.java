@@ -62,15 +62,6 @@ public class RepoWalker extends AbstractFileScanner {
 				_folderContents.add(Constants.getSourceFolderName());
 		
 				if(depth==1 && hasChildren(f, _folderContents)){
-					
-					if(pauseDuration > 0)
-						try {
-							Thread.sleep(pauseDuration);
-						} catch (InterruptedException e) {
-							// e.printStackTrace();
-							logger.log(Level.WARNING, "Cannot pause walk..");
-						}
-					
 					operateOn(f);
 				} 
 					
@@ -94,6 +85,7 @@ public class RepoWalker extends AbstractFileScanner {
 	 * 			for each command they are adding
 	 */
 	public void addCommand(RepoCommand command, int index){
+		command.setPauseInMiliSec(pauseDuration);
 		repoCommands.add(index, command);
 	}
 	
@@ -104,6 +96,9 @@ public class RepoWalker extends AbstractFileScanner {
 	private void operateOn(File projectFolder){
 		
 		if(logger!=null) logger.log(Level.INFO, "Started working on: " + projectFolder.getAbsolutePath());
+		if(!isContentFolderEmpty(projectFolder.getAbsolutePath(), logger)){
+			if(logger!=null) logger.log(Level.WARNING, "Content folder not empty for: " + projectFolder.getAbsolutePath());
+		}
 		
 		for(int i=0;i<repoCommands.size();i++){
 			RepoCommand command = repoCommands.get(i); 
@@ -131,6 +126,27 @@ public class RepoWalker extends AbstractFileScanner {
 	
 	private boolean hasChildren(File dir, List<String> children){
 		return Arrays.asList(dir.list()).containsAll(children);
+	}
+	
+	public static boolean isContentFolderEmpty(String projectFolderName, Logger logger){
+		boolean _processCodeFolder = true;
+		
+		File codeFolder = new File( new File(projectFolderName) , Constants.getSourceFolderName());
+		String[] codeFiles = codeFolder.list();
+		
+		if(codeFiles == null){
+			// should never happen
+			if(logger!=null){
+				logger.log(Level.SEVERE, "Cannot list the contents of source folder in " + projectFolderName);
+			}
+			_processCodeFolder = false;
+		}
+		
+		if(codeFiles.length>0){
+			_processCodeFolder = false;
+		}
+
+		return _processCodeFolder;
 	}
 	
 }

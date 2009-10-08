@@ -19,10 +19,7 @@
 package edu.uci.ics.sourcerer.repomanager;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Properties;
-import java.util.logging.Logger;
 import java.util.logging.Level;
 
 /**
@@ -50,37 +47,125 @@ public class ScmCoCommand extends AbstractRepoCommand  {
 		
 		String sourceRetrieveExpression = p.getProperty("scmUrl"); //"cvs -d :pserver:guest@cvs.dev.java.net:/cvs login;cvs -d :pserver:guest@cvs.dev.java.net:/cvs checkout ss74j";
 		if(sourceRetrieveExpression.equals("null")){
-			// log: ??
 			if(logger!=null){
 				logger.log(Level.WARNING, "SCM entry null in " + propertiesFileName);
 			}
 		}else if(sourceRetrieveExpression.startsWith("cvs")){
+			
 			cvsRetriever.retreive(sourceRetrieveExpression, projectFolderName);
-			// log: executed ScmCoCommand on projectFolder
+
 			if(logger!=null){
-				logger.log(Level.INFO, "CVS CO executed from " + propertiesFileName);
+				logger.log(Level.INFO, "CVS CO, 1st attempt, executed from " + propertiesFileName 
+						+ " cvs_expression:" + sourceRetrieveExpression);
+			}
+			pauseCommand();
+			
+			// if cvs co failed and cvs url is from sourceforge, retry with "./" as modulename
+			if(didCvsCoFail(projectFolderName)){
+				
+				// TODO do this for other repositories too
+				if(sourceRetrieveExpression.indexOf("cvs.sourceforge.net") > -1){
+					
+					if(logger!=null) logger.log(Level.INFO, "CVS CO failed, removing CVS error file in: " + projectFolderName );
+					deleteCvsErrorFile(projectFolderName);
+					if(logger!=null) logger.log(Level.INFO, "CVS CO failed, cleaning content folder: " + cvsRetriever.getCheckoutFolder() );
+					FileUtils.cleanDirectory(new File(cvsRetriever.getCheckoutFolder()));
+					
+					sourceRetrieveExpression = sourceRetrieveExpression.replaceAll("co -P modulename","co -P ./");
+					cvsRetriever.retreive(sourceRetrieveExpression, projectFolderName);
+					if(logger!=null){
+						logger.log(Level.INFO, "CVS CO, 2nd attempt with './' as module name, executed from " 
+								+ propertiesFileName  + " cvs_expression:" + sourceRetrieveExpression);
+					}
+					
+					if(didCvsCoFail(projectFolderName)){
+						if(logger!=null){
+							logger.log(Level.INFO, "CVS CO failed on 2nd attempt, cleaning content folder: " + cvsRetriever.getCheckoutFolder() );
+						}
+						FileUtils.cleanDirectory(new File(cvsRetriever.getCheckoutFolder()));
+					}
+					
+					pauseCommand();
+				} else {
+					if(logger!=null) logger.log(Level.INFO, "CVS CO failed, cleaning content folder: " + cvsRetriever.getCheckoutFolder() );
+					FileUtils.cleanDirectory(new File(cvsRetriever.getCheckoutFolder()));
+				}
 			}
 			
 		} else if(sourceRetrieveExpression.startsWith("svn")){
 			
-			svnRetriever.retreive(sourceRetrieveExpression, projectFolderName);
-			// log: executed ScmCoCommand on projectFolder
+			boolean svnHasError = ! svnRetriever.retreive(sourceRetrieveExpression, projectFolderName);
+
 			if(logger!=null){
 				logger.log(Level.INFO, "SVN CO executed from " + propertiesFileName);
 			}
+			pauseCommand();
 			
+			if(svnHasError) {
+				if(logger!=null) logger.log(Level.INFO, "SVN CO failed, cleaning content folder: " + svnRetriever.getCheckoutFolder() );
+				cleanContentFolderForFailedSvnCo(projectFolderName);
+			}
 			
 		} else {
-			// log: unsupported
+
 			if(logger!=null){
 				logger.log(Level.WARNING, "Unknown SCM entry in " + propertiesFileName);
 			}	
 		}
-		
 	}
 
-	
-	
-	
+	/**
+	 * @param projectFolderName
+	 */
+	private void deleteCvsErrorFile(String projectFolderName) {
+		String errorFileName = projectFolderName  + File.separator + Constants.getCvsErrorFileName();
+		File errorFile = new File(errorFileName);
+		if(!errorFile.delete()){
+			if(logger!=null) logger.log(Level.WARNING, "CVS error file not removed :" + errorFileName);
+		}
+	}
 
+	private boolean didCvsCoFail(String projectFolderName) {
+		
+		String errorLineTxt = "cvs [status aborted]: no repository";
+		String cvsErrorFile = projectFolderName  + File.separator + Constants.getCvsErrorFileName();
+		String cvsCoFile = projectFolderName  + File.separator + Constants.getCvsCoOutputFileName();
+		
+		String errorLineFromFile = FileUtils.getLastNonEmptyLine(cvsErrorFile); 
+		
+		if(	// cvs.error ends with line: cvs [status aborted]: no repository
+			 (errorLineFromFile !=null && errorLineFromFile.equals(errorLineTxt))||
+				// cvsco.out has no entry	
+				(FileUtils.getLastNonEmptyLine(cvsCoFile) == null)
+				){
+			return true;
+		} else {
+			return false;
+		}
+		
+		// you can also check, but no need
+		// cvsstat.out not empty
+	}
+
+//	private boolean didSvnCoRunAlready(String projectFolderName) {
+//		// is there a svnstat.properties file in the root
+//		String svnStatFilePath = projectFolderName + File.separator + Constants.getSvnStatOutputFileName();
+//		return FileUtils.exists(svnStatFilePath);
+//	}
+
+	
+	private void cleanContentFolderForFailedSvnCo(String projectFolderName) {
+		
+		String contentFolderName = svnRetriever.getCheckoutFolder();
+		FileUtils.cleanDirectory(new File(contentFolderName));
+		
+//		String svnFolderName = contentFolderName + File.separator + ".svn";
+//		
+//		if(FileUtils.exists(svnFolderName) && FileUtils.countChildren(contentFolderName)==1){
+//			if(logger!=null) logger.log(Level.INFO, "SVN CO brought nothing, cleaning content folder: " + svnRetriever.getCheckoutFolder());
+//			// delete .svn folder inside the content folder
+//			FileUtils.deleteDir(new File(svnFolderName));
+//			
+//		} 
+	}
 }

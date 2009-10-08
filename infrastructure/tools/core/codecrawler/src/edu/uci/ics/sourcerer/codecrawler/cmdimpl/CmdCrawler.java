@@ -37,7 +37,7 @@ import edu.uci.ics.sourcerer.common.LoggerUtils;
  */
 public class CmdCrawler implements Runnable {
 	
-	private static final String BUILT_ON = "(Built on 2009/09/11 12:24 AM)";
+	private static final String BUILT_ON = "(Built on 2009/09/23 06:15 AM)";
 
 	private class CrawlerListener implements ICrawlerEventListener {
 		

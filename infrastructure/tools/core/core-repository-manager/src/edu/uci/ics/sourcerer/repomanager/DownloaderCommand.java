@@ -19,12 +19,9 @@
 package edu.uci.ics.sourcerer.repomanager;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
@@ -47,7 +44,7 @@ public class DownloaderCommand extends AbstractRepoCommand {
 		// already has a scm checkout
 		if(Arrays.asList(projectFolder.list()).contains(Constants.getCvsCoOutputFileName()) 
 				|| Arrays.asList(projectFolder.list()).contains(Constants.getSvnStatOutputFileName())) {
-			logger.log(Level.INFO, "Code Folder empty while SCM command already executed. Now, attempting download in project folder: " + projectFolderName);
+			logger.log(Level.INFO, "Content folder empty. Now, attempting download in project folder: " + projectFolderName);
 		}
 	
 		
@@ -88,12 +85,14 @@ public class DownloaderCommand extends AbstractRepoCommand {
 		
 	}
 
-	private void download(String projectFolderName, String downloadUrl, String packageFolderName) {
+	private boolean download(String projectFolderName, String downloadUrl, String packageFolderName) {
+		boolean success = false;
 		try{
-			downloader.download(downloadUrl, projectFolderName, packageFolderName);
+			success = downloader.download(downloadUrl, projectFolderName, packageFolderName);
 			if(logger!=null){
 				logger.log(Level.INFO, "Downloaded source file from " + downloadUrl + " to " + projectFolderName);
 			}
+			pauseCommand();
 		} catch (Exception e){
 			if(logger!=null){
 				logger.log(Level.SEVERE, "Exception while downloading source file from " + downloadUrl + 
@@ -102,6 +101,7 @@ public class DownloaderCommand extends AbstractRepoCommand {
 			
 			e.printStackTrace();
 		}
-	}
-	
+		
+		return success;
+	}	
 }

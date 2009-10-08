@@ -55,7 +55,7 @@ public abstract class DomainFilterPlugin extends UrlFilterPlugin {
 	}
 	
 	/**
-	 * @author skb
+	 * @author <a href="mailto:bajracharya@gmail.com">Sushil Bajracharya</a>
 	 * @param url 
 	 * @return only get the part between :// and the first /
 	 * 			of url

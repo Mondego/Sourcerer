@@ -36,24 +36,11 @@ import edu.uci.ics.sourcerer.codecrawler.parserplugin.ParserPluginManager;
  * @created Sep 15, 2009
  *
  */
-public class JavaNetParserPluginTest extends TestCase {
+public class JavaNetParserPluginTest extends AbstractParserPluginTest {
 
-	ParserPluginManager pluginMgr;
-	IDocumentParser docParser;
-
-	public void setUp() throws ParserPluginLoadException {
-
-		pluginMgr = new ParserPluginManager();
-		pluginMgr.setIdGenerator(new IParserPluginIdGenerator() {
-			public long getNewHitId() {
-				return 0;
-			}
-		});
-		String[] pluginNames = { "edu.uci.ics.sourcerer.codecrawler.parserplugin.plugins.JavaNetParserPlugin" };
-		pluginMgr.loadPlugins(pluginNames);
-
-		docParser = new DocumentParser(pluginMgr, null);
-
+	public String[] getPluginNames(){
+		String[] p = { "edu.uci.ics.sourcerer.codecrawler.parserplugin.plugins.JavaNetParserPlugin" }; 
+		return p;
 	}
 
 	public void test1() throws Exception {
@@ -100,12 +87,5 @@ public class JavaNetParserPluginTest extends TestCase {
 		
 	}
 	
-	public void printHits(Document doc) {
-		for (Hit hit : doc.getHits())
-			System.out.println( hit.getCheckoutString() + "\t"
-					+ hit.getLanguage() + "\t"
-					+ hit.getVersion() + "\t"
-					+ hit.getProjectDescription() + "\t"
-					+ hit.getSourceCode());
-	}
+	
 }

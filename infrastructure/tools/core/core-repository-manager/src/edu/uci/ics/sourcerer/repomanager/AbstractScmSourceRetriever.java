@@ -47,16 +47,18 @@ public abstract class AbstractScmSourceRetriever implements ISourceRetriever {
 	/**
 	 * only checks out if the localFolder is a valid sourcerer folder
 	 */
-	public void retreive(String sourceRetrieveExpression, String projectFolder) {
+	public boolean retreive(String sourceRetrieveExpression, String projectFolder) {
 
 		try {
 			validateLocalFolder(projectFolder);
-			checkout(sourceRetrieveExpression, projectFolder);
+			return checkout(sourceRetrieveExpression, projectFolder);
 		} catch (Exception e) {
 			// TODO Log this error
 			// 		make this throwable; handle exception at client
 			e.printStackTrace();
 		}
+		
+		return false;
 
 	}
 
@@ -68,8 +70,9 @@ public abstract class AbstractScmSourceRetriever implements ISourceRetriever {
 	 * 
 	 * @param sourceRetrieveExpression
 	 * @param projectFolder
+	 * @return true if checkout succeeds false otherwise
 	 */
-	protected abstract void checkout(String sourceRetrieveExpression,
+	protected abstract boolean checkout(String sourceRetrieveExpression,
 			String projectFolder);
 
 	/**

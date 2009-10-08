@@ -68,7 +68,7 @@ public class RepoFolderCreatorRunnerTest extends TestCase {
 		rfcr.execute();
 	}
 	
-	public void testRepoFolderCreatorRunnerSourceforge() {
+	public void __testRepoFolderCreatorRunnerSourceforge() {
 		String[] options = new String[]{
 				"-crawled_repo", "SOURCEFORGE", 
 				"-crawler_output_file", "./test/resources/crawlouts/sourceforge.net.hits.txt.test", 
@@ -79,6 +79,24 @@ public class RepoFolderCreatorRunnerTest extends TestCase {
 		RepoFolderCreatorRunner rfcr = new RepoFolderCreatorRunner(options);
 		
 		RepoFolderCreatorBinderModule binder = new RepoFolderCreatorBinderModule(Repositories.SOURCEFORGE);
+		Injector inj = Guice.createInjector(binder);
+		ICrawlerEntryFilter filter = inj.getInstance(ICrawlerEntryFilter.class);
+		rfcr.setCrawlerEntryFilter(filter);
+		
+		rfcr.execute();
+	}
+	
+	public void testRepoFolderCreatorRunnerGoogleCode() {
+		String[] options = new String[]{
+				"-crawled_repo", "GOOGLECODE", 
+				"-crawler_output_file", "./test/resources/crawlouts/google.code.hits.txt.test", 
+				"-folders_in_batch", "1000",
+				"-sourcerer_repo_root","./test/resources/output",
+				"-start_batch_num", "90"};
+		
+		RepoFolderCreatorRunner rfcr = new RepoFolderCreatorRunner(options);
+		
+		RepoFolderCreatorBinderModule binder = new RepoFolderCreatorBinderModule(Repositories.GOOGLECODE);
 		Injector inj = Guice.createInjector(binder);
 		ICrawlerEntryFilter filter = inj.getInstance(ICrawlerEntryFilter.class);
 		rfcr.setCrawlerEntryFilter(filter);

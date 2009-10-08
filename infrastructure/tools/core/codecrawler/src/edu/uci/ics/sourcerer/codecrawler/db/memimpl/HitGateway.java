@@ -31,7 +31,8 @@ import edu.uci.ics.sourcerer.codecrawler.util.StringFormatUtils;
 
 /**
  * @author <a href="mailto:hahrot@yahoo.com">Huy A. Huynh</a>
- * 
+ * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
+ *
  */
 public class HitGateway implements IHitGateway {
 
@@ -92,12 +93,6 @@ public class HitGateway implements IHitGateway {
 	}
 
 	public void saveHit(Hit hit) {
-		/*
-		Hit oldHit = downloadStringMap.get(hit.getCheckoutString());
-		if (oldHit != null) {
-			hit.setId(hit.getId());
-		}
-		 */
 		
 		synchronized(this) {
 			table.put(new Long(hit.getId()), hit);
@@ -105,11 +100,21 @@ public class HitGateway implements IHitGateway {
 		}
 		
 		output.println(String.format("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
-				hit.getId(), StringFormatUtils.formatDate("yyyy-MMM-dd", hit.getHitDate()),
-				hit.getCheckoutString(), hit.getProjectName(), hit.getProjectDescription(),
-				hit.getProjectCategory(), hit.getProjectLicense(), hit.getLanguage(),
-				hit.getVersion(), hit.getSourceCode(), hit.getReleaseDate(), hit.getDescription(),
-				hit.getContainerUrl(), hit.getKeywords(), hit.getFileExtensions()));
+				hit.getId(), 
+				StringFormatUtils.formatDate("yyyy-MMM-dd", hit.getHitDate()),
+				hit.getCheckoutString(), 
+				hit.getProjectName(), 
+				hit.getProjectDescription(),
+				hit.getProjectCategory(), 
+				hit.getProjectLicense(), 
+				hit.getLanguage(),
+				hit.getVersion(), 
+				hit.getSourceCode(), 
+				hit.getReleaseDate(), 
+				hit.getDescription(),
+				hit.getContainerUrl(), 
+				hit.getKeywords(), 
+				hit.getFileExtensions()));
 		output.flush();
 	}
 

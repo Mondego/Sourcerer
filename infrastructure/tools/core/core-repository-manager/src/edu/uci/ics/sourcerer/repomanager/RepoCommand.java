@@ -27,4 +27,6 @@ import java.io.File;
  */
 public interface RepoCommand {
 	public void execute(File projectFolder);
+	public long getPauseInMiliSec();
+	public void setPauseInMiliSec(long pause);
 }

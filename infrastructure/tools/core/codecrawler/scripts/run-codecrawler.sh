@@ -20,7 +20,7 @@
 # @author Sushil Bajracharya (bajracharya@gmail.com)
 
 L="../lib" # library path
-LIB_INCLUDES=$L/ant-1.7.0.jar:$L/ant-commons-net-1.7.0.jar:$L/ant-launcher-1.7.0.jar:$L/commons-cli-1.1.jar:$L/guice-1.0.jar:$L/svnclientadapter-svnant_1.2.1.jar
-RM_JAR="core-repomanager.jar" # core repomanager jar
+LIB_INCLUDES=$L/htmlparser-1.6.jar:$L/log4j-1.2.8.jar
+CC_JAR="codecrawler.jar"
 
-java -cp ./:$LIB_INCLUDES:./$RM_JAR edu.uci.ics.sourcerer.repomanager.RepoFolderCreatorRunner $1 $2 $3 $4 $5 $6 $7 $8 $9 "${10}" "${11}" "${12}"
+java -Xmx2048m -cp ./:$LIB_INCLUDES:./$CC_JAR edu.uci.ics.sourcerer.codecrawler.cmdimpl.CmdCrawler $1 $2 $3 $4

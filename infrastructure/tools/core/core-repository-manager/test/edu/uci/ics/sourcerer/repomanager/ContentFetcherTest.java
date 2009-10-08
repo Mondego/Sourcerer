@@ -27,7 +27,9 @@ import org.junit.Test;
  */
 public class ContentFetcherTest {
 
-	final static String repoRoot = "./test/resources/testrepo";
+	final static String repoRoot = 
+		//"./test/resources/testrepo";
+		"./test/resources/testrepo.withretry";
 	ContentFetcher cf = new ContentFetcher(repoRoot);
 	
 

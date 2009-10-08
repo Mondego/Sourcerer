@@ -16,37 +16,39 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package edu.uci.ics.sourcerer.repomanager;
+package edu.uci.ics.sourcerer.codecrawler.parserplugin.plugins;
+
+import edu.uci.ics.sourcerer.codecrawler.network.UrlString;
+import edu.uci.ics.sourcerer.codecrawler.parser.Document;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
- * @created Jan 12, 2009
+ * @created Sep 23, 2009
  *
  */
-public enum Repositories {
-	
-	SOURCEFORGE("http://sourceforge.net"),
-	TIGRIS("http://tigris.net"),
-	JAVANET("http://java.net"),
-	APACHE("http://archive.apache.org"),
-	GOOGLECODE("http://code.google.com");
-	
-	private String URL;
-	Repositories(String url){
-		this.URL = url;
+public class GoogleCodeParserPluginTest extends AbstractParserPluginTest{
+	public String[] getPluginNames(){
+		String[] p = { "edu.uci.ics.sourcerer.codecrawler.parserplugin.plugins.GoogleCodeParserPlugin" }; 
+		return p;
+	}
+
+	public void testHg() throws Exception {
+		
+		String u1 = "http://code.google.com/p/jynx/";
+		
+		UrlString url  = new UrlString(u1);
+		Document doc = Document.openDocument(url);
+		docParser.parseDocument(doc, null);
+		printHits(doc);
 	}
 	
-	public String getUrl(){
-		return URL;
-	}
-	
-	public static boolean isRepositoryName(String name){
+	public void testSvn() throws Exception {
 		
-		for(Repositories repo: Repositories.values()){
-			if(repo.name().equals(name))
-				return true;
-		}
+		String u2 = "http://code.google.com/p/symja/";
 		
-		return false;
+		UrlString url  = new UrlString(u2);
+		Document doc = Document.openDocument(url);
+		docParser.parseDocument(doc, null);
+		printHits(doc);
 	}
 }
