@@ -33,7 +33,7 @@ public final class JarsTable {
    *  +-------------+---------------+-------+--------+
    *  | jar_id      | SERIAL        | No    | Yes    |
    *  | hash        | VARCHAR(32)   | No    | Yes    |
-   *  | name        | VARCHAR(1024) | No    | No     |
+   *  | name        | VARCHAR(1024) | No    | Yes    |
    *  | group       | VARCHAR(1024) | Yes   | No     |
    *  | version     | VARCHAR(128)  | Yes   | No     |
    *  +-------------+---------------+-------+--------+
@@ -47,7 +47,8 @@ public final class JarsTable {
         "name VARCHAR(1024) BINARY NOT NULL",
         "group VARCHAR(1024) BINARY",
         "version VARCHAR(1024) BINARY",
-        "INDEX(hash)");
+        "INDEX(hash)",
+        "INDEX(name(48))");
   }
   
   // ---- INSERT ----
