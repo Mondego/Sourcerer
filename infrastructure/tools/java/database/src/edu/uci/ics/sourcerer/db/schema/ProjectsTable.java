@@ -31,7 +31,7 @@ public final class ProjectsTable {
    *  | Column name | Type          | Null? | Index? |
    *  +-------------+---------------+-------+--------+
    *  | project_id  | SERIAL        | No    | Yes    |
-   *  | name        | VARCHAR(1024) | No    | Yes    |
+   *  | name        | VARCHAR(1024) | No    | No     |
    *  | version     | VARCHAR(128)  | Yes   | No     |
    *  | path        | VARCHAR(256)  | No    | No     |
    *  +-------------+---------------+-------+--------+
@@ -43,8 +43,7 @@ public final class ProjectsTable {
         "project_id SERIAL",
         "name VARCHAR(1024) BINARY NOT NULL",
         "version VARCHER(128) BINARY",
-        "path VARCHAR(256) BINARY NOT NULL",
-        "INDEX(name(48))");
+        "path VARCHAR(256) BINARY NOT NULL");
   }
   
   // ---- INSERT ----

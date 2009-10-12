@@ -369,7 +369,7 @@ public class AddProjects extends DatabaseAccessor {
       // Or a new parametrized type!
       int baseIndex = fqn.indexOf("<");
       if (baseIndex > 0 && fqn.indexOf('>') > baseIndex) {
-        TypedEntityID eid = TypedEntityID.getSourceEntityID(EntitiesTable.insert(executor, Entity.PARAMETERIZED_TYPE, fqn, projectID));
+        TypedEntityID eid = TypedEntityID.getSourceEntityID(EntitiesTable.insert(executor, Entity.PARAMETRIZED_TYPE, fqn, projectID));
         
         String baseType = TypeUtils.getBaseType(fqn);
         TypedEntityID baseTypeEid = getEid(batcher, entityMap, inClause, projectID, baseType, false);

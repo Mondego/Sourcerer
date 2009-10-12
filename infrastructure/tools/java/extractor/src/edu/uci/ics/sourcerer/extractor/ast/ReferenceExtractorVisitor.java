@@ -568,10 +568,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     IMethodBinding methodBinding = node.resolveConstructorBinding();
     if (methodBinding == null) {
       String methodFqn = fqnStack.getFqn() + ".<init>" + getFuzzyMethodArgs(node.arguments());
-      relationWriter.writeInstantiates(fqn, methodFqn, getLocation(node.getName()));
+      relationWriter.writeInstantiates(fqn, methodFqn, getLocation(node));
     } else {
       // Write the calls relation
-      relationWriter.writeInstantiates(fqn, getMethodFqn(methodBinding, false), getLocation(node.getName()));
+      relationWriter.writeInstantiates(fqn, getMethodFqn(methodBinding, false), getLocation(node));
     }
     
     // Push the enum constant onto the stack
@@ -1805,7 +1805,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     // TODO Auto-generated method stub
     return super.visit(node);
   }
-  
+
   private Location getLocation(ASTNode node) {
     return new Location(compilationUnitPath, node.getStartPosition(), node.getLength());
   }

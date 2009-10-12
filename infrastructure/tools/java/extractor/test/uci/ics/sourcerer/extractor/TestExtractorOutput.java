@@ -23,15 +23,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Collection;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.LocalVariable;
-import edu.uci.ics.sourcerer.model.Modifier;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
@@ -116,7 +112,7 @@ public class TestExtractorOutput {
       RepoProject project = repo.getProject(extractedProject.getRelativePath());
       IFileSet files = project.getFileSet();
       for (IJavaFile file : files.getUniqueJavaFiles()) {
-        String relativePath = repo.convertToRelativePath(file.getPath());
+        String relativePath = extractedRepo.convertToRelativePath(file.getPath());
         verifyLine = "Verifying " + relativePath;
         verifyOutput(file, map.getExtractorOutput(relativePath));
       }
@@ -136,13 +132,8 @@ public class TestExtractorOutput {
       String fullText = FileUtils.getFileAsString(file.getPath());
       
       BufferedReader br = new BufferedReader(new StringReader(fullText));
-      boolean testBegun = false;
       for (String line = br.readLine(); line != null; line = br.readLine()) {
-        if (!testBegun) {
-          if (line.startsWith("// BEGIN TEST")) {
-            testBegun = true;
-          }
-        } else if (line.startsWith("//")) {
+        if (line.startsWith("//")) {
           line = line.substring(3);
           String[] parts = line.split(" ");
           if (parts.length == 0) {
@@ -152,35 +143,16 @@ public class TestExtractorOutput {
           // Is it an entity?
           Entity entity = Entity.parse(parts[0]);
           if (entity != null) {
-            if(parts.length < 3) {
+            if(parts.length < 2) {
               reportInvalidLine(line);
               continue;
             }
-            Collection<Modifier> mods = null;
-            try {
-              mods = convertModifiers(parts[1]);
-            } catch (IllegalArgumentException e) {
-              reportInvalidLine(line);
-              continue;
-            }
-            String fqn = removePkg(parts[2], file.getPackage());
+            String fqn = removePkg(parts[1], file.getPackage());
             // Attempt to locate the matching entity
             EntityEX found = null;
             for (EntityEX extracted : output.getEntities()) {
-              if (extracted.getType().equals(entity) && extracted.getFqn().equals(fqn) && verifyMods(extracted, mods)) {
-                // If present, verify the first and last word
-                if (parts.length == 5) {
-                  String text = getText(extracted, fullText);
-                  if (text.startsWith(parts[3]) && text.endsWith(parts[4])) {
-                    found = extracted;
-                  }
-                } else if (parts.length == 4) {
-                  if (parts[3].equals("-") && extracted.getStartPosition().equals("-1") && extracted.getLength().equals("0")) {
-                    found = extracted;
-                  }
-                } else {
-                  found = extracted;
-                }
+              if (extracted.getType().equals(entity) && extracted.getFqn().equals(fqn)) {
+                found = extracted;
                 break;
               }
             }
@@ -275,10 +247,7 @@ public class TestExtractorOutput {
       // Output the warnings
       for (EntityEX extracted : output.getEntities()) {
         if (!verifiedEntities.contains(extracted)) {
-          String text = getText(extracted, fullText);
-          String start = getStart(text);
-          String end = getEnd(text);
-          reportWarning(extracted.getType().name() + " " + modsToString(extracted) + " " + addPkg(extracted.getFqn(), file.getPackage()) + " " + start + " " + end);
+          reportWarning(extracted.getType().name() + " " + addPkg(extracted.getFqn(), file.getPackage()));
         }
       }
       {
@@ -328,89 +297,6 @@ public class TestExtractorOutput {
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to verify output for: " + file.getPath(), e);
     }
-  }
-  
-  private Pattern whitespace = Pattern.compile("\\s*(.*)", Pattern.DOTALL);
-  private String getText(EntityEX entity, String fullText) {
-    int startPos = Integer.parseInt(entity.getStartPosition());
-    int length = Integer.parseInt(entity.getLength());
-    if (startPos == -1) {
-      return "-";
-    } else {
-      Matcher matcher = whitespace.matcher(fullText.substring(startPos, startPos + length));
-      if (matcher.matches()) {
-        return matcher.group(1);
-      } else {
-        return null;
-      }
-    }
-  }
-  
-  private String getStart(String text) {
-    int spaceIndex = text.indexOf(' ');
-    int nIndex = text.indexOf('\n');
-    int rIndex = text.indexOf('\r');
-    if (spaceIndex == -1 && nIndex == -1 && rIndex == -1) {
-      return text;
-    } else {
-      int min = Integer.MAX_VALUE;
-      if (spaceIndex != -1) {
-        min = spaceIndex;
-      }
-      if (nIndex != -1) {
-        min = Math.min(min, nIndex);
-      }
-      if (rIndex != -1) {
-        min = Math.min(min, rIndex);
-      }
-      return text.substring(0, min);
-    }
-  }
-  
-  private Collection<Modifier> convertModifiers(String mods) {
-    Collection<Modifier> retval = Helper.newLinkedList();
-    for (String mod :  mods.split("-")) {
-      retval.add(Modifier.valueOf(mod.toUpperCase()));
-    }
-    return retval;
-  }
-  
-  private boolean verifyMods(EntityEX extracted, Collection<Modifier> mods) {
-    Set<Modifier> modifiers = Modifier.convertFromString(extracted.getMods());
-    int count = 0;
-    for (Modifier mod : mods) {
-      if (modifiers.contains(mod)) {
-        count++;
-      } else {
-        return false;
-      }
-    }
-    return count == modifiers.size();
-  }
-  
-  private String modsToString(EntityEX extracted) {
-    StringBuffer mods = new StringBuffer();
-    boolean first = true;
-    for (Modifier mod : Modifier.convertFromString(extracted.getMods())) {
-      if (first) {
-        first = false;
-      } else {
-        mods.append('-');
-      }
-      mods.append(mod.name().toLowerCase());
-    }
-    
-    if (mods.length() == 0) {
-      return "-";
-    } else {
-      return mods.toString();
-    }
-  }
-  
-  private String getEnd(String text) {
-    int max = Math.max(text.lastIndexOf(' '), text.lastIndexOf('\n'));
-    max = Math.max(max, text.lastIndexOf('\r'));
-    return text.substring(max + 1);
   }
   
   private String getText(RelationEX relation, String fullText) {

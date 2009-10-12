@@ -38,7 +38,7 @@ public enum Entity {
     ARRAY,
     TYPE_VARIABLE,
     WILDCARD,
-    PARAMETERIZED_TYPE,
+    PARAMETRIZED_TYPE,
     DUPLICATE,
     UNKNOWN,
     ;
@@ -59,7 +59,7 @@ public enum Entity {
           PRIMITIVE,
           ARRAY,
           TYPE_VARIABLE,
-          PARAMETERIZED_TYPE,
+          PARAMETRIZED_TYPE,
           WILDCARD,
           UNKNOWN };
       return values;
@@ -80,7 +80,7 @@ public enum Entity {
           ANNOTATION_ELEMENT,
           ARRAY,
           TYPE_VARIABLE,
-          PARAMETERIZED_TYPE,
+          PARAMETRIZED_TYPE,
           WILDCARD,
           UNKNOWN };
       return values;
@@ -119,7 +119,7 @@ public enum Entity {
     }
 
     public boolean isParametrizedType() {
-      return this == PARAMETERIZED_TYPE;
+      return this == PARAMETRIZED_TYPE;
     }
 
     public boolean isCallableType() {
