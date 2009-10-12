@@ -57,12 +57,19 @@ public class MavenCrawler {
       if (linksFile.exists()) {
         BufferedReader br = new BufferedReader(new FileReader(linksFile));
         for (String line = br.readLine(); line != null; line = br.readLine()) {
-          links.add(line);
+          if (!completed.contains(line)) {
+            links.add(line);
+          }
         }
         br.close();
       }
       if (links.isEmpty()) {
-        links.add(properties.getValue(Property.INPUT));
+        links.add("");
+      }
+      
+      String baseUrl = properties.getValue(Property.INPUT);
+      if (baseUrl.endsWith("/")) {
+        baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
       }
       
       BufferedWriter progress = new BufferedWriter(new FileWriter(linksFile, true));
@@ -73,13 +80,13 @@ public class MavenCrawler {
           if (link.endsWith("/")) {
             try {
               logger.info("Getting " + link);
-              URL url = new URL(link);
+              URL url = new URL(baseUrl + link);
               BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
               for (String line = br.readLine(); line != null; line = br.readLine()) {
                 Matcher matcher = linkPattern.matcher(line);
                 if (matcher.find()) {
                   String part = matcher.group(1);
-                  if (!part.equals("../")) {
+                  if (!part.startsWith(".")) {
                     String newLink = link + part;
                     logger.info("Adding " + newLink);
                     links.push(newLink);

@@ -24,6 +24,7 @@ import java.util.Set;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.maven.MavenCrawler;
 import edu.uci.ics.sourcerer.repo.maven.MavenDownloader;
+import edu.uci.ics.sourcerer.repo.maven.MavenCrawlStats;
 import edu.uci.ics.sourcerer.repo.maven.MavenToRepositoryAdder;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -57,6 +58,8 @@ public class Main {
       MavenDownloader.downloadLinks();
     } else if (properties.isSet(Property.ADD_MAVEN_JARS)) {
       MavenToRepositoryAdder.addToRepository();
+    } else if (properties.isSet(Property.MAVEN_STATS)) {
+      MavenCrawlStats.crawlStats();
     }
   }
 }

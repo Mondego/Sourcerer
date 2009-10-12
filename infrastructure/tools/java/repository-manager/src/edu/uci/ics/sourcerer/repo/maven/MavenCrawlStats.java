@@ -17,59 +17,56 @@
  */
 package edu.uci.ics.sourcerer.repo.maven;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URL;
-import java.util.Set;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class MavenDownloader {
-  public static void downloadLinks() {
+public class MavenCrawlStats {
+  public static void crawlStats() {
     try {
-      Set<String> resume = Logging.initializeResumeLogger();
       PropertyManager properties = PropertyManager.getProperties();
-      File input = new File(properties.getValue(Property.INPUT), properties.getValue(Property.LINKS_FILE));
-     
-      Repository repo = Repository.getUninitializedRepository();
-      File outputDir = repo.getJarsDir();
+      File dir = properties.getValueAsFile(Property.INPUT);
+      File input = new File(dir, properties.getValue(Property.LINKS_FILE));
+//      File output = new File(dir, "fixed-" + properties.getValue(Property.LINKS_FILE));
       String baseUrl = properties.getValue(Property.MAVEN_URL);
       if (baseUrl.endsWith("/")) {
         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
       }
-      outputDir.mkdirs();
       BufferedReader br = new BufferedReader(new FileReader(input));
+//      BufferedWriter bw = new BufferedWriter(new FileWriter(output));
+      int count = 0, jarCount = 0;
       for (String line = br.readLine(); line != null; line = br.readLine()) {
-        if (line.endsWith(".jar") && !resume.contains(line)) {
-          URL url = new URL(baseUrl + line);
-          File file = new File(outputDir + line);
-          file.getParentFile().mkdirs();
-          logger.info("Writing " + line + " to file");
-          try {
-            if (FileUtils.writeStreamToFile(url.openStream(), file)) {
-              logger.log(RESUME, line);
-            }
-          } catch (IOException e) {
-            logger.log(Level.SEVERE, "Unable to write " + line, e);
+        if (line.startsWith(baseUrl)) {
+          count++;
+//          bw.write(line.substring(baseUrl.length()) + "\n");
+          if (line.endsWith(".jar")) {
+            jarCount++;
           }
-          Thread.sleep(10000);
+        } else {
+          logger.severe("Unexpected line: " + line);
         }
       }
-    } catch (Exception e) {
-      logger.log(Level.SEVERE, "Unable to download", e);
+      br.close();
+//      bw.close();
+      
+//      input.renameTo(new File(dir, input.getName() + "-old"));
+//      output.renameTo(input);
+//      logger.info("Converted " + count + " lines and found " + jarCount + " jars");
+      logger.info("Found " + count + " lines and found " + jarCount + " jars");
+//      logger.info("Done!");
+    } catch (IOException e) {
+//      logger.log(Level.SEVERE, "Unable to fix maven links", e);
+      logger.log(Level.SEVERE, "Unable to get maven stats", e);
     }
   }
 }

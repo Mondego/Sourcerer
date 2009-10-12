@@ -67,11 +67,7 @@ public class ExtractedRepository extends AbstractRepository {
   }
   
   public static ExtractedRepository getRepository(File repoRoot) {
-    ExtractedRepository repo = new ExtractedRepository(repoRoot);
-    
-    repo.populateRepository();
-    
-    return repo;
+    return new ExtractedRepository(repoRoot);
   }
   
   public static ExtractedRepository getUninitializedRepository(File repoRoot) {
