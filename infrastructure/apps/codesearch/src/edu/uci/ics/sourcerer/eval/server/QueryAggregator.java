@@ -61,6 +61,8 @@ import edu.uci.ics.sourcerer.scs.server.SourcererSearchServiceImpl;
 public class QueryAggregator {
   private static QueryAggregator instance = null;
 
+  private int count = 0;
+  
   private Map<String, Query> queries;
   private Map<Query, Collection<Result>> resultMap;
   
@@ -85,6 +87,8 @@ public class QueryAggregator {
 
     try {
       BufferedReader br = new BufferedReader(new InputStreamReader(context.getResourceAsStream("/evaluation/queries.txt")));
+      // first line should be number of queries
+      count = Integer.parseInt(br.readLine());
       for (String line = br.readLine(); line != null; line = br.readLine()) {
         String[] parts = line.split("\\|");
         queries.put(parts[0], Query.getQuery(parts[0], parts[1], parts[2]));
@@ -191,7 +195,7 @@ public class QueryAggregator {
           }
           br.close();
         } else {
-          String resultXML = SourcererSearchAdapter.searchSCSServer(query.getQueryText(), 0, 30, heuristic);
+          String resultXML = SourcererSearchAdapter.searchSCSServer(query.getQueryText(), 0, count, heuristic);
           InputSource input = new InputSource(new StringReader(resultXML));
           NodeList nodes = (NodeList)xpath.evaluate("/response/result[@name='response']/doc", input, XPathConstants.NODESET);
           
