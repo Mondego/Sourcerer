@@ -20,12 +20,10 @@ package edu.uci.ics.sourcerer.eval.server;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.Collection;
@@ -43,21 +41,18 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import edu.uci.ics.sourcerer.eval.client.Query;
 import edu.uci.ics.sourcerer.eval.client.Result;
-import edu.uci.ics.sourcerer.scs.common.JavaToHtml;
 import edu.uci.ics.sourcerer.scs.common.SourcererSearchAdapter;
 import edu.uci.ics.sourcerer.scs.common.client.SearchHeuristic;
-import edu.uci.ics.sourcerer.scs.server.SourcererSearchServiceImpl;
 
+/**
+ * @author Joel Ossher (jossher@uci.edu)
+ */
 public class QueryAggregator {
   private static QueryAggregator instance = null;
 

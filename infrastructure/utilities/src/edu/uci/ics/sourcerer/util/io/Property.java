@@ -121,9 +121,10 @@ public enum Property {
   
   // -- Begin Calculate Precision Recall Properties --
   STATS_FILE("top-stats-file", "top-stats.txt"),
-  TOP_K("top-k", "10"),
+  K("k", "10"),
   PR_FILE("precision-recall-file", "precision-recall.txt"),
   PR_THRESHOLD("pr-relevant-threshold", "0"),
+  TUPLE_MODE("tuple-mode", true),
   CSV_MODE("csv-mode", true),
   // -- End Calculate Precision Recall Properties --
   ;
