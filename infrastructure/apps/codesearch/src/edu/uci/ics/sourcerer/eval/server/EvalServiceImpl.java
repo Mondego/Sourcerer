@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
+import edu.uci.ics.sourcerer.eval.VoteOptions;
 import edu.uci.ics.sourcerer.eval.client.EvalService;
 import edu.uci.ics.sourcerer.eval.client.EvaluationProgress;
 import edu.uci.ics.sourcerer.eval.client.Query;
@@ -41,22 +42,9 @@ public class EvalServiceImpl extends RemoteServiceServlet implements EvalService
     }
     return "Welcome to the Sourcerer Code Search Evaluation Tool! Please press the button to begin";
   }
-  
+
   public Vote[] getVoteOptions() {
-    Vote[] options = new Vote[3];
-    options[0] = new Vote("2", "The result fully solves the problem", 
-        "Code can be copied with little modifiction",
-        "Contains everything I needed to know",
-        "Contains all the APIs needed",
-        "Contains additional related information");
-    options[1] = new Vote("1", "The result partially solves the problem",
-        "Following references looks promising",
-        "Contains something I needed to know",
-        "Contains some of the APIs needed");
-    options[2] = new Vote("0", "The result is not useful at all",
-        "Too long, did not read",
-        "An implementation of the functionality rather than an API usage example");
-    return options;
+    return VoteOptions.getVoteOptions();
   }
   
   public synchronized EvaluationProgress getEvaluationProgress(String email) {

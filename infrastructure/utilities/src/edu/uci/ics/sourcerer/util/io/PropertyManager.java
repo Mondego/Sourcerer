@@ -80,6 +80,10 @@ public class PropertyManager {
   public File getValueAsFile(Property prop) {
     return new File(getValue(prop));
   }
+  
+  public int getValueAsInt(Property prop) {
+    return Integer.parseInt(getValue(prop));
+  }
 
   public synchronized boolean isSet(Property prop) {
     if (!prop.isFlag()) {

@@ -35,6 +35,10 @@ public class Vote implements Serializable {
     this.subVotesVotes = new boolean[subVotes.length];
   }
   
+  public String getValue() {
+    return value;
+  }
+  
   public String getVoteResult() {
     StringBuilder output = new StringBuilder();
     output.append(value).append("-");

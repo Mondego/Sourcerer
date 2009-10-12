@@ -38,6 +38,7 @@ public class TablePrettyPrinter {
   private MaxCounter[] maxWidths;
   private int maxWidth;
   private int columns;
+  private boolean csvMode = false;
   
   private NumberFormat format;
   
@@ -50,7 +51,15 @@ public class TablePrettyPrinter {
       throw new IllegalStateException("beginTable(int) not called");
     }
   }
-    
+
+  public void setCSVMode(boolean csvMode) {
+    if (table == null) {
+      this.csvMode = csvMode;
+    } else {
+      throw new IllegalStateException("May not change csv mode after table begun");
+    }
+  }
+  
   public void setFractionDigits(int digits) {
     if (format == null) {
       format = NumberFormat.getNumberInstance();
@@ -78,6 +87,46 @@ public class TablePrettyPrinter {
 
   public void endTable() {
     verifyTableBegun();
+    if (csvMode) {
+      endTableCSV();
+    } else {
+      endTablePretty();
+    }
+    
+    table = null;
+    maxWidths = null;
+    maxWidth = 0;
+  }
+  
+  private void endTableCSV() {
+    try {
+      for (TableRow row : table) {
+        if (row != null) {
+          // Write out a row
+          TableCell[] cells = row.getCells();
+          for (int j = 0; j < columns; j++) {
+            TableCell cell = cells[j];
+            if (cell != null) {
+              if (j != 0) {
+                writer.write(",");
+              }
+              writer.write(cell.getValue().replace(',', '-'));
+              for (int k = 1, max = cell.getSpan(); k < max; k++) {
+                writer.write(",");
+              }
+            }
+          }
+          writer.write("\n");
+        }
+      }
+      writer.write("\n\n");
+      writer.flush();
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to write table", e);
+    }
+  }
+  
+  private void endTablePretty() {
     checkSpanningWidths();
     char[] padding = new char[maxWidth];
     for (int i = 0; i < maxWidth; i++) {
@@ -176,10 +225,6 @@ public class TablePrettyPrinter {
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to write table", e);
     }
-
-    table = null;
-    maxWidths = null;
-    maxWidth = 0;
   }
   
   private void writePadding(char[] padding, int total) throws IOException {
