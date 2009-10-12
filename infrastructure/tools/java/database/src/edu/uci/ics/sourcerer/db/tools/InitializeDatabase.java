@@ -277,7 +277,7 @@ public class InitializeDatabase extends DatabaseAccessor {
       // Or a new parametrized type!
       int baseIndex = fqn.indexOf("<");
       if (baseIndex > 0 && fqn.indexOf('>') > baseIndex) {
-        String eid = LibraryEntitiesTable.insert(executor, Entity.PARAMETRIZED_TYPE, fqn, libraryID);
+        String eid = LibraryEntitiesTable.insert(executor, Entity.PARAMETERIZED_TYPE, fqn, libraryID);
         
         String baseType = getEid(batcher, entityMap, libraryID, TypeUtils.getBaseType(fqn));
         LibraryRelationsTable.insert(batcher, Relation.HAS_BASE_TYPE, eid, baseType, libraryID);

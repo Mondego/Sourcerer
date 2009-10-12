@@ -245,7 +245,7 @@ public class AddJars extends DatabaseAccessor {
       // Or a new parametrized type!
       int baseIndex = fqn.indexOf("<");
       if (baseIndex > 0 && fqn.indexOf('>') > baseIndex) {
-        TypedEntityID eid = TypedEntityID.getJarEntityID(JarEntitiesTable.insert(executor, Entity.PARAMETRIZED_TYPE, fqn, jarID));
+        TypedEntityID eid = TypedEntityID.getJarEntityID(JarEntitiesTable.insert(executor, Entity.PARAMETERIZED_TYPE, fqn, jarID));
         
         String baseType = TypeUtils.getBaseType(fqn);
         TypedEntityID baseTypeEid = getEid(batcher, entityMap, jarID, baseType);

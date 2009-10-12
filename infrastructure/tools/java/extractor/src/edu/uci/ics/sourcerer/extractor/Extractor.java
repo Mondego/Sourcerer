@@ -187,6 +187,7 @@ public class Extractor implements IApplication {
           Collection<IFile> bestDuplicateIFiles = EclipseUtils.loadFilesIntoProject(files.getBestDuplicateJavaFiles());
           
           // Set up the output
+          properties.setProperty(Property.OUTPUT, project.getOutputPath(output.getBaseDir()));
           WriterBundle bundle = new WriterBundle(repo);
           extractor.setBundle(bundle);
           
