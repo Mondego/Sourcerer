@@ -67,11 +67,11 @@ public class Helper {
 	}
 	
 	@SuppressWarnings("unchecked")
-  public static <A,K,V extends LinkedList<A>> LinkedList<A> getLinkedListFromMap(Map<K,V> map, K key) {
-    LinkedList<A> value = map.get(key);
+  public static <A,K,V extends Collection<A>> V getLinkedListFromMap(Map<K,V> map, K key) {
+    V value = map.get(key);
     if (value == null) {
-      value = newLinkedList();
-      map.put(key, (V)value);
+      value = (V)newLinkedList();
+      map.put(key, value);
     }
     return value;
   }

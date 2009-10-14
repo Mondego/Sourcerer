@@ -34,170 +34,148 @@ import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 public class CalculatePrecisionRecall {
   public static void calculate() {
     PropertyManager properties = PropertyManager.getProperties();
+    
+    // Compute the precision/recall for the top k
     int top = properties.getValueAsInt(Property.K);
     
+    // The list of responses to consider relevant
+    String relevantOptions = properties.getValue(Property.PR_LIST);
+    Set<String> relevantOptionsSet = Helper.newHashSet();
+    for (String string : relevantOptions.split(",")) {
+      relevantOptionsSet.add(VoteOptions.getVoteFromAbbreviation(string));
+    }
+    
+    // Tuple mode is for easier consumption by R
+    boolean tupleMode = properties.isSet(Property.TUPLE_MODE);
+    
+    // Load the evaluation results
     EvaluationResults results = EvaluationResults.loadResults();
     
-    // Print out the results
-    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(properties, Property.STATS_FILE);
+    // Initialize the table printer
+    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(properties, Property.PR_FILE);
     printer.setCSVMode(properties.isSet(Property.CSV_MODE));
     printer.setFractionDigits(3);
     
-    boolean tupleMode = properties.isSet(Property.TUPLE_MODE);
+    if (tupleMode) {
+      printer.beginTable(6);
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("Query");
+      printer.addCell("User");
+      printer.addCell("Relevant");
+      printer.addCell("Heuristic");
+      printer.addCell("P");
+      printer.addCell("R");
+      printer.addDividerRow();
+    }
     
-    // row -> heuristic -> averager map
-    Map<String, Map<String, Averager<Integer>>> globalMap = Helper.newHashMap();
-    
+    Map<String, Averager<Double>> globalPrecisionMap = Helper.newHashMap();
+    Map<String, Averager<Double>> globalRecallMap = Helper.newHashMap();
+
+    // Collect all the heuristics, in case a single query is missing some
     Collection<String> globalHeuristics = Helper.newHashSet();
     
     // Go through every query
     for (Query query : results.getQueries()) {
-      Map<String, Map<String, Averager<Integer>>> queryMap = Helper.newHashMap();
       // Look up the heuristics for this query
       Collection<String> heuristics = Helper.newLinkedList();
       heuristics.addAll(query.getHeuristics());
       globalHeuristics.addAll(heuristics);
       
-      // Go through every vote group for this query
-      for (Votes votes : results.getVotes(query)) {
-        if (tupleMode) {
-          printer.beginTable(heuristics.size() + 4);
-          printer.addDividerRow();
-          printer.beginRow();
-          printer.addCell("Query");
-          printer.addCell("User");
-          printer.addCell("Vote");
-          printer.addCell("Vote.Type");
-        } else {
-          printer.beginTable(heuristics.size() + 1);
+      Map<String, Averager<Double>> queryPrecisionMap = Helper.newHashMap();
+      Map<String, Averager<Double>> queryRecallMap = Helper.newHashMap();
+      
+      // Go through every vote (person) group for this query
+      Collection<Votes> result = results.getVotes(query);
+      for (Votes votes : result) {
+         if (!tupleMode) {
+          printer.beginTable(3);
           printer.addHeader("Query " + query.getName() + " for user " + votes.getUser());
           printer.addDividerRow();
           printer.beginRow();
-          printer.addCell("");
+          printer.addCell("Heuristic");
+          printer.addCell("P");
+          printer.addCell("R");
+          printer.addDividerRow();
         }
-        for (String heuristic : heuristics) {
-          printer.addCell(heuristic);
-        }
-        printer.addDividerRow();
         
-        for (String option : Vote.getTextOptions()) {
-          // Do the main option
+        // For each heuristic
+        for (String heuristic : heuristics) {
           printer.beginRow();
           if (tupleMode) {
            printer.addCell(query.getName());
            printer.addCell(votes.getUser());
-           printer.addCell(VoteOptions.getVoteAbbreviation(option));
+           printer.addCell(relevantOptions);
           }
-          printer.addCell(option);
-          Map<String, Averager<Integer>> globalHeuristicMap = Helper.getHashMapFromMap(globalMap, option);
-          Map<String, Averager<Integer>> queryHeuristicMap = Helper.getHashMapFromMap(queryMap, option);
+          printer.addCell(heuristic);
           
-          for (String heuristic : heuristics) {
-            Set<String> topResults = query.getTopResults(heuristic, top);
-            int inTop = votes.getUnionCount(topResults, option, null);
-            printer.addCell(inTop);
-            Helper.getFromMap(globalHeuristicMap, heuristic, Averager.class).addValue(inTop);
-            Helper.getFromMap(queryHeuristicMap, heuristic, Averager.class).addValue(inTop);
-          }
-          
-          // Do the suboptions
-          for (String subOption : Vote.getSubOptions(option)) {
-            printer.beginRow();
-            if (tupleMode) {
-              printer.addCell(query.getName());
-              printer.addCell(votes.getUser());
-              printer.addCell(VoteOptions.getVoteAbbreviation(subOption));
-             }
-            printer.addCell(subOption);
-            globalHeuristicMap = Helper.getHashMapFromMap(globalMap, option + subOption);
-            queryHeuristicMap = Helper.getHashMapFromMap(queryMap, option + subOption);
-            
-            for (String heuristic : heuristics) {
-              Set<String> topResults = query.getTopResults(heuristic, top);
-              int inTop = votes.getUnionCount(topResults, option, subOption);
-              printer.addCell(inTop);
-              Helper.getFromMap(globalHeuristicMap, heuristic, Averager.class).addValue(inTop);
-              Helper.getFromMap(queryHeuristicMap, heuristic, Averager.class).addValue(inTop);
-            }
-          }
+          // Compute the precision/recall
+          // Get the relevant results
+          Set<String> relevant = votes.getRelevant(query.getResults(), relevantOptionsSet);
+          int unionCount = query.getUnionCount(relevant, heuristic, top);
+          // Precision is the ratio of relevant responses in the top
+          double p = ((double) unionCount) / ((double) top);
+          // Recall is the ratio of relevant responses in the top to total relevant responses
+          double r = ((double) unionCount) / ((double) relevant.size());
+          printer.addCell(p);
+          Helper.getFromMap(queryPrecisionMap, heuristic, Averager.class).addValue(p);
+          Helper.getFromMap(globalPrecisionMap, heuristic, Averager.class).addValue(p);
+          printer.addCell(r);
+          Helper.getFromMap(queryRecallMap, heuristic, Averager.class).addValue(r);
+          Helper.getFromMap(globalRecallMap, heuristic, Averager.class).addValue(r);
         }
         printer.addDividerRow();
-        printer.endTable();
+        if (!tupleMode) {
+          printer.endTable();
+        }
       }
       
       // Print out the average results for this query
-      if (!tupleMode) {
-        printer.beginTable(heuristics.size() + 1);
+      if (!tupleMode && result.size() > 1) {
+        printer.beginTable(3);
         printer.addHeader("Query " + query.getName() + " averaged results");
         printer.addDividerRow();
         printer.beginRow();
-        printer.addCell("");
-
-        for (String heuristic : heuristics) {
-          printer.addCell(heuristic);
-        }
+        printer.addCell("Heuristic");
+        printer.addCell("P");
+        printer.addCell("R");
         printer.addDividerRow();
         
-        for (String option : Vote.getTextOptions()) {
-          // Do the main option
+        // For each heuristic
+        for (String heuristic : heuristics) {
           printer.beginRow();
-          printer.addCell(option);
-          Map<String, Averager<Integer>> queryHeuristicMap = Helper.getHashMapFromMap(queryMap, option);
-          
-          for (String heuristic : heuristics) {
-            printer.addCell(Helper.getFromMap(queryHeuristicMap, heuristic, Averager.class).getCellValueWithStandardDeviation());
-          }
-        
-          // Do the suboptions
-          for (String subOption : Vote.getSubOptions(option)) {
-            printer.beginRow();
-            printer.addCell(subOption);
-            queryHeuristicMap = Helper.getHashMapFromMap(queryMap, option + subOption);
-            
-            for (String heuristic : heuristics) {
-              printer.addCell(Helper.getFromMap(queryHeuristicMap, heuristic, Averager.class).getCellValueWithStandardDeviation());
-            }
-          }
+          printer.addCell(heuristic);
+          printer.addCell(queryPrecisionMap.get(heuristic).getCellValueWithStandardDeviation());
+          printer.addCell(queryRecallMap.get(heuristic).getCellValueWithStandardDeviation());
         }
         printer.addDividerRow();
         printer.endTable();
       }
     }
     
+    // Print out the average results for this query
     if (!tupleMode) {
-      // Print out the overall average results
-      printer.beginTable(globalHeuristics.size() + 1);
+      printer.beginTable(3);
       printer.addHeader("Overall averaged results");
       printer.addDividerRow();
       printer.beginRow();
-      printer.addCell("");
-      for (String heuristic : globalHeuristics) {
-        printer.addCell(heuristic);
-      }
+      printer.addCell("Heuristic");
+      printer.addCell("P");
+      printer.addCell("R");
       printer.addDividerRow();
       
-      for (String option : Vote.getTextOptions()) {
-        // Do the main option
+      // For each heuristic
+      for (String heuristic : globalHeuristics) {
         printer.beginRow();
-        printer.addCell(option);
-        Map<String, Averager<Integer>> globalHeuristicMap = Helper.getHashMapFromMap(globalMap, option);
-        
-        for (String heuristic : globalHeuristics) {
-          printer.addCell(Helper.getFromMap(globalHeuristicMap, heuristic, Averager.class).getCellValueWithStandardDeviation());
-        }
-        
-        // Do the suboptions
-        for (String subOption : Vote.getSubOptions(option)) {
-          printer.beginRow();
-          printer.addCell(subOption);
-          globalHeuristicMap = Helper.getHashMapFromMap(globalMap, option + subOption);
-          
-          for (String heuristic : globalHeuristics) {
-            printer.addCell(Helper.getFromMap(globalHeuristicMap, heuristic, Averager.class).getCellValueWithStandardDeviation());
-          }
-        }
+        printer.addCell(heuristic);
+        printer.addCell(globalPrecisionMap.get(heuristic).getCellValueWithStandardDeviation());
+        printer.addCell(globalRecallMap.get(heuristic).getCellValueWithStandardDeviation());
       }
       printer.addDividerRow();
+      printer.endTable();
+    }
+    
+    if (tupleMode) {
       printer.endTable();
     }
   }

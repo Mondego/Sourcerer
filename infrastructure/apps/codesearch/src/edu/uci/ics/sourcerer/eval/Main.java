@@ -19,6 +19,7 @@
 package edu.uci.ics.sourcerer.eval;
 
 import edu.uci.ics.sourcerer.util.io.Logging;
+import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -28,6 +29,13 @@ public class Main {
   public static void main(String[] args) {
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
-    CalculateTopStats.calculate();
+    
+    PropertyManager properties = PropertyManager.getProperties();
+    if (properties.isSet(Property.TOP_STATS)) {
+      CalculateTopStats.calculate();
+    }
+    if (properties.isSet(Property.PR)) {
+      CalculatePrecisionRecall.calculate();
+    }
   }
 }

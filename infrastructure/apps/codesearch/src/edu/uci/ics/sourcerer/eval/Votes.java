@@ -24,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -68,5 +69,18 @@ public class Votes {
       }
     }
     return count;
+  }
+  
+  public Set<String> getRelevant(Collection<String> results, Set<String> relevantOptions) {
+    Set<String> relevant = Helper.newHashSet();
+    for (String result : results) {
+      Vote vote = votes.get(result);
+      if (vote != null) {
+        if (vote.matches(relevantOptions)) {
+          relevant.add(result);
+        }
+      }
+    }
+    return relevant;
   }
 }

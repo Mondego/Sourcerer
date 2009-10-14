@@ -120,10 +120,12 @@ public enum Property {
   // -- End Automated Slice Tester Properties --
   
   // -- Begin Calculate Precision Recall Properties --
+  TOP_STATS("top-stats", true),
   STATS_FILE("top-stats-file", "top-stats.txt"),
   K("k", "10"),
+  PR("pr", true),
   PR_FILE("precision-recall-file", "precision-recall.txt"),
-  PR_THRESHOLD("pr-relevant-threshold", "0"),
+  PR_LIST("pr-relevant-list", "FUL,PSP"),
   TUPLE_MODE("tuple-mode", true),
   CSV_MODE("csv-mode", true),
   // -- End Calculate Precision Recall Properties --

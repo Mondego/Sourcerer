@@ -43,42 +43,47 @@ public class CalculateTopStats {
     printer.setCSVMode(properties.isSet(Property.CSV_MODE));
     printer.setFractionDigits(3);
     
+    // Collect the heuristics
+    Collection<String> heuristics = Helper.newHashSet();
+    for (Query query : results.getQueries()) {
+      heuristics.addAll(query.getHeuristics());
+    }
+    
     boolean tupleMode = properties.isSet(Property.TUPLE_MODE);
-    
-    // row -> heuristic -> averager map
+    if (tupleMode) {
+      printer.beginTable(heuristics.size() + 4);
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("Query");
+      printer.addCell("User");
+      printer.addCell("Vote");
+      printer.addCell("Vote.Type");
+      for (String heuristic : heuristics) {
+        printer.addCell(heuristic);
+      }
+      printer.addDividerRow();
+    }
+    // option -> heuristic -> averager map
     Map<String, Map<String, Averager<Integer>>> globalMap = Helper.newHashMap();
-    
-    Collection<String> globalHeuristics = Helper.newHashSet();
     
     // Go through every query
     for (Query query : results.getQueries()) {
       Map<String, Map<String, Averager<Integer>>> queryMap = Helper.newHashMap();
-      // Look up the heuristics for this query
-      Collection<String> heuristics = Helper.newLinkedList();
-      heuristics.addAll(query.getHeuristics());
-      globalHeuristics.addAll(heuristics);
-      
+
       // Go through every vote group for this query
       for (Votes votes : results.getVotes(query)) {
-        if (tupleMode) {
-          printer.beginTable(heuristics.size() + 4);
-          printer.addDividerRow();
-          printer.beginRow();
-          printer.addCell("Query");
-          printer.addCell("User");
-          printer.addCell("Vote");
-          printer.addCell("Vote.Type");
-        } else {
+         if (!tupleMode) {
           printer.beginTable(heuristics.size() + 1);
           printer.addHeader("Query " + query.getName() + " for user " + votes.getUser());
           printer.addDividerRow();
           printer.beginRow();
           printer.addCell("");
+          for (String heuristic : heuristics) {
+            printer.addCell(heuristic);
+          }
+          printer.addDividerRow();
         }
-        for (String heuristic : heuristics) {
-          printer.addCell(heuristic);
-        }
-        printer.addDividerRow();
+        
         
         for (String option : Vote.getTextOptions()) {
           // Do the main option
@@ -122,7 +127,9 @@ public class CalculateTopStats {
           }
         }
         printer.addDividerRow();
-        printer.endTable();
+        if (!tupleMode) {
+          printer.endTable();
+        }
       }
       
       // Print out the average results for this query
@@ -166,12 +173,12 @@ public class CalculateTopStats {
     
     if (!tupleMode) {
       // Print out the overall average results
-      printer.beginTable(globalHeuristics.size() + 1);
+      printer.beginTable(heuristics.size() + 1);
       printer.addHeader("Overall averaged results");
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("");
-      for (String heuristic : globalHeuristics) {
+      for (String heuristic : heuristics) {
         printer.addCell(heuristic);
       }
       printer.addDividerRow();
@@ -182,7 +189,7 @@ public class CalculateTopStats {
         printer.addCell(option);
         Map<String, Averager<Integer>> globalHeuristicMap = Helper.getHashMapFromMap(globalMap, option);
         
-        for (String heuristic : globalHeuristics) {
+        for (String heuristic : heuristics) {
           printer.addCell(Helper.getFromMap(globalHeuristicMap, heuristic, Averager.class).getCellValueWithStandardDeviation());
         }
         
@@ -192,12 +199,15 @@ public class CalculateTopStats {
           printer.addCell(subOption);
           globalHeuristicMap = Helper.getHashMapFromMap(globalMap, option + subOption);
           
-          for (String heuristic : globalHeuristics) {
+          for (String heuristic : heuristics) {
             printer.addCell(Helper.getFromMap(globalHeuristicMap, heuristic, Averager.class).getCellValueWithStandardDeviation());
           }
         }
       }
       printer.addDividerRow();
+      printer.endTable();
+    }
+    if (tupleMode) {
       printer.endTable();
     }
   }

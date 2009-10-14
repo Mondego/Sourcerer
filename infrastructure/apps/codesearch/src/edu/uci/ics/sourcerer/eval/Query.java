@@ -52,7 +52,7 @@ public class Query {
   public void addResults(File file) {
     String heuristic = file.getName();
     heuristic = heuristic.substring(0, heuristic.lastIndexOf('.'));
-    Collection<String> queryResult = getQueryResult(heuristic);
+    Collection<String> queryResult = Helper.getLinkedListFromMap(resultsByHeuristic, heuristic); 
     try {
       BufferedReader br = new BufferedReader(new FileReader(file));
       for (String line = br.readLine(); line != null; line = br.readLine()) {
@@ -66,17 +66,12 @@ public class Query {
     }
   }
   
-  private Collection<String> getQueryResult(String heuristic) {
-    Collection<String> queryResult = resultsByHeuristic.get(heuristic);
-    if (queryResult == null) {
-      queryResult = Helper.newLinkedList();
-      resultsByHeuristic.put(heuristic, queryResult);
-    }
-    return queryResult;
+  public Collection<String> getResults() {
+    return results;
   }
   
   public Set<String> getTopResults(String heuristic, int top) {
-    Collection<String> results = getQueryResult(heuristic);
+    Collection<String> results = resultsByHeuristic.get(heuristic);
     Set<String> topResults = Helper.newHashSet();
     for (String result : results) {
       if (top-- <= 0) {
@@ -85,6 +80,20 @@ public class Query {
       topResults.add(result);
     }
     return topResults;
+  }
+  
+  public int getUnionCount(Set<String> relevant, String heuristic, int top) {
+    int count = 0;
+    Collection<String> results = resultsByHeuristic.get(heuristic);
+    for (String result : results) {
+      if (top-- <= 0) {
+        break;
+      }
+      if (relevant.contains(result)) {
+        count++;
+      }
+    }
+    return count;
   }
   
   public Collection<String> getHeuristics() {

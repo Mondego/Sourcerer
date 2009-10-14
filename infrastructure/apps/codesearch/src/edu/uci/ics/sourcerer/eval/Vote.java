@@ -49,6 +49,19 @@ public class Vote {
     return text.equals(option) && (subOption == null || subVotes.contains(subOption));
   }
   
+  public boolean matches(Set<String> options) {
+    if (options.contains(text)) {
+      return true;
+    } else {
+      for (String subVote : subVotes) {
+        if (options.contains(subVote)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
   public static Vote parseLine(String line) {
     String[] parts = line.split(" ");
     

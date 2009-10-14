@@ -54,6 +54,36 @@ public class VoteOptions {
     }
   }
   
+  public static String getVoteFromAbbreviation(String abbreviation) {
+    if (abbreviation.equals("FUL")) {
+      return "The result fully solves the problem";
+    } else if (abbreviation.equals("COP")) {
+      return "Code can be copied with little modifiction";
+    } else if (abbreviation.equals("EVE")) {
+      return "Contains everything I needed to know";
+    } else if (abbreviation.equals("AAP")) {
+      return "Contains all the APIs needed";
+    } else if (abbreviation.equals("ADD")) {
+      return "Contains additional related information";
+    } else if (abbreviation.equals("PSP")) {
+      return "The result partially solves the problem";
+    } else if (abbreviation.equals("REF")) {
+      return "Following references looks promising";
+    } else if (abbreviation.equals("STK")) {
+      return "Contains something I needed to know";
+    } else if (abbreviation.equals("SAP")) {
+      return "Contains some of the APIs needed";
+    } else if (abbreviation.equals("NOT")) {
+      return "The result is not useful at all";
+    } else if (abbreviation.equals("LON")) {
+      return "Too long, did not read";
+    } else if (abbreviation.equals("IMP")) {
+      return "An implementation of the functionality rather than an API usage example";
+    } else {
+      return null;
+    }
+  }
+  
   public static Vote[] getVoteOptions() {
     Vote[] options = new Vote[3];
     options[0] = new Vote("2", "The result fully solves the problem", 
