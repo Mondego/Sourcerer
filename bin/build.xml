@@ -17,186 +17,231 @@
  -->
 <!-- @author Joel Ossher (jossher@uci.edu) -->
 <!-- @author Sushil Bajracharya (bajracharya@gmail.com) -->
-<project name="Sourcerer Library" default="all" basedir=".">
-  <description>
-    Build file for the library jar.
+<project name="Sourcerer Infrastructure" basedir=".">
+	<description>
+    Build file for the Sourcerer Infrastructure.
   </description>
-  <property name="build" location="build" />
-  <property name="build-search-eval" location="build/search-eval" />
+	<!-- There should be a different build location for each target,
+       so that the jars don't contain unneeded files -->
+	<property name="build" location="build" />
+	<property name="build-java-tools-core" location="${build}/java-tools-core" />
+	<property name="build-search-eval" location="${build}/search-eval" />
+	<property name="build-search-server" location="${build}/search-server" />
+	<property name="build-core-repomanager" location="${build}/core-repomanager" />
+	<property name="build-codecrawler" location="${build}/codecrawler" />
 
-  <property name="utilities" location="../infrastructure/utilities/src" />
-  <property name="repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
-  <property name="model" location="../infrastructure/tools/java/model/src" />
-  <property name="search-eval" location="../infrastructure/apps/codesearch/src" />
-  <property name="core-repository-manager" location="../infrastructure/tools/core/core-repository-manager/src" />
-  <property name="search-server" location="../infrastructure/services/search-server/src" />
-  <property name="solr-root" location="../infrastructure/services/solr-1.3-patched" />
-  <property name="codecrawler" location="../infrastructure/tools/core/codecrawler/src" />
+	<property name="utilities" location="../infrastructure/utilities/src" />
+	<property name="repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
+	<property name="model" location="../infrastructure/tools/java/model/src" />
+	<property name="search-eval" location="../infrastructure/apps/codesearch/src" />
+	<property name="core-repository-manager" location="../infrastructure/tools/core/core-repository-manager/src" />
+	<property name="search-server" location="../infrastructure/services/search-server/src" />
+	<property name="solr-root" location="../infrastructure/services/solr-1.3-patched" />
+	<property name="codecrawler" location="../infrastructure/tools/core/codecrawler/src" />
 
-  <property name="lib" location="../lib" />
+	<property name="lib" location="../lib" />
 
-  <target name="init">
-    <mkdir dir="${build}" />
+	<target name="init">
+		<mkdir dir="${build}" />
+	</target>
+
+	<target name="init-java-tools-core" depends="init">
+    <mkdir dir="${build-java-tools-core}"/>
   </target>
-  
-  <target name="init-search-eval" depends="init">
+	
+	<target name="compile-java-tools-core" depends="init-java-tools-core">
+		<javac destdir="${build-java-tools-core}" debug="on">
+			<src path="${utilities}" />
+			<src path="${repository-manager}" />
+			<src path="${model}" />
+		</javac>
+		<copy todir="${build-java-tools-core}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-java-tools-core}">
+			<fileset dir="${repository-manager}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-java-tools-core}">
+			<fileset dir="${model}" includes="**/*.java" />
+		</copy>
+	</target>
+
+	<target name="sourcerer-lib" depends="compile-java-tools-core">
+		<jar destfile="sourcerer-lib.jar" basedir="${build-java-tools-core}" />
+	</target>
+
+	<target name="repo-tools" depends="compile-java-tools-core">
+		<jar destfile="repo-tools.jar" basedir="${build-java-tools-core}">
+			<manifest>
+				<attribute name="Main-Class" value="edu.uci.ics.sourcerer.repo.Main" />
+			</manifest>
+		</jar>
+	</target>
+	
+	<target name="clean-java-tools">
+		<delete dir="${build-java-tools-core}" />
+		<delete>
+			<fileset dir=".">
+			  <include name="sourcerer-lib.jar" />
+				<include name="repo-tools.jar" />
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="scs">
+		<war destfile="scs.war" webxml="../infrastructure/apps/codesearch/war/WEB-INF/web.xml" basedir="../infrastructure/apps/codesearch/war">
+			<lib dir="${lib}">
+				<include name="mysql*.jar" />
+				<include name="smartgwt*.jar" />
+				<include name="commons*.jar" />
+				<include name="gwt*.jar" />
+			</lib>
+			<exclude name="**/.gitignore" />
+			<exclude name="evaluation/results/**/*" />
+		</war>
+	</target>
+
+	<target name="init-search-eval" depends="init">
     <mkdir dir="${build-search-eval}" />
   </target>
+	
+	<target name="compile-search-eval" depends="init-search-eval">
+		<javac destdir="${build-search-eval}" debug="on" excludes="**/sourcerer/db/**/*.java,**/sourcerer/scs/**/*.java,**/sourcerer/eval/client/**/*.java,**/sourcerer/eval/server/**/*.java">
+			<src path="${utilities}" />
+			<src path="${repository-manager}" />
+			<src path="${model}" />
+			<src path="${search-eval}" />
+		</javac>
+		<copy todir="${build-search-eval}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-search-eval}">
+			<fileset dir="${repository-manager}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-search-eval}">
+			<fileset dir="${model}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-search-eval}">
+			<fileset dir="${search-eval}" includes="**/*.java" />
+		</copy>
+	</target>
+	
+	<target name="search-eval" depends="compile-search-eval">
+		<jar destfile="search-eval.jar" basedir="${build-search-eval}">
+			<manifest>
+				<attribute name="Main-Class" value="edu.uci.ics.sourcerer.eval.CalculateTopStats" />
+			</manifest>
+		</jar>
+	</target>
+	
+	<target name="clean-search-eval">
+		<delete dir="${build-search-eval}" />
+	</target>
 
-  <target name="compile-sourcerer" depends="init">
-    <javac destdir="${build}" debug="on">
-      <src path="${utilities}" />
-      <src path="${repository-manager}" />
-      <src path="${model}" />
-    </javac>
-    <copy todir="${build}">
-      <fileset dir="${utilities}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build}">
-      <fileset dir="${repository-manager}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build}">
-      <fileset dir="${model}" includes="**/*.java" />
-    </copy>
-  </target>
+	<target name="init-search-server" depends="init">
+		<mkdir dir="${build-search-server}" />
+	</target>
+	
+	<target name="compile-search-server" depends="init-search-server">
+		<javac destdir="${build-search-server}" debug="on">
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/apache-solr*.jar" />
+					<include name="**/lucene-*.jar" />
+					<include name="**/commons-httpclient-*.jar" />
+				</fileset>
+			</classpath>
+			<src path="${search-server}" />
+		</javac>
+		<copy todir="${build-search-server}">
+			<fileset dir="${search-server}" includes="**/*.java" />
+		</copy>
+	</target>
 
-  <target name="sourcerer-lib" depends="compile-sourcerer">
-    <jar destfile="sourcerer-lib.jar" basedir="${build}" />
-  </target>
+	<target name="search-server" depends="compile-search-server">
+		<jar destfile="sourcerer-search.jar" basedir="${build-search-server}" />
+	</target>	
+	
+	<target name="clean-search-server">
+		<delete dir="${build-search-server}" />
+	</target>
 
-  <target name="repo" depends="compile-sourcerer">
-    <jar destfile="repo-tools.jar" basedir="${build}">
-      <manifest>
-        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.repo.Main" />
-      </manifest>
-    </jar>
-  </target>
-  
-  <target name="search">
-    <war destfile="scs.war" webxml="../infrastructure/apps/codesearch/war/WEB-INF/web.xml" basedir="../infrastructure/apps/codesearch/war">
-      <lib dir="${lib}">
-        <include name="mysql*.jar" />
-        <include name="smartgwt*.jar" />
-        <include name="commons*.jar" />
-        <include name="gwt*.jar" />
-      </lib>
-      <exclude name="**/.gitignore" />
-      <exclude name="evaluation/results/**/*" />
-    </war>
-  </target>
-  
-  <target name="compile-search-eval" depends="init-search-eval">
-    <javac destdir="${build-search-eval}" debug="on" excludes="**/sourcerer/db/**/*.java,**/sourcerer/scs/**/*.java,**/sourcerer/eval/client/**/*.java,**/sourcerer/eval/server/**/*.java">
-      <src path="${utilities}" />
-      <src path="${repository-manager}" />
-      <src path="${model}" />
-      <src path="${search-eval}" />
-    </javac>
-    <copy todir="${build-search-eval}">
-      <fileset dir="${utilities}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-search-eval}">
-      <fileset dir="${repository-manager}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-search-eval}">
-      <fileset dir="${model}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-search-eval}">
-      <fileset dir="${search-eval}" includes="**/*.java" />
-    </copy>
-  </target>
-  
-  <target name="search-eval" depends="compile-search-eval">
-    <jar destfile="search-eval.jar" basedir="${build-search-eval}">
-      <manifest>
-        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.eval.CalculateTopStats" />
-      </manifest>
-    </jar>
-  </target>
+	<target name="init-core-repomanager" depends="init">
+	  <mkdir dir="${build-core-repomanager}" />
+	</target>
+	
+	<target name="compile-core-repomanager" depends="init-core-repomanager">
+		<javac destdir="${build-core-repomanager}" debug="on">
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/ant-*.jar" />
+					<include name="**/commons-cli-*.jar" />
+					<include name="**/guice-*.jar" />
+					<include name="**/svnclientadapter-*.jar" />
+				</fileset>
+			</classpath>
+			<src path="${core-repository-manager}" />
+		</javac>
+		<copy todir="${build-core-repomanager}">
+			<fileset dir="${core-repository-manager}" includes="**/*.java" />
+		</copy>
+	</target>
 
- <target name="compile-search-server" depends="init">
-    <javac destdir="${build}" debug="on">
-	 <classpath>
-	 	<pathelement path="${classpath}"/>
-		<fileset dir="${lib}">
-            <include name="**/apache-solr*.jar"/>
-            <include name="**/lucene-*.jar"/>
-            <include name="**/commons-httpclient-*.jar"/>
-	    </fileset>
-      </classpath>	
-      <src path="${search-server}" />
-    </javac>
-    <copy todir="${build}">
-      <fileset dir="${search-server}" includes="**/*.java" />
-    </copy>
-  </target>
+	<target name="core-repomanager" depends="compile-core-repomanager">
+		<jar destfile="core-repomanager.jar" basedir="${build-core-repomanager}" />
+		<copy file="${core-repository-manager}/../scripts/content-fetcher.sh" todir="." />
+		<copy file="${core-repository-manager}/../scripts/repo-folder-creator.sh" todir="." />
+	</target>
+	
+	<target name="clean-core-repomanager">
+	  <delete dir="${build-core-repomanager}" />
+	</target>
 
-  <target name="search-server" depends="compile-search-server">
-    <jar destfile="sourcerer-search.jar" basedir="${build}" />
-  </target>
+	<target name="init-codecrawler" depends="init">
+		<mkdir dir="${build-codecrawler}"/>
+	</target>
+	
+	<target name="compile-codecrawler" depends="init-codecrawler">
+		<javac destdir="${build-codecrawler}" debug="on" source="1.5">
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/htmlparser-*.jar" />
+					<include name="**/log4j-*.jar" />
+				</fileset>
+			</classpath>
+			<src path="${codecrawler}" />
+		</javac>
+		<copy todir="${build-codecrawler}">
+			<fileset dir="${codecrawler}" includes="**/*.java" />
+		</copy>
+	</target>
 
-  <target name="compile-core-repomanager" depends="init">
-    <javac destdir="${build}" debug="on">
-	 <classpath>
-	 	<pathelement path="${classpath}"/>
-		<fileset dir="${lib}">
-            <include name="**/ant-*.jar"/>
-            <include name="**/commons-cli-*.jar"/>
-            <include name="**/guice-*.jar"/>
-            <include name="**/svnclientadapter-*.jar"/>
-	    </fileset>
-      </classpath>	
-      <src path="${core-repository-manager}" />
-    </javac>
-    <copy todir="${build}">
-      <fileset dir="${core-repository-manager}" includes="**/*.java" />
-    </copy>
-  </target>
+	<target name="codecrawler" depends="compile-codecrawler">
+		<jar destfile="codecrawler.jar" basedir="${build-codecrawler}" />
+		<copy file="${codecrawler}/../scripts/run-codecrawler.sh" todir="." />
+	</target>
 
-  <target name="core-repomanager" depends="compile-core-repomanager">
-    <jar destfile="core-repomanager.jar" basedir="${build}" />
-    <copy file="${core-repository-manager}/../scripts/content-fetcher.sh" todir="."/>
-    <copy file="${core-repository-manager}/../scripts/repo-folder-creator.sh" todir="."/>
-  </target>
-  
-  <target name="compile-codecrawler" depends="init">
-    <javac destdir="${build}" debug="on" source="1.5">
-	 <classpath>
-	 	<pathelement path="${classpath}"/>
-		<fileset dir="${lib}">
-            <include name="**/htmlparser-*.jar"/>
-            <include name="**/log4j-*.jar"/>
-	    </fileset>
-      </classpath>	
-      <src path="${codecrawler}" />
-    </javac>
-    <copy todir="${build}">
-      <fileset dir="${codecrawler}" includes="**/*.java" />
-    </copy>
-  </target>
+  <target name="clean-codecrawler">
+	  <delete dir="${build-codecrawler}" />
+	</target>
+  	
+	<target name="fetch-patch-solr" depends="init">
+		<get src="http://www.apache.org/dist/lucene/solr/1.3.0/apache-solr-1.3.0.tgz" dest="${build}/apache-solr-1.3.0.tgz" />
+		<untar src="${build}/apache-solr-1.3.0.tgz" dest="${build}" compression="gzip" />
+		<move todir="${solr-root}">
+			<fileset dir="${build}/apache-solr-1.3.0">
+				<include name="**/*" />
+			</fileset>
+		</move>
+		<get src="http://issues.apache.org/jira/secure/attachment/12407410/SOLR-236_collapsing.patch" dest="${solr-root}/SOLR-236_collapsing.patch" />
+		<patch patchfile="${solr-root}/SOLR-236_collapsing.patch" strip="0" dir="${solr-root}" />
+		<move file="${solr-root}/src/common/org/apache/solr/common/params/CollapseParams.java" todir="${solr-root}/src/java/org/apache/solr/common/params" />
+	</target>
 
-  <target name="codecrawler" depends="compile-codecrawler">
-    <jar destfile="codecrawler.jar" basedir="${build}" />
-    <copy file="${codecrawler}/../scripts/run-codecrawler.sh" todir="."/>
-  </target>
-
-  
-  <target name="fetch-patch-solr" depends="init">
-    <get src="http://www.apache.org/dist/lucene/solr/1.3.0/apache-solr-1.3.0.tgz" dest="${build}/apache-solr-1.3.0.tgz"/>
-    <untar src="${build}/apache-solr-1.3.0.tgz" dest="${build}" compression="gzip"/>
-    <move todir="${solr-root}">
-    <fileset dir="${build}/apache-solr-1.3.0">
-      <include name="**/*"/>
-    </fileset>
-    </move>
-    <get src="http://issues.apache.org/jira/secure/attachment/12407410/SOLR-236_collapsing.patch" dest="${solr-root}/SOLR-236_collapsing.patch"/>
-    <patch patchfile="${solr-root}/SOLR-236_collapsing.patch" strip="0" dir="${solr-root}"/>
-    <move file="${solr-root}/src/common/org/apache/solr/common/params/CollapseParams.java" todir="${solr-root}/src/java/org/apache/solr/common/params" />
-  </target>
-
-  <target name="all" depends="sourcerer-lib,repo" />
-
-  <target name="clean" description="clean up">
-    <delete dir="${build}" />
-  </target>
+	<target name="clean" description="clean up" depends="clean-java-tools">
+		<delete dir="${build}" />
+	</target>
 </project>
