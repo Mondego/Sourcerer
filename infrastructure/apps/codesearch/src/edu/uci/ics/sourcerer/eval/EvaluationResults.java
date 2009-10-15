@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -73,7 +73,7 @@ public class EvaluationResults {
     PropertyManager properties = PropertyManager.getProperties();
     
     // Load the evaluation results
-    File input = properties.getValueAsFile(Property.INPUT);
+    File input = properties.getValueAsFile(PropertyOld.INPUT);
    
     EvaluationResults results = new EvaluationResults();
     

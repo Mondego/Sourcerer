@@ -26,7 +26,7 @@ import java.util.Set;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -44,7 +44,7 @@ public class MavenToRepositoryAdder {
       jarsDir.mkdir();
     }
     
-    File mavenDownloadDir = properties.getValueAsFile(Property.INPUT);
+    File mavenDownloadDir = properties.getValueAsFile(PropertyOld.INPUT);
     for (File jar : mavenDownloadDir.listFiles()) {
       if (jar.isFile() && jar.getName().endsWith(".jar")) {
         if (!resume.contains(jar.getName())) {

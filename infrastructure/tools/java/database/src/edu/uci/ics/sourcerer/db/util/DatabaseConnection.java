@@ -24,7 +24,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -45,8 +45,8 @@ public class DatabaseConnection {
   public void open() {
     PropertyManager properties = PropertyManager.getProperties();
     try {
-      connection = DriverManager.getConnection(properties.getValue(Property.DATABASE_URL), properties
-          .getValue(Property.DATABASE_USER), properties.getValue(Property.DATABASE_PASSWORD));
+      connection = DriverManager.getConnection(properties.getValue(PropertyOld.DATABASE_URL), properties
+          .getValue(PropertyOld.DATABASE_USER), properties.getValue(PropertyOld.DATABASE_PASSWORD));
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Exception opening connection", e);
     }

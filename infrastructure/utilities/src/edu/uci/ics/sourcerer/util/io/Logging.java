@@ -71,9 +71,9 @@ public final class Logging {
       throw new IllegalStateException("Resume logging may only be initialized once");
     }
     PropertyManager properties = PropertyManager.getProperties();
-    String resumeFile = properties.getValue(Property.OUTPUT) + File.separatorChar + properties.getValue(Property.RESUME_LOG);
+    String resumeFile = properties.getValue(PropertyOld.OUTPUT) + File.separatorChar + properties.getValue(PropertyOld.RESUME_LOG);
     
-    if (properties.isSet(Property.CLEAR_RESUME_LOG)) {
+    if (properties.isSet(PropertyOld.CLEAR_RESUME_LOG)) {
       File file = new File(resumeFile);
       if (file.exists()) {
         file.delete();
@@ -114,15 +114,15 @@ public final class Logging {
     logger.setUseParentHandlers(false);
     
     try {
-      final boolean suppressFileLogging = properties.isSet(Property.SUPPRESS_FILE_LOGGING);
-      final boolean reportToConsole = properties.isSet(Property.REPORT_TO_CONSOLE);
+      final boolean suppressFileLogging = properties.isSet(PropertyOld.SUPPRESS_FILE_LOGGING);
+      final boolean reportToConsole = properties.isSet(PropertyOld.REPORT_TO_CONSOLE);
       
       if (suppressFileLogging && !reportToConsole) {
         return;
       }
       
       if (!suppressFileLogging) {
-        File dir = new File(properties.getValue(Property.OUTPUT));
+        File dir = new File(properties.getValue(PropertyOld.OUTPUT));
         dir.mkdirs();        
       }
       
@@ -155,7 +155,7 @@ public final class Logging {
             }
           }
         };
-        errorHandler = new FileHandler(properties.getValue(Property.OUTPUT) + File.separatorChar + properties.getValue(Property.ERROR_LOG));
+        errorHandler = new FileHandler(properties.getValue(PropertyOld.OUTPUT) + File.separatorChar + properties.getValue(PropertyOld.ERROR_LOG));
         errorHandler.setFormatter(errorFormatter);
       }
       errorHandler.setLevel(Level.WARNING);
@@ -185,7 +185,7 @@ public final class Logging {
             }
           }
         };
-        infoHandler = new FileHandler(properties.getValue(Property.OUTPUT) + File.separatorChar + properties.getValue(Property.INFO_LOG));
+        infoHandler = new FileHandler(properties.getValue(PropertyOld.OUTPUT) + File.separatorChar + properties.getValue(PropertyOld.INFO_LOG));
         infoHandler.setFormatter(infoFormatter);
       }
       infoHandler.setLevel(Level.INFO);

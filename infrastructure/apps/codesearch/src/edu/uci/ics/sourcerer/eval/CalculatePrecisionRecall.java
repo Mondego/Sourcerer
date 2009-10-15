@@ -24,7 +24,7 @@ import java.util.Set;
 
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 
@@ -36,24 +36,24 @@ public class CalculatePrecisionRecall {
     PropertyManager properties = PropertyManager.getProperties();
     
     // Compute the precision/recall for the top k
-    int top = properties.getValueAsInt(Property.K);
+    int top = properties.getValueAsInt(PropertyOld.K);
     
     // The list of responses to consider relevant
-    String relevantOptions = properties.getValue(Property.PR_LIST);
+    String relevantOptions = properties.getValue(PropertyOld.PR_LIST);
     Set<String> relevantOptionsSet = Helper.newHashSet();
     for (String string : relevantOptions.split(",")) {
       relevantOptionsSet.add(VoteOptions.getVoteFromAbbreviation(string));
     }
     
     // Tuple mode is for easier consumption by R
-    boolean tupleMode = properties.isSet(Property.TUPLE_MODE);
+    boolean tupleMode = properties.isSet(PropertyOld.TUPLE_MODE);
     
     // Load the evaluation results
     EvaluationResults results = EvaluationResults.loadResults();
     
     // Initialize the table printer
-    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(properties, Property.PR_FILE);
-    printer.setCSVMode(properties.isSet(Property.CSV_MODE));
+    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(properties, PropertyOld.PR_FILE);
+    printer.setCSVMode(properties.isSet(PropertyOld.CSV_MODE));
     printer.setFractionDigits(3);
     
     if (tupleMode) {

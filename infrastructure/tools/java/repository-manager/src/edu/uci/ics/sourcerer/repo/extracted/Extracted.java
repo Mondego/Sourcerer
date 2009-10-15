@@ -22,7 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -35,25 +35,25 @@ public abstract class Extracted {
     this.content = content;
   }
 
-  protected InputStream getInputStream(Property property) throws IOException {
+  protected InputStream getInputStream(PropertyOld property) throws IOException {
     PropertyManager properties = PropertyManager.getProperties();
     File file = new File(content, properties.getValue(property));
     return new FileInputStream(file);
   }
 
   public InputStream getEntityInputStream() throws IOException {
-    return getInputStream(Property.ENTITY_FILE); 
+    return getInputStream(PropertyOld.ENTITY_FILE); 
   }
   
   public InputStream getRelationInputStream() throws IOException {
-    return getInputStream(Property.RELATION_FILE);
+    return getInputStream(PropertyOld.RELATION_FILE);
   }
   
   public InputStream getLocalVariableInputStream() throws IOException {
-    return getInputStream(Property.LOCAL_VARIABLE_FILE);
+    return getInputStream(PropertyOld.LOCAL_VARIABLE_FILE);
   }
   
   public InputStream getCommentFile() throws IOException {
-    return getInputStream(Property.COMMENT_FILE);
+    return getInputStream(PropertyOld.COMMENT_FILE);
   }
 }

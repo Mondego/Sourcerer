@@ -22,7 +22,7 @@ import java.util.Collection;
 
 import edu.uci.ics.sourcerer.repo.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -63,7 +63,7 @@ public class ExtractedRepository extends AbstractRepository {
   }
  
   public static ExtractedRepository getRepository() {
-    return getRepository(PropertyManager.getProperties().getValueAsFile(Property.REPO_ROOT));
+    return getRepository(PropertyManager.getProperties().getValueAsFile(PropertyOld.REPO_ROOT));
   }
   
   public static ExtractedRepository getRepository(File repoRoot) {

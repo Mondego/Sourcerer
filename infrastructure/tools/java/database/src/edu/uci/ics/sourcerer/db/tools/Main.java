@@ -19,7 +19,7 @@ package edu.uci.ics.sourcerer.db.tools;
 
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -34,13 +34,13 @@ public class Main {
    connection.open();
    
    PropertyManager properties = PropertyManager.getProperties();
-   if (properties.isSet(Property.INITIALIZE_DATABASE)) {
+   if (properties.isSet(PropertyOld.INITIALIZE_DATABASE)) {
      InitializeDatabase tool = new InitializeDatabase(connection);
      tool.initializeDatabase();
-   } else if (properties.isSet(Property.ADD_JARS)) {
+   } else if (properties.isSet(PropertyOld.ADD_JARS)) {
      AddJars tool = new AddJars(connection);
      tool.addJars();
-   } else if (properties.isSet(Property.ADD_PROJECTS)) {
+   } else if (properties.isSet(PropertyOld.ADD_PROJECTS)) {
 //     AddProjects tool = new AddProjects(connection);
 //     tool.addProjects();
    }

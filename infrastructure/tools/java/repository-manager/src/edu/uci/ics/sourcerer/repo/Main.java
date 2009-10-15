@@ -27,7 +27,7 @@ import edu.uci.ics.sourcerer.repo.maven.MavenDownloader;
 import edu.uci.ics.sourcerer.repo.maven.MavenCrawlStats;
 import edu.uci.ics.sourcerer.repo.maven.MavenToRepositoryAdder;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -38,27 +38,27 @@ public class Main {
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
     PropertyManager properties = PropertyManager.getProperties();
-    if (properties.isSet(Property.CREATE_JAR_INDEX)) {
-      File repo = new File(properties.getValue(Property.REPO_ROOT));
+    if (properties.isSet(PropertyOld.CREATE_JAR_INDEX)) {
+      File repo = new File(properties.getValue(PropertyOld.REPO_ROOT));
       Repository.createJarIndex(repo);
-     } else if (properties.isSet(Property.AGGREGATE_JAR_FILES)) {
-       File repo = properties.getValueAsFile(Property.REPO_ROOT);
+     } else if (properties.isSet(PropertyOld.AGGREGATE_JAR_FILES)) {
+       File repo = properties.getValueAsFile(PropertyOld.REPO_ROOT);
        Repository.aggregateJarFiles(repo);
-     } else if (properties.isSet(Property.CLEAN_REPOSITORY)) {
-       File repo = properties.getValueAsFile(Property.REPO_ROOT);
+     } else if (properties.isSet(PropertyOld.CLEAN_REPOSITORY)) {
+       File repo = properties.getValueAsFile(PropertyOld.REPO_ROOT);
       Repository.deleteCompressedRepository(repo);
-    } else if (properties.isSet(Property.MIGRATE_REPOSITORY)) {
-      File repo = properties.getValueAsFile(Property.REPO_ROOT);
+    } else if (properties.isSet(PropertyOld.MIGRATE_REPOSITORY)) {
+      File repo = properties.getValueAsFile(PropertyOld.REPO_ROOT);
       Set<String> completed = Logging.initializeResumeLogger();
-      File source = new File(properties.getValue(Property.INPUT));
+      File source = new File(properties.getValue(PropertyOld.INPUT));
       Repository.migrateRepository(source, repo, completed);
-    } else if (properties.isSet(Property.CRAWL_MAVEN)) {
+    } else if (properties.isSet(PropertyOld.CRAWL_MAVEN)) {
       MavenCrawler.getDownloadLinks();
-    } else if (properties.isSet(Property.DOWNLOAD_MAVEN)) {
+    } else if (properties.isSet(PropertyOld.DOWNLOAD_MAVEN)) {
       MavenDownloader.downloadLinks();
-    } else if (properties.isSet(Property.ADD_MAVEN_JARS)) {
+    } else if (properties.isSet(PropertyOld.ADD_MAVEN_JARS)) {
       MavenToRepositoryAdder.addToRepository();
-    } else if (properties.isSet(Property.MAVEN_STATS)) {
+    } else if (properties.isSet(PropertyOld.MAVEN_STATS)) {
       MavenCrawlStats.crawlStats();
     }
   }

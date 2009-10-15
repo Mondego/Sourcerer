@@ -33,41 +33,52 @@ import edu.uci.ics.sourcerer.util.Helper;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class PropertyManager {
+  public static final Property<Boolean> PROMPT_MISSING = null;
+  public static final Property<File> PROPERTIES_FILE = null;
+  
   private static PropertyManager singleton = null;
-  private Map<Property, String> propertyMap;
+  private Map<Property<?>, PropertyValue<?>> propertyMap;
+  private Map<String, String> inputMap;
   
   private PropertyManager() {
-    propertyMap = Helper.newEnumMap(Property.class);
+    propertyMap = Helper.newHashMap();
+    inputMap = Helper.newHashMap();
   }
     
-  public synchronized void setProperty(Property prop, String value) {
-    propertyMap.put(prop, value);
-  }
-  
-  public synchronized void setBooleanProperty(Property prop, boolean value) {
-    if (value) {
-      propertyMap.put(prop, "");
+  public synchronized void setProperty(Property<String> prop, String value) {
+    if (prop.isStringProperty()) {
+      Helper.getSubFromMap(propertyMap, prop, PropertyValue.StringValue.class).setValue(value);
     } else {
-      propertyMap.remove(prop);
+      throw new IllegalArgumentException(prop + " is not a string property.");
     }
   }
   
-  public synchronized boolean hasValue(Property prop) {
+  public synchronized void setProperty(Property<Boolean> prop, boolean value) {
+    if (prop.isBooleanProperty()) {
+      Helper.getSubFromMap(propertyMap, prop, PropertyValue.BooleanValue.class).setValue(value);
+    } else {
+      throw new IllegalArgumentException(prop + " is not a boolean property.");
+    }
+  }
+  
+  public synchronized boolean hasValue(Property<?> prop) {
     return propertyMap.containsKey(prop) || prop.hasDefaultValue();
   }
   
-  public synchronized String getValue(Property prop) {
+  @SuppressWarnings("unchecked")
+  public synchronized <T> T getValue(Property<T> prop) {
     if (propertyMap.containsKey(prop)) {
-      return propertyMap.get(prop);
+      return (T) propertyMap.get(prop).getValue();
     } else if (prop.hasDefaultValue()) {
-      return prop.getDefaultValue();
-    } else if (isSet(Property.PROMPT_MISSING)) {
+      return prop.getDefaultValue().getValue();
+    } else if (isSet(PROMPT_MISSING)) {
       try {
         System.out.print("Please enter value for " + prop.getName() + ":");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         String value = br.readLine();
-        propertyMap.put(prop, value);
-        return value;
+        PropertyValue<T> propValue = prop.parseValue(value);
+        propertyMap.put(prop, propValue);
+        return propValue.getValue();
       } catch (IOException e) {
         e.printStackTrace();
         throw new IllegalArgumentException(prop.getName() + " never specified.");
@@ -77,19 +88,11 @@ public class PropertyManager {
     }
   }
   
-  public File getValueAsFile(Property prop) {
-    return new File(getValue(prop));
-  }
-  
-  public int getValueAsInt(Property prop) {
-    return Integer.parseInt(getValue(prop));
-  }
-
-  public synchronized boolean isSet(Property prop) {
-    if (!prop.isFlag()) {
-      throw new IllegalArgumentException(prop.getName() + " is not a flag");
+  public synchronized <T> boolean isSet(Property<T> prop) {
+    if (prop.isBooleanProperty()) {
+      return (Boolean) getValue(prop);
     } else {
-      return propertyMap.containsKey(prop);
+      throw new IllegalArgumentException(prop.getName() + " is not a boolean property");
     }
   }
   
@@ -105,40 +108,30 @@ public class PropertyManager {
       if (args != null) {
         for (int index = 0; index < args.length;) {
           if (args[index].startsWith("--")) {
-            Property prop = Property.parse(args[index].substring(2));
-            if (prop == null) {
-              throw new IllegalArgumentException("Unknown property " + args[index]);
+            String prop = args[index].substring(2);
+            if (args[index + 1].startsWith("--")) {
+              properties.inputMap.put(prop, "--");
             } else {
-              if (prop.isFlag()) {
-                properties.setProperty(prop, "");
-                index++;
-              } else if (++index < args.length) {
-                properties.setProperty(prop, args[index++]);
-              }
+              properties.inputMap.put(prop, args[++index]);
             }
           } else {
-            index++;
+            throw new IllegalArgumentException(args[index] + " from " + args + " is invalid");
           }
         }
       
-        if (properties.hasValue(Property.PROPERTIES_FILE)) {
+        if (properties.hasValue(PROPERTIES_FILE)) {
           try {
-            FileInputStream fis = new FileInputStream(properties.getValue(Property.PROPERTIES_FILE));
+            FileInputStream fis = new FileInputStream(properties.getValue(PROPERTIES_FILE));
     
             Properties props = new Properties();
             props.load(fis);
             fis.close();
-            
+  
             for (Entry<String, String> entry : (Set<Entry<String,String>>)(Object)props.entrySet()) {
-              Property prop = Property.parse(entry.getKey());
-              if (prop == null) {
-                throw new IllegalArgumentException("Unknown property from file " + entry.getKey());
-              } else {
-                properties.setProperty(prop, entry.getValue());
-              }
+              properties.inputMap.put(entry.getKey(), entry.getValue());
             }
           } catch (IOException e) {
-            throw new IllegalArgumentException("Unable to find properties file at " + properties.getValue(Property.PROPERTIES_FILE));
+            throw new IllegalArgumentException("Unable to find properties file at " + properties.getValue(PROPERTIES_FILE));
           }
         }
       }

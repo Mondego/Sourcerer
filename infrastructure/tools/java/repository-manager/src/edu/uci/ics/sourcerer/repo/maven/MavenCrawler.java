@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -49,11 +49,11 @@ public class MavenCrawler {
     
     Set<String> completed = Logging.initializeResumeLogger();
     
-    File outputDir = properties.getValueAsFile(Property.OUTPUT);
+    File outputDir = properties.getValueAsFile(PropertyOld.OUTPUT);
     try {
       Deque<String> links = Helper.newLinkedList();
       
-      File linksFile = new File(outputDir, properties.getValue(Property.LINKS_FILE));
+      File linksFile = new File(outputDir, properties.getValue(PropertyOld.LINKS_FILE));
       if (linksFile.exists()) {
         BufferedReader br = new BufferedReader(new FileReader(linksFile));
         for (String line = br.readLine(); line != null; line = br.readLine()) {
@@ -67,7 +67,7 @@ public class MavenCrawler {
         links.add("");
       }
       
-      String baseUrl = properties.getValue(Property.INPUT);
+      String baseUrl = properties.getValue(PropertyOld.INPUT);
       if (baseUrl.endsWith("/")) {
         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
       }

@@ -35,7 +35,7 @@ public final class FileUtils {
   
   public static File getTempDir() {
     PropertyManager properties = PropertyManager.getProperties();
-    File tempDir = new File(properties.getValue(Property.OUTPUT), "temp");
+    File tempDir = new File(properties.getValue(PropertyOld.OUTPUT), "temp");
     if (tempDir.mkdirs()) {
       return tempDir;
     } else {
@@ -45,7 +45,7 @@ public final class FileUtils {
   
   public static void cleanTempDir() {
     PropertyManager properties = PropertyManager.getProperties();
-    File tempDir = new File(properties.getValue(Property.OUTPUT), "temp");
+    File tempDir = new File(properties.getValue(PropertyOld.OUTPUT), "temp");
     deleteDirectory(tempDir);
   }
   

@@ -22,7 +22,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.File;
 import java.util.regex.Pattern;
 
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -36,7 +36,7 @@ public abstract class AbstractRepository {
   protected AbstractRepository(File repoRoot) {
     this.repoRoot = repoRoot;
     PropertyManager properties = PropertyManager.getProperties();
-    this.jarIndexFile = new File(getJarsDir(), properties.getValue(Property.JAR_INDEX_FILE));
+    this.jarIndexFile = new File(getJarsDir(), properties.getValue(PropertyOld.JAR_INDEX_FILE));
   }
   
   protected abstract void addFile(File checkout);

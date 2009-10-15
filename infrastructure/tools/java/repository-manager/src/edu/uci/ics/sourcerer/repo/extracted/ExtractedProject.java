@@ -26,7 +26,7 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -65,18 +65,18 @@ public class ExtractedProject extends Extracted {
   }
   
   public InputStream getFileInputStream() throws IOException {
-    return getInputStream(Property.FILE_FILE);
+    return getInputStream(PropertyOld.FILE_FILE);
   }
   
   public InputStream getProblemInputStream() throws IOException {
-    return getInputStream(Property.PROBLEM_FILE);
+    return getInputStream(PropertyOld.PROBLEM_FILE);
   }
   
   public InputStream getJarInputStream() throws IOException {
-    return getInputStream(Property.JAR_FILE_FILE);
+    return getInputStream(PropertyOld.JAR_FILE_FILE);
   }
   
   public InputStream getImportInputStream() throws IOException {
-    return getInputStream(Property.IMPORT_FILE);
+    return getInputStream(PropertyOld.IMPORT_FILE);
   }
 }

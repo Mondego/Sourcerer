@@ -38,7 +38,7 @@ import edu.uci.ics.sourcerer.repo.JarIndex;
 import edu.uci.ics.sourcerer.repo.RepoJar;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -69,7 +69,7 @@ public class Repository extends AbstractRepository {
   
   public static Repository getUninitializedRepository() {
     PropertyManager properties = PropertyManager.getProperties();
-    return new Repository(properties.getValueAsFile(Property.REPO_ROOT), null);
+    return new Repository(properties.getValueAsFile(PropertyOld.REPO_ROOT), null);
   }
   
   public static Repository getUninitializedRepository(File repoRoot) {

@@ -57,7 +57,7 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -72,7 +72,7 @@ public class AddProjects extends DatabaseAccessor {
     Set<String> completed = Logging.initializeResumeLogger();
     
     PropertyManager properties = PropertyManager.getProperties();
-    ExtractedRepository extracted = ExtractedRepository.getRepository(properties.getValueAsFile(Property.REPO_ROOT));
+    ExtractedRepository extracted = ExtractedRepository.getRepository(properties.getValueAsFile(PropertyOld.REPO_ROOT));
     
     logger.info("Addings jars to database for " + extracted);
 

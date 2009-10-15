@@ -24,7 +24,7 @@ import java.util.Set;
 
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 
@@ -34,13 +34,13 @@ import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 public class CalculateTopStats {
   public static void calculate() {
     PropertyManager properties = PropertyManager.getProperties();
-    int top = properties.getValueAsInt(Property.K);
+    int top = properties.getValueAsInt(PropertyOld.K);
     
     EvaluationResults results = EvaluationResults.loadResults();
     
     // Print out the results
-    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(properties, Property.STATS_FILE);
-    printer.setCSVMode(properties.isSet(Property.CSV_MODE));
+    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(properties, PropertyOld.STATS_FILE);
+    printer.setCSVMode(properties.isSet(PropertyOld.CSV_MODE));
     printer.setFractionDigits(3);
     
     // Collect the heuristics
@@ -49,7 +49,7 @@ public class CalculateTopStats {
       heuristics.addAll(query.getHeuristics());
     }
     
-    boolean tupleMode = properties.isSet(Property.TUPLE_MODE);
+    boolean tupleMode = properties.isSet(PropertyOld.TUPLE_MODE);
     if (tupleMode) {
       printer.beginTable(heuristics.size() + 4);
       printer.addDividerRow();

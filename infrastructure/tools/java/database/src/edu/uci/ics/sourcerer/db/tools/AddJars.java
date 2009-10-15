@@ -43,7 +43,7 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -58,7 +58,7 @@ public class AddJars extends DatabaseAccessor {
     Set<String> completed = Logging.initializeResumeLogger();
     
     PropertyManager properties = PropertyManager.getProperties();
-    ExtractedRepository extracted = ExtractedRepository.getRepository(properties.getValueAsFile(Property.INPUT));
+    ExtractedRepository extracted = ExtractedRepository.getRepository(properties.getValueAsFile(PropertyOld.INPUT));
     
     logger.info("Adding jars to database for " + extracted);
     

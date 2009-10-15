@@ -90,6 +90,20 @@ public class Helper {
 	  return value;
 	}
 	
+	@SuppressWarnings("unchecked")
+  public static <K, V, A extends V> A getSubFromMap(Map<K, V> map, K key, Class<A> klass) {
+	  A value = (A) map.get(key);
+    if (value == null) {
+      try {
+        value = klass.newInstance();
+      } catch (Exception e) {
+        return null;
+      }
+      map.put(key, value);
+    }
+    return value;
+	}
+	
 	public static <K,V> TreeMap<K,V> newTreeMap() {
 	  return new TreeMap<K, V>();
 	}

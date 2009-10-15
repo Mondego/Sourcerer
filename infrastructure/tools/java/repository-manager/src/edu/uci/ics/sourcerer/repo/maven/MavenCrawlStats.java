@@ -25,7 +25,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -35,10 +35,10 @@ public class MavenCrawlStats {
   public static void crawlStats() {
     try {
       PropertyManager properties = PropertyManager.getProperties();
-      File dir = properties.getValueAsFile(Property.INPUT);
-      File input = new File(dir, properties.getValue(Property.LINKS_FILE));
-//      File output = new File(dir, "fixed-" + properties.getValue(Property.LINKS_FILE));
-      String baseUrl = properties.getValue(Property.MAVEN_URL);
+      File dir = properties.getValueAsFile(PropertyOld.INPUT);
+      File input = new File(dir, properties.getValue(PropertyOld.LINKS_FILE));
+//      File output = new File(dir, "fixed-" + properties.getValue(PropertyOld.LINKS_FILE));
+      String baseUrl = properties.getValue(PropertyOld.MAVEN_URL);
       if (baseUrl.endsWith("/")) {
         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
       }

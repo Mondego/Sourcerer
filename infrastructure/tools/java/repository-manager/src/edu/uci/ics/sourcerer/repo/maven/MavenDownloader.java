@@ -31,7 +31,7 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -42,11 +42,11 @@ public class MavenDownloader {
     try {
       Set<String> resume = Logging.initializeResumeLogger();
       PropertyManager properties = PropertyManager.getProperties();
-      File input = new File(properties.getValue(Property.INPUT), properties.getValue(Property.LINKS_FILE));
+      File input = new File(properties.getValue(PropertyOld.INPUT), properties.getValue(PropertyOld.LINKS_FILE));
      
       Repository repo = Repository.getUninitializedRepository();
       File outputDir = repo.getJarsDir();
-      String baseUrl = properties.getValue(Property.MAVEN_URL);
+      String baseUrl = properties.getValue(PropertyOld.MAVEN_URL);
       if (baseUrl.endsWith("/")) {
         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
       }

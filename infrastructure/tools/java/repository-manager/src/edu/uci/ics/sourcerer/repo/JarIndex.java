@@ -33,7 +33,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -75,7 +75,7 @@ public class JarIndex {
   
   public static void createJarIndexFile(File dir) {
     PropertyManager properties = PropertyManager.getProperties();
-    File indexFile = new File(dir, properties.getValue(Property.JAR_INDEX_FILE));
+    File indexFile = new File(dir, properties.getValue(PropertyOld.JAR_INDEX_FILE));
     
     String baseDir = dir.getPath().replace('\\', '/');
     

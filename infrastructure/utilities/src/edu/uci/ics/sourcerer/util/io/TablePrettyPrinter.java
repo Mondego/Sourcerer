@@ -338,9 +338,9 @@ public class TablePrettyPrinter {
     }
   }
   
-  public static TablePrettyPrinter getTablePrettyPrinter(PropertyManager properties, Property prop) {
+  public static TablePrettyPrinter getTablePrettyPrinter(PropertyManager properties, PropertyOld prop) {
     try {
-      BufferedWriter writer = new BufferedWriter(new FileWriter(new File(properties.getValue(Property.OUTPUT), properties.getValue(prop))));
+      BufferedWriter writer = new BufferedWriter(new FileWriter(new File(properties.getValue(PropertyOld.OUTPUT), properties.getValue(prop))));
       return new TablePrettyPrinter(writer);
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to open output stream for TablePrettyPrinter", e);

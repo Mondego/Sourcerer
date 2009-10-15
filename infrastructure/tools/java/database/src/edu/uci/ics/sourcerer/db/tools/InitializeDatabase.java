@@ -49,7 +49,7 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -62,7 +62,7 @@ public class InitializeDatabase extends DatabaseAccessor {
   
   public void initializeDatabase() {
     PropertyManager properties = PropertyManager.getProperties();
-    ExtractedRepository extracted = ExtractedRepository.getRepository(properties.getValueAsFile(Property.INPUT));
+    ExtractedRepository extracted = ExtractedRepository.getRepository(properties.getValueAsFile(PropertyOld.INPUT));
     logger.info("Initializing database...");
     {
       executor.dropTables(
