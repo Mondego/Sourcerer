@@ -343,7 +343,7 @@ public class TablePrettyPrinter {
     }
   }
   
-  public static TablePrettyPrinter getTablePrettyPrinter(PropertyManager properties, Property<String> prop) {
+  public static TablePrettyPrinter getTablePrettyPrinter(Property<String> prop) {
     try {
       BufferedWriter writer = new BufferedWriter(new FileWriter(new File(OUTPUT.getValue(), prop.getValue())));
       TablePrettyPrinter retval = new TablePrettyPrinter(writer);

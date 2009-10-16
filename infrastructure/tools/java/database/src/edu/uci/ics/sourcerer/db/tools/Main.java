@@ -27,6 +27,7 @@ import edu.uci.ics.sourcerer.util.io.PropertyManager;
  */
 public class Main {
   public static void main(String[] args) {
+    PropertyManager.registerLoggingProperties();
    PropertyManager.initializeProperties(args);
    Logging.initializeLogger();
    

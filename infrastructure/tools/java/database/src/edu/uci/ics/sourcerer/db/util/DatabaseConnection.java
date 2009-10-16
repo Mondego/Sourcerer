@@ -24,13 +24,17 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class DatabaseConnection {
+  public static final Property<String> DATABASE_URL = new StringProperty("database-url", "jdbc:mysql://tagus.ics.uci.edu:3306/sourcerer", "Database", "Url of the database.");
+  public static final Property<String> DATABASE_USER = new StringProperty("database-user", "Database", "Database user account to use when connecting.");
+  public static final Property<String> DATABASE_PASSWORD = new StringProperty("database-password", "", "Database", "Password for the user account.");
+  
   private Connection connection;
   
   public DatabaseConnection() {
@@ -43,10 +47,8 @@ public class DatabaseConnection {
   }
   
   public void open() {
-    PropertyManager properties = PropertyManager.getProperties();
     try {
-      connection = DriverManager.getConnection(properties.getValue(PropertyOld.DATABASE_URL), properties
-          .getValue(PropertyOld.DATABASE_USER), properties.getValue(PropertyOld.DATABASE_PASSWORD));
+      connection = DriverManager.getConnection(DATABASE_URL.getValue(), DATABASE_USER.getValue(), DATABASE_PASSWORD.getValue());
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Exception opening connection", e);
     }

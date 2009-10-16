@@ -40,10 +40,12 @@ public class Main {
   private static final Property<Boolean> CREATE_JAR_INDEX = new BooleanProperty("create-jar-index", false, "Repository Manager", "Creates index of the jars in the target repository.");
   private static final Property<Boolean> AGGREGATE_JAR_FILES = new BooleanProperty("aggregate-jar-files", false, "Repository Manager", "Aggregates the jar files of the target repository.");
   private static final Property<Boolean> CLEAN_REPOSITORY = new BooleanProperty("clean-repository", false, "Repository Manager", "Deletes the compressed portion of the target repository.");
-  private static final Property<Boolean> MIGRATE_REPOSITORY = new BooleanProperty("migrate-repository", false, "Repository Manager", "Migrates (while compressing) the input repository to the target repository.");
+  private static final Property<Boolean> MIGRATE_REPOSITORY = new BooleanProperty("migrate-repository", false, "Repository Manager",
+      "Migrates (while compressing) the input repository to the target repository.");
   private static final Property<Boolean> CRAWL_MAVEN = new BooleanProperty("crawl-maven", false, "Repository Manager", "Crawls the target maven repository.");
   private static final Property<Boolean> DOWNLOAD_MAVEN = new BooleanProperty("download-maven", false, "Repository Manager", "Downloads the jar file links retreived from a maven crawl.");
   private static final Property<Boolean> MAVEN_STATS = new BooleanProperty("maven-stats", false, "Repository Manager", "Gets some statistics on the links retreived from a maven crawl.");
+
   public static void main(String[] args) {
     PropertyManager.registerLoggingProperties();
     PropertyManager.initializeProperties(args);
@@ -52,11 +54,11 @@ public class Main {
       PropertyManager.registerUsedProperties(CREATE_JAR_INDEX, REPO_ROOT, JAR_INDEX_FILE);
       PropertyManager.verifyUsage();
       Repository.createJarIndex(REPO_ROOT.getValue());
-     } else if (AGGREGATE_JAR_FILES.getValue()) {
+    } else if (AGGREGATE_JAR_FILES.getValue()) {
       PropertyManager.registerUsedProperties(AGGREGATE_JAR_FILES, REPO_ROOT);
       PropertyManager.verifyUsage();
       Repository.aggregateJarFiles(REPO_ROOT.getValue());
-     } else if (CLEAN_REPOSITORY.getValue()) {
+    } else if (CLEAN_REPOSITORY.getValue()) {
       PropertyManager.registerUsedProperties(CLEAN_REPOSITORY, REPO_ROOT);
       PropertyManager.verifyUsage();
       Repository.deleteCompressedRepository(REPO_ROOT.getValue());
@@ -79,13 +81,7 @@ public class Main {
       PropertyManager.verifyUsage();
       MavenCrawlStats.crawlStats();
     } else {
-      PropertyManager.registerUsedProperties(CREATE_JAR_INDEX,
-          AGGREGATE_JAR_FILES, 
-          CLEAN_REPOSITORY,
-          MIGRATE_REPOSITORY,
-          CRAWL_MAVEN,
-          DOWNLOAD_MAVEN,
-          MAVEN_STATS);
+      PropertyManager.registerUsedProperties(CREATE_JAR_INDEX, AGGREGATE_JAR_FILES, CLEAN_REPOSITORY, MIGRATE_REPOSITORY, CRAWL_MAVEN, DOWNLOAD_MAVEN, MAVEN_STATS);
       PropertyManager.printUsage();
     }
   }

@@ -19,6 +19,7 @@
 package edu.uci.ics.sourcerer.eval;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
 
 import java.io.File;
 import java.util.Collection;
@@ -26,8 +27,6 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -70,10 +69,8 @@ public class EvaluationResults {
   }
 
   public static EvaluationResults loadResults() {
-    PropertyManager properties = PropertyManager.getProperties();
-    
     // Load the evaluation results
-    File input = properties.getValueAsFile(PropertyOld.INPUT);
+    File input = INPUT.getValue();
    
     EvaluationResults results = new EvaluationResults();
     

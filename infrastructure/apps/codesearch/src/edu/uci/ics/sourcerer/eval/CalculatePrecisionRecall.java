@@ -18,40 +18,45 @@
  */
 package edu.uci.ics.sourcerer.eval;
 
+import static edu.uci.ics.sourcerer.eval.Main.TOP_K;
+import static edu.uci.ics.sourcerer.eval.Main.TUPLE_MODE;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
+import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class CalculatePrecisionRecall {
+  public static final Property<String> RELEVANT_LIST = new StringProperty("relevant-list", "FUL,PSP", "Evaluation Stats", "Vote options to consider relevant.");
+  public static final Property<String> PR_FILE = new StringProperty("pr-file", "pr.txt", "Evaluation Stats", "Filename for precision/recall results.");
+  
   public static void calculate() {
     // Compute the precision/recall for the top k
-    int top = properties.getValueAsInt(PropertyOld.K);
+    int top = TOP_K.getValue();
     
     // The list of responses to consider relevant
-    String relevantOptions = properties.getValue(PropertyOld.PR_LIST);
+    String relevantOptions = RELEVANT_LIST.getValue();
     Set<String> relevantOptionsSet = Helper.newHashSet();
     for (String string : relevantOptions.split(",")) {
       relevantOptionsSet.add(VoteOptions.getVoteFromAbbreviation(string));
     }
     
     // Tuple mode is for easier consumption by R
-    boolean tupleMode = properties.isSet(PropertyOld.TUPLE_MODE);
+    boolean tupleMode = TUPLE_MODE.getValue();
     
     // Load the evaluation results
     EvaluationResults results = EvaluationResults.loadResults();
     
     // Initialize the table printer
-    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(properties, PropertyOld.PR_FILE);
-    printer.setCSVMode(properties.isSet(PropertyOld.CSV_MODE));
+    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(PR_FILE);
     printer.setFractionDigits(3);
     
     if (tupleMode) {
