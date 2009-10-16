@@ -33,13 +33,15 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarIndex {
+  public static final Property<String> JAR_INDEX_FILE = new StringProperty("jar-index", "index.txt", "Repository Manager", "The filename of the jar index.");
+  
   private Map<String, IndexedJar> index;
   
   private JarIndex() {
@@ -74,8 +76,7 @@ public class JarIndex {
   }
   
   public static void createJarIndexFile(File dir) {
-    PropertyManager properties = PropertyManager.getProperties();
-    File indexFile = new File(dir, properties.getValue(PropertyOld.JAR_INDEX_FILE));
+    File indexFile = new File(dir, JAR_INDEX_FILE.getValue());
     
     String baseDir = dir.getPath().replace('\\', '/');
     

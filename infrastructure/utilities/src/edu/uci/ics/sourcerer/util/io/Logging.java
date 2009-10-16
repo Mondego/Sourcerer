@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.util.io;
 
+import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -36,23 +38,49 @@ import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 @SuppressWarnings("serial")
 public final class Logging {
+  protected static final Property<Boolean> SUPPRESS_FILE_LOGGING = new BooleanProperty("suppress-file-logging", false, "Logging", "Suppresses all logging to files.");
+  protected static final Property<Boolean> REPORT_TO_CONSOLE = new BooleanProperty("report-to-console", false, "Logging", "Prints all the logging messages to the console.");
+  
+  protected static final Property<String> ERROR_LOG = new StringProperty("error-log", "error.log", "Logging", "Filename for error log.");
+  
+  protected static final Property<String> INFO_LOG = new StringProperty("info-log", "info.log", "Logging", "Filename for the info log.");
+  
+  protected static final Property<String> RESUME_LOG = new StringProperty("resume-log", "resume.log", "Logging", "Filename for the resume log.");
+  protected static final Property<Boolean> CLEAR_RESUME_LOG = new BooleanProperty("clear-resume-log", false, "Logging", "Clears the resume log before beginning."); 
+  
   private Logging() {}
   
   public static final Level RESUME = new Level("RESUME", 10000) {};
-  public static Logger logger = null;
+  private static boolean loggingInitialized = false;
+  public static Logger logger;
+  private static StreamHandler defaultHandler; 
+  static {
+    logger = Logger.getLogger("edu.uci.ics.sourcerer.util.io");
+    logger.setUseParentHandlers(false);
     
-  private static Set<String> getResumeSet(String resumeFile) {
-    File file = new File(resumeFile);
-    if (file.exists()) {
+    Formatter formatter = new Formatter() {
+      @Override
+      public String format(LogRecord record) {
+        return Logging.formatError(record);
+      }
+    };
+    defaultHandler = new StreamHandler(System.err, formatter);
+    logger.addHandler(defaultHandler);
+  }
+    
+  private static Set<String> getResumeSet(File resumeFile) {
+    if (resumeFile.exists()) {
       Set<String> resumeSet = Helper.newHashSet();
       try {
-        BufferedReader br = new BufferedReader(new FileReader(file));
+        BufferedReader br = new BufferedReader(new FileReader(resumeFile));
         for (String line = br.readLine(); line != null; line = br.readLine()) {
           resumeSet.add(line);
         }
@@ -64,30 +92,32 @@ public final class Logging {
       return Collections.emptySet();
     }
   }
+  
+  public synchronized static boolean loggingInitialized() {
+    return loggingInitialized;
+  }
     
   private static boolean resumeLoggingEnabled = false;
   public synchronized static Set<String> initializeResumeLogger() {
     if (resumeLoggingEnabled) {
       throw new IllegalStateException("Resume logging may only be initialized once");
     }
-    PropertyManager properties = PropertyManager.getProperties();
-    String resumeFile = properties.getValue(PropertyOld.OUTPUT) + File.separatorChar + properties.getValue(PropertyOld.RESUME_LOG);
+    File resumeFile = new File(OUTPUT.getValue(), RESUME_LOG.getValue());
     
-    if (properties.isSet(PropertyOld.CLEAR_RESUME_LOG)) {
-      File file = new File(resumeFile);
-      if (file.exists()) {
-        file.delete();
+    if (CLEAR_RESUME_LOG.getValue()) {
+      if (resumeFile.exists()) {
+        resumeFile.delete();
       }
     }
     
     Set<String> resumeSet = getResumeSet(resumeFile);
     
-    if (logger == null) {
+    if (!loggingInitialized) {
       initializeLogger();
     }
     
     try {
-      FileHandler resumeHandler = new FileHandler(resumeFile, true);
+      FileHandler resumeHandler = new FileHandler(resumeFile.getPath(), true);
       resumeHandler.setLevel(RESUME);
       resumeHandler.setFormatter(new Formatter() {
         @Override
@@ -106,24 +136,20 @@ public final class Logging {
   }
  
   public synchronized static void initializeLogger() {
-    if (logger != null) {
+    if (loggingInitialized) {
       throw new IllegalStateException("The logger may only be initialized once");
     }
-    PropertyManager properties = PropertyManager.getProperties();
-    logger = Logger.getLogger("edu.uci.ics.sourcerer.util.io");
-    logger.setUseParentHandlers(false);
-    
+   
     try {
-      final boolean suppressFileLogging = properties.isSet(PropertyOld.SUPPRESS_FILE_LOGGING);
-      final boolean reportToConsole = properties.isSet(PropertyOld.REPORT_TO_CONSOLE);
+      final boolean suppressFileLogging = SUPPRESS_FILE_LOGGING.getValue();
+      final boolean reportToConsole = REPORT_TO_CONSOLE.getValue();
       
       if (suppressFileLogging && !reportToConsole) {
         return;
       }
       
       if (!suppressFileLogging) {
-        File dir = new File(properties.getValue(PropertyOld.OUTPUT));
-        dir.mkdirs();        
+        OUTPUT.getValue().mkdirs();
       }
       
       Formatter errorFormatter = null;
@@ -155,7 +181,7 @@ public final class Logging {
             }
           }
         };
-        errorHandler = new FileHandler(properties.getValue(PropertyOld.OUTPUT) + File.separatorChar + properties.getValue(PropertyOld.ERROR_LOG));
+        errorHandler = new FileHandler(new File(OUTPUT.getValue(), ERROR_LOG.getValue()).getPath());
         errorHandler.setFormatter(errorFormatter);
       }
       errorHandler.setLevel(Level.WARNING);
@@ -185,13 +211,15 @@ public final class Logging {
             }
           }
         };
-        infoHandler = new FileHandler(properties.getValue(PropertyOld.OUTPUT) + File.separatorChar + properties.getValue(PropertyOld.INFO_LOG));
+        infoHandler = new FileHandler(new File(OUTPUT.getValue(), INFO_LOG.getValue()).getPath());
         infoHandler.setFormatter(infoFormatter);
       }
       infoHandler.setLevel(Level.INFO);
             
       logger.addHandler(errorHandler);
       logger.addHandler(infoHandler);
+      
+      logger.removeHandler(defaultHandler);
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(1);

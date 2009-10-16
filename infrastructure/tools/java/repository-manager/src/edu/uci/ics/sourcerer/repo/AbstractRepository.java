@@ -22,21 +22,22 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.File;
 import java.util.regex.Pattern;
 
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractRepository {
+  public static final Property<File> REPO_ROOT = new FileProperty("repo-root", "Repository Manager", "The root directory of the repository.");
+  
   protected File repoRoot;
   protected File jarIndexFile;
   
   protected JarIndex jarIndex;
   protected AbstractRepository(File repoRoot) {
     this.repoRoot = repoRoot;
-    PropertyManager properties = PropertyManager.getProperties();
-    this.jarIndexFile = new File(getJarsDir(), properties.getValue(PropertyOld.JAR_INDEX_FILE));
+    this.jarIndexFile = new File(getJarsDir(), JarIndex.JAR_INDEX_FILE.getValue());
   }
   
   protected abstract void addFile(File checkout);

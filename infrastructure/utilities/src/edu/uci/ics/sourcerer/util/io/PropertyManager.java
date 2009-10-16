@@ -17,82 +17,111 @@
  */
 package edu.uci.ics.sourcerer.util.io;
 
-import java.io.BufferedReader;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
+import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
+import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class PropertyManager {
-  public static final Property<Boolean> PROMPT_MISSING = null;
-  public static final Property<File> PROPERTIES_FILE = null;
+  public static final Property<Boolean> PRINT_USAGE = new BooleanProperty("usage", false, "General", "Prints usage information.");
+  public static final Property<File> PROPERTIES_FILE = new FileProperty("properties-file", "General", "File containing Java-style property bindings.").makeOptional();
+  public static final Property<Boolean> REQUIRE_REGISTERED = new BooleanProperty("require-registered-properties", true, "General", "Terminate execution if registered property not present.");
   
   private static PropertyManager singleton = null;
-  private Map<Property<?>, PropertyValue<?>> propertyMap;
-  private Map<String, String> inputMap;
+  private static Map<String, Collection<Property<?>>> usedProperties = null;
+  private Map<String, String> propertyMap;
   
   private PropertyManager() {
     propertyMap = Helper.newHashMap();
-    inputMap = Helper.newHashMap();
   }
-    
-  public synchronized void setProperty(Property<String> prop, String value) {
-    if (prop.isStringProperty()) {
-      Helper.getSubFromMap(propertyMap, prop, PropertyValue.StringValue.class).setValue(value);
-    } else {
-      throw new IllegalArgumentException(prop + " is not a string property.");
+  
+  protected synchronized String getValue(String name) {
+    return propertyMap.get(name);
+  }
+  
+  public synchronized static void registerLoggingProperties() {
+    registerUsedProperties(edu.uci.ics.sourcerer.util.io.Properties.OUTPUT,
+        Logging.REPORT_TO_CONSOLE,
+        Logging.SUPPRESS_FILE_LOGGING,
+        Logging.INFO_LOG,
+        Logging.ERROR_LOG);
+  }
+  
+  public synchronized static void registerResumeLoggingProperties() {
+    registerLoggingProperties();
+    registerUsedProperties(Logging.RESUME_LOG, Logging.CLEAR_RESUME_LOG);
+  }
+  
+  private static void addProperty(Property<?> prop) {
+    Helper.getFromMap(usedProperties, prop.category, HashSet.class).add(prop);
+  }
+  
+  public synchronized static void registerUsedProperties(Property<?> ... properties) {
+    if (usedProperties == null) {
+      usedProperties = Helper.newHashMap();   
+      addProperty(PRINT_USAGE);
+      addProperty(REQUIRE_REGISTERED);
+    }
+    for (Property<?> prop : properties) {
+      addProperty(prop);
     }
   }
   
-  public synchronized void setProperty(Property<Boolean> prop, boolean value) {
-    if (prop.isBooleanProperty()) {
-      Helper.getSubFromMap(propertyMap, prop, PropertyValue.BooleanValue.class).setValue(value);
-    } else {
-      throw new IllegalArgumentException(prop + " is not a boolean property.");
-    }
-  }
-  
-  public synchronized boolean hasValue(Property<?> prop) {
-    return propertyMap.containsKey(prop) || prop.hasDefaultValue();
-  }
-  
-  @SuppressWarnings("unchecked")
-  public synchronized <T> T getValue(Property<T> prop) {
-    if (propertyMap.containsKey(prop)) {
-      return (T) propertyMap.get(prop).getValue();
-    } else if (prop.hasDefaultValue()) {
-      return prop.getDefaultValue().getValue();
-    } else if (isSet(PROMPT_MISSING)) {
-      try {
-        System.out.print("Please enter value for " + prop.getName() + ":");
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        String value = br.readLine();
-        PropertyValue<T> propValue = prop.parseValue(value);
-        propertyMap.put(prop, propValue);
-        return propValue.getValue();
-      } catch (IOException e) {
-        e.printStackTrace();
-        throw new IllegalArgumentException(prop.getName() + " never specified.");
+  public synchronized static void printUsage() {
+    TablePrettyPrinter printer = TablePrettyPrinter.getCommandLinePrettyPrinter();
+    printer.beginTable(3);
+    printer.addDividerRow();
+    for (Map.Entry<String, Collection<Property<?>>> entry : usedProperties.entrySet()) {
+      printer.beginRow();
+      printer.addCell(entry.getKey() + " Properties", 3, Alignment.CENTER);
+      printer.addDividerRow();
+      for (Property<?> property : entry.getValue()) {
+        printer.beginRow();
+        printer.addCell(property.getName());
+        printer.addCell(property.getType());
+        printer.addCell(property.getDescriptionWithDefault());
       }
-    } else {
-      throw new IllegalArgumentException(prop.getName() + " never specified.");
+      printer.addDividerRow();
     }
+    printer.endTable();
+    System.exit(0);
   }
   
-  public synchronized <T> boolean isSet(Property<T> prop) {
-    if (prop.isBooleanProperty()) {
-      return (Boolean) getValue(prop);
-    } else {
-      throw new IllegalArgumentException(prop.getName() + " is not a boolean property");
+  public synchronized static void verifyUsage() {
+    boolean problem = false;
+    for (Collection<Property<?>> properties : usedProperties.values()) {
+      for (Property<?> prop : properties) {
+        if (!prop.hasValue() && prop.isNotOptional()) {
+          logger.log(Level.SEVERE, prop.getName() + " not specified.");
+          problem = true;
+        }
+      }
+    }
+    if (problem && REQUIRE_REGISTERED.getValue()) {
+      printUsage();
+    }
+    printUsageIfRequested();
+  }
+  
+  public synchronized static void printUsageIfRequested() {
+    if (PRINT_USAGE.getValue()) {
+      printUsage();
     }
   }
   
@@ -103,45 +132,44 @@ public class PropertyManager {
   @SuppressWarnings("unchecked")
   public synchronized static void initializeProperties(String[] args) {
     if (singleton == null) {
-      PropertyManager properties = new PropertyManager();
+      singleton = new PropertyManager();
       
       if (args != null) {
-        for (int index = 0; index < args.length;) {
+        for (int index = 0; index < args.length; index++) {
           if (args[index].startsWith("--")) {
             String prop = args[index].substring(2);
-            if (args[index + 1].startsWith("--")) {
-              properties.inputMap.put(prop, "--");
+            if (index == args.length - 1 || args[index + 1].startsWith("--")) {
+              singleton.propertyMap.put(prop, "true");
             } else {
-              properties.inputMap.put(prop, args[++index]);
+              singleton.propertyMap.put(prop, args[++index]);
             }
           } else {
             throw new IllegalArgumentException(args[index] + " from " + args + " is invalid");
           }
         }
       
-        if (properties.hasValue(PROPERTIES_FILE)) {
+        if (PROPERTIES_FILE.hasValue()) {
           try {
-            FileInputStream fis = new FileInputStream(properties.getValue(PROPERTIES_FILE));
+            FileInputStream fis = new FileInputStream(PROPERTIES_FILE.getValue());
     
             Properties props = new Properties();
             props.load(fis);
             fis.close();
   
             for (Entry<String, String> entry : (Set<Entry<String,String>>)(Object)props.entrySet()) {
-              properties.inputMap.put(entry.getKey(), entry.getValue());
+              singleton.propertyMap.put(entry.getKey(), entry.getValue());
             }
           } catch (IOException e) {
-            throw new IllegalArgumentException("Unable to find properties file at " + properties.getValue(PROPERTIES_FILE));
+            throw new IllegalArgumentException("Unable to find properties file at " + PROPERTIES_FILE.getValue().getPath());
           }
         }
       }
-      singleton = properties;
     } else {
       throw new IllegalStateException("Attempt to initialize PropertyManager twice!");
     }
   }
   
-  public synchronized static PropertyManager getProperties() {
+  protected synchronized static PropertyManager getProperties() {
     if (singleton == null) {
       throw new IllegalStateException("Properties not initialized");
     } else {

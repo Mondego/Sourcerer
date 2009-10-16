@@ -26,12 +26,18 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedProject extends Extracted {
+  public static final Property<String> FILE_FILE = new StringProperty("file-file", "files.txt", "Repository Manager", "Filename for the extracted files.");
+  public static final Property<String> PROBLEM_FILE = new StringProperty("problem-file", "problems.txt", "Repository Manager", "Filename for the extracted problems.");
+  public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Repository Manager", "Filename for the associated jars.");
+  public static final Property<String> IMPORT_FILE = new StringProperty("import-file", "imports.txt", "Repository Manager", "Filename for the extracted imports.");
+  
   private String relativetPath;
   private String name;
   
@@ -65,18 +71,18 @@ public class ExtractedProject extends Extracted {
   }
   
   public InputStream getFileInputStream() throws IOException {
-    return getInputStream(PropertyOld.FILE_FILE);
+    return getInputStream(FILE_FILE);
   }
   
   public InputStream getProblemInputStream() throws IOException {
-    return getInputStream(PropertyOld.PROBLEM_FILE);
+    return getInputStream(PROBLEM_FILE);
   }
   
   public InputStream getJarInputStream() throws IOException {
-    return getInputStream(PropertyOld.JAR_FILE_FILE);
+    return getInputStream(JAR_FILE_FILE);
   }
   
   public InputStream getImportInputStream() throws IOException {
-    return getInputStream(PropertyOld.IMPORT_FILE);
+    return getInputStream(IMPORT_FILE);
   }
 }

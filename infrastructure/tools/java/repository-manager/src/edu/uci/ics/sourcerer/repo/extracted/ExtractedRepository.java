@@ -22,8 +22,6 @@ import java.util.Collection;
 
 import edu.uci.ics.sourcerer.repo.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -63,7 +61,7 @@ public class ExtractedRepository extends AbstractRepository {
   }
  
   public static ExtractedRepository getRepository() {
-    return getRepository(PropertyManager.getProperties().getValueAsFile(PropertyOld.REPO_ROOT));
+    return getRepository(REPO_ROOT.getValue());
   }
   
   public static ExtractedRepository getRepository(File repoRoot) {

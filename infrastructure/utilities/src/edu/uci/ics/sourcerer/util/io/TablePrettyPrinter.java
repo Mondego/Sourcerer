@@ -18,21 +18,26 @@
 package edu.uci.ics.sourcerer.util.io;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class TablePrettyPrinter {
+  public static final Property<Boolean> CSV_MODE = new BooleanProperty("csv-mode", false, "General", "Print tables as csv instead of prettily.");
+  
   private BufferedWriter writer;
   private ArrayList<TableRow> table;
   private MaxCounter[] maxWidths;
@@ -338,14 +343,21 @@ public class TablePrettyPrinter {
     }
   }
   
-  public static TablePrettyPrinter getTablePrettyPrinter(PropertyManager properties, PropertyOld prop) {
+  public static TablePrettyPrinter getTablePrettyPrinter(PropertyManager properties, Property<String> prop) {
     try {
-      BufferedWriter writer = new BufferedWriter(new FileWriter(new File(properties.getValue(PropertyOld.OUTPUT), properties.getValue(prop))));
-      return new TablePrettyPrinter(writer);
+      BufferedWriter writer = new BufferedWriter(new FileWriter(new File(OUTPUT.getValue(), prop.getValue())));
+      TablePrettyPrinter retval = new TablePrettyPrinter(writer);
+      retval.setCSVMode(CSV_MODE.getValue());
+      return retval;
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to open output stream for TablePrettyPrinter", e);
       return null;
     }
+  }
+  
+  public static TablePrettyPrinter getCommandLinePrettyPrinter() {
+    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
+    return new TablePrettyPrinter(writer);
   }
   
   private class TableRow {

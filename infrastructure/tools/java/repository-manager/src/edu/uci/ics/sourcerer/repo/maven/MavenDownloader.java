@@ -17,8 +17,11 @@
  */
 package edu.uci.ics.sourcerer.repo.maven;
 
+import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.LINKS_FILE;
+import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.MAVEN_URL;
 import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,8 +34,6 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -41,12 +42,11 @@ public class MavenDownloader {
   public static void downloadLinks() {
     try {
       Set<String> resume = Logging.initializeResumeLogger();
-      PropertyManager properties = PropertyManager.getProperties();
-      File input = new File(properties.getValue(PropertyOld.INPUT), properties.getValue(PropertyOld.LINKS_FILE));
+      File input = new File(INPUT.getValue(), LINKS_FILE.getValue());
      
       Repository repo = Repository.getUninitializedRepository();
       File outputDir = repo.getJarsDir();
-      String baseUrl = properties.getValue(PropertyOld.MAVEN_URL);
+      String baseUrl = MAVEN_URL.getValue();
       if (baseUrl.endsWith("/")) {
         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
       }

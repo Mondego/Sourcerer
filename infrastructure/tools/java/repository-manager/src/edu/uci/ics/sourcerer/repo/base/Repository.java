@@ -38,8 +38,6 @@ import edu.uci.ics.sourcerer.repo.JarIndex;
 import edu.uci.ics.sourcerer.repo.RepoJar;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -68,8 +66,7 @@ public class Repository extends AbstractRepository {
   }
   
   public static Repository getUninitializedRepository() {
-    PropertyManager properties = PropertyManager.getProperties();
-    return new Repository(properties.getValueAsFile(PropertyOld.REPO_ROOT), null);
+    return new Repository(REPO_ROOT.getValue(), null);
   }
   
   public static Repository getUninitializedRepository(File repoRoot) {

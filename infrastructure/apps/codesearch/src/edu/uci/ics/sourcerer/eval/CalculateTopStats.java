@@ -18,29 +18,35 @@
  */
 package edu.uci.ics.sourcerer.eval;
 
+import static edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.CSV_MODE;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
+import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class CalculateTopStats {
+  public static final Property<Integer> TOP_STATS_FILE = new StringProperty("top-stats-file", "top-stats.txt", "Evaluation Stats", "Filename for the top stats results.");
+  public static final Property<Integer> TOP_K = new IntegerProperty("top-k", 10, "Evaluation Stats", "Number of top results to consider.");
+  
   public static void calculate() {
-    PropertyManager properties = PropertyManager.getProperties();
-    int top = properties.getValueAsInt(PropertyOld.K);
+    int top = TOP_K.getValue();
     
     EvaluationResults results = EvaluationResults.loadResults();
     
     // Print out the results
-    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(properties, PropertyOld.STATS_FILE);
-    printer.setCSVMode(properties.isSet(PropertyOld.CSV_MODE));
+    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(STATS_FILE);
     printer.setFractionDigits(3);
     
     // Collect the heuristics

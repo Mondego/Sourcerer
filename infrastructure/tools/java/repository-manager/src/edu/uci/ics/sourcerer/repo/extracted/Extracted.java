@@ -22,38 +22,42 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class Extracted {
+  public static final Property<String> ENTITY_FILE = new StringProperty("entity-file", "entities.txt", "Repository Manager", "Filename for the extracted entities.");
+  public static final Property<String> RELATION_FILE = new StringProperty("relation-file", "relations.txt", "Repository Manager", "Filename for the extracted relations.");
+  public static final Property<String> LOCAL_VARIABLE_FILE = new StringProperty("local-variables-file", "local-variables.txt", "Repository Manager", "Filename for the extracted local variables / parameters.");
+  public static final Property<String> COMMENT_FILE = new StringProperty("comment-file", "comments.txt", "Repository Manager", "Filename for the extracted comments.");
+  
   protected File content;
 
   public Extracted(File content) {
     this.content = content;
   }
 
-  protected InputStream getInputStream(PropertyOld property) throws IOException {
-    PropertyManager properties = PropertyManager.getProperties();
-    File file = new File(content, properties.getValue(property));
+  protected InputStream getInputStream(Property<String> property) throws IOException {
+    File file = new File(content, property.getValue());
     return new FileInputStream(file);
   }
 
   public InputStream getEntityInputStream() throws IOException {
-    return getInputStream(PropertyOld.ENTITY_FILE); 
+    return getInputStream(ENTITY_FILE); 
   }
   
   public InputStream getRelationInputStream() throws IOException {
-    return getInputStream(PropertyOld.RELATION_FILE);
+    return getInputStream(RELATION_FILE);
   }
   
   public InputStream getLocalVariableInputStream() throws IOException {
-    return getInputStream(PropertyOld.LOCAL_VARIABLE_FILE);
+    return getInputStream(LOCAL_VARIABLE_FILE);
   }
   
   public InputStream getCommentFile() throws IOException {
-    return getInputStream(PropertyOld.COMMENT_FILE);
+    return getInputStream(COMMENT_FILE);
   }
 }

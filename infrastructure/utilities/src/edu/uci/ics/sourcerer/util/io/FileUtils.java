@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.util.io;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,15 +28,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class FileUtils {
+  protected static final Property<String> TEMP_DIR = new StringProperty("temp-dir", "temp", "Name of temp directory placed into OUTPUT directory");
+  
   private FileUtils() {}
   
   public static File getTempDir() {
-    PropertyManager properties = PropertyManager.getProperties();
-    File tempDir = new File(properties.getValue(PropertyOld.OUTPUT), "temp");
+    File tempDir = new File(OUTPUT.getValue(), TEMP_DIR.getValue());
     if (tempDir.mkdirs()) {
       return tempDir;
     } else {
@@ -44,8 +48,7 @@ public final class FileUtils {
   }
   
   public static void cleanTempDir() {
-    PropertyManager properties = PropertyManager.getProperties();
-    File tempDir = new File(properties.getValue(PropertyOld.OUTPUT), "temp");
+    File tempDir = new File(OUTPUT.getValue(), TEMP_DIR.getValue());
     deleteDirectory(tempDir);
   }
   

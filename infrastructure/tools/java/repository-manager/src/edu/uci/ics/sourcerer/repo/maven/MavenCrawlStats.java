@@ -17,7 +17,10 @@
  */
 package edu.uci.ics.sourcerer.repo.maven;
 
+import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.LINKS_FILE;
+import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.MAVEN_URL;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,20 +28,16 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
-
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class MavenCrawlStats {
   public static void crawlStats() {
     try {
-      PropertyManager properties = PropertyManager.getProperties();
-      File dir = properties.getValueAsFile(PropertyOld.INPUT);
-      File input = new File(dir, properties.getValue(PropertyOld.LINKS_FILE));
+      File dir = INPUT.getValue();
+      File input = new File(dir, LINKS_FILE.getValue());
 //      File output = new File(dir, "fixed-" + properties.getValue(PropertyOld.LINKS_FILE));
-      String baseUrl = properties.getValue(PropertyOld.MAVEN_URL);
+      String baseUrl = MAVEN_URL.getValue();
       if (baseUrl.endsWith("/")) {
         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
       }

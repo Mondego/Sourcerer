@@ -33,8 +33,6 @@ import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
  */
 public class CalculatePrecisionRecall {
   public static void calculate() {
-    PropertyManager properties = PropertyManager.getProperties();
-    
     // Compute the precision/recall for the top k
     int top = properties.getValueAsInt(PropertyOld.K);
     

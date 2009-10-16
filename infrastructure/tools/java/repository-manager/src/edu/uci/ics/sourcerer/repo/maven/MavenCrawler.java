@@ -17,8 +17,9 @@
  */
 package edu.uci.ics.sourcerer.repo.maven;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -36,24 +37,26 @@ import java.util.regex.Pattern;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class MavenCrawler {
+  public static final Property<String> MAVEN_URL = new StringProperty("maven-url", "Maven Tools", "URL of the maven repository");
+  public static final Property<String> LINKS_FILE = new StringProperty("links-file", "links.txt", "Maven Tools", "File containing links crawled from maven.");
+  
   public static void getDownloadLinks() {
     Pattern linkPattern = Pattern.compile("<a\\shref=\"(.*?)\">");
-    PropertyManager properties = PropertyManager.getProperties();
     
     Set<String> completed = Logging.initializeResumeLogger();
     
-    File outputDir = properties.getValueAsFile(PropertyOld.OUTPUT);
+    File outputDir = OUTPUT.getValue();
     try {
       Deque<String> links = Helper.newLinkedList();
       
-      File linksFile = new File(outputDir, properties.getValue(PropertyOld.LINKS_FILE));
+      File linksFile = new File(outputDir, LINKS_FILE.getValue());
       if (linksFile.exists()) {
         BufferedReader br = new BufferedReader(new FileReader(linksFile));
         for (String line = br.readLine(); line != null; line = br.readLine()) {
@@ -67,7 +70,7 @@ public class MavenCrawler {
         links.add("");
       }
       
-      String baseUrl = properties.getValue(PropertyOld.INPUT);
+      String baseUrl = MAVEN_URL.getValue();
       if (baseUrl.endsWith("/")) {
         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
       }
