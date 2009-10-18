@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.db.tools;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.REPO_ROOT;
 
 import java.util.Collection;
 import java.util.Map;
@@ -43,7 +44,6 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -57,8 +57,7 @@ public class AddJars extends DatabaseAccessor {
   public void addJars() {
     Set<String> completed = Logging.initializeResumeLogger();
     
-    PropertyManager properties = PropertyManager.getProperties();
-    ExtractedRepository extracted = ExtractedRepository.getRepository(properties.getValueAsFile(PropertyOld.INPUT));
+    ExtractedRepository extracted = ExtractedRepository.getRepository(REPO_ROOT.getValue());
     
     logger.info("Adding jars to database for " + extracted);
     
@@ -275,18 +274,4 @@ public class AddJars extends DatabaseAccessor {
     entityMap.put(fqn, teid);
     return teid;
   }
-
-  public static void main(String[] args) {
-    PropertyManager.initializeProperties(args);
-    Logging.initializeLogger();
-    
-    DatabaseConnection connection = new DatabaseConnection();
-    connection.open();
-    
-    AddJars accessor = new AddJars(connection);
-    accessor.addJars();
-    
-    connection.close();
-  }
-
 }

@@ -47,7 +47,6 @@ public class Main {
   private static final Property<Boolean> MAVEN_STATS = new BooleanProperty("maven-stats", false, "Repository Manager", "Gets some statistics on the links retreived from a maven crawl.");
 
   public static void main(String[] args) {
-    PropertyManager.registerLoggingProperties();
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
     if (CREATE_JAR_INDEX.getValue()) {

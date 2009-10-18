@@ -55,17 +55,8 @@ public class PropertyManager {
     return propertyMap.get(name);
   }
   
-  public synchronized static void registerLoggingProperties() {
-    registerUsedProperties(edu.uci.ics.sourcerer.util.io.Properties.OUTPUT,
-        Logging.REPORT_TO_CONSOLE,
-        Logging.SUPPRESS_FILE_LOGGING,
-        Logging.INFO_LOG,
-        Logging.ERROR_LOG);
-  }
-  
   public synchronized static void registerResumeLoggingProperties() {
-    registerLoggingProperties();
-    registerUsedProperties(Logging.RESUME_LOG, Logging.CLEAR_RESUME_LOG);
+    
   }
   
   private static void addProperty(Property<?> prop) {

@@ -95,6 +95,7 @@ public abstract class Property <T> {
       initializeValue();
     }
     if (value == null) {
+      PropertyManager.registerUsedProperties(this);
       PropertyManager.verifyUsage();
       throw new IllegalStateException(name + " never specified.");
     } else {

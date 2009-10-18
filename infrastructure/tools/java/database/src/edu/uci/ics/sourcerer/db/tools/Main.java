@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.db.tools;
 
+import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.*;
+
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.PropertyOld;
@@ -26,26 +28,27 @@ import edu.uci.ics.sourcerer.util.io.PropertyManager;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
+  public static final Property<Boolean> INITIALIZE_DATABASE
   public static void main(String[] args) {
-    PropertyManager.registerLoggingProperties();
-   PropertyManager.initializeProperties(args);
-   Logging.initializeLogger();
-   
-   DatabaseConnection connection = new DatabaseConnection();
-   connection.open();
-   
-   PropertyManager properties = PropertyManager.getProperties();
-   if (properties.isSet(PropertyOld.INITIALIZE_DATABASE)) {
-     InitializeDatabase tool = new InitializeDatabase(connection);
-     tool.initializeDatabase();
-   } else if (properties.isSet(PropertyOld.ADD_JARS)) {
-     AddJars tool = new AddJars(connection);
-     tool.addJars();
-   } else if (properties.isSet(PropertyOld.ADD_PROJECTS)) {
-//     AddProjects tool = new AddProjects(connection);
-//     tool.addProjects();
-   }
-   
-   connection.close();
+    PropertyManager.initializeProperties(args);
+    Logging.initializeLogger();
+
+    PropertyManager.registerUsedProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+    PropertyManager.verifyUsage();
+    DatabaseConnection connection = new DatabaseConnection();
+    connection.open();
+
+    if (properties.isSet(PropertyOld.INITIALIZE_DATABASE)) {
+      InitializeDatabase tool = new InitializeDatabase(connection);
+      tool.initializeDatabase();
+    } else if (properties.isSet(PropertyOld.ADD_JARS)) {
+      AddJars tool = new AddJars(connection);
+      tool.addJars();
+    } else if (properties.isSet(PropertyOld.ADD_PROJECTS)) {
+      // AddProjects tool = new AddProjects(connection);
+      // tool.addProjects();
+    }
+
+    connection.close();
   }
 }

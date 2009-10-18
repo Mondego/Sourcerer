@@ -40,7 +40,6 @@ public class Main {
   public static final Property<Boolean> PR = new BooleanProperty("pr-stats", false, "Evaluation Stats", "Calculate precision/recall for the top results for each heuristic.");
   
   public static void main(String[] args) {
-    PropertyManager.registerLoggingProperties();
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
     

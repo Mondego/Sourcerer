@@ -102,6 +102,9 @@ public final class Logging {
     if (resumeLoggingEnabled) {
       throw new IllegalStateException("Resume logging may only be initialized once");
     }
+    PropertyManager.registerUsedProperties(OUTPUT, RESUME_LOG, CLEAR_RESUME_LOG);
+    PropertyManager.verifyUsage();
+    
     File resumeFile = new File(OUTPUT.getValue(), RESUME_LOG.getValue());
     
     if (CLEAR_RESUME_LOG.getValue()) {
@@ -140,6 +143,9 @@ public final class Logging {
       throw new IllegalStateException("The logger may only be initialized once");
     }
    
+    PropertyManager.registerUsedProperties(OUTPUT, REPORT_TO_CONSOLE, SUPPRESS_FILE_LOGGING, INFO_LOG, ERROR_LOG);
+    PropertyManager.verifyUsage();
+    
     try {
       final boolean suppressFileLogging = SUPPRESS_FILE_LOGGING.getValue();
       final boolean reportToConsole = REPORT_TO_CONSOLE.getValue();
