@@ -22,13 +22,16 @@ import edu.uci.ics.sourcerer.extractor.io.Location;
 import edu.uci.ics.sourcerer.model.extracted.ImportExParser;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class ImportWriter extends ExtractorWriter implements IImportWriter {
+  public static final Property<String> IMPORT_FILE = new StringProperty("import-file", "imports.txt", "Extractor Output", "Filename for extracted imports.");
+  
   public ImportWriter(Repository input) {
-    super(input, Property.IMPORT_FILE);
+    super(input, IMPORT_FILE);
   }
   
   public void writeImport(String name, boolean isStatic, boolean onDemand, Location location) {

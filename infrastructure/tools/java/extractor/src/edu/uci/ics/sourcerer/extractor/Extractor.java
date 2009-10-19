@@ -17,9 +17,19 @@
  */
 package edu.uci.ics.sourcerer.extractor;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.COMMENT_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.ENTITY_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.FILE_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.IMPORT_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.JAR_ENTITY_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.JAR_FILE_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.JAR_RELATION_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.LOCAL_VARIABLE_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.PROBLEM_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.RELATION_WRITER;
 import static edu.uci.ics.sourcerer.repo.AbstractRepository.REPO_ROOT;
-import static edu.uci.ics.sourcerer.util.io.Properties.*;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.File;
 import java.util.Collection;
@@ -34,14 +44,13 @@ import org.eclipse.jdt.core.IClassFile;
 import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor;
 import edu.uci.ics.sourcerer.extractor.io.IJarFileWriter;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
-import edu.uci.ics.sourcerer.extractor.io.WriterFactory;
-import edu.uci.ics.sourcerer.extractor.io.dummy.DummyJarFileWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.CommentWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.EntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.FileWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.ImportWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.JarEntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.JarFileWriter;
+import edu.uci.ics.sourcerer.extractor.io.file.JarRelationWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.LocalVariableWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.ProblemWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.RelationWriter;
@@ -198,11 +207,10 @@ public class Extractor implements IApplication {
           extractor.setBundle(bundle);
           
           // Write out jar files
-          IJarFileWriter jarWriter = WriterFactory.createWriter(null, Property.JAR_FILE_WRITER, DummyJarFileWriter.class);
+          IJarFileWriter jarWriter = bundle.getJarFileWriter();
           for (IJarFile file : files.getJarFiles()) {
             jarWriter.writeJarFile(file.getHash());
           }
-          jarWriter.close();
           
           logger.info("Extracting references for " + uniqueIFiles.size() + " compilation units");
           extractor.extractSourceFiles(uniqueIFiles);
@@ -265,17 +273,29 @@ public class Extractor implements IApplication {
     String[] args = (String[]) context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
-    PropertyManager properties = PropertyManager.getProperties();
-    properties.setProperty(Property.FILE_WRITER, FileWriter.class.getName());
-    properties.setProperty(Property.JAR_FILE_WRITER, JarFileWriter.class.getName());
-    properties.setProperty(Property.IMPORT_WRITER, ImportWriter.class.getName());
-    properties.setProperty(Property.ENTITY_WRITER, EntityWriter.class.getName());
-    properties.setProperty(Property.RELATION_WRITER, RelationWriter.class.getName());
-    properties.setProperty(Property.LOCAL_VARIABLE_WRITER, LocalVariableWriter.class.getName());
-    properties.setProperty(Property.COMMENT_WRITER, CommentWriter.class.getName());
-    properties.setProperty(Property.JAR_ENTITY_WRITER, JarEntityWriter.class.getName());
-    properties.setProperty(Property.PROBLEM_WRITER, ProblemWriter.class.getName());
-    Extractor.extract(properties);
+    
+    PropertyManager.registerAndVerify(OUTPUT, REPO_ROOT, JARS_ONLY, FORCE_REDO, FeatureExtractor.PPA,
+        IMPORT_WRITER, ImportWriter.IMPORT_FILE,
+        PROBLEM_WRITER, ProblemWriter.PROBLEM_FILE,
+        ENTITY_WRITER, JAR_ENTITY_WRITER, EntityWriter.ENTITY_FILE,
+        LOCAL_VARIABLE_WRITER, LocalVariableWriter.LOCAL_VARIABLE_FILE,
+        RELATION_WRITER, JAR_RELATION_WRITER, RelationWriter.RELATION_FILE,
+        COMMENT_WRITER, CommentWriter.COMMENT_FILE,
+        FILE_WRITER, FileWriter.FILE_FILE,
+        JAR_FILE_WRITER, JarFileWriter.JAR_FILE_FILE);
+    
+    IMPORT_WRITER.setValue(ImportWriter.class);
+    PROBLEM_WRITER.setValue(ProblemWriter.class);
+    ENTITY_WRITER.setValue(EntityWriter.class);
+    JAR_ENTITY_WRITER.setValue(JarEntityWriter.class);
+    LOCAL_VARIABLE_WRITER.setValue(LocalVariableWriter.class);
+    RELATION_WRITER.setValue(RelationWriter.class);
+    JAR_RELATION_WRITER.setValue(JarRelationWriter.class);
+    COMMENT_WRITER.setValue(CommentWriter.class);
+    FILE_WRITER.setValue(FileWriter.class);
+    JAR_FILE_WRITER.setValue(JarFileWriter.class);
+    
+    Extractor.extract();
     return EXIT_OK;
   }
 

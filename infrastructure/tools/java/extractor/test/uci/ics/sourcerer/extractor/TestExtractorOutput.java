@@ -36,6 +36,7 @@ import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
+import edu.uci.ics.sourcerer.repo.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
@@ -45,7 +46,7 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -444,13 +445,12 @@ public class TestExtractorOutput {
   }
   
   public static void runTest() {
-    PropertyManager properties = PropertyManager.getProperties();
     
-    File repoRoot = new File(properties.getValue(Property.REPO_ROOT));
+    File repoRoot = AbstractRepository.REPO_ROOT.getValue();
     File tempDir = FileUtils.getTempDir();
     Repository repo = Repository.getRepository(repoRoot, tempDir);
     
-    File extractorOutput = new File(properties.getValue(Property.INPUT));
+    File extractorOutput = Properties.INPUT.getValue();
     ExtractedRepository extractedRepo = ExtractedRepository.getRepository(extractorOutput);
     
     TestExtractorOutput test = new TestExtractorOutput(repo, extractedRepo);
@@ -460,6 +460,7 @@ public class TestExtractorOutput {
   public static void main(String[] args) {
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
+    PropertyManager.registerAndVerify(AbstractRepository.REPO_ROOT, Properties.INPUT, Properties.OUTPUT);
     runTest();
   }
 }

@@ -24,7 +24,6 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -33,22 +32,13 @@ public final class WriterFactory {
   private WriterFactory() {}
   
   @SuppressWarnings("unchecked")
-  public static <T> T createWriter(Repository input, Property property, Class<?> backup) {
-    PropertyManager properties = PropertyManager.getProperties();
-    String name = properties.getValue(property);
-    if (name != null) {
-      try {
-        Class<?> klass = Class.forName(name);
-        Constructor<?> constructor = klass.getConstructor(Repository.class);
-        return (T)constructor.newInstance(input);
-      } catch (Exception e) {
-        logger.log(Level.SEVERE, "Unable to create writer: " + name, e);
-      }
-    }
+  public static <T> T createWriter(Repository input, Property<Class<?>> property) {
     try {
-      return (T)backup.newInstance();
-    } catch (Exception e2) {
-      logger.log(Level.SEVERE, "Unable to create backup writer!");
+      Class<?> klass = property.getValue();
+      Constructor<?> constructor = klass.getConstructor(Repository.class);
+      return (T)constructor.newInstance(input);
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, "Unable to create writer: " + property.getName(), e);
       return null;
     }
   }

@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.extractor.io.file;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -28,7 +29,6 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.extractor.io.IExtractorWriter;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -37,11 +37,10 @@ public abstract class ExtractorWriter implements IExtractorWriter {
   private BufferedWriter writer;
   private Repository input;
   
-  protected ExtractorWriter(Repository input, Property property) {
+  protected ExtractorWriter(Repository input, Property<String> property) {
     this.input = input;
-    PropertyManager properties = PropertyManager.getProperties();
     try {
-      writer = new BufferedWriter(new FileWriter(new File(properties.getValueAsFile(Property.OUTPUT), properties.getValue(property))));
+      writer = new BufferedWriter(new FileWriter(new File(OUTPUT.getValue(), property.getValue())));
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error opening file", e);
     }

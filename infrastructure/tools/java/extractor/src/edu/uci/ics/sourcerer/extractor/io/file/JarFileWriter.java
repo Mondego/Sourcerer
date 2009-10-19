@@ -20,13 +20,16 @@ package edu.uci.ics.sourcerer.extractor.io.file;
 import edu.uci.ics.sourcerer.extractor.io.IJarFileWriter;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class JarFileWriter extends ExtractorWriter implements IJarFileWriter {
+  public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Extractor Output", "Filename for used jar files.");
+  
   public JarFileWriter(Repository input) {
-    super(input, Property.JAR_FILE_FILE);
+    super(input, JAR_FILE_FILE);
   }
   
   public void writeJarFile(String filename) {

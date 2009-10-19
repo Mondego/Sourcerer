@@ -21,14 +21,13 @@ import edu.uci.ics.sourcerer.extractor.io.IJarRelationWriter;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.extracted.RelationExJarParser;
 import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.util.io.Property;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarRelationWriter extends ExtractorWriter implements IJarRelationWriter {
   public JarRelationWriter(Repository input) {
-    super(input, Property.RELATION_FILE);
+    super(input, RelationWriter.RELATION_FILE);
   }
   
   @Override
