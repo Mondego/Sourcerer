@@ -20,7 +20,6 @@ package edu.uci.ics.sourcerer.util.io;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
 
@@ -66,11 +65,15 @@ public abstract class Property <T> {
   
   public abstract String getType();
   
+  protected String toString(T value) {
+    return value.toString();
+  }
+  
   public String getDescriptionWithDefault() {
     if (defaultValue == null) {
       return description;
     } else {
-      return description + " Defaults to " + defaultValue + ".";
+      return description + " Defaults to " + toString(defaultValue) + ".";
     }
   }
   
@@ -116,7 +119,7 @@ public abstract class Property <T> {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             stringValue = br.readLine();
             value = parseString(stringValue);
-          } catch (IOException e) {
+          } catch (Exception e) {
             value = defaultValue;
             logger.log(Level.SEVERE, "Unable to read value for " + name, e);
           }

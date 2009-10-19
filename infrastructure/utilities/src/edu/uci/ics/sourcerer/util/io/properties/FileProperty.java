@@ -39,6 +39,11 @@ public class FileProperty extends Property<File> {
   }
   
   @Override
+  public String toString(File value) {
+    return value.getPath();
+  }
+  
+  @Override
   protected File parseString(String value) {
     return new File(value);
   }

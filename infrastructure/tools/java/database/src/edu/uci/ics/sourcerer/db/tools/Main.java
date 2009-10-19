@@ -17,36 +17,47 @@
  */
 package edu.uci.ics.sourcerer.db.tools;
 
-import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.*;
-
+import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_PASSWORD;
+import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_URL;
+import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_USER;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.REPO_ROOT;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
+import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
+import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
-  public static final Property<Boolean> INITIALIZE_DATABASE
+  public static final Property<Boolean> INITIALIZE_DATABASE = new BooleanProperty("initialize-database", false, "Database", "Clean and initialize the database, inserting all library entities/relations.");
+  public static final Property<Boolean> ADD_JARS = new BooleanProperty("add-jars", false, "Database", "Adds extracted jars to the database.");
+  public static final Property<Boolean> ADD_PROJECTS = new BooleanProperty("add-projects", false, "Database", "Adds extracted projects to the database.");
+  
   public static void main(String[] args) {
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
 
-    PropertyManager.registerUsedProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
-    PropertyManager.verifyUsage();
+    PropertyManager.registerAndVerify(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
     DatabaseConnection connection = new DatabaseConnection();
     connection.open();
 
-    if (properties.isSet(PropertyOld.INITIALIZE_DATABASE)) {
+    if (INITIALIZE_DATABASE.getValue()) {
+      PropertyManager.registerAndVerify(INITIALIZE_DATABASE, REPO_ROOT);
       InitializeDatabase tool = new InitializeDatabase(connection);
       tool.initializeDatabase();
-    } else if (properties.isSet(PropertyOld.ADD_JARS)) {
+    } else if (ADD_JARS.getValue()) {
+      PropertyManager.registerAndVerify(ADD_JARS, REPO_ROOT);
       AddJars tool = new AddJars(connection);
       tool.addJars();
-    } else if (properties.isSet(PropertyOld.ADD_PROJECTS)) {
-      // AddProjects tool = new AddProjects(connection);
-      // tool.addProjects();
+    } else if (ADD_PROJECTS.getValue()) {
+      PropertyManager.registerAndVerify(ADD_PROJECTS, REPO_ROOT);
+       AddProjects tool = new AddProjects(connection);
+       tool.addProjects();
+    } else {
+      PropertyManager.registerUsedProperties(INITIALIZE_DATABASE, ADD_JARS, ADD_PROJECTS);
+      PropertyManager.printUsage();
     }
 
     connection.close();

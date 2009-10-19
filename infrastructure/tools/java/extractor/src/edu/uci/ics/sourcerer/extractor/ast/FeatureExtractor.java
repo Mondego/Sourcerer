@@ -36,14 +36,17 @@ import org.eclipse.jdt.core.dom.ImportDeclaration;
 
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class FeatureExtractor {
+  public static final Property<Boolean> PPA = new BooleanProperty("ppa", false, "Extractor", "Do partial program analysis.");
+  
   private ASTParser parser;
   private WriterBundle bundle;
-  private boolean doPPA;
   
   public FeatureExtractor() {
     parser = ASTParser.newParser(AST.JLS3);
@@ -54,10 +57,6 @@ public final class FeatureExtractor {
       this.bundle.close();
     }
     this.bundle = bundle;
-  }
-  
-  public void setPPA(boolean doPPA) {
-    this.doPPA = doPPA;
   }
   
   public void close() {
@@ -81,9 +80,9 @@ public final class FeatureExtractor {
     int total = 0;
     
     for (IFile source : sourceFiles) {
-      if (doPPA) {
-//        PPAUtil.getCU(source, new PPAOptions()).accept(visitor);
-      } else {
+//      if (doPPA) {
+////        PPAUtil.getCU(source, new PPAOptions()).accept(visitor);
+//      } else {
         ICompilationUnit icu = JavaCore.createCompilationUnitFrom(source);
         
         parser.setStatementsRecovery(true);
@@ -106,7 +105,7 @@ public final class FeatureExtractor {
       if (++total % 1000 == 0) {
         logger.info(total + " files extracted");
       }
-    }
+//    }
     
     logger.info(total + " files extracted");
   }

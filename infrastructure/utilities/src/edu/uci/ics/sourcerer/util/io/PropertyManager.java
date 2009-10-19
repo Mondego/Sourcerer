@@ -63,6 +63,11 @@ public class PropertyManager {
     Helper.getFromMap(usedProperties, prop.category, HashSet.class).add(prop);
   }
   
+  public synchronized static void registerAndVerify(Property<?> ... properties) {
+    registerUsedProperties(properties);
+    verifyUsage();
+  }
+  
   public synchronized static void registerUsedProperties(Property<?> ... properties) {
     if (usedProperties == null) {
       usedProperties = Helper.newHashMap();   

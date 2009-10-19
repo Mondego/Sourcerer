@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.db.tools;
 
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.REPO_ROOT;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
@@ -49,8 +50,6 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.PropertyOld;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -61,8 +60,7 @@ public class InitializeDatabase extends DatabaseAccessor {
   }
   
   public void initializeDatabase() {
-    PropertyManager properties = PropertyManager.getProperties();
-    ExtractedRepository extracted = ExtractedRepository.getRepository(properties.getValueAsFile(PropertyOld.INPUT));
+    ExtractedRepository extracted = ExtractedRepository.getRepository(REPO_ROOT.getValue());
     logger.info("Initializing database...");
     {
       executor.dropTables(

@@ -17,8 +17,8 @@
  */
 package edu.uci.ics.sourcerer.db.tools;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.repo.AbstractRepository.REPO_ROOT;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
 import java.util.Map;
@@ -44,7 +44,6 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

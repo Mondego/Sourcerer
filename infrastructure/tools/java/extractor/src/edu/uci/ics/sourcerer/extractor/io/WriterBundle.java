@@ -29,11 +29,13 @@ import edu.uci.ics.sourcerer.extractor.io.dummy.DummyRelationWriter;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
+import edu.uci.ics.sourcerer.util.io.properties.ClassProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class WriterBundle {
+  public static final Property<Class<?>> IMPORT_WRITER = new ClassProperty("import-writer", DummyImportWriter.class, "Extractor", "Import writer.");
   private IImportWriter importWriter;
   private IProblemWriter problemWriter;
   private IEntityWriter entityWriter;
