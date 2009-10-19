@@ -84,7 +84,7 @@ public class Repository extends AbstractRepository {
   
   public static void createJarIndex(File repoRoot) {
     Repository repo = new Repository(repoRoot, null);
-    JarIndex.createJarIndexFile(repo.getJarsDir());
+    JarIndex.buildJarIndexFile(repo.getJarsDir());
   }
   
   public static void aggregateJarFiles(File repoRoot) {

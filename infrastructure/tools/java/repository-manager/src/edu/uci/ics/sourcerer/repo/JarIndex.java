@@ -27,6 +27,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.Map;
 import java.util.Properties;
@@ -75,7 +76,43 @@ public class JarIndex {
     return index;
   }
   
-  public static void createJarIndexFile(File dir) {
+  public static void printJarIndexStats(File dir) {
+    String baseDir = dir.getPath().replace('\\', '/');
+
+    int projectJarCount = 0;
+    int mavenJarCount = 0;
+    int mavenSourceCount = 0;
+    int mavenVersionCount = 0;
+    
+    Collection<File> jarDirs = Helper.newHashSet();
+    for (File file : dir.listFiles()) {
+      // A file is a project jar
+      if (file.isFile()) {
+        if (file.getName().endsWith(".jar")) {
+          projectJarCount++;
+        }
+      } else if (file.isDirectory()) {
+        Deque<File> stack = Helper.newStack();
+        stack.push(file);
+        while (!stack.isEmpty()) {
+          File top = stack.pop();
+          for (File next : top.listFiles()) {
+            if (next.isDirectory()) {
+              stack.push(next);
+            } else {
+              if (next.getName().endsWith(".jar")) {
+                jarDirs.add(next);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    
+  }
+  
+  public static void buildJarIndexFile(File dir) {
     File indexFile = new File(dir, JAR_INDEX_FILE.getValue());
     
     String baseDir = dir.getPath().replace('\\', '/');
