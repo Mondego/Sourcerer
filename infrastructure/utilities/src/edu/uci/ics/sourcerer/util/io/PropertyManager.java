@@ -81,7 +81,8 @@ public class PropertyManager {
   
   public synchronized static void printUsage() {
     TablePrettyPrinter printer = TablePrettyPrinter.getCommandLinePrettyPrinter();
-    printer.beginTable(3);
+    printer.beginTable(3, 80);
+    printer.makeColumnWrappable(2);
     printer.addDividerRow();
     for (Map.Entry<String, Collection<Property<?>>> entry : usedProperties.entrySet()) {
       printer.beginRow();
