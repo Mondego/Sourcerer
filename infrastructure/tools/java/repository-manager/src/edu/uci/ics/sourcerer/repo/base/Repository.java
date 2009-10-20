@@ -87,6 +87,11 @@ public class Repository extends AbstractRepository {
     JarIndex.buildJarIndexFile(repo.getJarsDir());
   }
   
+  public static void printJarStats(File repoRoot) {
+    Repository repo = new Repository(repoRoot, null);
+    JarIndex.printJarStats(repo.getJarsDir());
+  }
+  
   public static void aggregateJarFiles(File repoRoot) {
     logger.info("--- Aggregating jar files for: " + repoRoot.getPath() + " ---");
     

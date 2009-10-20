@@ -38,6 +38,7 @@ import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
  */
 public class Main {
   private static final Property<Boolean> CREATE_JAR_INDEX = new BooleanProperty("create-jar-index", false, "Repository Manager", "Creates index of the jars in the target repository.");
+  private static final Property<Boolean> PRINT_JAR_STATS = new BooleanProperty("print-jar-stats", false, "Repository Manager", "Prints statistics regarding the jars in the repository.");
   private static final Property<Boolean> AGGREGATE_JAR_FILES = new BooleanProperty("aggregate-jar-files", false, "Repository Manager", "Aggregates the jar files of the target repository.");
   private static final Property<Boolean> CLEAN_REPOSITORY = new BooleanProperty("clean-repository", false, "Repository Manager", "Deletes the compressed portion of the target repository.");
   private static final Property<Boolean> MIGRATE_REPOSITORY = new BooleanProperty("migrate-repository", false, "Repository Manager",
@@ -50,37 +51,33 @@ public class Main {
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
     if (CREATE_JAR_INDEX.getValue()) {
-      PropertyManager.registerUsedProperties(CREATE_JAR_INDEX, REPO_ROOT, JAR_INDEX_FILE);
-      PropertyManager.verifyUsage();
+      PropertyManager.registerAndVerify(CREATE_JAR_INDEX, REPO_ROOT, JAR_INDEX_FILE);
       Repository.createJarIndex(REPO_ROOT.getValue());
+    } else if (PRINT_JAR_STATS.getValue()) {
+      PropertyManager.registerAndVerify(PRINT_JAR_STATS, REPO_ROOT);
+      Repository.printJarStats(REPO_ROOT.getValue());
     } else if (AGGREGATE_JAR_FILES.getValue()) {
-      PropertyManager.registerUsedProperties(AGGREGATE_JAR_FILES, REPO_ROOT);
-      PropertyManager.verifyUsage();
+      PropertyManager.registerAndVerify(AGGREGATE_JAR_FILES, REPO_ROOT);
       Repository.aggregateJarFiles(REPO_ROOT.getValue());
     } else if (CLEAN_REPOSITORY.getValue()) {
-      PropertyManager.registerUsedProperties(CLEAN_REPOSITORY, REPO_ROOT);
-      PropertyManager.verifyUsage();
+      PropertyManager.registerAndVerify(CLEAN_REPOSITORY, REPO_ROOT);
       Repository.deleteCompressedRepository(REPO_ROOT.getValue());
     } else if (MIGRATE_REPOSITORY.getValue()) {
-      PropertyManager.registerUsedProperties(MIGRATE_REPOSITORY, INPUT, REPO_ROOT, JAR_INDEX_FILE);
       PropertyManager.registerResumeLoggingProperties();
-      PropertyManager.verifyUsage();
+      PropertyManager.registerAndVerify(MIGRATE_REPOSITORY, INPUT, REPO_ROOT, JAR_INDEX_FILE);
       Set<String> completed = Logging.initializeResumeLogger();
       Repository.migrateRepository(INPUT.getValue(), REPO_ROOT.getValue(), completed);
     } else if (CRAWL_MAVEN.getValue()) {
-      PropertyManager.registerUsedProperties(CRAWL_MAVEN, MAVEN_URL, LINKS_FILE);
-      PropertyManager.verifyUsage();
+      PropertyManager.registerAndVerify(CRAWL_MAVEN, MAVEN_URL, LINKS_FILE);
       MavenCrawler.getDownloadLinks();
     } else if (DOWNLOAD_MAVEN.getValue()) {
-      PropertyManager.registerUsedProperties(DOWNLOAD_MAVEN, INPUT, LINKS_FILE, MAVEN_URL);
-      PropertyManager.verifyUsage();
+      PropertyManager.registerAndVerify(DOWNLOAD_MAVEN, INPUT, LINKS_FILE, MAVEN_URL);
       MavenDownloader.downloadLinks();
     } else if (MAVEN_STATS.getValue()) {
-      PropertyManager.registerUsedProperties(MAVEN_STATS, INPUT, LINKS_FILE, MAVEN_URL);
-      PropertyManager.verifyUsage();
+      PropertyManager.registerAndVerify(MAVEN_STATS, INPUT, LINKS_FILE, MAVEN_URL);
       MavenCrawlStats.crawlStats();
     } else {
-      PropertyManager.registerUsedProperties(CREATE_JAR_INDEX, AGGREGATE_JAR_FILES, CLEAN_REPOSITORY, MIGRATE_REPOSITORY, CRAWL_MAVEN, DOWNLOAD_MAVEN, MAVEN_STATS);
+      PropertyManager.registerUsedProperties(CREATE_JAR_INDEX, PRINT_JAR_STATS, AGGREGATE_JAR_FILES, CLEAN_REPOSITORY, MIGRATE_REPOSITORY, CRAWL_MAVEN, DOWNLOAD_MAVEN, MAVEN_STATS);
       PropertyManager.printUsage();
     }
   }

@@ -35,6 +35,7 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
@@ -76,20 +77,22 @@ public class JarIndex {
     return index;
   }
   
-  public static void printJarIndexStats(File dir) {
-    String baseDir = dir.getPath().replace('\\', '/');
-
+  public static void printJarStats(File dir) {
     int projectJarCount = 0;
     int mavenJarCount = 0;
-    int mavenSourceCount = 0;
     int mavenVersionCount = 0;
+    int mavenProjectsWithSource = 0;
+    int mavenProjectsWithJar = 0;
     
-    Collection<File> jarDirs = Helper.newHashSet();
+    logger.info("Beginning jar stats calculation...");
+    Collection<File> projects = Helper.newHashSet();
     for (File file : dir.listFiles()) {
       // A file is a project jar
       if (file.isFile()) {
         if (file.getName().endsWith(".jar")) {
-          projectJarCount++;
+          if (++projectJarCount % 1000 == 0) {
+            logger.info(projectJarCount + " project jars counted.");
+          }
         }
       } else if (file.isDirectory()) {
         Deque<File> stack = Helper.newStack();
@@ -101,7 +104,10 @@ public class JarIndex {
               stack.push(next);
             } else {
               if (next.getName().endsWith(".jar")) {
-                jarDirs.add(next);
+                projects.add(top.getParentFile());
+                if (++mavenJarCount % 1000 == 0) {
+                  logger.info(mavenJarCount + " maven jars counted.");
+                }
               }
             }
           }
@@ -109,7 +115,45 @@ public class JarIndex {
       }
     }
     
+    logger.info("Beginning individual project stats calculation...");
+    for (File project : projects) {
+      boolean foundJar = false;
+      boolean foundSource = false;
+      for (File version : project.listFiles()) {
+        if (version.isDirectory()) {
+          mavenVersionCount++;
+          for (File jar : version.listFiles()) {
+            if (jar.getName().endsWith(version.getName() + ".jar")) {
+              foundJar = true;
+            } else if (jar.getName().endsWith("sources.jar") || jar.getName().endsWith("source.jar")) {
+              foundSource = true;
+            }
+          }
+        }
+      }
+      if (foundJar) {
+        if (++mavenProjectsWithJar % 1000 == 0) {
+          logger.info(mavenProjectsWithJar + " projects counted.");
+        }
+      }
+      if (foundSource) {
+        mavenProjectsWithSource++;
+      }
+    }
     
+    TablePrettyPrinter printer = TablePrettyPrinter.getCommandLinePrettyPrinter();
+    printer.beginTable(2);
+    printer.addDividerRow();
+    printer.addRow("Total jar count", "" + (projectJarCount + mavenJarCount));
+    printer.addRow("Project jar count", "" + projectJarCount);
+    printer.addRow("Maven jar count", "" + mavenJarCount);
+    printer.addDividerRow();
+    printer.addRow("Maven project count", "" + projects.size());
+    printer.addRow("Maven version count", "" + mavenVersionCount);
+    printer.addRow("Maven projects with jars", "" + mavenProjectsWithJar);
+    printer.addRow("Maven projects with source", "" + mavenProjectsWithSource);
+    printer.addDividerRow();
+    printer.endTable();
   }
   
   public static void buildJarIndexFile(File dir) {
