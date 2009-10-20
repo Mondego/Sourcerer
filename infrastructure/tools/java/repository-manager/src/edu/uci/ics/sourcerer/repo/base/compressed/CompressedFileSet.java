@@ -85,7 +85,13 @@ public class CompressedFileSet extends AbstractFileSet {
   
   protected File extractFileToTemp(String relativePath) {
     File tmp = new File(project.getRepository().getTempDir(), relativePath);
-    tmp.getParentFile().mkdirs();
+    File parentFile = tmp.getParentFile();
+    if (parentFile == null) {
+      logger.severe("Unable to get parent file: " + tmp.getPath());
+      return null;
+    } else {
+      parentFile.mkdirs();
+    }
     
     ZipFile zip = null;
     FileOutputStream fos = null;

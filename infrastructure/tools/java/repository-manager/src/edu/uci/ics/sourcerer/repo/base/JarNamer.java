@@ -17,8 +17,13 @@
  */
 package edu.uci.ics.sourcerer.repo.base;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Counter;
 import edu.uci.ics.sourcerer.util.Helper;
@@ -28,18 +33,20 @@ import edu.uci.ics.sourcerer.util.Helper;
  */
 public class JarNamer {
   private File path;
+  private File info;
+  private FileWriter infoWriter;
   private Map<String, Counter<?>> names;
   private int totalCount;
-  
-  public JarNamer(String path, String totalCount) {
-    this.path = new File(path);
-    this.totalCount = Integer.parseInt(totalCount);
-  }
-  
+   
   public JarNamer(File path) {
     this.path = path;
     names = Helper.newHashMap();
     totalCount = 0;
+  }
+  
+  public void setInfoFile(File info, FileWriter infoWriter) {
+    this.info = info;
+    this.infoWriter = infoWriter;
   }
   
   public void addName(String name) {
@@ -50,6 +57,14 @@ public class JarNamer {
       names.put(name, counter);
     }
     counter.increment();
+    if (infoWriter != null) {
+      try {
+        infoWriter.write(name + "\n");
+        infoWriter.flush();
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to write info file.", e);
+      }
+    }
   }
   
   public void rename() {
@@ -80,6 +95,13 @@ public class JarNamer {
     }
     path.renameTo(newPath);
     path = newPath;
+    
+    if (infoWriter != null) {
+      try {
+        infoWriter.close();
+      } catch (IOException e) {}
+      info.delete();
+    }
   }
   
 //  public String getNamePopularityInfo() {

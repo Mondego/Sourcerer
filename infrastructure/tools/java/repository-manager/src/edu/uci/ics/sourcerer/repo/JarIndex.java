@@ -59,7 +59,7 @@ public class JarIndex {
         br = new BufferedReader(new FileReader(indexFile));
         for (String line = br.readLine(); line != null; line = br.readLine()) {
           String[] parts = line.split(" ");
-          index.index.put(parts[0], new IndexedJar(basePath, parts[1]));
+          index.index.put(parts[0], new IndexedJar(basePath, parts[1], parts[2], parts[3]));
         }
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Error in reading jar md5 index");
@@ -156,6 +156,7 @@ public class JarIndex {
     printer.endTable();
   }
   
+  // TODO: fix this!
   public static void buildJarIndexFile(File dir) {
     File indexFile = new File(dir, JAR_INDEX_FILE.getValue());
     

@@ -34,33 +34,42 @@ public class JavaFile extends AbstractJavaFile {
   private String relativePath;
   private File file;
   private String pkg;
+  private boolean packageComputed = false;
   public JavaFile(String relativePath, File file) {
     this.relativePath = relativePath;
     this.file = file;
-    
-    try {
-      BufferedReader br = new BufferedReader(new FileReader(file));
-      String line = null;
-      while ((line = br.readLine()) != null) {
-        line = line.trim();
-        if (line.startsWith("package")) {
-          int semi = line.indexOf(';');
-          while (semi == -1) {
-            line += br.readLine().trim();
-            semi = line.indexOf(';');
+  }
+  
+  private void computePackage() {
+    if (!packageComputed) {
+      try {
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String line = null;
+        while ((line = br.readLine()) != null) {
+          line = line.trim();
+          if (line.startsWith("package")) {
+            int semi = line.indexOf(';');
+            while (semi == -1) {
+              line += br.readLine().trim();
+              semi = line.indexOf(';');
+            }
+            pkg = line.substring(8, line.indexOf(';')).trim();
+            break;
           }
-          pkg = line.substring(8, line.indexOf(';')).trim();
-          break;
         }
+        br.close();
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to extract package for file!", e);
       }
-      br.close();
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to extract package for file!", e);
+      packageComputed = true;
     }
   }
   
   @Override
   public String getPackage() {
+    if (!packageComputed) {
+      computePackage();
+    }
     return pkg;
   }
   

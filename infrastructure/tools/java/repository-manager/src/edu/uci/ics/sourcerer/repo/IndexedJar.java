@@ -27,31 +27,58 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 public class IndexedJar {
   private String basePath;
   private String relativePath;
+  private String jarName;
+  private String sourceName;
   
-  protected IndexedJar(String basePath, String relativePath) {
+  protected IndexedJar(String basePath, String relativePath, String jarName, String sourceName) {
     this.basePath = basePath;
     this.relativePath = relativePath;
+    this.jarName = jarName;
+    this.sourceName = sourceName;
   }
   
+  public void migrateIndexedJar(File newBasePath) {
+    String basePath = newBasePath.getPath();
+    
+    FileUtils.copyFile(getJarFile(), getJarFile(basePath));
+    if (sourceName != null) {
+      FileUtils.copyFile(getSourceFile(), getSourceFile(basePath));
+    }
+    FileUtils.copyFile(getPropertiesFile(), getPropertiesFile(basePath));
+  }
+
+  private File getJarFile(String basePath) {
+    return new File(basePath + File.separatorChar + relativePath + File.separatorChar + jarName);
+  }
+  
+  public File getJarFile() {
+    return getJarFile(basePath);
+  }
+  
+  private File getSourceFile(String basePath) {
+    return new File(basePath + File.separatorChar + relativePath + File.separatorChar + sourceName);
+  }
+  
+  public File getSourceFile() {
+    if (sourceName == null) {
+      return null;
+    } else {
+      return getSourceFile(basePath);
+    }
+  }
+  
+  private File getPropertiesFile(String basePath) {
+    return new File(basePath + File.separatorChar + relativePath + File.separatorChar + jarName + ".properties");
+  }
+  
+  public File getPropertiesFile() {
+    return getPropertiesFile(basePath);
+  }
+    
   public String getRelativePath() {
     return relativePath;
   }
   
-  public String getPath() {
-    return basePath + relativePath; 
-  }
-  
-  public File getFile() {
-    return new File(getPath());
-  }
-  
-  public File getPropertiesFile() {
-    File file = getFile(); 
-    String name = file.getName();
-    name = name.substring(0, name.lastIndexOf('.'));
-    return new File(file.getParentFile(), name + ".properties");
-  }
-    
   public String getOutputPath(File baseDir) {
     return baseDir.getPath() + "/" + relativePath;
   }

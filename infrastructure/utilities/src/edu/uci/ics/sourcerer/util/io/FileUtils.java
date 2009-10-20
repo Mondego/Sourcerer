@@ -34,13 +34,13 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class FileUtils {
-  protected static final Property<String> TEMP_DIR = new StringProperty("temp-dir", "temp", "Name of temp directory placed into OUTPUT directory");
+  protected static final Property<String> TEMP_DIR = new StringProperty("temp-dir", "temp", "General", "Name of temp directory placed into OUTPUT directory");
   
   private FileUtils() {}
   
   public static File getTempDir() {
     File tempDir = new File(OUTPUT.getValue(), TEMP_DIR.getValue());
-    if (tempDir.mkdirs()) {
+    if (tempDir.exists() || tempDir.mkdirs()) {
       return tempDir;
     } else {
       return null;
