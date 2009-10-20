@@ -86,6 +86,9 @@ public abstract class Property <T> {
   }
   
   public boolean hasValue() {
+    if (!initialized) {
+      initializeValue();
+    }
     return value != null || defaultValue != null;
   }
   
