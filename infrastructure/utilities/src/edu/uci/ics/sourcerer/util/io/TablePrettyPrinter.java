@@ -40,6 +40,7 @@ public class TablePrettyPrinter {
   
   private BufferedWriter writer;
   private ArrayList<TableRow> table;
+  private int maxTableWidth;
   private MaxCounter[] maxWidths;
   private int maxWidth;
   private int columns;
@@ -65,6 +66,12 @@ public class TablePrettyPrinter {
     }
   }
   
+  public void makeColumnWrappable(int column) {
+    verifyTableBegun();
+    updateMax(column, 0);
+    maxWidths[column].makeWrappable();
+  }
+    
   public void setFractionDigits(int digits) {
     if (format == null) {
       format = NumberFormat.getNumberInstance();
@@ -83,11 +90,16 @@ public class TablePrettyPrinter {
     }
   }
   
-  public void beginTable(int columns) {
+  public void beginTable(int columns, int maxTableWidth) {
     this.columns = columns;
     table = Helper.newArrayList();
     maxWidths = new MaxCounter[columns];
     maxWidth = 0;
+    this.maxTableWidth = maxTableWidth;
+  }
+  
+  public void beginTable(int columns) {
+    beginTable(columns, 0);
   }
 
   public void endTable() {
@@ -133,6 +145,28 @@ public class TablePrettyPrinter {
   
   private void endTablePretty() {
     checkSpanningWidths();
+    
+    int tableWidth = 1;
+    int wrappableCount = 0;
+    for (MaxCounter counter : maxWidths) {
+      tableWidth += counter.getMax() + 3;
+      if (counter.isWrappable()) {
+        wrappableCount++;
+      }
+    }
+    
+    // If the table is too big
+    if (tableWidth > maxTableWidth && wrappableCount > 0 && maxTableWidth > 0) {
+      int extra = tableWidth - maxTableWidth;
+      int share = (int) Math.ceil(((double) extra) / ((double) wrappableCount));
+      // Shrink each wrappable column by its share
+      for (MaxCounter counter : maxWidths) {
+        if (counter.isWrappable()) {
+          counter.setMax(counter.getMax() - share);
+        }
+      }
+    }
+    
     char[] padding = new char[maxWidth];
     for (int i = 0; i < maxWidth; i++) {
       padding[i] = ' ';
@@ -177,6 +211,8 @@ public class TablePrettyPrinter {
         } else {
           // Write out a row
           TableCell[] cells = row.getCells();
+          TableRow newRow = new TableRow();
+          boolean replaceRow = false;
           for (int j = 0; j < columns; j++) {
             TableCell cell = cells[j];
             if (cell != null) {
@@ -186,15 +222,30 @@ public class TablePrettyPrinter {
                 writer.write(" | ");
               }
               if (cell.getSpan() == 1) {
+                String value = cell.getValue();
                 int columnWidth = maxWidths[j].getMax();
-                int cellWidth = cell.getValue().length();
+                int cellWidth = value.length();
+                // Check if the column is too big and needs to be wrapped
+                if (cellWidth > columnWidth) {
+                  // Find the space to wrap on
+                  value = value.substring(0, columnWidth);
+                  int spaceIndex = value.lastIndexOf(' ');
+                  if (spaceIndex > 0) {
+                    value = value.substring(0, spaceIndex);
+                  }
+                  newRow.addCell(cell.getValue().substring(value.length()).trim());
+                  replaceRow = true;
+                  cellWidth = value.length();
+                } else {
+                  newRow.addCell("");
+                }
                 int paddingWidth = columnWidth - cellWidth;
                 if (cell.getAlignment() == Alignment.RIGHT) {
                   writer.write(padding, 0,  paddingWidth);
                 } else if (cell.getAlignment() == Alignment.CENTER) {
                   writer.write(padding, 0, paddingWidth / 2 + paddingWidth % 2);
                 }
-                writer.write(cell.getValue());
+                writer.write(value);
                 if (cell.getAlignment() == Alignment.LEFT) {
                   writer.write(padding, 0,  paddingWidth);
                 } else if (cell.getAlignment() == Alignment.CENTER) {
@@ -223,6 +274,9 @@ public class TablePrettyPrinter {
             }
           }
           writer.write(" |\n");
+          if (replaceRow) {
+            table.set(i--, newRow);
+          }
         }
       }
       writer.write("\n\n");
@@ -429,7 +483,8 @@ public class TablePrettyPrinter {
   }
   
   private class MaxCounter {
-    int max = 0;
+    private boolean wrappable = false;
+    private int max = 0;
     
     private MaxCounter(int value) {
       add(value);
@@ -446,6 +501,18 @@ public class TablePrettyPrinter {
     
     public int getMax() {
       return max;
+    }
+    
+    public void setMax(int max) {
+      this.max = max;
+    }
+    
+    public void makeWrappable() {
+      wrappable = true;
+    }
+    
+    public boolean isWrappable() {
+      return wrappable;
     }
   }
 }
