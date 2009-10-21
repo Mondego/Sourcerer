@@ -17,10 +17,10 @@
  */
 package edu.uci.ics.sourcerer.repo;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -31,9 +31,11 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
@@ -156,14 +158,22 @@ public class JarIndex {
     printer.endTable();
   }
   
-  // TODO: fix this!
   public static void buildJarIndexFile(File dir) {
+    Set<String> completed = Logging.initializeResumeLogger();
+    
     File indexFile = new File(dir, JAR_INDEX_FILE.getValue());
     
     String baseDir = dir.getPath().replace('\\', '/');
+    if (!baseDir.endsWith("/")) {
+      baseDir += "/";
+    }
     
+    int projectJarCount = 0;
+    int mavenJarCount = 0;
+    int mavenSourceCount = 0;
+    FileWriter writer = null; 
     try {
-      BufferedWriter bw = new BufferedWriter(new FileWriter(indexFile));
+      writer = new FileWriter(indexFile, true);
       for (File file : dir.listFiles()) {
         // A directory indicates a maven jar
         if (file.isDirectory()) {
@@ -171,69 +181,116 @@ public class JarIndex {
           stack.push(file);
           while (!stack.isEmpty()) {
             File top = stack.pop();
+            String version = top.getName();
+            File jar = null;
+            File source = null;
             for (File next : top.listFiles()) {
               if (next.isDirectory()) {
                 stack.push(next);
               } else {
-                if (next.getName().endsWith(".jar")) {
-                  String version = top.getName();
-                  if (next.getName().endsWith(version + ".jar")) {
-                    // Find out the hash
-                    String hash = RepoJar.getHash(next);
-                    
-                    // Write out the entry
-                    bw.write(hash + " " + getRelativePath(baseDir, next.getPath()));
-                    
-                    // Write out the properties file
-                    String name = next.getName();
-                    name = name.substring(0, name.lastIndexOf('.'));
-                    
-                    String groupPath = top.getParentFile().getParentFile().getPath().replace('\\', '/');
-                    groupPath = getRelativePath(baseDir, groupPath);
-                    String groupName = groupPath.replace('/', '.');
-                    
-                    String artifactName = top.getParentFile().getName();
-                    
-                    Properties props = new Properties();
-                    props.setProperty("name", artifactName);
-                    props.setProperty("group", groupName);
-                    props.setProperty("version", version);
-                    props.setProperty("hash", hash);
-                    
-                    File propsFile = new File(dir, name +".properties");
-                    OutputStream os = new FileOutputStream(propsFile);
-                    props.store(os, null);
-                    os.close();
+                if (next.getName().endsWith(version + ".jar")) {
+                  if (jar != null) {
+                    logger.log(Level.SEVERE, "Found two jars! " + top.getPath());
                   }
+                  jar = next;
+                } else if (next.getName().endsWith("source.jar") || next.getName().endsWith("sources.jar")) {
+                  if (source != null) {
+                    logger.log(Level.SEVERE, "Foudn two source jars! " + top.getPath());
+                  }
+                  source = next;
                 }
+              }
+            }
+            
+            if (jar != null) {
+              String id = getRelativePath(baseDir, jar.getPath());
+              if (!completed.contains(id)) {
+                // Find out the hash
+                String hash = RepoJar.getHash(jar);
+                      
+                // Write out the entry
+                if (source == null) {
+                  writer.write(hash + " " + getRelativePath(baseDir, top.getPath()) + " " + jar.getName());
+                } else {
+                  writer.write(hash + " " + getRelativePath(baseDir, top.getPath()) + " " + jar.getName() + " " + source.getName());
+                }
+                      
+                // Write out the properties file
+                String name = jar.getName();
+                name = name.substring(0, name.lastIndexOf('.'));
+                      
+                String groupPath = top.getParentFile().getParentFile().getPath().replace('\\', '/');
+                groupPath = getRelativePath(baseDir, groupPath);
+                String groupName = groupPath.replace('/', '.');
+                      
+                String artifactName = top.getParentFile().getName();
+                      
+                Properties props = new Properties();
+                props.setProperty("name", artifactName);
+                props.setProperty("group", groupName);
+                props.setProperty("version", version);
+                props.setProperty("hash", hash);
+                      
+                File propsFile = new File(top, jar.getName() + ".properties");
+                OutputStream os = new FileOutputStream(propsFile);
+                props.store(os, null);
+                os.close();
+                
+                logger.log(RESUME, id);
+                
+              }
+              if (++mavenJarCount % 1000 == 0) {
+                logger.info(mavenJarCount + " maven jars indexed");
+              }
+              if (source != null && ++mavenSourceCount % 1000 == 0) {
+                logger.info(mavenJarCount + " maven source jars indexed");
               }
             }
           }
         } else if (file.isFile() && file.getName().endsWith(".jar")) {
-          // Find out the hash
-          String hash = RepoJar.getHash(file);
+          if (!completed.contains(file.getName())) {
+            // Find out the hash
+            String hash = RepoJar.getHash(file);
           
-          // Write out the entry
-          bw.write(hash + " " + file.getName());
+            // Write out the entry
+            writer.write(hash + " " + file.getName());
+            writer.flush();
           
-          // Write out the properties file
-          String name = file.getName();
-          name = name.substring(0, name.lastIndexOf('.'));
+            // Write out the properties file
+            String name = file.getName();
+            name = name.substring(0, name.lastIndexOf('.'));
           
-          Properties props = new Properties();
-          props.setProperty("name", name);
-          props.setProperty("hash", hash);
+            Properties props = new Properties();
+            props.setProperty("name", name);
+            props.setProperty("hash", hash);
           
-          File propsFile = new File(dir, name + ".properties");
-          OutputStream os = new FileOutputStream(propsFile);
-          props.store(os, null);
-          os.close();
+            File propsFile = new File(dir, file.getName() + ".properties");
+            OutputStream os = new FileOutputStream(propsFile);
+            props.store(os, null);
+            os.close();
+            
+            logger.log(RESUME, file.getName());
+          }
+          if (++projectJarCount % 1000 == 0) {
+            logger.info(projectJarCount + " project jars indexed");
+          }
         }
       }
-      bw.close();
+      writer.close();
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to write out jar index", e);
+    } finally {
+      if (writer != null) {
+        try {
+          writer.close();
+        } catch (IOException e) {}
+      }
     }
+    
+    logger.info(mavenJarCount + " maven jars indexed");
+    logger.info(mavenJarCount + " maven source jars indexed");
+    logger.info(projectJarCount + " project jars indexed");
+    logger.info("Done!)");
   }
   
   private static String getRelativePath(String basePath, String path) {
