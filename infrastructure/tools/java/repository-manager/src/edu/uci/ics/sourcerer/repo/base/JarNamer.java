@@ -27,6 +27,7 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Counter;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -34,7 +35,6 @@ import edu.uci.ics.sourcerer.util.Helper;
 public class JarNamer {
   private File path;
   private File info;
-  private FileWriter infoWriter;
   private Map<String, Counter<?>> names;
   private int totalCount;
    
@@ -44,9 +44,8 @@ public class JarNamer {
     totalCount = 0;
   }
   
-  public void setInfoFile(File info, FileWriter infoWriter) {
+  public void setInfoFile(File info) {
     this.info = info;
-    this.infoWriter = infoWriter;
   }
   
   public void addName(String name) {
@@ -57,12 +56,15 @@ public class JarNamer {
       names.put(name, counter);
     }
     counter.increment();
-    if (infoWriter != null) {
+    if (info != null) {
+      FileWriter infoWriter = null;
       try {
+        infoWriter = new FileWriter(info, true);
         infoWriter.write(name + "\n");
-        infoWriter.flush();
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Unable to write info file.", e);
+      } finally {
+        FileUtils.close(infoWriter);
       }
     }
   }
@@ -96,12 +98,7 @@ public class JarNamer {
     path.renameTo(newPath);
     path = newPath;
     
-    if (infoWriter != null) {
-      try {
-        infoWriter.close();
-      } catch (IOException e) {}
-      info.delete();
-    }
+    info.delete();
   }
   
 //  public String getNamePopularityInfo() {

@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.util.io;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,6 +28,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
+import java.util.zip.ZipFile;
 
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
@@ -37,6 +39,22 @@ public final class FileUtils {
   protected static final Property<String> TEMP_DIR = new StringProperty("temp-dir", "temp", "General", "Name of temp directory placed into OUTPUT directory");
   
   private FileUtils() {}
+  
+  public static void close (Closeable closeMe) {
+    if (closeMe != null) {
+      try {
+        closeMe.close();
+      } catch (IOException e) {}
+    }
+  }  
+  
+  public static void close(ZipFile zipFile) {
+    if (zipFile != null) {
+      try {
+        zipFile.close();
+      } catch (IOException e) {}
+    }
+  }
   
   public static File getTempDir() {
     File tempDir = new File(OUTPUT.getValue(), TEMP_DIR.getValue());

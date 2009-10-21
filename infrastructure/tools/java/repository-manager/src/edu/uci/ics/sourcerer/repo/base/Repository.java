@@ -144,16 +144,12 @@ public class Repository extends AbstractRepository {
           for (line = br.readLine(); line != null; line = br.readLine()) {
             namer.addName(line);
           }
-          namer.setInfoFile(file, new FileWriter(file, true));
+          namer.setInfoFile(file);
           nameIndex.put(jar, namer);
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Error reading info file", e);
         } finally {
-          if (br != null) {
-            try {
-              br.close();
-            } catch (IOException e) {}
-          }
+          FileUtils.close(br);
         }
       }
     }
@@ -185,14 +181,17 @@ public class Repository extends AbstractRepository {
             FileUtils.copyFile(jar.getFile(), tmpFile);
             namer = new JarNamer(tmpFile);
             nameIndex.put(newJar, namer);
+            FileWriter writer = null;
             try {
-              FileWriter writer = new FileWriter(infoFile);
+              writer = new FileWriter(infoFile);
               writer.write(newJar.getLength() + "\n");
               writer.write(newJar.getHash() + "\n");
               writer.write(tmpFile.getName());
-              namer.setInfoFile(infoFile, writer);
+              namer.setInfoFile(infoFile);
             } catch (IOException e) {
               logger.log(Level.SEVERE, "Unable to write info file.", e);
+            } finally {
+              FileUtils.close(writer);
             }
             uniqueFiles++;
           }
@@ -331,7 +330,7 @@ public class Repository extends AbstractRepository {
                     zos.write(buff, 0, read);
                   }
                 } finally {
-                  fis.close();
+                  FileUtils.close(fis);
                 }
               } catch (IOException e) {
                 logger.log(Level.SEVERE, "Unable to write zip entry for file: " + file.getName(), e);
@@ -346,13 +345,9 @@ public class Repository extends AbstractRepository {
       delete = true;
       return false;
     } finally {
-      if (zos != null) {
-        try {
-          zos.close();
-        } catch(IOException e) {}
-        if (delete) {
-          output.delete();
-        }
+      FileUtils.close(zos);
+      if (delete) {
+        output.delete();
       }
     }
   }

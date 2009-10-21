@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
@@ -67,11 +68,7 @@ public class JarIndex {
         logger.log(Level.SEVERE, "Error in reading jar md5 index");
         index.index.clear();
       } finally {
-        try {
-          if (br != null) {
-            br.close();
-          }
-        } catch(IOException e) {}
+        FileUtils.close(br);
       }
     } else {
       logger.severe("No jar index file");
@@ -280,11 +277,7 @@ public class JarIndex {
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to write out jar index", e);
     } finally {
-      if (writer != null) {
-        try {
-          writer.close();
-        } catch (IOException e) {}
-      }
+      FileUtils.close(writer);
     }
     
     logger.info(mavenJarCount + " maven jars indexed");

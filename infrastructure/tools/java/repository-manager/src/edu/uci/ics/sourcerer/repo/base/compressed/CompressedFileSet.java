@@ -30,6 +30,7 @@ import java.util.zip.ZipFile;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -75,11 +76,7 @@ public class CompressedFileSet extends AbstractFileSet {
       logger.log(Level.SEVERE, "Error in reading zip: " + project.getContent().getPath(), e);
       return false;
     } finally {
-      try {
-        if (zip != null) {
-          zip.close();
-        }
-      } catch (IOException e) {}
+      FileUtils.close(zip);
     }
   }
   
@@ -110,12 +107,8 @@ public class CompressedFileSet extends AbstractFileSet {
       logger.log(Level.SEVERE, "Unable to write temp file: " + tmp.getPath(), e);
       return null;
     } finally {
-      try {
-        fos.close();
-      } catch (IOException e) {}
-      try {
-        fos.close();
-      } catch (IOException e) {}
+      FileUtils.close(zip);
+      FileUtils.close(fos);
     }
     return tmp;
   }
