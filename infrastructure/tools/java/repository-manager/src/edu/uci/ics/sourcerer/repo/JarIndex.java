@@ -62,6 +62,24 @@ public class JarIndex {
         br = new BufferedReader(new FileReader(indexFile));
         for (String line = br.readLine(); line != null; line = br.readLine()) {
           String[] parts = line.split(" ");
+          IndexedJar jar = null;
+          // It has two parts if it's a project jar
+          if (parts.length == 2) {
+            jar = new IndexedJar(basePath, parts[1]);
+          } else if (parts.length == 3) {
+            jar = new IndexedJar(basePath, parts[2], parts[3]);
+          } else if (parts.length == 4) {
+            jar = new IndexedJar(basePath, parts[2], parts[3], parts[4]);
+          }
+          if (index.index.containsKey(parts[0])) {
+            IndexedJar oldJar = index.index.get(parts[0]);
+            logger.log(Level.WARNING, oldJar.toString() + " duplicates " + jar.toString());
+            if (!oldJar.isMavenJar() && jar.isMavenJar()) {
+              index.index.put(parts[0], jar);
+            }
+          } else {
+            index.index.put(parts[0], jar);
+          }
           index.index.put(parts[0], new IndexedJar(basePath, parts[1], parts[2], parts[3]));
         }
       } catch (IOException e) {

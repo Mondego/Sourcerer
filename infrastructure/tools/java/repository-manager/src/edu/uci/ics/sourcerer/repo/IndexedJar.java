@@ -30,6 +30,14 @@ public class IndexedJar {
   private String jarName;
   private String sourceName;
   
+  protected IndexedJar(String basePath, String jarName) {
+    this(basePath, null, jarName, null);
+  }
+  
+  protected IndexedJar(String basePath, String relativePath, String jarName) {
+    this(basePath, relativePath, jarName, null);
+  }
+  
   protected IndexedJar(String basePath, String relativePath, String jarName, String sourceName) {
     this.basePath = basePath;
     this.relativePath = relativePath;
@@ -48,7 +56,11 @@ public class IndexedJar {
   }
 
   private File getJarFile(String basePath) {
-    return new File(basePath + File.separatorChar + relativePath + File.separatorChar + jarName);
+    if (relativePath == null) {
+      return new File(basePath + "/" + jarName);
+    } else {
+      return new File(basePath + "/" + relativePath + "/" + jarName);
+    }
   }
   
   public File getJarFile() {
@@ -56,7 +68,7 @@ public class IndexedJar {
   }
   
   private File getSourceFile(String basePath) {
-    return new File(basePath + File.separatorChar + relativePath + File.separatorChar + sourceName);
+    return new File(basePath + "/" + relativePath + "/" + sourceName);
   }
   
   public File getSourceFile() {
@@ -67,8 +79,16 @@ public class IndexedJar {
     }
   }
   
+  public boolean hasSource() {
+    return sourceName != null;
+  }
+  
+  public boolean isMavenJar() {
+    return relativePath != null;
+  }
+  
   private File getPropertiesFile(String basePath) {
-    return new File(basePath + File.separatorChar + relativePath + File.separatorChar + jarName + ".properties");
+    return new File(basePath + "/" + relativePath + "/" + jarName + ".properties");
   }
   
   public File getPropertiesFile() {
@@ -89,5 +109,13 @@ public class IndexedJar {
     name = name.substring(0, name.lastIndexOf('.'));
     File output = new File(outputDir, name + ".properties");
     FileUtils.copyFile(getPropertiesFile(), output);
+  }
+  
+  public String toString() {
+    if (relativePath == null) {
+      return jarName;
+    } else {
+      return relativePath + "/" + jarName;
+    }
   }
 }

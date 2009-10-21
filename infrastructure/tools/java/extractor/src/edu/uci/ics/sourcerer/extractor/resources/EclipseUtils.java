@@ -118,7 +118,7 @@ public class EclipseUtils {
   public static void initializeJarProject(IndexedJar jar) {
     try {
       IClasspathEntry entries[] = new IClasspathEntry[1];
-      entries[0] = JavaCore.newLibraryEntry(new Path(jar.getPath()), null, null);
+      entries[0] = JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), new Path(jar.getSourceFile().getPath()), null);
       javaProject.setRawClasspath(entries, monitor);
     } catch (JavaModelException e) {
       logger.log(Level.SEVERE, "Unable to initialize jar project", e);
