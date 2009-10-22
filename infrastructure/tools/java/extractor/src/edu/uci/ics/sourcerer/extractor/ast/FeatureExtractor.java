@@ -26,6 +26,7 @@ import java.util.logging.Level;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
@@ -65,10 +66,22 @@ public final class FeatureExtractor {
   
   public void extractClassFiles(Collection<IClassFile> classFiles) {
     ClassFileExtractor extractor = new ClassFileExtractor(bundle);
+    ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
     for (IClassFile classFile : classFiles) {
       try {
-        extractor.extractClassFile(classFile);
-      } catch (NullPointerException e) {
+        ISourceRange source = classFile.getSourceRange();
+        if (source == null || source.getLength() == 0) {
+          extractor.extractClassFile(classFile);
+        } else {
+          parser.setStatementsRecovery(true);
+          parser.setResolveBindings(true);
+          parser.setBindingsRecovery(true);
+          parser.setSource(classFile);
+          
+          CompilationUnit unit = (CompilationUnit) parser.createAST(null);
+          unit.accept(visitor);
+        }
+      } catch (Exception e) {
         logger.log(Level.SEVERE, "Unable to extract " + classFile.getElementName(), e);
       }
     }

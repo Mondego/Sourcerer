@@ -157,7 +157,7 @@ public class Repository extends AbstractRepository {
     logger.info("Found " + completed.size() + " completed projects.");
     
     logger.info("Extracting jars from " + repo.projects.size() + " projects...");
-    int projectCount = completed.size();
+    int projectCount = 0;
     int totalFiles = nameIndex.size();
     int uniqueFiles = nameIndex.size();
     for (RepoProject project : repo.getProjects()) {
@@ -166,39 +166,41 @@ public class Repository extends AbstractRepository {
         logger.info("Already completed: " + project.getProjectPath());
       } else {
         logger.info("Getting file set for: " + project.getProjectPath());
-        IFileSet fileSet = project.getFileSet();
-        if (fileSet == null) {
-          continue;
-        }
-        logger.info("Extracting " + fileSet.getJarFileCount() + " jar files from project " + projectCount + " of " + repo.projects.size());
-        
-        for (IJarFile jar : fileSet.getJarFiles()) {
-          RepoJar newJar = new RepoJar(jar.getFile());
-          JarNamer namer = nameIndex.get(newJar);
-          if (namer == null) {
-            File tmpFile = new File(jarFolder, uniqueFiles + ".tmp");
-            File infoFile = new File(jarFolder, uniqueFiles + ".info");
-            FileUtils.copyFile(jar.getFile(), tmpFile);
-            namer = new JarNamer(tmpFile);
-            nameIndex.put(newJar, namer);
-            FileWriter writer = null;
-            try {
-              writer = new FileWriter(infoFile);
-              writer.write(newJar.getLength() + "\n");
-              writer.write(newJar.getHash() + "\n");
-              writer.write(tmpFile.getName());
-              namer.setInfoFile(infoFile);
-            } catch (IOException e) {
-              logger.log(Level.SEVERE, "Unable to write info file.", e);
-            } finally {
-              FileUtils.close(writer);
-            }
-            uniqueFiles++;
+        try {
+          IFileSet fileSet = project.getFileSet();
+          if (fileSet == null) {
+            continue;
           }
-          totalFiles++;
-          namer.addName(jar.getName());
+          logger.info("Extracting " + fileSet.getJarFileCount() + " jar files from project " + projectCount + " of " + repo.projects.size());
+          
+          for (IJarFile jar : fileSet.getJarFiles()) {
+            RepoJar newJar = new RepoJar(jar.getFile());
+            JarNamer namer = nameIndex.get(newJar);
+            if (namer == null) {
+              File tmpFile = new File(jarFolder, uniqueFiles + ".tmp");
+              File infoFile = new File(jarFolder, uniqueFiles + ".info");
+              FileUtils.copyFile(jar.getFile(), tmpFile);
+              namer = new JarNamer(tmpFile);
+              nameIndex.put(newJar, namer);
+              FileWriter writer = null;
+              try {
+                writer = new FileWriter(infoFile);
+                writer.write(newJar.getLength() + "\n");
+                writer.write(newJar.getHash() + "\n");
+                writer.write(tmpFile.getName());
+                namer.setInfoFile(infoFile);
+              } finally {
+                FileUtils.close(writer);
+              }
+              uniqueFiles++;
+            }
+            totalFiles++;
+            namer.addName(jar.getName());
+          }
+          logger.log(RESUME, project.getProjectPath());
+        } catch (Exception e) {
+          logger.log(Level.SEVERE, "Unable to extract project: " + project.getProjectPath(), e);
         }
-        logger.log(RESUME, project.getProjectPath());
       }
     }
       
