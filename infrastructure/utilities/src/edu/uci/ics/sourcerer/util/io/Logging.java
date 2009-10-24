@@ -226,6 +226,8 @@ public final class Logging {
       logger.addHandler(infoHandler);
       
       logger.removeHandler(defaultHandler);
+      
+      loggingInitialized = true;
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(1);

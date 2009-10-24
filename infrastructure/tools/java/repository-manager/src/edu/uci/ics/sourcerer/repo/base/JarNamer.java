@@ -87,18 +87,27 @@ public class JarNamer {
     jarName = jarName.replace(' ', '_');
     
     // Rename the jar
-    File newPath = new File(path.getParent(), jarName);
-    if (newPath.exists()) {
-      String name = jarName.substring(0, jarName.lastIndexOf('.'));
-      int count = 0;
-      while (newPath.exists()) {
-        newPath = new File(path.getParent(), name + "-" + ++count + ".jar");
+    File newPath = new File(path.getParentFile(), jarName);
+    if (!path.equals(newPath)) {
+      if (newPath.exists()) {
+        String name = jarName.substring(0, jarName.lastIndexOf('.'));
+        int count = 0;
+        while (newPath.exists()) {
+          newPath = new File(path.getParent(), name + "-" + ++count + ".jar");
+        }
+      }
+      path.renameTo(newPath);
+      path = newPath;
+      
+      File newInfo = new File(newPath.getParentFile(), newPath.getName() + ".info");
+      info.renameTo(newInfo);
+      
+      File oldProperties = new File(path.getParentFile(), path.getName() + ".properties");
+      if (oldProperties.exists()) {
+        File newProperties = new File(newPath.getParentFile(), newPath.getName() + ".properties");
+        oldProperties.renameTo(newProperties);
       }
     }
-    path.renameTo(newPath);
-    path = newPath;
-    
-    info.delete();
   }
   
 //  public String getNamePopularityInfo() {

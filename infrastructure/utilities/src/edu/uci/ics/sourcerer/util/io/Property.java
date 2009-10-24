@@ -116,7 +116,7 @@ public abstract class Property <T> {
       PropertyManager properties = PropertyManager.getProperties();
       String stringValue = properties.getValue(name);
       if (stringValue == null) {
-        if (this != PROMPT_MISSING && PROMPT_MISSING.getValue()) {
+        if (defaultValue == null && this != PROMPT_MISSING && PROMPT_MISSING.getValue() && isNotOptional()) {
           try {
             System.out.print("Please enter value for " + name + ":");
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));

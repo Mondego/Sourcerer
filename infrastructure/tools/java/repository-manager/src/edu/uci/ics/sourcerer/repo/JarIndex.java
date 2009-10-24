@@ -80,7 +80,6 @@ public class JarIndex {
           } else {
             index.index.put(parts[0], jar);
           }
-          index.index.put(parts[0], new IndexedJar(basePath, parts[1], parts[2], parts[3]));
         }
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Error in reading jar md5 index");
@@ -183,6 +182,10 @@ public class JarIndex {
       baseDir += "/";
     }
     
+    if (completed.isEmpty() && indexFile.exists()) {
+      indexFile.delete();
+    }
+    
     int projectJarCount = 0;
     int mavenJarCount = 0;
     int mavenSourceCount = 0;
@@ -210,7 +213,7 @@ public class JarIndex {
                   jar = next;
                 } else if (next.getName().endsWith("source.jar") || next.getName().endsWith("sources.jar")) {
                   if (source != null) {
-                    logger.log(Level.SEVERE, "Foudn two source jars! " + top.getPath());
+                    logger.log(Level.SEVERE, "Found two source jars! " + top.getPath());
                   }
                   source = next;
                 }
@@ -225,9 +228,9 @@ public class JarIndex {
                       
                 // Write out the entry
                 if (source == null) {
-                  writer.write(hash + " " + getRelativePath(baseDir, top.getPath()) + " " + jar.getName());
+                  writer.write(hash + " " + getRelativePath(baseDir, top.getPath()) + " " + jar.getName() + "\n");
                 } else {
-                  writer.write(hash + " " + getRelativePath(baseDir, top.getPath()) + " " + jar.getName() + " " + source.getName());
+                  writer.write(hash + " " + getRelativePath(baseDir, top.getPath()) + " " + jar.getName() + " " + source.getName() + "\n");
                 }
                       
                 // Write out the properties file
@@ -268,7 +271,7 @@ public class JarIndex {
             String hash = RepoJar.getHash(file);
           
             // Write out the entry
-            writer.write(hash + " " + file.getName());
+            writer.write(hash + " " + file.getName() + "\n");
             writer.flush();
           
             // Write out the properties file

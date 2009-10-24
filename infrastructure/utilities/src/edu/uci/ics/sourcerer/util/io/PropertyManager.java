@@ -141,7 +141,7 @@ public class PropertyManager {
               singleton.propertyMap.put(prop, args[++index]);
             }
           } else {
-            throw new IllegalArgumentException(args[index] + " from " + args + " is invalid");
+            throw new IllegalArgumentException(args[index] + " is invalid (expecting --)");
           }
         }
       

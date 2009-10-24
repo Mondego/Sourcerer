@@ -25,6 +25,7 @@
        so that the jars don't contain unneeded files -->
 	<property name="build" location="build" />
 	<property name="build-java-tools-core" location="${build}/java-tools-core" />
+	<property name="build-database" location="${build}/database" />
 	<property name="build-search-eval" location="${build}/search-eval" />
 	<property name="build-search-server" location="${build}/search-server" />
 	<property name="build-core-repomanager" location="${build}/core-repomanager" />
@@ -33,12 +34,13 @@
 	<property name="utilities" location="../infrastructure/utilities/src" />
 	<property name="repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
 	<property name="model" location="../infrastructure/tools/java/model/src" />
+	<property name="database" location="../infrastructure/tools/java/database/src" />
 	<property name="search-eval" location="../infrastructure/apps/codesearch/src" />
 	<property name="core-repository-manager" location="../infrastructure/tools/core/core-repository-manager/src" />
 	<property name="search-server" location="../infrastructure/services/search-server/src" />
 	<property name="solr-root" location="../infrastructure/services/solr-1.3-patched" />
 	<property name="codecrawler" location="../infrastructure/tools/core/codecrawler/src" />
-
+	<property name="test-repo" location="../infrastructure/tools/java/extractor/test-repo" />
 	<property name="lib" location="../lib" />
 
 	<target name="init">
@@ -86,6 +88,48 @@
 				<include name="repo-tools.jar" />
 			</fileset>
 		</delete>
+	</target>
+	
+	<target name="init-database" depends="init">
+		<mkdir dir="${build-database}" />
+	</target>
+	
+	<target name="compile-database" depends="init-database">
+		<javac destdir="${build-database}" debug="on">
+		  <src path="${utilities}" />
+		  <src path="${repository-manager}" />
+			<src path="${model}" />
+			<src path="${database}" />
+	  </javac>
+		<copy todir="${build-database}">
+      <fileset dir="${utilities}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-database}">
+      <fileset dir="${repository-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-database}">
+      <fileset dir="${model}" includes="**/*.java" />
+    </copy>
+		<copy todir="${build-database}">
+      <fileset dir="${database}" includes="**/*.java" />
+    </copy>
+	</target>
+	
+	<target name="database" depends="compile-database">
+	  <jar destfile="sourcerer-db.jar" basedir="${build-database}">
+	    <manifest>
+	      <attribute name="Main-Class" value="edu.uci.ics.sourcerer.db.tools.Main" />
+    	</manifest>
+  	</jar>
+	</target>
+  		
+	<target name ="clean-database">
+	  <delete dir="${build-database}" />
+	  <delete>
+	    <fileset dir=".">
+	      <include name="sourcerer-db.jar" />
+      </fileset>
+  	</delete>
 	</target>
 
 	<target name="scs">
@@ -241,6 +285,51 @@
 		<move file="${solr-root}/src/common/org/apache/solr/common/params/CollapseParams.java" todir="${solr-root}/src/java/org/apache/solr/common/params" />
 	</target>
 
+	<target name="update-test-repo" depends="compile-java-tools-core,sourcerer-lib,repo-tools">
+		<!-- Setup 0/1 with sourcerer-lib --> 
+		<copy todir="${test-repo}/0/1/content/src">
+      <fileset dir="${utilities}" includes="**/*.java" />
+    </copy>
+		<copy todir="${test-repo}/0/1/content/src">
+      <fileset dir="${repository-manager}" includes="**/*.java" />
+    </copy>
+		<copy todir="${test-repo}/0/1/content/src">
+      <fileset dir="${model}" includes="**/*.java" />
+    </copy>
+		
+		<!-- Setup 0/2 with sourcerer-db and sourcerer-lib.jar -->
+		<copy todir="${test-repo}/0/2/content/src">
+		  <fileset dir="${database}" includes="**/*.java" />
+	  </copy>
+		<copy todir="${test-repo}/0/2/content/lib">
+			<fileset dir=".">
+			  <include name="sourcerer-lib.jar" />
+			</fileset>
+		</copy>
+
+		<!-- Clear the old output -->
+		<delete dir="${test-repo}/output" />
+		<delete dir="${test-repo}/jars" />
+		
+		<!-- Aggregate the jar repository -->
+		<java jar="repo-tools.jar" fork="true">
+			<arg value="--aggregate-jar-files" />
+			<arg value="--repo-root" />
+			<arg value="${test-repo}" />
+			<arg value="--output" />
+			<arg value="${test-repo}/output/agg" />
+		</java>
+		
+		<!-- Create jar index -->
+		<java jar="repo-tools.jar" fork="true">
+			<arg value="--create-jar-index" />
+			<arg value="--repo-root" />
+			<arg value="${test-repo}" />
+			<arg value="--output" />
+			<arg value="${test-repo}/output/index" />
+		</java>
+	</target>
+	
 	<target name="clean" description="clean up" depends="clean-java-tools">
 		<delete dir="${build}" />
 	</target>

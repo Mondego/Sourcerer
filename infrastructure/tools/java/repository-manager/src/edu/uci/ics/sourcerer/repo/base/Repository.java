@@ -134,12 +134,10 @@ public class Repository extends AbstractRepository {
             continue;
           }
           RepoJar jar = new RepoJar(length, hash);
-          // The third line contains the name of the jar
-          line = br.readLine();
-          if (line == null) {
-            continue;
-          }
-          JarNamer namer = new JarNamer(new File(jarFolder, line)); 
+          // The name of the jar is the name of the info file minus .info
+          String name = file.getName();
+          name = name.substring(0, name.lastIndexOf('.'));
+          JarNamer namer = new JarNamer(new File(jarFolder, name)); 
           // The rest of the lines contain the potential names
           for (line = br.readLine(); line != null; line = br.readLine()) {
             namer.addName(line);
@@ -155,6 +153,8 @@ public class Repository extends AbstractRepository {
     }
     logger.info("Found " + nameIndex.size() + " partially completed aggregates.");
     logger.info("Found " + completed.size() + " completed projects.");
+    
+    JarIndex index = repo.getJarIndex();
     
     logger.info("Extracting jars from " + repo.projects.size() + " projects...");
     int projectCount = 0;
@@ -175,29 +175,44 @@ public class Repository extends AbstractRepository {
           
           for (IJarFile jar : fileSet.getJarFiles()) {
             RepoJar newJar = new RepoJar(jar.getFile());
-            JarNamer namer = nameIndex.get(newJar);
-            if (namer == null) {
-              File tmpFile = new File(jarFolder, uniqueFiles + ".tmp");
-              File infoFile = new File(jarFolder, uniqueFiles + ".info");
-              FileUtils.copyFile(jar.getFile(), tmpFile);
-              namer = new JarNamer(tmpFile);
-              nameIndex.put(newJar, namer);
-              FileWriter writer = null;
+            // If the index already contains the jar
+            IndexedJar indexedJar = index.getIndexedJar(newJar.getHash());
+            if (indexedJar != null && !indexedJar.isMavenJar()) {
+              File info = indexedJar.getInfoFile();
+              FileWriter infoWriter = null;
               try {
-                writer = new FileWriter(infoFile);
-                writer.write(newJar.getLength() + "\n");
-                writer.write(newJar.getHash() + "\n");
-                writer.write(tmpFile.getName());
-                namer.setInfoFile(infoFile);
+                infoWriter = new FileWriter(info, true);
+                infoWriter.write(jar.getName() + "\n");
+              } catch (IOException e) {
+                logger.log(Level.SEVERE, "Unable to write info file.", e);
               } finally {
-                FileUtils.close(writer);
+                FileUtils.close(infoWriter);
               }
-              uniqueFiles++;
+            } else {
+              JarNamer namer = nameIndex.get(newJar);
+              if (namer == null) {
+                File tmpFile = new File(jarFolder, uniqueFiles + ".tmp");
+                File infoFile = new File(jarFolder, uniqueFiles + ".tmp.info");
+                FileUtils.copyFile(jar.getFile(), tmpFile);
+                namer = new JarNamer(tmpFile);
+                nameIndex.put(newJar, namer);
+                FileWriter writer = null;
+                try {
+                  writer = new FileWriter(infoFile);
+                  writer.write(newJar.getLength() + "\n");
+                  writer.write(newJar.getHash() + "\n");
+                  namer.setInfoFile(infoFile);
+                } finally {
+                  FileUtils.close(writer);
+                }
+                uniqueFiles++;
+              }
+              namer.addName(jar.getName());
             }
             totalFiles++;
-            namer.addName(jar.getName());
           }
           logger.log(RESUME, project.getProjectPath());
+          FileUtils.resetTempDir();
         } catch (Exception e) {
           logger.log(Level.SEVERE, "Unable to extract project: " + project.getProjectPath(), e);
         }
@@ -211,6 +226,8 @@ public class Repository extends AbstractRepository {
     for (JarNamer namer : nameIndex.values()) {
       namer.rename();
     }
+    
+    FileUtils.cleanTempDir();
     
     logger.info("--- Done! ---");
   }
@@ -234,9 +251,9 @@ public class Repository extends AbstractRepository {
       jars.mkdir();
     }
     for (IndexedJar jar : repo.getJarIndex().getIndexedJars()) {
-      if (!completed.contains(jar.getRelativePath())) {
+      if (!completed.contains(jar.toString())) {
         jar.migrateIndexedJar(jars);
-        logger.log(RESUME, jar.getRelativePath());
+        logger.log(RESUME, jar.toString());
       }
     }
     if (repo.jarIndexFile.exists()) {

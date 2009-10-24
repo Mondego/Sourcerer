@@ -173,7 +173,15 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   @Override
   public boolean visit(CompilationUnit node) {
     // Get the file path
-    compilationUnitPath = node.getJavaElement().getResource().getRawLocation().toString();
+    if (node.getJavaElement().getResource() == null) {
+      if (node.getPackage() == null) {
+        compilationUnitPath = node.getJavaElement().getElementName();
+      } else {
+        compilationUnitPath = node.getPackage().getName() + "." + node.getJavaElement().getElementName();
+      }
+    } else {
+      compilationUnitPath = node.getJavaElement().getResource().getRawLocation().toString();
+    }
     
     // Write the file path
     fileWriter.writeFile(compilationUnitPath);

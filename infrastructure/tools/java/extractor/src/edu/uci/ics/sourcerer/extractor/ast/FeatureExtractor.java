@@ -79,7 +79,18 @@ public final class FeatureExtractor {
           parser.setSource(classFile);
           
           CompilationUnit unit = (CompilationUnit) parser.createAST(null);
-          unit.accept(visitor);
+          boolean foundProblem = false;
+          for (IProblem problem : unit.getProblems()) {
+            if (problem.getID() == 16777540) {
+              foundProblem = true;
+            }
+          }
+          if (foundProblem) {
+            logger.log(Level.SEVERE, "Unable to parse source for: " + classFile.getElementName());
+            extractor.extractClassFile(classFile);
+          } else {
+            unit.accept(visitor);
+          }
         }
       } catch (Exception e) {
         logger.log(Level.SEVERE, "Unable to extract " + classFile.getElementName(), e);

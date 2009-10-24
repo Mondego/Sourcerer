@@ -45,14 +45,12 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Properties;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class TestExtractorOutput {
+public class ExtractorOutputTest {
   private Repository repo;
   private ExtractedRepository extractedRepo;
   
@@ -62,7 +60,7 @@ public class TestExtractorOutput {
   private int warnings;
   private int duplicates;
   
-  private TestExtractorOutput(Repository repo, ExtractedRepository extractedRepo) {
+  private ExtractorOutputTest(Repository repo, ExtractedRepository extractedRepo) {
     this.repo = repo;
     this.extractedRepo = extractedRepo;
   }
@@ -445,7 +443,6 @@ public class TestExtractorOutput {
   }
   
   public static void runTest() {
-    
     File repoRoot = AbstractRepository.REPO_ROOT.getValue();
     File tempDir = FileUtils.getTempDir();
     Repository repo = Repository.getRepository(repoRoot, tempDir);
@@ -453,14 +450,7 @@ public class TestExtractorOutput {
     File extractorOutput = Properties.INPUT.getValue();
     ExtractedRepository extractedRepo = ExtractedRepository.getRepository(extractorOutput);
     
-    TestExtractorOutput test = new TestExtractorOutput(repo, extractedRepo);
+    ExtractorOutputTest test = new ExtractorOutputTest(repo, extractedRepo);
     test.verifyOutput();
-  }
-  
-  public static void main(String[] args) {
-    PropertyManager.initializeProperties(args);
-    Logging.initializeLogger();
-    PropertyManager.registerAndVerify(AbstractRepository.REPO_ROOT, Properties.INPUT, Properties.OUTPUT);
-    runTest();
   }
 }

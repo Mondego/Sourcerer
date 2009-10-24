@@ -65,8 +65,19 @@ public final class FileUtils {
     }
   }
   
+  public static void resetTempDir() {
+    File tempDir = getTempDir();
+    for (File file : tempDir.listFiles()) {
+      if (file.isDirectory()) {
+        deleteDirectory(file);
+      } else {
+        file.delete();
+      }
+    }
+  }
+  
   public static void cleanTempDir() {
-    File tempDir = new File(OUTPUT.getValue(), TEMP_DIR.getValue());
+    File tempDir = getTempDir();
     deleteDirectory(tempDir);
   }
   

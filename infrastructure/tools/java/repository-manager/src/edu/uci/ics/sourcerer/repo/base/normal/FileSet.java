@@ -48,7 +48,7 @@ public class FileSet extends AbstractFileSet {
       File next = fileStack.pop();
       if (next.exists()) {
         for (File file : next.listFiles()) {
-          if (file.isDirectory()) {
+          if (file.isDirectory() && !file.getName().startsWith(".")) {
             fileStack.push(file);
           } else if (file.getName().endsWith(".jar")) {
             addJarFile(new JarFile(file, RepoJar.getHash(file)));

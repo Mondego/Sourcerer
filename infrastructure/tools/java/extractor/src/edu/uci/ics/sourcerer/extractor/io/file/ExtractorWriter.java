@@ -47,7 +47,11 @@ public abstract class ExtractorWriter implements IExtractorWriter {
   }
   
   protected String convertToRelativePath(String path) {
-    return input.convertToRelativePath(path);
+    if (input == null) {
+      return path;
+    } else {
+      return input.convertToRelativePath(path);
+    }
   }
   
   public void close() {

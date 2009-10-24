@@ -88,26 +88,40 @@ public class IndexedJar {
   }
   
   private File getPropertiesFile(String basePath) {
-    return new File(basePath + "/" + relativePath + "/" + jarName + ".properties");
+    if (relativePath == null) {
+      return new File(basePath + "/" + jarName + ".properties");
+    } else {
+      return new File(basePath + "/" + relativePath + "/" + jarName + ".properties");
+    }
   }
   
   public File getPropertiesFile() {
     return getPropertiesFile(basePath);
   }
-    
-  public String getRelativePath() {
-    return relativePath;
+  
+  private File getInfoFile(String basePath) {
+    if (relativePath == null) {
+      return null;
+    } else {
+      return new File(basePath + "/" + jarName + ".info");
+    }
+  }
+  
+  public File getInfoFile() {
+    return getInfoFile(basePath);
   }
   
   public String getOutputPath(File baseDir) {
-    return baseDir.getPath() + "/" + relativePath;
+    if (relativePath == null) {
+      return baseDir.getPath() + "/" + jarName;
+    } else {
+      return baseDir.getPath() + "/" + relativePath;
+    }
   }
   
   public void copyPropertiesFile(File baseDir) {
     File outputDir = new File(getOutputPath(baseDir));
-    String name = outputDir.getName();
-    name = name.substring(0, name.lastIndexOf('.'));
-    File output = new File(outputDir, name + ".properties");
+    File output = new File(outputDir, jarName + ".properties");
     FileUtils.copyFile(getPropertiesFile(), output);
   }
   

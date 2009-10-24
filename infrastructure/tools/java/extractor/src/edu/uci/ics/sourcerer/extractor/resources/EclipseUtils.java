@@ -23,15 +23,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceDescription;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -68,8 +65,8 @@ public class EclipseUtils {
   private static IProject project = null;
   private static IJavaProject javaProject = null;
   private static IProgressMonitor monitor = new NullProgressMonitor();
-
-  public static void initialize() {
+ 
+  private static void initializeProject() {
     IWorkspace workspace = ResourcesPlugin.getWorkspace();
     IWorkspaceDescription desc = workspace.getDescription();
     desc.setAutoBuilding(false);
@@ -83,20 +80,20 @@ public class EclipseUtils {
     project = root.getProject(projectName);
     
     try {
-      if (!project.exists()) {
-        project.create(monitor);
-        project.open(monitor);
-        IProjectDescription description = project.getDescription();
-        String[] prevNatures= description.getNatureIds();
-        String[] newNatures= new String[prevNatures.length + 1];
-        System.arraycopy(prevNatures, 0, newNatures, 0, prevNatures.length);
-        newNatures[prevNatures.length]= JavaCore.NATURE_ID;
-        description.setNatureIds(newNatures);
-        project.setDescription(description, monitor);
-        project.setDefaultCharset("US-ASCII", monitor);
-      } else {
-        project.open(monitor);
+      if (project.exists()) {
+        project.delete(true, monitor);
       }
+      
+      project.create(monitor);
+      project.open(monitor);
+      IProjectDescription description = project.getDescription();
+      String[] prevNatures= description.getNatureIds();
+      String[] newNatures= new String[prevNatures.length + 1];
+      System.arraycopy(prevNatures, 0, newNatures, 0, prevNatures.length);
+      newNatures[prevNatures.length]= JavaCore.NATURE_ID;
+      description.setNatureIds(newNatures);
+      project.setDescription(description, monitor);
+      project.setDefaultCharset("US-ASCII", monitor);
       
       javaProject = JavaCore.create(project);
     } catch (CoreException e) {
@@ -116,16 +113,22 @@ public class EclipseUtils {
   }
   
   public static void initializeJarProject(IndexedJar jar) {
+    initializeProject();
     try {
-      IClasspathEntry entries[] = new IClasspathEntry[1];
-      entries[0] = JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), new Path(jar.getSourceFile().getPath()), null);
-      javaProject.setRawClasspath(entries, monitor);
+      IVMInstall vmInstall = JavaRuntime.getDefaultVMInstall();
+      List<IClasspathEntry> entries = Helper.newArrayList();//new IClasspathEntry[locations.length + jarFiles.size() + 1];
+      for (LibraryLocation location : JavaRuntime.getLibraryLocations(vmInstall)) {
+        entries.add(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), location.getSystemLibrarySourcePath(), null));
+      }
+      entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), jar.getSourceFile() == null ? null : new Path(jar.getSourceFile().getPath()), null));
+      javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), monitor);
     } catch (JavaModelException e) {
       logger.log(Level.SEVERE, "Unable to initialize jar project", e);
     }
   }
   
   public static void initializeLibraryProject(IPath libraryJar) {
+    initializeProject();
     try {
       IClasspathEntry entries[] = new IClasspathEntry[1];
       entries[0] = JavaCore.newLibraryEntry(libraryJar, null, null);
@@ -136,9 +139,9 @@ public class EclipseUtils {
   }
   
   public static void initializeProject(Iterable<IJarFile> jarFiles) {
+    initializeProject();
     try {
       srcFolder = project.getFolder("src");
-      cleanProject();
 
       if (!srcFolder.exists()) {
         srcFolder.create(true, true, null);
@@ -228,17 +231,21 @@ public class EclipseUtils {
     }
   }
   
-  public static Collection<IClassFile> getClassFiles() {
+  public static Collection<IClassFile> getClassFiles(IPath path) {
     try {
       Collection<IClassFile> classFiles = Helper.newLinkedList();
       Deque<IPackageFragment> fragments = Helper.newStack();
       
-      for (IPackageFragmentRoot root : javaProject.getAllPackageFragmentRoots()) {
+      IPackageFragmentRoot root = javaProject.findPackageFragmentRoot(path);
+      if (root == null) {
+        logger.log(Level.SEVERE, "Unable to get class file listing for: " + path.toString());
+        return classFiles;
+      } else {
         for (IJavaElement child : root.getChildren()) {
           if (child.getElementType() == IJavaProject.PACKAGE_FRAGMENT) {
-            fragments.push((IPackageFragment)child); 
+            fragments.push((IPackageFragment) child); 
           } else if (child.getElementType() == IJavaProject.CLASS_FILE) {
-            classFiles.add((IClassFile)child);
+            classFiles.add((IClassFile) child);
           }
         }
       }
@@ -340,33 +347,33 @@ public class EclipseUtils {
 //    }
 //  }
 //  
-  public static void cleanProject() {
-    try {
-      IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-      IProject project = root.getProject(projectName);
-      if (project.exists()) {
-        final Set<IResource> resources = Helper.newHashSet();
-        IFolder folder = project.getFolder("src");
-        if (folder.exists()) {
-          project.getFolder("src").accept(new IResourceVisitor() {
-            @Override
-            public boolean visit(IResource resource) throws CoreException {
-              if (resource.getType() == IResource.FILE || resource.getType() == IResource.FOLDER) {
-                resources.add(resource);
-                return false;
-              } else {
-                return true;
-              }
-            }
-          });
-          for (IResource resource : resources) {
-            resource.delete(true, null);
-          }
-        }
-//        srcFolder.create(true, true, null);
-      }
-    } catch (CoreException e) {
-      logger.log(Level.SEVERE, "Error in project cleaning", e);
-    }
-  }
+//  public static void cleanProject() {
+//    try {
+//      IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+//      IProject project = root.getProject(projectName);
+//      if (project.exists()) {
+//        final Set<IResource> resources = Helper.newHashSet();
+//        IFolder folder = project.getFolder("src");
+//        if (folder.exists()) {
+//          project.getFolder("src").accept(new IResourceVisitor() {
+//            @Override
+//            public boolean visit(IResource resource) throws CoreException {
+//              if (resource.getType() == IResource.FILE || resource.getType() == IResource.FOLDER) {
+//                resources.add(resource);
+//                return false;
+//              } else {
+//                return true;
+//              }
+//            }
+//          });
+//          for (IResource resource : resources) {
+//            resource.delete(true, null);
+//          }
+//        }
+////        srcFolder.create(true, true, null);
+//      }
+//    } catch (CoreException e) {
+//      logger.log(Level.SEVERE, "Error in project cleaning", e);
+//    }
+//  }
 }

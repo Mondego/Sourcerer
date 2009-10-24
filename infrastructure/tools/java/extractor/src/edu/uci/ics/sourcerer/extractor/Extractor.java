@@ -37,6 +37,7 @@ import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.jdt.core.IClassFile;
@@ -79,9 +80,6 @@ public class Extractor implements IApplication {
     if (REPO_ROOT.hasValue()) {
       Set<String> completed = Logging.initializeResumeLogger();
       
-      // Initialize EclipseUtils
-      EclipseUtils.initialize();
-      
       // Initialize the FeatureExtractor
       FeatureExtractor extractor = new FeatureExtractor(); 
       
@@ -105,7 +103,7 @@ public class Extractor implements IApplication {
           EclipseUtils.initializeLibraryProject(library);
           
           logger.info("Getting class files");
-          Collection<IClassFile> classFiles = EclipseUtils.getClassFiles();
+          Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(library);
           
           logger.info("Extracting " + classFiles.size() + " class files");
           // Set up the writer bundle
@@ -137,16 +135,16 @@ public class Extractor implements IApplication {
       count = 0;
       for (IndexedJar jar : jarIndex.getIndexedJars()) {
         logger.info("-------------------------------");
-        logger.info("Extracting " + jar.getRelativePath() + " (" + ++count + " of " + jarIndex.getIndexSize() + ")");
+        logger.info("Extracting " + jar + " (" + ++count + " of " + jarIndex.getIndexSize() + ")");
         
-        if (completed.contains(jar.getRelativePath())) {
+        if (completed.contains(jar.toString())) {
           logger.info("Jar already completed!");
         } else {
           logger.info("Initializing project");
           EclipseUtils.initializeJarProject(jar);
           
           logger.info("Getting class files");
-          Collection<IClassFile> classFiles = EclipseUtils.getClassFiles();
+          Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(new Path(jar.getJarFile().getPath()));
           
           logger.info("Extracting " + classFiles.size() + " class files");
           // Set up the properties
@@ -164,7 +162,7 @@ public class Extractor implements IApplication {
           jar.copyPropertiesFile(output.getJarsDir());
           
           // The jar is completed
-          logger.log(Logging.RESUME, jar.getRelativePath());
+          logger.log(Logging.RESUME, jar.toString());
         }
       }
       
@@ -226,8 +224,11 @@ public class Extractor implements IApplication {
           FileUtils.copyFile(project.getPropertiesFile(), new File(project.getOutputPath(output.getBaseDir()), project.getPropertiesFile().getName()));
           
           logger.log(Logging.RESUME, project.getProjectPath());
+          
+          FileUtils.resetTempDir();
         }
       }
+      FileUtils.cleanTempDir();
       logger.info("Done!");
     } else {
 //      // Initialize EclipseUtils
@@ -296,6 +297,7 @@ public class Extractor implements IApplication {
     JAR_FILE_WRITER.setValue(JarFileWriter.class);
     
     Extractor.extract();
+
     return EXIT_OK;
   }
 
