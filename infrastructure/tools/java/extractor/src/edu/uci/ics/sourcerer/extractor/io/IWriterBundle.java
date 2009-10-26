@@ -15,27 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.extractor.io.file;
-
-import java.io.File;
-
-import edu.uci.ics.sourcerer.extractor.io.IFileWriter;
-import edu.uci.ics.sourcerer.model.extracted.FileExParser;
-import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+package edu.uci.ics.sourcerer.extractor.io;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class FileWriter extends ExtractorWriter implements IFileWriter {
-  public static final Property<String> FILE_FILE = new StringProperty("file-file", "files.txt", "Extractor Output", "Filename for extracted files.");
-  
-  public FileWriter(File output, Repository input) {
-    super(new File(output, FILE_FILE.getValue()), input);
-  }
+public interface IWriterBundle {
+  public IImportWriter getImportWriter();
 
-  public void writeFile(String path) {
-    write(FileExParser.getLine(convertToRelativePath(path)));
-  }
+  public IProblemWriter getProblemWriter();
+
+  public IEntityWriter getEntityWriter();
+
+  public IJarEntityWriter getJarEntityWriter();
+
+  public ILocalVariableWriter getLocalVariableWriter();
+
+  public IRelationWriter getRelationWriter();
+
+  public IJarRelationWriter getJarRelationWriter();
+
+  public ICommentWriter getCommentWriter();
+
+  public IFileWriter getFileWriter();
+
+  public IJarFileWriter getJarFileWriter();
+
+  public void close();
 }

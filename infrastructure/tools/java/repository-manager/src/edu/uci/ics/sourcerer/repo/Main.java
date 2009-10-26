@@ -17,7 +17,8 @@
  */
 package edu.uci.ics.sourcerer.repo;
 
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.REPO_ROOT;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
 import static edu.uci.ics.sourcerer.repo.JarIndex.JAR_INDEX_FILE;
 import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.*;
@@ -51,22 +52,22 @@ public class Main {
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
     if (CREATE_JAR_INDEX.getValue()) {
-      PropertyManager.registerAndVerify(CREATE_JAR_INDEX, REPO_ROOT, JAR_INDEX_FILE);
-      Repository.createJarIndex(REPO_ROOT.getValue());
+      PropertyManager.registerAndVerify(CREATE_JAR_INDEX, INPUT_REPO, JAR_INDEX_FILE);
+      Repository.createJarIndex(INPUT_REPO.getValue());
     } else if (PRINT_JAR_STATS.getValue()) {
-      PropertyManager.registerAndVerify(PRINT_JAR_STATS, REPO_ROOT);
-      Repository.printJarStats(REPO_ROOT.getValue());
+      PropertyManager.registerAndVerify(PRINT_JAR_STATS, INPUT_REPO);
+      Repository.printJarStats(INPUT_REPO.getValue());
     } else if (AGGREGATE_JAR_FILES.getValue()) {
-      PropertyManager.registerAndVerify(AGGREGATE_JAR_FILES, REPO_ROOT);
-      Repository.aggregateJarFiles(REPO_ROOT.getValue());
+      PropertyManager.registerAndVerify(AGGREGATE_JAR_FILES, INPUT_REPO);
+      Repository.aggregateJarFiles(INPUT_REPO.getValue());
     } else if (CLEAN_REPOSITORY.getValue()) {
-      PropertyManager.registerAndVerify(CLEAN_REPOSITORY, REPO_ROOT);
-      Repository.deleteCompressedRepository(REPO_ROOT.getValue());
+      PropertyManager.registerAndVerify(CLEAN_REPOSITORY, INPUT_REPO);
+      Repository.deleteCompressedRepository(INPUT_REPO.getValue());
     } else if (MIGRATE_REPOSITORY.getValue()) {
       PropertyManager.registerResumeLoggingProperties();
-      PropertyManager.registerAndVerify(MIGRATE_REPOSITORY, INPUT, REPO_ROOT, JAR_INDEX_FILE);
+      PropertyManager.registerAndVerify(MIGRATE_REPOSITORY, INPUT_REPO, OUTPUT_REPO, JAR_INDEX_FILE);
       Set<String> completed = Logging.initializeResumeLogger();
-      Repository.migrateRepository(INPUT.getValue(), REPO_ROOT.getValue(), completed);
+      Repository.migrateRepository(INPUT_REPO.getValue(), OUTPUT_REPO.getValue(), completed);
     } else if (CRAWL_MAVEN.getValue()) {
       PropertyManager.registerAndVerify(CRAWL_MAVEN, MAVEN_URL, LINKS_FILE);
       MavenCrawler.getDownloadLinks();

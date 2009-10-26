@@ -21,6 +21,7 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.repo.base.compressed.CompressedFileSet;
 import edu.uci.ics.sourcerer.repo.base.normal.FileSet;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -52,6 +53,9 @@ public class RepoProject {
     if (content.isDirectory()) {
       return new FileSet(content, repo);
     } else {
+      if (repo.getTempDir() == null) {
+        throw new IllegalStateException("Compressed file sets may only be used if a temp dir is specified.");
+      }
       return CompressedFileSet.getFileSet(this);
     }
   }
@@ -66,5 +70,12 @@ public class RepoProject {
   
   public File getPropertiesFile() {
     return properties;
+  }
+  
+  public void copyPropertiesFile(File baseDir) {
+    File outputDir = new File(getOutputPath(baseDir));
+    File propertiesFile = getPropertiesFile();
+    File outputFile = new File(outputDir, propertiesFile.getName());
+    FileUtils.copyFile(propertiesFile, outputFile);
   }
 }

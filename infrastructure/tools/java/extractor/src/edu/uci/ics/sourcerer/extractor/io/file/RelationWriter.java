@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.file;
 
+import java.io.File;
+
 import edu.uci.ics.sourcerer.extractor.io.IRelationWriter;
 import edu.uci.ics.sourcerer.extractor.io.Location;
 import edu.uci.ics.sourcerer.model.Relation;
@@ -31,8 +33,8 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public final class RelationWriter extends ExtractorWriter implements IRelationWriter {
   public static final Property<String> RELATION_FILE = new StringProperty("relation-file", "relations.txt", "Extractor Output", "Filename for extracted relations.");
   
-  public RelationWriter(Repository input) {
-    super(input, RELATION_FILE);
+  public RelationWriter(File output, Repository input) {
+    super(new File(output, RELATION_FILE.getValue()), input);
   }
 
   private void writeRelation(Relation type, String lhs, String rhs, Location location) {

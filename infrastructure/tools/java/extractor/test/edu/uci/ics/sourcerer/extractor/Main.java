@@ -1,6 +1,7 @@
-package uci.ics.sourcerer.extractor;
+package edu.uci.ics.sourcerer.extractor;
 
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.REPO_ROOT;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Properties.*;
 
 import edu.uci.ics.sourcerer.util.io.Logging;
@@ -15,7 +16,7 @@ public class Main {
     PropertyManager.initializeProperties();
     Logging.initializeLogger();
     
-    PropertyManager.registerAndVerify(REPO_ROOT, INPUT, OUTPUT);
+    PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO, OUTPUT);
     runTests();
   }
 }

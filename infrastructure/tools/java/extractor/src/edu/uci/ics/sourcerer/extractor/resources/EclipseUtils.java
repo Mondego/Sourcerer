@@ -179,14 +179,14 @@ public class EclipseUtils {
       IFile iFile = loadFileIntoProject(file, false);
       if (iFile != null) {
         if (++fileCount % 1000 == 0) {
-          logger.info(fileCount + " files loaded.");
+          logger.info("    " + fileCount + " files loaded.");
         }
         set.add(iFile);
       } else {
         logger.log(Level.SEVERE, "Unable to load: " + file.getPath());
       }
     }
-    logger.info(fileCount + " files loaded.");
+    logger.info("    " + fileCount + " files loaded.");
     return set;
   }
   

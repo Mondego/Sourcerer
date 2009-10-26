@@ -20,7 +20,7 @@ package edu.uci.ics.sourcerer.db.tools;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_PASSWORD;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_URL;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_USER;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.REPO_ROOT;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -44,15 +44,15 @@ public class Main {
     connection.open();
 
     if (INITIALIZE_DATABASE.getValue()) {
-      PropertyManager.registerAndVerify(INITIALIZE_DATABASE, REPO_ROOT);
+      PropertyManager.registerAndVerify(INITIALIZE_DATABASE, INPUT_REPO);
       InitializeDatabase tool = new InitializeDatabase(connection);
       tool.initializeDatabase();
     } else if (ADD_JARS.getValue()) {
-      PropertyManager.registerAndVerify(ADD_JARS, REPO_ROOT);
+      PropertyManager.registerAndVerify(ADD_JARS, INPUT_REPO);
       AddJars tool = new AddJars(connection);
       tool.addJars();
     } else if (ADD_PROJECTS.getValue()) {
-      PropertyManager.registerAndVerify(ADD_PROJECTS, REPO_ROOT);
+      PropertyManager.registerAndVerify(ADD_PROJECTS, INPUT_REPO);
        AddProjects tool = new AddProjects(connection);
        tool.addProjects();
     } else {

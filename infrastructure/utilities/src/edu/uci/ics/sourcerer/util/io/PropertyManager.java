@@ -110,14 +110,7 @@ public class PropertyManager {
         }
       }
     }
-    if (problem && REQUIRE_REGISTERED.getValue()) {
-      printUsage();
-    }
-    printUsageIfRequested();
-  }
-  
-  public synchronized static void printUsageIfRequested() {
-    if (PRINT_USAGE.getValue()) {
+    if ((problem && REQUIRE_REGISTERED.getValue()) || PRINT_USAGE.getValue()) {
       printUsage();
     }
   }

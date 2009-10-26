@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.file;
 
+import java.io.File;
+
 import edu.uci.ics.sourcerer.extractor.io.IImportWriter;
 import edu.uci.ics.sourcerer.extractor.io.Location;
 import edu.uci.ics.sourcerer.model.extracted.ImportExParser;
@@ -30,8 +32,8 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public final class ImportWriter extends ExtractorWriter implements IImportWriter {
   public static final Property<String> IMPORT_FILE = new StringProperty("import-file", "imports.txt", "Extractor Output", "Filename for extracted imports.");
   
-  public ImportWriter(Repository input) {
-    super(input, IMPORT_FILE);
+  public ImportWriter(File output, Repository input) {
+    super(new File(output, IMPORT_FILE.getValue()), input);
   }
   
   public void writeImport(String name, boolean isStatic, boolean onDemand, Location location) {

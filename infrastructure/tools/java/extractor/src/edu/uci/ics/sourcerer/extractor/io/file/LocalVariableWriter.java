@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.file;
 
+import java.io.File;
+
 import edu.uci.ics.sourcerer.extractor.io.ILocalVariableWriter;
 import edu.uci.ics.sourcerer.extractor.io.Location;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableExJarParser;
@@ -31,8 +33,8 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public class LocalVariableWriter extends ExtractorWriter implements ILocalVariableWriter {
   public static final Property<String> LOCAL_VARIABLE_FILE = new StringProperty("local-variable-file", "local-variables.txt", "Extractor Output", "Filename for extracted local variables.");
   
-  public LocalVariableWriter(Repository input) {
-    super(input, LOCAL_VARIABLE_FILE);
+  public LocalVariableWriter(File output, Repository input) {
+    super(new File(output, LOCAL_VARIABLE_FILE.getValue()), input);
   }
 
   @Override

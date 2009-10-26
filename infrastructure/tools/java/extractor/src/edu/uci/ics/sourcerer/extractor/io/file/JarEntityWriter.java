@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.file;
 
+import java.io.File;
+
 import edu.uci.ics.sourcerer.extractor.io.IJarEntityWriter;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.extracted.EntityExJarParser;
@@ -26,8 +28,8 @@ import edu.uci.ics.sourcerer.repo.base.Repository;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class JarEntityWriter extends ExtractorWriter implements IJarEntityWriter {
-  public JarEntityWriter(Repository input) {
-    super(input, EntityWriter.ENTITY_FILE);
+  public JarEntityWriter(File output, Repository input) {
+    super(new File(output, EntityWriter.ENTITY_FILE.getValue()), input);
   }
   
   public void writeClass(String fqn, int modifiers) {

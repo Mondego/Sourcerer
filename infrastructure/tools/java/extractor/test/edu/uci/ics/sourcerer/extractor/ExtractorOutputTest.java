@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package uci.ics.sourcerer.extractor;
+package edu.uci.ics.sourcerer.extractor;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
@@ -45,7 +45,6 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Properties;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -443,11 +442,11 @@ public class ExtractorOutputTest {
   }
   
   public static void runTest() {
-    File repoRoot = AbstractRepository.REPO_ROOT.getValue();
+    File repoRoot = AbstractRepository.INPUT_REPO.getValue();
     File tempDir = FileUtils.getTempDir();
     Repository repo = Repository.getRepository(repoRoot, tempDir);
     
-    File extractorOutput = Properties.INPUT.getValue();
+    File extractorOutput = AbstractRepository.OUTPUT_REPO.getValue();
     ExtractedRepository extractedRepo = ExtractedRepository.getRepository(extractorOutput);
     
     ExtractorOutputTest test = new ExtractorOutputTest(repo, extractedRepo);

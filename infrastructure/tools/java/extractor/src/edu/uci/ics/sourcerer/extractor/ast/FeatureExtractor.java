@@ -49,24 +49,19 @@ public final class FeatureExtractor {
   private ASTParser parser;
   private WriterBundle bundle;
   
-  public FeatureExtractor() {
+  public FeatureExtractor(WriterBundle bundle) {
+    this.bundle = bundle;
     parser = ASTParser.newParser(AST.JLS3);
   }
-  
-  public void setBundle(WriterBundle bundle) {
-    if (this.bundle != null) {
-      this.bundle.close();
-    }
-    this.bundle = bundle;
-  }
-  
+ 
   public void close() {
     bundle.close();
   }
   
-  public void extractClassFiles(Collection<IClassFile> classFiles) {
+  public boolean extractClassFiles(Collection<IClassFile> classFiles) {
     ClassFileExtractor extractor = new ClassFileExtractor(bundle);
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
+    boolean hadProblem = false;
     for (IClassFile classFile : classFiles) {
       try {
         ISourceRange source = classFile.getSourceRange();
@@ -81,12 +76,12 @@ public final class FeatureExtractor {
           CompilationUnit unit = (CompilationUnit) parser.createAST(null);
           boolean foundProblem = false;
           for (IProblem problem : unit.getProblems()) {
-            if (problem.getID() == 16777540) {
+            if (problem.isError()) {
               foundProblem = true;
             }
           }
           if (foundProblem) {
-            logger.log(Level.SEVERE, "Unable to parse source for: " + classFile.getElementName());
+            hadProblem = true;
             extractor.extractClassFile(classFile);
           } else {
             unit.accept(visitor);
@@ -96,6 +91,7 @@ public final class FeatureExtractor {
         logger.log(Level.SEVERE, "Unable to extract " + classFile.getElementName(), e);
       }
     }
+    return hadProblem;
   }
    
   public void extractSourceFiles(Collection<IFile> sourceFiles) {
@@ -124,14 +120,14 @@ public final class FeatureExtractor {
           logger.log(Level.SEVERE, "Unable to create AST for " + icu.getResource().getLocation().toString(), e);
           total--;
         }
-      }
       
       if (++total % 1000 == 0) {
-        logger.info(total + " files extracted");
+        logger.info("    " + total + " files extracted");
       }
+    }
 //    }
     
-    logger.info(total + " files extracted");
+    logger.info("    " + total + " files extracted");
   }
   
   @SuppressWarnings("unchecked")

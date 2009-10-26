@@ -61,7 +61,7 @@ public class ExtractedRepository extends AbstractRepository {
   }
  
   public static ExtractedRepository getRepository() {
-    return getRepository(REPO_ROOT.getValue());
+    return getRepository(INPUT_REPO.getValue());
   }
   
   public static ExtractedRepository getRepository(File repoRoot) {

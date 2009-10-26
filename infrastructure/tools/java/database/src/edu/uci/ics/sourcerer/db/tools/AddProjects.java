@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.db.tools;
 
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.REPO_ROOT;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
@@ -70,7 +70,7 @@ public class AddProjects extends DatabaseAccessor {
   public void addProjects() {
     Set<String> completed = Logging.initializeResumeLogger();
     
-    ExtractedRepository extracted = ExtractedRepository.getRepository(REPO_ROOT.getValue());
+    ExtractedRepository extracted = ExtractedRepository.getRepository(INPUT_REPO.getValue());
     
     logger.info("Addings jars to database for " + extracted);
 

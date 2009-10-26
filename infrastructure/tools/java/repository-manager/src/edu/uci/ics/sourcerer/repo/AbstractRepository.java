@@ -29,7 +29,8 @@ import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractRepository {
-  public static final Property<File> REPO_ROOT = new FileProperty("repo-root", "Repository Manager", "The root directory of the repository.");
+  public static final Property<File> INPUT_REPO = new FileProperty("input-repo", "Repository Manager", "The root directory of the input repository.");
+  public static final Property<File> OUTPUT_REPO = new FileProperty("output-repo", "Repository Manager", "The root directory of the output repository.");
   
   protected File repoRoot;
   protected File jarIndexFile;

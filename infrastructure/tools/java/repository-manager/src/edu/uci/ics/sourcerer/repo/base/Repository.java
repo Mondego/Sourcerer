@@ -70,13 +70,22 @@ public class Repository extends AbstractRepository {
   }
   
   public static Repository getUninitializedRepository() {
-    return new Repository(REPO_ROOT.getValue(), null);
+    return new Repository(INPUT_REPO.getValue(), null);
   }
   
   public static Repository getUninitializedRepository(File repoRoot) {
     return new Repository(repoRoot, null);
   }
  
+  public static Repository getRepository(File repoRoot) {
+    Repository repo = new Repository(repoRoot, null);
+    
+    repo.loadJarIndex();
+    repo.populateRepository();
+    
+    return repo;
+  }
+  
   public static Repository getRepository(File repoRoot, File tempDir) {
     Repository repo = new Repository(repoRoot, tempDir);
     
@@ -391,22 +400,5 @@ public class Repository extends AbstractRepository {
     } else {
       return tempDir;
     }
-  }
-  
-  public void cleanTempDir() {
-    if (tempDir != null && tempDir.exists()) {
-      cleanDir(tempDir);
-    }
-  }
-  
-  private static void cleanDir(File tempDir) {
-    for (File file : tempDir.listFiles()) {
-      if (file.isFile()) {
-        file.delete();
-      } else {
-        cleanDir(file);
-      }
-    }
-    tempDir.delete();
   }
 }

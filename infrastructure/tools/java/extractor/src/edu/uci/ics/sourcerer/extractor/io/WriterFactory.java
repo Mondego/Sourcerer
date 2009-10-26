@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.extractor.io;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.util.logging.Level;
 
@@ -32,11 +33,11 @@ public final class WriterFactory {
   private WriterFactory() {}
   
   @SuppressWarnings("unchecked")
-  public static <T> T createWriter(Repository input, Property<Class<?>> property) {
+  public static <T> T createWriter(File output, Repository input, Property<Class<?>> property) {
     try {
       Class<?> klass = property.getValue();
-      Constructor<?> constructor = klass.getConstructor(Repository.class);
-      return (T)constructor.newInstance(input);
+      Constructor<?> constructor = klass.getConstructor(File.class, Repository.class);
+      return (T)constructor.newInstance(output, input);
     } catch (Exception e) {
       logger.log(Level.SEVERE, "Unable to create writer: " + property.getName(), e);
       return null;

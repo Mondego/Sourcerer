@@ -27,24 +27,12 @@ import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.JAR_RELATION_WRITE
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.LOCAL_VARIABLE_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.PROBLEM_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.RELATION_WRITER;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.REPO_ROOT;
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.OUTPUT_REPO;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.Set;
-
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
-import org.eclipse.jdt.core.IClassFile;
 
-import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor;
-import edu.uci.ics.sourcerer.extractor.io.IJarFileWriter;
-import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.extractor.io.file.CommentWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.EntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.FileWriter;
@@ -55,15 +43,6 @@ import edu.uci.ics.sourcerer.extractor.io.file.JarRelationWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.LocalVariableWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.ProblemWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.RelationWriter;
-import edu.uci.ics.sourcerer.extractor.resources.EclipseUtils;
-import edu.uci.ics.sourcerer.repo.IndexedJar;
-import edu.uci.ics.sourcerer.repo.JarIndex;
-import edu.uci.ics.sourcerer.repo.base.IFileSet;
-import edu.uci.ics.sourcerer.repo.base.IJarFile;
-import edu.uci.ics.sourcerer.repo.base.RepoProject;
-import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
@@ -73,209 +52,17 @@ import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Extractor implements IApplication {
-  public static final Property<Boolean> JARS_ONLY = new BooleanProperty("jars-only", false, "Extractor", "Only extract the jars in the repository.");
-  public static final Property<Boolean> FORCE_REDO = new BooleanProperty("force-redo", false, "Extractor", "Force re-extraction of projects.");
-  
-  public static void extract() {
-    if (REPO_ROOT.hasValue()) {
-      Set<String> completed = Logging.initializeResumeLogger();
-      
-      // Initialize the FeatureExtractor
-      FeatureExtractor extractor = new FeatureExtractor(); 
-      
-      // Get an uninitialized output repository
-      ExtractedRepository output = ExtractedRepository.getUninitializedRepository(OUTPUT.getValue());
-      
-      // Start with the system jars
-      logger.info("Getting the library jars");
-      Collection<IPath> libraryJars = EclipseUtils.getLibraryJars();
-      logger.info("Extracting " + libraryJars.size() + " library jars");
-      int count = 0;
-      for (IPath library : libraryJars) {
-        File lib = library.toFile();
-        logger.info("-------------------------------");
-        logger.info("Extracting " + lib.getName() + " (" + ++count + " of " + libraryJars.size() + ")");
-        
-        if (completed.contains("**" + lib.getName())) {
-          logger.info("Library already completed!");
-        } else {
-          logger.info("Initializing project");
-          EclipseUtils.initializeLibraryProject(library);
-          
-          logger.info("Getting class files");
-          Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(library);
-          
-          logger.info("Extracting " + classFiles.size() + " class files");
-          // Set up the writer bundle
-          File libPath = new File(output.getLibsDir(), lib.getName());
-          OUTPUT.setValue(libPath);
-          WriterBundle bundle = new WriterBundle();
-          extractor.setBundle(bundle);
-          
-          // Extract!
-          extractor.extractClassFiles(classFiles);
-          
-          // Close the output files
-          extractor.close();
-          
-          // The jar is completed
-          logger.log(Logging.RESUME, "**" + lib.getName());
-        }
-      }
-      
-      // Set up the input repository
-      File repoRoot = REPO_ROOT.getValue();
-      File tempDir = FileUtils.getTempDir();
-      Repository repo = Repository.getRepository(repoRoot, tempDir);
-      
-      // Start by analyzing the jars
-      logger.info("Getting the jar index");
-      JarIndex jarIndex = repo.getJarIndex();
-      logger.info("Extracting " + jarIndex.getIndexSize() + " jars");
-      count = 0;
-      for (IndexedJar jar : jarIndex.getIndexedJars()) {
-        logger.info("-------------------------------");
-        logger.info("Extracting " + jar + " (" + ++count + " of " + jarIndex.getIndexSize() + ")");
-        
-        if (completed.contains(jar.toString())) {
-          logger.info("Jar already completed!");
-        } else {
-          logger.info("Initializing project");
-          EclipseUtils.initializeJarProject(jar);
-          
-          logger.info("Getting class files");
-          Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(new Path(jar.getJarFile().getPath()));
-          
-          logger.info("Extracting " + classFiles.size() + " class files");
-          // Set up the properties
-          OUTPUT.setValue(new File(jar.getOutputPath(output.getJarsDir())));
-          WriterBundle bundle = new WriterBundle();
-          extractor.setBundle(bundle);;
-          
-          // Extract!
-          extractor.extractClassFiles(classFiles);
-          
-          // Close the output files
-          extractor.close();
-          
-          // Copy the properties file
-          jar.copyPropertiesFile(output.getJarsDir());
-          
-          // The jar is completed
-          logger.log(Logging.RESUME, jar.toString());
-        }
-      }
-      
-      FileUtils.copyFile(repo.getJarIndexFile(), output.getJarIndexFile());
-      
-      // If jar only, terminate
-      if (JARS_ONLY.getValue()) {
-        logger.info("Done!");
-        return;
-      }
-      
-      // Now analyze the projects
-      logger.info("Getting project list");
-      Collection<RepoProject> projects = repo.getProjects();
-      logger.info("Extracting " + projects.size() + " projects");
-      count = 0;
-      
-      for (RepoProject project : projects) {
-        logger.info("-------------------------------");
-        logger.info("Extracting " + project.getProjectPath() + " (" + ++count + " of " + projects.size() + ")");
-        
-        if (!FORCE_REDO.getValue() && completed.contains(project.getProjectPath())) {
-          logger.info("Project already completed!");
-        } else {
-          logger.info("Getting file list");
-          IFileSet files = project.getFileSet();
-          
-          logger.info("Initializing project with " + files.getJarFileCount() + " jar files");
-          EclipseUtils.initializeProject(files.getJarFiles());
-          
-          logger.info("Loading " + files.getUniqueJavaFileCount() + " unique files into project");
-          Collection<IFile> uniqueIFiles = EclipseUtils.loadFilesIntoProject(files.getUniqueJavaFiles());
-          
-          logger.info("Loading " + files.getBestDuplicateJavaFileCount() + " chosen duplicate files into project");
-          Collection<IFile> bestDuplicateIFiles = EclipseUtils.loadFilesIntoProject(files.getBestDuplicateJavaFiles());
-          
-          // Set up the output
-          OUTPUT.setValue(new File(project.getOutputPath(output.getBaseDir())));
-          WriterBundle bundle = new WriterBundle(repo);
-          extractor.setBundle(bundle);
-          
-          // Write out jar files
-          IJarFileWriter jarWriter = bundle.getJarFileWriter();
-          for (IJarFile file : files.getJarFiles()) {
-            jarWriter.writeJarFile(file.getHash());
-          }
-          
-          logger.info("Extracting references for " + uniqueIFiles.size() + " compilation units");
-          extractor.extractSourceFiles(uniqueIFiles);
-          
-          logger.info("Extracting references for " + bestDuplicateIFiles.size() + " compilation units");
-          extractor.extractSourceFiles(bestDuplicateIFiles);
-          
-          extractor.close();
-          
-          repo.cleanTempDir();
-          
-          logger.info("Copying properties file");
-          FileUtils.copyFile(project.getPropertiesFile(), new File(project.getOutputPath(output.getBaseDir()), project.getPropertiesFile().getName()));
-          
-          logger.log(Logging.RESUME, project.getProjectPath());
-          
-          FileUtils.resetTempDir();
-        }
-      }
-      FileUtils.cleanTempDir();
-      logger.info("Done!");
-    } else {
-//      // Initialize EclipseUtils
-//      EclipseUtils.initialize();
-//      
-//      logger.info("Getting file list");
-//      File input = new File(properties.getValue(Property.INPUT));
-//      if (!input.exists() || !input.isDirectory()) {
-//        logger.log(Level.SEVERE, "Input needs to be a directory: " + properties.getValue(Property.INPUT));
-//        return;
-//      }
-//        
-//      IFileSet files = new FileSet(input, input.getPath());
-//      
-//      logger.info("Initializing project with " + files.getJarFileCount() + " jar files");
-//      EclipseUtils.initializeProject(files.getJarFiles());
-//      
-//      logger.info("Loading " + files.getUniqueJavaFileCount() + " unique files into project");
-//      Collection<IFile> uniqueIFiles = EclipseUtils.loadFilesIntoProject(files.getUniqueJavaFiles());
-//      
-//      logger.info("Loading " + files.getBestDuplicateJavaFileCount() + " chosen duplicate files into project");
-//      Collection<IFile> bestDuplicateIFiles = EclipseUtils.loadFilesIntoProject(files.getBestDuplicateJavaFiles());
-//      
-//      FeatureExtractor extractor = new FeatureExtractor();
-//      
-//      extractor.resetOutput();
-//      extractor.setPPA(properties.isSet(Property.PPA));
-// 
-//      logger.info("Extracting references for " + uniqueIFiles.size() + " compilation units");
-//      extractor.extractSourceFiles(uniqueIFiles);
-//      
-//      logger.info("Extracting references for " + bestDuplicateIFiles.size() + " compilation units");
-//      extractor.extractSourceFiles(bestDuplicateIFiles);
-//      
-//      extractor.close();
-//
-//      logger.info("Done!");
-    }
-  }
+  public static final Property<Boolean> EXTRACT_LIBRARIES = new BooleanProperty("extract-libraries", false, "Extractor", "Extract the libraries.");
+  public static final Property<Boolean> EXTRACT_JARS = new BooleanProperty("extract-jars", false, "Extractor", "Extract the jars.");
+  public static final Property<Boolean> EXTRACT_PROJECTS = new BooleanProperty("extract-projects", false, "Extractor", "Extract the projects.");
 
   @Override
   public Object start(IApplicationContext context) throws Exception {
     String[] args = (String[]) context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
-    
-    PropertyManager.registerAndVerify(OUTPUT, REPO_ROOT, JARS_ONLY, FORCE_REDO, FeatureExtractor.PPA,
+   
+    PropertyManager.registerAndVerify(EXTRACT_LIBRARIES, EXTRACT_JARS, EXTRACT_PROJECTS,
         IMPORT_WRITER, ImportWriter.IMPORT_FILE,
         PROBLEM_WRITER, ProblemWriter.PROBLEM_FILE,
         ENTITY_WRITER, JAR_ENTITY_WRITER, EntityWriter.ENTITY_FILE,
@@ -296,7 +83,18 @@ public class Extractor implements IApplication {
     FILE_WRITER.setValue(FileWriter.class);
     JAR_FILE_WRITER.setValue(JarFileWriter.class);
     
-    Extractor.extract();
+    if (EXTRACT_LIBRARIES.getValue()) {
+      PropertyManager.registerAndVerify(OUTPUT_REPO);
+      LibraryExtractor.extract();
+    } else if (EXTRACT_JARS.getValue()){
+      PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);
+      JarExtractor.extract();
+    } else if (EXTRACT_PROJECTS.getValue()) {
+      PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);
+      ProjectExtractor.extract();
+    } else {
+      PropertyManager.printUsage();
+    }
 
     return EXIT_OK;
   }

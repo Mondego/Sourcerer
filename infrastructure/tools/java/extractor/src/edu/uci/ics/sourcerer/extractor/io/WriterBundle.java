@@ -17,7 +17,8 @@
  */
 package edu.uci.ics.sourcerer.extractor.io;
 
-import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
+import java.io.File;
+
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyCommentWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyEntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyFileWriter;
@@ -35,7 +36,7 @@ import edu.uci.ics.sourcerer.util.io.properties.ClassProperty;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class WriterBundle {
+public class WriterBundle implements IWriterBundle {
   public static final Property<Class<?>> IMPORT_WRITER = new ClassProperty("import-writer", DummyImportWriter.class, "Extractor Output", "Import writer.");
   public static final Property<Class<?>> PROBLEM_WRITER = new ClassProperty("problem-writer", DummyProblemWriter.class, "Extractor Output", "Problem writer.");
   public static final Property<Class<?>> ENTITY_WRITER = new ClassProperty("entity-writer", DummyEntityWriter.class, "Extractor Output", "Entity writer.");
@@ -59,82 +60,85 @@ public class WriterBundle {
   private IJarFileWriter jarFileWriter;
   
   private Repository input;
+  
+  private File output;
 
-  public WriterBundle() {
-    OUTPUT.getValue().mkdirs();
+  public WriterBundle(File output) {
+    this.output = output;
+    output.mkdirs();
   }
   
-  public WriterBundle(Repository input) {
+  public WriterBundle(File output, Repository input) {
+    this(output);
     this.input = input;
-    OUTPUT.getValue().mkdirs();
   }
 
   public IImportWriter getImportWriter() {
     if (importWriter == null) {
-      importWriter = WriterFactory.createWriter(input, IMPORT_WRITER);
+      importWriter = WriterFactory.createWriter(output, input, IMPORT_WRITER);
     }
     return importWriter;
   }
   
   public IProblemWriter getProblemWriter() {
     if (problemWriter == null) {
-      problemWriter = WriterFactory.createWriter(input, PROBLEM_WRITER);
+      problemWriter = WriterFactory.createWriter(output, input, PROBLEM_WRITER);
     }
     return problemWriter;
   }
   
   public IEntityWriter getEntityWriter() {
     if (entityWriter == null) {
-      entityWriter = WriterFactory.createWriter(input, ENTITY_WRITER);
+      entityWriter = WriterFactory.createWriter(output, input, ENTITY_WRITER);
     }
     return entityWriter;
   }
   
   public IJarEntityWriter getJarEntityWriter() {
     if (jarEntityWriter == null) {
-      jarEntityWriter = WriterFactory.createWriter(input, JAR_ENTITY_WRITER);
+      jarEntityWriter = WriterFactory.createWriter(output, input, JAR_ENTITY_WRITER);
     }
     return jarEntityWriter;
   }
   
   public ILocalVariableWriter getLocalVariableWriter() {
     if (localVariableWriter == null) {
-      localVariableWriter = WriterFactory.createWriter(input, LOCAL_VARIABLE_WRITER);
+      localVariableWriter = WriterFactory.createWriter(output, input, LOCAL_VARIABLE_WRITER);
     }
     return localVariableWriter;
   }
   
   public IRelationWriter getRelationWriter() {
     if (relationWriter == null) {
-      relationWriter = WriterFactory.createWriter(input, RELATION_WRITER);
+      relationWriter = WriterFactory.createWriter(output, input, RELATION_WRITER);
     }
     return relationWriter;
   }
   
   public IJarRelationWriter getJarRelationWriter() {
     if (jarRelationWriter == null) {
-      jarRelationWriter = WriterFactory.createWriter(input, JAR_RELATION_WRITER);
+      jarRelationWriter = WriterFactory.createWriter(output, input, JAR_RELATION_WRITER);
     }
     return jarRelationWriter;
   }
   
   public ICommentWriter getCommentWriter() {
     if (commentWriter == null) {
-      commentWriter = WriterFactory.createWriter(input, COMMENT_WRITER);
+      commentWriter = WriterFactory.createWriter(output, input, COMMENT_WRITER);
     }
     return commentWriter;
   }
   
   public IFileWriter getFileWriter() {
     if (fileWriter == null) {
-      fileWriter = WriterFactory.createWriter(input, FILE_WRITER);
+      fileWriter = WriterFactory.createWriter(output, input, FILE_WRITER);
     }
     return fileWriter;
   }
   
   public IJarFileWriter getJarFileWriter() {
     if (jarFileWriter == null) {
-      jarFileWriter = WriterFactory.createWriter(input, JAR_FILE_WRITER);
+      jarFileWriter = WriterFactory.createWriter(output, input, JAR_FILE_WRITER);
     }
     return jarFileWriter;
   }

@@ -30,6 +30,7 @@
 	<property name="build-search-server" location="${build}/search-server" />
 	<property name="build-core-repomanager" location="${build}/core-repomanager" />
 	<property name="build-codecrawler" location="${build}/codecrawler" />
+	<property name="build-extractor" location="${build}/extractor" />
 
 	<property name="utilities" location="../infrastructure/utilities/src" />
 	<property name="repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
@@ -42,6 +43,7 @@
 	<property name="codecrawler" location="../infrastructure/tools/core/codecrawler/src" />
 	<property name="test-repo" location="../infrastructure/tools/java/extractor/test-repo" />
 	<property name="lib" location="../lib" />
+	<property name="extractor-bin" location="../infrastructure/tools/java/extractor/bin" />
 
 	<target name="init">
 		<mkdir dir="${build}" />
@@ -123,7 +125,7 @@
   	</jar>
 	</target>
   		
-	<target name ="clean-database">
+	<target name="clean-database">
 	  <delete dir="${build-database}" />
 	  <delete>
 	    <fileset dir=".">
@@ -132,6 +134,22 @@
   	</delete>
 	</target>
 
+	<target name="extractor">
+	  <pde.exportPlugins destination="." exportSource="true" exportType="directory" plugins="Extractor" useJARFormat="true"/>
+	</target>
+	
+	<target name="repackage-extractor" depends="compile-java-tools-core">
+		<unjar src="./plugins/Extractor_1.0.0.jar" dest="${build-extractor}" />
+		<copy todir="${build-extractor}">
+		  <fileset dir="${build-java-tools-core}" includes="**/*.class" />
+		</copy>
+		<zip destfile="./Extractor_1.0.0.jar" basedir="${build-extractor}" />
+	</target>
+	
+	<target name="clean-extractor">
+		<delete dir="./plugins.xml" />
+	</target>
+	
 	<target name="scs">
 		<war destfile="scs.war" webxml="../infrastructure/apps/codesearch/war/WEB-INF/web.xml" basedir="../infrastructure/apps/codesearch/war">
 			<lib dir="${lib}">
@@ -314,7 +332,7 @@
 		<!-- Aggregate the jar repository -->
 		<java jar="repo-tools.jar" fork="true">
 			<arg value="--aggregate-jar-files" />
-			<arg value="--repo-root" />
+			<arg value="--input-repo" />
 			<arg value="${test-repo}" />
 			<arg value="--output" />
 			<arg value="${test-repo}/output/agg" />
@@ -323,7 +341,7 @@
 		<!-- Create jar index -->
 		<java jar="repo-tools.jar" fork="true">
 			<arg value="--create-jar-index" />
-			<arg value="--repo-root" />
+			<arg value="--input-repo" />
 			<arg value="${test-repo}" />
 			<arg value="--output" />
 			<arg value="${test-repo}/output/index" />

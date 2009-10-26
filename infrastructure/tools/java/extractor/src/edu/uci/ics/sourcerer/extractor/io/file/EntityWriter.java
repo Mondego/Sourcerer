@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.file;
 
+import java.io.File;
+
 import edu.uci.ics.sourcerer.extractor.io.IEntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.Location;
 import edu.uci.ics.sourcerer.model.Entity;
@@ -31,8 +33,8 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public final class EntityWriter extends ExtractorWriter implements IEntityWriter {
   public static final Property<String> ENTITY_FILE = new StringProperty("entity-file", "entities.txt", "Extractor Output", "Filename for extracted entities.");
   
-  public EntityWriter(Repository input) {
-    super(input, ENTITY_FILE);
+  public EntityWriter(File output, Repository input) {
+    super(new File(output, ENTITY_FILE.getValue()), input);
   }
 
   private void writeEntity(Entity type, String fqn, int modifiers, Location location) {

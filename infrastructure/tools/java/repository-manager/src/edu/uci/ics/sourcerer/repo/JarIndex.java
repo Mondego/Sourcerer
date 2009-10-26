@@ -67,13 +67,13 @@ public class JarIndex {
           if (parts.length == 2) {
             jar = new IndexedJar(basePath, parts[1]);
           } else if (parts.length == 3) {
-            jar = new IndexedJar(basePath, parts[2], parts[3]);
+            jar = new IndexedJar(basePath, parts[1], parts[2]);
           } else if (parts.length == 4) {
-            jar = new IndexedJar(basePath, parts[2], parts[3], parts[4]);
+            jar = new IndexedJar(basePath, parts[1], parts[2], parts[3]);
           }
           if (index.index.containsKey(parts[0])) {
             IndexedJar oldJar = index.index.get(parts[0]);
-            logger.log(Level.WARNING, oldJar.toString() + " duplicates " + jar.toString());
+//            logger.log(Level.WARNING, oldJar.toString() + " duplicates " + jar.toString());
             if (!oldJar.isMavenJar() && jar.isMavenJar()) {
               index.index.put(parts[0], jar);
             }
@@ -232,6 +232,7 @@ public class JarIndex {
                 } else {
                   writer.write(hash + " " + getRelativePath(baseDir, top.getPath()) + " " + jar.getName() + " " + source.getName() + "\n");
                 }
+                writer.flush();
                       
                 // Write out the properties file
                 String name = jar.getName();
@@ -261,7 +262,7 @@ public class JarIndex {
                 logger.info(mavenJarCount + " maven jars indexed");
               }
               if (source != null && ++mavenSourceCount % 1000 == 0) {
-                logger.info(mavenJarCount + " maven source jars indexed");
+                logger.info(mavenSourceCount + " maven source jars indexed");
               }
             }
           }
@@ -304,7 +305,7 @@ public class JarIndex {
     logger.info(mavenJarCount + " maven jars indexed");
     logger.info(mavenJarCount + " maven source jars indexed");
     logger.info(projectJarCount + " project jars indexed");
-    logger.info("Done!)");
+    logger.info("Done!");
   }
   
   private static String getRelativePath(String basePath, String path) {

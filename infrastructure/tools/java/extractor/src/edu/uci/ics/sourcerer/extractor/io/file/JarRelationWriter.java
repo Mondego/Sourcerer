@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.file;
 
+import java.io.File;
+
 import edu.uci.ics.sourcerer.extractor.io.IJarRelationWriter;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.extracted.RelationExJarParser;
@@ -26,8 +28,8 @@ import edu.uci.ics.sourcerer.repo.base.Repository;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarRelationWriter extends ExtractorWriter implements IJarRelationWriter {
-  public JarRelationWriter(Repository input) {
-    super(input, RelationWriter.RELATION_FILE);
+  public JarRelationWriter(File output, Repository input) {
+    super(new File(output, RelationWriter.RELATION_FILE.getValue()), input);
   }
   
   @Override
