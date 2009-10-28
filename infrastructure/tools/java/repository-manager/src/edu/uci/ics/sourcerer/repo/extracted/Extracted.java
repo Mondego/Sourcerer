@@ -40,6 +40,10 @@ public abstract class Extracted {
     this.content = content;
   }
 
+  public File getContent() {
+    return content;
+  }
+  
   protected InputStream getInputStream(Property<String> property) throws IOException {
     File file = new File(content, property.getValue());
     return new FileInputStream(file);

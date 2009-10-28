@@ -20,7 +20,7 @@ package edu.uci.ics.sourcerer.repo.extracted;
 import java.io.File;
 import java.util.Collection;
 
-import edu.uci.ics.sourcerer.repo.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**

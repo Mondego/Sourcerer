@@ -20,7 +20,7 @@ package edu.uci.ics.sourcerer.db.tools;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_PASSWORD;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_URL;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_USER;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;

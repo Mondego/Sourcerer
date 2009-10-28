@@ -36,7 +36,7 @@ import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
-import edu.uci.ics.sourcerer.repo.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;

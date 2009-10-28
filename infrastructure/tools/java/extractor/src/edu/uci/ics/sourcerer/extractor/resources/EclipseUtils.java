@@ -35,8 +35,6 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -50,7 +48,7 @@ import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.LibraryLocation;
 
-import edu.uci.ics.sourcerer.repo.IndexedJar;
+import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.base.IJarFile;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.util.Helper;
@@ -64,7 +62,6 @@ public class EclipseUtils {
   private static IFolder srcFolder = null;
   private static IProject project = null;
   private static IJavaProject javaProject = null;
-  private static IProgressMonitor monitor = new NullProgressMonitor();
  
   private static void initializeProject() {
     IWorkspace workspace = ResourcesPlugin.getWorkspace();
@@ -81,19 +78,19 @@ public class EclipseUtils {
     
     try {
       if (project.exists()) {
-        project.delete(true, monitor);
+        project.delete(true, null);
       }
       
-      project.create(monitor);
-      project.open(monitor);
+      project.create(null);
+      project.open(null);
       IProjectDescription description = project.getDescription();
       String[] prevNatures= description.getNatureIds();
       String[] newNatures= new String[prevNatures.length + 1];
       System.arraycopy(prevNatures, 0, newNatures, 0, prevNatures.length);
       newNatures[prevNatures.length]= JavaCore.NATURE_ID;
       description.setNatureIds(newNatures);
-      project.setDescription(description, monitor);
-      project.setDefaultCharset("US-ASCII", monitor);
+      project.setDescription(description, null);
+      project.setDefaultCharset("US-ASCII", null);
       
       javaProject = JavaCore.create(project);
     } catch (CoreException e) {
@@ -121,7 +118,7 @@ public class EclipseUtils {
         entries.add(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), location.getSystemLibrarySourcePath(), null));
       }
       entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), jar.getSourceFile() == null ? null : new Path(jar.getSourceFile().getPath()), null));
-      javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), monitor);
+      javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
     } catch (JavaModelException e) {
       logger.log(Level.SEVERE, "Unable to initialize jar project", e);
     }
@@ -132,7 +129,7 @@ public class EclipseUtils {
     try {
       IClasspathEntry entries[] = new IClasspathEntry[1];
       entries[0] = JavaCore.newLibraryEntry(libraryJar, null, null);
-      javaProject.setRawClasspath(entries, monitor);
+      javaProject.setRawClasspath(entries, null);
     } catch (JavaModelException e) {
       logger.log(Level.SEVERE, "Unable to initialize jar project", e);
     }
@@ -156,7 +153,7 @@ public class EclipseUtils {
         entries.add(JavaCore.newLibraryEntry(new Path(file.getPath()), null, null));
       }
       entries.add(JavaCore.newSourceEntry(srcFolder.getFullPath()));
-      javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), monitor);
+      javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
     } catch (CoreException e) {
       logger.log(Level.SEVERE, "Error in project initialization", e);
     }

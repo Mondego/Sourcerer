@@ -17,63 +17,64 @@
  */
 package edu.uci.ics.sourcerer.repo.extracted;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-import java.util.logging.Level;
+
+import edu.uci.ics.sourcerer.repo.general.JarProperties;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedJar extends Extracted {
-  private String name;
-  private String group;
-  private String version;
-  private String hash;
+  private JarProperties properties;
   
   public ExtractedJar(File content) {
     super(content);
-    loadProperties();
+    properties = JarProperties.load(getPropertiesFile());
   }
   
-  private void loadProperties() {
-    String name = content.getName();
-    name = name.substring(0, name.lastIndexOf('.'));
-    File propFile = new File(content, name + ".properties");
-    if (propFile.exists()) {
-      Properties properties = new Properties();
-      try {
-        InputStream is = new FileInputStream(propFile);
-        properties.load(is);
-        name = properties.getProperty("name");
-        group = properties.getProperty("group");
-        version = properties.getProperty("version");
-        hash = properties.getProperty("hash");
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Unable to read properties", e);
-      }
+  public ExtractedJar(File content, File propFile) {
+    super(content);
+    File exPropFile = getPropertiesFile();
+    if (exPropFile.exists()) {
+      properties = JarProperties.load(exPropFile);
     } else {
-      logger.log(Level.SEVERE, "Unable to find properties: " + propFile.getPath());
+      properties = JarProperties.load(propFile);
     }
   }
   
+  private File getPropertiesFile() {
+    return new File(content, content.getName() + ".properties");
+  }
+  
+  public void reportExecution(boolean hasSource, boolean sourceError) {
+    properties.reportExtraction(getPropertiesFile(), hasSource, sourceError);
+  }
+    
   public String getName() {
-    return name;
+    return properties.getName();
   }
   
   public String getGroup() {
-    return group;
+    return properties.getGroup();
   }
   
   public String getVersion() {
-    return version;
+    return properties.getVersion();
   }
   
   public String getHash() {
-    return hash;
+    return properties.getHash();
+  }
+  
+  public boolean extracted() {
+    return properties.extracted();
+  }
+  
+  public boolean hasSource() {
+    return properties.hasSource();
+  }
+  
+  public boolean sourceError() {
+    return properties.sourceError();
   }
 }

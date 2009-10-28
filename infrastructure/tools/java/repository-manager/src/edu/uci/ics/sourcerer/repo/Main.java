@@ -17,11 +17,12 @@
  */
 package edu.uci.ics.sourcerer.repo;
 
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.OUTPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.JarIndex.JAR_INDEX_FILE;
+import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.LINKS_FILE;
+import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.MAVEN_URL;
 import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
-import static edu.uci.ics.sourcerer.repo.JarIndex.JAR_INDEX_FILE;
-import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.*;
 
 import java.util.Set;
 
@@ -44,6 +45,7 @@ public class Main {
   private static final Property<Boolean> CLEAN_REPOSITORY = new BooleanProperty("clean-repository", false, "Repository Manager", "Deletes the compressed portion of the target repository.");
   private static final Property<Boolean> MIGRATE_REPOSITORY = new BooleanProperty("migrate-repository", false, "Repository Manager",
       "Migrates (while compressing) the input repository to the target repository.");
+  private static final Property<Boolean> CLEAN_JAR_MANIFESTS = new BooleanProperty("clean-jar-manifests", false, "Repository Manager", "Removes Class-Path entries from manifest files.");
   private static final Property<Boolean> CRAWL_MAVEN = new BooleanProperty("crawl-maven", false, "Repository Manager", "Crawls the target maven repository.");
   private static final Property<Boolean> DOWNLOAD_MAVEN = new BooleanProperty("download-maven", false, "Repository Manager", "Downloads the jar file links retreived from a maven crawl.");
   private static final Property<Boolean> MAVEN_STATS = new BooleanProperty("maven-stats", false, "Repository Manager", "Gets some statistics on the links retreived from a maven crawl.");
@@ -53,13 +55,16 @@ public class Main {
     Logging.initializeLogger();
     if (CREATE_JAR_INDEX.getValue()) {
       PropertyManager.registerAndVerify(CREATE_JAR_INDEX, INPUT_REPO, JAR_INDEX_FILE);
-      Repository.createJarIndex(INPUT_REPO.getValue());
+      Repository repo = Repository.getRepository(INPUT_REPO.getValue());
+      repo.createJarIndex();
     } else if (PRINT_JAR_STATS.getValue()) {
       PropertyManager.registerAndVerify(PRINT_JAR_STATS, INPUT_REPO);
-      Repository.printJarStats(INPUT_REPO.getValue());
+      Repository repo = Repository.getRepository(INPUT_REPO.getValue());
+      repo.printJarStats();
     } else if (AGGREGATE_JAR_FILES.getValue()) {
       PropertyManager.registerAndVerify(AGGREGATE_JAR_FILES, INPUT_REPO);
-      Repository.aggregateJarFiles(INPUT_REPO.getValue());
+      Repository repo = Repository.getRepository(INPUT_REPO.getValue());
+      repo.aggregateJarFiles();
     } else if (CLEAN_REPOSITORY.getValue()) {
       PropertyManager.registerAndVerify(CLEAN_REPOSITORY, INPUT_REPO);
       Repository.deleteCompressedRepository(INPUT_REPO.getValue());
@@ -68,11 +73,14 @@ public class Main {
       PropertyManager.registerAndVerify(MIGRATE_REPOSITORY, INPUT_REPO, OUTPUT_REPO, JAR_INDEX_FILE);
       Set<String> completed = Logging.initializeResumeLogger();
       Repository.migrateRepository(INPUT_REPO.getValue(), OUTPUT_REPO.getValue(), completed);
+    } else if (CLEAN_JAR_MANIFESTS.getValue()) {
+      PropertyManager.registerAndVerify(CLEAN_JAR_MANIFESTS, INPUT_REPO);
+      Repository.getRepository(INPUT_REPO.getValue()).getJarIndex().cleanManifestFiles();
     } else if (CRAWL_MAVEN.getValue()) {
       PropertyManager.registerAndVerify(CRAWL_MAVEN, MAVEN_URL, LINKS_FILE);
       MavenCrawler.getDownloadLinks();
     } else if (DOWNLOAD_MAVEN.getValue()) {
-      PropertyManager.registerAndVerify(DOWNLOAD_MAVEN, INPUT, LINKS_FILE, MAVEN_URL);
+      PropertyManager.registerAndVerify(DOWNLOAD_MAVEN, INPUT, INPUT_REPO, LINKS_FILE, MAVEN_URL);
       MavenDownloader.downloadLinks();
     } else if (MAVEN_STATS.getValue()) {
       PropertyManager.registerAndVerify(MAVEN_STATS, INPUT, LINKS_FILE, MAVEN_URL);

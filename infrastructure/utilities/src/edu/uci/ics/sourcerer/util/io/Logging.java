@@ -29,9 +29,11 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -48,20 +50,23 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public final class Logging {
   protected static final Property<Boolean> SUPPRESS_FILE_LOGGING = new BooleanProperty("suppress-file-logging", false, "Logging", "Suppresses all logging to files.");
   protected static final Property<Boolean> REPORT_TO_CONSOLE = new BooleanProperty("report-to-console", false, "Logging", "Prints all the logging messages to the console.");
-  
   protected static final Property<String> ERROR_LOG = new StringProperty("error-log", "error.log", "Logging", "Filename for error log.");
-  
   protected static final Property<String> INFO_LOG = new StringProperty("info-log", "info.log", "Logging", "Filename for the info log.");
-  
   protected static final Property<String> RESUME_LOG = new StringProperty("resume-log", "resume.log", "Logging", "Filename for the resume log.");
   protected static final Property<Boolean> CLEAR_RESUME_LOG = new BooleanProperty("clear-resume-log", false, "Logging", "Clears the resume log before beginning."); 
   
+  public static final Level RESUME = new Level("RESUME", 10000) {};
+  
+  public static Logger logger;
+  
   private Logging() {}
   
-  public static final Level RESUME = new Level("RESUME", 10000) {};
   private static boolean loggingInitialized = false;
-  public static Logger logger;
-  private static StreamHandler defaultHandler; 
+  private static boolean resumeLoggingInitialized = false;
+  private static StreamHandler defaultHandler;
+  
+  private static Map<File, Handler> handlerMap = Helper.newHashMap();
+  
   static {
     logger = Logger.getLogger("edu.uci.ics.sourcerer.util.io");
     logger.setUseParentHandlers(false);
@@ -93,13 +98,8 @@ public final class Logging {
     }
   }
   
-  public synchronized static boolean loggingInitialized() {
-    return loggingInitialized;
-  }
-    
-  private static boolean resumeLoggingEnabled = false;
   public synchronized static Set<String> initializeResumeLogger() {
-    if (resumeLoggingEnabled) {
+    if (resumeLoggingInitialized) {
       throw new IllegalStateException("Resume logging may only be initialized once");
     }
     PropertyManager.registerUsedProperties(OUTPUT, RESUME_LOG, CLEAR_RESUME_LOG);
@@ -134,7 +134,7 @@ public final class Logging {
       System.exit(1);
     }
     
-    resumeLoggingEnabled = true;
+    resumeLoggingInitialized = true;
     return resumeSet;
   }
  
@@ -158,10 +158,9 @@ public final class Logging {
         OUTPUT.getValue().mkdirs();
       }
       
-      Formatter errorFormatter = null;
       StreamHandler errorHandler = null;
       if (suppressFileLogging) {
-        errorFormatter = new Formatter() {
+        Formatter errorFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
             if (record.getLevel() == RESUME) {
@@ -173,7 +172,7 @@ public final class Logging {
         };
         errorHandler = new StreamHandler(System.err, errorFormatter);
       } else {
-        errorFormatter = new Formatter() {
+        Formatter errorFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
             if (record.getLevel() == RESUME) {
@@ -192,10 +191,9 @@ public final class Logging {
       }
       errorHandler.setLevel(Level.WARNING);
       
-      Formatter infoFormatter = null;
       StreamHandler infoHandler = null;
       if (suppressFileLogging) {
-        infoFormatter = new Formatter() {
+        Formatter infoFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
             return formatInfo(record);
@@ -203,7 +201,7 @@ public final class Logging {
         };
         infoHandler = new StreamHandler(System.out, infoFormatter);
       } else {
-        infoFormatter = new Formatter() {
+        Formatter infoFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
             if (record.getLevel() == Level.INFO) {
@@ -231,6 +229,52 @@ public final class Logging {
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(1);
+    }
+  }
+  
+  public synchronized static void addFileLogger(File file) {
+    if (!loggingInitialized) {
+      throw new IllegalStateException("Logging must be initialized before error logs can be added.");
+    } else if (handlerMap.containsKey(file)) {
+      throw new IllegalArgumentException("Error logging may not be added to the same file twice: " + file.getPath());
+    }
+
+    Formatter formatter = new Formatter() {
+      @Override
+      public String format(LogRecord record) {
+        
+        if (record.getLevel() == RESUME) {
+          return "";
+        } else if (record.getLevel() == Level.INFO) {
+          return Logging.formatInfo(record);
+        } else {
+          return Logging.formatError(record);
+        }
+      }
+    };
+    
+    try {
+      file.mkdirs();
+      StreamHandler handler = new FileHandler(new File(file, "log").getPath());
+      handler.setFormatter(formatter);
+      handler.setLevel(Level.INFO);
+      handlerMap.put(file, handler);
+      logger.addHandler(handler);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error adding file logger.", e);
+    }
+  }
+  
+  public synchronized static void removeFileLogger(File file) {
+    if (!loggingInitialized) {
+      throw new IllegalStateException("Logging must be initialized before error logs can be removed.");
+    }
+    
+    Handler handler = handlerMap.get(file);
+    if (handler != null) {
+      logger.removeHandler(handler);
+      handler.close();
+      handlerMap.remove(file);
     }
   }
   

@@ -27,8 +27,8 @@ import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.JAR_RELATION_WRITE
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.LOCAL_VARIABLE_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.PROBLEM_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.RELATION_WRITER;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.OUTPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;

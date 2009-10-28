@@ -17,13 +17,11 @@
  */
 package edu.uci.ics.sourcerer.extractor;
 
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.*;
-import static edu.uci.ics.sourcerer.util.io.Logging.*;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.io.File;
 import java.util.Collection;
-import java.util.Set;
-import java.util.logging.Level;
 
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClassFile;
@@ -31,10 +29,11 @@ import org.eclipse.jdt.core.IClassFile;
 import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.extractor.resources.EclipseUtils;
-import edu.uci.ics.sourcerer.repo.IndexedJar;
-import edu.uci.ics.sourcerer.repo.JarIndex;
 import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
+import edu.uci.ics.sourcerer.repo.general.IndexedJar;
+import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 
@@ -43,8 +42,6 @@ import edu.uci.ics.sourcerer.util.io.Logging;
  */
 public class JarExtractor {
   public static void extract() {
-    Set<String> completed = Logging.initializeResumeLogger();
-    
     // Load the input repository
     logger.info("Loading the input repository...");
     Repository input = Repository.getRepository(INPUT_REPO.getValue());
@@ -58,9 +55,13 @@ public class JarExtractor {
     int count = 0;
     for (IndexedJar jar : index.getIndexedJars()) {
       logger.info("Extracting " + jar.toString() + " (" + ++count + " of " + index.getIndexSize() + ")");
-      if (completed.contains(jar.toString())) {
+      ExtractedJar extracted = jar.getExtractedJar(output);
+      if (extracted.extracted()) {
         logger.info("  Jar already extracted");
       } else {
+        // Set up logging
+        Logging.addFileLogger(extracted.getContent());
+
         logger.info("  Initializing project...");
         EclipseUtils.initializeJarProject(jar);
         
@@ -70,25 +71,22 @@ public class JarExtractor {
         logger.info("  Extracting " + classFiles.size() + " class files...");
         
         // Set up the writer bundle
-        WriterBundle bundle = new WriterBundle(new File(jar.getOutputPath(output.getJarsDir())));
-        
+        WriterBundle bundle = new WriterBundle(extracted.getContent());
+                
         // Set up the feature extractor
         FeatureExtractor extractor = new FeatureExtractor(bundle);
         
         // Extract
-        if (extractor.extractClassFiles(classFiles)) {
-          logger.info("    Found source, but error in extraction.");
-          logger.log(Level.SEVERE, "Error in source extraction for " + jar.toString());
-        }
+        extractor.extractClassFiles(classFiles);
         
         // Close the output files
         extractor.close();
         
-        // Copy the properties file
-        jar.copyPropertiesFile(output.getJarsDir());
+        // Write the properties file
+        extracted.reportExecution(extractor.foundSource(), extractor.sourceError());
        
-        // The jar is completed
-        logger.log(RESUME, jar.toString());
+        // End the error logging
+        Logging.removeFileLogger(extracted.getContent());
       }
     }
     

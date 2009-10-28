@@ -1,7 +1,7 @@
 package edu.uci.ics.sourcerer.extractor;
 
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.OUTPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Properties.*;
 
 import edu.uci.ics.sourcerer.util.io.Logging;

@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 
@@ -44,7 +45,7 @@ public class MavenDownloader {
       Set<String> resume = Logging.initializeResumeLogger();
       File input = new File(INPUT.getValue(), LINKS_FILE.getValue());
      
-      Repository repo = Repository.getUninitializedRepository();
+      Repository repo = Repository.getRepository(AbstractRepository.INPUT_REPO.getValue());
       File outputDir = repo.getJarsDir();
       String baseUrl = MAVEN_URL.getValue();
       if (baseUrl.endsWith("/")) {

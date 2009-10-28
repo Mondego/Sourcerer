@@ -15,24 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo;
+package edu.uci.ics.sourcerer.repo.general;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
@@ -51,6 +56,87 @@ public class JarIndex {
   
   private JarIndex() {
     index = Helper.newHashMap();
+  }
+  
+  public void cleanManifestFiles() {
+    logger.info("--- Cleaning manifest files for " + index.size() + " jars ---");
+    int count = 0;
+    int rewriteCount = 0;
+    for (IndexedJar jar : index.values()) {
+      logger.info("Checking " + jar + " (" + ++count + " of " + index.size() + ")");
+      File file = jar.getJarFile();
+      
+      // Find if the jar contains a problematic manifest
+      byte[] newManifest = null;
+      ZipFile zip = null;
+      BufferedReader br = null;
+      try {
+        boolean foundClassPath = false;
+        ByteArrayOutputStream out = new ByteArrayOutputStream(); 
+        zip = new ZipFile(file);
+        ZipEntry entry = zip.getEntry("META-INF/MANIFEST.MF");
+        if (entry != null) {
+          br = new BufferedReader(new InputStreamReader(zip.getInputStream(entry)));
+          for (String line = br.readLine(); line != null; line = br.readLine()) {
+            if (line.startsWith("Class-Path")) {
+              foundClassPath = true;
+            } else {
+              out.write(line.getBytes());
+            }
+          }
+          
+          // We need to rewrite the jar
+          if (foundClassPath) {
+            newManifest = out.toByteArray();
+          }
+        }
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Error reading jar: " + jar, e);
+      } finally {
+        FileUtils.close(zip);
+        FileUtils.close(br);
+      }
+      
+      // We need to rewrite the jar
+      if (newManifest != null) {
+        logger.info("  Found problematic manifest... rewriting...");
+        rewriteCount++;
+        // rename the old jar
+        File backup = new File(file.getParentFile(), file.getName() + ".bak");
+        file.renameTo(backup);
+        
+        // Read through the jar, and keep everything except the manifest
+        ZipInputStream zis = null;
+        ZipOutputStream zos = null;
+        try {
+          zis = new ZipInputStream(new FileInputStream(backup));
+          zos = new ZipOutputStream(new FileOutputStream(file));
+          
+          byte[] buff = new byte[1024];
+          for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
+            ZipEntry newEntry = new ZipEntry(entry.getName());
+            zos.putNextEntry(newEntry);
+            if (entry.getName().equals("META-INF/MANIFEST.MF")) {
+              zos.write(newManifest);
+             } else {
+              int read = 0;
+              while ((read = zis.read(buff)) > 0) {
+                zos.write(buff, 0, read);
+              }
+            }
+            zos.closeEntry();
+          }
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Error in rewriting: " + jar, e);
+        } finally {
+          FileUtils.close(zis);
+          FileUtils.close(zos);
+        }
+      }
+    }
+    logger.info("Done!");
+    logger.info(count + " jars checked.");
+    logger.info(rewriteCount + " jars rewritten.");
   }
   
   protected static JarIndex getJarIndex(File indexFile) {
@@ -172,7 +258,7 @@ public class JarIndex {
     printer.endTable();
   }
   
-  public static void buildJarIndexFile(File dir) {
+  public static void createJarIndexFile(File dir) {
     Set<String> completed = Logging.initializeResumeLogger();
     
     File indexFile = new File(dir, JAR_INDEX_FILE.getValue());
@@ -244,19 +330,10 @@ public class JarIndex {
                       
                 String artifactName = top.getParentFile().getName();
                       
-                Properties props = new Properties();
-                props.setProperty("name", artifactName);
-                props.setProperty("group", groupName);
-                props.setProperty("version", version);
-                props.setProperty("hash", hash);
-                      
                 File propsFile = new File(top, jar.getName() + ".properties");
-                OutputStream os = new FileOutputStream(propsFile);
-                props.store(os, null);
-                os.close();
+                JarProperties.create(propsFile, artifactName, groupName, version, hash);
                 
                 logger.log(RESUME, id);
-                
               }
               if (++mavenJarCount % 1000 == 0) {
                 logger.info(mavenJarCount + " maven jars indexed");
@@ -279,14 +356,8 @@ public class JarIndex {
             String name = file.getName();
             name = name.substring(0, name.lastIndexOf('.'));
           
-            Properties props = new Properties();
-            props.setProperty("name", name);
-            props.setProperty("hash", hash);
-          
             File propsFile = new File(dir, file.getName() + ".properties");
-            OutputStream os = new FileOutputStream(propsFile);
-            props.store(os, null);
-            os.close();
+            JarProperties.create(propsFile, name, hash);
             
             logger.log(RESUME, file.getName());
           }

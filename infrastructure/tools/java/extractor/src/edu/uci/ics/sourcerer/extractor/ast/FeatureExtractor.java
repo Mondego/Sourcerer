@@ -49,6 +49,9 @@ public final class FeatureExtractor {
   private ASTParser parser;
   private WriterBundle bundle;
   
+  private boolean foundSource;
+  private boolean sourceError;
+  
   public FeatureExtractor(WriterBundle bundle) {
     this.bundle = bundle;
     parser = ASTParser.newParser(AST.JLS3);
@@ -58,16 +61,24 @@ public final class FeatureExtractor {
     bundle.close();
   }
   
-  public boolean extractClassFiles(Collection<IClassFile> classFiles) {
+  public boolean foundSource() {
+    return foundSource;
+  }
+  
+  public boolean sourceError() {
+    return sourceError;
+  }
+  
+  public void extractClassFiles(Collection<IClassFile> classFiles) {
     ClassFileExtractor extractor = new ClassFileExtractor(bundle);
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
-    boolean hadProblem = false;
     for (IClassFile classFile : classFiles) {
       try {
         ISourceRange source = classFile.getSourceRange();
         if (source == null || source.getLength() == 0) {
           extractor.extractClassFile(classFile);
         } else {
+          foundSource = true;
           parser.setStatementsRecovery(true);
           parser.setResolveBindings(true);
           parser.setBindingsRecovery(true);
@@ -81,7 +92,7 @@ public final class FeatureExtractor {
             }
           }
           if (foundProblem) {
-            hadProblem = true;
+            sourceError = true;
             extractor.extractClassFile(classFile);
           } else {
             unit.accept(visitor);
@@ -91,7 +102,6 @@ public final class FeatureExtractor {
         logger.log(Level.SEVERE, "Unable to extract " + classFile.getElementName(), e);
       }
     }
-    return hadProblem;
   }
    
   public void extractSourceFiles(Collection<IFile> sourceFiles) {

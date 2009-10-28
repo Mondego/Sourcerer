@@ -17,9 +17,9 @@
  */
 package edu.uci.ics.sourcerer.extractor;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.*;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.File;
 import java.util.Collection;

@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.db.tools;
 
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;

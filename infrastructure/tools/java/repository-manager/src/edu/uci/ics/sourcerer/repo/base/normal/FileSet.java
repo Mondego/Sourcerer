@@ -21,10 +21,10 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Deque;
 
-import edu.uci.ics.sourcerer.repo.RepoJar;
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.general.RepoJar;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**

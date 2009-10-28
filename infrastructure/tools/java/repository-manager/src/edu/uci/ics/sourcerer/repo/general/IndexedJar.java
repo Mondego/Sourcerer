@@ -15,10 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo;
+package edu.uci.ics.sourcerer.repo.general;
 
 import java.io.File;
 
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
@@ -53,6 +55,7 @@ public class IndexedJar {
       FileUtils.copyFile(getSourceFile(), getSourceFile(basePath));
     }
     FileUtils.copyFile(getPropertiesFile(), getPropertiesFile(basePath));
+    FileUtils.copyFile(getInfoFile(), getInfoFile(basePath));
   }
 
   private File getJarFile(String basePath) {
@@ -95,7 +98,7 @@ public class IndexedJar {
     }
   }
   
-  public File getPropertiesFile() {
+  private File getPropertiesFile() {
     return getPropertiesFile(basePath);
   }
   
@@ -111,18 +114,16 @@ public class IndexedJar {
     return getInfoFile(basePath);
   }
   
-  public String getOutputPath(File baseDir) {
+  public ExtractedJar getExtractedJar(ExtractedRepository repo) {
+    return new ExtractedJar(new File(getOutputPath(repo.getJarsDir())), getPropertiesFile());
+  }
+  
+  private String getOutputPath(File baseDir) {
     if (relativePath == null) {
       return baseDir.getPath() + "/" + jarName;
     } else {
       return baseDir.getPath() + "/" + relativePath;
     }
-  }
-  
-  public void copyPropertiesFile(File baseDir) {
-    File outputDir = new File(getOutputPath(baseDir));
-    File output = new File(outputDir, jarName + ".properties");
-    FileUtils.copyFile(getPropertiesFile(), output);
   }
   
   public String toString() {

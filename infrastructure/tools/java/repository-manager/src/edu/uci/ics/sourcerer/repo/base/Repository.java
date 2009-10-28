@@ -35,10 +35,10 @@ import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import edu.uci.ics.sourcerer.repo.AbstractRepository;
-import edu.uci.ics.sourcerer.repo.IndexedJar;
-import edu.uci.ics.sourcerer.repo.JarIndex;
-import edu.uci.ics.sourcerer.repo.RepoJar;
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.general.IndexedJar;
+import edu.uci.ics.sourcerer.repo.general.JarIndex;
+import edu.uci.ics.sourcerer.repo.general.RepoJar;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
@@ -53,7 +53,6 @@ public class Repository extends AbstractRepository {
   private Repository(File repoRoot, File tempDir) {
     super(repoRoot);
     this.tempDir = tempDir;
-    projects = Helper.newHashMap();
   }
   
   @Override
@@ -68,53 +67,30 @@ public class Repository extends AbstractRepository {
       projects.put(project.getProjectPath(), project);
     }
   }
-  
-  public static Repository getUninitializedRepository() {
-    return new Repository(INPUT_REPO.getValue(), null);
-  }
-  
-  public static Repository getUninitializedRepository(File repoRoot) {
-    return new Repository(repoRoot, null);
-  }
  
   public static Repository getRepository(File repoRoot) {
-    Repository repo = new Repository(repoRoot, null);
-    
-    repo.loadJarIndex();
-    repo.populateRepository();
-    
-    return repo;
+    return new Repository(repoRoot, null);
   }
   
   public static Repository getRepository(File repoRoot, File tempDir) {
-    Repository repo = new Repository(repoRoot, tempDir);
-    
-    repo.loadJarIndex();
-    repo.populateRepository();
-    
-    return repo;
+    return new Repository(repoRoot, tempDir);
   }
   
-  public static void createJarIndex(File repoRoot) {
-    Repository repo = new Repository(repoRoot, null);
-    JarIndex.buildJarIndexFile(repo.getJarsDir());
+  public void createJarIndex() {
+    JarIndex.createJarIndexFile(getJarsDir());
   }
   
-  public static void printJarStats(File repoRoot) {
-    Repository repo = new Repository(repoRoot, null);
-    JarIndex.printJarStats(repo.getJarsDir());
+  public void printJarStats() {
+    JarIndex.printJarStats(getJarsDir());
   }
   
-  public static void aggregateJarFiles(File repoRoot) {
+  public void aggregateJarFiles() {
     Set<String> completed = Logging.initializeResumeLogger();
     
     logger.info("--- Aggregating jar files for: " + repoRoot.getPath() + " ---");
     
-    logger.info("Initializing repository...");
-    Repository repo = getRepository(repoRoot, FileUtils.getTempDir());
-    
     // Create the jar folder
-    File jarFolder = repo.getJarsDir();
+    File jarFolder = getJarsDir();
     if (!jarFolder.exists()) {
       jarFolder.mkdir();
     }
@@ -163,13 +139,13 @@ public class Repository extends AbstractRepository {
     logger.info("Found " + nameIndex.size() + " partially completed aggregates.");
     logger.info("Found " + completed.size() + " completed projects.");
     
-    JarIndex index = repo.getJarIndex();
+    JarIndex index = getJarIndex();
     
-    logger.info("Extracting jars from " + repo.projects.size() + " projects...");
+    logger.info("Extracting jars from " + getProjects().size() + " projects...");
     int projectCount = 0;
     int totalFiles = nameIndex.size();
     int uniqueFiles = nameIndex.size();
-    for (RepoProject project : repo.getProjects()) {
+    for (RepoProject project : getProjects()) {
       projectCount++;
       if (completed.contains(project.getProjectPath())) {
         logger.info("Already completed: " + project.getProjectPath());
@@ -180,7 +156,7 @@ public class Repository extends AbstractRepository {
           if (fileSet == null) {
             continue;
           }
-          logger.info("Extracting " + fileSet.getJarFileCount() + " jar files from project " + projectCount + " of " + repo.projects.size());
+          logger.info("Extracting " + fileSet.getJarFileCount() + " jar files from project " + projectCount + " of " + getProjects().size());
           
           for (IJarFile jar : fileSet.getJarFiles()) {
             RepoJar newJar = new RepoJar(jar.getFile());
@@ -381,10 +357,18 @@ public class Repository extends AbstractRepository {
   }
     
   public Collection<RepoProject> getProjects() {
+    if (projects == null) {
+      projects = Helper.newHashMap();
+      populateRepository();
+    }
     return projects.values();
   }
   
   public RepoProject getProject(String projectPath) {
+    if (projects == null) {
+      projects = Helper.newHashMap();
+      populateRepository();
+    }
     return projects.get(projectPath);
   }
   
