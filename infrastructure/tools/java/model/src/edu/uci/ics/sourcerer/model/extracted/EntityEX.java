@@ -66,4 +66,8 @@ public final class EntityEX implements ModelEX {
   public String getLength() {
     return length;
   }
+  
+  public String toString() {
+    return type + " " + fqn;
+  }
 }

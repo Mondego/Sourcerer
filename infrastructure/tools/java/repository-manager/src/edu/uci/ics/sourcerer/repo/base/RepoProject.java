@@ -21,7 +21,8 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.repo.base.compressed.CompressedFileSet;
 import edu.uci.ics.sourcerer.repo.base.normal.FileSet;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -41,6 +42,10 @@ public class RepoProject {
     this.properties = properties;
   }
  
+  public ExtractedProject getExtractedProject(ExtractedRepository repo) {
+    return new ExtractedProject(new File(getOutputPath(repo.getBaseDir())), getProjectPath(), properties);
+  }
+  
   public String getOutputPath(File baseDir) {
     return baseDir.getPath() + File.separatorChar + getProjectPath();
   }
@@ -70,12 +75,5 @@ public class RepoProject {
   
   public File getPropertiesFile() {
     return properties;
-  }
-  
-  public void copyPropertiesFile(File baseDir) {
-    File outputDir = new File(getOutputPath(baseDir));
-    File propertiesFile = getPropertiesFile();
-    File outputFile = new File(outputDir, propertiesFile.getName());
-    FileUtils.copyFile(propertiesFile, outputFile);
   }
 }

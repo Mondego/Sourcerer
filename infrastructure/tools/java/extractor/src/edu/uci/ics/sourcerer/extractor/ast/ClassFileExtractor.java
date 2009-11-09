@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeParameter;
@@ -53,21 +54,67 @@ public class ClassFileExtractor {
     fqnStack = Helper.newStack();
   }
   
-  public void extractClassFile(IClassFile classFile) {
-    extractIType(classFile.getType());
+  public static boolean isTopLevel(IClassFile classFile) {
+    return !classFile.getType().getFullyQualifiedName().contains("$");
+//    try {
+//      IType declaring = classFile.getType();
+//      boolean topLevel = true;
+//
+//      while (declaring != null) {
+//        if (declaring.isMember() || declaring.isLocal() || declaring.isAnonymous()) {
+//          topLevel = false;
+//          break;
+//        }
+//        declaring = declaring.getDeclaringType();
+//      }
+//      
+//      if (topLevel) {
+//        // check if there is any $ in the fqn
+//        if (classFile.getType().getFullyQualifiedName().indexOf('$') == -1) {
+//          return true;
+//        } else {
+//          logger.log(Level.SEVERE, "isTopLevel thinks " + classFile.getType().getFullyQualifiedName() + " is top-level");
+//          return true;
+//        }
+//      }
+//    } catch (JavaModelException e) {
+//      logger.log(Level.SEVERE, "Error in determining toplevel", e);
+//      return false;
+//    }
   }
   
-  private void extractIType(IType type) {
+  public void extractClassFile(IClassFile classFile) {
+    // Verify that it's a top-level type, or a subtype of a top-level type
     try {
-      // Verify that it's a top-level type, or a subtype of a top-level type
-      IType declaring = type;
+      IType declaring = classFile.getType();
       while (declaring != null) {
         if (declaring.isLocal() || declaring.isAnonymous()) {
           return;
         }
         declaring = declaring.getDeclaringType();
       }
-
+    } catch (JavaModelException e) {
+      logger.log(Level.SEVERE, "Error in extracting class file", e);
+      return;
+    }
+    extractIType(classFile.getType());
+    
+    IJavaElement parent = classFile.getParent();
+    while (true) {
+      if (parent == null) {
+        logger.log(Level.SEVERE, "Unable to find package for: " + classFile.getElementName());
+        break;
+      } else if (parent.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
+        relationWriter.writeInside(classFile.getType().getFullyQualifiedName(), parent.getElementName());
+        break;
+      } else {
+        parent = parent.getParent();
+      }
+    }
+  }
+  
+  private void extractIType(IType type) {
+    try {
       String fqn = type.getFullyQualifiedName();
       
       // Write the entity
@@ -98,9 +145,9 @@ public class ClassFileExtractor {
       
       fqnStack.push(type.getFullyQualifiedName());
       
-//      for (IType child : type.getTypes()) {
-//        extractIType(child);
-//      }
+      for (IType child : type.getTypes()) {
+        extractIType(child);
+      }
       
       for (IField field : type.getFields()) {
         if (!Flags.isSynthetic(field.getFlags())) {

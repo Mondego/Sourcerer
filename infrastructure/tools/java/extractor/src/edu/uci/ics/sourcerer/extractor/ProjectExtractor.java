@@ -2,12 +2,10 @@ package edu.uci.ics.sourcerer.extractor;
 
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
-import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 
@@ -19,14 +17,13 @@ import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.base.IJarFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 
 public class ProjectExtractor {
   public static void extract() {
-    Set<String> completed = Logging.initializeResumeLogger();
-    
     // Load the input repository
     logger.info("Loading the input repository...");
     Repository input = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
@@ -40,9 +37,13 @@ public class ProjectExtractor {
     int count = 0;
     for (RepoProject project : projects) {
       logger.info("Extracting " + project.getProjectPath() + " (" + ++count + " of " + projects.size() + ")");
-      if (completed.contains(project.getProjectPath())) {
+      ExtractedProject extracted = project.getExtractedProject(output);
+      if (extracted.extracted()) {
         logger.info("  Project already extracted");
       } else {
+        // Set up logging
+        Logging.addFileLogger(extracted.getContent());
+        
         logger.info("  Getting file list...");
         IFileSet files = project.getFileSet();
         
@@ -76,11 +77,8 @@ public class ProjectExtractor {
         // Close the output files
         extractor.close();
         
-        // Copy the properties file
-        project.copyPropertiesFile(output.getBaseDir());
-        
-        // The project is completed
-        logger.log(RESUME, project.getProjectPath());
+        // Write the properties file
+        extracted.reportExtraction();
         
         FileUtils.resetTempDir();
       }

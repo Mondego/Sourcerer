@@ -42,49 +42,6 @@ public enum Entity {
     DUPLICATE,
     UNKNOWN,
     ;
-
-    public static Entity[] getLibraryValues() {
-      Entity[] values = 
-        { PACKAGE,
-          CLASS,
-          INTERFACE,
-          ENUM,
-          ANNOTATION,
-          FIELD,
-          ENUM_CONSTANT,
-          CONSTRUCTOR,
-          METHOD,
-          PARAMETER,
-          ANNOTATION_ELEMENT,
-          PRIMITIVE,
-          ARRAY,
-          TYPE_VARIABLE,
-          PARAMETERIZED_TYPE,
-          WILDCARD,
-          UNKNOWN };
-      return values;
-    }
-    
-    public static Entity[] getJarValues() {
-      Entity[] values =
-        { PACKAGE,
-          CLASS,
-          INTERFACE,
-          ENUM,
-          ANNOTATION,
-          FIELD,
-          ENUM_CONSTANT,
-          CONSTRUCTOR,
-          METHOD,
-          PARAMETER,
-          ANNOTATION_ELEMENT,
-          ARRAY,
-          TYPE_VARIABLE,
-          PARAMETERIZED_TYPE,
-          WILDCARD,
-          UNKNOWN };
-      return values;
-    }
     
     public boolean isDeclaredType() {
       return this == CLASS || this == INTERFACE || this == ENUM || this == ANNOTATION;

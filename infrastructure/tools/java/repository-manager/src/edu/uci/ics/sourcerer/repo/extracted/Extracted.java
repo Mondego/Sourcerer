@@ -33,6 +33,9 @@ public abstract class Extracted {
   public static final Property<String> RELATION_FILE = new StringProperty("relation-file", "relations.txt", "Repository Manager", "Filename for the extracted relations.");
   public static final Property<String> LOCAL_VARIABLE_FILE = new StringProperty("local-variables-file", "local-variables.txt", "Repository Manager", "Filename for the extracted local variables / parameters.");
   public static final Property<String> COMMENT_FILE = new StringProperty("comment-file", "comments.txt", "Repository Manager", "Filename for the extracted comments.");
+  public static final Property<String> FILE_FILE = new StringProperty("file-file", "files.txt", "Repository Manager", "Filename for the extracted files.");
+  public static final Property<String> PROBLEM_FILE = new StringProperty("problem-file", "problems.txt", "Repository Manager", "Filename for the extracted problems.");
+  public static final Property<String> IMPORT_FILE = new StringProperty("import-file", "imports.txt", "Repository Manager", "Filename for the extracted imports.");
   
   protected File content;
 
@@ -42,6 +45,10 @@ public abstract class Extracted {
 
   public File getContent() {
     return content;
+  }
+  
+  protected File getPropertiesFile() {
+    return new File(content, ".properties");
   }
   
   protected InputStream getInputStream(Property<String> property) throws IOException {
@@ -63,5 +70,17 @@ public abstract class Extracted {
   
   public InputStream getCommentFile() throws IOException {
     return getInputStream(COMMENT_FILE);
+  }
+  
+  public InputStream getFileInputStream() throws IOException {
+    return getInputStream(FILE_FILE);
+  }
+  
+  public InputStream getProblemInputStream() throws IOException {
+    return getInputStream(PROBLEM_FILE);
+  }
+  
+  public InputStream getImportInputStream() throws IOException {
+    return getInputStream(IMPORT_FILE);
   }
 }

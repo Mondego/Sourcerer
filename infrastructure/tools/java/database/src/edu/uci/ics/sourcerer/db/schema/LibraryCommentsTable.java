@@ -24,10 +24,10 @@ import edu.uci.ics.sourcerer.model.Comment;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class CommentsTable {
-  private CommentsTable() {}
+public class LibraryCommentsTable {
+  private LibraryCommentsTable() {}
   
-  public static final String TABLE = "comments";
+  public static final String TABLE = "library_comments";
   /*  
    *  +----------------+-----------------+-------+--------+
    *  | Column name    | Type            | Null? | Index? |
@@ -36,21 +36,12 @@ public final class CommentsTable {
    *  | comment_type   | ENUM(values)    | No    | No     |
    *  | containing_eid | BIGINT UNSIGNED | Yes   | Yes    |
    *  | following_eid  | BIGINT UNSIGNED | Yes   | Yes    |
-   *  | project_id     | BIGINT UNSIGNED | No    | Yes    |
-   *  | file_id        | BIGINT UNSIGNED | No    | Yes    |
+   *  | library_id     | BIGINT UNSIGNED | No    | Yes    |
+   *  | lclass_fid     | BIGINT UNSIGNED | No    | Yes    |
    *  | offset         | INT UNSIGNED    | No    | No     |
    *  | length         | INT UNSIGNED    | No    | No     |
    *  +----------------+-----------------+-------+--------+
    */
-  
-  // ---- LOCK ----
-  public static String getReadLock() {
-    return SchemaUtils.getReadLock(TABLE);
-  }
-  
-  public static String getWriteLock() {
-    return SchemaUtils.getWriteLock(TABLE);
-  }
   
   // ---- CREATE ----
   public static void createTable(QueryExecutor executor) {
@@ -59,46 +50,41 @@ public final class CommentsTable {
         "comment_type " + SchemaUtils.getEnumCreate(Comment.getValues()),
         "containing_eid BIGINT UNSIGNED",
         "following_eid BIGINT UNSIGNED",
-        "project_id BIGINT UNSIGNED NOT NULL",
-        "file_id BIGINT UNSIGNED NOT NULL",
+        "library_id BIGINT UNSIGNED NOT NULL",
+        "lclass_fid BIGINT UNSIGNED NOT NULL",
         "offset INT UNSIGNED NOT NULL",
         "length INT UNSIGNED NOT NULL",
         "INDEX(containing_eid)",
         "INDEX(following_eid)",
-        "INDEX(project_id)",
-        "INDEX(file_id)");
+        "INDEX(library_id)",
+        "INDEX(lclass_fid)");
   }
-
+  
   // ---- INSERT ----
   public static InsertBatcher getInsertBatcher(QueryExecutor executor) {
     return executor.getInsertBatcher(TABLE);
   }
-
-  private static String getInsertValue(Comment type, String containing, String following, String projectID, String fileID, String offset, String length) {
+  
+  private static String getInsertValue(Comment type, String containing, String following, String libraryID, String libraryClassFileID, String offset, String length) {
     return SchemaUtils.getSerialInsertValue(
         SchemaUtils.convertNotNullVarchar(type.name()),
         SchemaUtils.convertNumber(containing),
         SchemaUtils.convertNumber(following),
-        SchemaUtils.convertNotNullNumber(projectID),
-        SchemaUtils.convertNotNullNumber(fileID),
+        SchemaUtils.convertNotNullNumber(libraryID),
+        SchemaUtils.convertNotNullNumber(libraryClassFileID),
         SchemaUtils.convertNotNullNumber(offset),
         SchemaUtils.convertNotNullNumber(length));
    }
   
-  public static void insertJavadoc(InsertBatcher batcher, String eid, String projectID, String fileID, String offset, String length) {
-    batcher.addValue(getInsertValue(Comment.JAVADOC, null, eid, projectID, fileID, offset, length));
+  public static void insertJavadoc(InsertBatcher batcher, String eid, String libraryID, String libraryClassFileID, String offset, String length) {
+    batcher.addValue(getInsertValue(Comment.JAVADOC, eid, null, libraryID, libraryClassFileID, offset, length));
   }
   
-  public static void insertUnassociatedJavadoc(InsertBatcher batcher, String projectID, String fileID, String offset, String length) {
-    batcher.addValue(getInsertValue(Comment.JAVADOC, null, null, projectID, fileID, offset, length));
+  public static void insertUnassociatedJavadoc(InsertBatcher batcher, String libraryID, String libraryClassFileID, String offset, String length) {
+    batcher.addValue(getInsertValue(Comment.JAVADOC, null, null, libraryID, libraryClassFileID, offset, length));
   }
   
-  public static void insertComment(InsertBatcher batcher, Comment type, String projectID, String fileID, String offset, String length) {
-    batcher.addValue(getInsertValue(type, null, null, projectID, fileID, offset, length));
-  }
-  
-  // ---- DELETE ----
-  public static void deleteByProjectID(QueryExecutor executor, String projectID) {
-    executor.delete(TABLE, "project_id=" + projectID);
+  public static void insertComment(InsertBatcher batcher, Comment type, String libraryID, String libraryClassFileID, String offset, String length) {
+    batcher.addValue(getInsertValue(type, null, null, libraryID, libraryClassFileID, offset, length));
   }
 }

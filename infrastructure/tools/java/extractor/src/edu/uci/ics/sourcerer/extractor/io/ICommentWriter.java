@@ -27,6 +27,6 @@ public interface ICommentWriter extends IExtractorWriter {
 
   public void writeUnassociatedJavadocComment(String containingFile, int startPos, int length);
 
-  public void writeJavadocComment(String containingFqn, int startPos, int length);
+  public void writeJavadocComment(String containingFqn, String containingFile, int startPos, int length);
 
 }

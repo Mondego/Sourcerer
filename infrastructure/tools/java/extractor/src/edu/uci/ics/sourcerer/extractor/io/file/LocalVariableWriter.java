@@ -21,7 +21,6 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.ILocalVariableWriter;
 import edu.uci.ics.sourcerer.extractor.io.Location;
-import edu.uci.ics.sourcerer.model.extracted.LocalVariableExJarParser;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableExParser;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -44,7 +43,7 @@ public class LocalVariableWriter extends ExtractorWriter implements ILocalVariab
 
   @Override
   public void writeJarParameter(String name, String type, String parent, int position) {
-    write(LocalVariableExJarParser.getLineParam(name, type, parent, position));
+    write(LocalVariableExParser.getJarLineParam(name, type, parent, position));
   }
   
   @Override

@@ -37,17 +37,25 @@ public class EntityExParser implements ModelExParser<EntityEX> {
     return type.name() + " " + fqn + " " + modifiers + " " + compilationUnitPath + " " + startPos + " " + length;
   }
   
+  public static String getJarLine(Entity type, String fqn, int modifiers) {
+    return type.name() + " " + fqn + " " + modifiers;
+  }
+  
   @Override
   public EntityEX parseLine(String line) {
     String[] parts = line.split(" ");
     
     try {
-      return new EntityEX(Entity.valueOf(parts[0]), parts[1], parts[2], parts[3], parts[4], parts[5]);
-    } catch (ArrayIndexOutOfBoundsException e) {
-      logger.log(Level.SEVERE, "Unable to parse line: " + line);
-      return null;
+      if (parts.length == 3) {
+        return new EntityEX(Entity.valueOf(parts[0]), parts[1], parts[2]);
+      } else if (parts.length == 6) {
+        return new EntityEX(Entity.valueOf(parts[0]), parts[1], parts[2], parts[3], parts[4], parts[5]);
+      } else {
+        logger.log(Level.SEVERE, "Unable to parse entity: " + line);
+        return null;
+      }
     } catch (IllegalArgumentException e) {
-      logger.log(Level.SEVERE, "Unable to parse line: " + line);
+      logger.log(Level.SEVERE, "Unable to parse entity: " + line);
       return null;
     }
   }

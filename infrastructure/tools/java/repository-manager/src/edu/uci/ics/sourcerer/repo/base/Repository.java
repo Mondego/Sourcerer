@@ -161,7 +161,10 @@ public class Repository extends AbstractRepository {
           for (IJarFile jar : fileSet.getJarFiles()) {
             RepoJar newJar = new RepoJar(jar.getFile());
             // If the index already contains the jar
-            IndexedJar indexedJar = index.getIndexedJar(newJar.getHash());
+            IndexedJar indexedJar = null;
+            if (index != null ) {
+              index.getIndexedJar(newJar.getHash());
+            }
             if (indexedJar != null && !indexedJar.isMavenJar()) {
               File info = indexedJar.getInfoFile();
               FileWriter infoWriter = null;

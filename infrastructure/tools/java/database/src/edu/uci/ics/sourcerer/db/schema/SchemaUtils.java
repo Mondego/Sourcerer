@@ -17,11 +17,21 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
+import edu.uci.ics.sourcerer.model.db.TypedEntityID;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class SchemaUtils {
   private SchemaUtils() {}
+  
+  public static String getReadLock(String table) {
+    return table + " READ";
+  }
+  
+  public static String getWriteLock(String table) {
+    return table + " WRITE";
+  }
   
   public static String getSerialInsertValue(String... args) {
     StringBuilder builder = new StringBuilder("(NULL,");
@@ -39,6 +49,24 @@ public final class SchemaUtils {
     }
     builder.setCharAt(builder.length() -1, ')');
     return builder.toString();
+  }
+  
+  public static String convertJarTypedEntityID(TypedEntityID eid) {
+    if (eid.getType() == TypedEntityID.Type.LIBRARY) {
+      return convertNotNullNumber(eid.getID()) + ",NULL";
+    } else {
+      return "NULL," + convertNotNullNumber(eid.getID());
+    }
+  }
+  
+  public static String convertProjectTypedEntityID(TypedEntityID eid) {
+    if (eid.getType() == TypedEntityID.Type.LIBRARY) {
+      return convertNotNullNumber(eid.getID()) + ",NULL,NULL";
+    } else if (eid.getType() == TypedEntityID.Type.JAR) {
+      return "NULL," + convertNotNullNumber(eid.getID()) + ",NULL";
+    } else {
+      return "NULL,NULL," + convertNotNullNumber(eid.getID());
+    }
   }
   
   public static String convertNumber(String value) {
@@ -86,6 +114,10 @@ public final class SchemaUtils {
     } else {
       return convertNumber(length);
     }
+  }
+  
+  public static String convertBoolean(boolean bool) {
+    return bool ? "TRUE" : "FALSE";
   }
   
   public static <T extends Enum<T>> String getEnumCreate(Enum<T>[] values) {

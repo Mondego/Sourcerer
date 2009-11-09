@@ -22,9 +22,11 @@ package edu.uci.ics.sourcerer.db.util;
  */
 public abstract class DatabaseAccessor {
   protected QueryExecutor executor;
+  protected TableLocker locker;
 
   protected DatabaseAccessor(DatabaseConnection connection) {
     executor = new QueryExecutor(connection.getConnection());
+    locker = executor.getTableLocker();
   }
   
   public void close() {

@@ -110,6 +110,10 @@ public final class FileUtils {
   public static boolean writeStreamToFile(InputStream stream, File file) {
     FileOutputStream os = null;
     try {
+      File parent = file.getParentFile();
+      if (!parent.exists()) {
+        parent.mkdirs();
+      }
       os = new FileOutputStream(file);
       byte[] buff = new byte[1024];
       for (int read = stream.read(buff); read > 0; read = stream.read(buff)) {
@@ -117,7 +121,7 @@ public final class FileUtils {
       }
       return true;
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to write stream to file.", e);
+      logger.log(Level.SEVERE, "Unable to write stream to " + file.getPath(), e);
       return false;
     } finally {
       if (os != null) {
@@ -137,7 +141,7 @@ public final class FileUtils {
       FileInputStream in = new FileInputStream(source);
       return writeStreamToFile(in, destination);
     } catch (IOException e) {
-       logger.log(Level.SEVERE, "Unable to copy file from " + source.getPath() + " to " + destination.getPath());
+       logger.log(Level.SEVERE, "Unable to copy file from " + source.getPath() + " to " + destination.getPath(), e);
        return false;
     }
   }

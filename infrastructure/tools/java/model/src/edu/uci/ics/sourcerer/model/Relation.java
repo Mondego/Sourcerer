@@ -44,38 +44,6 @@ public enum Relation {
   OVERRIDES,
   MATCHES,
   ;
-
-  public static Relation[] getLibraryValues() {
-    Relation[] values = {
-        INSIDE,
-        EXTENDS,
-        IMPLEMENTS,
-        HOLDS,
-        RETURNS,
-        HAS_ELEMENTS_OF,
-        PARAMETRIZED_BY,
-        HAS_BASE_TYPE,
-        HAS_TYPE_ARGUMENT,
-        HAS_UPPER_BOUND,
-        HAS_LOWER_BOUND };
-    return values;
-  }
-  
-  public static Relation[] getJarValues() {
-    Relation[] values = {
-        INSIDE,
-        EXTENDS,
-        IMPLEMENTS,
-        HOLDS,
-        RETURNS,
-        HAS_ELEMENTS_OF,
-        PARAMETRIZED_BY,
-        HAS_BASE_TYPE,
-        HAS_TYPE_ARGUMENT,
-        HAS_UPPER_BOUND,
-        HAS_LOWER_BOUND };
-    return values;
-  }
   
   public static Relation parse(String name) {
     if (name == null) {

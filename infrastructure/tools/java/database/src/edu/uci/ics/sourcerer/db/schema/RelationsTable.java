@@ -21,7 +21,6 @@ import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.db.TypedEntityID;
-import edu.uci.ics.sourcerer.model.db.TypedEntityID.Type;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -46,6 +45,15 @@ public final class RelationsTable {
    *  | length        | INT UNSIGNED    | Yes   | No     |
    *  +---------------+-----------------+-------+--------+
    */
+  
+  //---- LOCK ----
+  public static String getReadLock() {
+    return SchemaUtils.getReadLock(TABLE);
+  }
+  
+  public static String getWriteLock() {
+    return SchemaUtils.getWriteLock(TABLE);
+  }
   
   // ---- CREATE ----
   public static void createTable(QueryExecutor executor) {
@@ -75,13 +83,14 @@ public final class RelationsTable {
   }
   
   private static String getInsertValue(Relation type, String lhsEid, TypedEntityID rhsEid, String projectID, String fileID, String offset, String length) {
-    return "(NULL," +
-        SchemaUtils.convertNotNullVarchar(type.name()) + "," +
-        SchemaUtils.convertNotNullNumber(lhsEid) + "," +
-        (rhsEid.getType() == Type.LIBRARY ? (rhsEid.getID() + ",NULL,NULL,") : (rhsEid.getType() == Type.JAR ? ("NULL," + rhsEid.getID() + ",NULL,") : ("NULL,NULL," + rhsEid.getID() + ","))) +
-        SchemaUtils.convertNotNullNumber(projectID) + "," + 
-        SchemaUtils.convertOffset(offset) + "," + 
-        SchemaUtils.convertLength(length) + ")";
+    return SchemaUtils.getSerialInsertValue(
+        SchemaUtils.convertNotNullVarchar(type.name()),
+        SchemaUtils.convertNotNullNumber(lhsEid),
+        SchemaUtils.convertProjectTypedEntityID(rhsEid),
+        SchemaUtils.convertNotNullNumber(projectID), 
+        SchemaUtils.convertNumber(fileID),
+        SchemaUtils.convertOffset(offset), 
+        SchemaUtils.convertLength(length));
   }
   
   public static void insert(InsertBatcher batcher, Relation type, String lhsEid, TypedEntityID rhsEid, String projectID, String fileID, String offset, String length) {

@@ -32,7 +32,6 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.model.extracted.CommentEX;
 import edu.uci.ics.sourcerer.model.extracted.CommentExParser;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
-import edu.uci.ics.sourcerer.model.extracted.EntityExJarParser;
 import edu.uci.ics.sourcerer.model.extracted.EntityExParser;
 import edu.uci.ics.sourcerer.model.extracted.FileEX;
 import edu.uci.ics.sourcerer.model.extracted.FileExParser;
@@ -41,14 +40,12 @@ import edu.uci.ics.sourcerer.model.extracted.ImportExParser;
 import edu.uci.ics.sourcerer.model.extracted.JarEX;
 import edu.uci.ics.sourcerer.model.extracted.JarExParser;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
-import edu.uci.ics.sourcerer.model.extracted.LocalVariableExJarParser;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableExParser;
 import edu.uci.ics.sourcerer.model.extracted.ModelEX;
 import edu.uci.ics.sourcerer.model.extracted.ModelExParser;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.model.extracted.ProblemExParser;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
-import edu.uci.ics.sourcerer.model.extracted.RelationExJarParser;
 import edu.uci.ics.sourcerer.model.extracted.RelationExParser;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
@@ -79,32 +76,32 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
 
   @Override
   public boolean hasNext() {
-    if (next == null) {
-      if (input == null) {
-        return false;
-      } else {
-        try {
-          String line = input.readLine();
-          if (line == null) {
-            input.close();
+    while (true) {
+      if (next == null) {
+        if (input == null) {
+          return false;
+        } else {
+          try {
+            String line = input.readLine();
+            if (line == null) {
+              input.close();
+              input = null;
+              return false;
+            } else {
+              next = parser.parseLine(line);
+              if (next != null) {
+                return true;
+              }
+            }
+          } catch (IOException e) {
+            logger.log(Level.SEVERE, "Unable to read line.", e);
             input = null;
             return false;
-          } else {
-            next = parser.parseLine(line);
-            if (next == null) {
-              return hasNext();
-            } else {
-              return true;
-            }
           }
-        } catch (IOException e) {
-          logger.log(Level.SEVERE, "Unable to read line.", e);
-          input = null;
-          return false;
         }
+      } else {
+        return true;
       }
-    } else {
-      return true;
     }
   }
   
@@ -124,54 +121,27 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
     throw new UnsupportedOperationException();
   }
   
-  public static ExtractedReader<EntityEX> getJarEntityReader(Extracted jar) {
+  public static ExtractedReader<FileEX> getFileReader(Extracted extracted) {
     try {
-      return new ExtractedReader<EntityEX>(EntityExJarParser.getParser(), jar.getEntityInputStream());
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to create jar entity reader", e);
-      return null;
-    }
-  }
-  
-  public static ExtractedReader<RelationEX> getJarRelationReader(Extracted jar) {
-    try {
-      return new ExtractedReader<RelationEX>(RelationExJarParser.getParser(), jar.getRelationInputStream());
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to create jar relation reader", e);
-      return null;
-    }
-  }
-  
-  public static ExtractedReader<LocalVariableEX> getJarLocalVariableReader(Extracted jar) {
-    try {
-      return new ExtractedReader<LocalVariableEX>(LocalVariableExJarParser.getParser(), jar.getLocalVariableInputStream());
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to create jar local variable reader", e);
-      return null;
-    }
-  }
-  
-  public static ExtractedReader<FileEX> getFileReader(ExtractedProject project) {
-    try {
-      return new ExtractedReader<FileEX>(FileExParser.getParser(), project.getFileInputStream());
+      return new ExtractedReader<FileEX>(FileExParser.getParser(), extracted.getFileInputStream());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to create file reader", e);
       return null;
     }
   }
   
-  public static ExtractedReader<ProblemEX> getProblemReader(ExtractedProject project) {
+  public static ExtractedReader<ProblemEX> getProblemReader(Extracted extracted) {
     try {
-      return new ExtractedReader<ProblemEX>(ProblemExParser.getParser(), project.getProblemInputStream());
+      return new ExtractedReader<ProblemEX>(ProblemExParser.getParser(), extracted.getProblemInputStream());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to create problem reader", e);
       return null;
     }
   }
   
-  public static ExtractedReader<EntityEX> getEntityReader(ExtractedProject project) {
+  public static ExtractedReader<EntityEX> getEntityReader(Extracted extracted) {
     try {
-      return new ExtractedReader<EntityEX>(EntityExParser.getParser(), project.getEntityInputStream());
+      return new ExtractedReader<EntityEX>(EntityExParser.getParser(), extracted.getEntityInputStream());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to create entity reader", e);
       return null;
@@ -187,36 +157,36 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
     }
   }
   
-  public static ExtractedReader<ImportEX> getImportReader(ExtractedProject project) {
+  public static ExtractedReader<ImportEX> getImportReader(Extracted extracted) {
     try {
-      return new ExtractedReader<ImportEX>(ImportExParser.getParser(), project.getImportInputStream());
+      return new ExtractedReader<ImportEX>(ImportExParser.getParser(), extracted.getImportInputStream());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to create import reader", e);
       return null;
     }
   }
   
-  public static ExtractedReader<RelationEX> getRelationReader(ExtractedProject project) {
+  public static ExtractedReader<RelationEX> getRelationReader(Extracted extracted) {
     try {
-      return new ExtractedReader<RelationEX>(RelationExParser.getParser(), project.getRelationInputStream());
+      return new ExtractedReader<RelationEX>(RelationExParser.getParser(), extracted.getRelationInputStream());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to create relation reader", e);
       return null;
     }
   }
   
-  public static ExtractedReader<LocalVariableEX> getLocalVariableReader(ExtractedProject project) {
+  public static ExtractedReader<LocalVariableEX> getLocalVariableReader(Extracted extracted) {
     try {
-      return new ExtractedReader<LocalVariableEX>(LocalVariableExParser.getParser(), project.getLocalVariableInputStream());
+      return new ExtractedReader<LocalVariableEX>(LocalVariableExParser.getParser(), extracted.getLocalVariableInputStream());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to create local variable reader", e);
       return null;
     }
   }
   
-  public static ExtractedReader<CommentEX> getCommentReader(ExtractedProject project) {
+  public static ExtractedReader<CommentEX> getCommentReader(Extracted extracted) {
     try {
-      return new ExtractedReader<CommentEX>(CommentExParser.getParser(), project.getCommentFile());
+      return new ExtractedReader<CommentEX>(CommentExParser.getParser(), extracted.getCommentFile());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to create comment reader", e);
       return null;

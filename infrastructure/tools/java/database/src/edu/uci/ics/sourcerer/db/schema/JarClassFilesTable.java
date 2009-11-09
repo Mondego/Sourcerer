@@ -17,53 +17,57 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
+import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.model.extracted.FileEX;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class JarUsesTable {
-  private JarUsesTable() {}
+public class JarClassFilesTable {
+  private JarClassFilesTable() {}
   
-  public static final String TABLE = "jar_uses";
+  public static final String TABLE = "jar_class_files";
   /*  
    *  +-------------+-----------------+-------+--------+
    *  | Column name | Type            | Null? | Index? |
    *  +-------------+-----------------+-------+--------+
+   *  | file_id     | SERIAL          | No    | Yes    |
+   *  | name        | VARCHAR(1024)   | No    | Yes    |
+   *  | path        | VARCHAR(1024)   | No    | No     |
    *  | jar_id      | BIGINT UNSIGNED | No    | Yes    |
-   *  | project_id  | BIGINT UNSIGNED | No    | Yes    |
    *  +-------------+-----------------+-------+--------+
    */
   
   // ---- CREATE ----
   public static void createTable(QueryExecutor executor) {
     executor.createTable(TABLE,
+        "file_id SERIAL",
+        "name VARCHAR(1024) BINARY NOT NULL",
+        "path VARCHAR(1024) BINARY NOT NULL",
         "jar_id BIGINT UNSIGNED NOT NULL",
-        "project_id BIGINT UNSIGNED NOT NULL",
-        "INDEX(jar_id)",
-        "INDEX(project_id)");
+        "INDEX(name(48))",
+        "INDEX(jar_id)");
   }
   
   // ---- INSERT ----
-  public static void insert(QueryExecutor executor, String jarID, String projectID) {
-    executor.insertSingle(TABLE, "(" + SchemaUtils.convertNotNullNumber(jarID) + "," + SchemaUtils.convertNotNullNumber(projectID) + ")");
+  public static <T> KeyInsertBatcher<T> getKeyInsertBatcher(QueryExecutor executor, KeyInsertBatcher.KeyProcessor<T> processor) {
+    return executor.getKeyInsertBatcher(TABLE, processor);
+  }
+  
+  private static String getInsertValue(String name, String relativePath, String jarID) {
+    return SchemaUtils.getSerialInsertValue(
+        SchemaUtils.convertNotNullVarchar(name),
+        SchemaUtils.convertNotNullVarchar(relativePath),
+        SchemaUtils.convertNotNullNumber(jarID));
+  }
+  
+  public static <T> void insert(KeyInsertBatcher<T> batcher, FileEX file, String jarID, T pairing) {
+    batcher.addValue(getInsertValue(file.getName(), file.getRelativePath(), jarID), pairing);
   }
   
   // ---- DELETE ----
   public static void deleteByJarID(QueryExecutor executor, String jarID) {
     executor.delete(TABLE, "jar_id=" + jarID);
   }
-  
-  // ---- SELECT ----
-//  public static int getProjectsUsingCount(QueryExecutor executor, String jarIDs) {
-//    return executor.executeSingleInt("SELECT COUNT(DISTINCT project_id) FROM jar_uses WHERE jar_id IN " + jarIDs + ";");
-//  }
-//  
-//  public static int getProjectsReallyUsingCount(QueryExecutor executor, String jarIDs) {
-//    return executor.executeSingleInt("SELECT COUNT(DISTINCT project_id) FROM relations INNER JOIN jar_entities on rhs_jeid=entity_id AND jar_id IN " + jarIDs + ";");
-//  }
-//  
-//  public static Collection<String> getUsedJars(QueryExecutor executor, String projectID) {
-//    return executor.execute("SELECT jar_id FROM jar_uses WHERE project_id= " + projectID + ";", ResultTranslator.SIMPLE_RESULT_TRANSLATOR);
-//  }
 }

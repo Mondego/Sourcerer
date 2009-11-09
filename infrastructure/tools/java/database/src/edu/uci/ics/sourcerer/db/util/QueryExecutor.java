@@ -58,6 +58,10 @@ public class QueryExecutor {
     }
   }
   
+  public TableLocker getTableLocker() {
+    return new TableLocker(this);
+  }
+  
   public InsertBatcher getInsertBatcher(String table) {
     return new InsertBatcher(this, table);
   }
@@ -92,7 +96,7 @@ public class QueryExecutor {
       if (result.next()) {
         return result.getString(1);
       } else {
-        logger.log(Level.SEVERE, "Unable to read key in update");
+        logger.log(Level.SEVERE, "Unable to read key in update: " + sql);
         return null;
       }
     } catch (SQLException e) {
@@ -118,6 +122,10 @@ public class QueryExecutor {
     return execute("SELECT " + column + " FROM " + table + " WHERE " + where + ";", translator);
   }
   
+  public void insertSingle(String table, String value) {
+    executeUpdate("INSERT INTO " + table + " VALUES " + value + ";");
+  }
+  
   public String insertSingleWithKey(String table, String value) {
     return executeUpdateWithKey("INSERT INTO " + table + " VALUES " + value + ";");
   }
@@ -139,6 +147,19 @@ public class QueryExecutor {
     }
     sql.setCharAt(sql.length() - 1, ')');
     executeUpdate(sql.toString());
+  }
+  
+  public void lock(String ... locks) {
+    StringBuilder sql = new StringBuilder("LOCK TABLES ");
+    for (String lock : locks) {
+      sql.append(lock).append(',');
+    }
+    sql.setCharAt(sql.length() - 1, ';');
+    executeUpdate(sql.toString());
+  }
+  
+  public void unlock() {
+    executeUpdate("UNLOCK TABLES;");
   }
   
   public <T> IterableResult<T> executeStreamed(String sql, ResultTranslator<T> translator) {

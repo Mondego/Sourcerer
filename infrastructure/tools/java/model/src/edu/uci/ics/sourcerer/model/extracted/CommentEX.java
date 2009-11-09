@@ -24,12 +24,18 @@ import edu.uci.ics.sourcerer.model.Comment;
  */
 public class CommentEX implements ModelEX {
   private Comment type;
+  private String fqn;
   private String path;
   private String offset;
   private String length;
   
   protected CommentEX(Comment type, String path, String offset, String length) {
+   this(type, null, path, offset, length);
+  }
+  
+  protected CommentEX(Comment type, String fqn, String path, String offset, String length) {
     this.type = type;
+    this.fqn = fqn;
     this.path = path;
     this.offset = offset;
     this.length = length;
@@ -37,6 +43,10 @@ public class CommentEX implements ModelEX {
 
   public Comment getType() {
     return type;
+  }
+  
+  public String getFqn() {
+    return fqn;
   }
 
   public String getPath() {
@@ -49,5 +59,9 @@ public class CommentEX implements ModelEX {
 
   public String getLength() {
     return length;
+  }
+  
+  public String toString() {
+    return type + " " + path;
   }
 }

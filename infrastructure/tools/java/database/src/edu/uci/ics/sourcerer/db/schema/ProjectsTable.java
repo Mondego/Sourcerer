@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.db.schema;
 
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -32,8 +33,8 @@ public final class ProjectsTable {
    *  +-------------+---------------+-------+--------+
    *  | project_id  | SERIAL        | No    | Yes    |
    *  | name        | VARCHAR(1024) | No    | Yes    |
-   *  | version     | VARCHAR(128)  | Yes   | No     |
    *  | path        | VARCHAR(256)  | No    | No     |
+   *  | version     | VARCHAR(128)  | Yes   | No     |
    *  +-------------+---------------+-------+--------+
    */
   
@@ -42,18 +43,21 @@ public final class ProjectsTable {
     executor.createTable(TABLE,
         "project_id SERIAL",
         "name VARCHAR(1024) BINARY NOT NULL",
-        "version VARCHER(128) BINARY",
         "path VARCHAR(256) BINARY NOT NULL",
+        "version VARCHAR(128) BINARY",
         "INDEX(name(48))");
   }
   
   // ---- INSERT ----
   private static String getInsertValue(String name, String path) {
-    return "(NULL,'" + SchemaUtils.convertNotNullVarchar(name) + "',NULL,'" + SchemaUtils.convertNotNullVarchar(path) + "')";
+    return SchemaUtils.getSerialInsertValue( 
+        SchemaUtils.convertNotNullVarchar(name), 
+        SchemaUtils.convertNotNullVarchar(path), 
+        SchemaUtils.convertVarchar(null));
   }
   
-  public static String insert(QueryExecutor executor, String name, String path) {
-    return executor.insertSingleWithKey(TABLE, getInsertValue(name, path));
+  public static String insert(QueryExecutor executor, ExtractedProject project) {
+    return executor.insertSingleWithKey(TABLE, getInsertValue(project.getName(), project.getRelativePath()));
   }
   
   // ---- DELETE ----

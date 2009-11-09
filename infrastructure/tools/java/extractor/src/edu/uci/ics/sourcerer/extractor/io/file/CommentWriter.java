@@ -48,7 +48,7 @@ public final class CommentWriter extends ExtractorWriter implements ICommentWrit
     write(CommentExParser.getLine(Comment.UJAVADOC, convertToRelativePath(containingFile), startPos, length));
   }
   
-  public void writeJavadocComment(String containingFqn, int startPos, int length) {
-    write(CommentExParser.getLine(Comment.JAVADOC, containingFqn, startPos, length));
+  public void writeJavadocComment(String containingFqn, String containingFile, int startPos, int length) {
+    write(CommentExParser.getLine(Comment.JAVADOC, containingFqn, convertToRelativePath(containingFile), startPos, length));
   }
 }

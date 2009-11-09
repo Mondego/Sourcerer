@@ -34,8 +34,9 @@ public final class JarsTable {
    *  | jar_id      | SERIAL        | No    | Yes    |
    *  | hash        | VARCHAR(32)   | No    | Yes    |
    *  | name        | VARCHAR(1024) | No    | Yes    |
-   *  | group       | VARCHAR(1024) | Yes   | No     |
+   *  | path        | VARCHAR(1024) | Yes   | No     |
    *  | version     | VARCHAR(128)  | Yes   | No     |
+   *  | has_source  | BOOLEAN       | No    | No     |
    *  +-------------+---------------+-------+--------+
    */
   
@@ -45,32 +46,46 @@ public final class JarsTable {
         "jar_id SERIAL",
         "hash VARCHAR(32) BINARY NOT NULL",
         "name VARCHAR(1024) BINARY NOT NULL",
-        "group VARCHAR(1024) BINARY",
+        "path VARCHAR(1024) BINARY",
         "version VARCHAR(1024) BINARY",
+        "has_source BOOLEAN NOT NULL",
         "INDEX(hash)",
         "INDEX(name(48))");
   }
   
   // ---- INSERT ----
-  private static String getInsertValue(String hash, String name, String group, String version) {
-    return "(NULL," +
-    		SchemaUtils.convertNotNullVarchar(hash) + "," +
-				SchemaUtils.convertNotNullVarchar(name) + "," +
-				SchemaUtils.convertVarchar(group) + "," +
-				SchemaUtils.convertVarchar(version) + ")";
+  private static String getInsertValue(String hash, String name, String path, String version, boolean hasSource) {
+    return SchemaUtils.getSerialInsertValue(
+        SchemaUtils.convertNotNullVarchar(hash),
+				SchemaUtils.convertNotNullVarchar(name),
+				SchemaUtils.convertVarchar(path),
+				SchemaUtils.convertVarchar(version),
+				SchemaUtils.convertBoolean(hasSource));
   }
   
   public static String insert(QueryExecutor executor, ExtractedJar jar) {
-    return executor.insertSingleWithKey(TABLE, getInsertValue(jar.getHash(), jar.getName(), jar.getGroup(), jar.getVersion()));
+    return executor.insertSingleWithKey(TABLE, getInsertValue(jar.getHash(), jar.getName(), jar.getGroup(), jar.getVersion(), jar.hasSource()));
   }
   
   // ---- DELETE ----
   public static void deleteJar(QueryExecutor executor, String jarID) {
-    // Delet the entities
+    // Delete the class files
+    JarClassFilesTable.deleteByJarID(executor, jarID);
+    
+    // Delete the problems
+    JarProblemsTable.deleteByJarID(executor, jarID);
+    
+    // Delete the imports
+    JarImportsTable.deleteByJarID(executor, jarID);
+    
+    // Delete the entities
     JarEntitiesTable.deleteByJarID(executor, jarID);
     
     // Delete the relations
     JarRelationsTable.deleteByJarID(executor, jarID);
+    
+    // Delete the comments
+    JarCommentsTable.deleteByJarID(executor, jarID);
     
     // Delete the uses
     JarUsesTable.deleteByJarID(executor, jarID);

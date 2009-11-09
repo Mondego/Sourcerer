@@ -37,18 +37,24 @@ public class CommentExParser implements ModelExParser<CommentEX> {
     return type.name() + " " + path + " " + offset + " " + length;
   }
   
+  public static String getLine(Comment type, String fqn, String path, int offset, int length) {
+    return type.name() + " " + fqn + " " + path + " " + offset + " " + length;
+  }
+  
   @Override
   public CommentEX parseLine(String line) {
-    String parts[] = line.split(" ");
-    if (parts.length == 4) {
-      try {
+    try {
+      String parts[] = line.split(" ");
+      if (parts.length == 4) {
         return new CommentEX(Comment.valueOf(parts[0]), parts[1], parts[2], parts[3]);
-      } catch (IllegalArgumentException e) {
-        logger.log(Level.SEVERE, "Unable to parse line: " + line);
+      } else if (parts.length == 5) {
+        return new CommentEX(Comment.valueOf(parts[0]), parts[1], parts[2], parts[3], parts[4]);
+      } else {
+        logger.log(Level.SEVERE, "Unable to parse entity: " + line);
         return null;
       }
-    } else {
-      logger.log(Level.SEVERE, "Unable to parse line: " + line);
+    } catch (IllegalArgumentException e) {
+      logger.log(Level.SEVERE, "Unable to parse entity: " + line);
       return null;
     }
   }

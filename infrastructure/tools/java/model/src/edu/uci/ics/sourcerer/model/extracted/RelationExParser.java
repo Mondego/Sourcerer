@@ -45,6 +45,14 @@ public class RelationExParser implements ModelExParser<RelationEX> {
     return Relation.PARAMETRIZED_BY.name() + " " + lhs + " " + rhs + " " + position + " " + compilationUnitPath + " " + startPos + " " + length;
   }
   
+  public static String getJarLine(Relation type, String lhs, String rhs) {
+    return type.name() + " " + lhs + " " + rhs;
+  }
+  
+  public static String getJarLineParametrizedBy(String lhs, String rhs, int position) {
+    return Relation.PARAMETRIZED_BY + " " + lhs + " " + rhs + " " + position;
+  }
+  
   @Override
   public RelationEX parseLine(String line) {
     String[] parts = line.split(" ");
@@ -52,17 +60,29 @@ public class RelationExParser implements ModelExParser<RelationEX> {
     try {
       Relation type = Relation.valueOf(parts[0]);
       if (type == Relation.INSIDE) {
-        return RelationEX.getInsideRelation(parts[1], parts[2], parts[3]);
+        if (parts.length == 3) {
+          return RelationEX.getJarRelation(type, parts[1], parts[2]);
+        } else {
+          return RelationEX.getInsideRelation(parts[1], parts[2], parts[3]);
+        }
       } else if (type == Relation.PARAMETRIZED_BY) {
-        return RelationEX.getParametrizedByRelation(parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]);
+        if (parts.length == 4) {
+          return RelationEX.getJarParametrizedByRelation(parts[1], parts[2], parts[3]);
+        } else {
+          return RelationEX.getParametrizedByRelation(parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]);
+        }
       } else {
-        return RelationEX.getRelation(type, parts[1], parts[2], parts[3], parts[4], parts[5]);
+        if (parts.length == 3) {
+          return RelationEX.getJarRelation(type, parts[1], parts[2]);
+        } else {
+          return RelationEX.getRelation(type, parts[1], parts[2], parts[3], parts[4], parts[5]);
+        }
       }
     } catch (ArrayIndexOutOfBoundsException e) {
-      logger.log(Level.SEVERE, "Unable to parse line: " + line);
+      logger.log(Level.SEVERE, "Unable to parse relation: " + line);
       return null;
     } catch (IllegalArgumentException e) {
-      logger.log(Level.SEVERE, "Unable to parse line: " + line);
+      logger.log(Level.SEVERE, "Unable to parse relation: " + line);
       return null;
     }
   }

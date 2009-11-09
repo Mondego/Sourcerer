@@ -21,20 +21,20 @@ package edu.uci.ics.sourcerer.model.extracted;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ImportEX implements ModelEX {
-  private String file;
   private String imported;
   private boolean isStatic;
   private boolean onDemand;
+  private String file;
+  private String offset;
+  private String length;
 
-  protected ImportEX(String file, String imported, boolean isStatic, boolean onDemand) {
-    this.file = file;
+  protected ImportEX(String imported, boolean isStatic, boolean onDemand, String file, String offset, String length) {
     this.imported = imported;
     this.isStatic = isStatic;
     this.onDemand = onDemand;
-  }
-
-  public String getFile() {
-    return file;
+    this.file = file;
+    this.offset = offset;
+    this.length = length;
   }
   
   public String getImported() {
@@ -47,5 +47,17 @@ public class ImportEX implements ModelEX {
   
   public boolean isOnDemand() {
     return onDemand;
+  }
+  
+  public String getFile() {
+    return file;
+  }
+  
+  public String getOffset() {
+    return offset;
+  }
+  
+  public String getLength() {
+    return length;
   }
 }

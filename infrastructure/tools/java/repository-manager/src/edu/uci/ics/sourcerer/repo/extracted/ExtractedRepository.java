@@ -37,7 +37,10 @@ public class ExtractedRepository extends AbstractRepository {
   
   @Override
   protected void addFile(File checkout) {
-    projects.add(new ExtractedProject(checkout, checkout.getParentFile().getName() + File.separatorChar + checkout.getName()));
+    ExtractedProject extracted = new ExtractedProject(checkout, checkout.getParentFile().getName() + "/" + checkout.getName());
+    if (extracted.extracted()) {
+      projects.add(extracted);
+    }
   }
   
   private void populateLibraries() {
@@ -45,7 +48,10 @@ public class ExtractedRepository extends AbstractRepository {
     File libsDir = getLibsDir();
     for (File lib : libsDir.listFiles()) {
       if (lib.isDirectory()) {
-        libraries.add(new ExtractedLibrary(lib));
+        ExtractedLibrary extracted = new ExtractedLibrary(lib);
+        if (extracted.extracted()) {
+          libraries.add(extracted);
+        }
       }
     }
   }
@@ -55,7 +61,10 @@ public class ExtractedRepository extends AbstractRepository {
     File jarsDir = getJarsDir();
     for (File jar : jarsDir.listFiles()) {
       if (jar.isDirectory()) {
-        jars.add(new ExtractedJar(jar));
+        ExtractedJar extracted = new ExtractedJar(jar);
+        if (extracted.extracted()) {
+          jars.add(extracted);
+        }
       }
     }
   }

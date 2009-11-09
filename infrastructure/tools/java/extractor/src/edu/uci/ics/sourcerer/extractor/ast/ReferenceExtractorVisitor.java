@@ -285,6 +285,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       } else {
         fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), binding.getBinaryName());
       }
+    } else if (binding == null) {
+      // Cut things short
+      logger.severe("Type binding is null - giving up for: " + compilationUnitPath);
+      throw new IllegalStateException("Binding resolution appears to have failed!");
     } else {
       logger.severe("Unsure what type the declaration is!");
       fqn = "(ERROR)" + node.getName().getIdentifier();
@@ -1142,6 +1146,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         node.getQualifier().accept(this);
       }
     } else if (binding instanceof IPackageBinding) {
+    } else if (binding == null) { 
     } else {
       logger.log(Level.SEVERE, "Unknown binding type encountered:", binding);
     }
@@ -1392,7 +1397,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     if (node.getParent() == null || node.getParent() instanceof PackageDeclaration) {
       commentWriter.writeUnassociatedJavadocComment(compilationUnitPath, node.getStartPosition(), node.getLength());
     } else {
-      commentWriter.writeJavadocComment(fqnStack.getFqn(), node.getStartPosition(), node.getLength());
+      commentWriter.writeJavadocComment(fqnStack.getFqn(), compilationUnitPath, node.getStartPosition(), node.getLength());
     }
     return true;
   }
@@ -2250,7 +2255,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       if (type.isConstructor()) {
         superInvoked = true;
       } else {
-        throw new IllegalStateException("May not report super invocation for non-constructor: " + type);
+        logger.log(Level.SEVERE, "Super invocation reported for non-constructor in" + compilationUnitPath);
       }
     }
     

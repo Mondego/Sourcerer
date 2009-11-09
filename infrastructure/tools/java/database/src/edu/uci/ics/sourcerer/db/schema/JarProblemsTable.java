@@ -25,10 +25,10 @@ import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class ProblemsTable {
-  private ProblemsTable() {}
+public class JarProblemsTable {
+  private JarProblemsTable() {}
   
-  public static final String TABLE = "problems";
+  public static final String TABLE = "jar_problems";
   /*  
    *  +--------------+-----------------+-------+--------+
    *  | Column name  | Type            | Null? | Index? |
@@ -36,8 +36,8 @@ public final class ProblemsTable {
    *  | problem_type | ENUM(values)    | No    | Yes    |
    *  | error_code   | INT UNSIGNED    | No    | Yes    |
    *  | message      | VARCHAR(1024)   | No    | No     |
-   *  | project_id   | BIGINT UNSIGNED | No    | Yes    |
-   *  | file_id      | BIGINT UNSIGNED | No    | Yes    |
+   *  | jar_id       | BIGINT UNSIGNED | No    | Yes    |
+   *  | jclass_fid   | BIGINT UNSIGNED | No    | Yes    |
    *  +--------------+-----------------+-------+--------+
    */
   
@@ -47,12 +47,12 @@ public final class ProblemsTable {
         "problem_type " + SchemaUtils.getEnumCreate(Problem.values()) + " NOT NULL",
         "error_code INT UNSIGNED NOT NULL",
         "message VARCHAR(1024) BINARY NOT NULL",
-        "project_id BIGINT UNSIGNED NOT NULL",
-        "file_id BIGINT UNSIGNED NOT NULL",
+        "jar_id BIGINT UNSIGNED NOT NULL",
+        "jclass_fid BIGINT UNSIGNED NOT NULL",
         "INDEX(problem_type)",
         "INDEX(error_code)",
-        "INDEX(project_id)",
-        "INDEX(file_id)");
+        "INDEX(jar_id)",
+        "INDEX(jclass_fid)");
   }
   
   // ---- INSERT ----
@@ -60,21 +60,21 @@ public final class ProblemsTable {
     return executor.getInsertBatcher(TABLE);
   }
   
-  private static String getInsertValue(Problem type, String errorCode, String message, String projectID, String fileID) {
+  private static String getInsertValue(Problem type, String errorCode, String message, String jarID, String jarClassFileID) {
     return SchemaUtils.getInsertValue(
         SchemaUtils.convertNotNullVarchar(type.name()),
         SchemaUtils.convertNotNullNumber(errorCode),
         SchemaUtils.convertNotNullVarchar(message),
-        SchemaUtils.convertNotNullNumber(projectID),
-        SchemaUtils.convertNotNullNumber(fileID));
+        SchemaUtils.convertNotNullNumber(jarID),
+        SchemaUtils.convertNotNullNumber(jarClassFileID));
   }
   
-  public static void insert(InsertBatcher batcher, ProblemEX problem, String projectID, String fileID) {
-    batcher.addValue(getInsertValue(problem.getType(), problem.getErrorCode(), problem.getMessage(), projectID, fileID));
+  public static void insert(InsertBatcher batcher, ProblemEX problem, String jarID, String jarClassFileID) {
+    batcher.addValue(getInsertValue(problem.getType(), problem.getErrorCode(), problem.getMessage(), jarID, jarClassFileID));
   }
   
   // ---- DELETE ----
-  public static void deleteByProjectID(QueryExecutor executor, String projectID) {
-    executor.delete(TABLE, "project_id=" + projectID);
+  public static void deleteByJarID(QueryExecutor executor, String jarID) {
+    executor.delete(TABLE, "jar_id=" + jarID);
   }
 }

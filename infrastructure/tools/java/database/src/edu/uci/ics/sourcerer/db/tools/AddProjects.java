@@ -55,7 +55,6 @@ import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
-import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Logging;
 
@@ -63,55 +62,53 @@ import edu.uci.ics.sourcerer.util.io.Logging;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class AddProjects extends DatabaseAccessor {
+  private Set<String> completed;
   public AddProjects(DatabaseConnection connection) {
     super(connection);
+    completed = Logging.initializeResumeLogger();
   }
   
   public void addProjects() {
-    Set<String> completed = Logging.initializeResumeLogger();
-    
     ExtractedRepository extracted = ExtractedRepository.getRepository(INPUT_REPO.getValue());
     
-    logger.info("Addings jars to database for " + extracted);
+    logger.info("Locating all the extracted projects...");
 
     // Get the project list
     Collection<ExtractedProject> projects = extracted.getProjects();
       
-    logger.info("Found " + projects.size() + " projects to insert.");
+    logger.info("--- Inserting " + projects.size() + " projects in database ---");
       
     int count = 0;
     for (ExtractedProject project : projects) {
-      String name = project.getName();
-      logger.info("------------------------");
-      logger.info("Inserting " + name + " (" + ++count + " of " + projects.size() + ")");
-      if (completed.contains(name) && ProjectsTable.getProjectIDByName(executor, name) != null) {
-        logger.info("Already completed!");
-      } else {
-        addProject(project, extracted.getJarIndex());
-      }
+      logger.info("inserting " + project.getName() + "(" + ++count + " of " + projects.size() + ")");
+      addProject(project);
     }
   
     logger.info("Done!");
   }
   
-  private void addProject(ExtractedProject project, JarIndex jarIndex) {
-    String name = project.getName();
-    
+  private void addProject(ExtractedProject project) {
     // Check if the project was added already
-    String oldID = ProjectsTable.getProjectIDByName(executor, name);
+    String oldID = ProjectsTable.getProjectIDByName(executor, project.getName());
     if (oldID != null) {
-      logger.info("Deleting existing project...");
-      ProjectsTable.deleteProject(executor, oldID);
+      if (completed.contains(project.getRelativePath())) {
+        logger.info("  Already inserted.");
+        return;
+      } else {
+        logger.info("  Deleting existing project...");
+        ProjectsTable.deleteProject(executor, oldID);
+      }
     }
     
     // Add the project to database
-    final String projectID = ProjectsTable.insert(executor, name, project.getRelativePath());
+    final String projectID = ProjectsTable.insert(executor, project);
 
     // Add the files to database
     final Map<String, String> fileMap = Helper.newHashMap();
     {
-      executor.execute("LOCK TABLES files WRITE;");
-      logger.info("Beginning insert of files...");
+      logger.info("  Beginning insert of files...");
+      locker.addWrite(FilesTable.TABLE);
+      locker.lock();
       int count = 0;
       KeyInsertBatcher<FileEX> batcher = FilesTable.getKeyInsertBatcher(executor, new KeyInsertBatcher.KeyProcessor<FileEX>() {
         public void processKey(String key, FileEX file) {
@@ -123,35 +120,37 @@ public class AddProjects extends DatabaseAccessor {
         count++;
       }
       batcher.insert();
-      executor.execute("UNLOCK TABLES;");
-      logger.info(count + " files inserted.");
+      locker.unlock();
+      logger.info("    " + count + " files inserted.");
     }
     
     // Add the problems to the database
     {
-      executor.execute("LOCK TABLES problems WRITE;");
-      logger.info("Beginning insert of problems...");
+      logger.info("  Beginning insert of problems...");
+      locker.addWrite(ProblemsTable.TABLE);
+      locker.lock();
       int count = 0;
       InsertBatcher batcher = ProblemsTable.getInsertBatcher(executor);
       for (ProblemEX problem : ExtractedReader.getProblemReader(project)) {
         String fileID = fileMap.get(problem.getRelativePath());
         if (fileID != null) {
-          ProblemsTable.insert(batcher, problem, fileID, projectID);
+          ProblemsTable.insert(batcher, problem, projectID, fileID);
           count++;
         } else {
           logger.log(Level.SEVERE, "Unknown file: " + problem.getRelativePath());
         }
       }
       batcher.insert();
-      executor.execute("UNLOCK TABLES;");
-      logger.info(count + " problems inserted.");
+      locker.unlock();
+      logger.info("    " + count + " problems inserted.");
     }
     
     // Add the entities to database
     final Map<String, TypedEntityID> entityMap = Helper.newHashMap();
     {
-      executor.execute("LOCK TABLES entities WRITE;");
-      logger.info("Beginning insert of entities...");
+      logger.info("  Beginning insert of entities...");
+      locker.addWrite(EntitiesTable.TABLE);
+      locker.lock();
       int count = 0;
       KeyInsertBatcher<EntityEX> batcher = EntitiesTable.getKeyInsertBatcher(executor, new KeyInsertBatcher.KeyProcessor<EntityEX>() {
         public void processKey(String key, EntityEX entity) {
@@ -160,12 +159,15 @@ public class AddProjects extends DatabaseAccessor {
       });
       for (EntityEX entity : ExtractedReader.getEntityReader(project)) {
         String fileID = getFileID(fileMap, entity.getPath());
-        EntitiesTable.insert(batcher, entity, fileID, projectID, entity);
+        if (fileID == null) {
+          logger.log(Level.SEVERE, "Unknown file: " + entity.getPath());
+        }
+        EntitiesTable.insert(batcher, entity, projectID, fileID, entity);
         count++;
       }
       batcher.insert();
-      executor.execute("UNLOCK TABLES;");
-      logger.info(count + " entities inserted.");
+      locker.unlock();
+      logger.info("    " + count + " entities inserted.");
     }
     
     // Look up the used jars
@@ -188,64 +190,58 @@ public class AddProjects extends DatabaseAccessor {
       }
     }
     
-    // Add the imports to the database
-    {
-      logger.info("Beginning insert of imports...");
-      executor.execute("LOCK TABLES imports WRITE, entities WRITE, library_entities READ, jar_entities READ;");
-      int count = 0;
-      InsertBatcher batcher = ImportsTable.getInsertBatcher(executor);
-      InsertBatcher relBatcher = RelationsTable.getInsertBatcher(executor);
-      for (ImportEX imp : ExtractedReader.getImportReader(project)) {
-        // Look up the file
-        String fileID = fileMap.get(imp.getFile());
-        if (fileID == null) {
-          logger.log(Level.SEVERE, "Missing file for import: " + imp.getFile());
-        } else {
-          // Look up the entity
-          TypedEntityID eid = getEid(relBatcher, entityMap, inClause, projectID, imp.getImported(), false);
-          ImportsTable.insert(batcher, imp.isStatic(), imp.isOnDemand(), eid, fileID, projectID);
-          count++;
-        }
-      }
-      batcher.insert();
-      executor.execute("UNLOCK TABLES;");
-      logger.info(count + " imports inserted.");
-    }
+
     
     // Add the local variables to the database
     {
-      executor.execute("LOCK TABLES entities WRITE, relations WRITE library_entities READ, jar_entities READ;");
-      logger.info("Beginning insert of local variables / parameters...");
+      logger.info("  Beginning insert of local variables / parameters...");
+      locker.addWrites(EntitiesTable.TABLE, RelationsTable.TABLE);
+      locker.addReads(LibraryEntitiesTable.TABLE, JarEntitiesTable.TABLE);
+      locker.lock();
       int count = 0;
       InsertBatcher batcher = RelationsTable.getInsertBatcher(executor);
       for (LocalVariableEX var : ExtractedReader.getLocalVariableReader(project)) {
         // Get the file
         String fileID = getFileID(fileMap, var.getPath());
         
+        if (fileID == null) {
+          logger.log(Level.SEVERE, "Unknown file: " + var.getPath());
+        }
+        
         // Add the entity
-        String eid = EntitiesTable.insertLocalVariable(executor, var, fileID, projectID);
+        String eid = EntitiesTable.insertLocalVariable(executor, var, projectID, fileID);
         
         // Add the holds relation
         TypedEntityID typeEid = getEid(batcher, entityMap, inClause, projectID, var.getTypeFqn(), false);
         RelationsTable.insert(batcher, Relation.HOLDS, eid, typeEid, projectID, fileID, var.getTypeStartPos(), var.getTypeLength());
         
+        // Add the inside relation
+        TypedEntityID parentEid = getEid(batcher, entityMap, inClause, projectID, var.getParent(), false);
+        RelationsTable.insert(batcher, Relation.INSIDE, eid, parentEid, projectID);
+        
         count++;
       }
       batcher.insert();
-      executor.execute("UNLOCK TABLES;");
-      logger.info(count + " local variables / parameters inserted.");
+      locker.unlock();
+      logger.info("    " + count + " local variables / parameters inserted.");
     }
     
     // Add the relations to database
     {
-      executor.execute("LOCK TABLES relations WRITE, entities WRITE, library_entities READ, jar_entities READ;");
       logger.info("Beginning insert of relations...");
+      locker.addWrites(RelationsTable.TABLE, EntitiesTable.TABLE);
+      locker.addReads(LibraryEntitiesTable.TABLE, JarEntitiesTable.TABLE);
+      locker.lock();
       int count = 0;
       InsertBatcher batcher = RelationsTable.getInsertBatcher(executor);
       for (RelationEX relation : ExtractedReader.getRelationReader(project)) {
         // Get the file
         String fileID = getFileID(fileMap, relation.getPath());
 
+        if (fileID == null) {
+          logger.log(Level.SEVERE, "Unknown file: " + relation.getPath());
+        }
+        
         // Look up the lhs eid
         TypedEntityID lhsEid = entityMap.get(relation.getLhs());
         if (lhsEid == null) {
@@ -262,52 +258,75 @@ public class AddProjects extends DatabaseAccessor {
         count++;
       }
       batcher.insert();
-      executor.execute("UNLOCK TABLES;");
+      locker.unlock();
       logger.info(count + " relations inserted.");
+    }
+    
+    // Add the imports to the database
+    {
+      logger.info("Beginning insert of imports...");
+      executor.lock(ImportsTable.getWriteLock(),
+          EntitiesTable.getWriteLock(),
+          RelationsTable.getWriteLock(),
+          LibraryEntitiesTable.getReadLock(),
+          JarEntitiesTable.getReadLock());
+      int count = 0;
+      InsertBatcher batcher = ImportsTable.getInsertBatcher(executor);
+      InsertBatcher relBatcher = RelationsTable.getInsertBatcher(executor);
+      for (ImportEX imp : ExtractedReader.getImportReader(project)) {
+        String fileID = fileMap.get(imp.getFile());
+        if (fileID == null) {
+          logger.log(Level.SEVERE, "Missing file for import: " + imp.getFile());
+        } else {
+          // Look up the entity
+          TypedEntityID eid = getEid(relBatcher, entityMap, inClause, projectID, imp.getImported(), imp.isOnDemand());
+          ImportsTable.insert(batcher, imp.isStatic(), imp.isOnDemand(), eid, projectID, fileID, imp.getOffset(), imp.getLength());
+          count++;
+        }
+      }
+      batcher.insert();
+      executor.unlock();
+      logger.info("    " + count + " imports inserted.");
     }
     
     // Add the comments to the database
     {
-      executor.execute("LOCK TABLES comments WRITE, entities READ;");
-      logger.info("Beginning insert of comments...");
+      logger.info("  Beginning insert of comments...");
+      executor.lock(CommentsTable.getWriteLock(),
+          EntitiesTable.getReadLock());
       int count = 0;
       InsertBatcher batcher = CommentsTable.getInsertBatcher(executor);
       for (CommentEX comment : ExtractedReader.getCommentReader(project)) {
-        // If it's a javadoc comment
-        if (comment.getType() == Comment.JAVADOC) {
-          // Look up the eid
-          TypedEntityID eid = entityMap.get(comment.getPath());
-          if (eid == null) {
-            logger.log(Level.SEVERE, "Missing declared type for comment: " + comment.getPath());
-          } else {
-            // Look up the file id
-            String fid = EntitiesTable.getFileIDByEid(executor, eid.getID());
-            
-            // Add the comment
-            CommentsTable.insertJavadoc(batcher, eid.getID(), projectID, fid, comment.getOffset(), comment.getLength());
-          }
+        // Look up the file id
+        String fileID = fileMap.get(comment.getPath());
+        
+        if (fileID == null) {
+          logger.log(Level.SEVERE, "Missing file for comment: " + comment.getPath());
         } else {
-          // Look up the file id
-          String fid = fileMap.get(comment.getPath());
-          if (fid == null) {
-            logger.log(Level.SEVERE, "Missing file for comment: " + comment.getPath());
-          } else {
-            // Add the comment
-            if (comment.getType() == Comment.UJAVADOC) {
-              CommentsTable.insertUnassociatedJavadoc(batcher, projectID, fid, comment.getOffset(), comment.getLength());
+          // If it's a javadoc comment
+          if (comment.getType() == Comment.JAVADOC) {
+            // Look up the eid
+            TypedEntityID eid = entityMap.get(comment.getFqn());
+            if (eid == null) {
+              logger.log(Level.SEVERE, "Missing declared type for comment: " + comment.getPath());
             } else {
-              CommentsTable.insertComment(batcher, comment.getType(), projectID, fid, comment.getOffset(), comment.getLength());
+              // Add the comment
+              CommentsTable.insertJavadoc(batcher, eid.getID(), projectID, fileID, comment.getOffset(), comment.getLength());
             }
+          } else if (comment.getType() == Comment.UJAVADOC) {
+            CommentsTable.insertUnassociatedJavadoc(batcher, projectID, fileID, comment.getOffset(), comment.getLength());
+          } else {
+            CommentsTable.insertComment(batcher, comment.getType(), projectID, fileID, comment.getOffset(), comment.getLength());
           }
         }
         count++;
       }
       batcher.insert();
-      executor.execute("UNLOCK TABLES;");
-      logger.info(count + " comments inserted.");
+      executor.unlock();
+      logger.info("    " + count + " comments inserted.");
     }
     
-    logger.log(Logging.RESUME, name);
+    logger.log(Logging.RESUME, project.getRelativePath());
     executor.reset();
   }
   

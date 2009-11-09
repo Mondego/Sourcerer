@@ -18,19 +18,17 @@
 package edu.uci.ics.sourcerer.extractor;
 
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
-import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.io.File;
 import java.util.Collection;
-import java.util.Set;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClassFile;
 
 import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.extractor.resources.EclipseUtils;
+import edu.uci.ics.sourcerer.extractor.resources.LibraryJar;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.util.io.Logging;
 
@@ -40,20 +38,22 @@ import edu.uci.ics.sourcerer.util.io.Logging;
  */
 public class LibraryExtractor {
   public static void extract() {
-    Set<String> completed = Logging.initializeResumeLogger();
-    
     // Load the output repository
     ExtractedRepository output = ExtractedRepository.getUninitializedRepository(OUTPUT_REPO.getValue());
     
     logger.info("Getting the library jars...");
-    Collection<IPath> libraryJars = EclipseUtils.getLibraryJars();
+    Collection<LibraryJar> libraryJars = EclipseUtils.getLibraryJars();
     logger.info("--- Extracting " + libraryJars.size() + " library jars ---");
     int count = 0;
-    for (IPath library : libraryJars) {
-      logger.info("Extracting " + library.lastSegment() + " (" + ++count + " of " + libraryJars.size() + ")");
-      if (completed.contains(library.lastSegment())) {
+    for (LibraryJar library : libraryJars) {
+      logger.info("Extracting " + library + " (" + ++count + " of " + libraryJars.size() + ")");
+      ExtractedLibrary extracted = library.getExtractedLibrary(output);
+      if (extracted.extracted()) {
         logger.info("  Library already extracted");
       } else {
+        // Set up logging
+        Logging.addFileLogger(extracted.getContent());
+        
         logger.info("  Initializing project...");
         EclipseUtils.initializeLibraryProject(library);
         
@@ -63,8 +63,7 @@ public class LibraryExtractor {
         logger.info("  Extracting " + classFiles.size() + " class files...");
         
         // Set up the writer bundle
-        File libPath = new File(output.getLibsDir(), library.lastSegment());
-        WriterBundle bundle = new WriterBundle(libPath);
+        WriterBundle bundle = new WriterBundle(extracted.getContent());
         
         // Set up the feature extractor
         FeatureExtractor extractor = new FeatureExtractor(bundle);
@@ -75,8 +74,11 @@ public class LibraryExtractor {
         // Close the output files
         extractor.close();
         
-        // The library is completed
-        logger.log(RESUME, library.lastSegment());
+        // Write the properties files
+        extracted.createPropertiesFile(library.getName() , extractor.foundSource(), extractor.sourceError());
+
+        // End the error logging
+        Logging.removeFileLogger(extracted.getContent());
       }
     }
     

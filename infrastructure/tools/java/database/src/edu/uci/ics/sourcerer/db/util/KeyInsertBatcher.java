@@ -60,8 +60,8 @@ public class KeyInsertBatcher <T> extends AbstractInsertBatcher {
         } else {
           logger.log(Level.SEVERE, "Not enough matching keys.");
         }
-        pairedTs.clear();
       }
+      pairedTs.clear();
     }
   }
   

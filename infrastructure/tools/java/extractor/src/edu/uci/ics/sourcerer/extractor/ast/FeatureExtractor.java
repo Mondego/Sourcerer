@@ -74,28 +74,36 @@ public final class FeatureExtractor {
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
     for (IClassFile classFile : classFiles) {
       try {
-        ISourceRange source = classFile.getSourceRange();
-        if (source == null || source.getLength() == 0) {
-          extractor.extractClassFile(classFile);
-        } else {
-          foundSource = true;
-          parser.setStatementsRecovery(true);
-          parser.setResolveBindings(true);
-          parser.setBindingsRecovery(true);
-          parser.setSource(classFile);
-          
-          CompilationUnit unit = (CompilationUnit) parser.createAST(null);
-          boolean foundProblem = false;
-          for (IProblem problem : unit.getProblems()) {
-            if (problem.isError()) {
-              foundProblem = true;
-            }
-          }
-          if (foundProblem) {
-            sourceError = true;
+        if (ClassFileExtractor.isTopLevel(classFile)) {
+          ISourceRange source = classFile.getSourceRange();
+          if (source == null || source.getLength() == 0) {
             extractor.extractClassFile(classFile);
           } else {
-            unit.accept(visitor);
+            foundSource = true;
+            parser.setStatementsRecovery(true);
+            parser.setResolveBindings(true);
+            parser.setBindingsRecovery(true);
+            parser.setSource(classFile);
+            
+            CompilationUnit unit = (CompilationUnit) parser.createAST(null);
+            boolean foundProblem = false;
+            for (IProblem problem : unit.getProblems()) {
+              if (problem.isError()) {
+                foundProblem = true;
+              }
+            }
+            if (foundProblem) {
+              sourceError = true;
+              extractor.extractClassFile(classFile);
+            } else {
+              try {
+                unit.accept(visitor);
+              } catch (Exception e) {
+                logger.log(Level.SEVERE, "Error in extracting " + classFile.getElementName(), e);
+                sourceError = true;
+                extractor.extractClassFile(classFile);
+              }
+            }
           }
         }
       } catch (Exception e) {

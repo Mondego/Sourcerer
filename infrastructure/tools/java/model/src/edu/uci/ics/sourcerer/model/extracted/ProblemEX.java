@@ -50,4 +50,8 @@ public class ProblemEX implements ModelEX {
   public String getMessage() {
     return message;
   }
+  
+  public String toString() {
+    return type + " " + relativePath + " " + errorCode + " " + message; 
+  }
 }

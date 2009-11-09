@@ -98,12 +98,12 @@ public class EclipseUtils {
     }
   }
   
-  public static Collection<IPath> getLibraryJars() {
-    Collection<IPath> libraryJars = Helper.newLinkedList();
+  public static Collection<LibraryJar> getLibraryJars() {
+    Collection<LibraryJar> libraryJars = Helper.newLinkedList();
     
     IVMInstall vmInstall = JavaRuntime.getDefaultVMInstall();
     for (LibraryLocation location : JavaRuntime.getLibraryLocations(vmInstall)) {
-      libraryJars.add(location.getSystemLibraryPath());
+      libraryJars.add(new LibraryJar(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), location.getSystemLibrarySourcePath(), null)));
     }
     
     return libraryJars;
@@ -124,11 +124,11 @@ public class EclipseUtils {
     }
   }
   
-  public static void initializeLibraryProject(IPath libraryJar) {
+  public static void initializeLibraryProject(LibraryJar libraryJar) {
     initializeProject();
     try {
       IClasspathEntry entries[] = new IClasspathEntry[1];
-      entries[0] = JavaCore.newLibraryEntry(libraryJar, null, null);
+      entries[0] = libraryJar.getClasspathEntry();
       javaProject.setRawClasspath(entries, null);
     } catch (JavaModelException e) {
       logger.log(Level.SEVERE, "Unable to initialize jar project", e);
@@ -228,7 +228,15 @@ public class EclipseUtils {
     }
   }
   
-  public static Collection<IClassFile> getClassFiles(IPath path) {
+  public static Collection<IClassFile> getClassFiles(LibraryJar jar) {
+    return getClassFiles(jar.getClasspathEntry().getPath());
+  }
+  
+  public static Collection<IClassFile> getClassFiles(IndexedJar jar) {
+    return getClassFiles(new Path(jar.getJarFile().getPath()));
+  }
+  
+  private static Collection<IClassFile> getClassFiles(IPath path) {
     try {
       Collection<IClassFile> classFiles = Helper.newLinkedList();
       Deque<IPackageFragment> fragments = Helper.newStack();

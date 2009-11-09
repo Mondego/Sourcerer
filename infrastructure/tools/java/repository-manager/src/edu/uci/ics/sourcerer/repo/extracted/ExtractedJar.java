@@ -41,11 +41,7 @@ public class ExtractedJar extends Extracted {
       properties = JarProperties.load(propFile);
     }
   }
-  
-  private File getPropertiesFile() {
-    return new File(content, content.getName() + ".properties");
-  }
-  
+
   public void reportExecution(boolean hasSource, boolean sourceError) {
     properties.reportExtraction(getPropertiesFile(), hasSource, sourceError);
   }

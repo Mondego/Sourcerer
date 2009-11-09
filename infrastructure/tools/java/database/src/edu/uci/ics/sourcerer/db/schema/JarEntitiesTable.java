@@ -20,13 +20,16 @@ package edu.uci.ics.sourcerer.db.schema;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
 
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.model.Entity;
+import edu.uci.ics.sourcerer.model.LocalVariable;
 import edu.uci.ics.sourcerer.model.db.TypedEntityID;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
+import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -45,22 +48,37 @@ public final class JarEntitiesTable {
    *  | modifiers   | INT UNSIGNED    | Yes   | No     |
    *  | multi       | INT UNSIGNED    | Yes   | No     |
    *  | jar_id      | BIGINT UNSIGNED | No    | Yes    |
+   *  | jclass_fid  | BIGINT UNSIGNED | Yes   | Yes    |
+   *  | offset      | INT UNSIGNED    | Yes   | No     |
+   *  | length      | INT UNSIGNED    | Yes   | No     | 
    *  +-------------+-----------------+-------+--------+
    */
+  
+  //---- LOCK ----
+  public static String getReadLock() {
+    return SchemaUtils.getReadLock(TABLE);
+  }
+  
+  public static String getWriteLock() {
+    return SchemaUtils.getWriteLock(TABLE);
+  }
   
   // ---- CREATE ----
   public static void createTable(QueryExecutor executor) {
     executor.createTable(TABLE,
         "entity_id SERIAL",
-        "entity_type " + SchemaUtils.getEnumCreate(Entity.getJarValues()) + " NOT NULL",
+        "entity_type " + SchemaUtils.getEnumCreate(Entity.values()) + " NOT NULL",
         "fqn VARCHAR(2048) BINARY NOT NULL",
         "modifiers INT UNSIGNED",
         "multi INT UNSIGNED",
         "jar_id BIGINT UNSIGNED NOT NULL",
+        "jclass_fid BIGINT UNSIGNED",
+        "offset INT UNSIGNED",
         "length INT UNSIGNED",
         "INDEX(entity_type)",
         "INDEX(fqn(48))",
-        "INDEX(jar_id)");
+        "INDEX(jar_id)",
+        "INDEX(jclass_fid)");
   }
   
   // ---- INSERT ----
@@ -68,33 +86,52 @@ public final class JarEntitiesTable {
     return executor.getKeyInsertBatcher(TABLE, processor);
   }
   
-  private static String getInsertValue(Entity type, String fqn, String mods, String multi, String jarID) {
-    return "(NULL, " +
-    		"'" + type.name() + "'," +
-				SchemaUtils.convertNotNullVarchar(fqn) + "," +
-				SchemaUtils.convertNumber(mods) + "," +
-				SchemaUtils.convertNumber(multi) + "," +
-				SchemaUtils.convertNotNullNumber(jarID) + ")";
+  private static String getInsertValue(Entity type, String fqn, String mods, String multi, String jarID, String jarClassFileID, String offset, String length) {
+    return SchemaUtils.getSerialInsertValue(
+    		SchemaUtils.convertNotNullVarchar(type.name()),
+				SchemaUtils.convertNotNullVarchar(fqn),
+				SchemaUtils.convertNumber(mods),
+				SchemaUtils.convertNumber(multi),
+				SchemaUtils.convertNotNullNumber(jarID),
+				SchemaUtils.convertNumber(jarClassFileID),
+				SchemaUtils.convertOffset(offset), 
+				SchemaUtils.convertLength(length));
   }
   
   public static <T> void insert(KeyInsertBatcher<T> batcher, EntityEX entity, String jarID, T pairing) {
-    batcher.addValue(getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), "NULL", jarID), pairing);
+    batcher.addValue(getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), null, jarID, null, null, null), pairing);
   }
   
-  public static <T> void insertPackage(KeyInsertBatcher<T> batcher, String pkg, String jarID, T pairing) {
-    batcher.addValue(getInsertValue(Entity.PACKAGE, pkg, "NULL", "NULL", jarID), pairing);
+  public static <T> void insert(KeyInsertBatcher<T> batcher, EntityEX entity, String jarID, String jarClassFileID, T pairing) {
+    batcher.addValue(getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), null, jarID, jarClassFileID, entity.getStartPosition(), entity.getLength()), pairing);
   }
   
-  public static String insertParam(QueryExecutor executor, String name, String mods, String position, String libraryID) {
-    return executor.insertSingleWithKey(TABLE, getInsertValue(Entity.PARAMETER, name, mods, position, libraryID));
+  public static String insertLocal(QueryExecutor executor, LocalVariableEX var, String jarID) {
+    Entity type = null;
+    if (var.getType() == LocalVariable.LOCAL) {
+      type = Entity.LOCAL_VARIABLE;
+    } else if (var.getType() == LocalVariable.PARAM) {
+      type = Entity.PARAMETER;
+    }
+    return executor.insertSingleWithKey(TABLE, getInsertValue(type, var.getName(), var.getModifiers(), var.getPosition(), jarID, null, null, null));
+  }
+  
+  public static String insertLocal(QueryExecutor executor, LocalVariableEX local, String jarID, String jarClassFileID) {
+    Entity type = null;
+    if (local.getType() == LocalVariable.LOCAL) {
+      type = Entity.LOCAL_VARIABLE;
+    } else if (local.getType() == LocalVariable.PARAM) {
+      type = Entity.PARAMETER;
+    }
+    return executor.insertSingleWithKey(TABLE, getInsertValue(type, local.getName(), local.getModifiers(), local.getPosition(), jarID, jarClassFileID, local.getStartPos(), local.getLength()));
   }
   
   public static String insertArray(QueryExecutor executor, String fqn, int dimensions, String jarID) {
-    return executor.insertSingleWithKey(TABLE, getInsertValue(Entity.ARRAY, fqn, "NULL", Integer.toString(dimensions), jarID));
+    return executor.insertSingleWithKey(TABLE, getInsertValue(Entity.ARRAY, fqn, null, Integer.toString(dimensions), jarID, null, null, null));
   }
   
   public static String insert(QueryExecutor executor, Entity type, String name, String jarID) {
-    return executor.insertSingleWithKey(TABLE, getInsertValue(type, name, "NULL", "NULL", jarID));
+    return executor.insertSingleWithKey(TABLE, getInsertValue(type, name, null, null, jarID, null, null, null));
   }
   
   // ---- DELETE ----
@@ -112,7 +149,7 @@ public final class JarEntitiesTable {
   
   public static Collection<TypedEntityID> getEntityIDsByFqn(QueryExecutor executor, String fqn, String inClause) {
     if (inClause == null) {
-      return null;
+      return Collections.emptySet();
     } else {
       return executor.select(TABLE, "entity_id", "fqn='" + fqn + "' AND entity_type<>'UNKNOWN' AND jar_id IN " + inClause, TRANSLATOR_TEID);
     }

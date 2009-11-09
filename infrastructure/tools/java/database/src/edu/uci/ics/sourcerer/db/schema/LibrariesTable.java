@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.db.schema;
 
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -32,6 +33,7 @@ public final class LibrariesTable {
    *  +-------------+---------------+-------+--------+
    *  | library_id  | SERIAL        | No    | Yes    |
    *  | name        | VARCHAR(1024) | No    | No     |
+   *  | has_source  | BOOLEAN       | No    | No     |
    *  +-------------+---------------+-------+--------+
    */
   
@@ -39,16 +41,23 @@ public final class LibrariesTable {
   public static void createTable(QueryExecutor executor) {
     executor.createTable(TABLE,
         "library_id SERIAL",
-        "name VARCHAR(1024) BINARY NOT NULL");
+        "name VARCHAR(1024) BINARY NOT NULL," +
+        "has_source BOOLEAN NOT NULL");
   }
   
   // ---- INSERT ----
-  private static String getInsertValue(String name) {
-    return "(NULL," + SchemaUtils.convertNotNullVarchar(name) + ")";
+  private static String getInsertValue(String name, boolean hasSource) {
+    return SchemaUtils.getSerialInsertValue(
+        SchemaUtils.convertNotNullVarchar(name),
+        SchemaUtils.convertBoolean(hasSource));
   }
   
-  public static String insert(QueryExecutor executor, String name) {
-    return executor.insertSingleWithKey(TABLE, getInsertValue(name));
+  public static String insert(QueryExecutor executor, ExtractedLibrary library) {
+    return executor.insertSingleWithKey(TABLE, getInsertValue(library.getName(), library.hasSource()));
+  }
+  
+  public static String insertPrimitivesProject(QueryExecutor executor) {
+    return executor.insertSingleWithKey(TABLE, getInsertValue("primitives", false));
   }
   
   // ---- SELECT ----

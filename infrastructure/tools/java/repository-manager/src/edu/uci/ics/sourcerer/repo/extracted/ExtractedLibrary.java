@@ -19,15 +19,36 @@ package edu.uci.ics.sourcerer.repo.extracted;
 
 import java.io.File;
 
+import edu.uci.ics.sourcerer.repo.general.LibraryProperties;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedLibrary extends Extracted {
+  private LibraryProperties properties;
+  
   public ExtractedLibrary(File content) {
     super(content);
+    properties = LibraryProperties.load(getPropertiesFile());
+  }
+    
+  public void createPropertiesFile(String name, boolean hasSource, boolean sourceError) {
+    LibraryProperties.create(getPropertiesFile(), name, hasSource, sourceError);
   }
   
   public String getName() {
-    return content.getName();
+    return properties.getName();
+  }
+  
+  public boolean extracted() {
+    return properties.extracted();
+  }
+  
+  public boolean hasSource() {
+    return properties.hasSource();
+  }
+  
+  public boolean sourceError() {
+    return properties.sourceError();
   }
 }

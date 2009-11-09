@@ -28,7 +28,7 @@ public class DummyCommentWriter implements ICommentWriter {
   }
 
   @Override
-  public void writeJavadocComment(String containingFqn, int startPos, int length) {
+  public void writeJavadocComment(String containingFqn, String containingFile, int startPos, int length) {
   }
 
   @Override

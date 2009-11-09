@@ -38,8 +38,8 @@ public class ImportExParser implements ModelExParser<ImportEX> {
   @Override
   public ImportEX parseLine(String line) {
     String[] parts = line.split(" ");
-    if (parts.length == 5) {
-      return new ImportEX(parts[0], parts[2], parts[3].equals("STATIC"), parts[4].equals("ON_DEMAND"));
+    if (parts.length == 6) {
+      return new ImportEX(parts[0], parts[1].equals("STATIC"), parts[2].equals("ON_DEMAND"), parts[3], parts[4], parts[5]);
     } else {
       logger.log(Level.SEVERE, "Unable to parse import: " + line);
       return null;

@@ -21,7 +21,9 @@ import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.model.Entity;
+import edu.uci.ics.sourcerer.model.LocalVariable;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
+import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -40,21 +42,37 @@ public final class LibraryEntitiesTable {
    *  | modifiers   | INT UNSIGNED    | Yes   | No     |
    *  | multi       | INT UNSIGNED    | Yes   | No     |
    *  | library_id  | BIGINT UNSIGNED | No    | Yes    |
+   *  | lclass_fid  | BIGINT UNSIGNED | Yes   | Yes    |
+   *  | offset      | INT UNSIGNED    | Yes   | No     |
+   *  | length      | INT UNSIGNED    | Yes   | No     |
    *  +-------------+-----------------+-------+--------+
    */
+  
+  //---- LOCK ----
+  public static String getReadLock() {
+    return SchemaUtils.getReadLock(TABLE);
+  }
+  
+  public static String getWriteLock() {
+    return SchemaUtils.getWriteLock(TABLE);
+  }
   
   // ---- CREATE ----
   public static void createTable(QueryExecutor executor) {
     executor.createTable(TABLE,
         "entity_id SERIAL",
-        "entity_type " + SchemaUtils.getEnumCreate(Entity.getLibraryValues()) + " NOT NULL",
+        "entity_type " + SchemaUtils.getEnumCreate(Entity.values()) + " NOT NULL",
         "fqn VARCHAR(2048) BINARY NOT NULL",
         "modifiers INT UNSIGNED",
         "multi INT UNSIGNED",
         "library_id BIGINT UNSIGNED NOT NULL",
+        "lclass_fid BIGINT UNSIGNED",
+        "offset INT UNSIGNED",
+        "length INT UNSIGNED",
         "INDEX(entity_type)",
         "INDEX(fqn(48))",
-        "INDEX(library_id)");
+        "INDEX(library_id)",
+        "INDEX(lclass_fid)");
   }
   
   // ---- INSERT ----
@@ -66,37 +84,56 @@ public final class LibraryEntitiesTable {
     return executor.getKeyInsertBatcher(TABLE, processor);
   }
   
-  private static String getInsertValue(Entity type, String fqn, String mods, String multi, String libraryID) {
-    return "(NULL, " +
-    		"'" + type.name() + "'," +
-				SchemaUtils.convertNotNullVarchar(fqn) + "," +
-				SchemaUtils.convertNumber(mods) + "," + 
-				SchemaUtils.convertNumber(multi) + "," + 
-				SchemaUtils.convertNotNullNumber(libraryID) + ")";
+  private static String getInsertValue(Entity type, String fqn, String mods, String multi, String libraryID, String libraryClassFileID, String offset, String length) {
+    return SchemaUtils.getSerialInsertValue(
+    		SchemaUtils.convertNotNullVarchar(type.name()),
+				SchemaUtils.convertNotNullVarchar(fqn),
+				SchemaUtils.convertNumber(mods), 
+				SchemaUtils.convertNumber(multi), 
+				SchemaUtils.convertNotNullNumber(libraryID),
+				SchemaUtils.convertNumber(libraryClassFileID),
+				SchemaUtils.convertOffset(offset),
+				SchemaUtils.convertLength(length));
   }
   
   public static <T> void insert(KeyInsertBatcher<T> batcher, EntityEX entity, String libraryID, T pairing) {
-    batcher.addValue(getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), "NULL", libraryID), pairing);
+    batcher.addValue(getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), null, libraryID, null, null, null), pairing);
   }
   
-  public static <T> void insertPackage(KeyInsertBatcher<T> batcher, String pkg, String libraryID, T pairing) {
-    batcher.addValue(getInsertValue(Entity.PACKAGE, pkg, "NULL", "NULL", libraryID), pairing);
+  public static <T> void insert(KeyInsertBatcher<T> batcher, EntityEX entity, String libraryID, String libraryClassFileID, T pairing) {
+    batcher.addValue(getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), null, libraryID, libraryClassFileID, entity.getStartPosition(), entity.getLength()), pairing);
+  }
+    
+  public static String insertLocal(QueryExecutor executor, LocalVariableEX local, String libraryID) {
+    Entity type = null;
+    if (local.getType() == LocalVariable.LOCAL) {
+      type = Entity.LOCAL_VARIABLE;
+    } else if (local.getType() == LocalVariable.PARAM) {
+      type = Entity.PARAMETER;
+    }
+    return executor.insertSingleWithKey(TABLE, getInsertValue(type, local.getName(), local.getModifiers(), local.getPosition(), libraryID, null, null, null));
   }
   
-  public static String insertParam(QueryExecutor executor, String name, String mods, String position, String libraryID) {
-    return executor.insertSingleWithKey(TABLE, getInsertValue(Entity.PARAMETER, name, mods, position, libraryID));
+  public static String insertLocal(QueryExecutor executor, LocalVariableEX local, String libraryID, String libraryClassFileID) {
+    Entity type = null;
+    if (local.getType() == LocalVariable.LOCAL) {
+      type = Entity.LOCAL_VARIABLE;
+    } else if (local.getType() == LocalVariable.PARAM) {
+      type = Entity.PARAMETER;
+    }
+    return executor.insertSingleWithKey(TABLE, getInsertValue(type, local.getName(), local.getModifiers(), local.getPosition(), libraryID, libraryClassFileID, local.getStartPos(), local.getLength()));
   }
   
   public static void insertPrimitive(InsertBatcher batcher, String name, String libraryID) {
-    batcher.addValue(getInsertValue(Entity.PRIMITIVE, name, "NULL", "NULL", libraryID));
+    batcher.addValue(getInsertValue(Entity.PRIMITIVE, name, null, null, libraryID, null, null, null));
   }
   
   public static String insertArray(QueryExecutor executor, String fqn, int dimensions, String libraryID) {
-    return executor.insertSingleWithKey(TABLE, getInsertValue(Entity.ARRAY, fqn, "NULL", Integer.toString(dimensions), libraryID));
+    return executor.insertSingleWithKey(TABLE, getInsertValue(Entity.ARRAY, fqn, "NULL", Integer.toString(dimensions), libraryID, null, null, null));
   }
   
   public static String insert(QueryExecutor executor, Entity type, String fqn, String libraryID) {
-    return executor.insertSingleWithKey(TABLE, getInsertValue(type, fqn, "NULL", "NULL", libraryID));
+    return executor.insertSingleWithKey(TABLE, getInsertValue(type, fqn, null, null, libraryID, null, null, null));
   }
   
   // ---- SELECT ----

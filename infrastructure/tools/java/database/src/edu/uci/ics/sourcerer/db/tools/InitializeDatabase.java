@@ -24,15 +24,24 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.db.schema.CommentsTable;
 import edu.uci.ics.sourcerer.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.db.schema.FilesTable;
 import edu.uci.ics.sourcerer.db.schema.ImportsTable;
+import edu.uci.ics.sourcerer.db.schema.JarClassFilesTable;
+import edu.uci.ics.sourcerer.db.schema.JarCommentsTable;
 import edu.uci.ics.sourcerer.db.schema.JarEntitiesTable;
+import edu.uci.ics.sourcerer.db.schema.JarImportsTable;
+import edu.uci.ics.sourcerer.db.schema.JarProblemsTable;
 import edu.uci.ics.sourcerer.db.schema.JarRelationsTable;
 import edu.uci.ics.sourcerer.db.schema.JarUsesTable;
 import edu.uci.ics.sourcerer.db.schema.JarsTable;
 import edu.uci.ics.sourcerer.db.schema.LibrariesTable;
+import edu.uci.ics.sourcerer.db.schema.LibraryClassFilesTable;
+import edu.uci.ics.sourcerer.db.schema.LibraryCommentsTable;
 import edu.uci.ics.sourcerer.db.schema.LibraryEntitiesTable;
+import edu.uci.ics.sourcerer.db.schema.LibraryImportsTable;
+import edu.uci.ics.sourcerer.db.schema.LibraryProblemsTable;
 import edu.uci.ics.sourcerer.db.schema.LibraryRelationsTable;
 import edu.uci.ics.sourcerer.db.schema.ProblemsTable;
 import edu.uci.ics.sourcerer.db.schema.ProjectsTable;
@@ -41,10 +50,15 @@ import edu.uci.ics.sourcerer.db.util.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
+import edu.uci.ics.sourcerer.model.Comment;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.Relation;
+import edu.uci.ics.sourcerer.model.extracted.CommentEX;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
+import edu.uci.ics.sourcerer.model.extracted.FileEX;
+import edu.uci.ics.sourcerer.model.extracted.ImportEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
+import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
@@ -55,6 +69,9 @@ import edu.uci.ics.sourcerer.util.Helper;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class InitializeDatabase extends DatabaseAccessor {
+  private Map<String, String> fileMap;
+  private Map<String, String> entityMap;
+  
   public InitializeDatabase(DatabaseConnection connection) {
     super(connection);
   }
@@ -67,159 +84,304 @@ public class InitializeDatabase extends DatabaseAccessor {
           LibrariesTable.TABLE,
           LibraryEntitiesTable.TABLE,
           LibraryRelationsTable.TABLE,
+          LibraryClassFilesTable.TABLE,
+          LibraryCommentsTable.TABLE,
+          LibraryImportsTable.TABLE,
+          LibraryProblemsTable.TABLE,
           JarsTable.TABLE,
           JarEntitiesTable.TABLE,
           JarRelationsTable.TABLE,
+          JarClassFilesTable.TABLE,
+          JarCommentsTable.TABLE,
+          JarImportsTable.TABLE,
+          JarProblemsTable.TABLE,
           JarUsesTable.TABLE,
           ProjectsTable.TABLE,
           FilesTable.TABLE,
           ProblemsTable.TABLE,
           ImportsTable.TABLE,
           EntitiesTable.TABLE,
-          RelationsTable.TABLE);
+          RelationsTable.TABLE,
+          CommentsTable.TABLE);
       LibrariesTable.createTable(executor);
       LibraryEntitiesTable.createTable(executor);
       LibraryRelationsTable.createTable(executor);
+      LibraryClassFilesTable.createTable(executor);
+      LibraryCommentsTable.createTable(executor);
+      LibraryImportsTable.createTable(executor);
+      LibraryProblemsTable.createTable(executor);
       JarsTable.createTable(executor);
       JarEntitiesTable.createTable(executor);
       JarRelationsTable.createTable(executor);
+      JarClassFilesTable.createTable(executor);
+      JarCommentsTable.createTable(executor);
+      JarImportsTable.createTable(executor);
       JarUsesTable.createTable(executor);
+      JarProblemsTable.createTable(executor);
       ProjectsTable.createTable(executor);
+      FilesTable.createTable(executor);
+      ProblemsTable.createTable(executor);
       ImportsTable.createTable(executor);
       EntitiesTable.createTable(executor);
       RelationsTable.createTable(executor);
+      CommentsTable.createTable(executor);
+      
+      // Add the primitives
+      locker.addWrites(LibrariesTable.TABLE, LibraryEntitiesTable.TABLE);
+      locker.lock();
+      String projectID = LibrariesTable.insertPrimitivesProject(executor);
+      InsertBatcher batcher = LibraryEntitiesTable.getInsertBatcher(executor);
+      LibraryEntitiesTable.insertPrimitive(batcher, "boolean", projectID);
+      LibraryEntitiesTable.insertPrimitive(batcher, "char", projectID);
+      LibraryEntitiesTable.insertPrimitive(batcher, "byte", projectID);
+      LibraryEntitiesTable.insertPrimitive(batcher, "short", projectID);
+      LibraryEntitiesTable.insertPrimitive(batcher, "int", projectID);
+      LibraryEntitiesTable.insertPrimitive(batcher, "long", projectID);
+      LibraryEntitiesTable.insertPrimitive(batcher, "float", projectID);
+      LibraryEntitiesTable.insertPrimitive(batcher, "double", projectID);
+      LibraryEntitiesTable.insertPrimitive(batcher, "void", projectID);
+      batcher.insert();
+      locker.unlock();
     }
     
     // The database was initialized, so add the library jars
     logger.info("Locating all the extracted library jars...");
     Collection<ExtractedLibrary> libraryJars = extracted.getLibraries();
     
-    logger.info("Found " + libraryJars.size() + " extracted libraries to insert.");
+    logger.info("--- Inserting " + libraryJars.size() + " libraries into database ---");
     
     int count = 0;
     // Do all the entities first
-    Map<String, String> entityMap = Helper.newHashMap();
+    fileMap = Helper.newHashMap();
+    entityMap = Helper.newHashMap();
     // Lock some tables
-    executor.execute("LOCK TABLES libraries WRITE, library_entities WRITE, library_relations WRITE;");
+    locker.addWrites(LibrariesTable.TABLE, 
+        LibraryEntitiesTable.TABLE, 
+        LibraryRelationsTable.TABLE, 
+        LibraryClassFilesTable.TABLE,
+        LibraryProblemsTable.TABLE,
+        LibraryImportsTable.TABLE,
+        LibraryCommentsTable.TABLE);
+    locker.lock();
     // Do the entities first
     for (ExtractedLibrary libraryJar : libraryJars) {
-      logger.info("------------------------");
       logger.info("Inserting " + libraryJar.getName() + "'s entities (" + ++count + " of " + libraryJars.size() + ")");
-      insertLibraryEntities(libraryJar, entityMap);
+      insertLibraryFirst(libraryJar);
     }
     
     count = 0;
     for (ExtractedLibrary libraryJar : libraryJars) {
-      logger.info("------------------------");
       logger.info("Inserting " + libraryJar.getName() + "'s params and relations (" + ++count + " of " + libraryJars.size() + ")");
-      insertLibraryParamsAndRelations(libraryJar, entityMap);
+      insertLibraryRemainder(libraryJar);
     }
     
     // Unlock the tables
-    executor.execute("UNLOCK TABLES;");
+    locker.unlock();
     executor.reset();
   }
   
-  private void insertLibraryEntities(ExtractedLibrary library, final Map<String, String> entityMap) {
-    String name = library.getName();
-    final String libraryID = LibrariesTable.insert(executor, name);
+  private void insertLibraryFirst(ExtractedLibrary library) {
+    // Add the library to the database
+    final String libraryID = LibrariesTable.insert(executor, library);
+    
+    // Add the files to the database
+    {
+      logger.info("  Beginning insert of class files...");
+      int count = 0;
+      KeyInsertBatcher<FileEX> batcher = LibraryClassFilesTable.getKeyInsertBatcher(executor, new KeyInsertBatcher.KeyProcessor<FileEX>() {
+        public void processKey(String key, FileEX file) {
+          fileMap.put(file.getRelativePath(), key);
+        }
+      });
+      for (FileEX file : ExtractedReader.getFileReader(library)) {
+        LibraryClassFilesTable.insert(batcher, file, libraryID, file);
+        count++;
+      }
+      batcher.insert();
+      logger.info("    " + count + " files inserted.");
+    }
+    
+    // Add the problems to the database
+    {
+      logger.info("  Beginning insert of problems...");
+      int count = 0;
+      InsertBatcher batcher = LibraryProblemsTable.getInsertBatcher(executor);
+      for (ProblemEX problem : ExtractedReader.getProblemReader(library)) {
+        String fileID = fileMap.get(problem.getRelativePath());
+        if (fileID != null) {
+          LibraryProblemsTable.insert(batcher, problem, fileID, libraryID);
+          count++;
+        } else {
+          logger.log(Level.SEVERE, "Unknown file: " + problem.getRelativePath() + " for " + problem);
+        }
+      }
+      batcher.insert();
+      logger.info("    " + count + " problems inserted.");
+    }
     
     // Add the entities to the database
     {
-      logger.info("Beginning insert of entities...");
+      logger.info("  Beginning insert of entities...");
       int count = 0;
-      final Map<String, Collection<String>> packageMap = Helper.newHashMap();
-      KeyInsertBatcher<String> batcher = LibraryEntitiesTable.<String>getKeyInsertBatcher(executor, new KeyInsertBatcher.KeyProcessor<String>() {
-        public void processKey(String key, String fqn) {
-          entityMap.put(fqn, key);
-          String pkg = Entity.getPossiblePackage(fqn);
-          Collection<String> members = packageMap.get(pkg);
-          if (members == null) {
-            members = Helper.newLinkedList();
-            packageMap.put(pkg, members);
-          }
-          members.add(key);
+      KeyInsertBatcher<EntityEX> batcher = LibraryEntitiesTable.<EntityEX>getKeyInsertBatcher(executor, new KeyInsertBatcher.KeyProcessor<EntityEX>() {
+        public void processKey(String key, EntityEX entity) {
+          entityMap.put(entity.getFqn(), key);
         }
       });
-      for (EntityEX entity : ExtractedReader.getJarEntityReader(library)) {
-        LibraryEntitiesTable.insert(batcher, entity, libraryID, entity.getFqn());
+      for (EntityEX entity : ExtractedReader.getEntityReader(library)) {
+        String fileID = null;
+        if (entity.getPath() != null) {
+          fileID = fileMap.get(entity.getPath());
+          if (fileID == null) {
+            logger.log(Level.SEVERE, "Unknown file: " + entity.getPath() + " for " + entity);
+          }
+        }
+        if (fileID == null) {
+          LibraryEntitiesTable.insert(batcher, entity, libraryID, entity);
+        } else {
+          LibraryEntitiesTable.insert(batcher, entity, libraryID, fileID, entity);
+        }
         count++;
       }
       batcher.insert();
-      logger.info(count + " entities inserted.");
-        
-      // Add the packages to the database
-      count = 0;
-      final InsertBatcher relationBatcher = LibraryRelationsTable.getInsertBatcher(executor);
-      batcher.setProcessor(new KeyInsertBatcher.KeyProcessor<String>() {
-        public void processKey(String key, String pkg) {
-          // Add the inside relations
-          for (String member : packageMap.get(pkg)) {
-            LibraryRelationsTable.insert(relationBatcher, Relation.INSIDE, member, key, libraryID);
-          }
-        }
-      });
-      for (Map.Entry<String, Collection<String>> pkg : packageMap.entrySet()) {
-        if (!entityMap.containsKey(pkg.getKey())) {
-          // If it's not an entity, then assume it's a package
-          LibraryEntitiesTable.insertPackage(batcher, pkg.getKey(), libraryID, pkg.getKey());
-          count++;
-        }
-      }
-      batcher.insert();
-      relationBatcher.insert();
-      logger.info(count + " packages inserted.");
+      logger.info("    " + count + " entities inserted.");
     }
   }
   
-  private void insertLibraryParamsAndRelations(ExtractedLibrary library, Map<String, String> entityMap) {
+  private void insertLibraryRemainder(ExtractedLibrary library) {
     String name = library.getName();
     String libraryID = LibrariesTable.getLibraryIDByName(executor, name);
     {
-      InsertBatcher batcher = LibraryRelationsTable.getInsertBatcher(executor);
+      InsertBatcher relBatcher = LibraryRelationsTable.getInsertBatcher(executor);     
       
       // Add the local variables to the database
-      logger.info("Beginning insert of parameters...");
-      int count = 0;
-      for (LocalVariableEX param : ExtractedReader.getJarLocalVariableReader(library)) {
-        // Add the entity
-        String eid = LibraryEntitiesTable.insertParam(executor, param.getName(), param.getModifiers(), param.getPosition(), libraryID);
+      {
+        logger.info("  Beginning insert of local variables / parameters...");
+        int count = 0;
+        for (LocalVariableEX local: ExtractedReader.getLocalVariableReader(library)) {
+          String fileID = null;
+          if (local.getPath() != null) {
+            fileID = fileMap.get(local.getPath());
+            if (fileID == null) {
+              logger.log(Level.SEVERE, "Unknown file: " + local.getPath());
+            }
+          }
+          // Add the entity
+          String eid = null;
+          if (fileID == null) {
+            eid = LibraryEntitiesTable.insertLocal(executor, local, libraryID);
+          } else {
+            eid = LibraryEntitiesTable.insertLocal(executor, local, fileID, libraryID);
+          }
         
-        // Add the holds relation
-        String typeEid = getEid(batcher, entityMap, libraryID, param.getTypeFqn());
-        LibraryRelationsTable.insert(batcher, Relation.HOLDS, eid, typeEid, libraryID);
+          // Add the holds relation
+          String typeEid = getEid(relBatcher, libraryID, local.getTypeFqn(), false);
+          if (fileID == null) {
+            LibraryRelationsTable.insert(relBatcher, Relation.HOLDS, eid, typeEid, libraryID);
+          } else {
+            LibraryRelationsTable.insert(relBatcher, Relation.HOLDS, eid, typeEid, libraryID, fileID, local.getTypeStartPos(), local.getTypeLength());
+          }
         
-        // Add the inside relation
-        String parentEid = getEid(batcher, entityMap, libraryID, param.getParent());
-        LibraryRelationsTable.insert(batcher, Relation.INSIDE, eid, parentEid, libraryID);
+          // Add the inside relation
+          String parentEid = getEid(relBatcher, libraryID, local.getParent(), false);
+          LibraryRelationsTable.insert(relBatcher, Relation.INSIDE, eid, parentEid, libraryID);
         
-        count++;
-      }
-      // Add the relations to the database
-      logger.info("Beginning insert of relations...");
-      count = 0;
-      
-      for (RelationEX relation : ExtractedReader.getJarRelationReader(library)) {
-        // Look up the lhs eid
-        String lhsEid = entityMap.get(relation.getLhs());
-        if (lhsEid == null) {
-          logger.log(Level.SEVERE, "Missing lhs for a relation! " + relation.getLhs());
-          continue;
+          count++;
         }
-        
-        // Look up the rhs eid
-        String rhsEid = getEid(batcher, entityMap, libraryID, relation.getRhs());
-        
-        // Add the relation
-        LibraryRelationsTable.insert(batcher, relation.getType(), lhsEid, rhsEid, libraryID);
-        count++;
+        relBatcher.insert();
+        logger.info("    " + count + " local variables / parameters inserted.");
       }
-      batcher.insert();
-      logger.info(count + " relations inserted.");
+      
+      // Add the relations to the database
+      {
+        logger.info(  "Beginning insert of relations...");
+        int count = 0;
+      
+        for (RelationEX relation : ExtractedReader.getRelationReader(library)) {
+          // Get the file
+          String fileID = null;
+          if (relation.getPath() != null) {
+            fileID = fileMap.get(relation.getPath());
+            if (fileID == null) {
+              logger.log(Level.SEVERE, "Unknown file: " + relation.getPath());
+            }
+          }
+          
+          // Look up the lhs eid
+          String lhsEid = entityMap.get(relation.getLhs());
+          if (lhsEid == null) {
+            logger.log(Level.SEVERE, "Missing lhs for a relation! " + relation.getLhs());
+            continue;
+          }
+          
+          // Look up the rhs eid
+          String rhsEid = getEid(relBatcher, libraryID, relation.getRhs(), relation.getType() == Relation.INSIDE);
+          
+          // Add the relation
+          LibraryRelationsTable.insert(relBatcher, relation.getType(), lhsEid, rhsEid, libraryID);
+          count++;
+        }
+        relBatcher.insert();
+        logger.info("    " + count + " relations inserted.");
+      }
+      
+      // Add the imports to the database
+      {
+        logger.info("  Beginning insert of imports...");
+        int count = 0;
+        InsertBatcher batcher = LibraryImportsTable.getInsertBatcher(executor);
+
+        for (ImportEX imp : ExtractedReader.getImportReader(library)) {
+          String fileID = fileMap.get(imp.getFile());
+          if (fileID != null) {
+            String leid = getEid(relBatcher, libraryID, imp.getImported(), imp.isOnDemand());
+            LibraryImportsTable.insert(batcher, imp.isStatic(), imp.isOnDemand(), leid, libraryID, fileID, imp.getOffset(), imp.getLength());
+            count++;
+          } else {
+            logger.log(Level.SEVERE, "Unknown file: " + imp.getFile());
+          }
+        }
+        batcher.insert();
+        logger.info("    " + count + " imports inserted.");
+      }
+      
+      // Add the comments to the database
+      {
+        logger.info("  Beginning insert of comments...");
+        int count = 0;
+        InsertBatcher batcher = LibraryCommentsTable.getInsertBatcher(executor);
+        for (CommentEX comment : ExtractedReader.getCommentReader(library)) {
+          // Look up the file id
+          String fileID = fileMap.get(comment.getPath());
+          
+          if (fileID == null) {
+            logger.log(Level.SEVERE, "Missing file for comment: " + comment.getPath());
+          } else {
+            // If it's a javadoc comment
+            if (comment.getType() == Comment.JAVADOC) {
+              // Look up the eid
+              String eid = entityMap.get(comment.getFqn());
+              if (eid == null) {
+                logger.log(Level.SEVERE, "Missing declared type for comment: " + comment.getFqn());
+              } else {
+                logger.log(Level.SEVERE, "Inserting comment to: " + eid);
+                LibraryCommentsTable.insertJavadoc(batcher, eid, libraryID, fileID, comment.getOffset(), comment.getLength());
+              }
+            } else if (comment.getType() == Comment.UJAVADOC) {
+              LibraryCommentsTable.insertUnassociatedJavadoc(batcher, libraryID, fileID, comment.getOffset(), comment.getLength());
+            } else {
+              LibraryCommentsTable.insertComment(batcher, comment.getType(), libraryID, fileID, comment.getOffset(), comment.getLength());
+            }
+            count++;
+          }
+        }
+        batcher.insert();
+        logger.info("    " + count + " comments inserted.");
+      }
     }
   }
   
-  private String getEid(InsertBatcher batcher, Map<String, String> entityMap, String libraryID, String fqn) {
+  private String getEid(InsertBatcher batcher, String libraryID, String fqn, boolean maybePackage) {
     // Maybe it's just in the map
     if (entityMap.containsKey(fqn)) {
       return entityMap.get(fqn);
@@ -232,9 +394,9 @@ public class InitializeDatabase extends DatabaseAccessor {
         int arrIndex = fqn.indexOf("[]");
         String elementFqn = fqn.substring(0, arrIndex);
         int dimensions = (fqn.length() - arrIndex) / 2;
-        String eid = LibraryEntitiesTable.insertArray(executor, elementFqn, dimensions, libraryID);
+        String eid = LibraryEntitiesTable.insertArray(executor, fqn, dimensions, libraryID);
             
-        String elementEid = getEid(batcher, entityMap, libraryID, elementFqn);
+        String elementEid = getEid(batcher, libraryID, elementFqn, false);
         LibraryRelationsTable.insert(batcher, Relation.HAS_ELEMENTS_OF, eid, elementEid, libraryID);
         
         entityMap.put(fqn, eid);
@@ -247,7 +409,7 @@ public class InitializeDatabase extends DatabaseAccessor {
         
         if (!fqn.equals("<?>")) {
           boolean isLower = TypeUtils.isLowerBound(fqn);
-          String bound = getEid(batcher, entityMap, libraryID, TypeUtils.getWildcardBound(fqn));
+          String bound = getEid(batcher, libraryID, TypeUtils.getWildcardBound(fqn), false);
           if (isLower) {
             LibraryRelationsTable.insert(batcher, Relation.HAS_LOWER_BOUND, eid, bound, libraryID);
           } else {
@@ -264,7 +426,7 @@ public class InitializeDatabase extends DatabaseAccessor {
         String eid = LibraryEntitiesTable.insert(executor, Entity.TYPE_VARIABLE, fqn, libraryID);
         
         for (String bound : TypeUtils.breakTypeVariable(fqn)) {
-          String boundEid = getEid(batcher, entityMap, libraryID, bound);
+          String boundEid = getEid(batcher, libraryID, bound, false);
           LibraryRelationsTable.insert(batcher, Relation.HAS_UPPER_BOUND, eid, boundEid, libraryID);
         }
         
@@ -277,14 +439,21 @@ public class InitializeDatabase extends DatabaseAccessor {
       if (baseIndex > 0 && fqn.indexOf('>') > baseIndex) {
         String eid = LibraryEntitiesTable.insert(executor, Entity.PARAMETERIZED_TYPE, fqn, libraryID);
         
-        String baseType = getEid(batcher, entityMap, libraryID, TypeUtils.getBaseType(fqn));
+        String baseType = getEid(batcher, libraryID, TypeUtils.getBaseType(fqn), false);
         LibraryRelationsTable.insert(batcher, Relation.HAS_BASE_TYPE, eid, baseType, libraryID);
         
         for (String arg : TypeUtils.breakParametrizedType(fqn)) {
-          String argEid = getEid(batcher, entityMap, libraryID, arg);
+          String argEid = getEid(batcher, libraryID, arg, false);
           LibraryRelationsTable.insert(batcher, Relation.HAS_UPPER_BOUND, eid, argEid, libraryID);
         }
         
+        entityMap.put(fqn, eid);
+        return eid;
+      }
+      
+      // Perhaps a package
+      if (maybePackage) {
+        String eid = LibraryEntitiesTable.insert(executor, Entity.PACKAGE , fqn, libraryID);
         entityMap.put(fqn, eid);
         return eid;
       }

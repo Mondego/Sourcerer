@@ -21,7 +21,7 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.IJarRelationWriter;
 import edu.uci.ics.sourcerer.model.Relation;
-import edu.uci.ics.sourcerer.model.extracted.RelationExJarParser;
+import edu.uci.ics.sourcerer.model.extracted.RelationExParser;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 
 /**
@@ -34,36 +34,36 @@ public class JarRelationWriter extends ExtractorWriter implements IJarRelationWr
   
   @Override
   public void writeInside(String innerFqn, String outerFqn) {
-    write(RelationExJarParser.getLine(Relation.INSIDE, innerFqn, outerFqn));
+    write(RelationExParser.getJarLine(Relation.INSIDE, innerFqn, outerFqn));
   }
   
   @Override
   public void writeExtends(String subTypeFqn, String superTypeFqn) {
-    write(RelationExJarParser.getLine(Relation.EXTENDS, subTypeFqn, superTypeFqn));
+    write(RelationExParser.getJarLine(Relation.EXTENDS, subTypeFqn, superTypeFqn));
   }
   
   @Override
   public void writeImplements(String subTypeFqn, String superTypeFqn) {
-    write(RelationExJarParser.getLine(Relation.IMPLEMENTS, subTypeFqn, superTypeFqn));
+    write(RelationExParser.getJarLine(Relation.IMPLEMENTS, subTypeFqn, superTypeFqn));
   }
   
   @Override
   public void writeHolds(String fqn, String type) {
-    write(RelationExJarParser.getLine(Relation.HOLDS, fqn, type));
+    write(RelationExParser.getJarLine(Relation.HOLDS, fqn, type));
   }
   
   @Override
   public void writeReturns(String fqn, String returnType) {
-    write(RelationExJarParser.getLine(Relation.RETURNS, fqn, returnType));
+    write(RelationExParser.getJarLine(Relation.RETURNS, fqn, returnType));
   }
    
   @Override
   public void writeThrows(String fqn, String exceptionType) {
-    write(RelationExJarParser.getLine(Relation.THROWS, fqn, exceptionType));
+    write(RelationExParser.getJarLine(Relation.THROWS, fqn, exceptionType));
   }
   
   @Override
   public void writeParametrizedBy(String fqn, String typeVariable, int position) {
-    write(RelationExJarParser.getLineParametrizedBy(fqn, typeVariable, position));
+    write(RelationExParser.getJarLineParametrizedBy(fqn, typeVariable, position));
   }
 }

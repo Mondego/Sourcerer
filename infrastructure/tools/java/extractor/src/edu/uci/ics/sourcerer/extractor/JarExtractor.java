@@ -23,7 +23,6 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
 
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClassFile;
 
 import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor;
@@ -66,7 +65,7 @@ public class JarExtractor {
         EclipseUtils.initializeJarProject(jar);
         
         logger.info("  Getting class files...");
-        Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(new Path(jar.getJarFile().getPath()));
+        Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(jar);
         
         logger.info("  Extracting " + classFiles.size() + " class files...");
         

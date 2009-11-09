@@ -47,6 +47,15 @@ public final class EntitiesTable {
    *  +-------------+-----------------+-------+--------+
    */
   
+  //---- LOCK ----
+  public static String getReadLock() {
+    return SchemaUtils.getReadLock(TABLE);
+  }
+  
+  public static String getWriteLock() {
+    return SchemaUtils.getWriteLock(TABLE);
+  }
+  
   // ---- CREATE ----
   public static void createTable(QueryExecutor executor) {
     executor.createTable(TABLE,
@@ -70,38 +79,38 @@ public final class EntitiesTable {
     return executor.getKeyInsertBatcher(TABLE, processor);
   }
   
-  private static String getInsertValue(Entity type, String fqn, String modifiers, String multi, String fileID, String projectID, String offset, String length) {
-    return "(NULL, " +
-        SchemaUtils.convertNotNullVarchar(type.name()) + "," +
-        SchemaUtils.convertNotNullVarchar(fqn) + "," +
-        SchemaUtils.convertNumber(modifiers) + "," +
-        SchemaUtils.convertNumber(multi) + "," +
-        SchemaUtils.convertNumber(fileID) + "," +
-        SchemaUtils.convertNotNullNumber(projectID) + "," +
-        SchemaUtils.convertOffset(offset) + "," + 
-        SchemaUtils.convertLength(length) + ")";
+  private static String getInsertValue(Entity type, String fqn, String modifiers, String multi, String projectID, String fileID, String offset, String length) {
+    return SchemaUtils.getSerialInsertValue(
+        SchemaUtils.convertNotNullVarchar(type.name()),
+        SchemaUtils.convertNotNullVarchar(fqn),
+        SchemaUtils.convertNumber(modifiers),
+        SchemaUtils.convertNumber(multi),
+        SchemaUtils.convertNotNullNumber(projectID),
+        SchemaUtils.convertNumber(fileID),
+        SchemaUtils.convertOffset(offset),
+        SchemaUtils.convertLength(length));
   }
   
-  public static <T> void insert(KeyInsertBatcher<T> batcher, EntityEX entity, String fileID, String projectID, T pairing) {
-    batcher.addValue(getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), "NULL", projectID, fileID, entity.getStartPosition(), entity.getLength()), pairing);
+  public static <T> void insert(KeyInsertBatcher<T> batcher, EntityEX entity, String projectID, String fileID, T pairing) {
+    batcher.addValue(getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), null, projectID, fileID, entity.getStartPosition(), entity.getLength()), pairing);
   }
   
   public static String insert(QueryExecutor executor, Entity type, String fqn, String projectID) {
-    return executor.insertSingleWithKey(TABLE, getInsertValue(type, fqn, null, null, null, projectID, null, null));
+    return executor.insertSingleWithKey(TABLE, getInsertValue(type, fqn, null, null, projectID, null, null, null));
   }
   
   public static String insertArray(QueryExecutor executor, String fqn, int size, String projectID) {
-    return executor.insertSingleWithKey(TABLE, getInsertValue(Entity.ARRAY, fqn, null, "" + size, null, projectID, null, null));
+    return executor.insertSingleWithKey(TABLE, getInsertValue(Entity.ARRAY, fqn, null, "" + size, projectID, null, null, null));
   }
   
-  public static String insertLocalVariable(QueryExecutor executor, LocalVariableEX local, String fileID, String projectID) {
+  public static String insertLocalVariable(QueryExecutor executor, LocalVariableEX var, String projectID, String fileID) {
     Entity type = null;
-    if (local.getType() == LocalVariable.LOCAL) {
+    if (var.getType() == LocalVariable.LOCAL) {
       type = Entity.LOCAL_VARIABLE;
-    } else if (local.getType() == LocalVariable.PARAM) {
+    } else if (var.getType() == LocalVariable.PARAM) {
       type = Entity.PARAMETER;
     }
-    return executor.insertSingleWithKey(TABLE, getInsertValue(type, local.getName(), local.getModifiers(), local.getPosition(), fileID, projectID, local.getStartPos(), local.getLength()));
+    return executor.insertSingleWithKey(TABLE, getInsertValue(type, var.getName(), var.getModifiers(), var.getPosition(), projectID, fileID, var.getStartPos(), var.getLength()));
   }
   
   // ---- DELETE ----

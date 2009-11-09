@@ -35,18 +35,18 @@ public class ProblemExParser implements ModelExParser<ProblemEX> {
     return new ProblemExParser();
   }
   
-  public String getLine(Problem type, int errorCode, String message, String filename) {
+  public static String getLine(Problem type, int errorCode, String message, String filename) {
     return type.name() + " " + errorCode + " " + filename + " " + message;
   }
   
-  private static Pattern pattern = Pattern.compile("(\\w*)\\s(\\d*)\\s(\\w*)\\s(.*)");
+  private static Pattern pattern = Pattern.compile("([^\\s]*)\\s([^\\s]*)\\s([^\\s]*)\\s(.*)");
   @Override
   public ProblemEX parseLine(String line) {
     Matcher matcher = pattern.matcher(line);
     if (matcher.matches()) {
       return new ProblemEX(Problem.valueOf(matcher.group(1)), matcher.group(3), matcher.group(2), matcher.group(4));
     } else {
-      logger.log(Level.SEVERE, "Unable to parse line: " + line);
+      logger.log(Level.SEVERE, "Unable to parse problem: " + line);
       return null;
     }
   }

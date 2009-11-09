@@ -40,7 +40,7 @@ public abstract class AbstractInsertBatcher {
     builder.append(value).append(',');
   }
   
-  public void incrementCount() {
+  protected void incrementCount() {
     if (++count == BATCH_SIZE) {
       insert();
     }

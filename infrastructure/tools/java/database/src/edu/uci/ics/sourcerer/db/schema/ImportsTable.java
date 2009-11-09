@@ -32,26 +32,39 @@ public final class ImportsTable {
    *  +-------------+-------------------+-------+--------+
    *  | Column name | Type              | Null? | Index? |
    *  +-------------+-------------------+-------+--------+
-   *  | static      | ENUM('STATIC')    | Yes   | No     |
-   *  | on_demand   | ENUM('ON_DEMAND') | Yes   | No     |
+   *  | static      | BOOLEAN           | No    | No     |
+   *  | on_demand   | BOOLEAN           | No    | No     |
    *  | leid        | BIGINT UNSIGNED   | Yes   | Yes    |
    *  | jeid        | BIGINT UNSIGNED   | Yes   | Yes    |
    *  | eid         | BIGINT UNSIGNED   | Yes   | Yes    |
    *  | project_id  | BIGINT UNSIGNED   | No    | Yes    |
    *  | file_id     | BIGINT UNSIGNED   | No    | Yes    |
+   *  | offset      | INT UNSIGNED      | No    | No     |
+   *  | length      | INT UNSIGNED      | No    | No     |
    *  +-------------+-------------------+-------+--------+
    */
+  
+  //---- LOCK ----
+  public static String getReadLock() {
+    return SchemaUtils.getReadLock(TABLE);
+  }
+  
+  public static String getWriteLock() {
+    return SchemaUtils.getWriteLock(TABLE);
+  }
   
   // ---- CREATE ----
   public static void createTable(QueryExecutor executor) {
     executor.createTable(TABLE, 
-        "static ENUM('STATIC')",
-        "on_demand ENUM('ON_DEMAND')",
+        "static BOOLEAN NOT NULL",
+        "on_demand BOOLEAN NOT NULL",
         "leid BIGINT UNSIGNED",
         "jeid BIGINT UNSIGNED",
         "eid BIGINT UNSIGNED",
         "project_id BIGINT UNSIGNED NOT NULL",
         "file_id BIGINT UNSIGNED NOT NULL",
+        "offset INT UNSIGNED NOT NULL",
+        "length INT UNSIGNED NOT NULL",
         "INDEX(leid)",
         "INDEX(jeid)",
         "INDEX(eid)",
@@ -64,17 +77,19 @@ public final class ImportsTable {
     return executor.getInsertBatcher(TABLE);
   }
   
-  private static String getInsertValue(boolean isStatic, boolean onDemand, TypedEntityID eid, String fileID, String projectID) {
-    return "(" +
-      (isStatic ? "'STATIC'" : "NULL") + "," +
-      (onDemand ? "'ON_DEMAND'" : "NULL") + "," +
-      (eid.getType() == TypedEntityID.Type.LIBRARY? (eid.getID() + ",NULL,NULL,") : (eid.getType() == TypedEntityID.Type.JAR ? ("NULL," + eid.getID() + ",NULL,") : ("NULL,NULL," + eid.getID() + ","))) +
-      SchemaUtils.convertNotNullNumber(fileID) + "," +
-      SchemaUtils.convertNotNullNumber(projectID) + ")";
+  private static String getInsertValue(boolean isStatic, boolean onDemand, TypedEntityID eid, String projectID, String fileID, String offset, String length) {
+    return SchemaUtils.getInsertValue(
+        SchemaUtils.convertBoolean(isStatic),
+        SchemaUtils.convertBoolean(onDemand),
+        SchemaUtils.convertProjectTypedEntityID(eid),
+        SchemaUtils.convertNotNullNumber(projectID),
+        SchemaUtils.convertNotNullNumber(fileID),
+        SchemaUtils.convertOffset(offset),
+        SchemaUtils.convertLength(length));
   }
   
-  public static void insert(InsertBatcher batcher, boolean isStatic, boolean onDemand, TypedEntityID eid, String fileID, String projectID) {
-    batcher.addValue(getInsertValue(isStatic, onDemand, eid, fileID, projectID));
+  public static void insert(InsertBatcher batcher, boolean isStatic, boolean onDemand, TypedEntityID eid, String projectID, String fileID, String offset, String length) {
+    batcher.addValue(getInsertValue(isStatic, onDemand, eid, projectID, fileID, offset, length));
   }
   
   // ---- DELETE ----

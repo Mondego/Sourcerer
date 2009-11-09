@@ -17,15 +17,11 @@
  */
 package edu.uci.ics.sourcerer.repo.extracted;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Properties;
-import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
@@ -33,56 +29,45 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedProject extends Extracted {
-  public static final Property<String> FILE_FILE = new StringProperty("file-file", "files.txt", "Repository Manager", "Filename for the extracted files.");
-  public static final Property<String> PROBLEM_FILE = new StringProperty("problem-file", "problems.txt", "Repository Manager", "Filename for the extracted problems.");
   public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Repository Manager", "Filename for the associated jars.");
-  public static final Property<String> IMPORT_FILE = new StringProperty("import-file", "imports.txt", "Repository Manager", "Filename for the extracted imports.");
   
-  private String relativetPath;
-  private String name;
-  
+  private ProjectProperties properties;
+  private String relativePath;
+   
   public ExtractedProject(File content, String relativePath) {
     super(content);
-    this.relativetPath = relativePath;
-    loadProperties();
+    this.relativePath = relativePath;
+    properties = ProjectProperties.load(getPropertiesFile());
   }
   
-  private void loadProperties() {
-    File properties = new File(content, "project.properties");
-    if (properties.exists()) {
-      try {
-        Properties props = new Properties();
-        InputStream is = new FileInputStream(properties);
-        props.load(is);
-        is.close();
-        name = props.getProperty("name");
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Unable to load properties", e);
-      }
+  public ExtractedProject(File content, String relativePath, File propFile) {
+    super(content);
+    this.relativePath = relativePath;
+    File exPropFile = getPropertiesFile();
+    if (exPropFile.exists()) {
+      properties = ProjectProperties.load(exPropFile);
+    } else {
+      properties = ProjectProperties.load(propFile);
     }
   }
   
   public String getRelativePath() {
-    return relativetPath;
+    return relativePath;
   }
   
   public String getName() {
-    return name;
+    return properties.getName();
   }
   
-  public InputStream getFileInputStream() throws IOException {
-    return getInputStream(FILE_FILE);
+  public boolean extracted() {
+    return properties.extracted();
   }
   
-  public InputStream getProblemInputStream() throws IOException {
-    return getInputStream(PROBLEM_FILE);
+  public void reportExtraction() {
+    properties.reportExtraction(getPropertiesFile());
   }
   
   public InputStream getJarInputStream() throws IOException {
     return getInputStream(JAR_FILE_FILE);
-  }
-  
-  public InputStream getImportInputStream() throws IOException {
-    return getInputStream(IMPORT_FILE);
   }
 }

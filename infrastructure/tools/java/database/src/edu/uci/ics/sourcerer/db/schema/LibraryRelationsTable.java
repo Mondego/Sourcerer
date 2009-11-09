@@ -37,6 +37,9 @@ public final class LibraryRelationsTable {
    *  | lhs_leid      | BIGINT UNSIGNED | No    | Yes    |
    *  | rhs_leid      | BIGINT UNSIGNED | No    | Yes    |
    *  | library_id    | BIGINT UNSIGNED | No    | Yes    |
+   *  | lclass_fid    | BIGINT UNSIGNED | Yes   | Yes    |
+   *  | offset        | INT UNSIGNED    | Yes   | No     |
+   *  | length        | INT UNSIGNED    | Yes   | No     |
    *  +---------------+-----------------+-------+--------+
    */
   
@@ -44,14 +47,18 @@ public final class LibraryRelationsTable {
   public static void createTable(QueryExecutor executor) {
     executor.createTable(TABLE,
         "relation_id SERIAL",
-        "relation_type " + SchemaUtils.getEnumCreate(Relation.getLibraryValues()) + " NOT NULL",
+        "relation_type " + SchemaUtils.getEnumCreate(Relation.values()) + " NOT NULL",
         "lhs_leid BIGINT UNSIGNED NOT NULL",
         "rhs_leid BIGINT UNSIGNED NOT NULL",
         "library_id BIGINT UNSIGNED NOT NULL",
+        "lclass_fid BIGINT UNSIGNED",
+        "offset INT UNSIGNED",
+        "length INT UNSIGNED",
         "INDEX(relation_type)",
         "INDEX(lhs_leid)",
         "INDEX(rhs_leid)",
-        "INDEX(library_id)");
+        "INDEX(library_id)",
+        "INDEX(lclass_fid)");
   }
   
   // ---- INSERT ----
@@ -59,15 +66,22 @@ public final class LibraryRelationsTable {
     return executor.getInsertBatcher(TABLE);
   }
 
-  private static String getInsertValue(Relation type, String lhsEid, String rhsEid, String libraryID) {
-    return "(NULL, " +
-        "'" + type.name() + "', " +
-        SchemaUtils.convertNotNullNumber(lhsEid) + ", " +
-        SchemaUtils.convertNotNullNumber(rhsEid) + ", " + 
-        SchemaUtils.convertNotNullNumber(libraryID) + ")";
+  private static String getInsertValue(Relation type, String lhsEid, String rhsEid, String libraryID, String libraryClassFileID, String offset, String length) {
+    return SchemaUtils.getSerialInsertValue(
+        SchemaUtils.convertNotNullVarchar(type.name()),
+        SchemaUtils.convertNotNullNumber(lhsEid),
+        SchemaUtils.convertNotNullNumber(rhsEid), 
+        SchemaUtils.convertNotNullNumber(libraryID),
+        SchemaUtils.convertNumber(libraryClassFileID), 
+        SchemaUtils.convertOffset(offset),
+        SchemaUtils.convertLength(length));
   }
   
   public static void insert(InsertBatcher batcher, Relation type, String lhsEid, String rhsEid, String libraryID) {
-    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, libraryID));
+    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, libraryID, null, null, null));
+  }
+  
+  public static void insert(InsertBatcher batcher, Relation type, String lhsEid, String rhsEid, String libraryID, String libraryClassFileID, String offset, String length) {
+    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, libraryID, libraryClassFileID, offset, length));
   }
 }

@@ -38,7 +38,10 @@ public final class JarRelationsTable{
    *  | lhs_jeid      | BIGINT UNSIGNED | No    | Yes    |
    *  | rhs_leid      | BIGINT UNSIGNED | Yes   | Yes    |
    *  | rhs_jeid      | BIGINT UNSIGNED | Yes   | Yes    |
-   *  | jar_id        | BIGINT UNSIGNED | No    | Yes    |
+   *  | jclass_fid    | BIGINT UNSIGNED | No    | Yes    |
+   *  | jfile_id      | BIGINT UNSIGNED | Yes   | Yes    |
+   *  | offset        | INT UNSIGNED    | Yes   | No     |
+   *  | length        | INT UNSIGNED    | Yes   | No     |
    *  +---------------+-----------------+-------+--------+
    */
   
@@ -46,16 +49,20 @@ public final class JarRelationsTable{
   public static void createTable(QueryExecutor executor) {
     executor.createTable(TABLE,
         "relation_id SERIAL",
-        "relation_type " + SchemaUtils.getEnumCreate(Relation.getJarValues()) + " NOT NULL",
+        "relation_type " + SchemaUtils.getEnumCreate(Relation.values()) + " NOT NULL",
         "lhs_jeid BIGINT UNSIGNED NOT NULL",
         "rhs_leid BIGINT UNSIGNED",
         "rhs_jeid BIGINT UNSIGNED",
         "jar_id BIGINT UNSIGNED NOT NULL",
+        "jclass_fid BIGINT UNSIGNED",
+        "offset INT UNSIGNED",
+        "length INT UNSIGNED",
         "INDEX(relation_type)",
         "INDEX(lhs_jeid)",
         "INDEX(rhs_leid)",
         "INDEX(rhs_jeid)",
-        "INDEX(jar_id)");
+        "INDEX(jar_id)",
+        "INDEX(jclass_fid)");
   }
   
   // ---- INSERT ----
@@ -63,17 +70,24 @@ public final class JarRelationsTable{
     return executor.getInsertBatcher(TABLE);
   }
   
-  private static String getInsertValue(Relation type, String lhsEid, TypedEntityID rhsEid, String jarID) {
-    return "(NULL," +
-        SchemaUtils.convertNotNullVarchar(type.name()) + "," +
-        SchemaUtils.convertNotNullNumber(lhsEid) + "," +
-        (rhsEid.getType() == TypedEntityID.Type.LIBRARY ? (rhsEid.getID() + ",NULL,") : ("NULL," + rhsEid.getID() + ",")) +
-        SchemaUtils.convertNotNullNumber(jarID) + ")";
+  private static String getInsertValue(Relation type, String lhsEid, TypedEntityID rhsEid, String jarID, String jarClassFileID, String offset, String length) {
+    return SchemaUtils.getSerialInsertValue(
+        SchemaUtils.convertNotNullVarchar(type.name()),
+        SchemaUtils.convertNotNullNumber(lhsEid),
+        SchemaUtils.convertJarTypedEntityID(rhsEid),
+        SchemaUtils.convertNotNullNumber(jarID),
+        SchemaUtils.convertNumber(jarClassFileID),
+        SchemaUtils.convertOffset(offset),
+        SchemaUtils.convertLength(length));
   }
   
   
   public static void insert(InsertBatcher batcher, Relation type, String lhsEid, TypedEntityID rhsEid, String jarID) {
-    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, jarID));
+    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, jarID, null, null, null));
+  }
+  
+  public static void insert(InsertBatcher batcher, Relation type, String lhsEid, TypedEntityID rhsEid, String jarID, String jarClassFileID, String offset, String length) {
+    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, jarID, jarClassFileID, offset, length));
   }
   
   // ---- DELETE ----
