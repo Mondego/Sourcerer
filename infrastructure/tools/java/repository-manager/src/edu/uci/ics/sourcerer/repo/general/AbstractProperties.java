@@ -50,6 +50,20 @@ public abstract class AbstractProperties {
       }
     }
   }
+  
+  protected int readIntProperty(String name) {
+    String value = properties.getProperty(name);
+    if (value != null) {
+      try {
+        return Integer.parseInt(value);
+      } catch (NumberFormatException e) {
+        logger.log(Level.SEVERE, "Error reading int property: " + value);
+        return -1;
+      }
+    } else {
+      return -1;
+    }
+  }
 
   protected void write(File file) {
     write(file, properties);

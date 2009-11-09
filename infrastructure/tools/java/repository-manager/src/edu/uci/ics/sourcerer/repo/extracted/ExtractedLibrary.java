@@ -32,8 +32,8 @@ public class ExtractedLibrary extends Extracted {
     properties = LibraryProperties.load(getPropertiesFile());
   }
     
-  public void createPropertiesFile(String name, boolean hasSource, boolean sourceError) {
-    LibraryProperties.create(getPropertiesFile(), name, hasSource, sourceError);
+  public void createPropertiesFile(String name, int fromBinary, int fromSource, int sourceError) {
+    LibraryProperties.create(getPropertiesFile(), name, fromBinary, fromSource, sourceError);
   }
   
   public String getName() {
@@ -45,10 +45,22 @@ public class ExtractedLibrary extends Extracted {
   }
   
   public boolean hasSource() {
-    return properties.hasSource();
+    return getExtractedFromSource() + getSourceFilesWithErrors() > 0;
   }
   
   public boolean sourceError() {
-    return properties.sourceError();
+    return getSourceFilesWithErrors() > 0;
+  }
+  
+  public int getExtractedFromBinaryCount() {
+    return properties.getExtractedFromBinary();
+  }
+  
+  public int getExtractedFromSource() {
+    return properties.getExtractedFromSource();
+  }
+  
+  public int getSourceFilesWithErrors() {
+    return properties.getSourceFilesWithErrors();
   }
 }

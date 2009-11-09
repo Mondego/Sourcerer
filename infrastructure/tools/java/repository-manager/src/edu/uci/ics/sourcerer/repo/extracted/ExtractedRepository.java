@@ -17,16 +17,22 @@
  */
 package edu.uci.ics.sourcerer.repo.extracted;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.File;
 import java.util.Collection;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedRepository extends AbstractRepository {
+  public static final Property<String> EXTRACTION_STATS_FILE = new StringProperty("extraction-stats-file", "extraction-stats.txt", "Repository Manager", "Output file for the extraction stats.");
+  
   private Collection<ExtractedLibrary> libraries;
   private Collection<ExtractedJar> jars;
   private Collection<ExtractedProject> projects;
@@ -77,10 +83,6 @@ public class ExtractedRepository extends AbstractRepository {
     return new ExtractedRepository(repoRoot);
   }
   
-  public static ExtractedRepository getUninitializedRepository(File repoRoot) {
-    return new ExtractedRepository(repoRoot);
-  }
-  
   public Collection<ExtractedLibrary> getLibraries() {
     if (libraries == null) {
       populateLibraries();
@@ -101,5 +103,69 @@ public class ExtractedRepository extends AbstractRepository {
       populateRepository();
     }
     return projects;
+  }
+  
+  public void computeExtractionStats() {
+    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(EXTRACTION_STATS_FILE);
+    if (libraries == null) {
+      logger.info("Loading libraries...");
+      populateLibraries();
+    }
+    logger.info("Computing stats for " + libraries.size() + " libraries.");
+    {
+      int extracted = 0;
+      int nonEmpty = 0;
+      int source = 0;
+      int sourceError = 0;
+      int totalBinaryExtracted = 0;
+      int totalSourceExtracted = 0;
+      int totalSourceWithError = 0;
+      for (ExtractedLibrary lib : libraries) {
+        if (lib.extracted()) {
+          extracted++;
+          if (lib.getExtractedFromBinaryCount() > 0) {
+            nonEmpty++;
+          }
+          totalBinaryExtracted += lib.getExtractedFromBinaryCount();
+          if (lib.hasSource()) {
+            source++;
+            totalSourceExtracted += lib.getExtractedFromSource();
+          }
+          if (lib.sourceError()) {
+            sourceError++;
+            totalSourceWithError += lib.getSourceFilesWithErrors();
+          }
+        }
+      }
+      
+      printer.addHeader("Extracted Library Statistics");
+      printer.beginTable(2);
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("Extracted libraries");
+      printer.addCell(extracted);
+      printer.beginRow();
+      printer.addCell("Non-empty libraries");
+      printer.addCell(nonEmpty);
+      printer.beginRow();
+      printer.addCell("Binary files extracted");
+      printer.addCell(totalBinaryExtracted);
+      printer.beginRow();
+      printer.addCell("Libraries with source");
+      printer.addCell(source);
+      printer.beginRow();
+      printer.addCell("Source files extracted");
+      printer.addCell(totalSourceExtracted);
+      printer.beginRow();
+      printer.addCell("Libraries with source errors");
+      printer.addCell(sourceError);
+      printer.beginRow();
+      printer.addCell("Source files with errors");
+      printer.addCell(totalSourceWithError);
+      printer.addDividerRow();
+      printer.endTable();
+    }
+    
+    printer.close();
   }
 }

@@ -49,9 +49,6 @@ public final class FeatureExtractor {
   private ASTParser parser;
   private WriterBundle bundle;
   
-  private boolean foundSource;
-  private boolean sourceError;
-  
   public FeatureExtractor(WriterBundle bundle) {
     this.bundle = bundle;
     parser = ASTParser.newParser(AST.JLS3);
@@ -61,15 +58,41 @@ public final class FeatureExtractor {
     bundle.close();
   }
   
-  public boolean foundSource() {
-    return foundSource;
+  public final static class ClassExtractionReport {
+    private int extractedFromBinary = 0;
+    private int extractedFromSource = 0;
+    private int sourceWithErrors = 0;
+    
+    private ClassExtractionReport() {}
+    
+    private void reportBinaryExtraction() {
+      extractedFromBinary++;
+    }
+    
+    private void reportSourceExtraction() {
+      extractedFromSource++;
+    }
+    
+    private void reportSourceWithErrors() {
+      sourceWithErrors++;
+      extractedFromBinary++;
+    }
+    
+    public int getExtractedFromBinary() {
+      return extractedFromBinary;
+    }
+    
+    public int getExtractedFromSource() {
+      return extractedFromSource;
+    }
+    
+    public int getSourceFilesWithErrors() {
+      return sourceWithErrors;
+    }
   }
   
-  public boolean sourceError() {
-    return sourceError;
-  }
-  
-  public void extractClassFiles(Collection<IClassFile> classFiles) {
+  public ClassExtractionReport extractClassFiles(Collection<IClassFile> classFiles) {
+    ClassExtractionReport report = new ClassExtractionReport();
     ClassFileExtractor extractor = new ClassFileExtractor(bundle);
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
     for (IClassFile classFile : classFiles) {
@@ -78,8 +101,8 @@ public final class FeatureExtractor {
           ISourceRange source = classFile.getSourceRange();
           if (source == null || source.getLength() == 0) {
             extractor.extractClassFile(classFile);
+            report.reportBinaryExtraction();
           } else {
-            foundSource = true;
             parser.setStatementsRecovery(true);
             parser.setResolveBindings(true);
             parser.setBindingsRecovery(true);
@@ -87,20 +110,34 @@ public final class FeatureExtractor {
             
             CompilationUnit unit = (CompilationUnit) parser.createAST(null);
             boolean foundProblem = false;
+            // start by checking for a "public type" error
+            // just skip this unit in if one is found 
             for (IProblem problem : unit.getProblems()) {
-              if (problem.isError()) {
+              if (problem.isError() && problem.getID() == 16777541) {
                 foundProblem = true;
               }
             }
             if (foundProblem) {
-              sourceError = true;
+              continue;
+            } else {
+              // Check for other problems
+              for (IProblem problem : unit.getProblems()) {
+                if (problem.isError()) {
+                  logger.log(Level.SEVERE, "Error in source for class file (" + classFile.getElementName() + "): " + problem.getMessage());
+                  foundProblem = true;
+                }
+              }
+            }
+            if (foundProblem) {
+              report.reportSourceWithErrors();
               extractor.extractClassFile(classFile);
             } else {
               try {
                 unit.accept(visitor);
+                report.reportSourceExtraction();
               } catch (Exception e) {
                 logger.log(Level.SEVERE, "Error in extracting " + classFile.getElementName(), e);
-                sourceError = true;
+                report.reportSourceWithErrors();
                 extractor.extractClassFile(classFile);
               }
             }
@@ -110,6 +147,7 @@ public final class FeatureExtractor {
         logger.log(Level.SEVERE, "Unable to extract " + classFile.getElementName(), e);
       }
     }
+    return report;
   }
    
   public void extractSourceFiles(Collection<IFile> sourceFiles) {

@@ -46,7 +46,7 @@ public class JarExtractor {
     Repository input = Repository.getRepository(INPUT_REPO.getValue());
     
     // Load the output repository
-    ExtractedRepository output = ExtractedRepository.getUninitializedRepository(OUTPUT_REPO.getValue());
+    ExtractedRepository output = ExtractedRepository.getRepository(OUTPUT_REPO.getValue());
     
     logger.info("Getting the jar index...");
     JarIndex index = input.getJarIndex();
@@ -82,7 +82,7 @@ public class JarExtractor {
         extractor.close();
         
         // Write the properties file
-        extracted.reportExecution(extractor.foundSource(), extractor.sourceError());
+//        extracted.reportExecution(extractor.foundSource(), extractor.sourceError());
        
         // End the error logging
         Logging.removeFileLogger(extracted.getContent());

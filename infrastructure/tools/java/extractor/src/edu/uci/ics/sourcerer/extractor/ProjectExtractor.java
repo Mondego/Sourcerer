@@ -29,7 +29,7 @@ public class ProjectExtractor {
     Repository input = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
     
     // Load the output repository
-    ExtractedRepository output = ExtractedRepository.getUninitializedRepository(OUTPUT_REPO.getValue());
+    ExtractedRepository output = ExtractedRepository.getRepository(OUTPUT_REPO.getValue());
     
     logger.info("Getting the project listing...");
     Collection<RepoProject> projects = input.getProjects();

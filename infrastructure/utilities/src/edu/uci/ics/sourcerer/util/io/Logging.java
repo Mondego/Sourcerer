@@ -189,7 +189,7 @@ public final class Logging {
         errorHandler = new FileHandler(new File(OUTPUT.getValue(), ERROR_LOG.getValue()).getPath());
         errorHandler.setFormatter(errorFormatter);
       }
-      errorHandler.setLevel(Level.WARNING);
+      errorHandler.setLevel(Level.INFO);
       
       StreamHandler infoHandler = null;
       if (suppressFileLogging) {
