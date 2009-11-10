@@ -52,11 +52,13 @@ public class ExtractedRepository extends AbstractRepository {
   private void populateLibraries() {
     libraries = Helper.newLinkedList();
     File libsDir = getLibsDir();
-    for (File lib : libsDir.listFiles()) {
-      if (lib.isDirectory()) {
-        ExtractedLibrary extracted = new ExtractedLibrary(lib);
-        if (extracted.extracted()) {
-          libraries.add(extracted);
+    if (libsDir.exists()) {
+      for (File lib : libsDir.listFiles()) {
+        if (lib.isDirectory()) {
+          ExtractedLibrary extracted = new ExtractedLibrary(lib);
+          if (extracted.extracted()) {
+            libraries.add(extracted);
+          }
         }
       }
     }
@@ -65,11 +67,13 @@ public class ExtractedRepository extends AbstractRepository {
   private void populateJars() {
     jars = Helper.newLinkedList();
     File jarsDir = getJarsDir();
-    for (File jar : jarsDir.listFiles()) {
-      if (jar.isDirectory()) {
-        ExtractedJar extracted = new ExtractedJar(jar);
-        if (extracted.extracted()) {
-          jars.add(extracted);
+    if (jarsDir.exists()) {
+      for (File jar : jarsDir.listFiles()) {
+        if (jar.isDirectory()) {
+          ExtractedJar extracted = new ExtractedJar(jar);
+          if (extracted.extracted()) {
+            jars.add(extracted);
+          }
         }
       }
     }
@@ -158,6 +162,66 @@ public class ExtractedRepository extends AbstractRepository {
       printer.addCell(totalSourceExtracted);
       printer.beginRow();
       printer.addCell("Libraries with source errors");
+      printer.addCell(sourceError);
+      printer.beginRow();
+      printer.addCell("Source files with errors");
+      printer.addCell(totalSourceWithError);
+      printer.addDividerRow();
+      printer.endTable();
+    }
+    
+    if (jars == null) {
+      logger.info("Loading jars...");
+      populateJars();
+    }
+    
+    logger.info("Computing stats for " + jars.size() + " jars.");
+    {
+      int extracted = 0;
+      int nonEmpty = 0;
+      int source = 0;
+      int sourceError = 0;
+      int totalBinaryExtracted = 0;
+      int totalSourceExtracted = 0;
+      int totalSourceWithError = 0;
+      for (ExtractedJar jar : jars) {
+        if (jar.extracted()) {
+          extracted++;
+          if (jar.getExtractedFromBinaryCount() > 0) {
+            nonEmpty++;
+          }
+          totalBinaryExtracted += jar.getExtractedFromBinaryCount();
+          if (jar.hasSource()) {
+            source++;
+            totalSourceExtracted += jar.getExtractedFromSource();
+          }
+          if (jar.sourceError()) {
+            sourceError++;
+            totalSourceWithError += jar.getSourceFilesWithErrors();
+          }
+        }
+      }
+      
+      printer.addHeader("Extracted Jar Statistics");
+      printer.beginTable(2);
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("Extracted jars");
+      printer.addCell(extracted);
+      printer.beginRow();
+      printer.addCell("Non-empty jars");
+      printer.addCell(nonEmpty);
+      printer.beginRow();
+      printer.addCell("Binary files extracted");
+      printer.addCell(totalBinaryExtracted);
+      printer.beginRow();
+      printer.addCell("Jars with source");
+      printer.addCell(source);
+      printer.beginRow();
+      printer.addCell("Source files extracted");
+      printer.addCell(totalSourceExtracted);
+      printer.beginRow();
+      printer.addCell("Jars with source errors");
       printer.addCell(sourceError);
       printer.beginRow();
       printer.addCell("Source files with errors");

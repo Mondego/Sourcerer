@@ -99,9 +99,13 @@ public final class FeatureExtractor {
       try {
         if (ClassFileExtractor.isTopLevel(classFile)) {
           ISourceRange source = classFile.getSourceRange();
+          
           if (source == null || source.getLength() == 0) {
-            extractor.extractClassFile(classFile);
-            report.reportBinaryExtraction();
+            source = classFile.getSourceRange();
+            if (source == null || source.getLength() == 0) {
+              extractor.extractClassFile(classFile);
+              report.reportBinaryExtraction();
+            }
           } else {
             parser.setStatementsRecovery(true);
             parser.setResolveBindings(true);
@@ -113,7 +117,7 @@ public final class FeatureExtractor {
             // start by checking for a "public type" error
             // just skip this unit in if one is found 
             for (IProblem problem : unit.getProblems()) {
-              if (problem.isError() && problem.getID() == 16777541) {
+              if (problem.isError() && problem.getID() == IProblem.PublicClassMustMatchFileName) {
                 foundProblem = true;
               }
             }
@@ -121,12 +125,12 @@ public final class FeatureExtractor {
               continue;
             } else {
               // Check for other problems
-              for (IProblem problem : unit.getProblems()) {
-                if (problem.isError()) {
-                  logger.log(Level.SEVERE, "Error in source for class file (" + classFile.getElementName() + "): " + problem.getMessage());
-                  foundProblem = true;
-                }
-              }
+//              for (IProblem problem : unit.getProblems()) {
+//                if (problem.isError()) {
+//                  logger.log(Level.SEVERE, "Error in source for class file (" + classFile.getElementName() + "): " + problem.getMessage());
+//                  foundProblem = true;
+//                }
+//              }
             }
             if (foundProblem) {
               report.reportSourceWithErrors();
@@ -137,6 +141,11 @@ public final class FeatureExtractor {
                 report.reportSourceExtraction();
               } catch (Exception e) {
                 logger.log(Level.SEVERE, "Error in extracting " + classFile.getElementName(), e);
+                for (IProblem problem : unit.getProblems()) {
+                  if (problem.isError()) {
+                    logger.log(Level.SEVERE, "Error in source for class file (" + classFile.getElementName() + "): " + problem.getMessage());
+                  }
+                }
                 report.reportSourceWithErrors();
                 extractor.extractClassFile(classFile);
               }

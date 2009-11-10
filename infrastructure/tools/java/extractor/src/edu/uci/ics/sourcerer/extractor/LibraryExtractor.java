@@ -75,7 +75,7 @@ public class LibraryExtractor {
         extractor.close();
         
         // Write the properties files
-        extracted.createPropertiesFile(library.getName() , report.getExtractedFromBinary(), report.getExtractedFromSource(), report.getSourceFilesWithErrors());
+        extracted.createPropertiesFile(library.getName(), report.getExtractedFromBinary(), report.getExtractedFromSource(), report.getSourceFilesWithErrors());
 
         // End the error logging
         Logging.removeFileLogger(extracted.getContent());

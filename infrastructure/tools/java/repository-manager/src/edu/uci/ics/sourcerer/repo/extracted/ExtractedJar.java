@@ -42,8 +42,8 @@ public class ExtractedJar extends Extracted {
     }
   }
 
-  public void reportExecution(boolean hasSource, boolean sourceError) {
-    properties.reportExtraction(getPropertiesFile(), hasSource, sourceError);
+  public void reportExecution(int fromBinary, int fromSource, int sourceError) {
+    properties.reportExtraction(getPropertiesFile(), fromBinary, fromSource, sourceError);
   }
     
   public String getName() {
@@ -67,10 +67,22 @@ public class ExtractedJar extends Extracted {
   }
   
   public boolean hasSource() {
-    return properties.hasSource();
+    return getExtractedFromSource() + getSourceFilesWithErrors() > 0;
   }
   
   public boolean sourceError() {
-    return properties.sourceError();
+    return getSourceFilesWithErrors() > 0;
+  }
+  
+  public int getExtractedFromBinaryCount() {
+    return properties.getExtractedFromBinary();
+  }
+  
+  public int getExtractedFromSource() {
+    return properties.getExtractedFromSource();
+  }
+  
+  public int getSourceFilesWithErrors() {
+    return properties.getSourceFilesWithErrors();
   }
 }

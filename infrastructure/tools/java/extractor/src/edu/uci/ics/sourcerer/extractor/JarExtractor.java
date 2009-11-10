@@ -26,6 +26,7 @@ import java.util.Collection;
 import org.eclipse.jdt.core.IClassFile;
 
 import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor;
+import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor.ClassExtractionReport;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.extractor.resources.EclipseUtils;
 import edu.uci.ics.sourcerer.repo.base.Repository;
@@ -76,13 +77,13 @@ public class JarExtractor {
         FeatureExtractor extractor = new FeatureExtractor(bundle);
         
         // Extract
-        extractor.extractClassFiles(classFiles);
+        ClassExtractionReport report = extractor.extractClassFiles(classFiles);
         
         // Close the output files
         extractor.close();
         
         // Write the properties file
-//        extracted.reportExecution(extractor.foundSource(), extractor.sourceError());
+        extracted.reportExecution(report.getExtractedFromBinary(), report.getExtractedFromSource(), report.getSourceFilesWithErrors());
        
         // End the error logging
         Logging.removeFileLogger(extracted.getContent());
