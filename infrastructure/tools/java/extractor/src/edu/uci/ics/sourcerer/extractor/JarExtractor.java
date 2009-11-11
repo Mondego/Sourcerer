@@ -58,6 +58,8 @@ public class JarExtractor {
       ExtractedJar extracted = jar.getExtractedJar(output);
       if (extracted.extracted()) {
         logger.info("  Jar already extracted");
+      } else if (extracted.hasMissingTypes() && !Extractor.RESOLVE_MISSING_TYPES.getValue()) {
+        logger.info("  Jar has missing types");
       } else {
         // Set up logging
         Logging.addFileLogger(extracted.getContent());
@@ -68,6 +70,13 @@ public class JarExtractor {
         logger.info("  Getting class files...");
         Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(jar);
         
+        if (extracted.hasMissingTypes()) {
+//          logger.info("  Loading missing types...");
+//          for (MissingTypeEX type = ExtractedReader.getMissingTypeReader(extracted)) {
+//            
+//          }
+//          
+        }
         logger.info("  Extracting " + classFiles.size() + " class files...");
         
         // Set up the writer bundle
@@ -83,7 +92,11 @@ public class JarExtractor {
         extractor.close();
         
         // Write the properties file
-        extracted.reportExecution(report.getExtractedFromBinary(), report.getExtractedFromSource(), report.getSourceFilesWithErrors());
+        if (report.hadMissingType()) {
+          extracted.reportMissingTypeExtraction();
+        } else {
+          extracted.reportSuccessfulExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());
+        }
        
         // End the error logging
         Logging.removeFileLogger(extracted.getContent());

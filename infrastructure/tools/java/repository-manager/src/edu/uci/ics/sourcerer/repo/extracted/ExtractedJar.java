@@ -42,8 +42,12 @@ public class ExtractedJar extends Extracted {
     }
   }
 
-  public void reportExecution(int fromBinary, int fromSource, int sourceError) {
-    properties.reportExtraction(getPropertiesFile(), fromBinary, fromSource, sourceError);
+  public void reportSuccessfulExtraction(int fromBinary, int binaryExceptions, int fromSource, int sourceExceptions) {
+    properties.reportSuccessfulExtraction(getPropertiesFile(), fromBinary, binaryExceptions, fromSource, sourceExceptions);
+  }
+  
+  public void reportMissingTypeExtraction() {
+    properties.reportMissingTypeExtraction(getPropertiesFile());
   }
     
   public String getName() {
@@ -66,12 +70,16 @@ public class ExtractedJar extends Extracted {
     return properties.extracted();
   }
   
-  public boolean hasSource() {
-    return getExtractedFromSource() + getSourceFilesWithErrors() > 0;
+  public boolean hasMissingTypes() {
+    return properties.hasMissingTypes();
   }
   
+  public boolean hasSource() {
+    return getExtractedFromSource() + getSourceExceptions() > 0;
+  }
+
   public boolean sourceError() {
-    return getSourceFilesWithErrors() > 0;
+    return getSourceExceptions() > 0;
   }
   
   public int getExtractedFromBinaryCount() {
@@ -82,7 +90,11 @@ public class ExtractedJar extends Extracted {
     return properties.getExtractedFromSource();
   }
   
-  public int getSourceFilesWithErrors() {
-    return properties.getSourceFilesWithErrors();
+  public int getSourceExceptions() {
+    return properties.getSourceExceptions();
+  }
+  
+  public int getBinaryExceptions() {
+    return properties.getBinaryExceptions();
   }
 }

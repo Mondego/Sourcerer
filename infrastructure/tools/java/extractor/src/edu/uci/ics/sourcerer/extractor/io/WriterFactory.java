@@ -40,7 +40,17 @@ public final class WriterFactory {
       return (T)constructor.newInstance(output, input);
     } catch (Exception e) {
       logger.log(Level.SEVERE, "Unable to create writer: " + property.getName(), e);
-      return null;
+      Class<?> klass = property.getDefaultValue();
+      if (klass != null) {
+        try {
+          return (T)klass.newInstance();
+        } catch (Exception e2) {
+          logger.log(Level.SEVERE, "Unable to create dummy writer: " + property.getName(), e);
+          return null;
+        }
+      } else {
+        return null;
+      }
     }
   }
 }

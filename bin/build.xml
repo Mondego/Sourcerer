@@ -58,6 +58,7 @@
 			<src path="${utilities}" />
 			<src path="${repository-manager}" />
 			<src path="${model}" />
+			<src path="${database}" />
 		</javac>
 		<copy todir="${build-java-tools-core}">
 			<fileset dir="${utilities}" includes="**/*.java" />
@@ -68,6 +69,10 @@
 		<copy todir="${build-java-tools-core}">
 			<fileset dir="${model}" includes="**/*.java" />
 		</copy>
+		<copy todir="${build-java-tools-core}">
+			<fileset dir="${database}" includes="**/*.java" />
+		</copy>
+		<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-java-tools-core}"/>
 	</target>
 
 	<target name="sourcerer-lib" depends="compile-java-tools-core">
@@ -82,6 +87,14 @@
 		</jar>
 	</target>
 	
+	<target name="database" depends="compile-java-tools-core">
+    <jar destfile="sourcerer-db.jar" basedir="${build-java-tools-core}">
+      <manifest>
+        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.db.tools.Main" />
+      </manifest>
+    </jar>
+  </target>
+	
 	<target name="clean-java-tools">
 		<delete dir="${build-java-tools-core}" />
 		<delete>
@@ -92,6 +105,7 @@
 		</delete>
 	</target>
 	
+	<!--
 	<target name="init-database" depends="init">
 		<mkdir dir="${build-database}" />
 	</target>
@@ -125,7 +139,7 @@
     	</manifest>
   	</jar>
 	</target>
-  		
+ 
 	<target name="clean-database">
 	  <delete dir="${build-database}" />
 	  <delete>
@@ -133,7 +147,7 @@
 	      <include name="sourcerer-db.jar" />
       </fileset>
   	</delete>
-	</target>
+	</target>-->
 
 	<target name="extractor">
 	  <pde.exportPlugins destination="." exportSource="true" exportType="directory" plugins="Extractor" useJARFormat="true"/>

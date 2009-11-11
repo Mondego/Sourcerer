@@ -41,6 +41,8 @@ import edu.uci.ics.sourcerer.model.extracted.JarEX;
 import edu.uci.ics.sourcerer.model.extracted.JarExParser;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableExParser;
+import edu.uci.ics.sourcerer.model.extracted.MissingTypeEX;
+import edu.uci.ics.sourcerer.model.extracted.MissingTypeExParser;
 import edu.uci.ics.sourcerer.model.extracted.ModelEX;
 import edu.uci.ics.sourcerer.model.extracted.ModelExParser;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
@@ -186,9 +188,18 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
   
   public static ExtractedReader<CommentEX> getCommentReader(Extracted extracted) {
     try {
-      return new ExtractedReader<CommentEX>(CommentExParser.getParser(), extracted.getCommentFile());
+      return new ExtractedReader<CommentEX>(CommentExParser.getParser(), extracted.getCommentInputStream());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to create comment reader", e);
+      return null;
+    }
+  }
+  
+  public static ExtractedReader<MissingTypeEX> getMissingTypeReader(Extracted extracted) {
+    try {
+      return new ExtractedReader<MissingTypeEX>(MissingTypeExParser.getParser(), extracted.getMissingTypeInputStream());
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to create missing type reader", e);
       return null;
     }
   }

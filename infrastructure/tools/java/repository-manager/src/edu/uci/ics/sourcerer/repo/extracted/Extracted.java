@@ -36,6 +36,8 @@ public abstract class Extracted {
   public static final Property<String> FILE_FILE = new StringProperty("file-file", "files.txt", "Repository Manager", "Filename for the extracted files.");
   public static final Property<String> PROBLEM_FILE = new StringProperty("problem-file", "problems.txt", "Repository Manager", "Filename for the extracted problems.");
   public static final Property<String> IMPORT_FILE = new StringProperty("import-file", "imports.txt", "Repository Manager", "Filename for the extracted imports.");
+  public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Repository Manager", "Filename for used jar files.");
+  public static final Property<String> MISSING_TYPE_FILE = new StringProperty("missing-type-file", "missing-types.txt", "Repository Manager", "Filename for missing types.");
   
   protected File content;
 
@@ -68,7 +70,7 @@ public abstract class Extracted {
     return getInputStream(LOCAL_VARIABLE_FILE);
   }
   
-  public InputStream getCommentFile() throws IOException {
+  public InputStream getCommentInputStream() throws IOException {
     return getInputStream(COMMENT_FILE);
   }
   
@@ -82,5 +84,9 @@ public abstract class Extracted {
   
   public InputStream getImportInputStream() throws IOException {
     return getInputStream(IMPORT_FILE);
+  }
+  
+  public InputStream getMissingTypeInputStream() throws IOException {
+    return getInputStream(MISSING_TYPE_FILE);
   }
 }

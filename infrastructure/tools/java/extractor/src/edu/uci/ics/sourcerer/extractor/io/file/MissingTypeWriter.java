@@ -19,20 +19,20 @@ package edu.uci.ics.sourcerer.extractor.io.file;
 
 import java.io.File;
 
-import edu.uci.ics.sourcerer.extractor.io.IFileWriter;
-import edu.uci.ics.sourcerer.model.extracted.FileExParser;
+import edu.uci.ics.sourcerer.extractor.io.IMissingTypeWriter;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class FileWriter extends ExtractorWriter implements IFileWriter {
-  public FileWriter(File output, Repository input) {
-    super(new File(output, Extracted.FILE_FILE.getValue()), input);
+public class MissingTypeWriter extends ExtractorWriter implements IMissingTypeWriter {
+  public MissingTypeWriter(File output, Repository input) {
+    super(new File(output, Extracted.MISSING_TYPE_FILE.getValue()), input);
   }
 
-  public void writeFile(String path) {
-    write(FileExParser.getLine(convertToRelativePath(path)));
+  @Override
+  public void writeMissingType(String fqn) {
+    write(fqn);
   }
 }

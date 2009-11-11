@@ -23,44 +23,26 @@ import java.util.Properties;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarProperties extends AbstractProperties {
-  private static final String NAME = "name";
+public class JarProperties extends AbstractBinaryProperties {
   private static final String GROUP = "group";
   private static final String VERSION = "version";
   private static final String HASH = "hash";
-  private static final String EXTRACTED = "extracted";
-  private static final String FROM_BINARY = "fromBinary";
-  private static final String FROM_SOURCE = "fromSource";
-  private static final String SOURCE_ERROR = "sourceError";
   
   // Base properties
-  private String name;
   private String group;
   private String version;
   private String hash;
-  
-  // Extraction properties
-  private boolean extracted;
-  private int fromBinary;
-  private int fromSource;
-  private int sourceError;
-  
+ 
   private JarProperties() {}
   
   public static JarProperties load(File file) {
     JarProperties props = new JarProperties();
     props.loadProperties(file);
 
-    props.name = props.properties.getProperty(NAME);
     props.group = props.properties.getProperty(GROUP);
     props.version = props.properties.getProperty(VERSION);
     props.hash = props.properties.getProperty(HASH);
     
-    props.extracted = "true".equals(props.properties.getProperty(EXTRACTED));
-    props.fromBinary = props.readIntProperty(FROM_BINARY);
-    props.fromSource = props.readIntProperty(FROM_SOURCE);
-    props.sourceError = props.readIntProperty(SOURCE_ERROR);
-      
     return props;
   }
 
@@ -84,24 +66,31 @@ public class JarProperties extends AbstractProperties {
     write(file, properties);
   }
   
-  public void reportExtraction(File file, int fromBinary, int fromSource, int sourceError) {
+  public void reportSuccessfulExtraction(File file, int fromBinary, int binaryExceptions, int fromSource, int sourceExceptions) {
     this.extracted = true;
     this.fromBinary = fromBinary;
+    this.binaryExceptions = binaryExceptions;
     this.fromSource = fromSource;
-    this.sourceError = sourceError;
+    this.sourceExceptions = sourceExceptions;
+    
     
     properties.setProperty(EXTRACTED, Boolean.toString(extracted));
     properties.setProperty(FROM_BINARY, Integer.toString(fromBinary));
+    properties.setProperty(BINARY_EXCEPTIONS, Integer.toString(binaryExceptions));
     properties.setProperty(FROM_SOURCE, Integer.toString(fromSource));
-    properties. setProperty(SOURCE_ERROR, Integer.toString(sourceError));
+    properties.setProperty(SOURCE_EXCEPTIONS, Integer.toString(sourceExceptions));
     
     write(file);
   }
   
-  public String getName() {
-    return name;
+  public void reportMissingTypeExtraction(File file) {
+    this.missingTypes = true;
+    
+    properties.setProperty(MISSING_TYPES, Boolean.toString(missingTypes));
+    
+    write(file);
   }
-
+  
   public String getGroup() {
     return group;
   }
@@ -112,33 +101,5 @@ public class JarProperties extends AbstractProperties {
 
   public String getHash() {
     return hash;
-  }
-
-  public boolean extracted() {
-    return extracted;
-  }
-
-  public int getExtractedFromBinary() {
-    if (extracted) {
-      return fromBinary;
-    } else {
-      throw new IllegalStateException("This library has not been extracted yet.");
-    }
-  }
-
-  public int getExtractedFromSource() {
-    if (extracted) {
-      return fromSource;
-    } else {
-      throw new IllegalStateException("This library has not been extracted yet.");
-    }
-  }
-  
-  public int getSourceFilesWithErrors() {
-    if (extracted) {
-      return sourceError;
-    } else {
-      throw new IllegalStateException("This library has not been extracted yet.");
-    }
   }
 }

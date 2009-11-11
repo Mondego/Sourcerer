@@ -23,17 +23,14 @@ import edu.uci.ics.sourcerer.extractor.io.ICommentWriter;
 import edu.uci.ics.sourcerer.model.Comment;
 import edu.uci.ics.sourcerer.model.extracted.CommentExParser;
 import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class CommentWriter extends ExtractorWriter implements ICommentWriter {
-  public static final Property<String> COMMENT_FILE = new StringProperty("comment-file", "comments.txt", "Extractor Output", "Filename for extracted comments.");
-  
   public CommentWriter(File output, Repository input) {
-    super(new File(output, COMMENT_FILE.getValue()), input);
+    super(new File(output, Extracted.COMMENT_FILE.getValue()), input);
   }
 
   public void writeLineComment(String containingFile, int startPos, int length) {

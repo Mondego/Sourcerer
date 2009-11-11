@@ -44,12 +44,14 @@ public abstract class AbstractRepository {
   protected abstract void addFile(File checkout);
   
   protected void populateRepository() {
-    Pattern pattern = Pattern.compile("\\d*");
-    for (File batch : repoRoot.listFiles()) {
-      if (batch.isDirectory() && pattern.matcher(batch.getName()).matches()) {
-        for (File checkout : batch.listFiles()) {
-          if (pattern.matcher(checkout.getName()).matches()) {
-            addFile(checkout);
+    if (repoRoot.exists()) { 
+      Pattern pattern = Pattern.compile("\\d*");
+      for (File batch : repoRoot.listFiles()) {
+        if (batch.isDirectory() && pattern.matcher(batch.getName()).matches()) {
+          for (File checkout : batch.listFiles()) {
+            if (pattern.matcher(checkout.getName()).matches()) {
+              addFile(checkout);
+            }
           }
         }
       }

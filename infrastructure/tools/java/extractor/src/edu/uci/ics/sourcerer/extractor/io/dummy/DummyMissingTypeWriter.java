@@ -15,24 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.extractor.io.file;
+package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import java.io.File;
-
-import edu.uci.ics.sourcerer.extractor.io.IFileWriter;
-import edu.uci.ics.sourcerer.model.extracted.FileExParser;
-import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.repo.extracted.Extracted;
+import edu.uci.ics.sourcerer.extractor.io.IMissingTypeWriter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class FileWriter extends ExtractorWriter implements IFileWriter {
-  public FileWriter(File output, Repository input) {
-    super(new File(output, Extracted.FILE_FILE.getValue()), input);
-  }
+public class DummyMissingTypeWriter implements IMissingTypeWriter {
+  @Override
+  public void writeMissingType(String fqn) {}
 
-  public void writeFile(String path) {
-    write(FileExParser.getLine(convertToRelativePath(path)));
-  }
+  @Override
+  public void close() {}
 }

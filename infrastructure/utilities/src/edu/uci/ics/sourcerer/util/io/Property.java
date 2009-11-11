@@ -109,6 +109,10 @@ public abstract class Property <T> {
     }
   }
   
+  public T getDefaultValue() {
+    return defaultValue;
+  }
+  
   protected abstract T parseString(String value);
   
   private synchronized void initializeValue() {

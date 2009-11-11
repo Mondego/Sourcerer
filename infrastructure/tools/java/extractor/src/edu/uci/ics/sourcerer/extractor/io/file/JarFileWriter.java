@@ -21,17 +21,14 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.IJarFileWriter;
 import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class JarFileWriter extends ExtractorWriter implements IJarFileWriter {
-  public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Extractor Output", "Filename for used jar files.");
-  
   public JarFileWriter(File output, Repository input) {
-    super(new File(output, JAR_FILE_FILE.getValue()), input);
+    super(new File(output, Extracted.JAR_FILE_FILE.getValue()), input);
   }
   
   public void writeJarFile(String filename) {

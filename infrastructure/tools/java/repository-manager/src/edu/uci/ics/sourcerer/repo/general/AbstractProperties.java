@@ -36,6 +36,22 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 public abstract class AbstractProperties {
   protected Properties properties;
   
+  protected static final String NAME = "name";
+  
+  protected static final String EXTRACTED = "extracted";
+  protected static final String MISSING_TYPES = "missingTypes";
+  protected static final String FROM_SOURCE = "fromSource";
+  protected static final String SOURCE_EXCEPTIONS = "sourceExceptions";
+  
+  // Base properties
+  protected String name;
+  
+  // Extraction properties
+  protected boolean extracted;
+  protected boolean missingTypes;
+  protected int fromSource;
+  protected int sourceExceptions;
+  
   protected void loadProperties(File file) {
     properties = new Properties();
     if (file.exists()) {
@@ -48,6 +64,12 @@ public abstract class AbstractProperties {
       } finally {
         FileUtils.close(is);
       }
+      
+      name = properties.getProperty(NAME);
+      extracted = "true".equals(properties.get(EXTRACTED));
+      missingTypes = "true".equals(properties.get(MISSING_TYPES));
+      fromSource = readIntProperty(FROM_SOURCE);
+      sourceExceptions = readIntProperty(SOURCE_EXCEPTIONS);
     }
   }
   
@@ -77,5 +99,33 @@ public abstract class AbstractProperties {
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to write properties file: " + file.getPath(), e);
     }
+  }
+  
+  public String getName() {
+    return name;
+  }
+  
+  public boolean extracted() {
+    return extracted;
+  }
+  
+  public boolean hasMissingTypes() {
+    return missingTypes;
+  }
+  
+  protected void verifyExtracted() {
+    if (!extracted) {
+      throw new IllegalStateException("This item has not been extracted yet.");
+    }
+  }
+  
+  public int getExtractedFromSource() {
+    verifyExtracted();
+    return fromSource;
+  }
+  
+  public int getSourceExceptions() {
+    verifyExtracted();
+    return sourceExceptions;
   }
 }

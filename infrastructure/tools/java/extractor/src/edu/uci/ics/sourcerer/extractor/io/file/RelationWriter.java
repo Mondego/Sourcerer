@@ -24,17 +24,14 @@ import edu.uci.ics.sourcerer.extractor.io.Location;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.extracted.RelationExParser;
 import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class RelationWriter extends ExtractorWriter implements IRelationWriter {
-  public static final Property<String> RELATION_FILE = new StringProperty("relation-file", "relations.txt", "Extractor Output", "Filename for extracted relations.");
-  
   public RelationWriter(File output, Repository input) {
-    super(new File(output, RELATION_FILE.getValue()), input);
+    super(new File(output, Extracted.RELATION_FILE.getValue()), input);
   }
 
   private void writeRelation(Relation type, String lhs, String rhs, Location location) {
