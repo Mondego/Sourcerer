@@ -19,12 +19,13 @@ package edu.uci.ics.sourcerer.repo.extracted;
 
 import java.io.File;
 
+import edu.uci.ics.sourcerer.repo.general.AbstractBinaryProperties;
 import edu.uci.ics.sourcerer.repo.general.JarProperties;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ExtractedJar extends Extracted {
+public class ExtractedJar extends ExtractedBinary {
   private JarProperties properties;
   
   public ExtractedJar(File content) {
@@ -49,9 +50,9 @@ public class ExtractedJar extends Extracted {
   public void reportMissingTypeExtraction() {
     properties.reportMissingTypeExtraction(getPropertiesFile());
   }
-    
-  public String getName() {
-    return properties.getName();
+  
+  protected AbstractBinaryProperties getBinaryProperties() {
+    return properties;
   }
   
   public String getGroup() {
@@ -64,37 +65,5 @@ public class ExtractedJar extends Extracted {
   
   public String getHash() {
     return properties.getHash();
-  }
-  
-  public boolean extracted() {
-    return properties.extracted();
-  }
-  
-  public boolean hasMissingTypes() {
-    return properties.hasMissingTypes();
-  }
-  
-  public boolean hasSource() {
-    return getExtractedFromSource() + getSourceExceptions() > 0;
-  }
-
-  public boolean sourceError() {
-    return getSourceExceptions() > 0;
-  }
-  
-  public int getExtractedFromBinaryCount() {
-    return properties.getExtractedFromBinary();
-  }
-  
-  public int getExtractedFromSource() {
-    return properties.getExtractedFromSource();
-  }
-  
-  public int getSourceExceptions() {
-    return properties.getSourceExceptions();
-  }
-  
-  public int getBinaryExceptions() {
-    return properties.getBinaryExceptions();
   }
 }

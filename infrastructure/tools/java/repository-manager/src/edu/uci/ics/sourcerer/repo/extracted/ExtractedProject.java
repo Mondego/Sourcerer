@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
 import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
@@ -54,20 +55,16 @@ public class ExtractedProject extends Extracted {
   public String getRelativePath() {
     return relativePath;
   }
-  
-  public String getName() {
-    return properties.getName();
-  }
-  
-  public boolean extracted() {
-    return properties.extracted();
+
+  public InputStream getJarInputStream() throws IOException {
+    return getInputStream(JAR_FILE_FILE);
   }
   
   public void reportExtraction() {
     properties.reportExtraction(getPropertiesFile());
   }
   
-  public InputStream getJarInputStream() throws IOException {
-    return getInputStream(JAR_FILE_FILE);
+  protected AbstractProperties getProperties() {
+    return properties;
   }
 }

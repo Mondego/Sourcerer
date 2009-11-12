@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
@@ -88,5 +89,39 @@ public abstract class Extracted {
   
   public InputStream getMissingTypeInputStream() throws IOException {
     return getInputStream(MISSING_TYPE_FILE);
+  }
+  
+  protected abstract AbstractProperties getProperties();
+  
+  public String getName() {
+    return getProperties().getName();
+  }
+  
+  public boolean extracted() {
+    return getProperties().extracted();
+  }
+  
+  public boolean hasMissingTypes() {
+    return getProperties().hasMissingTypes();
+  }
+  
+  public boolean empty() {
+    return !hasSource();
+  }
+  
+  public boolean hasSource() {
+    return getExtractedFromSource() + getSourceExceptions() > 0;
+  }
+  
+  public int getExtractedFromSource() {
+    return getProperties().getExtractedFromSource();
+  }
+  
+  public boolean hasSourceExceptions() {
+    return getSourceExceptions() > 0;
+  }
+  
+  public int getSourceExceptions() {
+    return getProperties().getSourceExceptions();
   }
 }
