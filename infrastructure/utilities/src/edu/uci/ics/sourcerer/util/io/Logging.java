@@ -99,7 +99,7 @@ public final class Logging {
   }
   
   private static String getFileHandlerPattern(Property<String> prop) {
-    SimpleDateFormat format = new SimpleDateFormat("-MMM-WW-yyyy-HH-mm-ss");
+    SimpleDateFormat format = new SimpleDateFormat("-MMM-dd-yyyy-HH-mm-ss");
     return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + prop.getValue().replace("%d", format.format(new Date()));
   }
   

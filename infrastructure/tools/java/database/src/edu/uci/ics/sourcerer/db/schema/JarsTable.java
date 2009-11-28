@@ -40,6 +40,15 @@ public final class JarsTable {
    *  +-------------+---------------+-------+--------+
    */
   
+  // ---- LOCK ----
+  public static String getReadLock() {
+    return SchemaUtils.getReadLock(TABLE);
+  }
+  
+  public static String getWriteLock() {
+    return SchemaUtils.getWriteLock(TABLE);
+  }
+  
   // ---- CREATE ----
   public static void createTable(QueryExecutor executor) {
     executor.createTable(TABLE,
@@ -88,7 +97,7 @@ public final class JarsTable {
     JarCommentsTable.deleteByJarID(executor, jarID);
     
     // Delete the uses
-    JarUsesTable.deleteByJarID(executor, jarID);
+    UsedJarsTable.deleteByJarID(executor, jarID);
     
     // Delete the jar
     executor.delete(TABLE, "jar_id=" + jarID);
@@ -98,6 +107,11 @@ public final class JarsTable {
   public static String getJarIDByHash(QueryExecutor executor, String hash) {
     return executor.selectSingle(TABLE, "jar_id", "hash='" + hash + "'");
   }
+  
+  public static String getHashByID(QueryExecutor executor, String jarID) {
+    return executor.selectSingle(TABLE, "hash", "jar_id=" + jarID);
+  }
+  
 //  public static String getJarCount(QueryExecutor executor) {
 //    return executor.getRowCount(TABLE);
 //  }

@@ -18,10 +18,15 @@
 package edu.uci.ics.sourcerer.repo.extracted;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.io.File;
+import java.util.AbstractCollection;
 import java.util.Collection;
+import java.util.Iterator;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.general.IndexedJar;
+import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
@@ -65,18 +70,56 @@ public class ExtractedRepository extends AbstractRepository {
   }
 
   private void populateJars() {
-    jars = Helper.newLinkedList();
-    File jarsDir = getJarsDir();
-    if (jarsDir.exists()) {
-      for (File jar : jarsDir.listFiles()) {
-        if (jar.isDirectory()) {
-          ExtractedJar extracted = new ExtractedJar(jar);
-          if (extracted.extracted()) {
-            jars.add(extracted);
-          }
-        }
+    final JarIndex index = getJarIndex();
+    jars = new AbstractCollection<ExtractedJar>() {
+      @Override
+      public int size() {
+        return index.getIndexSize();
       }
-    }
+      @Override
+      public Iterator<ExtractedJar> iterator() {
+        return new Iterator<ExtractedJar>() {
+          private Iterator<IndexedJar> iter = index.getIndexedJars().iterator();
+          
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();          
+          }
+          
+          @Override
+          public ExtractedJar next() {
+            return iter.next().getExtractedJar();
+          }
+          
+          @Override
+          public boolean hasNext() {
+            return iter.hasNext();
+          }
+        };
+      }
+    };
+
+    
+    
+    // This is too slow, use the jar index
+//    File jarsDir = getJarsDir();
+//    if (jarsDir.exists()) {
+//      Deque<File> stack = Helper.newStack();
+//      stack.push(jarsDir);
+//      while (!stack.isEmpty()) {
+//        File top = stack.pop();
+//        for (File dir : top.listFiles()) {
+//          if (dir.isDirectory()) {
+//            stack.push(dir);
+//          } else if (dir.isFile() && dir.getName().endsWith(".properties")) {
+//            ExtractedJar extracted = new ExtractedJar(top);
+//            if (extracted.getPropertiesFile().exists()) {
+//              jars.add(extracted);
+//            }
+//          }
+//        }
+//      }
+//    }
   }
  
   public static ExtractedRepository getRepository() {
@@ -191,6 +234,9 @@ public class ExtractedRepository extends AbstractRepository {
       printer.addCell("Libs with source files");
       printer.addCell(libsWithSource);
       printer.beginRow();
+      printer.addCell("Source files extracted");
+      printer.addCell(totalSourceExtracted);
+      printer.beginRow();
       printer.addCell("Libs with source file exceptions");
       printer.addCell(libsWithSourceExceptions);
       printer.beginRow();
@@ -259,10 +305,10 @@ public class ExtractedRepository extends AbstractRepository {
       printer.addCell(jarsNonEmpty);
       printer.beginRow();
       printer.addCell("Extracted jars with missing types");
-      printer.addCell(jarsExtracted);
+      printer.addCell(extractedJarsWithMissingTypes);
       printer.beginRow();
       printer.addCell("Non-extracted jars with missing types");
-      printer.addCell(jarsExtracted);
+      printer.addCell(jarsWithMissingTypes);
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Binary files extracted");
@@ -273,13 +319,13 @@ public class ExtractedRepository extends AbstractRepository {
       printer.beginRow();
       printer.addCell("Binary files with exceptions");
       printer.addCell(totalBinaryExceptions);
-      printer.beginRow();
-      printer.addCell("Binary files extracted");
-      printer.addCell(totalBinaryExtracted);
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Jars with source files");
       printer.addCell(jarsWithSource);
+      printer.beginRow();
+      printer.addCell("Source files extracted");
+      printer.addCell(totalSourceExtracted);
       printer.beginRow();
       printer.addCell("Jars with source file exceptions");
       printer.addCell(jarsWithSourceExceptions);

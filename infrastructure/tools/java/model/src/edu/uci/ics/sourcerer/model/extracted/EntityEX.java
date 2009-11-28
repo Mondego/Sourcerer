@@ -68,6 +68,6 @@ public final class EntityEX implements ModelEX {
   }
   
   public String toString() {
-    return type + " " + fqn;
+    return type.name() + " " + fqn;
   }
 }

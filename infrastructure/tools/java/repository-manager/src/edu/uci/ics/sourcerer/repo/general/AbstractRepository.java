@@ -33,9 +33,10 @@ public abstract class AbstractRepository {
   public static final Property<File> OUTPUT_REPO = new FileProperty("output-repo", "Repository Manager", "The root directory of the output repository.");
   
   protected File repoRoot;
-  protected File jarIndexFile;
   
+  protected File jarIndexFile;
   protected JarIndex jarIndex;
+  
   protected AbstractRepository(File repoRoot) {
     this.repoRoot = repoRoot;
     this.jarIndexFile = new File(getJarsDir(), JarIndex.JAR_INDEX_FILE.getValue());
@@ -59,7 +60,7 @@ public abstract class AbstractRepository {
   }
   
   private void loadJarIndex() {
-    jarIndex = JarIndex.getJarIndex(jarIndexFile);
+    jarIndex = JarIndex.getJarIndex(this);
   }
   
   public File getJarIndexFile() {
@@ -75,6 +76,14 @@ public abstract class AbstractRepository {
   
   public File getBaseDir() {
     return repoRoot;
+  }
+  
+  public File getMavenJarsDir() {
+    return new File(getJarsDir(), "maven");
+  }
+  
+  public File getProjectJarsDir() {
+    return new File(getJarsDir(), "project");
   }
   
   public File getJarsDir() {

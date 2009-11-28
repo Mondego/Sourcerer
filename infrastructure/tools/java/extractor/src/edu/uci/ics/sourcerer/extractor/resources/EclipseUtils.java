@@ -124,6 +124,23 @@ public class EclipseUtils {
     }
   }
   
+  public static void initializeJarProject(Collection<IndexedJar> jars) {
+    initializeProject();
+    try {
+      IVMInstall vmInstall = JavaRuntime.getDefaultVMInstall();
+      List<IClasspathEntry> entries = Helper.newArrayList();//new IClasspathEntry[locations.length + jarFiles.size() + 1];
+      for (LibraryLocation location : JavaRuntime.getLibraryLocations(vmInstall)) {
+        entries.add(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), location.getSystemLibrarySourcePath(), null));
+      }
+      for (IndexedJar jar : jars) {
+        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), jar.getSourceFile() == null ? null : new Path(jar.getSourceFile().getPath()), null));
+      }
+      javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
+    } catch (JavaModelException e) {
+      logger.log(Level.SEVERE, "Unable to initialize jar project", e);
+    }
+  }
+  
   public static void initializeLibraryProject() {
     initializeProject();
     try {

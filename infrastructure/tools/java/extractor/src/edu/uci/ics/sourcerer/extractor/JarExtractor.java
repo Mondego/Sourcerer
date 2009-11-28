@@ -28,6 +28,7 @@ import org.eclipse.jdt.core.IClassFile;
 import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor;
 import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor.ClassExtractionReport;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.extractor.resolver.MissingTypeResolver;
 import edu.uci.ics.sourcerer.extractor.resources.EclipseUtils;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
@@ -41,7 +42,7 @@ import edu.uci.ics.sourcerer.util.io.Logging;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarExtractor {
-  public static void extract() {
+  public static void extract(MissingTypeResolver resolver) {
     // Load the input repository
     logger.info("Loading the input repository...");
     Repository input = Repository.getRepository(INPUT_REPO.getValue());
@@ -64,23 +65,26 @@ public class JarExtractor {
         // Set up logging
         Logging.addFileLogger(extracted.getContent());
 
-        logger.info("  Initializing project...");
-        EclipseUtils.initializeJarProject(jar);
+        // Set up the writer bundle
+        WriterBundle bundle = new WriterBundle(extracted.getContent());
+
+        if (extracted.hasMissingTypes()) {
+          logger.info("  Resolving missing types...");
+          Collection<IndexedJar> jars = resolver.resolveMissingTypes(index, extracted, bundle.getUsedJarWriter());
+          jars.add(jar);
+          logger.info("  Initializing project with " + jars.size() + " jars...");
+          EclipseUtils.initializeJarProject(jars);
+          
+        } else {
+          logger.info("  Initializing project...");
+          EclipseUtils.initializeJarProject(jar);
+        }
         
         logger.info("  Getting class files...");
         Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(jar);
         
-        if (extracted.hasMissingTypes()) {
-//          logger.info("  Loading missing types...");
-//          for (MissingTypeEX type = ExtractedReader.getMissingTypeReader(extracted)) {
-//            
-//          }
-//          
-        }
+
         logger.info("  Extracting " + classFiles.size() + " class files...");
-        
-        // Set up the writer bundle
-        WriterBundle bundle = new WriterBundle(extracted.getContent());
                 
         // Set up the feature extractor
         FeatureExtractor extractor = new FeatureExtractor(bundle);

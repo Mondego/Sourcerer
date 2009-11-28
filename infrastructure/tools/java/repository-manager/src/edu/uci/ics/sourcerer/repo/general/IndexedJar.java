@@ -27,20 +27,20 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class IndexedJar {
+  private boolean maven;
+  private String hash;
   private String basePath;
   private String relativePath;
   private String jarName;
   private String sourceName;
   
-  protected IndexedJar(String basePath, String jarName) {
-    this(basePath, null, jarName, null);
+  protected IndexedJar(boolean maven, String hash, String basePath, String relativePath, String jarName) {
+    this(maven, hash, basePath, relativePath, jarName, null);
   }
   
-  protected IndexedJar(String basePath, String relativePath, String jarName) {
-    this(basePath, relativePath, jarName, null);
-  }
-  
-  protected IndexedJar(String basePath, String relativePath, String jarName, String sourceName) {
+  protected IndexedJar(boolean maven, String hash, String basePath, String relativePath, String jarName, String sourceName) {
+    this.maven = maven;
+    this.hash = hash;
     this.basePath = basePath;
     this.relativePath = relativePath;
     this.jarName = jarName;
@@ -87,7 +87,7 @@ public class IndexedJar {
   }
   
   public boolean isMavenJar() {
-    return relativePath != null;
+    return maven;
   }
   
   private File getPropertiesFile(String basePath) {
@@ -114,15 +114,27 @@ public class IndexedJar {
     return getInfoFile(basePath);
   }
   
-  public ExtractedJar getExtractedJar(ExtractedRepository repo) {
-    return new ExtractedJar(new File(getOutputPath(repo.getJarsDir())), getPropertiesFile());
+  public String getHash() {
+    return hash;
   }
   
-  private String getOutputPath(File baseDir) {
+  public ExtractedJar getExtractedJar(ExtractedRepository repo) {
+    return new ExtractedJar(getOutputPath(repo.getJarsDir()), getPropertiesFile());
+  }
+  
+  public ExtractedJar getExtractedJar() {
+    return new ExtractedJar(new File(getOutputPath(basePath)));
+  }
+  
+  private File getOutputPath(File baseDir) {
+    return new File(getOutputPath(baseDir.getPath()));
+  }
+  
+  private String getOutputPath(String baseDir) {
     if (relativePath == null) {
-      return baseDir.getPath() + "/" + jarName;
+      return baseDir + "/" + jarName;
     } else {
-      return baseDir.getPath() + "/" + relativePath;
+      return baseDir + "/" + relativePath;
     }
   }
   

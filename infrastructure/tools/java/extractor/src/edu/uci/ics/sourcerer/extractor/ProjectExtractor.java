@@ -10,8 +10,9 @@ import java.util.Collection;
 import org.eclipse.core.resources.IFile;
 
 import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor;
-import edu.uci.ics.sourcerer.extractor.io.IJarFileWriter;
+import edu.uci.ics.sourcerer.extractor.io.IUsedJarWriter;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.extractor.resolver.MissingTypeResolver;
 import edu.uci.ics.sourcerer.extractor.resources.EclipseUtils;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.base.IJarFile;
@@ -23,7 +24,7 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 
 public class ProjectExtractor {
-  public static void extract() {
+  public static void extract(MissingTypeResolver resolver) {
     // Load the input repository
     logger.info("Loading the input repository...");
     Repository input = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
@@ -40,9 +41,15 @@ public class ProjectExtractor {
       ExtractedProject extracted = project.getExtractedProject(output);
       if (extracted.extracted()) {
         logger.info("  Project already extracted");
+      } else if (extracted.hasMissingTypes() && !Extractor.RESOLVE_MISSING_TYPES.getValue()) {
+        logger.info("  Project has missing types");
       } else {
         // Set up logging
         Logging.addFileLogger(extracted.getContent());
+        
+        if (extracted.hasMissingTypes()) {
+          
+        }
         
         logger.info("  Getting file list...");
         IFileSet files = project.getFileSet();
@@ -63,9 +70,9 @@ public class ProjectExtractor {
         FeatureExtractor extractor = new FeatureExtractor(bundle);
         
         // Write out the jar files
-        IJarFileWriter jarWriter = bundle.getJarFileWriter();
+        IUsedJarWriter jarWriter = bundle.getUsedJarWriter();
         for (IJarFile file : files.getJarFiles()) {
-          jarWriter.writeJarFile(file.getHash());
+          jarWriter.writeUsedJar(file.getHash());
         }
         
         logger.info("  Extracting " + uniqueFiles.size() + " unique java files...");

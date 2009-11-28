@@ -24,7 +24,7 @@ import edu.uci.ics.sourcerer.extractor.io.dummy.DummyEntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyFileWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyImportWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyJarEntityWriter;
-import edu.uci.ics.sourcerer.extractor.io.dummy.DummyJarFileWriter;
+import edu.uci.ics.sourcerer.extractor.io.dummy.DummyUsedJarWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyJarRelationWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyLocalVariableWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyMissingTypeWriter;
@@ -47,7 +47,7 @@ public class WriterBundle implements IWriterBundle {
   public static final Property<Class<?>> JAR_RELATION_WRITER = new ClassProperty("jar-relation-writer", DummyJarRelationWriter.class, "Extractor Output", "Jar relation writer.");
   public static final Property<Class<?>> COMMENT_WRITER = new ClassProperty("comment-writer", DummyCommentWriter.class, "Extractor Output", "Comment writer.");
   public static final Property<Class<?>> FILE_WRITER = new ClassProperty("file-writer", DummyFileWriter.class, "Extractor Output", "File writer.");
-  public static final Property<Class<?>> JAR_FILE_WRITER = new ClassProperty("jar-file-writer", DummyJarFileWriter.class, "Extractor Output", "Jar file writer.");
+  public static final Property<Class<?>> USED_JAR_WRITER = new ClassProperty("used-jar-writer", DummyUsedJarWriter.class, "Extractor Output", "Jar file writer.");
   public static final Property<Class<?>> MISSING_TYPE_WRITER = new ClassProperty("missing-class-writer", DummyMissingTypeWriter.class, "Extractor Output", "Missing type writer.");
   
   private IImportWriter importWriter;
@@ -59,7 +59,7 @@ public class WriterBundle implements IWriterBundle {
   private IJarRelationWriter jarRelationWriter;
   private ICommentWriter commentWriter;
   private IFileWriter fileWriter;
-  private IJarFileWriter jarFileWriter;
+  private IUsedJarWriter usedJarWriter;
   private IMissingTypeWriter missingTypeWriter;
   
   private Repository input;
@@ -139,11 +139,11 @@ public class WriterBundle implements IWriterBundle {
     return fileWriter;
   }
   
-  public IJarFileWriter getJarFileWriter() {
-    if (jarFileWriter == null) {
-      jarFileWriter = WriterFactory.createWriter(output, input, JAR_FILE_WRITER);
+  public IUsedJarWriter getUsedJarWriter() {
+    if (usedJarWriter == null) {
+      usedJarWriter = WriterFactory.createWriter(output, input, USED_JAR_WRITER);
     }
-    return jarFileWriter;
+    return usedJarWriter;
   }
   
   public IMissingTypeWriter getMissingTypeWriter() {
@@ -163,7 +163,7 @@ public class WriterBundle implements IWriterBundle {
     close(jarRelationWriter);
     close(commentWriter);
     close(fileWriter);
-    close(jarFileWriter);
+    close(usedJarWriter);
     close(missingTypeWriter);
   }
   

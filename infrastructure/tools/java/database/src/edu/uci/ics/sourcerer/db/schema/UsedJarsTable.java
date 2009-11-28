@@ -22,31 +22,50 @@ import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class JarUsesTable {
-  private JarUsesTable() {}
+public final class UsedJarsTable {
+  private UsedJarsTable() {}
   
-  public static final String TABLE = "jar_uses";
+  public static final String TABLE = "used_jars";
   /*  
    *  +-------------+-----------------+-------+--------+
    *  | Column name | Type            | Null? | Index? |
    *  +-------------+-----------------+-------+--------+
-   *  | jar_id      | BIGINT UNSIGNED | No    | Yes    |
+   *  | used_jar_id | BIGINT UNSIGNED | No    | Yes    |
+   *  | jar_id      | BIGINT UNSIGNED | Yes   | Yes    |
    *  | project_id  | BIGINT UNSIGNED | No    | Yes    |
    *  +-------------+-----------------+-------+--------+
    */
   
+  // ---- LOCK ----
+  public static String getReadLock() {
+    return SchemaUtils.getReadLock(TABLE);
+  }
+  
+  public static String getWriteLock() {
+    return SchemaUtils.getWriteLock(TABLE);
+  }
+  
   // ---- CREATE ----
   public static void createTable(QueryExecutor executor) {
     executor.createTable(TABLE,
-        "jar_id BIGINT UNSIGNED NOT NULL",
-        "project_id BIGINT UNSIGNED NOT NULL",
+        "used_jar_id BIGINT UNSIGNED NOT NULL",
+        "jar_id BIGINT UNSIGNED",
+        "project_id BIGINT UNSIGNED",
+        "INDEX(used_jar_id)",
         "INDEX(jar_id)",
         "INDEX(project_id)");
   }
   
   // ---- INSERT ----
-  public static void insert(QueryExecutor executor, String jarID, String projectID) {
-    executor.insertSingle(TABLE, "(" + SchemaUtils.convertNotNullNumber(jarID) + "," + SchemaUtils.convertNotNullNumber(projectID) + ")");
+  private static String getInsertValue(String usedJarID, String jarID, String projectID) {
+    return SchemaUtils.getInsertValue(
+        SchemaUtils.convertNotNullNumber("used_jar_id"),
+        SchemaUtils.convertNumber("jar_id"),
+        SchemaUtils.convertNumber("project_id"));
+  }
+  
+  public static void insert(QueryExecutor executor, String usedJarID, String jarID, String projectID) {
+    executor.insertSingle(TABLE, getInsertValue(usedJarID, jarID, projectID));
   }
   
   // ---- DELETE ----

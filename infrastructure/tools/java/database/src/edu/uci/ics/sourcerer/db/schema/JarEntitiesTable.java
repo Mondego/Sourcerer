@@ -147,12 +147,20 @@ public final class JarEntitiesTable {
     }
   };
   
-  public static Collection<TypedEntityID> getEntityIDsByFqn(QueryExecutor executor, String fqn, String inClause) {
+  public static Collection<TypedEntityID> getFilteredEntityIDsByFqn(QueryExecutor executor, String fqn, String inClause) {
     if (inClause == null) {
       return Collections.emptySet();
     } else {
-      return executor.select(TABLE, "entity_id", "fqn='" + fqn + "' AND entity_type<>'UNKNOWN' AND jar_id IN " + inClause, TRANSLATOR_TEID);
+      return executor.select(TABLE, "entity_id", "fqn='" + fqn + "' AND entity_type NOT IN ('UNKNOWN','LOCAL_VARIABLE','INITIALIZER','PARAMETER','ARRAY','DUPLICATE') AND jar_id IN " + inClause, TRANSLATOR_TEID);
     }
+  }
+  
+  public static Collection<String> getJarIDsByFqn(QueryExecutor executor, String fqn) {
+    return executor.select(TABLE, "jar_id", "fqn='" + fqn + "'", ResultTranslator.SIMPLE_RESULT_TRANSLATOR);
+  }
+  
+  public static Collection<String> getJarIDsByFuzzyFqn(QueryExecutor executor, String fqn) {
+    return executor.select(TABLE, "jar_id", "fqn LIKE '" + fqn.replace('.', '_') + "'", ResultTranslator.SIMPLE_RESULT_TRANSLATOR);
   }
 //  public static final ResultTranslator<EntityDB> TRANSLATOR = new ResultTranslator<EntityDB>() {
 //    @Override

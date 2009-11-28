@@ -37,8 +37,6 @@ import edu.uci.ics.sourcerer.model.extracted.FileEX;
 import edu.uci.ics.sourcerer.model.extracted.FileExParser;
 import edu.uci.ics.sourcerer.model.extracted.ImportEX;
 import edu.uci.ics.sourcerer.model.extracted.ImportExParser;
-import edu.uci.ics.sourcerer.model.extracted.JarEX;
-import edu.uci.ics.sourcerer.model.extracted.JarExParser;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableExParser;
 import edu.uci.ics.sourcerer.model.extracted.MissingTypeEX;
@@ -49,8 +47,9 @@ import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.model.extracted.ProblemExParser;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationExParser;
+import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
+import edu.uci.ics.sourcerer.model.extracted.UsedJarExParser;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
-import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -150,9 +149,9 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
     }
   }
   
-  public static ExtractedReader<JarEX> getJarReader(ExtractedProject project) {
+  public static ExtractedReader<UsedJarEX> getUsedJarReader(Extracted extracted) {
     try {
-      return new ExtractedReader<JarEX>(JarExParser.getParser(), project.getJarInputStream());
+      return new ExtractedReader<UsedJarEX>(UsedJarExParser.getParser(), extracted.getUsedJarInputStream());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to create jar reader", e);
       return null;

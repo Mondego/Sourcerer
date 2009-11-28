@@ -20,12 +20,9 @@ package edu.uci.ics.sourcerer.repo.base;
 import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Deque;
@@ -41,7 +38,6 @@ import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.repo.general.RepoJar;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Logging;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -77,7 +73,7 @@ public class Repository extends AbstractRepository {
   }
   
   public void createJarIndex() {
-    JarIndex.createJarIndexFile(getJarsDir());
+    JarIndex.createJarIndexFile(this);
   }
   
   public void printJarStats() {
@@ -85,141 +81,9 @@ public class Repository extends AbstractRepository {
   }
   
   public void aggregateJarFiles() {
-    Set<String> completed = Logging.initializeResumeLogger();
-    
-    logger.info("--- Aggregating jar files for: " + repoRoot.getPath() + " ---");
-    
-    // Create the jar folder
-    File jarFolder = getJarsDir();
-    if (!jarFolder.exists()) {
-      jarFolder.mkdir();
-    }
-    
-    // Create the name table
-    Map<RepoJar, JarNamer> nameIndex = Helper.newHashMap();
-    
-    logger.info("Checking for partially completed aggregates...");
-    // Check for any partially completed transfers
-    for (File file : jarFolder.listFiles()) {
-      // A tmp file is a partially completed jar
-      // A info file contains the info on a partially completed jar
-      if (file.isFile() && file.getName().endsWith(".info")) {
-        BufferedReader br = null;;
-        try {
-          br = new BufferedReader(new FileReader(file));
-          // The first line should contain the length
-          String line = br.readLine();
-          if (line == null) {
-            continue;
-          }
-          long length = Long.parseLong(line);
-          // The second line should contain the hash
-          String hash = br.readLine();
-          if (hash == null) {
-            continue;
-          }
-          RepoJar jar = new RepoJar(length, hash);
-          // The name of the jar is the name of the info file minus .info
-          String name = file.getName();
-          name = name.substring(0, name.lastIndexOf('.'));
-          JarNamer namer = new JarNamer(new File(jarFolder, name)); 
-          // The rest of the lines contain the potential names
-          for (line = br.readLine(); line != null; line = br.readLine()) {
-            namer.addName(line);
-          }
-          namer.setInfoFile(file);
-          nameIndex.put(jar, namer);
-        } catch (IOException e) {
-          logger.log(Level.SEVERE, "Error reading info file", e);
-        } finally {
-          FileUtils.close(br);
-        }
-      }
-    }
-    logger.info("Found " + nameIndex.size() + " partially completed aggregates.");
-    logger.info("Found " + completed.size() + " completed projects.");
-    
-    JarIndex index = getJarIndex();
-    
-    logger.info("Extracting jars from " + getProjects().size() + " projects...");
-    int projectCount = 0;
-    int totalFiles = nameIndex.size();
-    int uniqueFiles = nameIndex.size();
-    for (RepoProject project : getProjects()) {
-      projectCount++;
-      if (completed.contains(project.getProjectPath())) {
-        logger.info("Already completed: " + project.getProjectPath());
-      } else {
-        logger.info("Getting file set for: " + project.getProjectPath());
-        try {
-          IFileSet fileSet = project.getFileSet();
-          if (fileSet == null) {
-            continue;
-          }
-          logger.info("Extracting " + fileSet.getJarFileCount() + " jar files from project " + projectCount + " of " + getProjects().size());
-          
-          for (IJarFile jar : fileSet.getJarFiles()) {
-            RepoJar newJar = new RepoJar(jar.getFile());
-            // If the index already contains the jar
-            IndexedJar indexedJar = null;
-            if (index != null ) {
-              index.getIndexedJar(newJar.getHash());
-            }
-            if (indexedJar != null && !indexedJar.isMavenJar()) {
-              File info = indexedJar.getInfoFile();
-              FileWriter infoWriter = null;
-              try {
-                infoWriter = new FileWriter(info, true);
-                infoWriter.write(jar.getName() + "\n");
-              } catch (IOException e) {
-                logger.log(Level.SEVERE, "Unable to write info file.", e);
-              } finally {
-                FileUtils.close(infoWriter);
-              }
-            } else {
-              JarNamer namer = nameIndex.get(newJar);
-              if (namer == null) {
-                File tmpFile = new File(jarFolder, uniqueFiles + ".tmp");
-                File infoFile = new File(jarFolder, uniqueFiles + ".tmp.info");
-                FileUtils.copyFile(jar.getFile(), tmpFile);
-                namer = new JarNamer(tmpFile);
-                nameIndex.put(newJar, namer);
-                FileWriter writer = null;
-                try {
-                  writer = new FileWriter(infoFile);
-                  writer.write(newJar.getLength() + "\n");
-                  writer.write(newJar.getHash() + "\n");
-                  namer.setInfoFile(infoFile);
-                } finally {
-                  FileUtils.close(writer);
-                }
-                uniqueFiles++;
-              }
-              namer.addName(jar.getName());
-            }
-            totalFiles++;
-          }
-          logger.log(RESUME, project.getProjectPath());
-          FileUtils.resetTempDir();
-        } catch (Exception e) {
-          logger.log(Level.SEVERE, "Unable to extract project: " + project.getProjectPath(), e);
-        }
-      }
-    }
-      
-    logger.info(totalFiles + " jars found");
-    
-    // Rename the jars
-    logger.info("Renaming the " + uniqueFiles + " unique jar files");
-    for (JarNamer namer : nameIndex.values()) {
-      namer.rename();
-    }
-    
-    FileUtils.cleanTempDir();
-    
-    logger.info("--- Done! ---");
+    JarIndex.aggregateJars(this);
   }
-  
+
   public static void migrateRepository(File source, File target, Set<String> completed) {
     logger.info("--- Migrating and compressing repository from " + source.getPath() + " to " + target.getPath() + " ---");
     

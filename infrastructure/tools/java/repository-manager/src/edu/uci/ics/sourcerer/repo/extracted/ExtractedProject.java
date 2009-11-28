@@ -18,8 +18,6 @@
 package edu.uci.ics.sourcerer.repo.extracted;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
 import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
@@ -54,10 +52,6 @@ public class ExtractedProject extends Extracted {
   
   public String getRelativePath() {
     return relativePath;
-  }
-
-  public InputStream getJarInputStream() throws IOException {
-    return getInputStream(JAR_FILE_FILE);
   }
   
   public void reportExtraction() {

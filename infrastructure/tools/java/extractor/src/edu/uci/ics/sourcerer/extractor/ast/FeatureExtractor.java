@@ -20,7 +20,6 @@ package edu.uci.ics.sourcerer.extractor.ast;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.logging.Level;
 
 import org.eclipse.core.resources.IFile;
@@ -32,12 +31,9 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.IBinding;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
 
 import edu.uci.ics.sourcerer.extractor.io.IMissingTypeWriter;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 
@@ -59,49 +55,22 @@ public final class FeatureExtractor {
     bundle.close();
   }
   
-  public final static class ClassExtractionReport {
-    private boolean missingType = false;
+  public static class ClassExtractionReport extends SourceExtractionReport {
     private int extractedFromBinary = 0;
-    private int extractedFromSource = 0;
-    private int sourceExtractionExceptions = 0;
     private int binaryExtractionExceptions = 0;
     
     private ClassExtractionReport() {}
     
-    private void reportMissingType() {
-      missingType = true;
-    }
-    
-    private void reportBinaryExtraction() {
+    protected void reportBinaryExtraction() {
       extractedFromBinary++;
     }
     
-    private void reportSourceExtraction() {
-      extractedFromSource++;
-    }
-    
-    private void reportSourceExtractionException() {
-      sourceExtractionExceptions++;
-    }
-    
-    private void reportBinaryExtractionException() {
+    protected void reportBinaryExtractionException() {
       binaryExtractionExceptions++;
     }
-
-    public boolean hadMissingType() {
-      return missingType;
-    }
-    
+   
     public int getExtractedFromBinary() {
       return extractedFromBinary;
-    }
-    
-    public int getExtractedFromSource() {
-      return extractedFromSource;
-    }
-    
-    public int getSourceExtractionExceptions() {
-      return sourceExtractionExceptions;
     }
     
     public int getBinaryExtractionExceptions() {
@@ -145,13 +114,7 @@ public final class FeatureExtractor {
                 continue;
               }
               
-              // Check for the classpath problem
-              for (IProblem problem : unit.getProblems()) {
-                if (problem.isError() && (problem.getID() == IProblem.IsClassPathCorrect || problem.getID() == IProblem.ImportNotFound)) {
-                  missingTypeWriter.writeMissingType(problem.getArguments()[0]);
-                  report.reportMissingType();
-                }
-              }
+              checkForMissingTypes(unit, report, missingTypeWriter);
               if (!report.hadMissingType()) {
                 try {
                   unit.accept(visitor);
@@ -188,117 +151,158 @@ public final class FeatureExtractor {
     return report;
   }
    
+  public static class SourceExtractionReport {
+    private boolean missingType = false;
+    private int extractedFromSource = 0;
+    private int sourceExtractionExceptions = 0;
+    
+    private SourceExtractionReport() {}
+    
+    protected void reportMissingType() {
+      missingType = true;
+    }
+   
+    protected void reportSourceExtraction() {
+      extractedFromSource++;
+    }
+    
+    protected void reportSourceExtractionException() {
+      sourceExtractionExceptions++;
+    }
+    
+    public boolean hadMissingType() {
+      return missingType;
+    }
+    
+    public int getExtractedFromSource() {
+      return extractedFromSource;
+    }
+    
+    public int getSourceExtractionExceptions() {
+      return sourceExtractionExceptions;
+    }
+  }
+  
   public void extractSourceFiles(Collection<IFile> sourceFiles) {
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
-    
-    int total = 0;
+    SourceExtractionReport report = new SourceExtractionReport();
+    IMissingTypeWriter missingTypeWriter = bundle.getMissingTypeWriter();
     
     for (IFile source : sourceFiles) {
-//      if (doPPA) {
-////        PPAUtil.getCU(source, new PPAOptions()).accept(visitor);
-//      } else {
-        ICompilationUnit icu = JavaCore.createCompilationUnitFrom(source);
-        
-        parser.setStatementsRecovery(true);
-        parser.setResolveBindings(true);
-        parser.setBindingsRecovery(true);
-        parser.setSource(icu);
-        
+      ICompilationUnit icu = JavaCore.createCompilationUnitFrom(source);
+      
+      parser.setStatementsRecovery(true);
+      parser.setResolveBindings(true);
+      parser.setBindingsRecovery(true);
+      parser.setSource(icu);
+      
+      CompilationUnit unit = null;
+      try {
+        unit = (CompilationUnit)parser.createAST(null);
+      } catch (Exception e) {
+        logger.log(Level.SEVERE, "Error in creating AST for " + source.getName(), e);
+        report.reportSourceExtractionException();
+        continue;
+      }
+      
+      checkForMissingTypes(unit, report, missingTypeWriter);
+      if (!report.hadMissingType()) {
         try {
-          CompilationUnit unit;
-          do {
-            unit = (CompilationUnit)parser.createAST(null);
-          } while (reattemptCompilation(unit));
           unit.accept(visitor);
-        } catch (NullPointerException e) {
-          logger.log(Level.SEVERE, "Unable to create AST for " + icu.getResource().getLocation().toString(), e);
-          total--;
-        }
-      
-      if (++total % 1000 == 0) {
-        logger.info("    " + total + " files extracted");
-      }
-    }
-//    }
-    
-    logger.info("    " + total + " files extracted");
-  }
-  
-  @SuppressWarnings("unchecked")
-  private boolean reattemptCompilation(CompilationUnit unit) {
-    IProblem[] problems = unit.getProblems();
-    if (problems.length == 0) {
-      return false;
-    } else {
-      boolean foundIndirectRef = false;
-      Collection<String> missingPrefix = Helper.newHashSet();
-      Collection<String> missingRefs = Helper.newHashSet();
-      // Check problems for missing indirect references
-      for (IProblem problem : problems) {
-        if (problem.isError()) {
-          String message = problem.getMessage();
-          if (message.startsWith("The type") && message.endsWith("is indirectly referenced from required .class files")) {
-            foundIndirectRef = true;
-            missingRefs.add(problem.getArguments()[0]);
-          } else if (message.startsWith("The import") && message.endsWith("cannot be resolved")) {
-            missingPrefix.add(problem.getArguments()[0]);
-          }
-        }
-      }
-      
-      // Check for unresolved imports
-      for (ImportDeclaration imp : (List<ImportDeclaration>)unit.imports()) {
-        try {
-          String name = imp.getName().getFullyQualifiedName();
-          IBinding binding = imp.resolveBinding();
-          if (binding == null) {
-            // if there was a missing indirect reference, all bindings will be null
-            if (foundIndirectRef) {
-              if (isPrefix(missingPrefix, name)) {
-                missingRefs.add(name);
-              }
-            } else {
-              if (isPrefix(missingPrefix, name)) {
-                // should be unresolved
-                missingRefs.add(name);
-              } else {
-                logger.log(Level.SEVERE, "This reference should have a missing prefix: " + name);
-              }
-            }
-          } else {
-            if (!binding.getJavaElement().exists()) {
-              if (isPrefix(missingPrefix, name)) {
-                // should be unresolved
-                missingRefs.add(name);
-              } else {
-                logger.log(Level.SEVERE, "This reference should have a missing prefix: " + name);
-              }
-            }
-          }
+          report.reportSourceExtraction();
         } catch (Exception e) {
-          logger.log(Level.SEVERE, "Exception in getting binding!", e);
-          String name = imp.getName().getFullyQualifiedName();
-          if (isPrefix(missingPrefix, name)) {
-            // should be unresolved
-            missingRefs.add(name);
-          } else {
-            logger.log(Level.SEVERE, "This reference should have a missing prefix: " + name);
-          }
+          logger.log(Level.SEVERE, "Error in extracting " + source.getName(), e);
+          report.reportSourceExtractionException();
         }
-        
-        // Let's find the jars that work
-        return false;
       }
-      return false;
     }
   }
   
-  private boolean isPrefix(Collection<String> prefixes, String word) {
-    for (String prefix : prefixes) {
-      if (word.startsWith(prefix)) {
-        return true;
+  private void checkForMissingTypes(CompilationUnit unit, SourceExtractionReport report, IMissingTypeWriter writer) {
+    // Check for the classpath problem
+    for (IProblem problem : unit.getProblems()) {
+      if (problem.isError() && (problem.getID() == IProblem.IsClassPathCorrect || problem.getID() == IProblem.ImportNotFound)) {
+        writer.writeMissingType(problem.getArguments()[0]);
+        report.reportMissingType();
       }
     }
-    return false;
   }
+  
+//  @SuppressWarnings("unchecked")
+//  private boolean reattemptCompilation(CompilationUnit unit) {
+//    IProblem[] problems = unit.getProblems();
+//    if (problems.length == 0) {
+//      return false;
+//    } else {
+//      boolean foundIndirectRef = false;
+//      Collection<String> missingPrefix = Helper.newHashSet();
+//      Collection<String> missingRefs = Helper.newHashSet();
+//      // Check problems for missing indirect references
+//      for (IProblem problem : problems) {
+//        if (problem.isError()) {
+//          String message = problem.getMessage();
+//          if (message.startsWith("The type") && message.endsWith("is indirectly referenced from required .class files")) {
+//            foundIndirectRef = true;
+//            missingRefs.add(problem.getArguments()[0]);
+//          } else if (message.startsWith("The import") && message.endsWith("cannot be resolved")) {
+//            missingPrefix.add(problem.getArguments()[0]);
+//          }
+//        }
+//      }
+//      
+//      // Check for unresolved imports
+//      for (ImportDeclaration imp : (List<ImportDeclaration>)unit.imports()) {
+//        try {
+//          String name = imp.getName().getFullyQualifiedName();
+//          IBinding binding = imp.resolveBinding();
+//          if (binding == null) {
+//            // if there was a missing indirect reference, all bindings will be null
+//            if (foundIndirectRef) {
+//              if (isPrefix(missingPrefix, name)) {
+//                missingRefs.add(name);
+//              }
+//            } else {
+//              if (isPrefix(missingPrefix, name)) {
+//                // should be unresolved
+//                missingRefs.add(name);
+//              } else {
+//                logger.log(Level.SEVERE, "This reference should have a missing prefix: " + name);
+//              }
+//            }
+//          } else {
+//            if (!binding.getJavaElement().exists()) {
+//              if (isPrefix(missingPrefix, name)) {
+//                // should be unresolved
+//                missingRefs.add(name);
+//              } else {
+//                logger.log(Level.SEVERE, "This reference should have a missing prefix: " + name);
+//              }
+//            }
+//          }
+//        } catch (Exception e) {
+//          logger.log(Level.SEVERE, "Exception in getting binding!", e);
+//          String name = imp.getName().getFullyQualifiedName();
+//          if (isPrefix(missingPrefix, name)) {
+//            // should be unresolved
+//            missingRefs.add(name);
+//          } else {
+//            logger.log(Level.SEVERE, "This reference should have a missing prefix: " + name);
+//          }
+//        }
+//        
+//        // Let's find the jars that work
+//        return false;
+//      }
+//      return false;
+//    }
+//  }
+  
+//  private boolean isPrefix(Collection<String> prefixes, String word) {
+//    for (String prefix : prefixes) {
+//      if (word.startsWith(prefix)) {
+//        return true;
+//      }
+//    }
+//    return false;
+//  }
 }

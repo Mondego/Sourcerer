@@ -15,23 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.extractor.io.file;
+package edu.uci.ics.sourcerer.model.extracted;
 
-import java.io.File;
-
-import edu.uci.ics.sourcerer.extractor.io.IJarFileWriter;
-import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.repo.extracted.Extracted;
+import java.util.Collection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class JarFileWriter extends ExtractorWriter implements IJarFileWriter {
-  public JarFileWriter(File output, Repository input) {
-    super(new File(output, Extracted.JAR_FILE_FILE.getValue()), input);
+public class UsedJarEX implements ModelEX {
+  private String hash;
+  private Collection<String> missingTypes;
+  
+  protected UsedJarEX(String hash, Collection<String> missingTypes) {
+    this.hash = hash;
+    this.missingTypes = missingTypes;
   }
   
-  public void writeJarFile(String filename) {
-    write(filename);
+  public String getHash() {
+    return hash;
+  }
+  
+  public Collection<String> getMissingTypes() {
+    return missingTypes;
   }
 }

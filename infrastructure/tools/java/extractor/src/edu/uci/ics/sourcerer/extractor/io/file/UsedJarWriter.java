@@ -15,19 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model.extracted;
+package edu.uci.ics.sourcerer.extractor.io.file;
+
+import java.io.File;
+
+import edu.uci.ics.sourcerer.extractor.io.IUsedJarWriter;
+import edu.uci.ics.sourcerer.model.extracted.UsedJarExParser;
+import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarEX implements ModelEX {
-  private String hash;
-  
-  protected JarEX(String hash) {
-    this.hash = hash;
+public final class UsedJarWriter extends ExtractorWriter implements IUsedJarWriter {
+  public UsedJarWriter(File output, Repository input) {
+    super(new File(output, Extracted.USED_JAR_FILE.getValue()), input, true);
   }
   
-  public String getHash() {
-    return hash;
+  public void writeUsedJar(String hash, String ... missingTypes) {
+    write(UsedJarExParser.getLine(hash, missingTypes));
   }
 }

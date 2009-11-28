@@ -104,6 +104,10 @@ public class RelationEX implements ModelEX {
     return paramName;
   }
   
+  public String toString() {
+    return type.name() + " " + lhs + " " + rhs;
+  }
+  
   public int hashCode() {
     return (lhs + rhs).hashCode();
   }

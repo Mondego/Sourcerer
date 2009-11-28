@@ -15,13 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.extractor.io;
+package edu.uci.ics.sourcerer.extractor.io.dummy;
+
+import edu.uci.ics.sourcerer.extractor.io.IUsedJarWriter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IJarFileWriter extends IExtractorWriter {
+public class DummyUsedJarWriter implements IUsedJarWriter {
+  @Override
+  public void writeUsedJar(String hash, String ... missingTypes) {
+  }
 
-  public void writeJarFile(String filename);
-
+  @Override
+  public void close() {
+  }
 }

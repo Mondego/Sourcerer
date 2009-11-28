@@ -36,9 +36,13 @@ public abstract class ExtractorWriter implements IExtractorWriter {
   private Repository input;
   
   protected ExtractorWriter(File output, Repository input) {
+    this(output, input, false);
+  }
+  
+  protected ExtractorWriter(File output, Repository input, boolean append) {
     this.input = input;
     try {
-      writer = new BufferedWriter(new FileWriter(output));
+      writer = new BufferedWriter(new FileWriter(output, append));
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error opening file", e);
     }

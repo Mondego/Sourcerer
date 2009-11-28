@@ -22,7 +22,7 @@ import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.ENTITY_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.FILE_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.IMPORT_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.JAR_ENTITY_WRITER;
-import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.JAR_FILE_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.USED_JAR_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.JAR_RELATION_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.LOCAL_VARIABLE_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.MISSING_TYPE_WRITER;
@@ -32,7 +32,7 @@ import static edu.uci.ics.sourcerer.repo.extracted.Extracted.COMMENT_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.ENTITY_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.FILE_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.IMPORT_FILE;
-import static edu.uci.ics.sourcerer.repo.extracted.Extracted.JAR_FILE_FILE;
+import static edu.uci.ics.sourcerer.repo.extracted.Extracted.USED_JAR_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.LOCAL_VARIABLE_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.MISSING_TYPE_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.RELATION_FILE;
@@ -42,17 +42,20 @@ import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 
+import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.extractor.io.file.CommentWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.EntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.FileWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.ImportWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.JarEntityWriter;
-import edu.uci.ics.sourcerer.extractor.io.file.JarFileWriter;
+import edu.uci.ics.sourcerer.extractor.io.file.UsedJarWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.JarRelationWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.LocalVariableWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.MissingTypeWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.ProblemWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.RelationWriter;
+import edu.uci.ics.sourcerer.extractor.resolver.MissingTypeResolver;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
@@ -82,7 +85,7 @@ public class Extractor implements IApplication {
         RELATION_WRITER, JAR_RELATION_WRITER, RELATION_FILE,
         COMMENT_WRITER, COMMENT_FILE,
         FILE_WRITER, FILE_FILE,
-        JAR_FILE_WRITER, JAR_FILE_FILE,
+        USED_JAR_WRITER, USED_JAR_FILE,
         MISSING_TYPE_WRITER, MISSING_TYPE_FILE);
     
     IMPORT_WRITER.setValue(ImportWriter.class);
@@ -94,21 +97,31 @@ public class Extractor implements IApplication {
     JAR_RELATION_WRITER.setValue(JarRelationWriter.class);
     COMMENT_WRITER.setValue(CommentWriter.class);
     FILE_WRITER.setValue(FileWriter.class);
-    JAR_FILE_WRITER.setValue(JarFileWriter.class);
+    USED_JAR_WRITER.setValue(UsedJarWriter.class);
     MISSING_TYPE_WRITER.setValue(MissingTypeWriter.class);
     
+    DatabaseConnection connection = null;
+    MissingTypeResolver resolver = null;
+    if (RESOLVE_MISSING_TYPES.getValue()) {
+      PropertyManager.registerAndVerify(DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
+      connection = new DatabaseConnection();
+      connection.open();
+      resolver = new MissingTypeResolver(connection);
+    }
     if (EXTRACT_LIBRARIES.getValue()) {
       PropertyManager.registerAndVerify(OUTPUT_REPO);
       LibraryExtractor.extract();
     } else if (EXTRACT_JARS.getValue()){
       PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);
-      JarExtractor.extract();
+      JarExtractor.extract(resolver);
     } else if (EXTRACT_PROJECTS.getValue()) {
       PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);
-      ProjectExtractor.extract();
+      ProjectExtractor.extract(resolver);
     } else {
       PropertyManager.printUsage();
     }
+    
+    FileUtils.close(connection);
 
     return EXIT_OK;
   }

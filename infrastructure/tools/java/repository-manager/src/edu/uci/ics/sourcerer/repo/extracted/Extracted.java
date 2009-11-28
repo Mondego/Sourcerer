@@ -37,7 +37,7 @@ public abstract class Extracted {
   public static final Property<String> FILE_FILE = new StringProperty("file-file", "files.txt", "Repository Manager", "Filename for the extracted files.");
   public static final Property<String> PROBLEM_FILE = new StringProperty("problem-file", "problems.txt", "Repository Manager", "Filename for the extracted problems.");
   public static final Property<String> IMPORT_FILE = new StringProperty("import-file", "imports.txt", "Repository Manager", "Filename for the extracted imports.");
-  public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Repository Manager", "Filename for used jar files.");
+  public static final Property<String> USED_JAR_FILE = new StringProperty("used-jar-file", "used-jars.txt", "Repository Manager", "Filename for used jar files.");
   public static final Property<String> MISSING_TYPE_FILE = new StringProperty("missing-type-file", "missing-types.txt", "Repository Manager", "Filename for missing types.");
   
   protected File content;
@@ -51,7 +51,12 @@ public abstract class Extracted {
   }
   
   protected File getPropertiesFile() {
-    return new File(content, ".properties");
+    File file = new File(content, ".properties");
+    if (file.exists()) {
+      return file;
+    } else {
+      return new File(content, "extracted.properties");
+    }
   }
   
   protected InputStream getInputStream(Property<String> property) throws IOException {
@@ -89,6 +94,10 @@ public abstract class Extracted {
   
   public InputStream getMissingTypeInputStream() throws IOException {
     return getInputStream(MISSING_TYPE_FILE);
+  }
+  
+  public InputStream getUsedJarInputStream() throws IOException {
+    return getInputStream(USED_JAR_FILE);
   }
   
   protected abstract AbstractProperties getProperties();

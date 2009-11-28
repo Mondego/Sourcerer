@@ -15,24 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model.extracted;
+package edu.uci.ics.sourcerer.extractor.io;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarExParser implements ModelExParser<JarEX> {
-  private JarExParser() {}
-  
-  public static JarExParser getParser() {
-    return new JarExParser();
-  }
-  
-  public static String getLine(String hash) {
-    return hash;
-  }
-  
-  @Override
-  public JarEX parseLine(String line) {
-    return new JarEX(line);
-  }
+public interface IUsedJarWriter extends IExtractorWriter {
+  public void writeUsedJar(String hash, String ... missingTypes);
 }

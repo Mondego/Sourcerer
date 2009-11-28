@@ -39,7 +39,7 @@ public interface IWriterBundle {
 
   public IFileWriter getFileWriter();
 
-  public IJarFileWriter getJarFileWriter();
+  public IUsedJarWriter getUsedJarWriter();
 
   public void close();
 }

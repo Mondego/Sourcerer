@@ -34,7 +34,7 @@ import edu.uci.ics.sourcerer.db.schema.JarEntitiesTable;
 import edu.uci.ics.sourcerer.db.schema.JarImportsTable;
 import edu.uci.ics.sourcerer.db.schema.JarProblemsTable;
 import edu.uci.ics.sourcerer.db.schema.JarRelationsTable;
-import edu.uci.ics.sourcerer.db.schema.JarUsesTable;
+import edu.uci.ics.sourcerer.db.schema.UsedJarsTable;
 import edu.uci.ics.sourcerer.db.schema.JarsTable;
 import edu.uci.ics.sourcerer.db.schema.LibrariesTable;
 import edu.uci.ics.sourcerer.db.schema.LibraryClassFilesTable;
@@ -95,7 +95,7 @@ public class InitializeDatabase extends DatabaseAccessor {
           JarCommentsTable.TABLE,
           JarImportsTable.TABLE,
           JarProblemsTable.TABLE,
-          JarUsesTable.TABLE,
+          UsedJarsTable.TABLE,
           ProjectsTable.TABLE,
           FilesTable.TABLE,
           ProblemsTable.TABLE,
@@ -116,7 +116,7 @@ public class InitializeDatabase extends DatabaseAccessor {
       JarClassFilesTable.createTable(executor);
       JarCommentsTable.createTable(executor);
       JarImportsTable.createTable(executor);
-      JarUsesTable.createTable(executor);
+      UsedJarsTable.createTable(executor);
       JarProblemsTable.createTable(executor);
       ProjectsTable.createTable(executor);
       FilesTable.createTable(executor);
@@ -126,11 +126,18 @@ public class InitializeDatabase extends DatabaseAccessor {
       RelationsTable.createTable(executor);
       CommentsTable.createTable(executor);
       
+      entityMap = Helper.newHashMap();
+      
       // Add the primitives
       locker.addWrites(LibrariesTable.TABLE, LibraryEntitiesTable.TABLE);
       locker.lock();
       String projectID = LibrariesTable.insertPrimitivesProject(executor);
-      InsertBatcher batcher = LibraryEntitiesTable.getInsertBatcher(executor);
+      KeyInsertBatcher<String> batcher = LibraryEntitiesTable.getKeyInsertBatcher(executor, new KeyInsertBatcher.KeyProcessor<String>() {
+        @Override
+        public void processKey(String key, String value) {
+          entityMap.put(value, key);
+        }
+      });
       LibraryEntitiesTable.insertPrimitive(batcher, "boolean", projectID);
       LibraryEntitiesTable.insertPrimitive(batcher, "char", projectID);
       LibraryEntitiesTable.insertPrimitive(batcher, "byte", projectID);
@@ -153,7 +160,6 @@ public class InitializeDatabase extends DatabaseAccessor {
     int count = 0;
     // Do all the entities first
     fileMap = Helper.newHashMap();
-    entityMap = Helper.newHashMap();
     // Lock some tables
     locker.addWrites(LibrariesTable.TABLE, 
         LibraryEntitiesTable.TABLE, 
@@ -294,7 +300,7 @@ public class InitializeDatabase extends DatabaseAccessor {
       
       // Add the relations to the database
       {
-        logger.info(  "Beginning insert of relations...");
+        logger.info("  Beginning insert of relations...");
         int count = 0;
       
         for (RelationEX relation : ExtractedReader.getRelationReader(library)) {
