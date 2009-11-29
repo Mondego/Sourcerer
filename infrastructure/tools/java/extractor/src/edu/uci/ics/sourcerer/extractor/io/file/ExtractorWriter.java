@@ -23,15 +23,18 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.extractor.io.IExtractorWriter;
 import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class ExtractorWriter implements IExtractorWriter {
+  private static Map<File, BufferedWriter> writerMap = Helper.newHashMap();
   private BufferedWriter writer;
   private Repository input;
   
@@ -42,7 +45,12 @@ public abstract class ExtractorWriter implements IExtractorWriter {
   protected ExtractorWriter(File output, Repository input, boolean append) {
     this.input = input;
     try {
-      writer = new BufferedWriter(new FileWriter(output, append));
+      if (writerMap.containsKey(output)) {
+        writer = writerMap.get(output);
+      } else {
+        writer = new BufferedWriter(new FileWriter(output, append));
+        writerMap.put(output, writer);
+      }
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error opening file", e);
     }
