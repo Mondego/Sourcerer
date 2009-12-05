@@ -47,6 +47,20 @@
   <servlet>
     <servlet-name>sdbServlet</servlet-name>
     <servlet-class>edu.uci.ics.sourcerer.scs.server.SourcererDBServiceImpl</servlet-class>
+    <init-param>
+        <param-name>db-url</param-name>
+        <param-value>jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_test</param-value>
+    </init-param>
+    <init-param>
+        <param-name>db-user</param-name>
+        <param-value>sourcerer</param-value>
+    </init-param>
+    <init-param>
+        <param-name>db-password</param-name>
+        <param-value></param-value>
+    </init-param>
+    
+    
   </servlet>
   
   <servlet-mapping>

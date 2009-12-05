@@ -238,6 +238,9 @@ public class Sourcerer_cs implements EntryPoint,
 		m.put(SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibSimSNAME_SNAME.name(), 
 				SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibSimSNAME_SNAME.toString());
 		
+		m.put(SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME.name(), 
+				SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME.toString());
+		
 		m.put(SearchHeuristic.TEXT_USEDFQN_FQN_SNAME.name(), 
 				SearchHeuristic.TEXT_USEDFQN_FQN_SNAME.toString());
 		
@@ -255,6 +258,9 @@ public class Sourcerer_cs implements EntryPoint,
 		
 		m.put(SearchHeuristic.FQN_USEDFQN_JdkLibSimSNAME_SNAME.name(), 
 				SearchHeuristic.FQN_USEDFQN_JdkLibSimSNAME_SNAME.toString());
+		
+		m.put(SearchHeuristic.FQN_USEDFQN_JdkLibTcSimSNAME_SNAME.name(), 
+				SearchHeuristic.FQN_USEDFQN_JdkLibTcSimSNAME_SNAME.toString());
 		
 		m.put(SearchHeuristic.FQN_USEDFQN_SNAME.name(), 
 				SearchHeuristic.FQN_USEDFQN_SNAME.toString());

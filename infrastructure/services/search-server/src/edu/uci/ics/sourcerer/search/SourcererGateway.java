@@ -22,8 +22,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -42,6 +45,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import edu.uci.ics.sourcerer.db.util.JdbcDataSource;
+
 /**
  * 
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
@@ -50,10 +55,16 @@ import org.xml.sax.SAXException;
  */
 public class SourcererGateway {
 
-	String urlPart = "http://kathmandu.ics.uci.edu:8983/solr/scs/mlt";
-	String codeUrlPart = "http://nile.ics.uci.edu:9180/repofileserver";
+	String urlPart = "http://localhost:8983/solr/scs/mlt";
+	String codeUrlPart = "http://localhost:9180/repofileserver";
+	String dbDriver = "com.mysql.jdbc.Driver";
+	String dbUri = "jdbc:mysql://localhost:3307/sourcerer_test";
+	String dbUser = "sourcerer";
+	String dbPassword = "";
+
 	
 	HttpClient client;
+	JdbcDataSource ds;
 	DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	
 	{
@@ -63,19 +74,60 @@ public class SourcererGateway {
 	     client = new HttpClient(httpConnectionManager);
 	}
 	
+	private void initDb(){
+		ds = new JdbcDataSource();
+	    Properties p = new Properties();
+		p.put("driver", dbDriver);
+		p.put("url", dbUri);
+		p.put("user", dbUser);
+		p.put("password", dbPassword);
+		ds.init(p);
+	}
+	
 	public SourcererGateway(){
+		//initDb();
 	}
 	
 	public SourcererGateway(String scsUrlPart, String codeUrlPart) {
 		if(scsUrlPart!=null && scsUrlPart.length()>0) this.urlPart = scsUrlPart;
 		if(codeUrlPart!=null && codeUrlPart.length()>0) this.codeUrlPart = codeUrlPart;
+		//initDb();
+	}
+	
+	public SourcererGateway(String scsUrlPart, String codeUrlPart,
+			String dbUri, String dbUser, String dbPassword) {
+		if(scsUrlPart!=null && scsUrlPart.length()>0) this.urlPart = scsUrlPart;
+		if(codeUrlPart!=null && codeUrlPart.length()>0) this.codeUrlPart = codeUrlPart;
+		setDb(dbUri, dbUser, dbPassword);
+	}
+	
+	public void setDb(String uri, String user, String password){
+		this.dbUri = uri;
+		this.dbUser = user;
+		this.dbPassword = password;
+		initDb();
+	}
+	
+	public void setCodeServerUrl(String url){
+		this.codeUrlPart = url;
+	}
+	
+	public void setMltServerUrl(String url){
+		this.urlPart = url;
 	}
 	
 	public static SourcererGateway getInstance(String scsUrl, String codeUrl){
 		if (obj == null) obj = new SourcererGateway(scsUrl, codeUrl);
 		
 		return obj;
-			
+	}
+	
+	public static SourcererGateway getInstance(
+			String scsUrl, String codeUrl,
+			String dbUri, String dbUser, String dbPassword){
+		if (obj == null) obj = new SourcererGateway(scsUrl, codeUrl, dbUri, dbUser, dbPassword);
+		
+		return obj;
 	}
 	
 	private static SourcererGateway obj;
@@ -89,31 +141,56 @@ public class SourcererGateway {
 	}
 	
 	public String mltSnamesViaJdkUse(String entityId){
-		return HitFqnEntityIdToString(searchMltViaJdkUsage(entityId));
+		return HitFqnEntityIdToString(searchMltViaJdkUse(entityId));
 	}
 	
 	public String mltSnamesViaLibUse(String entityId){
-		return HitFqnEntityIdToString(searchMltViaLibUsage(entityId));
+		return HitFqnEntityIdToString(searchMltViaLibUse(entityId));
 	}
 	
 	public String mltSnamesViaLocalUse(String entityId){
-		return HitFqnEntityIdToString(searchMltViaLocalUsage(entityId));
+		return HitFqnEntityIdToString(searchMltViaLocalUse(entityId));
+	}
+	
+	public String mltSnamesViaJdkLibUse(String entityId) {
+		return HitFqnEntityIdToString(searchMltViaJdkLibUse(entityId));
+	}
+	
+	public String mltSnamesViaAllUse(String entityId) {
+		return HitFqnEntityIdToString(searchMltViaAllUse(entityId));
+	}
+	
+	public String snamesViaSimEntitiesTC(String entityId) {
+		
+		if(ds==null) return "";
+		
+		String query = "SELECT e.fqn from similarity_tanimoto as stc" +
+				" INNER JOIN entities as e on stc.rhs_eid=e.entity_id" +
+				" WHERE stc.lhs_eid=" + entityId;
+		return makeFqnsStringFromQueryResult(ds.getData(query));
 	}
 	
 	
-	
-	public List<HitFqnEntityId> searchMltViaJdkUsage(String entityId) {
+	public List<HitFqnEntityId> searchMltViaJdkUse(String entityId) {
 		return getFqnEntityIdFromHits(searchMlt(entityId, "jdk_use_fqn_full"));
 	}
 
 
-	public List<HitFqnEntityId> searchMltViaLibUsage(String entityId) {
+	public List<HitFqnEntityId> searchMltViaLibUse(String entityId) {
 		return getFqnEntityIdFromHits(searchMlt(entityId, "lib_use_fqn_full"));
 	}
 
 
-	public List<HitFqnEntityId> searchMltViaLocalUsage(String entityId) {
+	public List<HitFqnEntityId> searchMltViaLocalUse(String entityId) {
 		return getFqnEntityIdFromHits(searchMlt(entityId, "local_use_fqn_full"));
+	}
+	
+	public List<HitFqnEntityId> searchMltViaJdkLibUse(String entityId) {
+		return getFqnEntityIdFromHits(searchMlt(entityId, "jdkLib_use_fqn_full"));
+	}
+	
+	public List<HitFqnEntityId> searchMltViaAllUse(String entityId) {
+		return getFqnEntityIdFromHits(searchMlt(entityId, "all_use_fqn_full"));
 	}
 	
 	// -- end apis
@@ -325,5 +402,20 @@ public class SourcererGateway {
 	
 		return null;
 	}
+	
+	private String makeFqnsStringFromQueryResult(
+			Iterator<Map<String, Object>> data) {
+		StringBuffer sb = new StringBuffer();
+		
+		while(data.hasNext()){
+			sb.append((String) (data.next().get("fqn")));
+			sb.append(" ");
+		}
+		
+		return sb.toString().trim();
+	}
+
+
+	
 }
 

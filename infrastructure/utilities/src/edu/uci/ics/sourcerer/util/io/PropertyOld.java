@@ -98,7 +98,7 @@ public enum PropertyOld {
   // -- Begin Database Properties --
   DATABASE_URL("db-url", "jdbc:mysql://tagus.ics.uci.edu:3306/sourcerer"),
   DATABASE_USER("ub-user", "sourcerer"),
-  DATABASE_PASSWORD("db-passwd", "sourcerer4us"),
+  DATABASE_PASSWORD("db-passwd", ""),
   // -- End Database Properties --
 
   // -- Begin Database Tools Properties --

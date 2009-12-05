@@ -53,7 +53,7 @@ public class MLTQueryGatewayTest extends TestCase {
 		
 		System.out.println("--jdk--");
 		long start = System.currentTimeMillis();
-		List<HitFqnEntityId> jsim = g.searchMltViaJdkUsage(entityId);
+		List<HitFqnEntityId> jsim = g.searchMltViaJdkUse(entityId);
 		long end = System.currentTimeMillis();
 		assertNotNull(jsim);
 		//assertEquals(15, jsim.size());
@@ -64,7 +64,7 @@ public class MLTQueryGatewayTest extends TestCase {
 		
 		System.out.println("--lib--");
 		start = System.currentTimeMillis();
-		List<HitFqnEntityId> libsim = g.searchMltViaLibUsage(entityId);
+		List<HitFqnEntityId> libsim = g.searchMltViaLibUse(entityId);
 		end = System.currentTimeMillis();
 		assertNotNull(libsim);
 		//assertEquals(15, libsim.size());
@@ -75,7 +75,7 @@ public class MLTQueryGatewayTest extends TestCase {
 		
 		System.out.println("--local--");
 		start = System.currentTimeMillis();
-		List<HitFqnEntityId> locsim = g.searchMltViaLocalUsage(entityId);
+		List<HitFqnEntityId> locsim = g.searchMltViaLocalUse(entityId);
 		end = System.currentTimeMillis();
 		assertNotNull(locsim);
 	//	assertEquals(15, locsim.size());

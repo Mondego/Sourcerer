@@ -10,5 +10,6 @@
 	<classpathentry kind="lib" path="/lib/lucene-analyzers-2.4-dev.jar"/>
 	<classpathentry kind="lib" path="/lib/lucene-core-2.4-dev.jar"/>
 	<classpathentry kind="lib" path="/lib/commons-httpclient-3.0.jar"/>
+	<classpathentry kind="lib" path="/lib/mysql-connector-java-5.1.7-bin.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

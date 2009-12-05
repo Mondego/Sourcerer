@@ -40,6 +40,7 @@ public final class FqnFilter extends TokenFilter {
 	final int shortNamesOnly; // will void the effect of fragment*
 
 	final String UNRESOLVED_LITERAL = "_UNRESOLVED_.";
+	final String UNKNOWN_LITERAL = "(UNKNOWN)";
 	final char TYPED_PARAMETER_LITERAL = 'T';
 
 	public FqnFilter(TokenStream in, int extractSig, int shortNamesOnly) {
@@ -145,6 +146,8 @@ public final class FqnFilter extends TokenFilter {
 		// remove all typed parameters, and constructor info from fqn
 		// these would be pulled in the fields that denote usage
 		String newTerm = tokenTerm.replaceAll(UNRESOLVED_LITERAL, "");
+		newTerm = newTerm.replaceAll(UNKNOWN_LITERAL, "");
+		
 		// remove all whitespace from fqn
 		newTerm = newTerm.replaceAll("\\s", "");
 		newTerm = processAngularBrackets(newTerm);

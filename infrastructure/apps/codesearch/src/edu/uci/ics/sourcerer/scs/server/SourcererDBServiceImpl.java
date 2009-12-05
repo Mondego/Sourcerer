@@ -45,12 +45,16 @@ public class SourcererDBServiceImpl extends RemoteServiceServlet implements
 	
 	public void init(){
 		
+		String dbUrl = getInitParameter("db-url");
+		String dbUser = getInitParameter("db-user");
+		String dbPassword = getInitParameter("db-password");
+		
 		//TODO read all values from web.xml
 		Properties p = new Properties();
 	    p.put("driver", "com.mysql.jdbc.Driver");
-	    p.put("url", "jdbc:mysql://tagus.ics.uci.edu:3306/sourcerer");
-	    p.put("user", "sourcerer-public");
-	    p.put("password", "");
+	    p.put("url", dbUrl);
+	    p.put("user", dbUser);
+	    p.put("password", dbPassword);
 	    ds.init(p);
 	    
 	    dba.setDataSource(ds);

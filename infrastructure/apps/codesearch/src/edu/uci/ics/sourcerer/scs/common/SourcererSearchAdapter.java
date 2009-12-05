@@ -38,15 +38,18 @@ import edu.uci.ics.sourcerer.scs.common.client.SearchHeuristic;
  */
 public class SourcererSearchAdapter {
 
-	private static String SEARCH_SERVER = "http://nile.ics.uci.edu:8984";
-	private static String FACET_SERVER  = "http://nile.ics.uci.edu:8983"; 
-	private static String MLT_SERVER    = "http://nile.ics.uci.edu:8983";
-	private static String FILE_SERVER   = "http://nile.ics.uci.edu:9180";
+	private static String SEARCH_SERVER = "http://localhost:8984"; // "http://nile.ics.uci.edu:8984";
+	private static String FACET_SERVER  = "http://localhost:8984"; // "http://nile.ics.uci.edu:8983"; 
+	private static String MLT_SERVER    = "http://localhost:8984"; // "http://nile.ics.uci.edu:8983";
+	private static String FILE_SERVER   = "http://localhost:9180"; // "http://nile.ics.uci.edu:9180";
 	
 	private static String QUERY_PART_SNAME_CONTENTS = "sname_contents^40.0%20";
 	private static String QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS =   // "sim_sname_contents_via_jdk_use^10.0%20sim_sname_contents_via_lib_use^10.0%20sim_sname_contents_via_local_use^10.0%20";
 										   			//  "sim_sname_contents_via_jdk_use^20.0%20sim_sname_contents_via_lib_use^20.0%20sim_sname_contents_via_local_use^20.0%20";
 		  	"sim_sname_contents_via_jdk_use^1.0%20sim_sname_contents_via_lib_use^1.0%20";
+	private static String QUERY_PART_JDKLIB_TC_SIM_SNAME_CONTENTS =
+			"simTC_sname_contents_via_jdkLib_use^1.0%20";
+		
 	private static String QUERY_PART_LOCAL_SIM_SNAME_CONTENTS = "sim_sname_contents_via_local_use^1.0%20";	
 	private static String QUERY_PART_FQN_CONTENTS = "fqn_contents^20.0%20";
 	private static String QUERY_PART_USE_SNAME_CONTENTS = "jdk_use_sname_contents^20.0%20lib_use_sname_contents^20.0%20local_use_sname_contents^20.0%20";
@@ -269,7 +272,17 @@ public class SourcererSearchAdapter {
 			 		QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS +
 			 		QUERY_PART_SNAME_CONTENTS
 			 		;
-			break;	
+			break;
+			
+		case FQN_USEDFQN_JdkLibTcSimSNAME_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_JDKLIB_TC_SIM_SNAME_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
 			
 		case TEXT_USEDFQN_FQN_SNAME:
 			queryPart = "&q=" + queryTerms 
@@ -303,6 +316,18 @@ public class SourcererSearchAdapter {
 			 		QUERY_PART_SNAME_CONTENTS
 			 		;
 			break;
+			
+		case TEXT_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_FULL_TEXT +
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_JDKLIB_TC_SIM_SNAME_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
+			//
 			
 //		case FQN_USEDFQN_MIN_ONE_TERM_IN_SNAME:
 //			queryPart = "";
@@ -343,7 +368,7 @@ public class SourcererSearchAdapter {
 	private static String searchFacets(String query, SearchHeuristic heuristic){
 		
 		// TODO: #2 Remove this
-		query = query.replaceAll("\\s", "%20");
+		////// query = query.replaceAll("\\s", "%20");
 		
 		String urlPart = FACET_SERVER + "/solr/scs/select/";
 		
@@ -351,8 +376,8 @@ public class SourcererSearchAdapter {
 			
 		// TODO: #2 fix this.. add new missing fields to the new index
 		//			till then get it working approximately
-		//	+ buildQueryPart(query, heuristic) // Put this back on
-			+ "&q=" + query // Remove this
+			+ buildQueryPart(query, heuristic) // Put this back on
+		//////	+ "&q=" + query // Remove this
 		// END TODO #2
 			
 			+ "&facet=true&facet.field=lib_use_fqn_full&facet.field=jdk_use_fqn_full&facet.field=entity_type&facet.mincount=1";

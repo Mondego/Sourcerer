@@ -27,9 +27,11 @@ public enum SearchHeuristic {
 	
 	TEXT_USEDFQN_FQN_SimSNAME_SNAME("Text + Used FQNs + FQN + sim sname + sname"),
 	TEXT_USEDFQN_FQN_JdkLibSimSNAME_SNAME("Text + Used FQNs + FQN + Jdk/Lib sim sname + sname"),
+	TEXT_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME("Text + Used FQNs + FQN + Jdk/Lib Tanimoto sim sname + sname"),
 	TEXT_USEDFQN_FQN_SNAME("Text + Used FQNs + FQN + sname"),
 	FQN_USEDFQN_SimSNAME_SNAME("Used FQNs + FQN + sim sname + sname"),
 	FQN_USEDFQN_JdkLibSimSNAME_SNAME("Used FQNs + FQN + Jdk/Lib sim sname + sname"),
+	FQN_USEDFQN_JdkLibTcSimSNAME_SNAME("Used FQNs + FQN + Jdk/Lib Tanimoto sim sname + sname"),
 	FQN_USEDFQN_SNAME("Used FQNs + FQN + sname"),
 	TEXT_FQN_SNAME("Text + FQN + sname"),
 	TEXT_SNAME("Text + sname"),

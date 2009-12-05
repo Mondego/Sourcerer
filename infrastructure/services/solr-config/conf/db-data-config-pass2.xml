@@ -1,0 +1,149 @@
+<dataConfig>
+    <dataSource driver="com.mysql.jdbc.Driver" 
+		url="jdbc:mysql://localhost:3307/sourcerer_test" 
+    	user="" 
+    	password=""  />
+    	
+    <document name="entity">
+	    <entity name="code_entity" pk="entity_id" 
+		    transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+			query="select entity_id, fqn, entity_type from entities 
+					where entity_type='METHOD'
+					and (project_id=38 or project_id=97 or project_id=60)"
+		    deltaQuery="select entity_id from entities 
+		    		where last_modified > '${dataimporter.last_index_time}'">
+
+		<field column="fqn" name="sname_contents" />
+		<field column="fqn" name="fqn_contents" clean-fqn="true" />
+		<field column="fqn" name="fqn_full" clean-fqn="true"/>
+		
+		<field column="entity_id" name="entity_id" />
+		<field column="entity_type" name="entity_type" />
+
+		<entity name="second_pass"
+			transformer="edu.uci.ics.sourcerer.search.analysis.EidToSimSnamesTransformer"
+			query="SELECT entity_id as eid, entity_type as etype from entities where
+				entity_id=${code_entity.entity_id}"
+			code-server-url=""	
+			mlt-server-url="http://localhost:8983/solr/scs/mlt" >
+			<field column="sim_fqns_via_jdk_use" name="sim_sname_contents_via_jdk_use"/>
+			<field column="sim_fqns_via_lib_use" name="sim_sname_contents_via_lib_use"/>
+			<field column="sim_fqns_via_local_use" name="sim_sname_contents_via_local_use"/>
+			<field column="sim_fqns_via_jdkLib_use" name="sim_sname_contents_via_jdkLib_use"/>
+			<field column="sim_fqns_via_all_use" name="sim_sname_contents_via_all_use"/>
+			<!-- 
+			<field column="simTC_fqns_via_jdkLib_use" name="simTC_sname_contents_via_jdkLib_use"/>
+			 -->
+			
+			<!--  field column="code_text" name="full_text"/ -->
+			
+		</entity>
+		
+		<entity name="TC_use"
+			query="SELECT e.fqn as simTC_fqn from similarity_tanimoto as stc
+					INNER JOIN entities as e on stc.rhs_eid=e.entity_id
+					WHERE stc.lhs_eid='${code_entity.entity_id}'">
+			<field column="simTC_fqn" name="simTC_sname_contents_via_jdkLib_use"/>
+		</entity>
+
+		<!--returns, holds not needed -->
+		<entity name="local_use" 
+			transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+			query="SELECT e_provider.fqn as pfqn FROM entities AS e_provider INNER JOIN
+				(relations AS r INNER JOIN entities AS e ON
+				        r.lhs_eid = e.entity_id AND
+				         (r.relation_type='EXTENDS' OR
+				                r.relation_type='IMPLEMENTS' OR
+				                r.relation_type='CALLS' OR
+								r.relation_type='RETURNS' OR
+				                r.relation_type='HOLDS' OR
+				                r.relation_type='USES') AND
+				        e.entity_id = '${code_entity.entity_id}'
+				)  ON
+				r.rhs_eid=e_provider.entity_id
+				UNION ALL
+				SELECT E1.fqn as pfqn FROM entities AS E1 INNER JOIN
+				(relations as R1 INNER JOIN
+				        (relations as R2 INNER JOIN entities AS E2 ON
+				                R2.rhs_eid='${code_entity.entity_id}' AND
+				                E2.entity_type='FIELD' AND
+				                R2.relation_type='INSIDE' AND
+				                R2.lhs_eid=E2.entity_id
+				        ) ON R1.lhs_eid=R2.lhs_eid
+				) ON E1.entity_id=R1.rhs_eid AND R1.relation_type='HOLDS'">
+			
+			<field column="pfqn" name="local_use_fqn_full" />
+			<field column="pfqn" name="all_use_fqn_full" />
+			<field column="pfqn" name="local_use_sname_contents" />
+			<field column="pfqn" name="local_use_fqn_contents" clean-fqn="true"/>
+
+		</entity>
+
+		<entity name="jdk_use" 
+			transformer="RegexTransformer"
+			query="SELECT jdk_provider.fqn AS pfqn_jdk FROM library_entities AS jdk_provider INNER JOIN 
+				(relations AS r INNER JOIN entities AS e ON 
+					r.lhs_eid=e.entity_id AND
+				       (r.relation_type='EXTENDS' OR
+						r.relation_type='IMPLEMENTS' OR
+						r.relation_type='CALLS' OR
+						r.relation_type='RETURNS' OR
+						r.relation_type='HOLDS' OR
+						r.relation_type='USES') AND		
+					e.entity_id='${code_entity.entity_id}')  ON  
+					r.rhs_leid=jdk_provider.entity_id
+				UNION ALL
+				SELECT E1.fqn as pfqn_jdk FROM library_entities AS E1 INNER JOIN
+				(relations as R1 INNER JOIN
+					(relations as R2 INNER JOIN entities AS E2 ON
+						R2.rhs_eid='${code_entity.entity_id}' AND
+						E2.entity_type='FIELD' AND
+						R2.relation_type='INSIDE' AND
+						R2.lhs_eid=E2.entity_id
+					) ON R1.lhs_eid=R2.lhs_eid 
+				) ON E1.entity_id=R1.rhs_leid AND R1.relation_type='HOLDS'">
+		
+			<field column="pfqn_jdk" name="jdk_use_sname_contents" />
+			<field column="pfqn_jdk" name="jdk_use_fqn_contents" clean-fqn="true"/>
+			<field column="pfqn_jdk" name="jdk_use_fqn_full" />
+			<field column="pfqn_jdk" name="jdkLib_use_fqn_full"  />
+			<field column="pfqn_jdk" name="all_use_fqn_full" />
+			
+				
+		</entity>
+
+		<entity name="lib_use" 
+			transformer="RegexTransformer"
+			query="SELECT jar_provider.fqn AS pfqn_lib FROM jar_entities AS jar_provider INNER JOIN 
+				(relations AS r INNER JOIN entities AS e ON 
+					r.lhs_eid=e.entity_id AND
+				       (r.relation_type='EXTENDS' OR
+						r.relation_type='IMPLEMENTS' OR
+						r.relation_type='CALLS' OR
+						r.relation_type='RETURNS' OR
+						r.relation_type='HOLDS' OR
+						r.relation_type='USES') AND		
+					e.entity_id='${code_entity.entity_id}')  ON  
+				r.rhs_jeid=jar_provider.entity_id
+				UNION ALL
+				SELECT E1.fqn as pfqn_lib FROM jar_entities AS E1 INNER JOIN
+				(relations as R1 INNER JOIN
+					(relations as R2 INNER JOIN entities AS E2 ON
+						R2.rhs_eid='${code_entity.entity_id}' AND
+						E2.entity_type='FIELD' AND
+						R2.relation_type='INSIDE' AND
+						R2.lhs_eid=E2.entity_id
+					) ON R1.lhs_eid=R2.lhs_eid 
+				) ON E1.entity_id=R1.rhs_jeid AND R1.relation_type='HOLDS'">
+		
+			<field column="pfqn_lib" name="lib_use_sname_contents" />
+			<field column="pfqn_lib" name="lib_use_fqn_full" />
+			<field column="pfqn_lib" name="all_use_fqn_full" />
+			<field column="pfqn_lib" name="jdkLib_use_fqn_full" />
+			<field column="pfqn_lib" name="lib_use_fqn_contents" clean-fqn="true"/>
+		</entity>
+
+	</entity>
+    </document>
+</dataConfig>
+
