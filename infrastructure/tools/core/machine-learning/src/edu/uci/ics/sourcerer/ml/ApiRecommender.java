@@ -78,12 +78,6 @@ public final class ApiRecommender implements Recommender {
 
 		UserSimilarity similarity = new TanimotoCoefficientSimilarity(bcModel);
 		
-//		UserSimilarity similarity = new MySqlTanimotoCoefficientUserSimilarity(
-//				ManualPoolingMysqlDataSourceFactory.getDataSource(
-//						"jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_test", 
-//						"sourcerer", 
-//						"sourcerer4us")); 
-		
 //		UserSimilarity similarity = new HammingDistanceSimilarity(bcModel);
 
 		UserNeighborhood neighborhood = new NearestNUserNeighborhood(
