@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package edu.uci.ics.sourcerer.ml;
+package edu.uci.ics.sourcerer.ml.db.tools;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -38,6 +38,9 @@ import org.apache.mahout.cf.taste.impl.similarity.TanimotoCoefficientSimilarity;
 import org.apache.mahout.cf.taste.model.DataModel;
 import org.apache.mahout.cf.taste.recommender.Recommender;
 import org.apache.mahout.cf.taste.similarity.UserSimilarity;
+
+import edu.uci.ics.sourcerer.ml.ApiRecommender;
+import edu.uci.ics.sourcerer.ml.TasteFileModelWithStringItemIds;
 
 /**
  * @author <a href="mailto:bajracharya@gmail.com">Sushil Bajracharya</a>

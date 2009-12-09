@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package edu.uci.ics.sourcerer.ml;
+package edu.uci.ics.sourcerer.ml.db.tools;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -32,6 +32,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.uci.ics.sourcerer.ml.HammingDistanceSimilarity;
+import edu.uci.ics.sourcerer.ml.SimilarUserCalculator;
+import edu.uci.ics.sourcerer.ml.TasteFileModelWithStringItemIds;
+import edu.uci.ics.sourcerer.ml.Util;
 import edu.uci.ics.sourcerer.ml.db.tools.ISimilarityWriter;
 
 import junit.framework.TestCase;
@@ -41,7 +45,7 @@ import junit.framework.TestCase;
  */
 public class SimilarUserCalculatorTest extends TestCase{
 	
-	SimilarUserCalculator suCalc = new SimilarUserCalculator(new ConsoleWriter());
+	SimilarUserCalculator suCalc = new SimilarUserCalculator(new ConsoleSimilarityWriter());
 	String dataFileLocation = "test/resources/2jdk.txt";
 	long startTime;
 	
@@ -96,7 +100,7 @@ public class SimilarUserCalculatorTest extends TestCase{
 	}
 }
 
-class ConsoleWriter implements ISimilarityWriter{
+class ConsoleSimilarityWriter implements ISimilarityWriter{
 
 	@Override
 	public void writeSimilarty(String lhsEid, String rhsEid, String similarity) {
