@@ -48,6 +48,7 @@ public abstract class AbstractProperties {
   
   // Extraction properties
   protected boolean extracted;
+
   protected boolean missingTypes;
   protected int fromSource;
   protected int sourceExceptions;
@@ -66,11 +67,15 @@ public abstract class AbstractProperties {
       }
       
       name = properties.getProperty(NAME);
-      extracted = "true".equals(properties.get(EXTRACTED));
-      missingTypes = "true".equals(properties.get(MISSING_TYPES));
+      extracted = readBooleanProperty(EXTRACTED);
+      missingTypes = readBooleanProperty(MISSING_TYPES);
       fromSource = readIntProperty(FROM_SOURCE);
       sourceExceptions = readIntProperty(SOURCE_EXCEPTIONS);
     }
+  }
+  
+  protected boolean readBooleanProperty(String name) {
+    return "true".equals(properties.get(name));
   }
   
   protected int readIntProperty(String name) {
@@ -87,7 +92,29 @@ public abstract class AbstractProperties {
     }
   }
 
-  protected void write(File file) {
+  protected void set(String property, boolean value) {
+    properties.setProperty(property, "" + value);
+  }
+  
+  protected void set(String property, int value) {
+    properties.setProperty(property, "" + value);
+  }
+  
+  protected void set(String property, String value) {
+    if (value == null) {
+      properties.remove(property);
+    } else {
+      properties.setProperty(property, value);
+    }
+  }
+
+  public void save(File file) {
+    set(NAME, name);
+    set(EXTRACTED, extracted);
+    set(MISSING_TYPES, missingTypes);
+    set(FROM_SOURCE, fromSource);
+    set(SOURCE_EXCEPTIONS, sourceExceptions);
+    
     write(file, properties);
   }
   
@@ -100,6 +127,26 @@ public abstract class AbstractProperties {
       logger.log(Level.SEVERE, "Unable to write properties file: " + file.getPath(), e);
     }
   }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+  
+  public void setExtracted(boolean extracted) {
+    this.extracted = extracted;
+  }
+
+  public void setMissingTypes(boolean missingTypes) {
+    this.missingTypes = missingTypes;
+  }
+
+  public void setFromSource(int fromSource) {
+    this.fromSource = fromSource;
+  }
+
+  public void setSourceExceptions(int sourceExceptions) {
+    this.sourceExceptions = sourceExceptions;
+  }
   
   public String getName() {
     return name;
@@ -109,7 +156,7 @@ public abstract class AbstractProperties {
     return extracted;
   }
   
-  public boolean hasMissingTypes() {
+  public boolean missingTypes() {
     return missingTypes;
   }
   

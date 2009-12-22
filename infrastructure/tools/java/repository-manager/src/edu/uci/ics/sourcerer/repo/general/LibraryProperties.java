@@ -44,4 +44,8 @@ public class LibraryProperties extends AbstractBinaryProperties {
     
     write(file, properties);
   }
+  
+  public void save(File file) {
+    super.save(file);
+  }
 }

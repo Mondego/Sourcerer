@@ -72,6 +72,9 @@ public final class FilesTable {
   }
   
   // ---- SELECT ----
+  public static String getFilePathByFileID(QueryExecutor executor, String fileID) {
+    return executor.selectSingle(TABLE, "path", "file_id=" + fileID);
+  }
 //  public static final ResultTranslator<FileDB> TRANSLATOR = new ResultTranslator<FileDB>() {
 //    @Override
 //    public FileDB translate(ResultSet result) throws SQLException {

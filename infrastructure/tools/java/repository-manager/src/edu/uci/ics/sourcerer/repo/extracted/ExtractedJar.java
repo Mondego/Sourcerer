@@ -44,11 +44,51 @@ public class ExtractedJar extends ExtractedBinary {
   }
 
   public void reportSuccessfulExtraction(int fromBinary, int binaryExceptions, int fromSource, int sourceExceptions) {
-    properties.reportSuccessfulExtraction(getPropertiesFile(), fromBinary, binaryExceptions, fromSource, sourceExceptions);
+    properties.setExtracted(true);
+    properties.setSourceSkipped(false);
+    properties.setMissingTypes(false);
+    properties.setFromBinary(fromBinary);
+    properties.setBinaryExceptions(binaryExceptions);
+    properties.setFromSource(fromSource);
+    properties.setSourceExceptions(sourceExceptions);
+    
+    properties.save(getPropertiesFile());
   }
   
+  public void reportBinaryExtraction(int fromBinary, int binaryExceptions, boolean sourceSkipped) {
+    properties.setExtracted(true);
+    properties.setSourceSkipped(sourceSkipped);
+    properties.setMissingTypes(false);
+    properties.setFromBinary(fromBinary);
+    properties.setBinaryExceptions(binaryExceptions);
+    properties.setFromSource(0);
+    properties.setSourceExceptions(0);
+    
+    properties.save(getPropertiesFile());
+  }
+  
+  public void reportForcedExtraction(int fromBinary, int binaryExceptions, int fromSource, int sourceExceptions) {
+    properties.setExtracted(true);
+    properties.setSourceSkipped(false);
+    properties.setMissingTypes(true);
+    properties.setFromBinary(fromBinary);
+    properties.setBinaryExceptions(binaryExceptions);
+    properties.setFromSource(fromSource);
+    properties.setSourceExceptions(sourceExceptions);
+    
+    properties.save(getPropertiesFile());
+  }
+
   public void reportMissingTypeExtraction() {
-    properties.reportMissingTypeExtraction(getPropertiesFile());
+    properties.setExtracted(false);
+    properties.setSourceSkipped(false);
+    properties.setMissingTypes(true);
+    properties.setFromBinary(0);
+    properties.setBinaryExceptions(0);
+    properties.setFromSource(0);
+    properties.setSourceExceptions(0);
+    
+    properties.save(getPropertiesFile());
   }
   
   protected AbstractBinaryProperties getBinaryProperties() {

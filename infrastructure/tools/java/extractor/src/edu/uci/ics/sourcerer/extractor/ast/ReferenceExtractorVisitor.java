@@ -187,6 +187,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     if (node.getPackage() == null) {
       fqnStack.push("default", Entity.PACKAGE);
     } else {
+      entityWriter.writePackage(node.getPackage().getName().getFullyQualifiedName());
       fqnStack.push(node.getPackage().getName().getFullyQualifiedName(), Entity.PACKAGE);
     }
     
@@ -332,10 +333,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         logger.log(Level.SEVERE, "A type declaration should not declare an annonymous type!");
       } else {
         // Verify the fqn
-        String fqn2 = getTypeFqn(binding);
-        if (!fqn.equals(fqn2)) {
-          logger.log(Level.SEVERE, "Mismatch between " + fqn + " and " + fqn2);
-        }
+//        String fqn2 = getTypeFqn(binding);
+//        if (!fqn.equals(fqn2)) {
+//          logger.log(Level.SEVERE, "Mismatch between " + fqn + " and " + fqn2);
+//        }
 
         // Write out the synthesized constructors
         for (IMethodBinding method : binding.getDeclaredMethods()) {
@@ -1851,7 +1852,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   @SuppressWarnings("unchecked")
   private String getFuzzyMethodFqn(MethodInvocation invocation) {
     StringBuilder fqnBuilder = new StringBuilder();
-    fqnBuilder.append("_UNRESOLVED_.").append(invocation.getName().getFullyQualifiedName());
+    fqnBuilder.append("(1UKNOWN).").append(invocation.getName().getFullyQualifiedName());
     getFuzzyMethodArgs(fqnBuilder, invocation.arguments());
     return fqnBuilder.toString();
   }
@@ -1881,7 +1882,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         argBuilder.append(',');
       }
       if (binding == null) {
-        argBuilder.append("_UNKNOWN_");
+        argBuilder.append("(1UKNOWN)");
       } else {
         argBuilder.append(getTypeFqn(binding));
       }
@@ -1960,11 +1961,11 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private static final String BRACKETS = "[][][][][][][][][][][][][][][][][][][][]";
  
   private String getUnknownFqn(String name) {
-    return "(UNKNOWN)" + name;
+    return "(1UNKNOWN)" + name;
   }
   
   private String getUnknownSuperFqn(String name) {
-    return "(SUPER)" + name;
+    return "(1SUPER)" + name;
   }
   
   @SuppressWarnings("unchecked")

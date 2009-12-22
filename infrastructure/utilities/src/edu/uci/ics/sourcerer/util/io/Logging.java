@@ -74,10 +74,13 @@ public final class Logging {
     Formatter formatter = new Formatter() {
       @Override
       public String format(LogRecord record) {
-        return Logging.formatError(record);
+        String msg = Logging.formatError(record);
+        System.err.print(msg);
+        return msg;
       }
     };
     defaultHandler = new StreamHandler(System.err, formatter);
+    defaultHandler.setLevel(Level.INFO);
     logger.addHandler(defaultHandler);
   }
     

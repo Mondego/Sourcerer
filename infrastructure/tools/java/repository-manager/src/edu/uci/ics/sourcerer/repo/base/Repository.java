@@ -32,6 +32,7 @@ import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import edu.uci.ics.sourcerer.repo.base.normal.JavaFile;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
@@ -237,6 +238,16 @@ public class Repository extends AbstractRepository {
       populateRepository();
     }
     return projects.get(projectPath);
+  }
+  
+  public IJavaFile getFile(String path) {
+    // TODO: modify to work on compressed projects
+    File file = new File(repoRoot, path);
+    if (file.exists()) {
+      return new JavaFile(path, file);
+    } else {
+      return null;
+    }
   }
   
   public File getRoot() {

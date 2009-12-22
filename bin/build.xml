@@ -25,7 +25,6 @@
        so that the jars don't contain unneeded files -->
 	<property name="build" location="build" />
 	<property name="build-java-tools-core" location="${build}/java-tools-core" />
-	<property name="build-database" location="${build}/database" />
 	<property name="build-search-eval" location="${build}/search-eval" />
 	<property name="build-search-server" location="${build}/search-server" />
 	<property name="build-core-repomanager" location="${build}/core-repomanager" />
@@ -41,6 +40,7 @@
 	<property name="search-server" location="../infrastructure/services/search-server/src" />
 	<property name="solr-root" location="../infrastructure/services/solr-1.3-patched" />
 	<property name="codecrawler" location="../infrastructure/tools/core/codecrawler/src" />
+	<property name="file-server" location="../infrastructure/services/file-server/src" />
 	<property name="test-repo" location="../infrastructure/tools/java/extractor/test-repo" />
 	<property name="lib" location="../lib" />
 	<property name="extractor-bin" location="../infrastructure/tools/java/extractor/bin" />
@@ -55,10 +55,17 @@
 	
 	<target name="compile-java-tools-core" depends="init-java-tools-core">
 		<javac destdir="${build-java-tools-core}" debug="on">
+		  <classpath>
+		    <pathelement path="${classpath}" />
+        <fileset dir="${lib}">
+          <include name="**/servlet-api.jar" />
+        </fileset>
+      </classpath>
 			<src path="${utilities}" />
 			<src path="${repository-manager}" />
 			<src path="${model}" />
 			<src path="${database}" />
+			<src path="${file-server}" />
 		</javac>
 		<copy todir="${build-java-tools-core}">
 			<fileset dir="${utilities}" includes="**/*.java" />
@@ -71,6 +78,9 @@
 		</copy>
 		<copy todir="${build-java-tools-core}">
 			<fileset dir="${database}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-java-tools-core}">
+		  <fileset dir="${file-server}" includes="**/*.java" />
 		</copy>
 		<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-java-tools-core}"/>
 	</target>
@@ -95,12 +105,23 @@
     </jar>
   </target>
 	
+	<target name="file-server" depends="compile-java-tools-core">
+		<war destfile="file-server.war" webxml="${file-server}/edu/uci/ics/sourcerer/server/file/web.xml">
+			<lib dir="${file-server}/edu/uci/ics/sourcerer/server/file">
+				<include name="*.properties" />
+			</lib>
+		  <classes dir="${build-java-tools-core}" />
+		</war>
+	</target>
+	
 	<target name="clean-java-tools">
 		<delete dir="${build-java-tools-core}" />
 		<delete>
 			<fileset dir=".">
 			  <include name="sourcerer-lib.jar" />
 				<include name="repo-tools.jar" />
+				<include name="sourcerer-db.jar" />
+				<include name="file-server.war" />
 			</fileset>
 		</delete>
 	</target>
@@ -156,7 +177,7 @@
 	<target name="repackage-extractor" depends="compile-java-tools-core">
 		<unjar src="./plugins/Extractor_1.0.0.jar" dest="${build-extractor}" />
 		<copy todir="${build-extractor}">
-		  <fileset dir="${build-java-tools-core}" includes="**/*.class" />
+		  <fileset dir="${build-java-tools-core}" includes="**/*" />
 		</copy>
 		<zip destfile="./Extractor_1.0.0.jar" basedir="${build-extractor}" />
 	</target>

@@ -57,49 +57,77 @@ public class JarExtractor {
     for (IndexedJar jar : index.getIndexedJars()) {
       logger.info("Extracting " + jar.toString() + " (" + ++count + " of " + index.getIndexSize() + ")");
       ExtractedJar extracted = jar.getExtractedJar(output);
-      if (extracted.extracted()) {
+      if (Extractor.EXTRACT_BINARY.getValue() && extracted.extracted()) {
         logger.info("  Jar already extracted");
-      } else if (extracted.hasMissingTypes() && !Extractor.RESOLVE_MISSING_TYPES.getValue()) {
+      } else if (Extractor.RESOLVE_MISSING_TYPES.getValue() && extracted.extracted() && !extracted.sourceSkipped()) {
+        logger.info("  Jar already extracted");
+      } else if (extracted.hasMissingTypes()) {
         logger.info("  Jar has missing types");
+      } else if (extracted.extracted() && !extracted.sourceSkipped()) {
+        logger.info("  Jar already extracted");
       } else {
         // Set up logging
         Logging.addFileLogger(extracted.getContent());
 
-        // Set up the writer bundle
-        WriterBundle bundle = new WriterBundle(extracted.getContent());
+        Collection<IndexedJar> previousJars = null;
+        Collection<IndexedJar> jars = null;
+        boolean missingTypes = extracted.hasMissingTypes();
+        while (true) {
+          // Set up the writer bundle
+          WriterBundle bundle = new WriterBundle(extracted.getContent());
 
-        if (extracted.hasMissingTypes()) {
-          logger.info("  Resolving missing types...");
-          Collection<IndexedJar> jars = resolver.resolveMissingTypes(index, extracted, bundle.getUsedJarWriter());
-          jars.add(jar);
-          logger.info("  Initializing project with " + jars.size() + " jars...");
-          EclipseUtils.initializeJarProject(jars);
+          if (missingTypes) {
+            logger.info("  Resolving missing types...");
+            jars = resolver.resolveMissingTypes(index, extracted, bundle.getUsedJarWriter());
+            jars.add(jar);
+            logger.info("  Initializing project with " + jars.size() + " jars...");
+            EclipseUtils.initializeJarProject(jars, index);
+          } else {
+            logger.info("  Initializing project...");
+            EclipseUtils.initializeJarProject(jar, index);
+          }
           
-        } else {
-          logger.info("  Initializing project...");
-          EclipseUtils.initializeJarProject(jar);
-        }
-        
-        logger.info("  Getting class files...");
-        Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(jar);
-        
+          logger.info("  Getting class files...");
+          Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(jar);
+          
+          logger.info("  Extracting " + classFiles.size() + " class files...");
+                  
+          // Set up the feature extractor
+          FeatureExtractor extractor = new FeatureExtractor(bundle);
 
-        logger.info("  Extracting " + classFiles.size() + " class files...");
-                
-        // Set up the feature extractor
-        FeatureExtractor extractor = new FeatureExtractor(bundle);
-        
-        // Extract
-        ClassExtractionReport report = extractor.extractClassFiles(classFiles);
-        
-        // Close the output files
-        extractor.close();
-        
-        // Write the properties file
-        if (report.hadMissingType()) {
-          extracted.reportMissingTypeExtraction();
-        } else {
-          extracted.reportSuccessfulExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());
+          boolean force = previousJars != null && jars.size() <= previousJars.size(); 
+
+          // Extract
+          ClassExtractionReport report = extractor.extractClassFiles(classFiles, force);
+          
+          // Close the output files
+          extractor.close();
+          
+          previousJars = jars;
+          
+          if (Extractor.EXTRACT_BINARY.getValue()) {
+            extracted.reportBinaryExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.sourceSkipped());
+            break;
+          } else if (Extractor.RESOLVE_MISSING_TYPES.getValue()) {
+            if (force) {
+              extracted.reportForcedExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());
+              break;
+            } else if (!(report.hadMissingType() || report.hadMissingSecondOrder())) {
+              extracted.reportSuccessfulExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());
+              break;
+            } else {
+              missingTypes = report.hadMissingType() || report.hadMissingSecondOrder();
+              logger.info("  Redoing because of missing types...");
+            }
+          } else {
+            // Write the properties file
+            if (report.hadMissingType() || report.hadMissingSecondOrder()) {
+              extracted.reportMissingTypeExtraction();
+            } else {
+              extracted.reportSuccessfulExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());
+            }
+            break;
+          }
         }
        
         // End the error logging

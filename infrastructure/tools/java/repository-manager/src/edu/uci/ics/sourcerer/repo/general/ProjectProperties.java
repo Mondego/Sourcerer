@@ -30,12 +30,4 @@ public class ProjectProperties extends AbstractProperties {
     props.loadProperties(file);
     return props;
   }
-  
-  public void reportExtraction(File file) {
-    extracted = true;
-    
-    properties.setProperty(EXTRACTED, Boolean.toString(extracted));
-    
-    write(file);
-  }
 }

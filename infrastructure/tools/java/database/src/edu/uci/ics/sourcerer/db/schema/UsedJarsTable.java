@@ -59,9 +59,9 @@ public final class UsedJarsTable {
   // ---- INSERT ----
   private static String getInsertValue(String usedJarID, String jarID, String projectID) {
     return SchemaUtils.getInsertValue(
-        SchemaUtils.convertNotNullNumber("used_jar_id"),
-        SchemaUtils.convertNumber("jar_id"),
-        SchemaUtils.convertNumber("project_id"));
+        SchemaUtils.convertNotNullNumber(usedJarID),
+        SchemaUtils.convertNumber(jarID),
+        SchemaUtils.convertNumber(projectID));
   }
   
   public static void insert(QueryExecutor executor, String usedJarID, String jarID, String projectID) {

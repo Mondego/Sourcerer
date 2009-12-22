@@ -69,8 +69,9 @@ public class Extractor implements IApplication {
   public static final Property<Boolean> EXTRACT_JARS = new BooleanProperty("extract-jars", false, "Extractor", "Extract the jars.");
   public static final Property<Boolean> EXTRACT_PROJECTS = new BooleanProperty("extract-projects", false, "Extractor", "Extract the projects.");
 
+  public static final Property<Boolean> EXTRACT_BINARY = new BooleanProperty("extract-binary", false, "Extractor", "Extract jars as binary only");
   public static final Property<Boolean> RESOLVE_MISSING_TYPES = new BooleanProperty("resolve-missing-types", false, "Extractor", "Re-attempt extraction on failed missing type extractions.");
-  
+    
   @Override
   public Object start(IApplicationContext context) throws Exception {
     String[] args = (String[]) context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
@@ -112,7 +113,7 @@ public class Extractor implements IApplication {
       PropertyManager.registerAndVerify(OUTPUT_REPO);
       LibraryExtractor.extract();
     } else if (EXTRACT_JARS.getValue()){
-      PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);
+      PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO, EXTRACT_BINARY);
       JarExtractor.extract(resolver);
     } else if (EXTRACT_PROJECTS.getValue()) {
       PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);

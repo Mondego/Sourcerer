@@ -35,6 +35,11 @@ public class JavaFile extends AbstractJavaFile {
   private File file;
   private String pkg;
   private boolean packageComputed = false;
+  
+  public JavaFile(File file) {
+    this.file = file;
+  }
+  
   public JavaFile(String relativePath, File file) {
     this.relativePath = relativePath;
     this.file = file;

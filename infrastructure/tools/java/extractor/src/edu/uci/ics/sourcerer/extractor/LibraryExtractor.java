@@ -69,7 +69,7 @@ public class LibraryExtractor {
         FeatureExtractor extractor = new FeatureExtractor(bundle);
         
         // Extract
-        ClassExtractionReport report = extractor.extractClassFiles(classFiles);
+        ClassExtractionReport report = extractor.extractClassFiles(classFiles, true);
         
         // Close the output files
         extractor.close();

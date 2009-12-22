@@ -34,6 +34,7 @@ import java.util.Deque;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -58,9 +59,11 @@ public class JarIndex {
   public static final Property<String> JAR_INDEX_FILE = new StringProperty("jar-index", "index.txt", "Repository Manager", "The filename of the jar index.");
   
   private Map<String, IndexedJar> index;
+  private Map<String, IndexedJar> nameIndex;
   
   private JarIndex() {
     index = Helper.newHashMap();
+    nameIndex = Helper.newHashMap();
   }
   
   public void cleanManifestFiles() {
@@ -158,15 +161,25 @@ public class JarIndex {
           IndexedJar jar = null;
           // It has two parts if it's a project jar
           if (parts.length == 4) {
-            if ("MAVEN".equals(parts[1])) {
-              jar = new IndexedJar(true, parts[0], mavenBasePath, parts[1], parts[2]);
+            if ("PROJECT".equals(parts[1])) {
+              jar = new IndexedJar(parts[0], projectBasePath, parts[2], parts[3]);
             } else {
-              jar = new IndexedJar(false, parts[0], projectBasePath, parts[1], parts[2]);
+              logger.log(Level.SEVERE, "Invalid index line: " + line);
             }
-          } else if (parts.length == 5) {
+          } else if (parts.length == 7) {
             if ("MAVEN".equals(parts[1])) {
-              jar = new IndexedJar(true, parts[0], mavenBasePath, parts[1], parts[2], parts[3]);
+              jar = new IndexedJar(parts[0], parts[2], parts[3], parts[4], mavenBasePath, parts[5], parts[6]);
+            } else {
+              logger.log(Level.SEVERE, "Invalid index line: " + line);
             }
+          } else if (parts.length == 8) {
+            if ("MAVEN".equals(parts[1])) {
+              jar = new IndexedJar(parts[0], parts[2], parts[3], parts[4], mavenBasePath, parts[5], parts[6], parts[7]);
+            } else {
+              logger.log(Level.SEVERE, "Invalid index line: " + line);
+            }
+          } else {
+            logger.log(Level.SEVERE, "Invalid index line: " + line);
           }
           if (index.index.containsKey(parts[0])) {
             IndexedJar oldJar = index.index.get(parts[0]);
@@ -176,6 +189,9 @@ public class JarIndex {
             }
           } else {
             index.index.put(parts[0], jar);
+            if (!jar.isMavenJar()) {
+              index.nameIndex.put(jar.getName(), jar);
+            }
           }
         }
       } catch (IOException e) {
@@ -437,8 +453,6 @@ public class JarIndex {
     if (completed.isEmpty() && indexFile.exists()) {
       indexFile.delete();
     }
-    
-    String baseDir = repo.getJarsDir().getPath().replace('\\', '/');
         
     FileWriter writer = null; 
     try {
@@ -489,29 +503,26 @@ public class JarIndex {
               }
               
               if (jar != null) {
-                String id = getRelativePath(baseDir, jar.getPath());
+                String id = getRelativePath(mavenBaseDir, jar.getPath());
                 if (!completed.contains(id)) {
                   // Find out the hash
                   String hash = RepoJar.getHash(jar);
+                  
+                  String groupPath = top.getParentFile().getParentFile().getPath().replace('\\', '/');
+                  groupPath = getRelativePath(mavenBaseDir, groupPath);
+                  String groupName = groupPath.replace('/', '.');
                         
+                  String artifactName = top.getParentFile().getName();
+                  
                   // Write out the entry
                   if (source == null) {
-                    writer.write(hash + " MAVEN " + getRelativePath(mavenBaseDir, top.getPath()) + " " + jar.getName() + "\n");
+                    writer.write(hash + " MAVEN " + groupName + " " + version + " " + artifactName + " " + getRelativePath(mavenBaseDir, top.getPath()) + " " + jar.getName() + "\n");
                   } else {
-                    writer.write(hash + " MAVEN " + getRelativePath(mavenBaseDir, top.getPath()) + " " + jar.getName() + " " + source.getName() + "\n");
+                    writer.write(hash + " MAVEN " + groupName + " " + version + " " + artifactName + " " + getRelativePath(mavenBaseDir, top.getPath()) + " " + jar.getName() + " " + source.getName() + "\n");
                   }
                   writer.flush();
                         
                   // Write out the properties file
-                  String name = jar.getName();
-                  name = name.substring(0, name.lastIndexOf('.'));
-                        
-                  String groupPath = top.getParentFile().getParentFile().getPath().replace('\\', '/');
-                  groupPath = getRelativePath(baseDir, groupPath);
-                  String groupName = groupPath.replace('/', '.');
-                        
-                  String artifactName = top.getParentFile().getName();
-                        
                   File propsFile = new File(top, jar.getName() + ".properties");
                   JarProperties.create(propsFile, artifactName, groupName, version, hash);
                   
@@ -583,12 +594,63 @@ public class JarIndex {
     return index.size();
   }
   
+  public IndexedJar getPossibleSourceMatch(IndexedJar jar) {
+    String name = jar.getName();
+    name = name.replaceFirst("_", ".source_");
+    if (name.equals(jar.getName())) {
+      return null;
+    } else {
+      return nameIndex.get(name);
+    }
+  }
+  
   public Iterable<IndexedJar> getIndexedJars() {
     return index.values();
   }
   
   public Iterable<IndexedJar> getLatestMavenIndexedJars() {
-    return null;
+    Map<String, IndexedJar> byProject = Helper.newHashMap();
+    for (IndexedJar jar : index.values()) {
+      if (jar.isMavenJar()) {
+        String key = jar.getGroupName() + jar.getArtifactName();
+        IndexedJar other = byProject.get(key);
+        if (other == null) {
+          byProject.put(key, jar);
+        } else {
+          if (newestVersion(jar.getVersion(), other.getVersion())) {
+            byProject.put(key, jar);
+          }
+        }
+      }
+    }
+    return byProject.values();
+  }
+  
+  private static Pattern leadingDigits = Pattern.compile("(\\d+)(.*)");
+  private static boolean newestVersion(String first, String second) {
+    String[] firstParts = first.split("\\.");
+    String[] secondParts = second.split("\\.");
+    for (int i = 0; i < firstParts.length; i++) {
+      if (i < secondParts.length) {
+        try {
+          int firstNum = Integer.parseInt(firstParts[i]);
+          int secondNum = Integer.parseInt(secondParts[i]);
+          if (firstNum > secondNum) {
+            return true;
+          } else if (firstNum < secondNum) {
+            return false;
+          }
+        } catch (NumberFormatException e) {
+          int comp = firstParts[i].compareTo(secondParts[i]);
+          if (comp > 0) {
+            return true;
+          } else if (comp < 0) {
+            return false;
+          }
+        }
+      }
+    }
+    return false;
   }
   
   public IndexedJar getIndexedJar(String hash) {

@@ -19,6 +19,8 @@ package edu.uci.ics.sourcerer.extractor.resources;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -48,9 +50,9 @@ import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.LibraryLocation;
 
-import edu.uci.ics.sourcerer.repo.general.IndexedJar;
-import edu.uci.ics.sourcerer.repo.base.IJarFile;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
+import edu.uci.ics.sourcerer.repo.general.IndexedJar;
+import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
@@ -109,7 +111,7 @@ public class EclipseUtils {
     return libraryJars;
   }
   
-  public static void initializeJarProject(IndexedJar jar) {
+  public static void initializeJarProject(IndexedJar jar, JarIndex index) {
     initializeProject();
     try {
       IVMInstall vmInstall = JavaRuntime.getDefaultVMInstall();
@@ -117,14 +119,26 @@ public class EclipseUtils {
       for (LibraryLocation location : JavaRuntime.getLibraryLocations(vmInstall)) {
         entries.add(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), location.getSystemLibrarySourcePath(), null));
       }
-      entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), jar.getSourceFile() == null ? null : new Path(jar.getSourceFile().getPath()), null));
+      IPath sourcePath = null;
+      if (jar.isMavenJar()) {
+        File sourceFile = jar.getSourceFile();
+        if (sourceFile != null) {
+          sourcePath = new Path(sourceFile.getPath());
+        }
+      } else {
+        IndexedJar sourceJar = index.getPossibleSourceMatch(jar);
+        if (sourceJar != null) {
+          sourcePath = new Path(sourceJar.getJarFile().getPath());
+        }
+      }
+      entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), sourcePath, null));
       javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
     } catch (JavaModelException e) {
       logger.log(Level.SEVERE, "Unable to initialize jar project", e);
     }
   }
   
-  public static void initializeJarProject(Collection<IndexedJar> jars) {
+  public static void initializeJarProject(Collection<IndexedJar> jars, JarIndex index) {
     initializeProject();
     try {
       IVMInstall vmInstall = JavaRuntime.getDefaultVMInstall();
@@ -133,7 +147,19 @@ public class EclipseUtils {
         entries.add(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), location.getSystemLibrarySourcePath(), null));
       }
       for (IndexedJar jar : jars) {
-        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), jar.getSourceFile() == null ? null : new Path(jar.getSourceFile().getPath()), null));
+        IPath sourcePath = null;
+        if (jar.isMavenJar()) {
+          File sourceFile = jar.getSourceFile();
+          if (sourceFile != null) {
+            sourcePath = new Path(sourceFile.getPath());
+          }
+        } else {
+          IndexedJar sourceJar = index.getPossibleSourceMatch(jar);
+          if (sourceJar != null) {
+            sourcePath = new Path(sourceJar.getJarFile().getPath());
+          }
+        }
+        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), sourcePath, null));
       }
       javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
     } catch (JavaModelException e) {
@@ -155,7 +181,8 @@ public class EclipseUtils {
     }
   }
   
-  public static void initializeProject(Iterable<IJarFile> jarFiles) {
+//  public static void initializeProject(Iterable<IJarFile> jarFiles) {
+  public static void initializeProject(Collection<IndexedJar> jars) {
     initializeProject();
     try {
       srcFolder = project.getFolder("src");
@@ -169,13 +196,25 @@ public class EclipseUtils {
       for (LibraryLocation location : JavaRuntime.getLibraryLocations(vmInstall)) {
         entries.add(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), location.getSystemLibrarySourcePath(), null));
       }
-      for (IJarFile file : jarFiles) {
-        entries.add(JavaCore.newLibraryEntry(new Path(file.getPath()), null, null));
+      for (IndexedJar jar : jars) {
+        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), null, null));
       }
       entries.add(JavaCore.newSourceEntry(srcFolder.getFullPath()));
       javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
     } catch (CoreException e) {
       logger.log(Level.SEVERE, "Error in project initialization", e);
+    }
+  }
+  
+  public static void addToProjectClasspath(Collection<IndexedJar> jars) {
+    try {
+      List<IClasspathEntry> entries = Helper.newArrayList(Arrays.asList(javaProject.getRawClasspath()));
+      for (IndexedJar jar : jars) {
+        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), null, null));
+      }
+      javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
+    } catch (CoreException e) {
+      logger.log(Level.SEVERE, "Error in project classpath initialization", e);
     }
   }
   

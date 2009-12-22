@@ -32,6 +32,7 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
+import edu.uci.ics.sourcerer.extractor.Extractor;
 import edu.uci.ics.sourcerer.extractor.io.IMissingTypeWriter;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -56,6 +57,7 @@ public final class FeatureExtractor {
   }
   
   public static class ClassExtractionReport extends SourceExtractionReport {
+    private boolean sourceSkipped = false;
     private int extractedFromBinary = 0;
     private int binaryExtractionExceptions = 0;
     
@@ -68,6 +70,10 @@ public final class FeatureExtractor {
     protected void reportBinaryExtractionException() {
       binaryExtractionExceptions++;
     }
+    
+    protected void reportSourceSkipped() {
+      sourceSkipped = true;
+    }
    
     public int getExtractedFromBinary() {
       return extractedFromBinary;
@@ -76,9 +82,13 @@ public final class FeatureExtractor {
     public int getBinaryExtractionExceptions() {
       return binaryExtractionExceptions;
     }
+    
+    public boolean sourceSkipped() {
+      return sourceSkipped;
+    }
   }
   
-  public ClassExtractionReport extractClassFiles(Collection<IClassFile> classFiles) {
+  public ClassExtractionReport extractClassFiles(Collection<IClassFile> classFiles, boolean force) {
     ClassExtractionReport report = new ClassExtractionReport();
     ClassFileExtractor extractor = new ClassFileExtractor(bundle);
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
@@ -88,11 +98,19 @@ public final class FeatureExtractor {
         if (ClassFileExtractor.isTopLevel(classFile)) {
           ISourceRange source = classFile.getSourceRange();
           
+          boolean hasSource = true; 
           if (source == null || source.getLength() == 0) {
             source = classFile.getSourceRange();
             if (source == null || source.getLength() == 0) {
-              extractor.extractClassFile(classFile);
-              report.reportBinaryExtraction();
+              hasSource = false;
+            }
+          }
+          
+          if (!hasSource || Extractor.EXTRACT_BINARY.getValue()) {
+            extractor.extractClassFile(classFile);
+            report.reportBinaryExtraction();
+            if (hasSource) {
+              report.reportSourceSkipped();
             }
           } else {
             try {
@@ -115,7 +133,10 @@ public final class FeatureExtractor {
               }
               
               checkForMissingTypes(unit, report, missingTypeWriter);
-              if (!report.hadMissingType()) {
+              if (report.hadMissingSecondOrder() && force) {
+                extractor.extractClassFile(classFile);
+                report.reportBinaryExtraction();
+              } else if (!report.hadMissingSecondOrder() && (force || !report.hadMissingType())) {
                 try {
                   unit.accept(visitor);
                   report.reportSourceExtraction();
@@ -153,13 +174,18 @@ public final class FeatureExtractor {
    
   public static class SourceExtractionReport {
     private boolean missingType = false;
+    private boolean missingSecondOrder = false;
     private int extractedFromSource = 0;
     private int sourceExtractionExceptions = 0;
     
-    private SourceExtractionReport() {}
+    public SourceExtractionReport() {}
     
     protected void reportMissingType() {
       missingType = true;
+    }
+    
+    protected void reportMissingSecondOrder() {
+      missingSecondOrder = true;
     }
    
     protected void reportSourceExtraction() {
@@ -174,6 +200,10 @@ public final class FeatureExtractor {
       return missingType;
     }
     
+    public boolean hadMissingSecondOrder() {
+      return missingSecondOrder;
+    }
+    
     public int getExtractedFromSource() {
       return extractedFromSource;
     }
@@ -183,9 +213,8 @@ public final class FeatureExtractor {
     }
   }
   
-  public void extractSourceFiles(Collection<IFile> sourceFiles) {
+  public SourceExtractionReport extractSourceFiles(SourceExtractionReport report, Collection<IFile> sourceFiles, boolean force) {
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
-    SourceExtractionReport report = new SourceExtractionReport();
     IMissingTypeWriter missingTypeWriter = bundle.getMissingTypeWriter();
     
     for (IFile source : sourceFiles) {
@@ -216,14 +245,20 @@ public final class FeatureExtractor {
         }
       }
     }
+    return report;
   }
   
   private void checkForMissingTypes(CompilationUnit unit, SourceExtractionReport report, IMissingTypeWriter writer) {
     // Check for the classpath problem
     for (IProblem problem : unit.getProblems()) {
-      if (problem.isError() && (problem.getID() == IProblem.IsClassPathCorrect || problem.getID() == IProblem.ImportNotFound)) {
-        writer.writeMissingType(problem.getArguments()[0]);
-        report.reportMissingType();
+      if (problem.isError()) {
+        if (problem.getID() == IProblem.IsClassPathCorrect) {
+          writer.writeMissingType(problem.getArguments()[0]);
+          report.reportMissingSecondOrder();
+        } else if (problem.getID() == IProblem.ImportNotFound) {
+          writer.writeMissingType(problem.getArguments()[0]);
+          report.reportMissingType();
+        }
       }
     }
   }

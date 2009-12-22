@@ -17,7 +17,12 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.db.util.ResultTranslator;
+import edu.uci.ics.sourcerer.model.db.JarDB;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 
 /**
@@ -34,7 +39,7 @@ public final class JarsTable {
    *  | jar_id      | SERIAL        | No    | Yes    |
    *  | hash        | VARCHAR(32)   | No    | Yes    |
    *  | name        | VARCHAR(1024) | No    | Yes    |
-   *  | path        | VARCHAR(1024) | Yes   | No     |
+   *  | group       | VARCHAR(1024) | Yes   | Yes    |
    *  | version     | VARCHAR(128)  | Yes   | No     |
    *  | has_source  | BOOLEAN       | No    | No     |
    *  +-------------+---------------+-------+--------+
@@ -55,19 +60,20 @@ public final class JarsTable {
         "jar_id SERIAL",
         "hash VARCHAR(32) BINARY NOT NULL",
         "name VARCHAR(1024) BINARY NOT NULL",
-        "path VARCHAR(1024) BINARY",
+        "group VARCHAR(1024) BINARY",
         "version VARCHAR(1024) BINARY",
         "has_source BOOLEAN NOT NULL",
         "INDEX(hash)",
-        "INDEX(name(48))");
+        "INDEX(name(48))",
+        "INDEX(group(48))");
   }
   
   // ---- INSERT ----
-  private static String getInsertValue(String hash, String name, String path, String version, boolean hasSource) {
+  private static String getInsertValue(String hash, String name, String group, String version, boolean hasSource) {
     return SchemaUtils.getSerialInsertValue(
         SchemaUtils.convertNotNullVarchar(hash),
 				SchemaUtils.convertNotNullVarchar(name),
-				SchemaUtils.convertVarchar(path),
+				SchemaUtils.convertVarchar(group),
 				SchemaUtils.convertVarchar(version),
 				SchemaUtils.convertBoolean(hasSource));
   }
@@ -104,12 +110,34 @@ public final class JarsTable {
   }
   
   // ---- SELECT ----
+  public static final ResultTranslator<JarDB> JAR_RESULT_TRANSLATOR = new ResultTranslator<JarDB>() {
+    @Override
+    public JarDB translate(ResultSet result) throws SQLException {
+      String jarID = result.getString(1);
+      String hash = result.getString(2);
+      String name = result.getString(3);
+      String group = result.getString(4);
+      String version = result.getString(5);
+      boolean hasSource = result.getBoolean(6);
+      return new JarDB(jarID, hash, name, group, version, hasSource);
+    }
+    
+    public String getSelect() {
+      return "jar_id,hash,name,path,version,has_source";
+    }
+  };
+  
+  
   public static String getJarIDByHash(QueryExecutor executor, String hash) {
     return executor.selectSingle(TABLE, "jar_id", "hash='" + hash + "'");
   }
   
   public static String getHashByID(QueryExecutor executor, String jarID) {
     return executor.selectSingle(TABLE, "hash", "jar_id=" + jarID);
+  }
+  
+  public static JarDB getJarByJarID(QueryExecutor executor, String jarID) {
+    return executor.selectSingle(TABLE, JAR_RESULT_TRANSLATOR.getSelect(), "jar_id=" + jarID, JAR_RESULT_TRANSLATOR);
   }
   
 //  public static String getJarCount(QueryExecutor executor) {

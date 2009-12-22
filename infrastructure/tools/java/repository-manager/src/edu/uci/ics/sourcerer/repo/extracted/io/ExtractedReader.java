@@ -68,7 +68,9 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
   
   private ExtractedReader(ModelExParser<T> parser, InputStream entityInputStream) throws IOException {
     this.parser = parser;
-    this.input = new BufferedReader(new InputStreamReader(entityInputStream));
+    if (entityInputStream != null) {
+      this.input = new BufferedReader(new InputStreamReader(entityInputStream));
+    }
   }
   
   public Iterator<T> iterator() {

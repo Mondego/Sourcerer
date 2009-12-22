@@ -66,31 +66,27 @@ public class JarProperties extends AbstractBinaryProperties {
     write(file, properties);
   }
   
-  public void reportSuccessfulExtraction(File file, int fromBinary, int binaryExceptions, int fromSource, int sourceExceptions) {
-    this.extracted = true;
-    this.fromBinary = fromBinary;
-    this.binaryExceptions = binaryExceptions;
-    this.fromSource = fromSource;
-    this.sourceExceptions = sourceExceptions;
+  @Override
+  public void save(File file) {
+    set(GROUP, group);
+    set(VERSION, version);
+    set(HASH, hash);
     
-    
-    properties.setProperty(EXTRACTED, Boolean.toString(extracted));
-    properties.setProperty(FROM_BINARY, Integer.toString(fromBinary));
-    properties.setProperty(BINARY_EXCEPTIONS, Integer.toString(binaryExceptions));
-    properties.setProperty(FROM_SOURCE, Integer.toString(fromSource));
-    properties.setProperty(SOURCE_EXCEPTIONS, Integer.toString(sourceExceptions));
-    
-    write(file);
+    super.save(file);
   }
   
-  public void reportMissingTypeExtraction(File file) {
-    this.missingTypes = true;
-    
-    properties.setProperty(MISSING_TYPES, Boolean.toString(missingTypes));
-    
-    write(file);
+  public void setGroup(String group) {
+    this.group = group;
   }
-  
+
+  public void setVersion(String version) {
+    this.version = version;
+  }
+
+  public void setHash(String hash) {
+    this.hash = hash;
+  }
+
   public String getGroup() {
     return group;
   }

@@ -54,8 +54,31 @@ public class ExtractedProject extends Extracted {
     return relativePath;
   }
   
-  public void reportExtraction() {
-    properties.reportExtraction(getPropertiesFile());
+  public void reportSuccessfulExtraction(int fromSource, int sourceExceptions) {
+    properties.setExtracted(true);
+    properties.setMissingTypes(false);
+    properties.setFromSource(fromSource);
+    properties.setSourceExceptions(sourceExceptions);
+    
+    properties.save(getPropertiesFile());
+  }
+  
+  public void reportForcedExtraction(int fromSource, int sourceExceptions) {
+    properties.setExtracted(true);
+    properties.setMissingTypes(false);
+    properties.setFromSource(fromSource);
+    properties.setSourceExceptions(sourceExceptions);
+    
+    properties.save(getPropertiesFile());
+  }
+  
+  public void reportMissingTypeExtraction() {
+    properties.setExtracted(false);
+    properties.setMissingTypes(true);
+    properties.setFromSource(0);
+    properties.setSourceExceptions(0);
+    
+    properties.save(getPropertiesFile());
   }
   
   protected AbstractProperties getProperties() {

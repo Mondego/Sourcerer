@@ -35,6 +35,7 @@ import edu.uci.ics.sourcerer.util.Helper;
  */
 public abstract class ExtractorWriter implements IExtractorWriter {
   private static Map<File, BufferedWriter> writerMap = Helper.newHashMap();
+  private File output;
   private BufferedWriter writer;
   private Repository input;
   
@@ -43,14 +44,14 @@ public abstract class ExtractorWriter implements IExtractorWriter {
   }
   
   protected ExtractorWriter(File output, Repository input, boolean append) {
+    this.output = output;
     this.input = input;
     try {
-      if (writerMap.containsKey(output)) {
-        writer = writerMap.get(output);
-      } else {
+      writer = writerMap.get(output);
+      if (writer == null) {
         writer = new BufferedWriter(new FileWriter(output, append));
         writerMap.put(output, writer);
-      }
+      } 
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error opening file", e);
     }
@@ -63,9 +64,10 @@ public abstract class ExtractorWriter implements IExtractorWriter {
       return input.convertToRelativePath(path);
     }
   }
-  
-  public void close() {
+
+  public final void close() {
     try {
+      writerMap.remove(output);
       writer.close();
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error closing writer", e);

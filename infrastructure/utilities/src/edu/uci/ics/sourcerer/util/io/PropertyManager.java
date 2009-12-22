@@ -22,6 +22,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -34,6 +35,7 @@ import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
+import edu.uci.ics.sourcerer.util.io.properties.StreamProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -41,6 +43,7 @@ import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
 public class PropertyManager {
   public static final Property<Boolean> PRINT_USAGE = new BooleanProperty("usage", false, "General", "Prints usage information.");
   public static final Property<File> PROPERTIES_FILE = new FileProperty("properties-file", "General", "File containing Java-style property bindings.").makeOptional();
+  public static final Property<InputStream> PROPERTIES_STREAM = new StreamProperty("properties-stream", "General", "Stream containing Java-style property bindings.").makeOptional();
   public static final Property<Boolean> REQUIRE_REGISTERED = new BooleanProperty("require-registered-properties", true, "General", "Terminate execution if registered property not present.");
   
   private static PropertyManager singleton = null;
@@ -63,9 +66,9 @@ public class PropertyManager {
     Helper.getFromMap(usedProperties, prop.category, HashSet.class).add(prop);
   }
   
-  public synchronized static void registerAndVerify(Property<?> ... properties) {
+  public synchronized static boolean registerAndVerify(Property<?> ... properties) {
     registerUsedProperties(properties);
-    verifyUsage();
+    return verifyUsage();
   }
   
   public synchronized static void registerUsedProperties(Property<?> ... properties) {
@@ -100,7 +103,7 @@ public class PropertyManager {
     System.exit(0);
   }
   
-  public synchronized static void verifyUsage() {
+  public synchronized static boolean verifyUsage() {
     boolean problem = false;
     for (Collection<Property<?>> properties : usedProperties.values()) {
       for (Property<?> prop : properties) {
@@ -113,6 +116,7 @@ public class PropertyManager {
     if ((problem && REQUIRE_REGISTERED.getValue()) || PRINT_USAGE.getValue()) {
       printUsage();
     }
+    return problem;
   }
   
   public synchronized static void initializeProperties() {
@@ -137,21 +141,35 @@ public class PropertyManager {
             throw new IllegalArgumentException(args[index] + " is invalid (expecting --)");
           }
         }
+      }
       
-        if (PROPERTIES_FILE.hasValue()) {
-          try {
-            FileInputStream fis = new FileInputStream(PROPERTIES_FILE.getValue());
-    
-            Properties props = new Properties();
-            props.load(fis);
-            fis.close();
+      if (PROPERTIES_FILE.hasValue()) {
+        try {
+          FileInputStream fis = new FileInputStream(PROPERTIES_FILE.getValue());
   
-            for (Entry<String, String> entry : (Set<Entry<String,String>>)(Object)props.entrySet()) {
-              singleton.propertyMap.put(entry.getKey(), entry.getValue());
-            }
-          } catch (IOException e) {
-            throw new IllegalArgumentException("Unable to find properties file at " + PROPERTIES_FILE.getValue().getPath());
+          Properties props = new Properties();
+          props.load(fis);
+          fis.close();
+
+          for (Entry<String, String> entry : (Set<Entry<String,String>>)(Object)props.entrySet()) {
+            singleton.propertyMap.put(entry.getKey(), entry.getValue());
           }
+        } catch (IOException e) {
+          throw new IllegalArgumentException("Unable to find properties file at " + PROPERTIES_FILE.getValue().getPath());
+        }
+      }
+        
+      if (PROPERTIES_STREAM.hasValue()) {
+        try {
+          Properties props = new Properties();
+          props.load(PROPERTIES_STREAM.getValue());
+          PROPERTIES_STREAM.getValue().close();
+            
+          for (Entry<String, String> entry : (Set<Entry<String, String>>)(Object)props.entrySet()) {
+            singleton.propertyMap.put(entry.getKey(), entry.getValue());
+          }
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Unable to load properties stream", e);
         }
       }
     } else {

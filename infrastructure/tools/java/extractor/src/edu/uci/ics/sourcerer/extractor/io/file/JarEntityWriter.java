@@ -33,6 +33,10 @@ public final class JarEntityWriter extends ExtractorWriter implements IJarEntity
     super(new File(output, Extracted.ENTITY_FILE.getValue()), input);
   }
   
+  public void writePackage(String fqn) {
+    write(EntityExParser.getPackageLine(fqn));
+  }
+  
   public void writeClass(String fqn, int modifiers) {
     write(EntityExParser.getJarLine(Entity.CLASS, fqn, modifiers));
   }

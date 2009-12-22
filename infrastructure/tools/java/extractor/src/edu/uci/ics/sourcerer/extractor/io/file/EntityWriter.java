@@ -39,6 +39,11 @@ public final class EntityWriter extends ExtractorWriter implements IEntityWriter
   }
   
   @Override
+  public void writePackage(String fqn) {
+    write(EntityExParser.getPackageLine(fqn));
+  }
+  
+  @Override
   public void writeClass(String fqn, int modifiers, Location location) {
     writeEntity(Entity.CLASS, fqn, modifiers, location);
   }

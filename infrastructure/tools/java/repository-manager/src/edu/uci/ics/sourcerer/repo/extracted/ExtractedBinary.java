@@ -48,6 +48,10 @@ public abstract class ExtractedBinary extends Extracted {
     return getBinaryProperties().getExtractedFromBinary();
   }
   
+  public boolean sourceSkipped() {
+    return getBinaryProperties().sourceSkipped();
+  }
+  
   public boolean hasBinaryExceptions() {
     return getBinaryExceptions() > 0;
   }

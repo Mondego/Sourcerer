@@ -158,9 +158,9 @@ public class AddProjects extends DatabaseAccessor {
         }
       });
       for (EntityEX entity : ExtractedReader.getEntityReader(project)) {
-        String fileID = getFileID(fileMap, entity.getPath());
-        if (fileID == null) {
-          logger.log(Level.SEVERE, "Unknown file: " + entity.getPath());
+        String fileID = null;
+        if (entity.getType() != Entity.PACKAGE) {
+          fileID = getFileID(fileMap, entity.getPath());
         }
         EntitiesTable.insert(batcher, entity, projectID, fileID, entity);
         count++;
@@ -203,11 +203,7 @@ public class AddProjects extends DatabaseAccessor {
       for (LocalVariableEX var : ExtractedReader.getLocalVariableReader(project)) {
         // Get the file
         String fileID = getFileID(fileMap, var.getPath());
-        
-        if (fileID == null) {
-          logger.log(Level.SEVERE, "Unknown file: " + var.getPath());
-        }
-        
+                
         // Add the entity
         String eid = EntitiesTable.insertLocalVariable(executor, var, projectID, fileID);
         
@@ -237,10 +233,6 @@ public class AddProjects extends DatabaseAccessor {
       for (RelationEX relation : ExtractedReader.getRelationReader(project)) {
         // Get the file
         String fileID = getFileID(fileMap, relation.getPath());
-
-        if (fileID == null) {
-          logger.log(Level.SEVERE, "Unknown file: " + relation.getPath());
-        }
         
         // Look up the lhs eid
         TypedEntityID lhsEid = entityMap.get(relation.getLhs());
@@ -448,7 +440,7 @@ public class AddProjects extends DatabaseAccessor {
     } else {
       // Report the problem
       logger.log(Level.SEVERE, "File not found: " + path);
-      return "NULL";
+      return null;
     }
   }
 }

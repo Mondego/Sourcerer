@@ -92,8 +92,9 @@ public abstract class Property <T> {
     return value != null || defaultValue != null;
   }
   
-  public void setValue(T value) {
+  public synchronized void setValue(T value) {
     this.value = value;
+    initialized = true;
   }
   
   public synchronized T getValue() {
@@ -127,14 +128,19 @@ public abstract class Property <T> {
             stringValue = br.readLine();
             value = parseString(stringValue);
           } catch (Exception e) {
-            value = defaultValue;
             logger.log(Level.SEVERE, "Unable to read value for " + name, e);
+            PropertyManager.printUsage();
           }
         } else {
           value = defaultValue;
         }
       } else {
-        value = parseString(stringValue);
+        try {
+          value = parseString(stringValue);
+        } catch (IllegalArgumentException e) {
+          logger.log(Level.SEVERE, e.getMessage());
+          PropertyManager.printUsage();
+        }
       }
       initialized = true;
     }

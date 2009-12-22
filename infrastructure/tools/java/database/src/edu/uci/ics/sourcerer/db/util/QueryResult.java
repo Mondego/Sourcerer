@@ -60,6 +60,15 @@ public class QueryResult {
     }
   }
   
+  public boolean getBoolean(int column) {
+    try {
+      return results.getBoolean(column);
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE, "Unable to get column value", e);
+      return false;
+    }
+  }
+  
   public boolean isNull(int column) {
     try {
       return results.getString(column) == null;

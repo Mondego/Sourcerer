@@ -61,7 +61,11 @@ public abstract class Extracted {
   
   protected InputStream getInputStream(Property<String> property) throws IOException {
     File file = new File(content, property.getValue());
-    return new FileInputStream(file);
+    if (file.exists()) {
+      return new FileInputStream(file);
+    } else {
+      return null;
+    }
   }
 
   public InputStream getEntityInputStream() throws IOException {
@@ -96,6 +100,10 @@ public abstract class Extracted {
     return getInputStream(MISSING_TYPE_FILE);
   }
   
+  public boolean usesJars() {
+    return new File(content, USED_JAR_FILE.getValue()).exists();
+  }
+  
   public InputStream getUsedJarInputStream() throws IOException {
     return getInputStream(USED_JAR_FILE);
   }
@@ -111,7 +119,7 @@ public abstract class Extracted {
   }
   
   public boolean hasMissingTypes() {
-    return getProperties().hasMissingTypes();
+    return getProperties().missingTypes();
   }
   
   public boolean empty() {
