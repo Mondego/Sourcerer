@@ -28,8 +28,8 @@ import edu.uci.ics.sourcerer.repo.general.LibraryProperties;
 public class ExtractedLibrary extends ExtractedBinary {
   private LibraryProperties properties;
   
-  public ExtractedLibrary(File content) {
-    super(content);
+  public ExtractedLibrary(File content, String relativePath) {
+    super(content, relativePath);
     properties = LibraryProperties.load(getPropertiesFile());
   }
     

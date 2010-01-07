@@ -73,6 +73,21 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
     }
   }
   
+  public int getCount() {
+    try {
+      int count = 0;
+      for (String line = input.readLine(); line != null; line = input.readLine()) {
+        count++;
+      }
+      input.close();
+      input = null;
+      return count;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error getting count", e);
+      return -1;
+    }
+  }
+  
   public Iterator<T> iterator() {
     return this;
   }

@@ -23,7 +23,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.util.io.Property;
 
 /**
@@ -33,10 +33,10 @@ public final class WriterFactory {
   private WriterFactory() {}
   
   @SuppressWarnings("unchecked")
-  public static <T> T createWriter(File output, Repository input, Property<Class<?>> property) {
+  public static <T> T createWriter(File output, IFileSet input, Property<Class<?>> property) {
     try {
       Class<?> klass = property.getValue();
-      Constructor<?> constructor = klass.getConstructor(File.class, Repository.class);
+      Constructor<?> constructor = klass.getConstructor(File.class, IFileSet.class);
       return (T)constructor.newInstance(output, input);
     } catch (Exception e) {
       logger.log(Level.SEVERE, "Unable to create writer: " + property.getName(), e);

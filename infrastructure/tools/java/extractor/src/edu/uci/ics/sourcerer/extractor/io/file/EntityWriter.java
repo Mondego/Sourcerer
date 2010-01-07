@@ -23,14 +23,14 @@ import edu.uci.ics.sourcerer.extractor.io.IEntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.Location;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.extracted.EntityExParser;
-import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class EntityWriter extends ExtractorWriter implements IEntityWriter {
-  public EntityWriter(File output, Repository input) {
+  public EntityWriter(File output, IFileSet input) {
     super(new File(output, Extracted.ENTITY_FILE.getValue()), input);
   }
 

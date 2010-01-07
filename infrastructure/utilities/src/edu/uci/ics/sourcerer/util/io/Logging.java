@@ -263,7 +263,7 @@ public final class Logging {
     
     try {
       file.mkdirs();
-      StreamHandler handler = new FileHandler(new File(file, "log").getPath());
+      StreamHandler handler = new FileHandler(new File(file, "log").getPath(), true);
       handler.setFormatter(formatter);
       handler.setLevel(Level.INFO);
       handlerMap.put(file, handler);

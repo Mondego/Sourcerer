@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
@@ -41,13 +42,19 @@ public abstract class Extracted {
   public static final Property<String> MISSING_TYPE_FILE = new StringProperty("missing-type-file", "missing-types.txt", "Repository Manager", "Filename for missing types.");
   
   protected File content;
+  protected String relativePath;
 
-  public Extracted(File content) {
+  public Extracted(File content, String relativePath) {
     this.content = content;
+    this.relativePath = relativePath;
   }
 
   public File getContent() {
     return content;
+  }
+  
+  public String getRelativePath() {
+    return relativePath;
   }
   
   protected File getPropertiesFile() {
@@ -56,6 +63,14 @@ public abstract class Extracted {
       return file;
     } else {
       return new File(content, "extracted.properties");
+    }
+  }
+  
+  protected void clonePropertiesFile(ExtractedRepository target) {
+    File properties = getPropertiesFile();
+    if (properties.exists()) {
+      File newProperties = new File(target.getBaseDir().getPath(), relativePath + "/" + properties.getName());
+      FileUtils.copyFile(properties, newProperties);
     }
   }
   
@@ -140,5 +155,13 @@ public abstract class Extracted {
   
   public int getSourceExceptions() {
     return getProperties().getSourceExceptions();
+  }
+  
+  public int getFirstOrderJars() {
+    return getProperties().getFirstOrderJars();
+  }
+  
+  public int getJars() {
+    return getProperties().getJars();
   }
 }

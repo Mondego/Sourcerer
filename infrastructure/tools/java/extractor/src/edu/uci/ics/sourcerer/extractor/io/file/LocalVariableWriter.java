@@ -22,14 +22,14 @@ import java.io.File;
 import edu.uci.ics.sourcerer.extractor.io.ILocalVariableWriter;
 import edu.uci.ics.sourcerer.extractor.io.Location;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableExParser;
-import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class LocalVariableWriter extends ExtractorWriter implements ILocalVariableWriter {
-  public LocalVariableWriter(File output, Repository input) {
+  public LocalVariableWriter(File output, IFileSet input) {
     super(new File(output, Extracted.LOCAL_VARIABLE_FILE.getValue()), input);
   }
 

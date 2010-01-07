@@ -22,6 +22,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.File;
 import java.util.AbstractCollection;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
@@ -38,6 +39,7 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public class ExtractedRepository extends AbstractRepository {
   public static final Property<String> EXTRACTION_STATS_FILE = new StringProperty("extraction-stats-file", "extraction-stats.txt", "Repository Manager", "Output file for the extraction stats.");
   
+  private boolean includeNotExtracted = false;
   private Collection<ExtractedLibrary> libraries;
   private Collection<ExtractedJar> jars;
   private Collection<ExtractedProject> projects;
@@ -49,7 +51,7 @@ public class ExtractedRepository extends AbstractRepository {
   @Override
   protected void addFile(File checkout) {
     ExtractedProject extracted = new ExtractedProject(checkout, checkout.getParentFile().getName() + "/" + checkout.getName());
-    if (extracted.extracted()) {
+    if (includeNotExtracted || extracted.extracted()) {
       projects.add(extracted);
     }
   }
@@ -60,8 +62,8 @@ public class ExtractedRepository extends AbstractRepository {
     if (libsDir.exists()) {
       for (File lib : libsDir.listFiles()) {
         if (lib.isDirectory()) {
-          ExtractedLibrary extracted = new ExtractedLibrary(lib);
-          if (extracted.extracted()) {
+          ExtractedLibrary extracted = new ExtractedLibrary(lib, libsDir.getName());
+          if (includeNotExtracted || extracted.extracted()) {
             libraries.add(extracted);
           }
         }
@@ -71,36 +73,37 @@ public class ExtractedRepository extends AbstractRepository {
 
   private void populateJars() {
     final JarIndex index = getJarIndex();
-    jars = new AbstractCollection<ExtractedJar>() {
-      @Override
-      public int size() {
-        return index.getIndexSize();
-      }
-      @Override
-      public Iterator<ExtractedJar> iterator() {
-        return new Iterator<ExtractedJar>() {
-          private Iterator<IndexedJar> iter = index.getIndexedJars().iterator();
-          
-          @Override
-          public void remove() {
-            throw new UnsupportedOperationException();          
-          }
-          
-          @Override
-          public ExtractedJar next() {
-            return iter.next().getExtractedJar();
-          }
-          
-          @Override
-          public boolean hasNext() {
-            return iter.hasNext();
-          }
-        };
-      }
-    };
-
-    
-    
+    if (index == null) {
+      jars = Collections.emptyList();
+    } else {
+      jars = new AbstractCollection<ExtractedJar>() {
+        @Override
+        public int size() {
+          return index.getIndexSize();
+        }
+        @Override
+        public Iterator<ExtractedJar> iterator() {
+          return new Iterator<ExtractedJar>() {
+            private Iterator<IndexedJar> iter = index.getIndexedJars().iterator();
+            
+            @Override
+            public void remove() {
+              throw new UnsupportedOperationException();          
+            }
+            
+            @Override
+            public ExtractedJar next() {
+              return iter.next().getExtractedJar();
+            }
+            
+            @Override
+            public boolean hasNext() {
+              return iter.hasNext();
+            }
+          };
+        }
+      };
+    }    
     // This is too slow, use the jar index
 //    File jarsDir = getJarsDir();
 //    if (jarsDir.exists()) {
@@ -152,7 +155,40 @@ public class ExtractedRepository extends AbstractRepository {
     return projects;
   }
   
+  public void cloneProperties(ExtractedRepository target) {
+    logger.info("Cloning extracted library properties...");
+    {
+      int count = 0;
+      for (ExtractedLibrary lib : getLibraries()) {
+        lib.clonePropertiesFile(target);
+        count++;
+      }
+      logger.info("  " + count + " libraries cloned.");
+    }
+    
+    logger.info("Cloning extracted jar properties...");
+    {
+      int count = 0;
+      for (ExtractedJar jar : getJars()) {
+        jar.clonePropertiesFile(target);
+        count++;
+      }
+      logger.info("  " + count + " jars cloned.");
+    }
+    
+    logger.info("Cloning extracted project properties...");
+    {
+      int count = 0;
+      for (ExtractedProject project : getProjects()) {
+        project.clonePropertiesFile(target);
+        count++;
+      }
+      logger.info("  " + count + " projects cloned.");
+    }
+  }
+  
   public void computeExtractionStats() {
+    includeNotExtracted = true;
     TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(EXTRACTION_STATS_FILE);
     if (libraries == null) {
       logger.info("Loading libraries...");
@@ -253,44 +289,66 @@ public class ExtractedRepository extends AbstractRepository {
     
     logger.info("Computing stats for " + jars.size() + " jars.");
     {
-      int jarsExtracted = 0;
-      int jarsNonEmpty = 0;
+      int extracted = 0;
+      int nonEmpty = 0;
+      int withMissingTypes = 0;
       int jarsWithMissingTypes = 0;
-      int extractedJarsWithMissingTypes = 0;
-      int totalBinaryExtracted = 0;
+      int binaryExtracted = 0;
       int jarsWithBinaryExceptions = 0;
-      int totalBinaryExceptions = 0;
-      int jarsWithSource = 0;
-      int totalSourceExtracted = 0;
+      int binaryExceptions = 0;
+      int sourceSkipped = 0;
+      int withSource = 0;
+      int sourceExtracted = 0;
       int jarsWithSourceExceptions = 0;
-      int totalSourceExceptions = 0;
+      int sourceExceptions = 0;
+      int usingJars = 0;
+      int usedJars = 0;
+      int firstOrderJars = 0;
       
       for (ExtractedJar jar : jars) {
         if (jar.extracted()) {
-          jarsExtracted++;
+          extracted++;
           if (!jar.empty()) {
-            jarsNonEmpty++;
+            nonEmpty++;
           
-            totalBinaryExtracted += jar.getExtractedFromBinary();
+            binaryExtracted += jar.getExtractedFromBinary();
             if (jar.hasBinaryExceptions()) {
               jarsWithBinaryExceptions++;
-              totalBinaryExceptions += jar.getBinaryExceptions();
+              binaryExceptions += jar.getBinaryExceptions();
+            }
+            
+            if (jar.sourceSkipped()) {
+              sourceSkipped++;
             }
             
             if (jar.hasSource()) {
-              jarsWithSource++;
-              totalSourceExtracted += jar.getExtractedFromSource();
+              withSource++;
+              sourceExtracted += jar.getExtractedFromSource();
               if (jar.hasSourceExceptions()) {
                 jarsWithSourceExceptions++;
-                totalSourceExceptions += jar.getSourceExceptions();
+                sourceExceptions += jar.getSourceExceptions();
+              }
+            }
+            
+//            if (jar.getFirstOrderJars() == 0 && jar.getJars() > 0) {
+//              logger.info(jar.getName() + " " + jar.getFirstOrderJars() + " " + jar.getJars());
+//            } else if (jar.getFirstOrderJars() < 0 || jar.getJars() < 0) {
+//              logger.info(jar.getName() + " " + jar.getFirstOrderJars() + " " + jar.getJars());
+//            }
+            if (jar.getFirstOrderJars() > 0) {
+              firstOrderJars += jar.getFirstOrderJars();
+              int usedCount = jar.getJars();
+              if (usedCount > 0) {
+                usingJars++;
+                usedJars += usedCount;
               }
             }
           }
           if (jar.hasMissingTypes()) {
-            extractedJarsWithMissingTypes++;
+            jarsWithMissingTypes++;
           }
         } else if (jar.hasMissingTypes()) {
-          jarsWithMissingTypes++;
+          withMissingTypes++;
         }
       }
       
@@ -299,43 +357,133 @@ public class ExtractedRepository extends AbstractRepository {
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Extracted jars");
-      printer.addCell(jarsExtracted);
+      printer.addCell(extracted);
       printer.beginRow();
       printer.addCell("Non-empty jars");
-      printer.addCell(jarsNonEmpty);
+      printer.addCell(nonEmpty);
       printer.beginRow();
       printer.addCell("Extracted jars with missing types");
-      printer.addCell(extractedJarsWithMissingTypes);
+      printer.addCell(jarsWithMissingTypes);
       printer.beginRow();
       printer.addCell("Non-extracted jars with missing types");
-      printer.addCell(jarsWithMissingTypes);
+      printer.addCell(withMissingTypes);
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Binary files extracted");
-      printer.addCell(totalBinaryExtracted);
+      printer.addCell(binaryExtracted);
       printer.beginRow();
       printer.addCell("Jars with binary file exceptions");
       printer.addCell(jarsWithBinaryExceptions);
       printer.beginRow();
       printer.addCell("Binary files with exceptions");
-      printer.addCell(totalBinaryExceptions);
+      printer.addCell(binaryExceptions);
       printer.addDividerRow();
       printer.beginRow();
+      printer.addCell("Jars with source skipped");
+      printer.addCell(sourceSkipped);
+      printer.beginRow();
       printer.addCell("Jars with source files");
-      printer.addCell(jarsWithSource);
+      printer.addCell(withSource);
       printer.beginRow();
       printer.addCell("Source files extracted");
-      printer.addCell(totalSourceExtracted);
+      printer.addCell(sourceExtracted);
       printer.beginRow();
       printer.addCell("Jars with source file exceptions");
       printer.addCell(jarsWithSourceExceptions);
       printer.beginRow();
       printer.addCell("Source files with exceptions");
-      printer.addCell(totalSourceExceptions);
+      printer.addCell(sourceExceptions);
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("Jars using other jars");
+      printer.addCell(usingJars);
+      printer.beginRow();
+      printer.addCell("Jars used by other jars");
+      printer.addCell(usedJars);
+      printer.beginRow();
+      printer.addCell("First order jars uses");
+      printer.addCell(firstOrderJars);
       printer.addDividerRow();
       printer.endTable();
     }
     
+    getProjects();
+    
+    logger.info("Computing stats for " + projects.size() + " projects.");
+    {
+      int extracted = 0;
+      int nonEmpty = 0;
+      int withMissingTypes = 0;
+      int projectsWithMissingTypes = 0;
+      int sourceExtracted = 0;
+      int projectsWithSourceExceptions = 0;
+      int sourceExceptions = 0;
+      int usingJars = 0;
+      int usedJars = 0;
+      
+      for (ExtractedProject project : projects) {
+        if (project.extracted()) {
+          extracted++;
+          if (!project.empty()) {
+            nonEmpty++;
+        
+            sourceExtracted += project.getExtractedFromSource();
+            if (project.hasSourceExceptions()) {
+              projectsWithSourceExceptions++;
+              sourceExceptions += project.getSourceExceptions();
+            }
+            
+            int usedCount = project.getJars();
+            if (usedCount > 0) {
+              usingJars++;
+              usedJars += usedCount;
+            }
+          }
+          if (project.hasMissingTypes()) {
+            projectsWithMissingTypes++;
+          }
+        } else if (project.hasMissingTypes()) {
+          withMissingTypes++;
+        } else {
+          logger.info(project.getRelativePath());
+        }
+      }
+      
+      printer.addHeader("Extracted Project Statistics");
+      printer.beginTable(2);
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("Extracted projects");
+      printer.addCell(extracted);
+      printer.beginRow();
+      printer.addCell("Non-empty projects");
+      printer.addCell(nonEmpty);
+      printer.beginRow();
+      printer.addCell("Extracted projects with missing types");
+      printer.addCell(projectsWithMissingTypes);
+      printer.beginRow();
+      printer.addCell("Non-extracted projects with missing types");
+      printer.addCell(withMissingTypes);
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("Source files extracted");
+      printer.addCell(sourceExtracted);
+      printer.beginRow();
+      printer.addCell("Projects with source file exceptions");
+      printer.addCell(projectsWithSourceExceptions);
+      printer.beginRow();
+      printer.addCell("Source files with exceptions");
+      printer.addCell(sourceExceptions);
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("Projects using jars");
+      printer.addCell(usingJars);
+      printer.beginRow();
+      printer.addCell("Jars used by projects");
+      printer.addCell(usedJars);
+      printer.addDividerRow();
+      printer.endTable();
+    }
     printer.close();
   }
 }

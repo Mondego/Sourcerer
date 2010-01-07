@@ -6,6 +6,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.logging.Level;
 
 import org.eclipse.core.resources.IFile;
 
@@ -55,37 +56,44 @@ public class ProjectExtractor {
         logger.info("  Getting file list...");
         IFileSet files = project.getFileSet();
         
-        Collection<IndexedJar> previousJars = null;
         Collection<IndexedJar> jars = Helper.newHashSet();
-        for (IJarFile jar : files.getJarFiles()) {
-          jars.add(index.getIndexedJar(jar.getHash()));
-        };
+        Collection<String> paths = Helper.newHashSet();
+        if (Extractor.USE_PROJECT_JARS.getValue()) {
+          for (IJarFile jar : files.getJarFiles()) {
+            IndexedJar indexed = index.getIndexedJar(jar.getHash());
+            if (indexed == null) {
+              logger.log(Level.SEVERE, "Unable to locate " + jar.getName() + "(" + jar.getHash() + ") in index, so using directly");
+              paths.add(jar.getPath());
+            } else { 
+              jars.add(indexed);
+              paths.add(indexed.getJarFile().getPath());
+            }
+          }
+        }
         Collection<IFile> uniqueFiles = null;
         Collection<IFile> bestDuplicateFiles = null;
-        boolean missingTypes = extracted.hasMissingTypes();
+        boolean missingTypes = false;
         while (true) {
           // Set up the writer bundle
-          WriterBundle bundle = new WriterBundle(new File(project.getOutputPath(output.getBaseDir())), input);
-          
+          WriterBundle bundle = new WriterBundle(new File(project.getOutputPath(output.getBaseDir())), files);
+          boolean force = false;
           if (missingTypes) {
             logger.info("  Resolving missing types...");
-            jars = resolver.resolveMissingTypes(index, extracted, jars, bundle.getUsedJarWriter());
-            if (previousJars == null) {
-              logger.info("  Initializing project with " + jars.size() + " jars...");
-              EclipseUtils.initializeProject(jars);
+            Collection<IndexedJar> newJars = resolver.resolveMissingTypes(index, extracted, bundle.getUsedJarWriter());
+            if (newJars.isEmpty()) {
+              force = true;
+              logger.info("  No jars found to resolve missing types...");
             } else {
-              jars.removeAll(previousJars);
-              logger.info("  Adding " + jars.size() + " jars (" + (previousJars.size() + 1) + ") to project...");
-              EclipseUtils.addToProjectClasspath(jars);
-              jars.addAll(previousJars);
+              logger.info("  Adding " + newJars.size() + " jar(s) to the classpath...");
+              EclipseUtils.addToClasspath(newJars);
+              jars.addAll(newJars);
             }
           } else {
-            // TODO: print out the used jars for this case
-            logger.info("  Initializing project...");
-            EclipseUtils.initializeProject(jars);
+            logger.info("  Initializing project with " + jars.size() + " jars...");
+            EclipseUtils.initializeProject(paths);
           }
           
-          if (previousJars == null) {
+          if (!missingTypes) {
             logger.info("  Loading " + files.getUniqueJavaFileCount() + " unique java files into project...");
             uniqueFiles = EclipseUtils.loadFilesIntoProject(files.getUniqueJavaFiles());
             
@@ -96,7 +104,6 @@ public class ProjectExtractor {
           // Set up the feature extractor
           FeatureExtractor extractor = new FeatureExtractor(bundle);
           
-          boolean force = previousJars != null && jars.size() <= previousJars.size();
           if (force) {
             logger.info("  Unable to resolve all missing types, so forcing compilation...");
           }
@@ -110,15 +117,13 @@ public class ProjectExtractor {
           
           // Close the output files
           extractor.close();
-          
-          previousJars = jars;
-          
+         
           if (Extractor.RESOLVE_MISSING_TYPES.getValue()) {
             if (force) {
-              extracted.reportForcedExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions());
+              extracted.reportForcedExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions(), jars.size());
               break;
             } else if (!(report.hadMissingType() || report.hadMissingSecondOrder())) {
-              extracted.reportSuccessfulExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions());
+              extracted.reportSuccessfulExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions(), jars.size());
               break;
             } else {
               missingTypes = report.hadMissingType() || report.hadMissingSecondOrder();
@@ -129,12 +134,12 @@ public class ProjectExtractor {
             if (report.hadMissingType() || report.hadMissingSecondOrder()) {
               extracted.reportMissingTypeExtraction();
             } else {
-              extracted.reportSuccessfulExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions());
+              extracted.reportSuccessfulExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions(), jars.size());
             }
             break;
           }
         }
-        
+        Logging.removeFileLogger(extracted.getContent());
         FileUtils.resetTempDir();
       }
     }

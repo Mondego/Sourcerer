@@ -31,17 +31,14 @@ public class ExtractedProject extends Extracted {
   public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Repository Manager", "Filename for the associated jars.");
   
   private ProjectProperties properties;
-  private String relativePath;
    
   public ExtractedProject(File content, String relativePath) {
-    super(content);
-    this.relativePath = relativePath;
+    super(content, relativePath);
     properties = ProjectProperties.load(getPropertiesFile());
   }
   
   public ExtractedProject(File content, String relativePath, File propFile) {
-    super(content);
-    this.relativePath = relativePath;
+    super(content, relativePath);
     File exPropFile = getPropertiesFile();
     if (exPropFile.exists()) {
       properties = ProjectProperties.load(exPropFile);
@@ -50,24 +47,22 @@ public class ExtractedProject extends Extracted {
     }
   }
   
-  public String getRelativePath() {
-    return relativePath;
-  }
-  
-  public void reportSuccessfulExtraction(int fromSource, int sourceExceptions) {
+  public void reportSuccessfulExtraction(int fromSource, int sourceExceptions, int jars) {
     properties.setExtracted(true);
     properties.setMissingTypes(false);
     properties.setFromSource(fromSource);
     properties.setSourceExceptions(sourceExceptions);
+    properties.setJars(jars);
     
     properties.save(getPropertiesFile());
   }
   
-  public void reportForcedExtraction(int fromSource, int sourceExceptions) {
+  public void reportForcedExtraction(int fromSource, int sourceExceptions, int jars) {
     properties.setExtracted(true);
-    properties.setMissingTypes(false);
+    properties.setMissingTypes(true);
     properties.setFromSource(fromSource);
     properties.setSourceExceptions(sourceExceptions);
+    properties.setJars(jars);
     
     properties.save(getPropertiesFile());
   }
@@ -77,6 +72,7 @@ public class ExtractedProject extends Extracted {
     properties.setMissingTypes(true);
     properties.setFromSource(0);
     properties.setSourceExceptions(0);
+    properties.setJars(0);
     
     properties.save(getPropertiesFile());
   }

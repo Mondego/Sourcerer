@@ -60,12 +60,12 @@ public final class JarsTable {
         "jar_id SERIAL",
         "hash VARCHAR(32) BINARY NOT NULL",
         "name VARCHAR(1024) BINARY NOT NULL",
-        "group VARCHAR(1024) BINARY",
+        "groop VARCHAR(1024) BINARY",
         "version VARCHAR(1024) BINARY",
         "has_source BOOLEAN NOT NULL",
         "INDEX(hash)",
         "INDEX(name(48))",
-        "INDEX(group(48))");
+        "INDEX(groop(48))");
   }
   
   // ---- INSERT ----
@@ -123,7 +123,7 @@ public final class JarsTable {
     }
     
     public String getSelect() {
-      return "jar_id,hash,name,path,version,has_source";
+      return "jar_id,hash,name,groop,version,has_source";
     }
   };
   

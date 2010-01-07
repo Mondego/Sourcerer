@@ -182,7 +182,8 @@ public class EclipseUtils {
   }
   
 //  public static void initializeProject(Iterable<IJarFile> jarFiles) {
-  public static void initializeProject(Collection<IndexedJar> jars) {
+ 
+  public static void initializeProject(Collection<String> jars) {
     initializeProject();
     try {
       srcFolder = project.getFolder("src");
@@ -196,8 +197,8 @@ public class EclipseUtils {
       for (LibraryLocation location : JavaRuntime.getLibraryLocations(vmInstall)) {
         entries.add(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), location.getSystemLibrarySourcePath(), null));
       }
-      for (IndexedJar jar : jars) {
-        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), null, null));
+      for (String jar : jars) {
+        entries.add(JavaCore.newLibraryEntry(new Path(jar), null, null));
       }
       entries.add(JavaCore.newSourceEntry(srcFolder.getFullPath()));
       javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
@@ -206,7 +207,7 @@ public class EclipseUtils {
     }
   }
   
-  public static void addToProjectClasspath(Collection<IndexedJar> jars) {
+  public static void addToClasspath(Collection<IndexedJar> jars) {
     try {
       List<IClasspathEntry> entries = Helper.newArrayList(Arrays.asList(javaProject.getRawClasspath()));
       for (IndexedJar jar : jars) {

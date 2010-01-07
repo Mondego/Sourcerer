@@ -42,6 +42,8 @@ public abstract class AbstractProperties {
   protected static final String MISSING_TYPES = "missingTypes";
   protected static final String FROM_SOURCE = "fromSource";
   protected static final String SOURCE_EXCEPTIONS = "sourceExceptions";
+  protected static final String FIRST_ORDER_JARS = "firstOrderJars";
+  protected static final String JARS = "jars";
   
   // Base properties
   protected String name;
@@ -52,6 +54,8 @@ public abstract class AbstractProperties {
   protected boolean missingTypes;
   protected int fromSource;
   protected int sourceExceptions;
+  protected int firstOrderJars;
+  protected int jars;
   
   protected void loadProperties(File file) {
     properties = new Properties();
@@ -71,6 +75,8 @@ public abstract class AbstractProperties {
       missingTypes = readBooleanProperty(MISSING_TYPES);
       fromSource = readIntProperty(FROM_SOURCE);
       sourceExceptions = readIntProperty(SOURCE_EXCEPTIONS);
+      firstOrderJars = readIntProperty(FIRST_ORDER_JARS);
+      jars = readIntProperty(JARS);
     }
   }
   
@@ -114,6 +120,8 @@ public abstract class AbstractProperties {
     set(MISSING_TYPES, missingTypes);
     set(FROM_SOURCE, fromSource);
     set(SOURCE_EXCEPTIONS, sourceExceptions);
+    set(FIRST_ORDER_JARS, firstOrderJars);
+    set(JARS, jars);
     
     write(file, properties);
   }
@@ -148,6 +156,14 @@ public abstract class AbstractProperties {
     this.sourceExceptions = sourceExceptions;
   }
   
+  public void setFirstOrderJars(int firstOrderJars) {
+    this.firstOrderJars = firstOrderJars;
+  }
+  
+  public void setJars(int jars) {
+    this.jars = jars;
+  }
+  
   public String getName() {
     return name;
   }
@@ -158,6 +174,14 @@ public abstract class AbstractProperties {
   
   public boolean missingTypes() {
     return missingTypes;
+  }
+  
+  public int getFirstOrderJars() {
+    return firstOrderJars;
+  }
+  
+  public int getJars() {
+    return jars;
   }
   
   protected void verifyExtracted() {

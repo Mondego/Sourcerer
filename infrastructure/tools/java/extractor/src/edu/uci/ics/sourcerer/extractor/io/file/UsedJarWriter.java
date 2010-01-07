@@ -21,14 +21,14 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.IUsedJarWriter;
 import edu.uci.ics.sourcerer.model.extracted.UsedJarExParser;
-import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class UsedJarWriter extends ExtractorWriter implements IUsedJarWriter {
-  public UsedJarWriter(File output, Repository input) {
+  public UsedJarWriter(File output, IFileSet input) {
     super(new File(output, Extracted.USED_JAR_FILE.getValue()), input, true);
   }
   

@@ -12,7 +12,6 @@ import edu.uci.ics.sourcerer.db.util.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.extractor.io.IUsedJarWriter;
 import edu.uci.ics.sourcerer.model.extracted.MissingTypeEX;
-import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
@@ -23,15 +22,8 @@ public class MissingTypeResolver extends DatabaseAccessor {
   public MissingTypeResolver(DatabaseConnection connection) {
     super(connection);
   }
-  
+
   public Collection<IndexedJar> resolveMissingTypes(JarIndex index, Extracted extracted, IUsedJarWriter writer) {
-    return resolveMissingTypes(index, extracted, null, writer);
-  }
-  
-  /*
-   * TODO: fix this to print out the used jars properly now that we're grandfathering in the existing jars
-   */
-  public Collection<IndexedJar> resolveMissingTypes(JarIndex index, Extracted extracted, Collection<IndexedJar> previousJars, IUsedJarWriter writer) {
     // Keep track of all the jars
     Map<String, JarTypeCollection> jars = Helper.newHashMap();
     
@@ -61,22 +53,6 @@ public class MissingTypeResolver extends DatabaseAccessor {
     }
     
     Collection<IndexedJar> retval = Helper.newHashSet();
-    // Load all the previous jars
-    for (UsedJarEX used : ExtractedReader.getUsedJarReader(extracted)) {
-      IndexedJar indexed = index.getIndexedJar(used.getHash());
-      if (indexed == null) {
-        logger.log(Level.SEVERE, "Unable to find jar in index: " + used.getHash());
-      } else {
-        retval.add(indexed);
-      }
-    }
-    // Load all the previous jars
-    if (previousJars != null) {
-      for (IndexedJar indexed : previousJars) {
-        retval.add(indexed);
-      }
-    }
-    
     // Now repeatedly go through and find the jar that resolves the most missing types
     Collection<JarTypeCollection> bestJars = Helper.newLinkedList();
     while (true) {

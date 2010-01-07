@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.extractor.io.IExtractorWriter;
-import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
@@ -37,13 +37,13 @@ public abstract class ExtractorWriter implements IExtractorWriter {
   private static Map<File, BufferedWriter> writerMap = Helper.newHashMap();
   private File output;
   private BufferedWriter writer;
-  private Repository input;
+  private IFileSet input;
   
-  protected ExtractorWriter(File output, Repository input) {
+  protected ExtractorWriter(File output, IFileSet input) {
     this(output, input, false);
   }
   
-  protected ExtractorWriter(File output, Repository input, boolean append) {
+  protected ExtractorWriter(File output, IFileSet input, boolean append) {
     this.output = output;
     this.input = input;
     try {

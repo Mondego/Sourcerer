@@ -39,6 +39,7 @@ public class FileServer extends HttpServlet {
     PropertyManager.initializeProperties();
     
     if (!PropertyManager.registerAndVerify(DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD, AbstractRepository.INPUT_REPO)) {
+      logger.log(Level.INFO, "Initializing connection manager");
       connectionManager = new TimeoutManager<DatabaseConnection>(new TimeoutManager.Instantiator<DatabaseConnection>() {
         @Override
         public DatabaseConnection create() {
@@ -47,11 +48,17 @@ public class FileServer extends HttpServlet {
           return conn;
         }
       }, 10 * 60 * 1000);
+      
       repo = Repository.getRepository(AbstractRepository.INPUT_REPO.getValue());
     } else {
       logger.log(Level.SEVERE, "Unable to initialize connection");
       connectionManager = null;
     }
+  }
+  
+  @Override
+  public void destroy() {
+    logger.log(Level.INFO, "Destroying");
   }
   
   @Override
@@ -265,6 +272,9 @@ public class FileServer extends HttpServlet {
                 String minusClass = loc.getPath().substring(0, loc.getPath().lastIndexOf('.'));
                 String entryName = minusClass.replace('.', '/') + ".java";
                 ZipEntry entry = zip.getEntry(entryName);
+                if (entry == null) {
+                  entry = zip.getEntry("src/" + entryName);
+                }
                 if (entry == null) {
                   ServletUtils.writeErrorMsg(response, "Unable to find entry " + entryName + " in " + sourceFile.getName());
                 } else {

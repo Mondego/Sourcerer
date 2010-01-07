@@ -142,18 +142,26 @@ public class IndexedJar {
   
   public ExtractedJar getExtractedJar(ExtractedRepository repo) {
     if (maven) {
-      return new ExtractedJar(getOutputPath(repo.getMavenJarsDir()), getPropertiesFile());
+      return new ExtractedJar(getOutputPath(repo.getMavenJarsDir()), getPropertiesFile(), getRelativePath());
     } else {
-      return new ExtractedJar(getOutputPath(repo.getProjectJarsDir()), getPropertiesFile());
+      return new ExtractedJar(getOutputPath(repo.getProjectJarsDir()), getPropertiesFile(), getRelativePath());
     }
   }
   
   public ExtractedJar getExtractedJar() {
-    return new ExtractedJar(new File(getOutputPath(basePath)));
+    return new ExtractedJar(new File(getOutputPath(basePath)), getRelativePath());
   }
   
   private File getOutputPath(File baseDir) {
     return new File(getOutputPath(baseDir.getPath()));
+  }
+  
+  private String getRelativePath() {
+    if (maven) {
+      return relativePath;
+    } else {
+      return relativePath + "/" + jarName;
+    }
   }
   
   private String getOutputPath(String baseDir) {

@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.extractor.ast;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 
 import org.eclipse.core.resources.IFile;
@@ -31,6 +32,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 
 import edu.uci.ics.sourcerer.extractor.Extractor;
 import edu.uci.ics.sourcerer.extractor.io.IMissingTypeWriter;
@@ -248,6 +250,7 @@ public final class FeatureExtractor {
     return report;
   }
   
+  @SuppressWarnings("unchecked")
   private void checkForMissingTypes(CompilationUnit unit, SourceExtractionReport report, IMissingTypeWriter writer) {
     // Check for the classpath problem
     for (IProblem problem : unit.getProblems()) {
@@ -256,7 +259,19 @@ public final class FeatureExtractor {
           writer.writeMissingType(problem.getArguments()[0]);
           report.reportMissingSecondOrder();
         } else if (problem.getID() == IProblem.ImportNotFound) {
-          writer.writeMissingType(problem.getArguments()[0]);
+          String prefix = problem.getArguments()[0];
+          // Go and find all the imports with this prefix
+          boolean found = false;
+          for (ImportDeclaration imp : (List<ImportDeclaration>)unit.imports()) {
+            if (imp.getName().getFullyQualifiedName().startsWith(prefix)) {
+              writer.writeMissingType(imp.getName().getFullyQualifiedName());
+              found = true;
+            }
+          }
+          if (!found) {
+            logger.log(Level.SEVERE, "Unable to find import matching: " + prefix);
+            writer.writeMissingType(prefix);
+          }
           report.reportMissingType();
         }
       }

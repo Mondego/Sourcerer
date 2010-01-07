@@ -52,6 +52,7 @@ public class Main {
   private static final Property<Boolean> DOWNLOAD_MAVEN = new BooleanProperty("download-maven", false, "Repository Manager", "Downloads the jar file links retreived from a maven crawl.");
   private static final Property<Boolean> MAVEN_STATS = new BooleanProperty("maven-stats", false, "Repository Manager", "Gets some statistics on the links retreived from a maven crawl.");
   private static final Property<Boolean> EXTRACTION_STATS = new BooleanProperty("extraction-stats", false, "Repository Manager", "Get extraction stats.");
+  private static final Property<Boolean> CLONE_EXTRACTED_REPOSITORY = new BooleanProperty("clone-extracted", false, "Repository Manager", "Copies the property files into a new repositroy.");
 
   public static void main(String[] args) {
     PropertyManager.initializeProperties(args);
@@ -91,6 +92,9 @@ public class Main {
     } else if (EXTRACTION_STATS.getValue()) {
       PropertyManager.registerAndVerify(INPUT_REPO, EXTRACTION_STATS_FILE);
       ExtractedRepository.getRepository().computeExtractionStats();
+    } else if (CLONE_EXTRACTED_REPOSITORY.getValue()) {
+      PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);
+      ExtractedRepository.getRepository().cloneProperties(ExtractedRepository.getRepository(OUTPUT_REPO.getValue()));
     } else {
       PropertyManager.registerUsedProperties(CREATE_JAR_INDEX, PRINT_JAR_STATS, AGGREGATE_JAR_FILES, CLEAN_REPOSITORY, MIGRATE_REPOSITORY, CRAWL_MAVEN, DOWNLOAD_MAVEN, MAVEN_STATS, EXTRACTION_STATS);
       PropertyManager.printUsage();

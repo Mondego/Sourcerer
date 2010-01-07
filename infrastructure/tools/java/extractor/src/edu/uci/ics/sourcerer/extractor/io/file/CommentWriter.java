@@ -22,14 +22,14 @@ import java.io.File;
 import edu.uci.ics.sourcerer.extractor.io.ICommentWriter;
 import edu.uci.ics.sourcerer.model.Comment;
 import edu.uci.ics.sourcerer.model.extracted.CommentExParser;
-import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class CommentWriter extends ExtractorWriter implements ICommentWriter {
-  public CommentWriter(File output, Repository input) {
+  public CommentWriter(File output, IFileSet input) {
     super(new File(output, Extracted.COMMENT_FILE.getValue()), input);
   }
 

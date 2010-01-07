@@ -84,39 +84,51 @@ public class AddJars extends DatabaseAccessor {
     
     int count = 0;
     int size = jars.size();
-    logger.info("-- Inserting lone jars --");
-    for (ExtractedJar jar : jars) {
-      // in the first go, skip jars that use jars
-      if (!jar.usesJars()) {
+    if (ENTITIES_ONLY.getValue()) {
+      logger.info("-- Inserting jars --");
+      for (ExtractedJar jar : jars) {
         if (jar.extracted()) {
-          logger.info("Inserting " + jar.getName() + " " + "(" + ++count + " of " + size + ")");
-          addJar(jar);
-        } else {
-          logger.info("Skipping " + jar.getName() + " " + "(" + ++count + " of " + size + ")");
-        }
-      }
-    }
-    int newCount = 0;
-    logger.info("-- Inserting " + (size - count) + " remaining entities --");
-    for (ExtractedJar jar : jars) {
-      if (jar.usesJars()) {
-        if (jar.extracted()) {
-          logger.info("Inserting " + jar.getName() + "'s entities " + "(" + (++newCount + count) + " of " + size + ")");
+          logger.info("Inserting " + jar.getName() + "'s entities " + "(" + ++count + " of " + size + ")");
           addEntities(jar);
         } else {
-          logger.info("Skipping " + jar.getName() + " " + "(" + (++newCount + count) + " of " + size + ")");
+          logger.info("Skipping " + jar.getName() + "'s entities " + "(" + ++count + " of " + size + ")");
         }
       }
-    }
-    newCount = 0;
-    logger.info("-- Inserting " + (size - count) + " remaining relations --");
-    for (ExtractedJar jar : jars) {
-      if (jar.usesJars()) {
-        if (jar.extracted()) {
-          logger.info("Inserting " + jar.getName() + "'s relations " + "(" + (++newCount + count) + " of " + size + ")");
-          addRelations(jar);
-        } else {
-          logger.info("Skipping " + jar.getName() + " " + "(" + (++newCount + count) + " of " + size + ")");
+    } else {
+      logger.info("-- Inserting lone jars --");
+      for (ExtractedJar jar : jars) {
+        // in the first go, skip jars that use jars
+        if (!jar.usesJars()) {
+          if (jar.extracted()) {
+            logger.info("Inserting " + jar.getName() + " " + "(" + ++count + " of " + size + ")");
+            addJar(jar);
+          } else {
+            logger.info("Skipping " + jar.getName() + " " + "(" + ++count + " of " + size + ")");
+          }
+        }
+      }
+      int newCount = 0;
+      logger.info("-- Inserting " + (size - count) + " remaining entities --");
+      for (ExtractedJar jar : jars) {
+        if (jar.usesJars()) {
+          if (jar.extracted()) {
+            logger.info("Inserting " + jar.getName() + "'s entities " + "(" + (++newCount + count) + " of " + size + ")");
+            addEntities(jar);
+          } else {
+            logger.info("Skipping " + jar.getName() + " " + "(" + (++newCount + count) + " of " + size + ")");
+          }
+        }
+      }
+      newCount = 0;
+      logger.info("-- Inserting " + (size - count) + " remaining relations --");
+      for (ExtractedJar jar : jars) {
+        if (jar.usesJars()) {
+          if (jar.extracted()) {
+            logger.info("Inserting " + jar.getName() + "'s relations " + "(" + (++newCount + count) + " of " + size + ")");
+            addRelations(jar);
+          } else {
+            logger.info("Skipping " + jar.getName() + " " + "(" + (++newCount + count) + " of " + size + ")");
+          }
         }
       }
     }
@@ -403,7 +415,7 @@ public class AddJars extends DatabaseAccessor {
           if (fileID == null) {
             JarRelationsTable.insert(batcher, Relation.HOLDS, eid, typeEid, jarID);
           } else {
-            JarRelationsTable.insert(batcher, Relation.HOLDS, jarID, typeEid, jarID, fileID, var.getTypeStartPos(), var.getTypeLength());
+            JarRelationsTable.insert(batcher, Relation.HOLDS, eid, typeEid, jarID, fileID, var.getTypeStartPos(), var.getTypeLength());
           }
           
           // Add the inside relation

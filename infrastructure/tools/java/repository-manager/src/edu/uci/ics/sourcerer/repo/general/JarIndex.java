@@ -34,7 +34,6 @@ import java.util.Deque;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -604,11 +603,11 @@ public class JarIndex {
     }
   }
   
-  public Iterable<IndexedJar> getIndexedJars() {
+  public Collection<IndexedJar> getIndexedJars() {
     return index.values();
   }
   
-  public Iterable<IndexedJar> getLatestMavenIndexedJars() {
+  public Collection<IndexedJar> getLatestMavenIndexedJars() {
     Map<String, IndexedJar> byProject = Helper.newHashMap();
     for (IndexedJar jar : index.values()) {
       if (jar.isMavenJar()) {
@@ -626,7 +625,7 @@ public class JarIndex {
     return byProject.values();
   }
   
-  private static Pattern leadingDigits = Pattern.compile("(\\d+)(.*)");
+//  private static Pattern leadingDigits = Pattern.compile("(\\d+)(.*)");
   private static boolean newestVersion(String first, String second) {
     String[] firstParts = first.split("\\.");
     String[] secondParts = second.split("\\.");

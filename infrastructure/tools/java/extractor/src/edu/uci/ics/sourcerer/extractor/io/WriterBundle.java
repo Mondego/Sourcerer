@@ -24,13 +24,13 @@ import edu.uci.ics.sourcerer.extractor.io.dummy.DummyEntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyFileWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyImportWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyJarEntityWriter;
-import edu.uci.ics.sourcerer.extractor.io.dummy.DummyUsedJarWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyJarRelationWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyLocalVariableWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyMissingTypeWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyProblemWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyRelationWriter;
-import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.extractor.io.dummy.DummyUsedJarWriter;
+import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.ClassProperty;
 
@@ -62,7 +62,7 @@ public class WriterBundle implements IWriterBundle {
   private IUsedJarWriter usedJarWriter;
   private IMissingTypeWriter missingTypeWriter;
   
-  private Repository input;
+  private IFileSet input;
   
   private File output;
 
@@ -71,7 +71,7 @@ public class WriterBundle implements IWriterBundle {
     output.mkdirs();
   }
   
-  public WriterBundle(File output, Repository input) {
+  public WriterBundle(File output, IFileSet input) {
     this(output);
     this.input = input;
   }

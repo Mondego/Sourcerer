@@ -35,6 +35,7 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
+import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 
@@ -52,36 +53,53 @@ public class JarExtractor {
     
     logger.info("Getting the jar index...");
     JarIndex index = input.getJarIndex();
-    logger.info("--- Extracting " + index.getIndexSize() + " jars ---");
+    Collection<IndexedJar> toExtract = null;
+    if (Extractor.EXTRACT_LATEST_MAVEN.getValue()) {
+      toExtract = index.getLatestMavenIndexedJars();
+      logger.info("--- Extracting " + toExtract.size() + " latest maven jars ---");
+    } else {
+      toExtract = index.getIndexedJars();
+      logger.info("--- Extracting " + toExtract.size() + " jars ---");
+    }
     int count = 0;
-    for (IndexedJar jar : index.getIndexedJars()) {
-      logger.info("Extracting " + jar.toString() + " (" + ++count + " of " + index.getIndexSize() + ")");
+    for (IndexedJar jar : toExtract) {
+      logger.info("Extracting " + jar.toString() + " (" + ++count + " of " + toExtract.size() + ")");
       ExtractedJar extracted = jar.getExtractedJar(output);
       if (Extractor.EXTRACT_BINARY.getValue() && extracted.extracted()) {
         logger.info("  Jar already extracted");
-      } else if (Extractor.RESOLVE_MISSING_TYPES.getValue() && extracted.extracted() && !extracted.sourceSkipped()) {
+      } else if (Extractor.RESOLVE_MISSING_TYPES.getValue() && extracted.extracted() && !extracted.sourceSkipped() && !Extractor.FORCE_SOURCE_REDO.getValue()) {
         logger.info("  Jar already extracted");
       } else if (extracted.hasMissingTypes()) {
         logger.info("  Jar has missing types");
-      } else if (extracted.extracted() && !extracted.sourceSkipped()) {
+      } else if (extracted.extracted() && !extracted.sourceSkipped() && !Extractor.FORCE_SOURCE_REDO.getValue()) {
         logger.info("  Jar already extracted");
       } else {
         // Set up logging
         Logging.addFileLogger(extracted.getContent());
 
-        Collection<IndexedJar> previousJars = null;
-        Collection<IndexedJar> jars = null;
-        boolean missingTypes = extracted.hasMissingTypes();
+        Collection<IndexedJar> jars = Helper.newHashSet();
+        boolean missingTypes = false;
+        int firstOrderImports = 0;
         while (true) {
           // Set up the writer bundle
           WriterBundle bundle = new WriterBundle(extracted.getContent());
 
+          boolean force = false;
           if (missingTypes) {
             logger.info("  Resolving missing types...");
-            jars = resolver.resolveMissingTypes(index, extracted, bundle.getUsedJarWriter());
-            jars.add(jar);
-            logger.info("  Initializing project with " + jars.size() + " jars...");
-            EclipseUtils.initializeJarProject(jars, index);
+            Collection<IndexedJar> newJars = resolver.resolveMissingTypes(index, extracted, bundle.getUsedJarWriter());
+            newJars.removeAll(jars);
+            if (newJars.isEmpty()) {
+              force = true;
+              logger.info("  No jars found to resolve missing types...");
+            } else {
+              if (jars.isEmpty()) {
+                firstOrderImports = newJars.size();
+              }
+              logger.info("  Adding " + newJars.size() + " jar(s) to the classpath...");
+              EclipseUtils.addToClasspath(newJars);
+              jars.addAll(newJars);
+            }
           } else {
             logger.info("  Initializing project...");
             EclipseUtils.initializeJarProject(jar, index);
@@ -95,25 +113,21 @@ public class JarExtractor {
           // Set up the feature extractor
           FeatureExtractor extractor = new FeatureExtractor(bundle);
 
-          boolean force = previousJars != null && jars.size() <= previousJars.size(); 
-
           // Extract
           ClassExtractionReport report = extractor.extractClassFiles(classFiles, force);
           
           // Close the output files
           extractor.close();
-          
-          previousJars = jars;
-          
+
           if (Extractor.EXTRACT_BINARY.getValue()) {
             extracted.reportBinaryExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.sourceSkipped());
             break;
           } else if (Extractor.RESOLVE_MISSING_TYPES.getValue()) {
             if (force) {
-              extracted.reportForcedExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());
+              extracted.reportForcedExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions(), firstOrderImports, jars.size());
               break;
             } else if (!(report.hadMissingType() || report.hadMissingSecondOrder())) {
-              extracted.reportSuccessfulExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());
+              extracted.reportSuccessfulExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions(), firstOrderImports, jars.size());
               break;
             } else {
               missingTypes = report.hadMissingType() || report.hadMissingSecondOrder();
@@ -124,7 +138,7 @@ public class JarExtractor {
             if (report.hadMissingType() || report.hadMissingSecondOrder()) {
               extracted.reportMissingTypeExtraction();
             } else {
-              extracted.reportSuccessfulExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());
+              extracted.reportSuccessfulExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions(), firstOrderImports, jars.size());
             }
             break;
           }

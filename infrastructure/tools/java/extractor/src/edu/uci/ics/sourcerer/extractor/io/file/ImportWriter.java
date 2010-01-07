@@ -22,14 +22,14 @@ import java.io.File;
 import edu.uci.ics.sourcerer.extractor.io.IImportWriter;
 import edu.uci.ics.sourcerer.extractor.io.Location;
 import edu.uci.ics.sourcerer.model.extracted.ImportExParser;
-import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class ImportWriter extends ExtractorWriter implements IImportWriter {
-  public ImportWriter(File output, Repository input) {
+  public ImportWriter(File output, IFileSet input) {
     super(new File(output, Extracted.IMPORT_FILE.getValue()), input);
   }
   

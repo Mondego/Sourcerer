@@ -17,8 +17,6 @@
  */
 package edu.uci.ics.sourcerer.repo.general;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
 import java.io.File;
 import java.util.regex.Pattern;
 
@@ -92,33 +90,6 @@ public abstract class AbstractRepository {
   
   public File getLibsDir() {
     return new File(repoRoot, "libs");
-  }
-  
-  public String convertToRelativePath(File file) {
-    return convertToRelativePath(file.getPath(), repoRoot.getPath());
-  }
-  
-  public String convertToRelativePath(String path) {
-    return convertToRelativePath(path, repoRoot.getPath());
-  }
-  
-  public String convertToRelativePath(File file, File base) {
-    return convertToRelativePath(file.getPath(), base.getPath());
-  }
-  
-  public String convertToRelativePath(String path, String basePath) {
-    path = path.replace('\\', '/');
-    basePath = basePath.replace('\\', '/');
-    if (basePath == null) {
-      return path.replace(' ', '*');
-    } else {
-      if (path.startsWith(basePath)) {
-        return path.substring(basePath.length()).replace(' ', '*');
-      } else {
-        logger.severe("Unable to convert " + path + " to relative path");
-        return path.replace(' ', '*');
-      }
-    }
   }
   
   public String toString() {

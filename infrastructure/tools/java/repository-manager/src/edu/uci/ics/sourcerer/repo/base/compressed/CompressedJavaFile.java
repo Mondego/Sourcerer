@@ -43,6 +43,7 @@ public class CompressedJavaFile extends AbstractJavaFile {
   
   protected CompressedJavaFile(String relativePath, InputStream is, CompressedFileSet fileSet) {
     file = null;
+    this.fileSet = fileSet;
     fileRetrieved = false;
     this.relativePath = relativePath;
     name = relativePath.substring(relativePath.lastIndexOf('/') + 1);

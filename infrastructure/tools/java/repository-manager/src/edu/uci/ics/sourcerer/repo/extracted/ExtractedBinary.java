@@ -26,8 +26,8 @@ import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class ExtractedBinary extends Extracted {
-  public ExtractedBinary(File content) {
-    super(content);
+  public ExtractedBinary(File content, String relativePath) {
+    super(content, relativePath);
   }
   
   protected abstract AbstractBinaryProperties getBinaryProperties();
