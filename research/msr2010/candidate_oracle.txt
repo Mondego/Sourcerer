@@ -1,3 +1,7 @@
+== Candidate Queries and their solutions used for evaluation of retrieval schemes for locating API usage examples
+== submitted to MSR2010
+
+
 // Query 1: 
 // "copy paste data from clipboard"
 
