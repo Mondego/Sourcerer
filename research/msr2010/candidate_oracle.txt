@@ -1,0 +1,298 @@
+// Query 1: 
+// "copy paste data from clipboard"
+
+// Snippet
+final Clipboard cb = new Clipboard(display);
+// copy 
+String textData = text.getSelectionText();
+TextTransfer textTransfer = TextTransfer.getInstance();
+cb.setContents(new Object[]{textData}, new Transfer[]{textTransfer});
+// paste
+TextTransfer transfer = TextTransfer.getInstance();
+String data = (String)cb.getContents(transfer);
+text.insert(data);
+
+
+// Query 2: 
+// "open url in html browser"
+final IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().createBrowser( ... );
+browser.openURL(url);
+
+
+// Query 3: 
+// "track mouse hover"
+final Button b = new Button(s, SWT.PUSH);
+b.addMouseTrackListener(new MouseTrackAdapter() {
+public void mouseEnter(MouseEvent e) {
+b.setBackground(new Color(d, 0, 153, 153));
+
+}
+
+public void mouseExit(MouseEvent e) {
+b.setBackground(oldColor);
+}
+});
+
+// snippet
+MouseTrackAdapter listener = new MouseTrackAdapter(){
+..
+public void mouseExit(MouseEvent e){
+..
+public void mouseHover(MouseEvent e){
+..
+
+// snippet
+fSubjectControl.addMouseMoveListener(this);
+
+
+// Query 4:
+// "write to workbench error log"
+
+// Snippet, (jdge, p. 699)
+errorStatus.add(new Status(IStatus.ERROR,
+   ServicablePlugin.getDefault()
+       .getBundle().getSymbolicName(), 
+   IStatus.ERROR,
+   "Error message", exception));
+
+ServicablePlugin.getDefault().getLog().log(errorStatus);
+
+
+// Query 5:
+// "track job status change"
+
+customJob.schedule();
+customJob.addJobChangeListener(new JobChangeAdaper() {
+public void done(IJobChangeEvent event) {
+.. event.getJob().getName() + " finished"
+.. event.getJob().getResult() + " <- job result";
+}
+});
+
+
+// Query 6: 
+// "open file in external editor"
+
+// Snippet
+IWorkbenchPage page = ...;
+IFile file = ...;
+page.openEditor(
+  new FileEditorInput(file),
+     IEditorRegistry.SYSTEM_EXTERNAL_EDITOR_ID);
+
+
+// Query 7:
+// "batch workspace changes in single operation"
+
+// Snippet
+final IFolder folder1 = ..., folder2 = ...;
+workspace.run(new IWorkspaceRunnable() {
+   public void run(IProgressMonitor monitor) {
+      folder1.create(IResource.NONE, true, null);
+      folder2.create(IResource.NONE, true, null);
+   }
+}, null);
+
+
+// Query 8:
+// "remove problem marker from resource"
+
+// Snippet
+void compileResource(IResource resource) {
+resource.deleteMarkers(IMarker.PROBLEM, 
+    true, IResource.DEPTH_INFINITE);      
+doCompileResource(resource);
+}
+
+
+// Query 9:
+// "highlight text range in editor"
+
+// Snippet 1
+ITextEditor editor = ...;//the text editor instance
+ISelectionProvider sp = editor.getSelectionProvider();
+ISelection selection = sp.getSelection();
+ITextSelection text = (ITextSelection)selection;
+
+// Snippet 2
+ITextEditor editor = ...;
+editor.setHighlightRange(offset, length, true);
+editor.showHighlightRangeOnly(true);
+
+
+// Query 10:
+// "update status line"
+
+// Snippet, from a view
+IActionBars bars = getViewSite().getActionBars();
+bars.getStatusLineManager().setMessage("Hello");
+
+// editors can access the status line using 
+IEditorPart.getEditorSite().getActionBarContributor();
+
+
+// Query 11:
+// "prompt user to select directory"
+
+// Snippet 1
+FileDialog dialog = new FileDialog(shell, SWT.OPEN);
+dialog.setFilterExtensions(new String [] {"*.html"});
+dialog.setFilterPath("c:\\temp");
+String result = dialog.open();
+
+// Snippet 2
+DirectoryDialog dd = new DirectoryDialog(getShell());
+
+
+// Query 12:
+// "use shared image from workbench"
+
+// Snippet
+IWorkbench workbench = PlatformUI.getWorkbench();
+ISharedImages images = workbench.getSharedImages();
+Image image = images.getImage(ISharedImages.IMG_OBJ_FOLDER);
+
+
+// Query 13:
+// "open dialog and ask yes no question"
+
+// Snippet 1
+MessageDialog dialog = new MessageDialog(
+null, "Title", null, "Question",
+MessageDialog.QUESTION,
+new String[] {"Yes", "No", "Always", "Never"},
+0);, // yes is the default
+int result = dialog.open();
+
+// Snippet 2
+// Ask the user whether to switch
+final MessageDialogWithToggle m = MessageDialogWithToggle.openYesNoQuestion(
+  Utils.getShell(null),
+  CVSUIMessages.NewLocationWizard_1, 
+  message, 
+  CVSUIMessages.NewLocationWizard_4,   
+  false /* toggle state */,
+  store,
+  ICVSUIConstants.PREF_CHANGE_PERSPECTIVE_ON_NEW_REPOSITORY_LOCATION);
+//-- CALLS org.eclipse.jface.window.Window.getReturnCode() --//
+final int result = m.getReturnCode();
+//-- USES org.eclipse.jface.dialogs.IDialogConstants --//
+//-- USES org.eclipse.jface.dialogs.IDialogConstants --//
+switch (result) {
+  // yes
+  case IDialogConstants.YES_ID:
+  case IDialogConstants.OK_ID :
+  return desiredID;
+//-- USES org.eclipse.jface.dialogs.IDialogConstants --//
+  // no
+  case IDialogConstants.NO_ID :
+  return null;
+
+
+// Query 14:
+// "parse source string ast node"
+
+// Snippet
+StringWriter sw = new StringWriter()
+PrintWriter pw = new PrintWriter(Sw);
+pw.println(SOURCE_CODE_STRING);
+ASTParser parser = ASTParser.newParser(AST.JLS2)
+parser.setSource(sw.toString().toCharArray());
+CompilationUnit cu = ASTParser.createAST(null)
+
+
+// Query 15:
+// "extract return type from method declaration in sat node"
+
+// Snippet
+public boolean visit(MethodDeclaration node) { 
+ node.getModifiers(); 
+ node.getName().getIdentifier(); 
+ node.parameters();
+...
+
+
+// Query 16: 
+// "fill table background thread"
+
+// Snippet:
+display.syncExec (new Runnable () {
+					public void run () {
+						if (table.isDisposed ()) return;
+						TableItem item = new TableItem (table, SWT.NONE);
+						item.setText ("Table Item " + index [0]);
+						item.setImage (image);
+					}
+				});
+
+
+// Query 17:
+// "platform debug tracing for plugin"
+
+// Snippet
+ String debugOption = Platform.getDebugOption(DEBUG_ONE);
+   if (ExamplesPlugin.getDefault().isDebugging() &&
+               "true".equalsIgnoreCase(debugOption))
+      System.out.println("Debug statement one.");
+
+
+// Query 18:
+// "get display in current thread"
+
+// Snippet
+public static Display getDisplay() {
+      Display display = Display.getCurrent();
+      //may be null if outside the UI thread
+      if (display == null)
+         display = Display.getDefault();
+      return display;		
+   }
+
+
+// Query 19:
+// "run job in ui thread"
+
+// APIs listed in FAQ
+org.eclipse.ui.progress.UIJob
+ .. runInUIThread
+
+SWTÕs Display methods asyncExec and timerExec
+
+
+// Query 20:
+// "open external file"
+
+// Snippet, in Eclipse 3.3 onwards..
+String name= new FileDialog(aShell, SWT.OPEN).open();
+if (name == null)
+   return;
+IFileStore fileStore = EFS.getLocalFileSystem().getStore(new Path(filterPath));
+fileStore = fileStore.getChild(names[i]);
+ if (!fileStore.fetchInfo().isDirectory() && fileStore.fetchInfo().exists()) {
+   IWorkbenchPage page=  window.getActivePage();
+   try {
+     IDE.openEditorOnFileStore(page, fileStore);
+   } catch (PartInitException e) {
+     /* some code */
+  }
+}
+
+// Snippet. using Linked resource
+IWorkspace ws = ResourcesPlugin.getWorkspace();
+IProject project = ws.getRoot().getProject("External Files");
+if (!project.exists())
+  project.create(null);
+if (!project.isOpen())
+  project.open(null);
+Shell shell = window.getShell();
+String name = new FileDialog(shell, SWT.OPEN).open();
+if (name == null)
+   return;
+IPath location = new Path(name);
+IFile file = project.getFile(location.lastSegment());
+file.createLink(location, IResource.NONE, null);
+IWorkbenchPage page = window.getActivePage();
+if (page != null)
+   page.openEditor(file);
+
+
