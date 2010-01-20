@@ -18,7 +18,7 @@
  */
 package edu.uci.ics.sourcerer.scs.client;
 
-import static edu.uci.ics.sourcerer.scs.client.ResultProcessor.*;
+import static edu.uci.ics.sourcerer.scs.common.client.ResultProcessor.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -72,8 +72,13 @@ import com.smartgwt.client.widgets.Button;
 import com.smartgwt.client.widgets.Canvas;
 import com.smartgwt.client.widgets.HTMLFlow;
 import com.smartgwt.client.widgets.IButton;
-import edu.uci.ics.sourcerer.db.adapter.client.EntityCategory;
+
+import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
+import edu.uci.ics.sourcerer.scs.common.client.HitFqnEntityId;
+import edu.uci.ics.sourcerer.scs.common.client.HitsStat;
+import edu.uci.ics.sourcerer.scs.common.client.ResultProcessor;
 import edu.uci.ics.sourcerer.scs.common.client.SearchHeuristic;
+import edu.uci.ics.sourcerer.scs.common.client.UsedFqn;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
@@ -232,8 +237,22 @@ public class Sourcerer_cs implements EntryPoint,
 		cbHeuristics.setWidth(350);
 		LinkedHashMap<String, String> m = new LinkedHashMap<String, String>();
 
-		m.put(SearchHeuristic.TEXT_USEDFQN_FQN_SimSNAME_SNAME.name(), 
-				SearchHeuristic.TEXT_USEDFQN_FQN_SimSNAME_SNAME.toString());
+
+		// text, used javadoc, sim and used names
+		
+		m.put(SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_JdkLibSimSNAME_SNAME.name(), 
+				SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_JdkLibSimSNAME_SNAME.toString());
+		
+		m.put(SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME.name(), 
+				SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME.toString());
+		
+		m.put(SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_JdkLibHdSimSNAME_SNAME.name(), 
+				SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_JdkLibHdSimSNAME_SNAME.toString());
+		
+		m.put(SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_SNAME.name(), 
+				SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_SNAME.toString());
+		
+		// text, sim and used names
 		
 		m.put(SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibSimSNAME_SNAME.name(), 
 				SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibSimSNAME_SNAME.toString());
@@ -241,8 +260,13 @@ public class Sourcerer_cs implements EntryPoint,
 		m.put(SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME.name(), 
 				SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME.toString());
 		
+		m.put(SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibHdSimSNAME_SNAME.name(), 
+				SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibHdSimSNAME_SNAME.toString());
+		
 		m.put(SearchHeuristic.TEXT_USEDFQN_FQN_SNAME.name(), 
 				SearchHeuristic.TEXT_USEDFQN_FQN_SNAME.toString());
+		
+		// text, names
 		
 		m.put(SearchHeuristic.TEXT_FQN_SNAME.name(), 
 				SearchHeuristic.TEXT_FQN_SNAME.toString());
@@ -253,8 +277,8 @@ public class Sourcerer_cs implements EntryPoint,
 		m.put(SearchHeuristic.TEXT.name(), 
 				SearchHeuristic.TEXT.toString());
 		
-		m.put(SearchHeuristic.FQN_USEDFQN_SimSNAME_SNAME.name(), 
-				SearchHeuristic.FQN_USEDFQN_SimSNAME_SNAME.toString());
+
+		// w/o text, names only	
 		
 		m.put(SearchHeuristic.FQN_USEDFQN_JdkLibSimSNAME_SNAME.name(), 
 				SearchHeuristic.FQN_USEDFQN_JdkLibSimSNAME_SNAME.toString());
@@ -262,13 +286,19 @@ public class Sourcerer_cs implements EntryPoint,
 		m.put(SearchHeuristic.FQN_USEDFQN_JdkLibTcSimSNAME_SNAME.name(), 
 				SearchHeuristic.FQN_USEDFQN_JdkLibTcSimSNAME_SNAME.toString());
 		
+		m.put(SearchHeuristic.FQN_USEDFQN_JdkLibHdSimSNAME_SNAME.name(), 
+				SearchHeuristic.FQN_USEDFQN_JdkLibHdSimSNAME_SNAME.toString());
+		
 		m.put(SearchHeuristic.FQN_USEDFQN_SNAME.name(), 
 				SearchHeuristic.FQN_USEDFQN_SNAME.toString());
 		
 		m.put(SearchHeuristic.FQN_SNAME.name(), 
 				SearchHeuristic.FQN_SNAME.toString());
 		
+		// raw
+		
 		m.put(SearchHeuristic.NONE.name(), SearchHeuristic.NONE.toString());
+		
 		
 		cbHeuristics.setValueMap(m);
 		cbHeuristics.setDefaultToFirstOption(true);
@@ -459,22 +489,27 @@ public class Sourcerer_cs implements EntryPoint,
 						buildHitIds(hitsXml);
 						updateHitsPager(hsHitsNav, result);
 						
-						erTables = null;
-						sdbService.getERTables(hitEids,
-								new AsyncCallback<ERTables>() {
-									public void onFailure(Throwable caught) {
-										
-									}
-
-									public void onSuccess(ERTables result) {
-										erTables = result;
-										erTables.buildIndices();
-										Sourcerer_cs.this.rebuildResults(vlHits, Sourcerer_cs.this.hitsXml);
-										if(isNewQuery){
-											updateTopApis();
-										} 
-									}
-								});
+						Sourcerer_cs.this.rebuildResults(vlHits, Sourcerer_cs.this.hitsXml);
+						if(isNewQuery){
+							updateTopApis();
+						} 
+						
+//						erTables = null;
+//						sdbService.getERTables(hitEids,
+//								new AsyncCallback<ERTables>() {
+//									public void onFailure(Throwable caught) {
+//										
+//									}
+//
+//									public void onSuccess(ERTables result) {
+//										erTables = result;
+//										erTables.buildIndices();
+//										Sourcerer_cs.this.rebuildResults(vlHits, Sourcerer_cs.this.hitsXml);
+//										if(isNewQuery){
+//											updateTopApis();
+//										} 
+//									}
+//								});
 		
 					}
 				});
@@ -518,12 +553,50 @@ public class Sourcerer_cs implements EntryPoint,
 
 					public void onSuccess(String result) {
 						
-						vlTopApis.setTopJdkApis(ResultProcessor.getUsedApisFromFacetedHits(result,EntityCategory.JDK));
-						vlTopApis.setTopLibApis(ResultProcessor.getUsedApisFromFacetedHits(result,EntityCategory.LIB));
+//						List<HitFqnEntityId> jdkApis = ResultProcessor.getUsedApisFromFacetedHits(result,EntityCategory.JDK); 
+						List<HitFqnEntityId> libApis = ResultProcessor.getUsedApisFromFacetedHits(result,EntityCategory.LIB);
+						
+//						final List<String> jdkFqns = new LinkedList<String>();
+//						final List<String> libFqns = new LinkedList<String>();
+//						
+//						for(HitFqnEntityId jApi: jdkApis){
+//							jdkFqns.add(jApi.fqn);
+//						}
+//						
+//						for(HitFqnEntityId lApi: libApis){
+//							libFqns.add(lApi.fqn);
+//						}
+						
+//						sdbService.fillUsedFqnDetails(jdkApis, EntityCategory.JDK,
+//								new AsyncCallback<List<UsedFqn>>() {
+//									public void onFailure(Throwable caught) {
+//
+//									}
+//
+//									public void onSuccess(List<UsedFqn> uJdkApis) {
+//										vlTopApis.setTopUsedJdkApis(uJdkApis);
+//									}
+//								});
+						
+						sdbService.fillUsedFqnDetails(libApis, EntityCategory.LIB,
+								new AsyncCallback<List<UsedFqn>>() {
+									public void onFailure(Throwable caught) {
+
+									}
+
+									public void onSuccess(List<UsedFqn> uLibApis) {
+										vlTopApis.setTopUsedLibApis(uLibApis);
+									}
+								});
+						
+//						vlTopApis.setTopJdkApis(jdkApis);
+//						vlTopApis.setTopLibApis(libApis);
 						
 					}
 			
 		});
+		
+		
 		
 	}
 	
@@ -710,16 +783,16 @@ public class Sourcerer_cs implements EntryPoint,
 							
 							LinkedList<String> eids = new LinkedList<String>();
 							eids.add(_eid);
-							sdbService.getERTables(eids,
-									new AsyncCallback<ERTables>() {
-										public void onFailure(Throwable caught) {
-										}
-
-										public void onSuccess(ERTables result) {
-											_cachedResult.erTables = result;
-											updateERBoundControls(result);
-										}
-									});
+//							sdbService.getERTables(eids,
+//									new AsyncCallback<ERTables>() {
+//										public void onFailure(Throwable caught) {
+//										}
+//
+//										public void onSuccess(ERTables result) {
+//											_cachedResult.erTables = result;
+//											updateERBoundControls(result);
+//										}
+//									});
 
 						hitsDetailCache.put(_eid, _cachedResult);
 						

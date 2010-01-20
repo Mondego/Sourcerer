@@ -22,10 +22,20 @@ import java.util.List;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
+import edu.uci.ics.sourcerer.scs.common.client.HitFqnEntityId;
+import edu.uci.ics.sourcerer.scs.common.client.UsedFqn;
+
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
  * @created Jul 22, 2009
  */
 public interface SourcererDBServiceAsync {
 	void getERTables(List<String> hitEntities, AsyncCallback<ERTables> callback);
+
+	void fillUsedFqnDetails(HitFqnEntityId fqn, EntityCategory cat,
+			AsyncCallback<UsedFqn> callback);
+	
+	void fillUsedFqnDetails(List<HitFqnEntityId> fqns, EntityCategory cat,
+			AsyncCallback<List<UsedFqn>> callback);
 }

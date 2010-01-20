@@ -28,8 +28,8 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.sourcerer.db.adapter.client.Entity;
-import edu.uci.ics.sourcerer.db.adapter.client.EntityCategory;
 import edu.uci.ics.sourcerer.db.adapter.client.Relation;
+import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>

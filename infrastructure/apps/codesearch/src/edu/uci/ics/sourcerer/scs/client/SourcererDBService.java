@@ -23,6 +23,10 @@ import java.util.List;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
+import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
+import edu.uci.ics.sourcerer.scs.common.client.HitFqnEntityId;
+import edu.uci.ics.sourcerer.scs.common.client.UsedFqn;
+
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
  * @created Jul 22, 2009
@@ -32,5 +36,6 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 public interface SourcererDBService extends RemoteService {
 	
 	ERTables getERTables(List<String> hitEntities);
-
+	UsedFqn fillUsedFqnDetails(HitFqnEntityId fqn, EntityCategory cat);
+	List<UsedFqn> fillUsedFqnDetails(List<HitFqnEntityId> fqns, EntityCategory cat);
 }

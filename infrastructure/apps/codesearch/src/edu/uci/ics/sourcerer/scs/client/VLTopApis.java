@@ -33,11 +33,14 @@ import com.smartgwt.client.widgets.HTMLFlow;
 import com.smartgwt.client.widgets.layout.SectionStack;
 import com.smartgwt.client.widgets.layout.SectionStackSection;
 import com.smartgwt.client.widgets.layout.VLayout;
+import com.smartgwt.client.widgets.tab.Tab;
+import com.smartgwt.client.widgets.tab.TabSet;
 
-import edu.uci.ics.sourcerer.db.adapter.client.EntityCategory;
 import edu.uci.ics.sourcerer.scs.client.event.ApiSelectedEvent;
 import edu.uci.ics.sourcerer.scs.client.event.ApiSelectedEventHandler;
 import edu.uci.ics.sourcerer.scs.client.event.ApiSelectedEvent.Operation;
+import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
+import edu.uci.ics.sourcerer.scs.common.client.UsedFqn;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
@@ -52,6 +55,59 @@ public class VLTopApis extends VLayout implements ISelectedFqnsProvider {
 	
 	HashSet<String> selectedUsedJdkFqns = new HashSet<String>();
 	HashSet<String> selectedUsedLibFqns = new HashSet<String>();
+	
+	public void setTopUsedJdkApis(List<UsedFqn> jdkFqns){
+		vlJdkApisCI.removeMembers(vlJdkApisCI.getMembers());
+		vlJdkApisMC.removeMembers(vlJdkApisMC.getMembers());
+		vlJdkApisFi.removeMembers(vlJdkApisFi.getMembers());
+		vlJdkApisOt.removeMembers(vlJdkApisOt.getMembers());
+		
+		for(UsedFqn jdkFqn: jdkFqns){
+			switch(jdkFqn.getType()){
+			case CLASS_INF:
+				this.vlJdkApisCI.addMember(makeApiFqnLink(jdkFqn, EntityCategory.JDK));
+				break;
+			case METHOD_CONST:
+				this.vlJdkApisMC.addMember(makeApiFqnLink(jdkFqn, EntityCategory.JDK));
+				break;
+			case FIELD:
+				this.vlJdkApisFi.addMember(makeApiFqnLink(jdkFqn, EntityCategory.JDK));
+				break;
+			case OTHER:
+				this.vlJdkApisOt.addMember(makeApiFqnLink(jdkFqn, EntityCategory.JDK));
+				break;
+			default: break;
+			}
+			
+		}
+	}
+	
+	public void setTopUsedLibApis(List<UsedFqn> libFqns){
+		
+		vlLibApisCI.removeMembers(vlLibApisCI.getMembers());
+		vlLibApisMC.removeMembers(vlLibApisMC.getMembers());
+		vlLibApisFi.removeMembers(vlLibApisFi.getMembers());
+		vlLibApisOt.removeMembers(vlLibApisOt.getMembers());
+		
+		for(UsedFqn libFqn: libFqns){
+			switch(libFqn.getType()){
+			case CLASS_INF:
+				this.vlLibApisCI.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
+				break;
+			case METHOD_CONST:
+				this.vlLibApisMC.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
+				break;
+			case FIELD:
+				this.vlLibApisFi.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
+				break;
+			case OTHER:
+				this.vlLibApisOt.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
+				break;
+			default: break;
+			}
+			
+		}
+	}
 	
 	public HashSet<String> getSelectedUsedJdkFqns(){
 		return this.selectedUsedJdkFqns;
@@ -123,15 +179,43 @@ public class VLTopApis extends VLayout implements ISelectedFqnsProvider {
 	SectionStack ss = new SectionStack();
 	SectionStackSection ssJdk = new SectionStackSection("from JDK");
 	SectionStackSection ssLib = new SectionStackSection("from Libraries");
-	VLayout vlJdkApis = new VLayout();
-	VLayout vlLibApis = new VLayout();
+	
+//	VLayout vlJdkApis = new VLayout();
+//	VLayout vlLibApis = new VLayout();
+	
+	VLayout vlLibApisMC = new VLayout();
+	VLayout vlLibApisCI = new VLayout();
+	VLayout vlLibApisFi = new VLayout();
+	VLayout vlLibApisOt = new VLayout();
+	
+	VLayout vlJdkApisMC = new VLayout();
+	VLayout vlJdkApisCI = new VLayout();
+	VLayout vlJdkApisFi = new VLayout();
+	VLayout vlJdkApisOt = new VLayout();
+	
+	TabSet tsJdk = new TabSet();
+	TabSet tsLib = new TabSet();
+	
+	Tab tabLibApisMC = new Tab("Meth/Cons");
+	Tab tabLibApisCI = new Tab("Clas/Inf");
+	Tab tabLibApisFi = new Tab("Fields");
+	Tab tabLibApisOt = new Tab("Other");
+	
+	Tab tabJdkApisMC = new Tab("Meth/Cons");
+	Tab tabJdkApisCI = new Tab("Clas/Inf");
+	Tab tabJdkApisFi = new Tab("Fields");
+	Tab tabJdkApisOt = new Tab("Other");
+	
+	
+	
+	
 	
 	public VLTopApis(){
 		
 		ss.setVisibilityMode(VisibilityMode.MULTIPLE);
 		
-		vlJdkApis.setOverflow(Overflow.AUTO);
-		vlLibApis.setOverflow(Overflow.AUTO);
+//		vlJdkApis.setOverflow(Overflow.AUTO);
+//		vlLibApis.setOverflow(Overflow.AUTO);
 		
 		ssJdk.setExpanded(true);
 		ssLib.setExpanded(true);
@@ -143,8 +227,32 @@ public class VLTopApis extends VLayout implements ISelectedFqnsProvider {
 		
 		ss.addSection(ssJdk);
 		ss.addSection(ssLib);
-		ssJdk.addItem(vlJdkApis);
-		ssLib.addItem(vlLibApis);
+		
+//		ssJdk.addItem(vlJdkApis);
+//		ssLib.addItem(vlLibApis);
+		
+		ssJdk.addItem(tsJdk);
+		ssLib.addItem(tsLib);
+		
+		tsJdk.addTab(tabJdkApisMC);
+		tsJdk.addTab(tabJdkApisCI);
+		tsJdk.addTab(tabJdkApisFi);
+		tsJdk.addTab(tabJdkApisOt);
+		
+		tsLib.addTab(tabLibApisMC);
+		tsLib.addTab(tabLibApisCI);
+		tsLib.addTab(tabLibApisFi);
+		tsLib.addTab(tabLibApisOt);
+		
+		tabJdkApisMC.setPane(vlJdkApisMC);
+		tabJdkApisCI.setPane(vlJdkApisCI);
+		tabJdkApisFi.setPane(vlJdkApisFi);
+		tabJdkApisOt.setPane(vlJdkApisOt);
+		
+		tabLibApisMC.setPane(vlLibApisMC);
+		tabLibApisCI.setPane(vlLibApisCI);
+		tabLibApisFi.setPane(vlLibApisFi);
+		tabLibApisOt.setPane(vlLibApisOt);
 		
 		this.addMember(ss);
 		this.setLayoutAlign(VerticalAlignment.TOP);
@@ -164,8 +272,15 @@ public class VLTopApis extends VLayout implements ISelectedFqnsProvider {
 	}
 	
 	public void clearContents(){
-		vlJdkApis.removeMembers(vlJdkApis.getMembers());
-		vlLibApis.removeMembers(vlLibApis.getMembers());
+		vlJdkApisCI.removeMembers(vlJdkApisCI.getMembers());
+		vlJdkApisMC.removeMembers(vlJdkApisMC.getMembers());
+		vlJdkApisFi.removeMembers(vlJdkApisFi.getMembers());
+		vlJdkApisOt.removeMembers(vlJdkApisOt.getMembers());
+		
+		vlLibApisCI.removeMembers(vlLibApisCI.getMembers());
+		vlLibApisMC.removeMembers(vlLibApisMC.getMembers());
+		vlLibApisFi.removeMembers(vlLibApisFi.getMembers());
+		vlLibApisOt.removeMembers(vlLibApisOt.getMembers());
 		
 		selectedUsedJdkFqns.clear();
 		selectedUsedLibFqns.clear();
@@ -173,39 +288,48 @@ public class VLTopApis extends VLayout implements ISelectedFqnsProvider {
 		
 	}
 	
-	public void setTopJdkApis(List<HitFqnEntityId> jdkApis){
-		vlJdkApis.removeMembers(vlJdkApis.getMembers());
-		
-		for(HitFqnEntityId _h: jdkApis){
-			this.vlJdkApis.addMember(makeApiFqnLink(_h, EntityCategory.JDK));
-		}
-		
-	}
+//	public void setTopJdkApis(List<HitFqnEntityId> jdkApis){
+//		vlJdkApis.removeMembers(vlJdkApis.getMembers());
+//		
+//		for(HitFqnEntityId _h: jdkApis){
+//			this.vlJdkApis.addMember(makeApiFqnLink(_h, EntityCategory.JDK));
+//		}
+//		
+//	}
+//	
+//	public void setTopLibApis(List<HitFqnEntityId> libApis){
+//		vlLibApis.removeMembers(vlLibApis.getMembers());
+//		
+//		for(HitFqnEntityId _h: libApis){
+//			this.vlLibApis.addMember(makeApiFqnLink(_h, EntityCategory.LIB));
+//		}
+//	}
 	
-	public void setTopLibApis(List<HitFqnEntityId> libApis){
-		vlLibApis.removeMembers(vlLibApis.getMembers());
-		
-		for(HitFqnEntityId _h: libApis){
-			this.vlLibApis.addMember(makeApiFqnLink(_h, EntityCategory.LIB));
-		}
+	private ApiFqnLink makeApiFqnLink(UsedFqn uFqn, EntityCategory cat){
+		return makeApiFqnLink(uFqn.getFqn(), uFqn.getUseCount() + "", cat);
 	}
-	
 
 	
-	private ApiFqnLink makeApiFqnLink(HitFqnEntityId hitInfo, EntityCategory cat){
-		ApiFqnLink _f = new ApiFqnLink(hitInfo.fqn, cat, this);
+//	private ApiFqnLink makeApiFqnLink(HitFqnEntityId hitInfo, EntityCategory cat){
+//		return makeApiFqnLink(hitInfo.fqn, hitInfo.useCount, cat);
+//	}
+	
+	private ApiFqnLink makeApiFqnLink(String fqn, String useCount, EntityCategory cat){
+		ApiFqnLink _f = new ApiFqnLink(fqn, cat, this);
 		
-		String sname = extractShortName(hitInfo.fqn);
+		String sname = extractShortName(fqn);
 		if(sname.trim().equals("<init>")) sname = "&lt;init&gt";
 		
-		_f.setContents("<b>" + sname + "</b>  (" + hitInfo.useCount + ") <small>" + hitInfo.fqn + "</small>");
+		_f.setContents("<b>" + sname + "</b>  (" 
+				+ useCount + ") <small>" 
+				+ fqn + "</small>");
 		return _f;
 	}
 
 	public void showWaiting() {
 		clearContents();
-		vlJdkApis.addMember(new HTMLFlow("Calculating.."));
-		vlLibApis.addMember(new HTMLFlow("Calculating.."));
+		vlJdkApisMC.addMember(new HTMLFlow("Calculating.."));
+		vlLibApisMC.addMember(new HTMLFlow("Calculating.."));
 	}
 
 	public void update(String fqn, EntityCategory cat, Operation op) {

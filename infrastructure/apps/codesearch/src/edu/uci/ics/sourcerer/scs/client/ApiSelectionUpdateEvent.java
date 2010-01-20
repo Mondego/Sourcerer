@@ -21,8 +21,8 @@ package edu.uci.ics.sourcerer.scs.client;
 
 import com.google.gwt.event.shared.GwtEvent;
 
-import edu.uci.ics.sourcerer.db.adapter.client.EntityCategory;
 import edu.uci.ics.sourcerer.scs.client.event.ApiSelectedEvent.Operation;
+import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
