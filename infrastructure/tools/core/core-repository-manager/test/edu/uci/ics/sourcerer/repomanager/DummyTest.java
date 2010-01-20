@@ -34,6 +34,25 @@ import org.apache.tools.ant.util.FileUtils;
 public class DummyTest {
 	
 	@Test
+	public void testCast(){
+		long l = 10;
+		l = Integer.MAX_VALUE + 0l;
+		int i = (int) l;
+		
+		assert (i==l);
+		//System.out.println(i + ", " + l);
+		
+		String s = "\\(a\\)";
+		String s1 = "(a)b";
+		assertEquals("b", s1.replaceAll(s, ""));
+		s = "\\.<init>";
+		s1 = "C.<init>";
+		String s2 = "CX<init>";
+		assertEquals("C", s1.replaceAll(".<init>", ""));
+		Assert.assertFalse("C".equals(s2.replaceAll(s, "")));
+		
+	}
+	
 	public void testSth(){
 		String fileName = "./test/resources/fromurl/download/fileName_download.zip";
 		String[] pathStack = FileUtils.getPathStack(fileName);
@@ -47,7 +66,6 @@ public class DummyTest {
 		
 	}
 		
-	@Test
 	public void testStringStripEnd(){
 		String longS = "/src/test/ok/";
 		String strip = "ok/";

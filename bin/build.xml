@@ -215,10 +215,15 @@
 					<include name="**/apache-solr*.jar" />
 					<include name="**/lucene-*.jar" />
 					<include name="**/commons-httpclient-*.jar" />
+					<include name="**/commons-cli-*.jar" />
 				</fileset>
 			</classpath>
 			<src path="${search-server}" />
+			<src path="${utilities}" />
 		</javac>
+		<copy todir="${build-search-server}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
 		<copy todir="${build-search-server}">
 			<fileset dir="${search-server}" includes="**/*.java" />
 		</copy>
