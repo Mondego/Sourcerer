@@ -43,52 +43,42 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 public class UsageCalculator {
 	
 	final String SQL_JAR_USAGE = 
-		"select " +
-		"distinct r1.relation_id as rid, " +
-		" r1.lhs_jeid as eid, " +
-		" je.fqn as fqn, " +
-		" users.entity_type as etype " +
-		"from jar_relations as r1 " +
-		"inner join jar_relations as r2 " +
-		" on r1.lhs_jeid=r2.lhs_jeid AND " +
-		" r2.relation_type='INSIDE' " +
-		"inner join jar_relations as r3 " +
-		" on r1.rhs_jeid=r3.lhs_jeid AND " +
-		" r3.relation_type='INSIDE' " +
-		"inner join jar_entities as je " + // -- je is an API entity 
-		" on r1.rhs_jeid=je.entity_id  AND" +
-		" IF(je.modifiers & 0x0001,1,0)=1  " + // -- only public entities (API
-		"inner join jar_entities as users " +
-		" on users.entity_id=r1.lhs_jeid " +
-		"inner join jars as j " +
-		" on j.jar_id=users.jar_id " +
-		" where " +
-		"r1.relation_type IN ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES') and " +
-		"r2.rhs_jeid <> r3.rhs_jeid and " + // -- has subset of relations among jar entities, skips relations among siblings
-		"j.name like '%eclipse.%' AND " + // -- choose relations from eclipse projects
-		"users.entity_type in ('CLASS','METHOD','CONSTRUCTOR') " // -- limit to these types for users
-		// + "and r1.lhs_jeid=2981061"
-		//+ "limit 1000" 
+		" select" +  
+		" r1.lhs_jeid as eid" +
+		" ,je.fqn as fqn" +
+		" from jar_relations as r1" +  
+		" inner join jar_entities as users" + 
+		"  on users.entity_id=r1.lhs_jeid " +
+		" inner join jar_entities as je" + 
+		"  on je.entity_id=r1.rhs_jeid" + 
+		" inner join jars as j" + 
+		"  on j.jar_id=users.jar_id" +
+		" where" +
+		"    r1.relation_type IN ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES')" +		
+		" AND j.path='2/0' AND users.length IS NOT NULL " +
+		" AND users.entity_type in ('CLASS','METHOD','CONSTRUCTOR','UNKNOWN')" 
+	    // + " and r1.lhs_jeid=2981061"
+		// + "limit 1000" 
 		;
 	
 	final String SQL_JDK_USAGE = 
 		// -- jar entity_ids and library fqns used
-		"select " +
-		"distinct jr_2.relation_id as rid, jr_2.lhs_jeid as eid, le.fqn as fqn, " +
-		" users.entity_type as etype " +
-		"from jar_relations as jr_2 " +
-		"inner join library_entities as le " + // -- le is an API entity 
-		" on jr_2.rhs_leid=le.entity_id " +
-		"inner join jar_entities as users " +
-		" on users.entity_id=jr_2.lhs_jeid " +
-		"inner join jars as j " +
-		" on j.jar_id=users.jar_id " +
-		" where " +
-		"jr_2.relation_type in ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES') AND " +
-		"IF(le.modifiers & 0x0001,1,0)=1 AND " + //-- only public entities (API) 
-		"j.name like '%eclipse.%' AND " + //-- choose relations from eclipse projects
-		"users.entity_type in ('CLASS','METHOD','CONSTRUCTOR') "  //-- limit to these types for users
-		// + "limit 0"
+	" select" +
+	" jr_2.lhs_jeid as eid" + 
+	" ,le.fqn as fqn" +
+	" from jar_relations as jr_2" +
+	" inner join library_entities as le" + 
+	"  on jr_2.rhs_leid=le.entity_id" +
+	" inner join jar_entities as users" +
+	"  on users.entity_id=jr_2.lhs_jeid" +
+	" inner join jars as j" +
+	"  on j.jar_id=users.jar_id" +
+	"  where" +
+	" jr_2.relation_type in ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES') AND" +
+	" j.path='2/0' AND users.length IS NOT NULL " +
+	" AND users.entity_type in ('CLASS','METHOD','CONSTRUCTOR','UNKNOWN')" 
+	// + " AND jr_2.lhs_jeid=2981061" // 6508041  
+	// + " limit 0"
 		;  
 	
 	private long fqnCount = 0;
@@ -97,7 +87,6 @@ public class UsageCalculator {
 	Hashtable<String, Long> fqnTable = new Hashtable<String, Long>();
 	Hashtable<Long, Usage> usageTable = new Hashtable<Long, Usage>();
 	BitSet fqnsToSkip;
-	BitSet isEntityClass = new BitSet(500000); // 1/2 million entities ?
 	
 	IUsageWriter writer;
 	
@@ -134,11 +123,14 @@ public class UsageCalculator {
 	){
 		initDb(dbUri, dbUser, dbPassword);
 		calculateJdkUsage();
+		logger.info("Done calculating Jdk usage.");
 		calculateJarUsage();
+		logger.info("Done calculating Jar usage.");
 		filter = new UsageFilter(distinctFqnsUsedByEntities, 
 				fqnUseCount, usedFqnCountFileJdk, usedFqnCountFileJars,
 				popularFqnsFile);
 		initFqnsToSkip();
+		logger.info("Done calculating Fqns to skip.");
 	}
 	
 	private void initDb(String dbUri, String dbUser, String dbPassword){
@@ -213,8 +205,6 @@ public class UsageCalculator {
 				" Highly used FQNs won't be skipped");
 		}
 		
-		
-		
 	}
 
 	private void initFqnsToSkip(String fileName){
@@ -274,8 +264,8 @@ public class UsageCalculator {
 	}
 	
 	private void calculateJdkUsage() {
-		Iterator<Map<String, Object>> jarUsage = ds.getData(SQL_JDK_USAGE);
-		processUsageResults(jarUsage);
+		Iterator<Map<String, Object>> jdkUsage = ds.getData(SQL_JDK_USAGE);
+		processUsageResults(jdkUsage);
 	}
 	
 	public void writeUsage(){
@@ -285,6 +275,7 @@ public class UsageCalculator {
 		for(String fqn: fqnTable.keySet()){
 			writer.writeFqnId(fqnTable.get(fqn), fqn);
 		}
+		logger.info("Done writing Fqns.");
 		
 		for(Long entityId: usageTable.keySet()){
 			
@@ -298,9 +289,10 @@ public class UsageCalculator {
 				if(skipApi(apiFqnId)){
 					continue;
 				}
-				writer.writeUsage(entityId, apiFqnId, useCountForEntity, isClass(entityId));
+				writer.writeUsage(entityId, apiFqnId, useCountForEntity);
 			}
 		}
+		logger.info("Done writing Usage.");
 	}
 
 	private boolean skipApi(Long apiFqnId) {
@@ -324,33 +316,21 @@ public class UsageCalculator {
 			return filter.distinctFqnsUsedByEntities;
 	}
 
-	private void processUsageResults(Iterator<Map<String, Object>> jarUsage) {
-		while (jarUsage.hasNext()) {
-			Map<String, Object> usageMap = jarUsage.next();
+	private void processUsageResults(Iterator<Map<String, Object>> usage) {
+		while (usage.hasNext()) {
+			Map<String, Object> usageMap = usage.next();
 			// rid, eid, fqn
 			Long eid = ((BigInteger) usageMap.get("eid")).longValue();
 			String fqn = (String) usageMap.get("fqn");
-			String entityType =((String) usageMap.get("etype"));
-			updateUsage(eid, fqn, entityType);
+			updateUsage(eid, fqn);
 		}
 	}
 	
-	private void updateUsage(Long eid, String fqnUsed, String entityType){
+	private void updateUsage(Long eid, String fqnUsed){
 		long fqnId = updateFqn(fqnUsed);
-		if(entityType.equals("CLASS")) setEidAsClass(eid);
 		updateFqnUse(eid, fqnId);
 	}
 
-
-	private void setEidAsClass(Long eid) {
-		assert (int)(eid - 1) <= Integer.MAX_VALUE;
-		isEntityClass.set((int) (eid -1));
-	}
-	
-	private boolean isClass(Long eid){
-		assert (int)(eid - 1) <= Integer.MAX_VALUE;
-		return isEntityClass.get((int) (eid -1));
-	}
 
 	private void updateFqnUse(Long eid, Long fqnId) {
 		if(!usageTable.containsKey(eid)){

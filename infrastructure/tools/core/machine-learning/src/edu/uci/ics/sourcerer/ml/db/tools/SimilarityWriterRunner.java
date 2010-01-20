@@ -46,13 +46,13 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public class SimilarityWriterRunner {
 	
 	public static final Property<Double> SIM_THRESHOLD = 
-		new DoubleProperty("sim-threshold", 0.4, "SimDatabase", 
+		new DoubleProperty("sim-threshold", 0.1, "SimDatabase", 
 				"Similarity threshold.").makeOptional();
 	public static final Property<String> FQN_USE_FILE = 
 		new StringProperty("fqn-use-file", null, "SimDatabase", 
 				"Path to fqn use file.");
 	public static final Property<Integer> NEIGHBORHOOD_SIZE =
-		new IntegerProperty("n-size", 10, "SimDatabase",
+		new IntegerProperty("n-size", 45, "SimDatabase",
 				"Neighborhood size.").makeOptional();
 	public static final Property<Boolean> FQN_USE_FROM_DB =
 		new BooleanProperty("fqn-use-from-db", false, "SimDatabase",

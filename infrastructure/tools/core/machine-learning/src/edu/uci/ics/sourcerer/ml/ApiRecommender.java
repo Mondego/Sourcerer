@@ -73,10 +73,16 @@ public final class ApiRecommender implements Recommender {
 	public ApiRecommender(DataModel bcModel) throws TasteException {
 		
 //		UserSimilarity similarity = new EuclideanDistanceSimilarity(bcModel,Weighting.WEIGHTED);
-		//UserSimilarity similarity = new LogLikelihoodSimilarity(bcModel);
+//		UserSimilarity similarity = new LogLikelihoodSimilarity(bcModel);
 		//UserSimilarity similarity = new PearsonCorrelationSimilarity(bcModel);
 
 		UserSimilarity similarity = new TanimotoCoefficientSimilarity(bcModel);
+		
+//		UserSimilarity similarity = new MySqlTanimotoCoefficientUserSimilarity(
+//				ManualPoolingMysqlDataSourceFactory.getDataSource(
+//						"jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_test", 
+//						"sourcerer", 
+//						"")); 
 		
 //		UserSimilarity similarity = new HammingDistanceSimilarity(bcModel);
 

@@ -35,8 +35,8 @@ import org.junit.Test;
 import edu.uci.ics.sourcerer.ml.HammingDistanceSimilarity;
 import edu.uci.ics.sourcerer.ml.SimilarUserCalculator;
 import edu.uci.ics.sourcerer.ml.TasteFileModelWithStringItemIds;
-import edu.uci.ics.sourcerer.ml.Util;
 import edu.uci.ics.sourcerer.ml.db.tools.ISimilarityWriter;
+import edu.uci.ics.sourcerer.util.TimeUtil;
 
 import junit.framework.TestCase;
 
@@ -46,7 +46,7 @@ import junit.framework.TestCase;
 public class SimilarUserCalculatorTest extends TestCase{
 	
 	SimilarUserCalculator suCalc = new SimilarUserCalculator(new ConsoleSimilarityWriter());
-	String dataFileLocation = "test/resources/2jdk.txt";
+	String dataFileLocation = "test/data.big/usage.txt";
 	long startTime;
 	
 	@Before
@@ -55,8 +55,8 @@ public class SimilarUserCalculatorTest extends TestCase{
 		File dataFile = new File(dataFileLocation);
 		DataModel dm = new TasteFileModelWithStringItemIds(dataFile);
 		suCalc.setDataModel(dm);
-		suCalc.setNeighborhoodSize(10);
-		suCalc.setSimilarityThreshold(0.01);
+		suCalc.setNeighborhoodSize(30);
+		suCalc.setSimilarityThreshold(0.1);
 		
 //		 suCalc.setUserSimilarity(
 //				 //new CachingUserSimilarity(
@@ -96,7 +96,7 @@ public class SimilarUserCalculatorTest extends TestCase{
 	
 	@After
 	public void tearDown(){
-		System.out.println("Time Elapsed (hh:mm:ss) = " + Util.formatMs(System.currentTimeMillis()-startTime));
+		System.out.println("Time Elapsed (hh:mm:ss) = " + TimeUtil.formatMs(System.currentTimeMillis()-startTime));
 	}
 }
 

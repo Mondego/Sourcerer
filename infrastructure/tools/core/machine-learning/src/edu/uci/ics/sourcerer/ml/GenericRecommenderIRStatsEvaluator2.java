@@ -16,7 +16,7 @@
 // * along with this program. If not, see <http://www.gnu.org/licenses/>.
 // *
 // */
-//package edu.uci.ics.sourcerer.ml;
+//package edu.uci.ics.sourcerer.ml.db.tools;
 //
 ///**
 // * @author <a href="mailto:bajracharya@gmail.com">Sushil Bajracharya</a>

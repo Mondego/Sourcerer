@@ -22,11 +22,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.similarity.TanimotoCoefficientSimilarity;
 import org.apache.mahout.cf.taste.model.DataModel;
 import org.apache.mahout.cf.taste.similarity.UserSimilarity;
+import org.apache.mahout.cf.taste.impl.model.file.FileDataModel;
 
-import edu.uci.ics.sourcerer.db.schema.EntitySimilarityTanimotoCoefficientTable;
 import edu.uci.ics.sourcerer.db.util.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.db.util.InsertBatcher;
@@ -54,7 +53,8 @@ public abstract class DBSimilarityWriter extends DatabaseAccessor implements ISi
 		suCalc.setLowEntityId(lowUserId);
 		suCalc.setHighEntityId(highUserId);
 		File dataFile = new File(dataFileLocation);
-		DataModel dm = new TasteFileModelWithStringItemIds(dataFile);
+		// DataModel dm = new TasteFileModelWithStringItemIds(dataFile);
+		FileDataModel dm = new FileDataModel(dataFile);
 		suCalc.setDataModel(dm);
 		suCalc.setNeighborhoodSize(neighborhoodSize);
 		suCalc.setSimilarityThreshold(similarityThreshold);

@@ -68,11 +68,14 @@ public final class HammingDistanceSimilarity  implements UserSimilarity {
 
     //int numItems = prefs1Size;
     
-    double distance1 =  (double) (prefs1Size - intersectionSize)/(double) 2;
-    double distance2 =  (double) (prefs2Size - intersectionSize)/(double) 2;
-    double distance = (distance1 + distance2);
+//    double distance1 =  (double) (prefs1Size - intersectionSize)/(double) 2;
+//    double distance2 =  (double) (prefs2Size - intersectionSize)/(double) 2;
+//    double distance = (distance1 + distance2);
+    
+    double distance = (double) (prefs1Size - intersectionSize);
+    
     double similarity = 1.0 / (1.0 + distance); 
-    ////System.out.println( prefs1Size  + ", " + prefs2Size + ", " + intersectionSize + ", " + similarity);
+    //////System.out.println( prefs1Size  + ", " + prefs2Size + ", " + intersectionSize + ", " + similarity);
     return similarity;
   }
 

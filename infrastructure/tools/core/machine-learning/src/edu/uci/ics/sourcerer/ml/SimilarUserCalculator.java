@@ -110,7 +110,7 @@ public class SimilarUserCalculator {
 			}
 			long end = System.currentTimeMillis();
 			
-			logger.info("Written similarity tw for entity id:" + uid + Util.formatMs((long) (end - start)) + "ms");
+			//logger.info("Written similarity tw for entity id:" + uid + TimeUtil.formatMs((long) (end - start)) + "ms");
 			start = System.currentTimeMillis();
 		}
 	}

@@ -48,7 +48,7 @@ import edu.uci.ics.sourcerer.ml.TasteFileModelWithStringItemIds;
 public class RecommenderEvaluatorTest extends TestCase {
 
 	private static final double EPSILON = 0.00001;
-	String dataFileLocation = "test/resources/2jdk.txt";
+	String dataFileLocation = "test/data.big/usage_method.txt";
 
 	public void testEvaluate() throws Exception {
 		DataModel model = getDataModel();
@@ -84,7 +84,7 @@ public class RecommenderEvaluatorTest extends TestCase {
 				null, 
 				model, 
 				null, 
-				2,
+				5,
 				1.0, 
 				1.0);
 		

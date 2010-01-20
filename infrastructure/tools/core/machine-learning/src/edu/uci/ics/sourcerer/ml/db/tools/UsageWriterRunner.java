@@ -45,8 +45,8 @@ public class UsageWriterRunner {
 		new IntegerProperty("min-apis", 3, "Usage",
 				"Minimum count of distinct FQNs used by an entity to consider it for similarity.").makeOptional();
 	public static final Property<Integer> MIN_USES_OF_FQN =
-		new IntegerProperty("min-entities", 4, "Usage",
-				"Minimum count of uses of an API FQN to consider it for including in feature vector.").makeOptional();
+		new IntegerProperty("min-entities", 2, "Usage",
+				"Minimum count of distinct users of an API FQN to consider it for including in feature vector.").makeOptional();
 	
 	public static void main(String[] args) {
 		
@@ -68,8 +68,8 @@ public class UsageWriterRunner {
 	    FileUsageWriter writer = new FileUsageWriter(Properties.OUTPUT.getValue().getPath());
 	    
 	    String input = Properties.INPUT.getValue().getPath();
-	    String usedFqnCountFileJdk = input + File.separator + "jdk-usage.txt"; 
-		String usedFqnCountFileJars = input + File.separator + "jar-usage.txt"; 
+	    String usedFqnCountFileJdk = input + File.separator + "jdk-usage-by-entity.txt"; 
+		String usedFqnCountFileJars = input + File.separator + "jar-usage-by-entity.txt"; 
 		String popularFqnsFile = input + File.separator + "popular-fqn.txt";
 	    
 	    UsageCalculator ucalc = new UsageCalculator();

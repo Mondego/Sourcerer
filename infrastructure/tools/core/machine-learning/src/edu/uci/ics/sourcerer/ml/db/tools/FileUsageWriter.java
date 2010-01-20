@@ -32,16 +32,13 @@ public class FileUsageWriter implements IUsageWriter {
 
 	String outputFolder;
 	final String FQN_FILE = "fqns.txt";
-	final String USAGE_FILE_CLASS = "usage_class.txt";
-	final String USAGE_FILE_METHOD = "usage_method.txt";
+	final String USAGE_FILE = "usage.txt";
 	
     File fqnFile;
-    File usageFileClass;
-    File usageFileMethod;
+    File usageFile;
 	
     BufferedWriter fqnFileWriter;
-    BufferedWriter usageFileWriterClass;
-    BufferedWriter usageFileWriterMethod;
+    BufferedWriter usageFileWriter;
     
     public FileUsageWriter(String outputFolder){
     	this.outputFolder = outputFolder;
@@ -52,26 +49,21 @@ public class FileUsageWriter implements IUsageWriter {
 			outputFolder = outputFolder + File.separator;
 		
 		fqnFile = new File(outputFolder + FQN_FILE);
-		usageFileClass = new File(outputFolder + USAGE_FILE_CLASS);
-		usageFileMethod = new File(outputFolder + USAGE_FILE_METHOD);
+		usageFile = new File(outputFolder + USAGE_FILE);
 		
 		assert !fqnFile.exists();
-		assert !usageFileClass.exists();
-		assert !usageFileMethod.exists();
+		assert !usageFile.exists();
 		
 		fqnFileWriter = new BufferedWriter(new FileWriter(fqnFile));
-		usageFileWriterClass = new BufferedWriter(new FileWriter(usageFileClass));
-		usageFileWriterMethod = new BufferedWriter(new FileWriter(usageFileMethod));
+		usageFileWriter = new BufferedWriter(new FileWriter(usageFile));
 		
 	}
 	
 	public void closeFiles() throws IOException{
 		fqnFileWriter.close();
-		usageFileWriterClass.close();
-		usageFileWriterMethod.close();
+		usageFileWriter.close();
 		fqnFileWriter = null;
-		usageFileWriterClass = null;
-		usageFileWriterMethod = null;
+		usageFileWriter = null;
 	}
 	
 	@Override
@@ -86,16 +78,11 @@ public class FileUsageWriter implements IUsageWriter {
 	}
 
 	@Override
-	public void writeUsage(long entityId, long fqnId, int useCount, boolean isClass) {
+	public void writeUsage(long entityId, long fqnId, int useCount) {
 		try {
+				usageFileWriter.write(entityId + "\t" + fqnId + "\t" + useCount);
+				usageFileWriter.newLine();
 			
-			if(isClass){
-				usageFileWriterClass.write(entityId + "\t" + fqnId + "\t" + useCount);
-				usageFileWriterClass.newLine();
-			} else {
-				usageFileWriterMethod.write(entityId + "\t" + fqnId + "\t" + useCount);
-				usageFileWriterMethod.newLine();
-			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

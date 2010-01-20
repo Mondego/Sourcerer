@@ -25,5 +25,5 @@ package edu.uci.ics.sourcerer.ml.db.tools;
  */
 public interface IUsageWriter {
 	public void writeFqnId(long fqnId, String fqn);
-	public void writeUsage(long entityId, long fqnId, int useCount, boolean isClass);
+	public void writeUsage(long entityId, long fqnId, int useCount);
 }
