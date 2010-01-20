@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<schema name="db" version="1.1">
+   <types>
+
+     <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
+     <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true" omitNorms="true"/>
+     <fieldType name="integer" class="solr.IntField" omitNorms="true"/>
+     <fieldType name="long" class="solr.LongField" omitNorms="true"/>
+     <fieldType name="float" class="solr.FloatField" omitNorms="true"/>
+     <fieldType name="double" class="solr.DoubleField" omitNorms="true"/>
+     <fieldType name="sint" class="solr.SortableIntField" sortMissingLast="true" omitNorms="true"/>
+     <fieldType name="slong" class="solr.SortableLongField" sortMissingLast="true" omitNorms="true"/>
+     <fieldType name="sfloat" class="solr.SortableFloatField" sortMissingLast="true" omitNorms="true"/>
+     <fieldType name="sdouble" class="solr.SortableDoubleField" sortMissingLast="true" omitNorms="true"/>
+     <fieldType name="date" class="solr.DateField" sortMissingLast="true" omitNorms="true"/>
+     <fieldType name="random" class="solr.RandomSortField" indexed="true" />
+
+     <fieldType name="FT_fqn" class="solr.TextField" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer
+		class="edu.uci.ics.sourcerer.search.analysis.NoTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.search.analysis.FqnFilterFactory"
+		extractSig="0" shortNamesOnly="0" />
+      </analyzer>
+      <analyzer type="query">
+      	<tokenizer
+		class="edu.uci.ics.sourcerer.search.analysis.NoTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.search.analysis.FqnFilterFactory"
+		extractSig="0" shortNamesOnly="0" />
+      </analyzer>
+     </fieldType>
+
+     
+
+      <fieldType name="FT_use_fqn_full" class="solr.TextField" positionIncrementGap="100">
+	<analyzer type="index">
+	<tokenizer
+		class="edu.uci.ics.sourcerer.search.analysis.NoTokenizerFactory"/>
+	<filter class="solr.StopFilterFactory" words="stopwords-uses.txt" 
+		ignoreCase="true"/>
+      </analyzer>
+      <analyzer type="query">
+	<tokenizer
+		class="edu.uci.ics.sourcerer.search.analysis.NoTokenizerFactory"/>      
+	<filter class="solr.StopFilterFactory" words="stopwords-uses.txt" 
+		ignoreCase="true"/>
+	
+      </analyzer>
+     </fieldType>
+
+     
+
+ </types>
+
+
+ <fields>
+ 
+    
+   <field name="fqn_full" type="string" indexed="true" stored="true"
+	   required="true"/>
+   <field name="fqn" type="FT_fqn" indexed="true" stored="false" required="true" /> 
+   
+    
+    
+   <field name="entity_id" type="long" indexed="true" stored="true" required="true" /> 
+  
+    <!-- 
+    <field name="all_use_fqn_full" type="FT_use_fqn_full" indexed="true"
+	    stored="false" required="false" termVectors="true" 
+	    multiValued="true"/>
+	
+
+    <field name="local_use_fqn_full" type="FT_use_fqn_full" indexed="true"
+	    stored="true" required="false" termVectors="true"
+	    multiValued="true"/>
+	-->
+
+    <field name="jdk_use_fqn_full" type="FT_use_fqn_full" indexed="true"
+	    stored="true" required="false" termVectors="true" 
+	    multiValued="true"/>
+
+    <field name="lib_use_fqn_full" type="FT_use_fqn_full" indexed="true"
+	    stored="true" required="false" termVectors="true"
+	    multiValued="true"/>
+	    
+	<field name="jdkLib_use_fqn_full" type="FT_use_fqn_full" indexed="true"
+	    stored="true" required="false" termVectors="true"
+	    multiValued="true"/>    
+    
+ </fields>
+
+ <!-- Field to use to determine and enforce document uniqueness. 
+      Unless this field is marked with required="false", it will be a required field
+   -->
+ <uniqueKey>entity_id</uniqueKey>
+
+
+
+ <!-- SolrQueryParser configuration: defaultOperator="AND|OR" -->
+ <solrQueryParser defaultOperator="AND"/>
+
+
+ <!--
+ <copyField source="fqn_fragments" dest="fqn_contents"/>
+ <copyField source="fqn_cc_split" dest="fqn_contents"/>
+ -->
+ 
+
+  <!-- field for the QueryParser to use when an explicit fieldname is absent -->
+  <defaultSearchField>fqn_full</defaultSearchField>
+
+  <!-- Similarity is the scoring routine for each document vs. a query.
+      A custom similarity may be specified here, but the default is fine
+      for most applications.  -->
+ <!-- <similarity class="org.apache.lucene.search.DefaultSimilarity"/> -->
+
+</schema>
