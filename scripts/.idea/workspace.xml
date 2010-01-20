@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager" verified="true">
     <list default="true" readonly="true" id="b36db681-0132-4fec-ac88-558b71b222d6" name="Default" comment="" />
-    <ignored path=".idea/workspace.xml" />
     <ignored path="scripts.iws" />
+    <ignored path=".idea/workspace.xml" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,7 +68,7 @@
       <file leaf-file-name="JarUsage.groovy" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/JarUsage.groovy">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="85" column="50" selection-start="3031" selection-end="3031" vertical-scroll-proportion="1.4097902">
+            <state line="9" column="71" selection-start="467" selection-end="467" vertical-scroll-proportion="0.13917525">
               <folding />
             </state>
           </provider>
@@ -93,9 +93,9 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/src/JarUsage.groovy" />
         <option value="$PROJECT_DIR$/src/TestJaws.groovy" />
         <option value="$PROJECT_DIR$/src/JudgementProcessor.java" />
+        <option value="$PROJECT_DIR$/src/JarUsage.groovy" />
       </list>
     </option>
   </component>
@@ -137,6 +137,8 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scope" />
+      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -175,9 +177,7 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="PackagesPane" />
       <pane id="Favorites" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -193,9 +193,9 @@
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
     <property name="MemberChooser.showClasses" value="true" />
     <property name="GoToClass.includeLibraries" value="false" />
-    <property name="options.splitter.details.proportions" value="0.2" />
-    <property name="options.searchVisible" value="true" />
     <property name="dynamic.classpath" value="false" />
+    <property name="options.searchVisible" value="true" />
+    <property name="options.splitter.details.proportions" value="0.2" />
   </component>
   <component name="RunManager" selected="Application.TestJaws">
     <configuration default="true" type="Remote" factoryName="Remote">
@@ -386,7 +386,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="109" y="318" width="1111" height="878" extended-state="0" />
+    <frame x="122" y="116" width="1354" height="950" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -397,7 +397,7 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3991276" sideWeight="0.81889" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.33804142" sideWeight="0.72031665" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2750958" sideWeight="0.9988024" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.21693122" sideWeight="0.99905837" order="2" side_tool="false" content_ui="tabs" x="736" y="123" width="579" height="752" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -442,11 +442,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/JudgementProcessor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="10" column="10" selection-start="254" selection-end="254" vertical-scroll-proportion="0.16438356" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/TestJaws.groovy">
       <provider selected="true" editor-type-id="text-editor">
         <state line="12" column="63" selection-start="390" selection-end="390" vertical-scroll-proportion="0.0" />
@@ -454,7 +449,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/JarUsage.groovy">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="85" column="50" selection-start="3031" selection-end="3031" vertical-scroll-proportion="1.4097902">
+        <state line="9" column="71" selection-start="467" selection-end="467" vertical-scroll-proportion="0.13917525">
           <folding />
         </state>
       </provider>

@@ -53,8 +53,8 @@ class JarUsage{
     def sql = Sql.newInstance(
     	//"jdbc:mysql://kathmandu.ics.uci.edu:3306/sourcerer_t2",
         "jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_t2",
-    	"sourcerer",
-        "sourcerer4us",
+    	System.getProperty( "sourcerer.db.user" ),
+        System.getProperty( "sourcerer.db.password" ),
         //"tyl0n4pi", //password
         "com.mysql.jdbc.Driver")
 
