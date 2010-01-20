@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -47,6 +48,8 @@ import org.xml.sax.SAXException;
 
 import edu.uci.ics.sourcerer.db.util.JdbcDataSource;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 /**
  * 
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
@@ -54,9 +57,11 @@ import edu.uci.ics.sourcerer.db.util.JdbcDataSource;
  *
  */
 public class SourcererGateway {
-
+	
+	
+	
 	String urlPart = "http://localhost:8983/solr/scs/mlt";
-	String codeUrlPart = "http://localhost:9180/repofileserver";
+	String codeUrlPart = "http://localhost:9180/file-server";
 	String dbDriver = "com.mysql.jdbc.Driver";
 	String dbUri = "jdbc:mysql://localhost:3307/sourcerer_test";
 	String dbUser = "sourcerer";
@@ -133,12 +138,22 @@ public class SourcererGateway {
 	private static SourcererGateway obj;
 	
 	// -- apis
+	
+	//{{{ -- start hack
+	// TODO made to work with jar entities for now
 	public String getCode(String entityId){
 		
-		String queryString = "entityID=" + entityId;
+		String queryString = "jarEntityID=" + entityId;
 		
 		return sendGetCommand(queryString, codeUrlPart);
 	}
+	
+	public String getJarComment(String jarCommentId) {
+		String queryString = "jarCommentID=" + jarCommentId;
+		return sendGetCommand(queryString, codeUrlPart);
+	}
+	
+	///}}} -- end hack
 	
 	public String mltSnamesViaJdkUse(String entityId){
 		return HitFqnEntityIdToString(searchMltViaJdkUse(entityId));
@@ -148,17 +163,17 @@ public class SourcererGateway {
 		return HitFqnEntityIdToString(searchMltViaLibUse(entityId));
 	}
 	
-	public String mltSnamesViaLocalUse(String entityId){
-		return HitFqnEntityIdToString(searchMltViaLocalUse(entityId));
-	}
+//	public String mltSnamesViaLocalUse(String entityId){
+//		return HitFqnEntityIdToString(searchMltViaLocalUse(entityId));
+//	}
 	
 	public String mltSnamesViaJdkLibUse(String entityId) {
 		return HitFqnEntityIdToString(searchMltViaJdkLibUse(entityId));
 	}
 	
-	public String mltSnamesViaAllUse(String entityId) {
-		return HitFqnEntityIdToString(searchMltViaAllUse(entityId));
-	}
+//	public String mltSnamesViaAllUse(String entityId) {
+//		return HitFqnEntityIdToString(searchMltViaAllUse(entityId));
+//	}
 	
 	public String snamesViaSimEntitiesTC(String entityId) {
 		
@@ -181,17 +196,17 @@ public class SourcererGateway {
 	}
 
 
-	public List<HitFqnEntityId> searchMltViaLocalUse(String entityId) {
-		return getFqnEntityIdFromHits(searchMlt(entityId, "local_use_fqn_full"));
-	}
+//	public List<HitFqnEntityId> searchMltViaLocalUse(String entityId) {
+//		return getFqnEntityIdFromHits(searchMlt(entityId, "local_use_fqn_full"));
+//	}
 	
 	public List<HitFqnEntityId> searchMltViaJdkLibUse(String entityId) {
 		return getFqnEntityIdFromHits(searchMlt(entityId, "jdkLib_use_fqn_full"));
 	}
 	
-	public List<HitFqnEntityId> searchMltViaAllUse(String entityId) {
-		return getFqnEntityIdFromHits(searchMlt(entityId, "all_use_fqn_full"));
-	}
+//	public List<HitFqnEntityId> searchMltViaAllUse(String entityId) {
+//		return getFqnEntityIdFromHits(searchMlt(entityId, "all_use_fqn_full"));
+//	}
 	
 	// -- end apis
 	
@@ -215,7 +230,7 @@ public class SourcererGateway {
 	
 	private String searchMlt(String entityId, String mltFields){
 		
-		String queryString = "start=0&rows=10&q=entity_id:" 
+		String queryString = "start=0&rows=30&q=entity_id:" 
 			+ entityId 
 			+ "&mlt.fl=" 
 			+ mltFields 
@@ -259,6 +274,7 @@ public class SourcererGateway {
 		            if (statusCode != HttpStatus.SC_OK)
 		            {
 		                System.err.println("Method failed: " + get.getStatusLine() + "\n" + queryString);
+		                logger.log(Level.SEVERE, "Method failed: " + get.getStatusLine() + "\n" + queryString);
 		                //results = "Method failed: " + get.getStatusLine();
 		                results = "";
 		            }
@@ -268,11 +284,13 @@ public class SourcererGateway {
 		        {
 		            System.err.println("[" + queryString  + "] Fatal protocol violation: " + e.getMessage());
 		            e.printStackTrace();
+		            logger.log(Level.SEVERE, "[" + queryString  + "] Fatal protocol violation: " + e.getMessage());
 		        }
 		        catch (IOException e)
 		        {
 		            System.err.println("[" + queryString  + "] IOE "  + e.getMessage());
 		            e.printStackTrace();
+		            logger.log(Level.SEVERE, "[" + queryString  + "] IOE "  + e.getMessage());
 		        }
 		        finally
 		        {
@@ -285,11 +303,13 @@ public class SourcererGateway {
 			//e1.printStackTrace();
 			System.err.println("HttpExp: " + queryString);
 			results = "";
+			logger.log(Level.SEVERE,"HttpExp: " + queryString);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			// e1.printStackTrace();
 			System.err.println("Timeout: " + queryString);
 			results = "";
+			logger.log(Level.SEVERE,"Timeout: " + queryString);
 		}
        
         return results;
@@ -414,6 +434,8 @@ public class SourcererGateway {
 		
 		return sb.toString().trim();
 	}
+
+	
 
 
 	

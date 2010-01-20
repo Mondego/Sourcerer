@@ -44,10 +44,25 @@ public class FqnCleaningTransformer extends Transformer {
                             String value = (String) row.get(columnName);
                             // Trim and put the updated value back in the current row
                             if (value != null){
-                            	//value = value.replaceAll("_UNRESOLVED_.", ".");
+                            	value = value.replaceAll("_UNRESOLVED_.", ".");
+                            	value = value.replaceAll("\\(UNKNOWN\\)", "");
                             	value = value.replaceAll("\\(1UNKNOWN\\)", "");
                                 row.put(columnName, value);
                             }
+                    }
+                    
+                    String fixConstructor = field.get("fix-init");
+                    if("true".equals(fixConstructor)){
+                    	// Apply fqn cleaning on this field
+                        String columnName = field.get("column");
+                        // Get this field's value from the current row
+                        String value = (String) row.get(columnName);
+                        // Trim and put the updated value back in the current row
+                        if (value != null){
+                        	value = value.replaceAll("\\.<init>\\(", ".(");
+                        	value = value.replaceAll("\\.main\\(", ".(");
+                            row.put(columnName, value);
+                        }
                     }
             }
 

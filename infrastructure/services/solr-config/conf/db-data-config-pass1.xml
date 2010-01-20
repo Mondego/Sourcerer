@@ -1,8 +1,16 @@
 <dataConfig>
+    <!-- 
     <dataSource driver="com.mysql.jdbc.Driver" 
 		url="jdbc:mysql://localhost:3307/sourcerer_test" 
     	user="" 
     	password=""  />
+    -->
+    
+    <dataSource driver="com.mysql.jdbc.Driver" 
+		url="jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_test" 
+    	user="$sourcerer.db.user$" 
+    	password="$sourcerer.db.password$"  />
+    	
     	
     <!-- 
     entity_type='CLASS' OR

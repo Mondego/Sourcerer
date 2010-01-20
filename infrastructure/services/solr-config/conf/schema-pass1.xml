@@ -109,7 +109,7 @@
  
 
   <!-- field for the QueryParser to use when an explicit fieldname is absent -->
-  <defaultSearchField>fqn</defaultSearchField>
+  <defaultSearchField>fqn_full</defaultSearchField>
 
   <!-- Similarity is the scoring routine for each document vs. a query.
       A custom similarity may be specified here, but the default is fine

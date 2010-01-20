@@ -73,16 +73,19 @@ public class MLTQueryGatewayTest extends TestCase {
 		}
 		System.out.println("time " +  formatElapsedTime(end-start) );
 		
-		System.out.println("--local--");
-		start = System.currentTimeMillis();
-		List<HitFqnEntityId> locsim = g.searchMltViaLocalUse(entityId);
-		end = System.currentTimeMillis();
-		assertNotNull(locsim);
-	//	assertEquals(15, locsim.size());
-		for(HitFqnEntityId h: locsim){
-			System.out.println(h.fqn);
-		}
-		System.out.println("time " +  formatElapsedTime(end-start) );
+		// local disabled for now
+//		System.out.println("--local--");
+//		start = System.currentTimeMillis();
+//		List<HitFqnEntityId> locsim = g.searchMltViaLocalUse(entityId);
+//		end = System.currentTimeMillis();
+//		assertNotNull(locsim);
+//	//	assertEquals(15, locsim.size());
+//		for(HitFqnEntityId h: locsim){
+//			System.out.println(h.fqn);
+//		}
+//		System.out.println("time " +  formatElapsedTime(end-start) );
+		
+		
 		
 //		start = System.currentTimeMillis();
 //		List<HitFqnEntityId> jlsim = g.searchMltViaJdkLibUsage(entityId);
@@ -122,11 +125,13 @@ public class MLTQueryGatewayTest extends TestCase {
 		end = System.currentTimeMillis();
 		System.out.println("time " +  formatElapsedTime(end-start) );
 		
-		System.out.println("--local--");
-		start = System.currentTimeMillis();
-		System.out.println(g.mltSnamesViaLocalUse(entityId));
-		end = System.currentTimeMillis();
-		System.out.println("time " +  formatElapsedTime(end-start) );
+		
+		// local disabled for now
+//		System.out.println("--local--");
+//		start = System.currentTimeMillis();
+//		System.out.println(g.mltSnamesViaLocalUse(entityId));
+//		end = System.currentTimeMillis();
+//		System.out.println("time " +  formatElapsedTime(end-start) );
 		
 		
 	}
@@ -148,11 +153,12 @@ public class MLTQueryGatewayTest extends TestCase {
 			end = System.currentTimeMillis();
 			System.out.println(formatElapsedTime(end-start) );
 			
-			System.out.println("--local--");
-			start = System.currentTimeMillis();
-			System.out.println(g.mltSnamesViaLocalUse(eId));
-			end = System.currentTimeMillis();
-			System.out.println(formatElapsedTime(end-start) );
+			// local disabled for now
+//			System.out.println("--local--");
+//			start = System.currentTimeMillis();
+//			System.out.println(g.mltSnamesViaLocalUse(eId));
+//			end = System.currentTimeMillis();
+//			System.out.println(formatElapsedTime(end-start) );
 		}
 		
 	}

@@ -40,7 +40,8 @@ public final class FqnFilter extends TokenFilter {
 	final int shortNamesOnly; // will void the effect of fragment*
 
 	final String UNRESOLVED_LITERAL = "_UNRESOLVED_.";
-	final String UNKNOWN_LITERAL = "(UNKNOWN)";
+	final String UNKNOWN_LITERAL = "\\(UNKNOWN\\)";
+	final String UNKNOWN_LITERAL2 = "\\(1UNKNOWN\\)";
 	final char TYPED_PARAMETER_LITERAL = 'T';
 
 	public FqnFilter(TokenStream in, int extractSig, int shortNamesOnly) {
@@ -147,6 +148,7 @@ public final class FqnFilter extends TokenFilter {
 		// these would be pulled in the fields that denote usage
 		String newTerm = tokenTerm.replaceAll(UNRESOLVED_LITERAL, "");
 		newTerm = newTerm.replaceAll(UNKNOWN_LITERAL, "");
+		newTerm = newTerm.replaceAll(UNKNOWN_LITERAL2, "");
 		
 		// remove all whitespace from fqn
 		newTerm = newTerm.replaceAll("\\s", "");
