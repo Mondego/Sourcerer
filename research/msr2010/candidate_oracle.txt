@@ -19,12 +19,16 @@ text.insert(data);
 
 // Query 2: 
 // "open url in html browser"
+
+// Snippet
 final IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().createBrowser( ... );
 browser.openURL(url);
 
 
 // Query 3: 
 // "track mouse hover"
+
+// Snippet
 final Button b = new Button(s, SWT.PUSH);
 b.addMouseTrackListener(new MouseTrackAdapter() {
 public void mouseEnter(MouseEvent e) {
@@ -65,6 +69,7 @@ ServicablePlugin.getDefault().getLog().log(errorStatus);
 // Query 5:
 // "track job status change"
 
+// Snippet
 customJob.schedule();
 customJob.addJobChangeListener(new JobChangeAdaper() {
 public void done(IJobChangeEvent event) {
@@ -219,7 +224,7 @@ public boolean visit(MethodDeclaration node) {
 // Query 16: 
 // "fill table background thread"
 
-// Snippet:
+// Snippet
 display.syncExec (new Runnable () {
 					public void run () {
 						if (table.isDisposed ()) return;
@@ -256,6 +261,7 @@ public static Display getDisplay() {
 // Query 19:
 // "run job in ui thread"
 
+// Snippet
 // APIs listed in FAQ
 org.eclipse.ui.progress.UIJob
  .. runInUIThread
@@ -281,7 +287,7 @@ fileStore = fileStore.getChild(names[i]);
   }
 }
 
-// Snippet. using Linked resource
+// Snippet, using Linked resource
 IWorkspace ws = ResourcesPlugin.getWorkspace();
 IProject project = ws.getRoot().getProject("External Files");
 if (!project.exists())
