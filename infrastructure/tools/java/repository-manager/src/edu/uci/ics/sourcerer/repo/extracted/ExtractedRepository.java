@@ -24,10 +24,12 @@ import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
+import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
@@ -415,32 +417,48 @@ public class ExtractedRepository extends AbstractRepository {
       int nonEmpty = 0;
       int withMissingTypes = 0;
       int projectsWithMissingTypes = 0;
-      int sourceExtracted = 0;
       int projectsWithSourceExceptions = 0;
       int sourceExceptions = 0;
-      int usingJars = 0;
-      int usedJars = 0;
+      int correctUsingJars = 0;
+      int missingUsingJars = 0;
+      Averager<Integer> correctSource = new Averager<Integer>();
+      Averager<Integer> missingSource = new Averager<Integer>();
+      Averager<Integer> correctJars = new Averager<Integer>();
+      Averager<Integer> missingJars = new Averager<Integer>();
       
       for (ExtractedProject project : projects) {
         if (project.extracted()) {
           extracted++;
           if (!project.empty()) {
             nonEmpty++;
-        
-            sourceExtracted += project.getExtractedFromSource();
+
             if (project.hasSourceExceptions()) {
               projectsWithSourceExceptions++;
               sourceExceptions += project.getSourceExceptions();
             }
             
-            int usedCount = project.getJars();
-            if (usedCount > 0) {
-              usingJars++;
-              usedJars += usedCount;
+            if (project.hasMissingTypes()) {
+              projectsWithMissingTypes++;
+              missingSource.addValue(project.getExtractedFromSource());
+              int usedCount = project.getJars();
+              if (usedCount > 0) {
+                missingUsingJars++;
+                missingJars.addValue(usedCount);
+              }
+              logger.log(Level.SEVERE, "MISSING - " + project.getRelativePath());
+            } else {
+              correctSource.addValue(project.getExtractedFromSource());
+            
+              int usedCount = project.getJars();
+              if (usedCount > 0) {
+                correctUsingJars++;
+                correctJars.addValue(usedCount);
+              }
             }
-          }
-          if (project.hasMissingTypes()) {
-            projectsWithMissingTypes++;
+          } else {
+            if (project.hasMissingTypes()) {
+              logger.info("MISSING + EMPTY: " + project.getRelativePath());
+            }
           }
         } else if (project.hasMissingTypes()) {
           withMissingTypes++;
@@ -450,7 +468,7 @@ public class ExtractedRepository extends AbstractRepository {
       }
       
       printer.addHeader("Extracted Project Statistics");
-      printer.beginTable(2);
+      printer.beginTable(6);
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Extracted projects");
@@ -466,21 +484,25 @@ public class ExtractedRepository extends AbstractRepository {
       printer.addCell(withMissingTypes);
       printer.addDividerRow();
       printer.beginRow();
-      printer.addCell("Source files extracted");
-      printer.addCell(sourceExtracted);
+      printer.addCell("Correct Projects", 6, TablePrettyPrinter.Alignment.CENTER);
+      printer.addRow("", "Sum", "Mean", "Dev", "Min", "Max");
+      printer.addRow("Source files extracted", correctSource.getSum(), correctSource.getMean(), correctSource.getStandardDeviation(), correctSource.getMin(), correctSource.getMax());
+      printer.addRow("Using jars", "" + correctUsingJars);
+      printer.addRow("Used jars", correctJars.getSum(), correctJars.getMean(), correctJars.getStandardDeviation(), correctJars.getMin(), correctJars.getMax());
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("Missing Type Projects", 6, TablePrettyPrinter.Alignment.CENTER);
+      printer.addRow("", "Sum", "Mean", "Dev", "Min", "Max");
+      printer.addRow("Source files extracted", missingSource.getSum(), missingSource.getMean(), missingSource.getStandardDeviation(), missingSource.getMin(), missingSource.getMax());
+      printer.addRow("Using jars", "" + missingUsingJars);
+      printer.addRow("Used jars", missingJars.getSum(), missingJars.getMean(), missingJars.getStandardDeviation(), missingJars.getMin(), missingJars.getMax());
+      printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Projects with source file exceptions");
       printer.addCell(projectsWithSourceExceptions);
       printer.beginRow();
       printer.addCell("Source files with exceptions");
       printer.addCell(sourceExceptions);
-      printer.addDividerRow();
-      printer.beginRow();
-      printer.addCell("Projects using jars");
-      printer.addCell(usingJars);
-      printer.beginRow();
-      printer.addCell("Jars used by projects");
-      printer.addCell(usedJars);
       printer.addDividerRow();
       printer.endTable();
     }

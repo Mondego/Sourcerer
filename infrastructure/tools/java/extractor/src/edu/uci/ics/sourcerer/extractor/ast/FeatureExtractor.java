@@ -237,7 +237,7 @@ public final class FeatureExtractor {
       }
       
       checkForMissingTypes(unit, report, missingTypeWriter);
-      if (!report.hadMissingType()) {
+      if (!report.hadMissingType() || force) {
         try {
           unit.accept(visitor);
           report.reportSourceExtraction();

@@ -79,7 +79,7 @@ public class MissingTypeResolver extends DatabaseAccessor {
         // Remove the types from bestJar from all the remaining jars
         jars.remove(bestJar.getJarID());
         for (JarTypeCollection jar : jars.values()) {
-          jar.remove(jar.getTypes());
+          jar.remove(bestJar.getTypes());
         }
         String hash = JarsTable.getHashByID(executor, bestJar.getJarID());
         if (hash == null) {

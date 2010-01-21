@@ -45,7 +45,7 @@ public class ProjectExtractor {
     for (RepoProject project : projects) {
       logger.info("Extracting " + project.getProjectPath() + " (" + ++count + " of " + projects.size() + ")");
       ExtractedProject extracted = project.getExtractedProject(output);
-      if (extracted.extracted()) {
+      if (extracted.extracted() && !(extracted.hasMissingTypes() && Extractor.FORCE_MISSING_REDO.getValue())) {
         logger.info("  Project already extracted");
       } else if (extracted.hasMissingTypes() && !Extractor.RESOLVE_MISSING_TYPES.getValue()) {
         logger.info("  Project has missing types");
@@ -56,16 +56,20 @@ public class ProjectExtractor {
         logger.info("  Getting file list...");
         IFileSet files = project.getFileSet();
         
-        Collection<IndexedJar> jars = Helper.newHashSet();
+//        Collection<IndexedJar> jars = Helper.newHashSet();
         Collection<String> paths = Helper.newHashSet();
+        Collection<String> newPaths = Helper.newHashSet();
         if (Extractor.USE_PROJECT_JARS.getValue()) {
           for (IJarFile jar : files.getJarFiles()) {
-            IndexedJar indexed = index.getIndexedJar(jar.getHash());
+            IndexedJar indexed = null;
+            if (index != null) {
+              indexed = index.getIndexedJar(jar.getHash());
+            }
             if (indexed == null) {
               logger.log(Level.SEVERE, "Unable to locate " + jar.getName() + "(" + jar.getHash() + ") in index, so using directly");
               paths.add(jar.getPath());
             } else { 
-              jars.add(indexed);
+//              jars.add(indexed);
               paths.add(indexed.getJarFile().getPath());
             }
           }
@@ -80,16 +84,21 @@ public class ProjectExtractor {
           if (missingTypes) {
             logger.info("  Resolving missing types...");
             Collection<IndexedJar> newJars = resolver.resolveMissingTypes(index, extracted, bundle.getUsedJarWriter());
-            if (newJars.isEmpty()) {
+            newPaths.clear();
+            for (IndexedJar newJar : newJars) {
+              newPaths.add(newJar.getJarFile().getPath());
+            }
+            newPaths.removeAll(paths);
+            if (newPaths.isEmpty()) {
               force = true;
               logger.info("  No jars found to resolve missing types...");
             } else {
-              logger.info("  Adding " + newJars.size() + " jar(s) to the classpath...");
-              EclipseUtils.addToClasspath(newJars);
-              jars.addAll(newJars);
+              logger.info("  Adding " + newPaths.size() + " jar(s) to the classpath...");
+              EclipseUtils.addToClasspath(newPaths);
+              paths.addAll(newPaths);
             }
           } else {
-            logger.info("  Initializing project with " + jars.size() + " jars...");
+            logger.info("  Initializing project with " + paths.size() + " jars...");
             EclipseUtils.initializeProject(paths);
           }
           
@@ -120,10 +129,10 @@ public class ProjectExtractor {
          
           if (Extractor.RESOLVE_MISSING_TYPES.getValue()) {
             if (force) {
-              extracted.reportForcedExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions(), jars.size());
+              extracted.reportForcedExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions(), paths.size());
               break;
             } else if (!(report.hadMissingType() || report.hadMissingSecondOrder())) {
-              extracted.reportSuccessfulExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions(), jars.size());
+              extracted.reportSuccessfulExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions(), paths.size());
               break;
             } else {
               missingTypes = report.hadMissingType() || report.hadMissingSecondOrder();
@@ -134,11 +143,12 @@ public class ProjectExtractor {
             if (report.hadMissingType() || report.hadMissingSecondOrder()) {
               extracted.reportMissingTypeExtraction();
             } else {
-              extracted.reportSuccessfulExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions(), jars.size());
+              extracted.reportSuccessfulExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions(), paths.size());
             }
             break;
           }
         }
+        logger.info("  Finished extracting project.");
         Logging.removeFileLogger(extracted.getContent());
         FileUtils.resetTempDir();
       }

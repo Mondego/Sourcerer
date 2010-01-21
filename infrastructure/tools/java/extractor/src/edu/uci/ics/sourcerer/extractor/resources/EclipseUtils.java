@@ -207,11 +207,23 @@ public class EclipseUtils {
     }
   }
   
-  public static void addToClasspath(Collection<IndexedJar> jars) {
+  public static void addJarsToClasspath(Collection<IndexedJar> jars) {
     try {
       List<IClasspathEntry> entries = Helper.newArrayList(Arrays.asList(javaProject.getRawClasspath()));
       for (IndexedJar jar : jars) {
         entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), null, null));
+      }
+      javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
+    } catch (CoreException e) {
+      logger.log(Level.SEVERE, "Error in project classpath initialization", e);
+    }
+  }
+  
+  public static void addToClasspath(Collection<String> paths) {
+    try {
+      List<IClasspathEntry> entries = Helper.newArrayList(Arrays.asList(javaProject.getRawClasspath()));
+      for (String path : paths) {
+        entries.add(JavaCore.newLibraryEntry(new Path(path), null, null));
       }
       javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
     } catch (CoreException e) {

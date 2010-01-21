@@ -74,6 +74,7 @@ public class Extractor implements IApplication {
   public static final Property<Boolean> RESOLVE_MISSING_TYPES = new BooleanProperty("resolve-missing-types", false, "Extractor", "Re-attempt extraction on failed missing type extractions.");
 
   public static final Property<Boolean> FORCE_SOURCE_REDO = new BooleanProperty("force-source-redo", false, "Extractor", "Redo completed extraction.");
+  public static final Property<Boolean> FORCE_MISSING_REDO = new BooleanProperty("force-missing-redo", false, "Extractor", "Redo completed extraction.");
   public static final Property<Boolean> USE_PROJECT_JARS = new BooleanProperty("use-project-jars", true, "Extractor", "Use project jars on the classpath.");
   
   @Override
@@ -82,7 +83,7 @@ public class Extractor implements IApplication {
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
    
-    PropertyManager.registerAndVerify(EXTRACT_LIBRARIES, EXTRACT_JARS, EXTRACT_PROJECTS, EXTRACT_LATEST_MAVEN, RESOLVE_MISSING_TYPES, FORCE_SOURCE_REDO,
+    PropertyManager.registerAndVerify(EXTRACT_LIBRARIES, EXTRACT_JARS, EXTRACT_PROJECTS, EXTRACT_LATEST_MAVEN, RESOLVE_MISSING_TYPES, FORCE_SOURCE_REDO, FORCE_MISSING_REDO,
         IMPORT_WRITER, IMPORT_FILE,
         PROBLEM_WRITER, ProblemWriter.PROBLEM_FILE,
         ENTITY_WRITER, JAR_ENTITY_WRITER, ENTITY_FILE,

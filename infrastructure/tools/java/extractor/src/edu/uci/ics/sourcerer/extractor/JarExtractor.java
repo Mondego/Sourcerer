@@ -97,7 +97,7 @@ public class JarExtractor {
                 firstOrderImports = newJars.size();
               }
               logger.info("  Adding " + newJars.size() + " jar(s) to the classpath...");
-              EclipseUtils.addToClasspath(newJars);
+              EclipseUtils.addJarsToClasspath(newJars);
               jars.addAll(newJars);
             }
           } else {
