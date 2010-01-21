@@ -110,3 +110,13 @@
   border: 1px solid silver;
   background: #eeeeee;
 }
+
+div.result_code{
+	font-family: courier;
+	font-size: 12px;
+	margin: 1px;
+	margin-top:8px;
+/*	background: #e6e6e6;*/
+	padding: 8px;
+/*	border-bottom: 1px solid silver;*/
+}

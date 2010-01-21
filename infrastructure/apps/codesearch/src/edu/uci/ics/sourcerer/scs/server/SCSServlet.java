@@ -53,7 +53,8 @@ public class SCSServlet extends HttpServlet {
 	private String getGETResult(String query) {
 		
 		//TODO move this to servlet config
-		String urlPart = "http://nile.ics.uci.edu:8983/solr/scs/select/";
+		String urlPart = // "http://nile.ics.uci.edu:8983/solr/scs/select/";
+			"http://localhost:8984/solr/scs/select/";
 		
 		
 		//TODO handle this using query parser

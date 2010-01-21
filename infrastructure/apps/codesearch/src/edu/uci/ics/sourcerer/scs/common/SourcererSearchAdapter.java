@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -30,6 +31,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 import edu.uci.ics.sourcerer.scs.common.client.SearchHeuristic;
+import edu.uci.ics.sourcerer.scs.common.client.UsedFqn;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
@@ -38,21 +40,45 @@ import edu.uci.ics.sourcerer.scs.common.client.SearchHeuristic;
  */
 public class SourcererSearchAdapter {
 
-	private static String SEARCH_SERVER = "http://nile.ics.uci.edu:8984";
-	private static String FACET_SERVER  = "http://nile.ics.uci.edu:8983"; 
-	private static String MLT_SERVER    = "http://nile.ics.uci.edu:8983";
-	private static String FILE_SERVER   = "http://nile.ics.uci.edu:9180";
+	private static String SEARCH_SERVER = 
+	//	"http://localhost:8984"; 
+	 "http://kathmandu.ics.uci.edu:8984"; 
+	// "http://nile.ics.uci.edu:8984";
+	private static String FACET_SERVER  = 
+	//	"http://localhost:8984"; 
+	 "http://kathmandu.ics.uci.edu:8984"; 
+	// "http://nile.ics.uci.edu:8983"; 
+	private static String MLT_SERVER    = 
+	//	"http://localhost:8984"; 
+	"http://kathmandu.ics.uci.edu:8984"; 
+	// "http://nile.ics.uci.edu:8983";
+	private static String FILE_SERVER   = 
+	//	"http://nile.ics.uci.edu:9180/file-server";		
+		"http://kathmandu.ics.uci.edu:8080/file-server";
 	
-	private static String QUERY_PART_SNAME_CONTENTS = "sname_contents^40.0%20";
-	private static String QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS =   // "sim_sname_contents_via_jdk_use^10.0%20sim_sname_contents_via_lib_use^10.0%20sim_sname_contents_via_local_use^10.0%20";
-										   			//  "sim_sname_contents_via_jdk_use^20.0%20sim_sname_contents_via_lib_use^20.0%20sim_sname_contents_via_local_use^20.0%20";
-		  	"sim_sname_contents_via_jdk_use^1.0%20sim_sname_contents_via_lib_use^1.0%20";
-	private static String QUERY_PART_LOCAL_SIM_SNAME_CONTENTS = "sim_sname_contents_via_local_use^1.0%20";	
-	private static String QUERY_PART_FQN_CONTENTS = "fqn_contents^20.0%20";
-	private static String QUERY_PART_USE_SNAME_CONTENTS = "jdk_use_sname_contents^20.0%20lib_use_sname_contents^20.0%20local_use_sname_contents^20.0%20";
-	private static String QUERY_PART_USE_FQN_CONTENTS = "jdk_use_fqn_contents^10.0%20lib_use_fqn_contents^10.0%20local_use_fqn_contents^10.0%20";
-	private static String QUERY_PART_FULL_TEXT = "full_text^1.0%20";
+	private static String QUERY_PART_SNAME_CONTENTS = "sname_contents^50.0%20";
+	private static String QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS =   
+		// "sim_sname_contents_via_jdk_use^10.0%20sim_sname_contents_via_lib_use^10.0%20sim_sname_contents_via_local_use^10.0%20";
+		//  "sim_sname_contents_via_jdk_use^20.0%20sim_sname_contents_via_lib_use^20.0%20sim_sname_contents_via_local_use^20.0%20";
+		  	"sim_sname_contents_via_jdk_use^1.0%20sim_sname_contents_via_lib_use^50.0%20";
+	private static String QUERY_PART_JDKLIB_TC_SIM_SNAME_CONTENTS =
+			"simTC_sname_contents_via_jdkLib_use^50.0%20";
+	private static String QUERY_PART_JDKLIB_HD_SIM_SNAME_CONTENTS =
+		"simHD_sname_contents_via_jdkLib_use^50.0%20";
+		
+	// private static String QUERY_PART_LOCAL_SIM_SNAME_CONTENTS = 
+	// "sim_sname_contents_via_local_use^1.0%20";	
+	private static String QUERY_PART_FQN_CONTENTS = "fqn_contents^25.0%20";
 	
+	private static String QUERY_PART_USE_SNAME_CONTENTS = 
+		"jdk_use_sname_contents^1.0%20lib_use_sname_contents^100.0%20"; 
+	//local_use_sname_contents^20.0%20";
+	private static String QUERY_PART_USE_FQN_CONTENTS = 
+		"jdk_use_fqn_contents^1.0%20lib_use_fqn_contents^50.0%20"; 
+	//local_use_fqn_contents^10.0%20";
+	
+	private static String QUERY_PART_FULL_TEXT = "full_text^1.0%20"; // switch to 25
+	private static String QUERY_PART_USED_JAVADOC = "lib_use_javadoc^50.0%20";
 	static JavaToHtml j2h = new JavaToHtml();
 	
 	public static String searchSCSServer(String query) {
@@ -60,10 +86,16 @@ public class SourcererSearchAdapter {
 		return getGETResult(query, 1, 10, SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibSimSNAME_SNAME);
 	}
 	
+	public static String getFormattedSnippet(String raw){
+		j2h.reset();
+		String result = "<div class=\"result_code\">" + j2h.process(raw) + "</div>";
+		return result;
+	}
+	
 	public static String getEntityCode(String entityId, Set<String> qterms,
 			Set<String> usedEntities){
 		
-		String rawCode = getEntityCode(entityId);
+		String rawCode = getEntityCodeRaw(entityId);
 		
 		j2h.reset();
 		// System.out.print(j2h.process(javaCode));
@@ -80,10 +112,26 @@ public class SourcererSearchAdapter {
 		return result;
 	}
 	
-	public static String getEntityCode(String entityId){
+	public static String getEntityCodeRaw(String entityId){
 		
-		String urlPart = FILE_SERVER + "/repofileserver/" ;//?entityID=5096973";
-		String queryString = "entityID=" + entityId;
+		return(getEntityCodeRaw(entityId, "jarEntity"));
+	}
+	
+	public static String getJarClassFileCodeRaw(String jarClassFileID){
+		return(getEntityCodeRaw(jarClassFileID, "jarClassFileID"));
+	}
+	
+	/**
+	 * 
+	 * @param entityId
+	 * @param codeEntityType valid: jarEntity, jarClassFileID .. etc
+	 * @return
+	 */
+	private static String getEntityCodeRaw(String entityId, String codeEntityType){
+		//http://nile.ics.uci.edu:9180/file-server?jarClassFileID=100
+		
+		String urlPart = FILE_SERVER + "?" ;//?entityID=5096973";
+		String queryString = codeEntityType + "=" + entityId;
 		
 		try {
 			
@@ -103,7 +151,7 @@ public class SourcererSearchAdapter {
 		String queryString = "start=" + start + "&rows=" + rows 
 			// TODO refactor out as constant 
 			// collapse duplicate FQNs
-			+ "&collapse.field=fqn_full&collapse.max=1&collapse.type=normal" 
+			+ "&collapse.field=fqn_full&collapse.max=1&collapse.type=normal"
 			+ buildQueryPart(query, heuristic);
 		
 		String result = "";
@@ -211,7 +259,7 @@ public class SourcererSearchAdapter {
 		case TEXT:
 			queryPart = "&q=" + queryTerms 
 			 + "&fl=*,score&qt=dismax&qf=" +
-			 		QUERY_PART_FULL_TEXT
+			 		QUERY_PART_FULL_TEXT 
 			 		;
 			break;	
 		
@@ -236,7 +284,7 @@ public class SourcererSearchAdapter {
 		case TEXT_FQN_SNAME:
 			queryPart = "&q=" + queryTerms 
 			 + "&fl=*,score&qt=dismax&qf=" +
-			 		QUERY_PART_FULL_TEXT +
+			 		QUERY_PART_FULL_TEXT + 
 			 		QUERY_PART_FQN_CONTENTS +
 			 		QUERY_PART_SNAME_CONTENTS
 			 		;
@@ -245,21 +293,21 @@ public class SourcererSearchAdapter {
 		case TEXT_SNAME:
 			queryPart = "&q=" + queryTerms 
 			 + "&fl=*,score&qt=dismax&qf=" +
-			 		QUERY_PART_FULL_TEXT +
+			 		QUERY_PART_FULL_TEXT + 
 			 		QUERY_PART_SNAME_CONTENTS
 			 		;
 			break;	
 		
-		case FQN_USEDFQN_SimSNAME_SNAME:
-			queryPart = "&q=" + queryTerms 
-			 + "&fl=*,score&qt=dismax&qf=" +
-			 		QUERY_PART_FQN_CONTENTS +
-			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
-			 		QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS +
-			 		QUERY_PART_LOCAL_SIM_SNAME_CONTENTS +
-			 		QUERY_PART_SNAME_CONTENTS
-			 		;
-			break;
+//		case FQN_USEDFQN_SimSNAME_SNAME:
+//			queryPart = "&q=" + queryTerms 
+//			 + "&fl=*,score&qt=dismax&qf=" +
+//			 		QUERY_PART_FQN_CONTENTS +
+//			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+//			 		QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS +
+//			 		QUERY_PART_LOCAL_SIM_SNAME_CONTENTS +
+//			 		QUERY_PART_SNAME_CONTENTS
+//			 		;
+//			break;
 		
 		case FQN_USEDFQN_JdkLibSimSNAME_SNAME:
 			queryPart = "&q=" + queryTerms 
@@ -269,40 +317,168 @@ public class SourcererSearchAdapter {
 			 		QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS +
 			 		QUERY_PART_SNAME_CONTENTS
 			 		;
-			break;	
+			break;
 			
-		case TEXT_USEDFQN_FQN_SNAME:
+		case FQN_USEDFQN_JdkLibTcSimSNAME_SNAME:
 			queryPart = "&q=" + queryTerms 
 			 + "&fl=*,score&qt=dismax&qf=" +
-			 		QUERY_PART_FULL_TEXT +
-			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
 			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_JDKLIB_TC_SIM_SNAME_CONTENTS +
 			 		QUERY_PART_SNAME_CONTENTS
 			 		;
 			break;
-		
-		case TEXT_USEDFQN_FQN_SimSNAME_SNAME:
+			
+		case FQN_USEDFQN_JdkLibHdSimSNAME_SNAME:
 			queryPart = "&q=" + queryTerms 
 			 + "&fl=*,score&qt=dismax&qf=" +
-			 		QUERY_PART_FULL_TEXT +
-			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
 			 		QUERY_PART_FQN_CONTENTS +
-			 		QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS +
-			 		QUERY_PART_LOCAL_SIM_SNAME_CONTENTS +
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_JDKLIB_HD_SIM_SNAME_CONTENTS +
 			 		QUERY_PART_SNAME_CONTENTS
 			 		;
-			break;	
+			break;
 			
 		case TEXT_USEDFQN_FQN_JdkLibSimSNAME_SNAME:
 			queryPart = "&q=" + queryTerms 
 			 + "&fl=*,score&qt=dismax&qf=" +
-			 		QUERY_PART_FULL_TEXT +
+			 		QUERY_PART_FULL_TEXT + 
 			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
 			 		QUERY_PART_FQN_CONTENTS +
 			 		QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS +
 			 		QUERY_PART_SNAME_CONTENTS
 			 		;
 			break;
+			
+		case TEXT_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_FULL_TEXT + 
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_JDKLIB_TC_SIM_SNAME_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
+			
+		case TEXT_USEDFQN_FQN_JdkLibHdSimSNAME_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_FULL_TEXT +  
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_JDKLIB_HD_SIM_SNAME_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
+			
+		case TEXT_USEDFQN_FQN_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_FULL_TEXT + 
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
+			
+		// text + javadoc
+		
+		case TEXT_UJDOC_USEDFQN_FQN_JdkLibSimSNAME_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_FULL_TEXT + QUERY_PART_USED_JAVADOC +
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
+			
+		case TEXT_UJDOC_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_FULL_TEXT + QUERY_PART_USED_JAVADOC +
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_JDKLIB_TC_SIM_SNAME_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
+			
+		case TEXT_UJDOC_USEDFQN_FQN_JdkLibHdSimSNAME_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_FULL_TEXT +  QUERY_PART_USED_JAVADOC +
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_JDKLIB_HD_SIM_SNAME_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
+			
+		case TEXT_UJDOC_USEDFQN_FQN_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_FULL_TEXT + QUERY_PART_USED_JAVADOC +
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
+			
+			
+			
+	   // END text + javadoc
+			
+			// javadoc
+			// text + javadoc
+			
+		case UJDOC_USEDFQN_FQN_JdkLibSimSNAME_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_USED_JAVADOC +
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
+			
+		case UJDOC_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_USED_JAVADOC +
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_JDKLIB_TC_SIM_SNAME_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
+			
+		case UJDOC_USEDFQN_FQN_JdkLibHdSimSNAME_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_USED_JAVADOC +
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_JDKLIB_HD_SIM_SNAME_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
+			
+		case UJDOC_USEDFQN_FQN_SNAME:
+			queryPart = "&q=" + queryTerms 
+			 + "&fl=*,score&qt=dismax&qf=" +
+			 		QUERY_PART_USED_JAVADOC +
+			 		QUERY_PART_USE_FQN_CONTENTS + QUERY_PART_USE_SNAME_CONTENTS +
+			 		QUERY_PART_FQN_CONTENTS +
+			 		QUERY_PART_SNAME_CONTENTS
+			 		;
+			break;
+			
+			// end javadoc
+			
 			
 //		case FQN_USEDFQN_MIN_ONE_TERM_IN_SNAME:
 //			queryPart = "";
@@ -328,7 +504,7 @@ public class SourcererSearchAdapter {
 //			
 		}
 		
-		return queryPart;
+		return queryPart + "&fq=entity_type:METHOD";
 	}
 
 	public static String searchSCSServer(String query, long start, int rows,
@@ -342,19 +518,11 @@ public class SourcererSearchAdapter {
 
 	private static String searchFacets(String query, SearchHeuristic heuristic){
 		
-		// TODO: #2 Remove this
-		query = query.replaceAll("\\s", "%20");
 		
-		String urlPart = FACET_SERVER + "/solr/scs/select/";
+		String urlPart = FACET_SERVER + "/solr/scs/select";
 		
 		String queryString = "start=" + 1 + "&rows=" + 0 
-			
-		// TODO: #2 fix this.. add new missing fields to the new index
-		//			till then get it working approximately
-		//	+ buildQueryPart(query, heuristic) // Put this back on
-			+ "&q=" + query // Remove this
-		// END TODO #2
-			
+			+ buildQueryPart(query, heuristic)
 			+ "&facet=true&facet.field=lib_use_fqn_full&facet.field=jdk_use_fqn_full&facet.field=entity_type&facet.mincount=1";
 		
 		String result = "";
@@ -409,6 +577,8 @@ public class SourcererSearchAdapter {
 	public static String getUsageAsFacets(String query, SearchHeuristic heuristic){
 		return searchFacets(query, heuristic);
 	}
+	
+	
 
 }
 

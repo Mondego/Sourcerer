@@ -30,6 +30,7 @@
 	<property name="build-core-repomanager" location="${build}/core-repomanager" />
 	<property name="build-codecrawler" location="${build}/codecrawler" />
 	<property name="build-extractor" location="${build}/extractor" />
+	<property name="build-machine-learning" location="${build}/machine-learning" />
 
 	<property name="utilities" location="../infrastructure/utilities/src" />
 	<property name="repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
@@ -44,7 +45,8 @@
 	<property name="test-repo" location="../infrastructure/tools/java/extractor/test-repo" />
 	<property name="lib" location="../lib" />
 	<property name="extractor-bin" location="../infrastructure/tools/java/extractor/bin" />
-
+	<property name="machine-learning" location="../infrastructure/tools/core/machine-learning/src" />
+	
 	<target name="init">
 		<mkdir dir="${build}" />
 	</target>
@@ -135,10 +137,10 @@
 		<javac destdir="${build-database}" debug="on">
 		  <src path="${utilities}" />
 		  <src path="${repository-manager}" />
-			<src path="${model}" />
-			<src path="${database}" />
+		  <src path="${model}" />
+		  <src path="${database}" />
 	  </javac>
-		<copy todir="${build-database}">
+	<copy todir="${build-database}">
       <fileset dir="${utilities}" includes="**/*.java" />
     </copy>
     <copy todir="${build-database}">
@@ -248,10 +250,15 @@
 					<include name="**/apache-solr*.jar" />
 					<include name="**/lucene-*.jar" />
 					<include name="**/commons-httpclient-*.jar" />
+					<include name="**/commons-cli-*.jar" />
 				</fileset>
 			</classpath>
 			<src path="${search-server}" />
+			<src path="${utilities}" />
 		</javac>
+		<copy todir="${build-search-server}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
 		<copy todir="${build-search-server}">
 			<fileset dir="${search-server}" includes="**/*.java" />
 		</copy>
@@ -387,4 +394,61 @@
 	<target name="clean" description="clean up" depends="clean-java-tools">
 		<delete dir="${build}" />
 	</target>
+	
+	<target name="init-machine-learning" depends="init">
+			<mkdir dir="${build-machine-learning}" />
+	</target>
+		
+	<target name="compile-machine-learning" depends="init-machine-learning, database">
+		<javac destdir="${build-machine-learning}" debug="on">
+			<src path="${machine-learning}" />
+			<!--
+			<src path="${utilities}" />
+			<src path="${database}" />
+			-->
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/mahout-core-*.jar" />
+					<include name="**/slf4j-*.jar" />	
+					<include name="**/commons-*.jar" />
+					<include name="**/mahout-core-*.jar" />
+					<include name="**/uncommons-*.jar" />
+					<include name="**/mysql-*.jar" />
+					<include name="**/j2ee-*.jar" />
+				</fileset>
+				<fileset dir=".">
+					<include name="**/sourcerer-db.jar"/>
+				</fileset>
+			</classpath>
+		 </javac>
+		<copy todir="${build-machine-learning}">
+	      <fileset dir="${machine-learning}" includes="**/*.java" />
+	    </copy>
+		
+		<!--
+		<copy todir="${build-machine-learning}">
+		      <fileset dir="${database}" includes="**/*.java" />
+		 </copy>
+		<copy todir="${build-machine-learning}">
+		      <fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
+		-->
+		
+	</target>
+		
+	<target name="machine-learning" depends="compile-machine-learning">
+		<jar destfile="sourcerer-ml.jar" basedir="${build-machine-learning}">
+	  	</jar>
+	</target>
+	  		
+	<target name="clean-machine-learning">
+		 <delete dir="${build-machine-learning}" />
+		 <delete>
+		    <fileset dir=".">
+		      <include name="sourcerer-ml.jar" />
+	      </fileset>
+	  	</delete>
+	</target>
+	
 </project>

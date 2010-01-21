@@ -31,6 +31,9 @@ import edu.uci.ics.sourcerer.db.adapter.JdbcDataSource;
 import edu.uci.ics.sourcerer.db.adapter.SourcererDbAdapter;
 import edu.uci.ics.sourcerer.scs.client.ERTables;
 import edu.uci.ics.sourcerer.scs.client.SourcererDBService;
+import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
+import edu.uci.ics.sourcerer.scs.common.client.HitFqnEntityId;
+import edu.uci.ics.sourcerer.scs.common.client.UsedFqn;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
@@ -45,12 +48,15 @@ public class SourcererDBServiceImpl extends RemoteServiceServlet implements
 	
 	public void init(){
 		
-		//TODO read all values from web.xml
+		String dbUrl = getInitParameter("db-url");
+		String dbUser = getInitParameter("db-user");
+		String dbPassword = getInitParameter("db-password");
+		
 		Properties p = new Properties();
 	    p.put("driver", "com.mysql.jdbc.Driver");
-	    p.put("url", "jdbc:mysql://tagus.ics.uci.edu:3306/sourcerer");
-	    p.put("user", "sourcerer-public");
-	    p.put("password", "");
+	    p.put("url", dbUrl);
+	    p.put("user", dbUser);
+	    p.put("password", dbPassword);
 	    ds.init(p);
 	    
 	    dba.setDataSource(ds);
@@ -61,6 +67,13 @@ public class SourcererDBServiceImpl extends RemoteServiceServlet implements
 		return dba.buildDbForHitEntities(hitEntities);
 		
 	}
+
+	public UsedFqn fillUsedFqnDetails(HitFqnEntityId fqn, EntityCategory cat) {
+		return dba.fillUsedFqnDetails(fqn, cat);
+	}
 	
+	public List<UsedFqn> fillUsedFqnDetails(List<HitFqnEntityId> fqns, EntityCategory cat) {
+		return dba.fillUsedFqnsDetails(fqns, cat);
+	}
 	
 }

@@ -32,6 +32,8 @@ import com.smartgwt.client.widgets.events.MouseOverHandler;
 import com.smartgwt.client.widgets.layout.LayoutSpacer;
 import com.smartgwt.client.widgets.layout.VLayout;
 
+import edu.uci.ics.sourcerer.scs.common.client.HitFqnEntityId;
+
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
  * @created Sep 10, 2009

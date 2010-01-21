@@ -25,17 +25,36 @@ package edu.uci.ics.sourcerer.scs.common.client;
  */
 public enum SearchHeuristic {
 	
-	TEXT_USEDFQN_FQN_SimSNAME_SNAME("Text + Used FQNs + FQN + sim sname + sname"),
+//  TODO enable these by considering all sim snames together
+//	TEXT_USEDFQN_FQN_SimSNAME_SNAME("Text + Used FQNs + FQN + sim sname + sname"),
+//	FQN_USEDFQN_SimSNAME_SNAME("Used FQNs + FQN + sim sname + sname"),
+	
+	TEXT_UJDOC_USEDFQN_FQN_JdkLibSimSNAME_SNAME("Text + Used FQNs/Javadoc + FQN + Jdk/Lib sim sname + sname"),
+	TEXT_UJDOC_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME("Text + Used FQNs/Javadoc + FQN + Jdk/Lib Tanimoto sim sname + sname"),
+	TEXT_UJDOC_USEDFQN_FQN_JdkLibHdSimSNAME_SNAME("Text + Used FQNs/Javadoc + FQN + Jdk/Lib Hamming sim sname + sname"),
+	TEXT_UJDOC_USEDFQN_FQN_SNAME("Text + Used FQNs/Javadoc + FQN + sname"),
+	
 	TEXT_USEDFQN_FQN_JdkLibSimSNAME_SNAME("Text + Used FQNs + FQN + Jdk/Lib sim sname + sname"),
+	TEXT_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME("Text + Used FQNs + FQN + Jdk/Lib Tanimoto sim sname + sname"),
+	TEXT_USEDFQN_FQN_JdkLibHdSimSNAME_SNAME("Text + Used FQNs + FQN + Jdk/Lib Hamming sim sname + sname"),
 	TEXT_USEDFQN_FQN_SNAME("Text + Used FQNs + FQN + sname"),
-	FQN_USEDFQN_SimSNAME_SNAME("Used FQNs + FQN + sim sname + sname"),
+
+	UJDOC_USEDFQN_FQN_JdkLibSimSNAME_SNAME("Used FQNs/Javadoc + FQN + Jdk/Lib sim sname + sname"),
+	UJDOC_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME("Used FQNs/Javadoc + FQN + Jdk/Lib Tanimoto sim sname + sname"),
+	UJDOC_USEDFQN_FQN_JdkLibHdSimSNAME_SNAME("Used FQNs/Javadoc + FQN + Jdk/Lib Hamming sim sname + sname"),
+	UJDOC_USEDFQN_FQN_SNAME("Used FQNs/Javadoc + FQN + sname"),
+	
 	FQN_USEDFQN_JdkLibSimSNAME_SNAME("Used FQNs + FQN + Jdk/Lib sim sname + sname"),
+	FQN_USEDFQN_JdkLibTcSimSNAME_SNAME("Used FQNs + FQN + Jdk/Lib Tanimoto sim sname + sname"),
+	FQN_USEDFQN_JdkLibHdSimSNAME_SNAME("Used FQNs + FQN + Jdk/Lib Hamming sim sname + sname"),
 	FQN_USEDFQN_SNAME("Used FQNs + FQN + sname"),
+	
 	TEXT_FQN_SNAME("Text + FQN + sname"),
 	TEXT_SNAME("Text + sname"),
 	FQN_SNAME("FQN + sname"),
 	//FQN_USEDFQN_MIN_ONE_TERM_IN_SNAME("Used FQNs + FQN + min one term match in sname"),
 	TEXT("Text Only"),
+	
 	
 	NONE("Use raw lucene query");
 	

@@ -40,11 +40,8 @@ import junit.framework.TestCase;
  * @created Sep 10, 2009
  *
  */
-public class TestSourcererDbAdapter extends TestCase {
+public class TestSourcererDbAdapter extends TestSourcererDbAdapterBase {
 
-	JdbcDataSource dataSource = new JdbcDataSource();
-    SourcererDbAdapter dba = new SourcererDbAdapter();
-	
 	String[] hitEids = new String[]{
 			"5804931",
 			"6934165",
@@ -76,13 +73,6 @@ public class TestSourcererDbAdapter extends TestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 		
-		Properties p = new Properties();
-	    p.put("driver", "com.mysql.jdbc.Driver");
-	    p.put("url", "jdbc:mysql://tagus.ics.uci.edu:3306/sourcerer");
-	    p.put("user", "sourcerer-public");
-	    p.put("password", "");
-	    dataSource.init(p);
-	    
 	    dba.setDataSource(dataSource);
 	    dba.buildDbForHitEntities(Arrays.asList(hitEids));
 	}

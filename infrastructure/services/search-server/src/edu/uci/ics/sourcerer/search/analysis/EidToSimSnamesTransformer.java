@@ -21,6 +21,9 @@ package edu.uci.ics.sourcerer.search.analysis;
 import java.math.BigInteger;
 import java.util.Map;
 
+import org.apache.solr.handler.dataimport.Context;
+import org.apache.solr.handler.dataimport.Transformer;
+
 import edu.uci.ics.sourcerer.search.SourcererGateway;
 
 /**
@@ -28,20 +31,41 @@ import edu.uci.ics.sourcerer.search.SourcererGateway;
  * @created Aug 18, 2009
  *
  */
-public class EidToSimSnamesTransformer {
+public class EidToSimSnamesTransformer extends Transformer{
 	// use default urls
 	SourcererGateway sg = SourcererGateway.getInstance("", "");
 	
-	public Object transformRow(Map<String, Object> row)     {
-        String eid =  ((BigInteger) row.get("eid")) + "";
+	public Object transformRow(Map<String, Object> row, Context context)     {
+        String codeServerUrl = context.getEntityAttribute("code-server-url");
+		if(codeServerUrl!=null) sg.setCodeServerUrl(codeServerUrl);
+		
+		String mltServerUrl = context.getEntityAttribute("mlt-server-url");
+		if(mltServerUrl!=null) sg.setMltServerUrl(mltServerUrl);
+		
+		String eid =  ((BigInteger) row.get("eid")) + "";
         String etype = (String) row.get("etype");
         if (eid != null && etype!=null){             
         	
-        	if(etype.equals("CLASS") || etype.equals("METHOD")){
+        	if(etype.equals("CLASS") 
+        			|| etype.equals("METHOD") 
+        			|| etype.equals("CONSTRCUTOR")
+        			|| etype.equals("UNKNOWN")){
+        		
 	        	row.put("sim_fqns_via_jdk_use", sg.mltSnamesViaJdkUse(eid));
 	        	row.put("sim_fqns_via_lib_use", sg.mltSnamesViaLibUse(eid));
-	        	row.put("sim_fqns_via_local_use", sg.mltSnamesViaLocalUse(eid));
-	        	row.put("code_text", sg.getCode(eid));
+	        	// row.put("sim_fqns_via_local_use", sg.mltSnamesViaLocalUse(eid));
+	        	row.put("sim_fqns_via_jdkLib_use", sg.mltSnamesViaJdkLibUse(eid));
+	        	// row.put("sim_fqns_via_all_use", sg.mltSnamesViaAllUse(eid));
+	        	// row.put("simTC_fqns_via_jdkLib_use", sg.snamesViaSimEntitiesTC(eid));
+	        	
+	        	if(codeServerUrl!=null && codeServerUrl.length()>0){
+	        		String code = sg.getCode(eid);
+	        		if(code!=null 
+	        				&& code.length()>0 
+	        				&& !code.startsWith("Unable to find")){
+	        			row.put("code_text", code);
+	        		}
+	        	}
         	}
         }
 

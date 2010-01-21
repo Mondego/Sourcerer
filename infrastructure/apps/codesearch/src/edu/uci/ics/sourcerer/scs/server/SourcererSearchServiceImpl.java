@@ -61,7 +61,7 @@ public class SourcererSearchServiceImpl extends RemoteServiceServlet implements
 	}
 	
 	public String getEntityCode(String entityId){
-		return SourcererSearchAdapter.getEntityCode(entityId);
+		return SourcererSearchAdapter.getEntityCodeRaw(entityId);
 	}
 
 	public String searchSCSServer(String query, long start, int rows) {

@@ -18,7 +18,7 @@
  */
 package edu.uci.ics.sourcerer.scs.client;
 
-import edu.uci.ics.sourcerer.db.adapter.client.EntityCategory;
+import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>

@@ -27,8 +27,8 @@ import com.smartgwt.client.widgets.events.MouseOutHandler;
 import com.smartgwt.client.widgets.events.MouseOverEvent;
 import com.smartgwt.client.widgets.events.MouseOverHandler;
 
-import edu.uci.ics.sourcerer.db.adapter.client.EntityCategory;
 import edu.uci.ics.sourcerer.scs.client.event.ApiSelectedEvent;
+import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>

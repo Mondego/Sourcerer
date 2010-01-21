@@ -24,6 +24,17 @@
 <web-app>
   
   <!-- Servlets -->
+  
+  <servlet>
+    <servlet-name>evalSnippetServiceImpl</servlet-name>
+    <servlet-class>edu.uci.ics.sourcerer.evalsnippets.server.EvalSnippetServiceImpl</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>evalSnippetServiceImpl</servlet-name>
+    <url-pattern>/snippeteval/eval</url-pattern>
+  </servlet-mapping>
+  
   <servlet>
     <servlet-name>evalServiceImpl</servlet-name>
     <servlet-class>edu.uci.ics.sourcerer.eval.server.EvalServiceImpl</servlet-class>
@@ -47,6 +58,21 @@
   <servlet>
     <servlet-name>sdbServlet</servlet-name>
     <servlet-class>edu.uci.ics.sourcerer.scs.server.SourcererDBServiceImpl</servlet-class>
+    <init-param>
+        <param-name>db-url</param-name>
+        <!--  param-value>jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_test</param-value -->
+        <param-value>jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_t2</param-value>
+    </init-param>
+    <init-param>
+        <param-name>db-user</param-name>
+        <param-value>$sourcerer.db.user$</param-value>
+    </init-param>
+    <init-param>
+        <param-name>db-password</param-name>
+        <param-value>$sourcerer.db.password$</param-value>
+    </init-param>
+    
+    
   </servlet>
   
   <servlet-mapping>

@@ -26,7 +26,7 @@ import com.smartgwt.client.types.TreeModelType;
 import com.smartgwt.client.widgets.tree.Tree;
 
 import edu.uci.ics.sourcerer.db.adapter.client.Entity;
-import edu.uci.ics.sourcerer.db.adapter.client.EntityCategory;
+import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>

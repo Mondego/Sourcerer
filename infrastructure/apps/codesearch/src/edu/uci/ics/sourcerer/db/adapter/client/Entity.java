@@ -20,6 +20,9 @@ package edu.uci.ics.sourcerer.db.adapter.client;
 
 import java.io.Serializable;
 
+import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
+import edu.uci.ics.sourcerer.scs.common.client.EntityType;
+
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
  * @created Jul 20, 2009

@@ -1,0 +1,118 @@
+<dataConfig>
+    <!-- 
+    <dataSource driver="com.mysql.jdbc.Driver" 
+		url="jdbc:mysql://localhost:3307/sourcerer_test" 
+    	user="" 
+    	password=""  />
+     -->
+    
+    <dataSource driver="com.mysql.jdbc.Driver" 
+		url="jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_t2" 
+    	user="$sourcerer.db.user$" 
+    	password="$sourcerer.db.password$"  />
+    	
+    <!-- 
+     and jar_id in (5,6,15,17,24,32,52,54,62,67,76,88,105,114,125,132,145,147,157,168,175,177,180,181,184,190,205,215,217,224,230,237,240,254,261,272,287,291,310,312,319,325,334,347,352,357,390,392,399,441,444,450,454,458,463,482,518,523,527,540,543,547,558,563,565,580,587,588,590,605,614,623,624,632,633,662,678,683,689,703,705,727,728,751,759,764,783,788,804,815,835,837,846,847,870,882,888,897,909,910,922,932,941,949,956,958,974,987,989,1002,1005,1012,1021,1029,1034,1048,1050,1052,1053,1057,1059,1065,1082,1087,1116,1119,1126,1149,1150,1153,1170,1171,1199,1216,1229,1237,1249,1265,1274,1275,1277,1309,1329,1340,1343,1348,1367,1368,1373,1383,1384,1393,1402,1413,1420,1428,1445,1483,1488,1489,1493,1503,1512,1521,1525,1544,1562,1571,1572,1588,1618,1620,1626,1634,1648,1655,1658,1670,1684,1686,1691,1692,1693,1728,1730,1746,1755,1793,1794,1802,1817,1820,1825,1840,1848,1851,1892,1907,1908,1909,1910,1911,1912,1913,1914,1915,1916,1919,1920,1921,1922,1923,1925,1927,1930,1931,1932,1933,1934,1935,1936,1937,1938,1941,1942,1944,1945,1946,1947,1949,1950,1952,1953,1954,1955,1956,1957,1959,1960,1961,1962,1963,1964,1965,1966,1967,1968,1969,1970,1971,1972,1973,1976,1977,1978,1979,1981,1983,1984,1985,1986,1987,1988,1989,1990,1991,1993,1994,1995,1997,1999,2000,2001,2002,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026,2027,2028,2029,2030,2031,2032,2033,2035,2038,2039,2041,2042,2043,2044,2045,2046,2047,2048,2049,2050,2051,2052,2053,2054,2055,2056,2058,2059,2060,2061,2062,2063,2064,2065,2066,2067,2069,2070,2071,2072,2073,2074,2075,2077,2078,2079,2080,2081,2082)"
+     -->	
+    	
+    <document name="entity">
+	    <entity name="code_entity" pk="entity_id" 
+		    transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+			query="select entity_id, fqn, entity_type from jar_entities 
+		    		where entity_type in ('CLASS','METHOD','CONSTRUCTOR','UNKNOWN')
+					and length IS NOT NULL 
+					and jar_id in (5,6,15,17,24,32,52,54,62,67,76,88,105,114,125,132,145,147,157,168,175,177,180,181,184,190,205,215,217,224,230,237,240,254,261,272,287,291,310,312,319,325,334,347,352,357,390,392,399,441,444,450,454,458,463,482,518,523,527,540,543,547,558,563,565,580,587,588,590,605,614,623,624,632,633,662,678,683,689,703,705,727,728,751,759,764,783,788,804,815,835,837,846,847,870,882,888,897,909,910,922,932,941,949,956,958,974,987,989,1002,1005,1012,1021,1029,1034,1048,1050,1052,1053,1057,1059,1065,1082,1087,1116,1119,1126,1149,1150,1153,1170,1171,1199,1216,1229,1237,1249,1265,1274,1275,1277,1309,1329,1340,1343,1348,1367,1368,1373,1383,1384,1393,1402,1413,1420,1428,1445,1483,1488,1489,1493,1503,1512,1521,1525,1544,1562,1571,1572,1588,1618,1620,1626,1634,1648,1655,1658,1670,1684,1686,1691,1692,1693,1728,1730,1746,1755,1793,1794,1802,1817,1820,1825,1840,1848,1851,1892,1907,1908,1909,1910,1911,1912,1913,1914,1915,1916,1919,1920,1921,1922,1923,1925,1927,1930,1931,1932,1933,1934,1935,1936,1937,1938,1941,1942,1944,1945,1946,1947,1949,1950,1952,1953,1954,1955,1956,1957,1959,1960,1961,1962,1963,1964,1965,1966,1967,1968,1969,1970,1971,1972,1973,1976,1977,1978,1979,1981,1983,1984,1985,1986,1987,1988,1989,1990,1991,1993,1994,1995,1997,1999,2000,2001,2002,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026,2027,2028,2029,2030,2031,2032,2033,2035,2038,2039,2041,2042,2043,2044,2045,2046,2047,2048,2049,2050,2051,2052,2053,2054,2055,2056,2058,2059,2060,2061,2062,2063,2064,2065,2066,2067,2069,2070,2071,2072,2073,2074,2075,2077,2078,2079,2080,2081,2082)"
+
+		    deltaQuery="select entity_id from entities 
+		    		where last_modified > '${dataimporter.last_index_time}'">
+
+		<field column="fqn" name="sname_contents" fix-init="true"/>
+		<field column="fqn" name="fqn_contents" clean-fqn="true" />
+		<field column="fqn" name="fqn_full" clean-fqn="true"/>
+		<field column="fqn" name="fqn"/>
+		
+		<field column="entity_id" name="entity_id" />
+		<field column="entity_type" name="entity_type" />
+
+		<entity name="second_pass"
+			transformer="edu.uci.ics.sourcerer.search.analysis.EidToSimSnamesTransformer,edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+			query="SELECT entity_id as eid, entity_type as etype from jar_entities where
+				entity_id=${code_entity.entity_id}"
+			code-server-url="http://nile.ics.uci.edu:9180/file-server"	
+			mlt-server-url="http://localhost:8983/solr/scs/mlt" >
+			<field column="sim_fqns_via_jdk_use" name="sim_sname_contents_via_jdk_use" fix-init="true"/>
+			<field column="sim_fqns_via_lib_use" name="sim_sname_contents_via_lib_use" fix-init="true"/>
+			<field column="sim_fqns_via_jdkLib_use" name="sim_sname_contents_via_jdkLib_use" fix-init="true"/>
+			<field column="code_text" name="full_text"/>
+			
+		</entity>
+		
+		<entity name="TC_use"
+			transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+			query="SELECT je.fqn as simTC_fqn from similarity_tanimoto as stc
+					INNER JOIN jar_entities as je on stc.rhs_eid=je.entity_id
+					WHERE stc.lhs_eid='${code_entity.entity_id}'
+					ORDER BY stc.similarity DESC
+					LIMIT 30">
+			<field column="simTC_fqn" name="simTC_sname_contents_via_jdkLib_use" fix-init="true"/>
+			
+		</entity>
+		
+		<entity name="HD_use"
+			transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+			query="SELECT je.fqn as simHD_fqn from similarity_hamming as shd
+					INNER JOIN jar_entities as je on shd.rhs_eid=je.entity_id
+					WHERE shd.lhs_eid='${code_entity.entity_id}'
+					ORDER BY shd.similarity DESC
+					LIMIT 30">
+			<field column="simHD_fqn" name="simHD_sname_contents_via_jdkLib_use" fix-init="true"/>
+			
+		</entity>
+
+		<entity name="jdk_use" 
+			transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+			query="SELECT jdk_provider.fqn AS pfqn_jdk
+					FROM library_entities AS jdk_provider
+					INNER JOIN jar_relations AS jr ON jr.rhs_leid=jdk_provider.entity_id
+					WHERE
+					jr.relation_type in ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES')
+					AND jr.lhs_jeid='${code_entity.entity_id}'">
+		
+			<field column="pfqn_jdk" name="jdk_use_sname_contents" fix-init="true"/>
+			<field column="pfqn_jdk" name="jdk_use_fqn_contents" clean-fqn="true"/>
+			<field column="pfqn_jdk" name="jdk_use_fqn_full" />
+			<field column="pfqn_jdk" name="jdkLib_use_fqn_full"  />
+			
+				
+		</entity>
+
+		<entity name="lib_use" 
+			transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+			query="select je.fqn as pfqn_lib, je.entity_id as peid_lib   
+					from jar_relations as r1  
+					inner join jar_entities as je 
+					 on r1.rhs_jeid=je.entity_id 
+					where
+					r1.lhs_jeid='${code_entity.entity_id}' AND
+					r1.relation_type in ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES')">
+		
+			<field column="pfqn_lib" name="lib_use_sname_contents" fix-init="true" />
+			<field column="pfqn_lib" name="lib_use_fqn_full" />
+			<field column="pfqn_lib" name="jdkLib_use_fqn_full" />
+			<field column="pfqn_lib" name="lib_use_fqn_contents" clean-fqn="true"/>
+		
+			<entity name="lib_use_comment"
+				transformer="edu.uci.ics.sourcerer.search.analysis.UsedEntityCommentTransformer"
+				code-server-url="http://nile.ics.uci.edu:9180/file-server"
+				query="select comment_id as used_jcid 
+						from jar_comments
+						where following_eid=${lib_use.peid_lib}
+						and comment_type='JAVADOC'">
+				<field column="lp_javadoc" name="lib_use_javadoc"/>
+			</entity>
+		</entity>
+
+	</entity>
+    </document>
+</dataConfig>
+

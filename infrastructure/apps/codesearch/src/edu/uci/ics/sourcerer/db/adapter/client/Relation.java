@@ -21,6 +21,9 @@ package edu.uci.ics.sourcerer.db.adapter.client;
 
 import java.io.Serializable;
 
+import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
+import edu.uci.ics.sourcerer.scs.common.client.RelationType;
+
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
