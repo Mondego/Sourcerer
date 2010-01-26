@@ -19,6 +19,8 @@ package edu.uci.ics.sourcerer.model.extracted;
 
 import java.util.Collection;
 
+import edu.uci.ics.sourcerer.util.Helper;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
@@ -37,5 +39,30 @@ public class UsedJarEX implements ModelEX {
   
   public Collection<String> getMissingTypes() {
     return missingTypes;
+  }
+  
+  // ---- PARSER ----
+  private static final ModelExParser<UsedJarEX> parser = new ModelExParser<UsedJarEX>() {
+    @Override
+    public UsedJarEX parseLine(String line) {
+      String parts[] = line.split(" ");
+      Collection<String> missingTypes = Helper.newLinkedList();
+      for (int i = 1; i < parts.length; i++) {
+        missingTypes.add(parts[i]);
+      }
+      return new UsedJarEX(parts[0], missingTypes);
+    }
+  };
+  
+  public static ModelExParser<UsedJarEX> getParser() {
+    return parser;
+  }
+  
+  public static String getLine(String hash, String ... missingTypes) {
+    StringBuilder line = new StringBuilder(hash);
+    for (String missingType : missingTypes) {
+      line.append(" ").append(missingType);
+    }
+    return line.toString();
   }
 }

@@ -17,6 +17,10 @@
  */
 package edu.uci.ics.sourcerer.model.extracted;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.logging.Level;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
@@ -63,5 +67,27 @@ public class ImportEX implements ModelEX {
   
   public String toString() {
     return imported + " " + file;
+  }
+  
+  // ---- PARSER ----
+  private static ModelExParser<ImportEX> parser = new ModelExParser<ImportEX>() {
+    @Override
+    public ImportEX parseLine(String line) {
+      String[] parts = line.split(" ");
+      if (parts.length == 6) {
+        return new ImportEX(parts[0], parts[1].equals("STATIC"), parts[2].equals("ON_DEMAND"), parts[3], parts[4], parts[5]);
+      } else {
+        logger.log(Level.SEVERE, "Unable to parse import: " + line);
+        return null;
+      }
+    }
+  };
+  
+  public static ModelExParser<ImportEX> getParser() {
+    return parser;
+  }
+  
+  public static String getLine(String imported, boolean isStatic, boolean onDemand, String compilationUnitPath, int startPos, int length) {
+    return imported + " " + (isStatic ? "STATIC" : "NULL") + " " + (onDemand ? "ON_DEMAND" : "NULL") + " " + compilationUnitPath + " " + startPos + " " + length;
   }
 }

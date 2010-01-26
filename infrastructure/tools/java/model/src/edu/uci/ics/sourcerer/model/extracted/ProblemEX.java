@@ -17,6 +17,12 @@
  */
 package edu.uci.ics.sourcerer.model.extracted;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import edu.uci.ics.sourcerer.model.Problem;
 
 /**
@@ -53,5 +59,28 @@ public class ProblemEX implements ModelEX {
   
   public String toString() {
     return type + " " + relativePath + " " + errorCode + " " + message; 
+  }
+  
+  // ---- PARSER ----
+  private static ModelExParser<ProblemEX> parser = new ModelExParser<ProblemEX>() {
+    private Pattern pattern = Pattern.compile("([^\\s]*)\\s([^\\s]*)\\s([^\\s]*)\\s(.*)");
+    @Override
+    public ProblemEX parseLine(String line) {
+      Matcher matcher = pattern.matcher(line);
+      if (matcher.matches()) {
+        return new ProblemEX(Problem.valueOf(matcher.group(1)), matcher.group(3), matcher.group(2), matcher.group(4));
+      } else {
+        logger.log(Level.SEVERE, "Unable to parse problem: " + line);
+        return null;
+      }
+    }
+  };
+  
+  public static ModelExParser<ProblemEX> getParser() {
+    return parser;
+  }
+  
+  public static String getLine(Problem type, int errorCode, String message, String filename) {
+    return type.name() + " " + errorCode + " " + filename + " " + message;
   }
 }

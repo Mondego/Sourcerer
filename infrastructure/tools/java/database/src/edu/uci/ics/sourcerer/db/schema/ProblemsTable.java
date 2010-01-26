@@ -19,16 +19,18 @@ package edu.uci.ics.sourcerer.db.schema;
 
 import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Problem;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class ProblemsTable {
-  private ProblemsTable() {}
+public final class ProblemsTable extends DatabaseTable {
+  protected ProblemsTable(QueryExecutor executor, TableLocker locker) {
+    super(executor, locker, "problems");
+  }
   
-  public static final String TABLE = "problems";
   /*  
    *  +--------------+-----------------+-------+--------+
    *  | Column name  | Type            | Null? | Index? |
@@ -42,9 +44,9 @@ public final class ProblemsTable {
    */
   
   // ---- CREATE ----
-  public static void createTable(QueryExecutor executor) {
-    executor.createTable(TABLE, 
-        "problem_type " + SchemaUtils.getEnumCreate(Problem.values()) + " NOT NULL",
+  public void createTable() {
+    executor.createTable(name, 
+        "problem_type " + getEnumCreate(Problem.values()) + " NOT NULL",
         "error_code INT UNSIGNED NOT NULL",
         "message VARCHAR(1024) BINARY NOT NULL",
         "project_id BIGINT UNSIGNED NOT NULL",
@@ -56,25 +58,21 @@ public final class ProblemsTable {
   }
   
   // ---- INSERT ----
-  public static InsertBatcher getInsertBatcher(QueryExecutor executor) {
-    return executor.getInsertBatcher(TABLE);
+  private String getInsertValue(Problem type, String errorCode, String message, String projectID, String fileID) {
+    return buildInsertValue(
+        convertNotNullVarchar(type.name()),
+        convertNotNullNumber(errorCode),
+        convertNotNullVarchar(message),
+        convertNotNullNumber(projectID),
+        convertNotNullNumber(fileID));
   }
   
-  private static String getInsertValue(Problem type, String errorCode, String message, String projectID, String fileID) {
-    return SchemaUtils.getInsertValue(
-        SchemaUtils.convertNotNullVarchar(type.name()),
-        SchemaUtils.convertNotNullNumber(errorCode),
-        SchemaUtils.convertNotNullVarchar(message),
-        SchemaUtils.convertNotNullNumber(projectID),
-        SchemaUtils.convertNotNullNumber(fileID));
-  }
-  
-  public static void insert(InsertBatcher batcher, ProblemEX problem, String projectID, String fileID) {
+  public void insert(InsertBatcher batcher, ProblemEX problem, String projectID, String fileID) {
     batcher.addValue(getInsertValue(problem.getType(), problem.getErrorCode(), problem.getMessage(), projectID, fileID));
   }
   
   // ---- DELETE ----
-  public static void deleteByProjectID(QueryExecutor executor, String projectID) {
-    executor.delete(TABLE, "project_id=" + projectID);
+  public void deleteByProjectID(String projectID) {
+    executor.delete(name, "project_id=" + projectID);
   }
 }

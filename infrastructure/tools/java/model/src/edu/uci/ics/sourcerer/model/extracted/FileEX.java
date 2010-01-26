@@ -17,21 +17,66 @@
  */
 package edu.uci.ics.sourcerer.model.extracted;
 
+import edu.uci.ics.sourcerer.model.File;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FileEX implements ModelEX {
+  private File type;
+  private String name;
   private String relativePath;
+  private String hash;
   
-  protected FileEX(String relativePath) {
+  protected FileEX(File type, String name, String relativePath) {
+    this.type = type;
+    this.name = name;
     this.relativePath = relativePath;
   }
   
+  protected FileEX(String name, String hash) {
+    this.type = File.JAR;
+    this.name = name;
+    this.hash = hash; 
+  }
+
+  public File getType() {
+    return type;
+  }
+  
   public String getName() {
-    return relativePath.substring(relativePath.lastIndexOf('/') + 1);
+    return name;
   }
   
   public String getRelativePath() {
+    if (type == File.JAR) {
+      throw new IllegalStateException("Cannot get the relative path for a jar");
+    } else {
+      return relativePath;
+    }
+  }
+  
+  public String getHash() {
+    if (type == File.JAR) {
+      return hash;
+    } else {
+      throw new IllegalStateException("Cannot get the hash for a non-jar");
+    }
+  }
+  
+  // ---- PARSER ----
+  private static ModelExParser<FileEX> parser = new ModelExParser<FileEX>() {
+    @Override
+    public FileEX parseLine(String line) {
+      return null;
+    }
+  };
+  
+  public static ModelExParser<FileEX> getParser() {
+    return parser;
+  }
+  
+  public static String getLine(String relativePath) {
     return relativePath;
   }
 }

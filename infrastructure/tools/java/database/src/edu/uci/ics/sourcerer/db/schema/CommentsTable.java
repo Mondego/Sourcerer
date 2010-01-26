@@ -19,15 +19,17 @@ package edu.uci.ics.sourcerer.db.schema;
 
 import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Comment;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class CommentsTable {
-  private CommentsTable() {}
-  
-  public static final String TABLE = "comments";
+public final class CommentsTable extends DatabaseTable {
+  protected CommentsTable(QueryExecutor executor, TableLocker locker) {
+    super(executor, locker, "comments");
+  }
+
   /*  
    *  +----------------+-----------------+-------+--------+
    *  | Column name    | Type            | Null? | Index? |
@@ -42,21 +44,12 @@ public final class CommentsTable {
    *  | length         | INT UNSIGNED    | No    | No     |
    *  +----------------+-----------------+-------+--------+
    */
-  
-  // ---- LOCK ----
-  public static String getReadLock() {
-    return SchemaUtils.getReadLock(TABLE);
-  }
-  
-  public static String getWriteLock() {
-    return SchemaUtils.getWriteLock(TABLE);
-  }
-  
+ 
   // ---- CREATE ----
-  public static void createTable(QueryExecutor executor) {
-    executor.createTable(TABLE, 
+  public void createTable() {
+    executor.createTable(name, 
         "comment_id SERIAL",
-        "comment_type " + SchemaUtils.getEnumCreate(Comment.getValues()),
+        "comment_type " + getEnumCreate(Comment.getValues()),
         "containing_eid BIGINT UNSIGNED",
         "following_eid BIGINT UNSIGNED",
         "project_id BIGINT UNSIGNED NOT NULL",
@@ -70,35 +63,31 @@ public final class CommentsTable {
   }
 
   // ---- INSERT ----
-  public static InsertBatcher getInsertBatcher(QueryExecutor executor) {
-    return executor.getInsertBatcher(TABLE);
-  }
-
-  private static String getInsertValue(Comment type, String containing, String following, String projectID, String fileID, String offset, String length) {
-    return SchemaUtils.getSerialInsertValue(
-        SchemaUtils.convertNotNullVarchar(type.name()),
-        SchemaUtils.convertNumber(containing),
-        SchemaUtils.convertNumber(following),
-        SchemaUtils.convertNotNullNumber(projectID),
-        SchemaUtils.convertNotNullNumber(fileID),
-        SchemaUtils.convertNotNullNumber(offset),
-        SchemaUtils.convertNotNullNumber(length));
+  private String getInsertValue(Comment type, String containing, String following, String projectID, String fileID, String offset, String length) {
+    return buildSerialInsertValue(
+        convertNotNullVarchar(type.name()),
+        convertNumber(containing),
+        convertNumber(following),
+        convertNotNullNumber(projectID),
+        convertNotNullNumber(fileID),
+        convertNotNullNumber(offset),
+        convertNotNullNumber(length));
    }
   
-  public static void insertJavadoc(InsertBatcher batcher, String eid, String projectID, String fileID, String offset, String length) {
+  public void insertJavadoc(InsertBatcher batcher, String eid, String projectID, String fileID, String offset, String length) {
     batcher.addValue(getInsertValue(Comment.JAVADOC, null, eid, projectID, fileID, offset, length));
   }
   
-  public static void insertUnassociatedJavadoc(InsertBatcher batcher, String projectID, String fileID, String offset, String length) {
+  public void insertUnassociatedJavadoc(InsertBatcher batcher, String projectID, String fileID, String offset, String length) {
     batcher.addValue(getInsertValue(Comment.JAVADOC, null, null, projectID, fileID, offset, length));
   }
   
-  public static void insertComment(InsertBatcher batcher, Comment type, String projectID, String fileID, String offset, String length) {
+  public void insertComment(InsertBatcher batcher, Comment type, String projectID, String fileID, String offset, String length) {
     batcher.addValue(getInsertValue(type, null, null, projectID, fileID, offset, length));
   }
   
   // ---- DELETE ----
-  public static void deleteByProjectID(QueryExecutor executor, String projectID) {
-    executor.delete(TABLE, "project_id=" + projectID);
+  public void deleteByProjectID(String projectID) {
+    executor.delete(name, "project_id=" + projectID);
   }
 }

@@ -17,6 +17,10 @@
  */
 package edu.uci.ics.sourcerer.model.extracted;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.logging.Level;
+
 import edu.uci.ics.sourcerer.model.LocalVariable;
 
 /**
@@ -123,4 +127,47 @@ public class LocalVariableEX implements ModelEX {
   public int hashCode() {
     return (name + parent).hashCode();
   }
- }
+  
+  // ---- PARSER ----
+  private static ModelExParser<LocalVariableEX> parser = new ModelExParser<LocalVariableEX>() {
+    @Override
+    public LocalVariableEX parseLine(String line) {
+      String[] parts = line.split(" ");
+      
+      try {
+        LocalVariable type = LocalVariable.valueOf(parts[0]);
+        if (type == LocalVariable.PARAM) {
+          if (parts.length == 5) {
+            return LocalVariableEX.getJarParam(parts[1], parts[2], parts[3], parts[4]);
+          } else {
+            return LocalVariableEX.getParam(parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8], parts[9], parts[10]);
+          }
+        } else if (type == LocalVariable.LOCAL) {
+          return LocalVariableEX.getLocal(parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8], parts[9]);
+        } else {
+          logger.log(Level.SEVERE, "Unable to parse local variable: " + line);
+          return null;
+        }
+      } catch (Exception e) {
+        logger.log(Level.SEVERE, "Unable to parse local variable: " + line, e);
+        return null;
+      }
+    }
+  };
+  
+  public static ModelExParser<LocalVariableEX> getParser() {
+    return parser;
+  }
+  
+  public static String getLineParam(String name, int modifiers, String type, int typeStartPos, int typeLength, int position, String parent, String path, int startPos, int length) {
+    return LocalVariable.PARAM + " " + name + " " + modifiers + " " + type + " " + typeStartPos + " " + typeLength + " " + parent + " " + position + " " + path + " " + startPos + " " + length;
+  }
+  
+  public static String getLineLocal(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, String path, int startPos, int length) {
+    return LocalVariable.LOCAL + " " + name + " " + modifiers + " " + type + " " + typeStartPos + " " + typeLength + " "+ parent + " " + path + " " + startPos + " " + length;
+  }
+  
+  public static String getJarLineParam(String name, String type, String parent, int position) {
+    return LocalVariable.PARAM + " " + name + " " + type + " " + parent + " " + position;
+  }
+}

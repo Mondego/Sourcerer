@@ -30,4 +30,20 @@ public class MissingTypeEX implements ModelEX {
   public String getFqn() {
     return fqn;
   }
+  
+  // ---- PARSER ----
+  private static ModelExParser<MissingTypeEX> parser = new ModelExParser<MissingTypeEX>() {
+    @Override
+    public MissingTypeEX parseLine(String line) {
+      return new MissingTypeEX(line);
+    }
+  };
+  
+  public static ModelExParser<MissingTypeEX> getParser() {
+    return parser;
+  }
+  
+  public static String getLine(String fqn) {
+    return fqn;
+  }
 }

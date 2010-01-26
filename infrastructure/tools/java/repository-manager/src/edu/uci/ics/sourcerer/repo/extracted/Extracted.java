@@ -22,6 +22,16 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import edu.uci.ics.sourcerer.model.extracted.CommentEX;
+import edu.uci.ics.sourcerer.model.extracted.EntityEX;
+import edu.uci.ics.sourcerer.model.extracted.FileEX;
+import edu.uci.ics.sourcerer.model.extracted.ImportEX;
+import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
+import edu.uci.ics.sourcerer.model.extracted.MissingTypeEX;
+import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
+import edu.uci.ics.sourcerer.model.extracted.RelationEX;
+import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
+import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -74,53 +84,93 @@ public abstract class Extracted {
     }
   }
   
+  protected File getInputFile(Property<String> property) {
+    return new File(content, property.getValue());
+  }
+  
   protected InputStream getInputStream(Property<String> property) throws IOException {
-    File file = new File(content, property.getValue());
+    File file = getInputFile(property);
     if (file.exists()) {
       return new FileInputStream(file);
     } else {
       return null;
     }
   }
-
-  public InputStream getEntityInputStream() throws IOException {
-    return getInputStream(ENTITY_FILE); 
-  }
-  
-  public InputStream getRelationInputStream() throws IOException {
-    return getInputStream(RELATION_FILE);
-  }
-  
-  public InputStream getLocalVariableInputStream() throws IOException {
-    return getInputStream(LOCAL_VARIABLE_FILE);
-  }
-  
-  public InputStream getCommentInputStream() throws IOException {
-    return getInputStream(COMMENT_FILE);
-  }
   
   public InputStream getFileInputStream() throws IOException {
     return getInputStream(FILE_FILE);
   }
   
-  public InputStream getProblemInputStream() throws IOException {
-    return getInputStream(PROBLEM_FILE);
+  public ExtractedReader<FileEX> getFileReader() {
+    return ExtractedReader.getExtractedReader(FileEX.getParser(), getInputFile(FILE_FILE));
   }
   
   public InputStream getImportInputStream() throws IOException {
     return getInputStream(IMPORT_FILE);
   }
   
+  public ExtractedReader<ImportEX> getImportReader() {
+    return ExtractedReader.getExtractedReader(ImportEX.getParser(), getInputFile(IMPORT_FILE));
+  }
+  
+  public InputStream getProblemInputStream() throws IOException {
+    return getInputStream(PROBLEM_FILE);
+  }
+  
+  public ExtractedReader<ProblemEX> getProblemReader() {
+    return ExtractedReader.getExtractedReader(ProblemEX.getParser(), getInputFile(PROBLEM_FILE));
+  }
+  
+  public InputStream getCommentInputStream() throws IOException {
+    return getInputStream(COMMENT_FILE);
+  }
+ 
+  public ExtractedReader<CommentEX> getCommentReader() {
+    return ExtractedReader.getExtractedReader(CommentEX.getParser(), getInputFile(COMMENT_FILE));
+  }
+
+  public InputStream getEntityInputStream() throws IOException {
+    return getInputStream(ENTITY_FILE); 
+  }
+  
+  public ExtractedReader<EntityEX> getEntityReader() {
+    return ExtractedReader.getExtractedReader(EntityEX.getParser(), getInputFile(ENTITY_FILE));
+  }
+  
+  public InputStream getRelationInputStream() throws IOException {
+    return getInputStream(RELATION_FILE);
+  }
+  
+  public ExtractedReader<RelationEX> getRelationReader() {
+    return ExtractedReader.getExtractedReader(RelationEX.getParser(), getInputFile(RELATION_FILE));
+  }
+  
+  public InputStream getLocalVariableInputStream() throws IOException {
+    return getInputStream(LOCAL_VARIABLE_FILE);
+  }
+  
+  public ExtractedReader<LocalVariableEX> getLocalVariableReader() {
+    return ExtractedReader.getExtractedReader(LocalVariableEX.getParser(), getInputFile(LOCAL_VARIABLE_FILE));
+  }
+  
   public InputStream getMissingTypeInputStream() throws IOException {
     return getInputStream(MISSING_TYPE_FILE);
   }
   
-  public boolean usesJars() {
-    return new File(content, USED_JAR_FILE.getValue()).exists();
+  public ExtractedReader<MissingTypeEX> getMissingTypeReader() {
+    return ExtractedReader.getExtractedReader(MissingTypeEX.getParser(), getInputFile(MISSING_TYPE_FILE));
   }
   
   public InputStream getUsedJarInputStream() throws IOException {
     return getInputStream(USED_JAR_FILE);
+  }
+  
+  public ExtractedReader<UsedJarEX> getUsedJarReader() {
+    return ExtractedReader.getExtractedReader(UsedJarEX.getParser(), getInputFile(USED_JAR_FILE));
+  }
+  
+  public boolean usesJars() {
+    return new File(content, USED_JAR_FILE.getValue()).exists();
   }
   
   protected abstract AbstractProperties getProperties();

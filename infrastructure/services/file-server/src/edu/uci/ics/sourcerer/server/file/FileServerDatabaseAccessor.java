@@ -2,10 +2,10 @@ package edu.uci.ics.sourcerer.server.file;
 
 import edu.uci.ics.sourcerer.db.queries.FileQueries;
 import edu.uci.ics.sourcerer.db.queries.JarFileQueries;
+import edu.uci.ics.sourcerer.db.schema.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.schema.FilesTable;
 import edu.uci.ics.sourcerer.db.schema.JarClassFilesTable;
 import edu.uci.ics.sourcerer.db.schema.JarsTable;
-import edu.uci.ics.sourcerer.db.util.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.db.JarClassFileDB;
 import edu.uci.ics.sourcerer.model.db.JarDB;

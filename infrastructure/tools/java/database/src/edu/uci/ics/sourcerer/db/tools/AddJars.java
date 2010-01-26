@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.db.schema.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.schema.JarClassFilesTable;
 import edu.uci.ics.sourcerer.db.schema.JarCommentsTable;
 import edu.uci.ics.sourcerer.db.schema.JarEntitiesTable;
@@ -36,7 +37,6 @@ import edu.uci.ics.sourcerer.db.schema.JarsTable;
 import edu.uci.ics.sourcerer.db.schema.LibraryEntitiesTable;
 import edu.uci.ics.sourcerer.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.db.schema.UsedJarsTable;
-import edu.uci.ics.sourcerer.db.util.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;

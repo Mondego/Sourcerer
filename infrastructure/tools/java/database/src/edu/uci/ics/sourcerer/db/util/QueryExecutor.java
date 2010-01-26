@@ -26,6 +26,7 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.db.schema.DatabaseTable;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
@@ -134,10 +135,10 @@ public class QueryExecutor {
     return executeUpdateWithKey("INSERT INTO " + table + " VALUES " + value + ";");
   }
   
-  public void dropTables(String... tables) {
+  public void dropTables(DatabaseTable... tables) {
     StringBuilder sql = new StringBuilder("DROP TABLE IF EXISTS ");
-    for (String table : tables) {
-      sql.append(table).append(',');
+    for (DatabaseTable table : tables) {
+      sql.append(table.getName()).append(',');
     }
     sql.setCharAt(sql.length() - 1, ';');
     executeUpdate(sql.toString());
@@ -151,19 +152,6 @@ public class QueryExecutor {
     }
     sql.setCharAt(sql.length() - 1, ')');
     executeUpdate(sql.toString());
-  }
-  
-  public void lock(String ... locks) {
-    StringBuilder sql = new StringBuilder("LOCK TABLES ");
-    for (String lock : locks) {
-      sql.append(lock).append(',');
-    }
-    sql.setCharAt(sql.length() - 1, ';');
-    executeUpdate(sql.toString());
-  }
-  
-  public void unlock() {
-    executeUpdate("UNLOCK TABLES;");
   }
   
   public <T> IterableResult<T> executeStreamed(String sql, ResultTranslator<T> translator) {
