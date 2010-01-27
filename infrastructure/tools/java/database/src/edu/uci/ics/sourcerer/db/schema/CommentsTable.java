@@ -17,7 +17,6 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
-import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Comment;
@@ -27,7 +26,7 @@ import edu.uci.ics.sourcerer.model.Comment;
  */
 public final class CommentsTable extends DatabaseTable {
   protected CommentsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "comments");
+    super(executor, locker, "comments", true);
   }
 
   /*  
@@ -74,15 +73,15 @@ public final class CommentsTable extends DatabaseTable {
         convertNotNullNumber(length));
    }
   
-  public void insertJavadoc(InsertBatcher batcher, String eid, String projectID, String fileID, String offset, String length) {
+  public void insertJavadoc(String eid, String projectID, String fileID, String offset, String length) {
     batcher.addValue(getInsertValue(Comment.JAVADOC, null, eid, projectID, fileID, offset, length));
   }
   
-  public void insertUnassociatedJavadoc(InsertBatcher batcher, String projectID, String fileID, String offset, String length) {
+  public void insertUnassociatedJavadoc(String projectID, String fileID, String offset, String length) {
     batcher.addValue(getInsertValue(Comment.JAVADOC, null, null, projectID, fileID, offset, length));
   }
   
-  public void insertComment(InsertBatcher batcher, Comment type, String projectID, String fileID, String offset, String length) {
+  public void insertComment(Comment type, String projectID, String fileID, String offset, String length) {
     batcher.addValue(getInsertValue(type, null, null, projectID, fileID, offset, length));
   }
   

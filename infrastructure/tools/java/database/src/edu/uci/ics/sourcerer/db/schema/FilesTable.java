@@ -28,7 +28,7 @@ import edu.uci.ics.sourcerer.model.extracted.FileEX;
  */
 public final class FilesTable extends DatabaseTable {
   protected FilesTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "files");
+    super(executor, locker, "files", false);
   }
   /*  
    *  +-------------+-----------------+-------+--------+

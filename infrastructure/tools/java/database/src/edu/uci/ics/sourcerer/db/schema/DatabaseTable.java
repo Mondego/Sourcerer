@@ -35,10 +35,17 @@ public class DatabaseTable {
   protected final TableLocker locker;
   protected final String name;
   
-  protected DatabaseTable(QueryExecutor executor, TableLocker locker, String name) {
+  protected final InsertBatcher batcher;
+  
+  protected DatabaseTable(QueryExecutor executor, TableLocker locker, String name, boolean makeBatcher) {
     this.executor = executor;
     this.locker = locker;
     this.name = name;
+    if (makeBatcher) {
+      batcher = executor.getInsertBatcher(name);
+    } else {
+      batcher = null;
+    }
   }
   
   public String getName() {
@@ -46,12 +53,16 @@ public class DatabaseTable {
   }
   
   // ---- INSERT ----
-  public InsertBatcher getInsertBatcher() {
-    return executor.getInsertBatcher(name);
-  }
-  
   public <T> KeyInsertBatcher<T> getKeyInsertBatcher(KeyInsertBatcher.KeyProcessor<T> processor) {
     return executor.getKeyInsertBatcher(name, processor);
+  }
+  
+  public void flushInserts() {
+    if (batcher == null) {
+      throw new IllegalStateException("This table does not have flushable inserts");
+    } else {
+      batcher.insert();
+    }
   }
 
   // ---- STATIC UTILITIES ----

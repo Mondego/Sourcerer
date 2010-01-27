@@ -17,7 +17,6 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
-import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 
@@ -26,7 +25,7 @@ import edu.uci.ics.sourcerer.db.util.TableLocker;
  */
 public final class ImportsTable extends DatabaseTable {
   protected ImportsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "imports");
+    super(executor, locker, "imports", true);
   }
   /*  
    *  +-------------+-------------------+-------+--------+
@@ -69,7 +68,7 @@ public final class ImportsTable extends DatabaseTable {
         convertLength(length));
   }
   
-  public void insert(InsertBatcher batcher, boolean isStatic, boolean onDemand, String eid, String projectID, String fileID, String offset, String length) {
+  public void insert(boolean isStatic, boolean onDemand, String eid, String projectID, String fileID, String offset, String length) {
     batcher.addValue(getInsertValue(isStatic, onDemand, eid, projectID, fileID, offset, length));
   }
   

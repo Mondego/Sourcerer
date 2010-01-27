@@ -17,18 +17,16 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
-import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Relation;
-import edu.uci.ics.sourcerer.model.db.TypedEntityID;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class RelationsTable extends DatabaseTable {
   protected RelationsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "relations");
+    super(executor, locker, "relations", true);
   }
   
   /*  
@@ -79,6 +77,14 @@ public final class RelationsTable extends DatabaseTable {
         convertNumber(fileID),
         convertOffset(offset), 
         convertLength(length));
+  }
+  
+  public void insert(Relation type, String lhsEid, String rhsEid, boolean internal, String projectID) {
+    batcher.insert(getInsertValue(type, lhsEid, rhsEid, internal, projectID, null, null, null));
+  }
+  
+  public void insert(Relation type, String lhsEid, String rhsEid, boolean internal, String projectID, String fileID, String offset, String length) {
+    batcher.insert(getInsertValue(type, lhsEid, rhsEid, internal, projectID, fileID, offset, length));
   }
   
   // ---- DELETE ----

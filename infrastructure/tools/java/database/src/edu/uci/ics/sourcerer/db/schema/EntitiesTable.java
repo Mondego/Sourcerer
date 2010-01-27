@@ -30,7 +30,7 @@ import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
  */
 public final class EntitiesTable extends DatabaseTable {
   protected EntitiesTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "entities");
+    super(executor, locker, "entities", false);
   }
 
   /*  
@@ -99,7 +99,11 @@ public final class EntitiesTable extends DatabaseTable {
     } else if (var.getType() == LocalVariable.PARAM) {
       type = Entity.PARAMETER;
     }
-    return executor.insertSingleWithKey(name, getInsertValue(type, var.getName(), var.getModifiers(), var.getPosition(), projectID, fileID, var.getStartPos(), var.getLength()));
+    if (fileID == null) {
+      return executor.insertSingleWithKey(name, getInsertValue(type, var.getName(), var.getModifiers(), var.getPosition(), projectID, null, null, null));
+    } else {
+      return executor.insertSingleWithKey(name, getInsertValue(type, var.getName(), var.getModifiers(), var.getPosition(), projectID, fileID, var.getStartPos(), var.getLength()));
+    }
   }
   
   // ---- DELETE ----
