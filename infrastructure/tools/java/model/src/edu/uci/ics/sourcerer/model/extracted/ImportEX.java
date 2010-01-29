@@ -28,7 +28,7 @@ public class ImportEX implements ModelEX {
   private String imported;
   private boolean isStatic;
   private boolean onDemand;
-  private String file;
+  private String path;
   private String offset;
   private String length;
 
@@ -36,7 +36,7 @@ public class ImportEX implements ModelEX {
     this.imported = imported;
     this.isStatic = isStatic;
     this.onDemand = onDemand;
-    this.file = file;
+    this.path = file;
     this.offset = offset;
     this.length = length;
   }
@@ -53,8 +53,8 @@ public class ImportEX implements ModelEX {
     return onDemand;
   }
   
-  public String getFile() {
-    return file;
+  public String getPath() {
+    return path;
   }
   
   public String getOffset() {
@@ -66,7 +66,7 @@ public class ImportEX implements ModelEX {
   }
   
   public String toString() {
-    return imported + " " + file;
+    return imported + " " + path;
   }
   
   // ---- PARSER ----

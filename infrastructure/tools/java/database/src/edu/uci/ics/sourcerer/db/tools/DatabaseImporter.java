@@ -8,13 +8,15 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.db.schema.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
-import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
+import edu.uci.ics.sourcerer.model.Comment;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.db.LimitedEntityDB;
+import edu.uci.ics.sourcerer.model.extracted.CommentEX;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.FileEX;
+import edu.uci.ics.sourcerer.model.extracted.ImportEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.model.extracted.ModelEX;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
@@ -113,9 +115,9 @@ public class DatabaseImporter extends DatabaseAccessor {
       String projectID = projectsTable.getProjectIDByName(library.getName());
 
       insertLocalVariables(library, projectID, null);
-      //insertRelations(library, projectID);
-      //insertImports(library, projectID);
-      //insertComments(library, projectID);
+      insertRelations(library, projectID, null);
+      insertImports(library, projectID, null);
+      insertComments(library, projectID, null);
     }
   }
   
@@ -167,12 +169,12 @@ public class DatabaseImporter extends DatabaseAccessor {
       public void processKey(String key, EntityEX value) {
         Ent ent = entityMap.get(value.getFqn());
         if (ent == null) {
-          ent = new Ent(value.getFqn(), projectID, key);
+          ent = new Ent(value.getFqn());
           entityMap.put(value.getFqn(), ent);
         } else {
           logger.log(Level.SEVERE, "FQN collision: " + value.getFqn());
-          ent.addPair(projectID, key);
         }
+        ent.addPair(projectID, key, value.getType());
       }
     });
     for (EntityEX entity : extracted.getEntityReader()) {
@@ -189,6 +191,7 @@ public class DatabaseImporter extends DatabaseAccessor {
 
     int count = 0;
     for (LocalVariableEX local : extracted.getLocalVariableReader()) {
+      // Get the file
       String fileID = getFileID(local.getPath(), local);
       
       // Add the entity
@@ -204,12 +207,81 @@ public class DatabaseImporter extends DatabaseAccessor {
       
       // Add the inside relation
       LimitedEntityDB parent = getLocalEid(local.getParent(), projectID);
-      relationsTable.insert(Relation.INSIDE, eid, parentEid.getFirst(), parentEid.getSecond(), projectID);
+      relationsTable.insert(Relation.INSIDE, eid, parent.getEntityID(), null, projectID, fileID, null, null);
       
       count++;
     }
-    batcher.insert();
+    relationsTable.flushInserts();
     logger.info("      " + count + " local variables / parameters inserted.");
+  }
+  
+  private void insertRelations(Extracted extracted, String projectID, String inClause) {
+    logger.info("    Inserting relations...");
+    
+    int count = 0;
+    for (RelationEX relation : extracted.getRelationReader()) {
+      // Get the file
+      String fileID = getFileID(relation.getPath(), relation);
+      
+      // Look up the lhs eid
+      LimitedEntityDB lhs = getLocalEid(relation.getLhs(), projectID);
+      
+      // Look up the rhs eid
+      LimitedEntityDB rhs = getEid(relation.getRhs(), projectID, inClause);
+      
+      // Add the relation
+      relationsTable.insert(relation.getType(), lhs.getEntityID(), rhs.getEntityID(), relation.getType() == Relation.INSIDE ? null : rhs.isInternal(projectID), projectID, fileID, relation.getStartPosition(), relation.getLength());
+      
+      count++;
+    }
+    relationsTable.flushInserts();
+    logger.info("      " + count + " relations inserted.");
+  }
+  
+  private void insertImports(Extracted extracted, String projectID, String inClause) {
+    logger.info("    Inserting imports...");
+    
+    int count = 0;
+    for (ImportEX imp : extracted.getImportReader()) {
+      // Get the file
+      String fileID = getFileID(imp.getPath(), imp);
+      
+      // Look up the imported entity
+      LimitedEntityDB imported = getEid(imp.getImported(), projectID, inClause);
+      
+      // Add the import
+      importsTable.insert(imp.isStatic(), imp.isOnDemand(), imported.getEntityID(), projectID, fileID, imp.getOffset(), imp.getLength());
+      
+      count++;
+    }
+    importsTable.flushInserts();
+    logger.info("      " + count + " imports inserted.");
+  }
+  
+  private void insertComments(Extracted extracted, String projectID, String inClause) {
+    logger.info("    Inserting comments...");
+    
+    int count = 0;
+    for (CommentEX comment : extracted.getCommentReader()) {
+      // Get the file
+      String fileID = getFileID(comment.getPath(), comment);
+      
+      if (comment.getType() == Comment.JAVADOC) {
+        // Look up the entity
+        LimitedEntityDB commented = getLocalEid(comment.getFqn(), projectID);
+        
+        // Add the comment
+        commentsTable.insertJavadoc(commented.getEntityID(), projectID, fileID, comment.getOffset(), comment.getLength());
+      } else if (comment.getType() == Comment.UJAVADOC) {
+        // Add the comment
+        commentsTable.insertUnassociatedJavadoc(projectID, fileID, comment.getOffset(), comment.getLength());
+      } else {
+        commentsTable.insertComment(comment.getType(), projectID, fileID, comment.getOffset(), comment.getLength());
+      }
+      count++;
+    }
+    commentsTable.flushInserts();
+    logger.info("      " + count + " comments inserted.");
   }
   
   private String getFileID(String path, ModelEX model) {
@@ -236,7 +308,8 @@ public class DatabaseImporter extends DatabaseAccessor {
       }
     }
     String eid = entitiesTable.insert(Entity.UNKNOWN, fqn, projectID);
-    Ent result = new Ent(fqn, null, eid);
+    Ent result = new Ent(fqn);
+    result.addPair(projectID, eid, Entity.UNKNOWN);
     entityMap.put(fqn, result);
     return result.getMain(projectID);
   }
@@ -260,7 +333,7 @@ public class DatabaseImporter extends DatabaseAccessor {
         relationsTable.insert(Relation.HAS_ELEMENTS_OF, eid, element.getEntityID(), element.isInternal(projectID), projectID);
         
         Ent result = new Ent(fqn);
-        result.addPair(projectID, entityID)
+        result.addPair(projectID, eid, Entity.ARRAY);
         entityMap.put(fqn, result);
         return result.getMain(projectID);
       }
@@ -279,7 +352,8 @@ public class DatabaseImporter extends DatabaseAccessor {
           }
         }
         
-        Ent result = new Ent(fqn, null, eid);
+        Ent result = new Ent(fqn);
+        result.addPair(projectID, eid, Entity.WILDCARD);
         entityMap.put(fqn, result);
         return result.getMain(projectID);
       }
@@ -294,7 +368,8 @@ public class DatabaseImporter extends DatabaseAccessor {
           relationsTable.insert(Relation.HAS_UPPER_BOUND, eid, bound.getEntityID(), bound.isInternal(projectID), projectID);
         }
         
-        Ent result = new Ent(fqn, null, eid);
+        Ent result = new Ent(fqn);
+        result.addPair(projectID, eid, Entity.TYPE_VARIABLE);
         entityMap.put(fqn, result);
         return result.getMain(projectID);
       }
@@ -314,7 +389,8 @@ public class DatabaseImporter extends DatabaseAccessor {
           relationsTable.insert(Relation.HAS_TYPE_ARGUMENT, eid, arg.getEntityID(), arg.isInternal(projectID), projectID);
         }
         
-        Ent result = new Ent(fqn, null, eid);
+        Ent result = new Ent(fqn);
+        result.addPair(projectID, eid, Entity.PARAMETERIZED_TYPE);
         entityMap.put(fqn, result);
         return result.getMain(projectID);
       }
@@ -333,7 +409,8 @@ public class DatabaseImporter extends DatabaseAccessor {
     
     // Give up
     String eid = entitiesTable.insert(Entity.UNKNOWN, fqn, projectID);
-    Ent result = new Ent(fqn, null, eid);
+    Ent result = new Ent(fqn);
+    result.addPair(projectID, eid, Entity.UNKNOWN);
     entityMap.put(fqn, result);
     return result.getMain(projectID);
   }

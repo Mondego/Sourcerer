@@ -338,13 +338,13 @@ public class InitializeDatabase extends DatabaseAccessor {
         InsertBatcher batcher = LibraryImportsTable.getInsertBatcher(executor);
 
         for (ImportEX imp : ExtractedReader.getImportReader(library)) {
-          String fileID = fileMap.get(imp.getFile());
+          String fileID = fileMap.get(imp.getPath());
           if (fileID != null) {
             String leid = getEid(relBatcher, libraryID, imp.getImported());
             LibraryImportsTable.insert(batcher, imp.isStatic(), imp.isOnDemand(), leid, libraryID, fileID, imp.getOffset(), imp.getLength());
             count++;
           } else {
-            logger.log(Level.SEVERE, "Unknown file: " + imp.getFile());
+            logger.log(Level.SEVERE, "Unknown file: " + imp.getPath());
           }
         }
         batcher.insert();

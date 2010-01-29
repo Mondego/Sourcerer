@@ -266,9 +266,9 @@ public class AddProjects extends DatabaseAccessor {
       InsertBatcher batcher = ImportsTable.getInsertBatcher(executor);
       InsertBatcher relBatcher = RelationsTable.getInsertBatcher(executor);
       for (ImportEX imp : ExtractedReader.getImportReader(project)) {
-        String fileID = fileMap.get(imp.getFile());
+        String fileID = fileMap.get(imp.getPath());
         if (fileID == null) {
-          logger.log(Level.SEVERE, "Missing file for import: " + imp.getFile());
+          logger.log(Level.SEVERE, "Missing file for import: " + imp.getPath());
         } else {
           // Look up the entity
           TypedEntityID eid = getEid(relBatcher, entityMap, inClause, projectID, imp.getImported(), imp.isOnDemand());
