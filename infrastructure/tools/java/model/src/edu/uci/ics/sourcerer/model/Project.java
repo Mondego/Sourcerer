@@ -21,6 +21,7 @@ package edu.uci.ics.sourcerer.model;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public enum Project {
+  SYSTEM,
   JAVA_LIBRARY,
   CRAWLED,
   JAR,

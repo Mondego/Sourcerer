@@ -73,17 +73,28 @@ public final class ProjectsTable extends DatabaseTable {
         convertVarchar(group),
         convertVarchar(path),
         convertVarchar(hash),
-        convertBoolean(hasSource));
+        convertNotNullBoolean(hasSource));
   }
   
   public String insertPrimitivesProject() {
     return executor.insertSingleWithKey(name,
-        getInsertValue(Project.JAVA_LIBRARY, 
+        getInsertValue(Project.SYSTEM, 
             "primitives",
             null, // no version 
             null, // no group 
             null, // no path
             null, // no hash 
+            false));
+  }
+  
+  public String insertUnknownsProject() {
+    return executor.insertSingleWithKey(name,
+        getInsertValue(Project.SYSTEM,
+            "unknowns",
+            null, // no version
+            null, // no group
+            null, // no path
+            null, // no hash
             false));
   }
   
@@ -146,5 +157,9 @@ public final class ProjectsTable extends DatabaseTable {
   
   public String getProjectIDByName(String name) {
     return executor.selectSingle(name, "project_id", "name='" + name + "'");
+  }
+  
+  public String getUnknownsProject() {
+    return executor.selectSingle(name, "project_id", "name='unknowns'");
   }
 }

@@ -146,7 +146,19 @@ public class DatabaseTable {
     }
   }
   
-  protected static String convertBoolean(boolean bool) {
-    return bool ? "TRUE" : "FALSE";
+  protected static String convertBoolean(Boolean bool) {
+    if (bool == null) {
+      return "NULL";
+    } else {
+      return bool ? "TRUE" : "FALSE";
+    }
+  }
+  
+  protected static String convertNotNullBoolean(Boolean bool) {
+    if (bool == null) {
+      throw new IllegalArgumentException("bool may not be null");
+    } else {
+      return bool ? "TRUE" : "FALSE";
+    }
   }
 }

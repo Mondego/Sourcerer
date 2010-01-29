@@ -59,8 +59,8 @@ public final class ImportsTable extends DatabaseTable {
   // ---- INSERT ----
   private String getInsertValue(boolean isStatic, boolean onDemand, String eid, String projectID, String fileID, String offset, String length) {
     return buildInsertValue(
-        convertBoolean(isStatic),
-        convertBoolean(onDemand),
+        convertNotNullBoolean(isStatic),
+        convertNotNullBoolean(onDemand),
         convertNotNullNumber(eid),
         convertNotNullNumber(projectID),
         convertNotNullNumber(fileID),

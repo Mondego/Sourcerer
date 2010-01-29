@@ -12,6 +12,7 @@ import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.Relation;
+import edu.uci.ics.sourcerer.model.db.LimitedEntityDB;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.FileEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
@@ -69,6 +70,9 @@ public class DatabaseImporter extends DatabaseAccessor {
     entitiesTable.insert(Entity.PRIMITIVE, "double", projectID);
     entitiesTable.insert(Entity.PRIMITIVE, "void", projectID);
     
+    logger.info("  Adding the unknowns project...");
+    projectsTable.insertUnknownsProject();
+    
     locker.unlock();
     logger.info("  Initialization complete.");
   }
@@ -108,7 +112,7 @@ public class DatabaseImporter extends DatabaseAccessor {
       
       String projectID = projectsTable.getProjectIDByName(library.getName());
 
-      insertLocalVariables(library, projectID);
+      insertLocalVariables(library, projectID, null);
       //insertRelations(library, projectID);
       //insertImports(library, projectID);
       //insertComments(library, projectID);
@@ -180,7 +184,7 @@ public class DatabaseImporter extends DatabaseAccessor {
     logger.info("      " + count + " entities inserted.");
   }
   
-  private void insertLocalVariables(Extracted extracted, String projectID) {
+  private void insertLocalVariables(Extracted extracted, String projectID, String inClause) {
     logger.info("    Inserting local variables / parameters...");
 
     int count = 0;
@@ -191,16 +195,16 @@ public class DatabaseImporter extends DatabaseAccessor {
       String eid = entitiesTable.insertLocalVariable(local, projectID, fileID);
       
       // Add the holds relation
-      Pair<String, Boolean> typeEid = getEid(local.getTypeFqn());
+      LimitedEntityDB type = getEid(local.getTypeFqn(), projectID, inClause);
       if (fileID == null) {
-        relationsTable.insert(batcher, Relation.HOLDS, eid, typeEid.getFirst(), typeEid.getSecond(), projectID);
+        relationsTable.insert(Relation.HOLDS, eid, type.getEntityID(), type.isInternal(projectID), projectID);
       } else {
-        relationsTable.insert(batcher, Relation.HOLDS, eid, typeEid.getFirst(), typeEid.getSecond(), projectID, fileID, local.getStartPos(), local.getLength());
+        relationsTable.insert(Relation.HOLDS, eid, type.getEntityID(), type.isInternal(projectID), projectID, fileID, local.getStartPos(), local.getLength());
       }
       
       // Add the inside relation
-      Pair<String, Boolean> parentEid = getEid(local.getParent());
-      relationsTable.insert(batcher, Relation.INSIDE, eid, parentEid.getFirst(), parentEid.getSecond(), projectID);
+      LimitedEntityDB parent = getLocalEid(local.getParent(), projectID);
+      relationsTable.insert(Relation.INSIDE, eid, parentEid.getFirst(), parentEid.getSecond(), projectID);
       
       count++;
     }
@@ -220,72 +224,162 @@ public class DatabaseImporter extends DatabaseAccessor {
     }
   }
   
-  private Pair<String, Boolean> getEid(String fqn, String projectID, boolean withinProject) {
+  private LimitedEntityDB getLocalEid(String fqn, String projectID) {
     // Maybe it's in the map
     if (entityMap.containsKey(fqn)) {
       Ent ent = entityMap.get(fqn);
-      
-      // If it was a collision
-      if (COLLISION.equals(entity.getSecond())) {
-        
+      LimitedEntityDB entity = ent.getMain(projectID);
+      if (projectID.equals(entity.getProjectID())) {
+        return entity;
+      } else if (entity.getProjectID() == null && ent.isSingle()) {
+        return entity;
       }
     }
-    return null;
+    String eid = entitiesTable.insert(Entity.UNKNOWN, fqn, projectID);
+    Ent result = new Ent(fqn, null, eid);
+    entityMap.put(fqn, result);
+    return result.getMain(projectID);
   }
   
-  private class EntPair extends Pair<String, String> {
-    public EntPair(String projectID, String entityID) {
-      super(projectID, entityID);
+  private LimitedEntityDB getEid(String fqn, String projectID, String inClause) {
+    // Maybe it's in the map
+    if (entityMap.containsKey(fqn)) {
+      return entityMap.get(fqn).getMain(projectID); 
     }
     
-    public String getProjectID() {
-      return getFirst();
+    // If it's a method, skip the type entities
+    if (!TypeUtils.isMethod(fqn)) {
+      if (TypeUtils.isArray(fqn)) {
+        Pair<String, Integer> arrayInfo = TypeUtils.breakArray(fqn);
+        
+        // Insert the array entity
+        String eid = entitiesTable.insertArray(fqn, arrayInfo.getSecond(), projectID);
+        
+        // Insert has elements of relation
+        LimitedEntityDB element = getEid(arrayInfo.getFirst(), projectID, inClause);
+        relationsTable.insert(Relation.HAS_ELEMENTS_OF, eid, element.getEntityID(), element.isInternal(projectID), projectID);
+        
+        Ent result = new Ent(fqn);
+        result.addPair(projectID, entityID)
+        entityMap.put(fqn, result);
+        return result.getMain(projectID);
+      }
+      
+      if (TypeUtils.isWildcard(fqn)) {
+        // Insert the wildcard entity
+        String eid = entitiesTable.insert(Entity.WILDCARD, fqn, projectID);
+      
+        // If it's bounded, insert the bound relation
+        if (!TypeUtils.isUnboundedWildcard(fqn)) {
+          LimitedEntityDB bound = getEid(TypeUtils.getWildcardBound(fqn), projectID, inClause);
+          if (TypeUtils.isLowerBound(fqn)) {
+            relationsTable.insert(Relation.HAS_LOWER_BOUND, eid, bound.getEntityID(), bound.isInternal(projectID), projectID);
+          } else {
+            relationsTable.insert(Relation.HAS_UPPER_BOUND, eid, bound.getEntityID(), bound.isInternal(projectID), projectID);
+          }
+        }
+        
+        Ent result = new Ent(fqn, null, eid);
+        entityMap.put(fqn, result);
+        return result.getMain(projectID);
+      }
+      
+      if (TypeUtils.isTypeVariable(fqn)) {
+        // Insert the type variable entity
+        String eid = entitiesTable.insert(Entity.TYPE_VARIABLE, fqn, projectID);
+        
+        // Insert the bound relations
+        for (String boundFqn : TypeUtils.breakTypeVariable(fqn)) {
+          LimitedEntityDB bound = getEid(boundFqn, projectID, inClause);
+          relationsTable.insert(Relation.HAS_UPPER_BOUND, eid, bound.getEntityID(), bound.isInternal(projectID), projectID);
+        }
+        
+        Ent result = new Ent(fqn, null, eid);
+        entityMap.put(fqn, result);
+        return result.getMain(projectID);
+      }
+      
+      if (TypeUtils.isParametrizedType(fqn)) {
+        // Insert the parametrized type entity
+        String eid = entitiesTable.insert(Entity.PARAMETERIZED_TYPE, fqn, projectID);
+        
+        LimitedEntityDB baseType = getEid(TypeUtils.getBaseType(fqn), projectID, inClause);
+        
+        // Insert the has base type relation
+        relationsTable.insert(Relation.HAS_BASE_TYPE, eid, baseType.getEntityID(), baseType.isInternal(projectID), projectID);
+        
+        // Insert the type arguments
+        for (String argFqn : TypeUtils.breakParametrizedType(fqn)) {
+          LimitedEntityDB arg = getEid(argFqn, projectID, inClause);
+          relationsTable.insert(Relation.HAS_TYPE_ARGUMENT, eid, arg.getEntityID(), arg.isInternal(projectID), projectID);
+        }
+        
+        Ent result = new Ent(fqn, null, eid);
+        entityMap.put(fqn, result);
+        return result.getMain(projectID);
+      }
     }
     
-    public String getEntityID() {
-      return getSecond();
+    // Some external reference?
+    Collection<LimitedEntityDB> entities = entitiesTable.getLimitedEntitiesByFqn(fqn, inClause);
+    if (!entities.isEmpty()) {
+      Ent result = new Ent(fqn);
+      for (LimitedEntityDB entity : entities) {
+        result.addPair(entity);
+      }
+      entityMap.put(fqn, result);
+      return result.getMain(projectID);
     }
+    
+    // Give up
+    String eid = entitiesTable.insert(Entity.UNKNOWN, fqn, projectID);
+    Ent result = new Ent(fqn, null, eid);
+    entityMap.put(fqn, result);
+    return result.getMain(projectID);
   }
   
   private class Ent {
     private String fqn;
     
-    private EntPair main = null;
-    private Collection<EntPair> pairs = null;
-    private Map<String, EntPair> mainMap = null;
+    private LimitedEntityDB main = null;
+    private Collection<LimitedEntityDB> entities = null;
+    private Map<String, LimitedEntityDB> mainMap = null;
 
-    public Ent(String fqn, String projectID, String entityID) {
+    public Ent(String fqn) {
       this.fqn = fqn;
-      addPair(projectID, entityID);
     }
     
-    public void addPair(String projectID, String entityID) {
-      EntPair pair = new EntPair(projectID, entityID);
-      if (pairs == null && main == null) {
-        main = pair;
+    public void addPair(String projectID, String entityID, Entity type) {
+      LimitedEntityDB entity = new LimitedEntityDB(projectID, entityID, type);
+      addPair(entity);
+    }
+    
+    public void addPair(LimitedEntityDB entity) {
+      if (entities == null && main == null) {
+        main = entity;
       } else {
-        if (pairs == null) {
-          pairs = Helper.newLinkedList();
-          pairs.add(main);
+        if (entities == null) {
+          entities = Helper.newLinkedList();
+          entities.add(main);
           mainMap = Helper.newHashMap();
           main = null;
         }
-        pairs.add(pair);
+        entities.add(entity);
       }
     }
     
-    public EntPair getMain(String projectID) {
-      if (pairs == null) {
+    public LimitedEntityDB getMain(String projectID) {
+      if (entities == null) {
         return main;
       } else {
-        EntPair best = mainMap.get(projectID);
+        LimitedEntityDB best = mainMap.get(projectID);
         if (best != null) {
           return best;
         } else {
-          for (EntPair pair : pairs) {
-            if (projectID.equals(pair.getProjectID())) {
-              mainMap.put(projectID, pair);
-              return pair;
+          for (LimitedEntityDB entity : entities) {
+            if (projectID.equals(entity.getProjectID())) {
+              mainMap.put(projectID, entity);
+              return entity;
             }
           }
           
@@ -293,14 +387,18 @@ public class DatabaseImporter extends DatabaseAccessor {
           if (eid == null) {
             return null;
           }
-          for (EntPair pair : pairs) {
+          for (LimitedEntityDB pair : entities) {
             relationsTable.insert(Relation.MATCHES, eid, pair.getEntityID(), false, projectID);
           }
-          best = new EntPair(null, eid);
+          best = new LimitedEntityDB(projectID, eid, Entity.DUPLICATE);
           mainMap.put(projectID, best);
           return best;
         }
       }
+    }
+    
+    public boolean isSingle() {
+      return entities == null;
     }
   }
 }

@@ -37,7 +37,7 @@ public final class RelationsTable extends DatabaseTable {
    *  | relation_type | ENUM(values)    | No    | Yes    |
    *  | lhs_eid       | BIGINT UNSIGNED | No    | Yes    |
    *  | rhs_eid       | BIGINT UNSIGNED | No    | Yes    |
-   *  | internal      | BOOLEAN         | No    | Yes    |
+   *  | internal      | BOOLEAN         | Yes   | Yes    |
    *  | project_id    | BIGINT UNSIGNED | No    | Yes    |
    *  | file_id       | BIGINT UNSIGNED | Yes   | Yes    |
    *  | offset        | INT UNSIGNED    | Yes   | No     |
@@ -52,7 +52,7 @@ public final class RelationsTable extends DatabaseTable {
         "relation_type " + getEnumCreate(Relation.values()) + " NOT NULL",
         "lhs_eid BIGINT UNSIGNED NOT NULL",
         "rhs_eid BIGINT UNSIGNED NOT NULL",
-        "internal BOOLEAN NOT NULL",
+        "internal BOOLEAN",
         "project_id BIGINT UNSIGNED NOT NULL",
         "file_id BIGINT UNSIGNED",
         "offset INT UNSIGNED",
@@ -67,7 +67,7 @@ public final class RelationsTable extends DatabaseTable {
   }
   
   // ---- INSERT ----
-  private String getInsertValue(Relation type, String lhsEid, String rhsEid, boolean internal, String projectID, String fileID, String offset, String length) {
+  private String getInsertValue(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID, String fileID, String offset, String length) {
     return buildSerialInsertValue(
         convertNotNullVarchar(type.name()),
         convertNotNullNumber(lhsEid),
@@ -79,11 +79,11 @@ public final class RelationsTable extends DatabaseTable {
         convertLength(length));
   }
   
-  public void insert(Relation type, String lhsEid, String rhsEid, boolean internal, String projectID) {
+  public void insert(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID) {
     batcher.insert(getInsertValue(type, lhsEid, rhsEid, internal, projectID, null, null, null));
   }
   
-  public void insert(Relation type, String lhsEid, String rhsEid, boolean internal, String projectID, String fileID, String offset, String length) {
+  public void insert(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID, String fileID, String offset, String length) {
     batcher.insert(getInsertValue(type, lhsEid, rhsEid, internal, projectID, fileID, offset, length));
   }
   

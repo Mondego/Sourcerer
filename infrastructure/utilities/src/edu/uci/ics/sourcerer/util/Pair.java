@@ -23,8 +23,8 @@ import java.util.Iterator;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Pair <First, Second> {
-  private First a;
-  private Second b;
+  protected First a;
+  protected Second b;
   
   public Pair(First a, Second b) {
     this.a = a;

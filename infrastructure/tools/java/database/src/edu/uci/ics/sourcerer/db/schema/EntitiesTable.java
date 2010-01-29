@@ -17,11 +17,17 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collection;
+
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.LocalVariable;
+import edu.uci.ics.sourcerer.model.db.LimitedEntityDB;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 
@@ -88,6 +94,10 @@ public final class EntitiesTable extends DatabaseTable {
     return executor.insertSingleWithKey(name, getInsertValue(type, fqn, null, null, projectID, null, null, null));
   }
   
+  public String insertUnknown(String fqn, String unknownProject) {
+    return insert(Entity.UNKNOWN, fqn, unknownProject);
+  }
+  
   public String insertArray(String fqn, int size, String projectID) {
     return executor.insertSingleWithKey(name, getInsertValue(Entity.ARRAY, fqn, null, "" + size, projectID, null, null, null));
   }
@@ -114,5 +124,16 @@ public final class EntitiesTable extends DatabaseTable {
   // ---- SELECT ----
   public String getFileIDByEid(String eid) {
     return executor.selectSingle(name, "file_id", "entity_id="+eid);
+  }
+  
+  private static final ResultTranslator<LimitedEntityDB> LIMITED_ENTITY_TRANSLATOR = new ResultTranslator<LimitedEntityDB>() {
+    @Override
+    public LimitedEntityDB translate(ResultSet result) throws SQLException {
+      return new LimitedEntityDB(result.getString(1), result.getString(2), Entity.valueOf(result.getString(3)));
+    }
+  };
+  
+  public Collection<LimitedEntityDB> getLimitedEntitiesByFqn(String fqn, String inClause) {
+    return executor.select(name, "project_id,entity_id,entity_type", "fqn='" + fqn + "' AND projectID IN " + inClause, LIMITED_ENTITY_TRANSLATOR);
   }
 }
