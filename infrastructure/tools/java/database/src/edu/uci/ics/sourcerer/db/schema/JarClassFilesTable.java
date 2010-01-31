@@ -17,9 +17,17 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Map;
+
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.db.util.QueryResult;
+import edu.uci.ics.sourcerer.db.util.ResultTranslator;
+import edu.uci.ics.sourcerer.model.db.JarClassFileDB;
 import edu.uci.ics.sourcerer.model.extracted.FileEX;
+import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -69,5 +77,33 @@ public class JarClassFilesTable {
   // ---- DELETE ----
   public static void deleteByJarID(QueryExecutor executor, String jarID) {
     executor.delete(TABLE, "jar_id=" + jarID);
+  }
+  
+  // ---- SELECT ----
+  public static final ResultTranslator<JarClassFileDB> RESULT_TRANSLATOR = new ResultTranslator<JarClassFileDB>() {
+    @Override
+    public JarClassFileDB translate(ResultSet result) throws SQLException {
+      String jarID = result.getString(1);
+      String hash = result.getString(2);
+      String path = result.getString(3);
+      return new JarClassFileDB(jarID, hash, path);
+    }
+    
+    public String getSelect() {
+      return "jars.jar_id,jars.hash,jar_class_files.path";
+    }
+  };
+  
+  public static Map<String, String> getFileMap(QueryExecutor executor) {
+    Map<String, String> fileMap = Helper.newHashMap();
+    QueryResult result = executor.execute("SELECT name,file_id FROM " + TABLE);
+    while (result.next()) {
+      fileMap.put(result.getString(1), result.getString(2));
+    }
+    return fileMap;
+  }
+  
+  public static JarClassFileDB getJarClassFileByFileID(QueryExecutor executor, String fileID) {
+    return executor.selectSingle("jar_class_files INNER JOIN jars ON jar_class_files.jar_id=jars.jar_id", RESULT_TRANSLATOR.getSelect(), "file_id=" + fileID, RESULT_TRANSLATOR);
   }
 }

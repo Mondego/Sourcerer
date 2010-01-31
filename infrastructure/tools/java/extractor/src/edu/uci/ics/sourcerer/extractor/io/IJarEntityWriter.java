@@ -21,6 +21,8 @@ package edu.uci.ics.sourcerer.extractor.io;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface IJarEntityWriter extends IExtractorWriter {
+  public void writePackage(String fqn);
+  
   public void writeClass(String fqn, int modifiers);
 
   public void writeInterface(String fqn, int modifiers);

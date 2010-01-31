@@ -60,4 +60,8 @@ public class ImportEX implements ModelEX {
   public String getLength() {
     return length;
   }
+  
+  public String toString() {
+    return imported + " " + file;
+  }
 }

@@ -25,8 +25,12 @@ import edu.uci.ics.sourcerer.util.Pair;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface ResultTranslator <T> {
-  public T translate(ResultSet result) throws SQLException;
+public abstract class ResultTranslator <T> {
+  public String getSelect() {
+    return null;
+  }
+  
+  public abstract T translate(ResultSet result) throws SQLException;
   
   public static final ResultTranslator<String> SIMPLE_RESULT_TRANSLATOR = new ResultTranslator<String>() {
     public String translate(ResultSet result) throws SQLException {

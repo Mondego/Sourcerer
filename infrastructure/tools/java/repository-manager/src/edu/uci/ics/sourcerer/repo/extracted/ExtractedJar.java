@@ -19,35 +19,89 @@ package edu.uci.ics.sourcerer.repo.extracted;
 
 import java.io.File;
 
+import edu.uci.ics.sourcerer.repo.general.AbstractBinaryProperties;
 import edu.uci.ics.sourcerer.repo.general.JarProperties;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ExtractedJar extends Extracted {
+public class ExtractedJar extends ExtractedBinary {
   private JarProperties properties;
   
-  public ExtractedJar(File content) {
-    super(content);
+  public ExtractedJar(File content, String relativePath) {
+    super(content, relativePath);
     properties = JarProperties.load(getPropertiesFile());
   }
   
-  public ExtractedJar(File content, File propFile) {
-    super(content);
+  public ExtractedJar(File content, File propFile, String relativePath) {
+    super(content, relativePath);
     File exPropFile = getPropertiesFile();
     if (exPropFile.exists()) {
       properties = JarProperties.load(exPropFile);
     } else {
       properties = JarProperties.load(propFile);
+      properties.save(exPropFile);
     }
   }
 
-  public void reportExecution(boolean hasSource, boolean sourceError) {
-    properties.reportExtraction(getPropertiesFile(), hasSource, sourceError);
-  }
+  public void reportSuccessfulExtraction(int fromBinary, int binaryExceptions, int fromSource, int sourceExceptions, int firstOrderJars, int jars) {
+    properties.setExtracted(true);
+    properties.setSourceSkipped(false);
+    properties.setMissingTypes(false);
+    properties.setFromBinary(fromBinary);
+    properties.setBinaryExceptions(binaryExceptions);
+    properties.setFromSource(fromSource);
+    properties.setSourceExceptions(sourceExceptions);
+    properties.setFirstOrderJars(firstOrderJars);
+    properties.setJars(jars);
     
-  public String getName() {
-    return properties.getName();
+    properties.save(getPropertiesFile());
+  }
+  
+  public void reportBinaryExtraction(int fromBinary, int binaryExceptions, boolean sourceSkipped) {
+    properties.setExtracted(true);
+    properties.setSourceSkipped(sourceSkipped);
+    properties.setMissingTypes(false);
+    properties.setFromBinary(fromBinary);
+    properties.setBinaryExceptions(binaryExceptions);
+    properties.setFromSource(0);
+    properties.setSourceExceptions(0);
+    properties.setFirstOrderJars(0);
+    properties.setJars(0);
+    
+    properties.save(getPropertiesFile());
+  }
+  
+  public void reportForcedExtraction(int fromBinary, int binaryExceptions, int fromSource, int sourceExceptions, int firstOrderJars, int jars) {
+    properties.setExtracted(true);
+    properties.setSourceSkipped(false);
+    properties.setMissingTypes(true);
+    properties.setFromBinary(fromBinary);
+    properties.setBinaryExceptions(binaryExceptions);
+    properties.setFromSource(fromSource);
+    properties.setSourceExceptions(sourceExceptions);
+    properties.setFirstOrderJars(firstOrderJars);
+    properties.setJars(jars);
+    
+    properties.save(getPropertiesFile());
+  }
+
+  public void reportMissingTypeExtraction() {
+    properties.setExtracted(false);
+    properties.setSourceSkipped(false);
+    properties.setMissingTypes(true);
+    properties.setFromBinary(0);
+    properties.setBinaryExceptions(0);
+    properties.setFromSource(0);
+    properties.setSourceExceptions(0);
+    properties.setFirstOrderJars(0);
+    properties.setJars(0);
+    
+    properties.save(getPropertiesFile());
+  }
+  
+  protected AbstractBinaryProperties getBinaryProperties() {
+    return properties;
   }
   
   public String getGroup() {
@@ -60,17 +114,5 @@ public class ExtractedJar extends Extracted {
   
   public String getHash() {
     return properties.getHash();
-  }
-  
-  public boolean extracted() {
-    return properties.extracted();
-  }
-  
-  public boolean hasSource() {
-    return properties.hasSource();
-  }
-  
-  public boolean sourceError() {
-    return properties.sourceError();
   }
 }

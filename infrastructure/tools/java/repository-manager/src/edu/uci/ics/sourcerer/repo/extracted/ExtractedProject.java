@@ -18,9 +18,8 @@
 package edu.uci.ics.sourcerer.repo.extracted;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 
+import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
 import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
@@ -32,17 +31,14 @@ public class ExtractedProject extends Extracted {
   public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Repository Manager", "Filename for the associated jars.");
   
   private ProjectProperties properties;
-  private String relativePath;
    
   public ExtractedProject(File content, String relativePath) {
-    super(content);
-    this.relativePath = relativePath;
+    super(content, relativePath);
     properties = ProjectProperties.load(getPropertiesFile());
   }
   
   public ExtractedProject(File content, String relativePath, File propFile) {
-    super(content);
-    this.relativePath = relativePath;
+    super(content, relativePath);
     File exPropFile = getPropertiesFile();
     if (exPropFile.exists()) {
       properties = ProjectProperties.load(exPropFile);
@@ -51,23 +47,37 @@ public class ExtractedProject extends Extracted {
     }
   }
   
-  public String getRelativePath() {
-    return relativePath;
+  public void reportSuccessfulExtraction(int fromSource, int sourceExceptions, int jars) {
+    properties.setExtracted(true);
+    properties.setMissingTypes(false);
+    properties.setFromSource(fromSource);
+    properties.setSourceExceptions(sourceExceptions);
+    properties.setJars(jars);
+    
+    properties.save(getPropertiesFile());
   }
   
-  public String getName() {
-    return properties.getName();
+  public void reportForcedExtraction(int fromSource, int sourceExceptions, int jars) {
+    properties.setExtracted(true);
+    properties.setMissingTypes(true);
+    properties.setFromSource(fromSource);
+    properties.setSourceExceptions(sourceExceptions);
+    properties.setJars(jars);
+    
+    properties.save(getPropertiesFile());
   }
   
-  public boolean extracted() {
-    return properties.extracted();
+  public void reportMissingTypeExtraction() {
+    properties.setExtracted(false);
+    properties.setMissingTypes(true);
+    properties.setFromSource(0);
+    properties.setSourceExceptions(0);
+    properties.setJars(0);
+    
+    properties.save(getPropertiesFile());
   }
   
-  public void reportExtraction() {
-    properties.reportExtraction(getPropertiesFile());
-  }
-  
-  public InputStream getJarInputStream() throws IOException {
-    return getInputStream(JAR_FILE_FILE);
+  protected AbstractProperties getProperties() {
+    return properties;
   }
 }

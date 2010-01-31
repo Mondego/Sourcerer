@@ -23,41 +23,11 @@ import java.io.File;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ProjectProperties extends AbstractProperties {
-  private static final String NAME = "name";
-  private static final String EXTRACTED = "extracted";
-  
-  // Base properties
-  private String name;
-  
-  // Extraction properties
-  private boolean extracted;
-  
   private ProjectProperties() {}
   
   public static ProjectProperties load(File file) {
     ProjectProperties props = new ProjectProperties();
     props.loadProperties(file);
-
-    props.name = props.properties.getProperty(NAME);
-      
-    props.extracted = "true".equals(props.properties.getProperty(EXTRACTED));
-    
     return props;
-  }
-  
-  public void reportExtraction(File file) {
-    extracted = true;
-    
-    properties.setProperty(EXTRACTED, Boolean.toString(extracted));
-    
-    write(file);
-  }
-  
-  public String getName() {
-    return name;
-  }
-
-  public boolean extracted() {
-    return extracted;
   }
 }

@@ -23,22 +23,35 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.extractor.io.IExtractorWriter;
-import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.base.IFileSet;
+import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class ExtractorWriter implements IExtractorWriter {
+  private static Map<File, BufferedWriter> writerMap = Helper.newHashMap();
+  private File output;
   private BufferedWriter writer;
-  private Repository input;
+  private IFileSet input;
   
-  protected ExtractorWriter(File output, Repository input) {
+  protected ExtractorWriter(File output, IFileSet input) {
+    this(output, input, false);
+  }
+  
+  protected ExtractorWriter(File output, IFileSet input, boolean append) {
+    this.output = output;
     this.input = input;
     try {
-      writer = new BufferedWriter(new FileWriter(output));
+      writer = writerMap.get(output);
+      if (writer == null) {
+        writer = new BufferedWriter(new FileWriter(output, append));
+        writerMap.put(output, writer);
+      } 
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error opening file", e);
     }
@@ -51,9 +64,10 @@ public abstract class ExtractorWriter implements IExtractorWriter {
       return input.convertToRelativePath(path);
     }
   }
-  
-  public void close() {
+
+  public final void close() {
     try {
+      writerMap.remove(output);
       writer.close();
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error closing writer", e);

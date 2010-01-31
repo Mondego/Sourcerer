@@ -25,6 +25,7 @@ import java.util.Collection;
 import org.eclipse.jdt.core.IClassFile;
 
 import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor;
+import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor.ClassExtractionReport;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.extractor.resources.EclipseUtils;
 import edu.uci.ics.sourcerer.extractor.resources.LibraryJar;
@@ -39,11 +40,13 @@ import edu.uci.ics.sourcerer.util.io.Logging;
 public class LibraryExtractor {
   public static void extract() {
     // Load the output repository
-    ExtractedRepository output = ExtractedRepository.getUninitializedRepository(OUTPUT_REPO.getValue());
+    ExtractedRepository output = ExtractedRepository.getRepository(OUTPUT_REPO.getValue());
     
     logger.info("Getting the library jars...");
     Collection<LibraryJar> libraryJars = EclipseUtils.getLibraryJars();
     logger.info("--- Extracting " + libraryJars.size() + " library jars ---");
+    logger.info("  Initializing project...");
+    EclipseUtils.initializeLibraryProject();
     int count = 0;
     for (LibraryJar library : libraryJars) {
       logger.info("Extracting " + library + " (" + ++count + " of " + libraryJars.size() + ")");
@@ -53,10 +56,7 @@ public class LibraryExtractor {
       } else {
         // Set up logging
         Logging.addFileLogger(extracted.getContent());
-        
-        logger.info("  Initializing project...");
-        EclipseUtils.initializeLibraryProject(library);
-        
+
         logger.info("  Getting class files...");
         Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(library);
         
@@ -69,13 +69,13 @@ public class LibraryExtractor {
         FeatureExtractor extractor = new FeatureExtractor(bundle);
         
         // Extract
-        extractor.extractClassFiles(classFiles);
+        ClassExtractionReport report = extractor.extractClassFiles(classFiles, true);
         
         // Close the output files
         extractor.close();
         
         // Write the properties files
-        extracted.createPropertiesFile(library.getName() , extractor.foundSource(), extractor.sourceError());
+        extracted.createPropertiesFile(library.getName(), report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());
 
         // End the error logging
         Logging.removeFileLogger(extracted.getContent());

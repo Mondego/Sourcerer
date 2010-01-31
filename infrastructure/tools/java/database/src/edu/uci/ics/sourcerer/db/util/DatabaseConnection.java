@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.db.util;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.Closeable;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -30,7 +31,7 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DatabaseConnection {
+public class DatabaseConnection implements Closeable {
   public static final Property<String> DATABASE_URL = new StringProperty("database-url", "jdbc:mysql://tagus.ics.uci.edu:3306/sourcerer", "Database", "Url of the database.");
   public static final Property<String> DATABASE_USER = new StringProperty("database-user", "Database", "Database user account to use when connecting.");
   public static final Property<String> DATABASE_PASSWORD = new StringProperty("database-password", "", "Database", "Password for the user account.");

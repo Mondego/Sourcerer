@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
+import java.util.regex.Pattern;
+
 import edu.uci.ics.sourcerer.model.db.TypedEntityID;
 
 /**
@@ -69,16 +71,17 @@ public final class SchemaUtils {
     }
   }
   
+  private static Pattern number = Pattern.compile("\\d+");
   public static String convertNumber(String value) {
-    if (value == null) {
+    if (value == null || !number.matcher(value).matches()) {
       return "NULL";
     } else {
       return value;
     }
   }
   public static String convertNotNullNumber(String value) {
-    if (value == null) {
-      throw new NullPointerException();
+    if (value == null || !number.matcher(value).matches()) {
+      throw new IllegalArgumentException(value + " is not a number");
     } else {
       return value;
     }
@@ -94,7 +97,7 @@ public final class SchemaUtils {
   
   public static String convertNotNullVarchar(String value) {
     if (value == null) {
-      throw new NullPointerException();
+      throw new IllegalArgumentException("varchar may not be null");
     } else {
       return "'" + value + "'";
     }

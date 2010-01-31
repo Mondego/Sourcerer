@@ -24,6 +24,10 @@ import edu.uci.ics.sourcerer.extractor.io.IJarEntityWriter;
  */
 public class DummyJarEntityWriter implements IJarEntityWriter {
   @Override
+  public void writePackage(String fqn) {
+  }
+  
+  @Override
   public void writeAnnotation(String fqn, int modifiers) {
   }
 

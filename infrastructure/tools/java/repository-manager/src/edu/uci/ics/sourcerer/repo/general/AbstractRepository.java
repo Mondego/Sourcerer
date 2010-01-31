@@ -17,8 +17,6 @@
  */
 package edu.uci.ics.sourcerer.repo.general;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
 import java.io.File;
 import java.util.regex.Pattern;
 
@@ -33,9 +31,10 @@ public abstract class AbstractRepository {
   public static final Property<File> OUTPUT_REPO = new FileProperty("output-repo", "Repository Manager", "The root directory of the output repository.");
   
   protected File repoRoot;
-  protected File jarIndexFile;
   
+  protected File jarIndexFile;
   protected JarIndex jarIndex;
+  
   protected AbstractRepository(File repoRoot) {
     this.repoRoot = repoRoot;
     this.jarIndexFile = new File(getJarsDir(), JarIndex.JAR_INDEX_FILE.getValue());
@@ -44,12 +43,14 @@ public abstract class AbstractRepository {
   protected abstract void addFile(File checkout);
   
   protected void populateRepository() {
-    Pattern pattern = Pattern.compile("\\d*");
-    for (File batch : repoRoot.listFiles()) {
-      if (batch.isDirectory() && pattern.matcher(batch.getName()).matches()) {
-        for (File checkout : batch.listFiles()) {
-          if (pattern.matcher(checkout.getName()).matches()) {
-            addFile(checkout);
+    if (repoRoot.exists()) { 
+      Pattern pattern = Pattern.compile("\\d*");
+      for (File batch : repoRoot.listFiles()) {
+        if (batch.isDirectory() && pattern.matcher(batch.getName()).matches()) {
+          for (File checkout : batch.listFiles()) {
+            if (pattern.matcher(checkout.getName()).matches()) {
+              addFile(checkout);
+            }
           }
         }
       }
@@ -57,7 +58,7 @@ public abstract class AbstractRepository {
   }
   
   private void loadJarIndex() {
-    jarIndex = JarIndex.getJarIndex(jarIndexFile);
+    jarIndex = JarIndex.getJarIndex(this);
   }
   
   public File getJarIndexFile() {
@@ -75,39 +76,20 @@ public abstract class AbstractRepository {
     return repoRoot;
   }
   
+  public File getMavenJarsDir() {
+    return new File(getJarsDir(), "maven");
+  }
+  
+  public File getProjectJarsDir() {
+    return new File(getJarsDir(), "project");
+  }
+  
   public File getJarsDir() {
     return new File(repoRoot, "jars");
   }
   
   public File getLibsDir() {
     return new File(repoRoot, "libs");
-  }
-  
-  public String convertToRelativePath(File file) {
-    return convertToRelativePath(file.getPath(), repoRoot.getPath());
-  }
-  
-  public String convertToRelativePath(String path) {
-    return convertToRelativePath(path, repoRoot.getPath());
-  }
-  
-  public String convertToRelativePath(File file, File base) {
-    return convertToRelativePath(file.getPath(), base.getPath());
-  }
-  
-  public String convertToRelativePath(String path, String basePath) {
-    path = path.replace('\\', '/');
-    basePath = basePath.replace('\\', '/');
-    if (basePath == null) {
-      return path.replace(' ', '*');
-    } else {
-      if (path.startsWith(basePath)) {
-        return path.substring(basePath.length()).replace(' ', '*');
-      } else {
-        logger.severe("Unable to convert " + path + " to relative path");
-        return path.replace(' ', '*');
-      }
-    }
   }
   
   public String toString() {

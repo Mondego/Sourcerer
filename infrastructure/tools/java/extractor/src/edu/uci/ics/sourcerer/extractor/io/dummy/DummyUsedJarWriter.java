@@ -15,26 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.extractor.io.file;
+package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import java.io.File;
-
-import edu.uci.ics.sourcerer.extractor.io.IJarFileWriter;
-import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.extractor.io.IUsedJarWriter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class JarFileWriter extends ExtractorWriter implements IJarFileWriter {
-  public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Extractor Output", "Filename for used jar files.");
-  
-  public JarFileWriter(File output, Repository input) {
-    super(new File(output, JAR_FILE_FILE.getValue()), input);
+public class DummyUsedJarWriter implements IUsedJarWriter {
+  @Override
+  public void writeUsedJar(String hash, String ... missingTypes) {
   }
-  
-  public void writeJarFile(String filename) {
-    write(filename);
+
+  @Override
+  public void close() {
   }
 }

@@ -35,6 +35,11 @@ public class JavaFile extends AbstractJavaFile {
   private File file;
   private String pkg;
   private boolean packageComputed = false;
+  
+  public JavaFile(File file) {
+    this.file = file;
+  }
+  
   public JavaFile(String relativePath, File file) {
     this.relativePath = relativePath;
     this.file = file;
@@ -50,7 +55,11 @@ public class JavaFile extends AbstractJavaFile {
           if (line.startsWith("package")) {
             int semi = line.indexOf(';');
             while (semi == -1) {
-              line += br.readLine().trim();
+              String newLine = br.readLine();
+              if (newLine == null) {
+                newLine = ";";
+              }
+              line += newLine.trim();
               semi = line.indexOf(';');
             }
             pkg = line.substring(8, line.indexOf(';')).trim();

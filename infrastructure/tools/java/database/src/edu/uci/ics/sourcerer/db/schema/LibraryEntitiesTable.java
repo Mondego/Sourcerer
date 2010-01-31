@@ -124,8 +124,8 @@ public final class LibraryEntitiesTable {
     return executor.insertSingleWithKey(TABLE, getInsertValue(type, local.getName(), local.getModifiers(), local.getPosition(), libraryID, libraryClassFileID, local.getStartPos(), local.getLength()));
   }
   
-  public static void insertPrimitive(InsertBatcher batcher, String name, String libraryID) {
-    batcher.addValue(getInsertValue(Entity.PRIMITIVE, name, null, null, libraryID, null, null, null));
+  public static void insertPrimitive(KeyInsertBatcher<String> batcher, String name, String libraryID) {
+    batcher.addValue(getInsertValue(Entity.PRIMITIVE, name, null, null, libraryID, null, null, null), name);
   }
   
   public static String insertArray(QueryExecutor executor, String fqn, int dimensions, String libraryID) {
@@ -139,5 +139,9 @@ public final class LibraryEntitiesTable {
   // ---- SELECT ----
   public static String getEntityIDByFqn(QueryExecutor executor, String fqn) {
     return executor.executeSingle("SELECT entity_id FROM " + TABLE + " WHERE fqn='" + fqn + "';"); 
+  }
+  
+  public static String getFilteredEntityIDByFqn(QueryExecutor executor, String fqn) {
+    return executor.selectSingle(TABLE, "entity_id", "fqn='" + fqn +"' AND entity_type NOT IN ('UNKNOWN','LOCAL_VARIABLE','INITIALIZER','PARAMETER','ARRAY','DUPLICATE')");
   }
 }

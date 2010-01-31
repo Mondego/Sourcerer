@@ -106,6 +106,7 @@ public class ClassFileExtractor {
         break;
       } else if (parent.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
         relationWriter.writeInside(classFile.getType().getFullyQualifiedName(), parent.getElementName());
+        jarEntityWriter.writePackage(parent.getElementName());
         break;
       } else {
         parent = parent.getParent();

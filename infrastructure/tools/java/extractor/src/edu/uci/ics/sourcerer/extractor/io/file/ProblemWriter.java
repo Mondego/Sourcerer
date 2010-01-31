@@ -22,7 +22,8 @@ import java.io.File;
 import edu.uci.ics.sourcerer.extractor.io.IProblemWriter;
 import edu.uci.ics.sourcerer.model.Problem;
 import edu.uci.ics.sourcerer.model.extracted.ProblemExParser;
-import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.base.IFileSet;
+import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
@@ -32,8 +33,8 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public class ProblemWriter extends ExtractorWriter implements IProblemWriter {
   public static final Property<String> PROBLEM_FILE = new StringProperty("problem-file", "problems.txt", "Extractor Output", "Filename for extracted problems.");
   
-  public ProblemWriter(File output, Repository input) {
-    super(new File(output, PROBLEM_FILE.getValue()), input);
+  public ProblemWriter(File output, IFileSet input) {
+    super(new File(output, Extracted.PROBLEM_FILE.getValue()), input);
   }
 
   @Override

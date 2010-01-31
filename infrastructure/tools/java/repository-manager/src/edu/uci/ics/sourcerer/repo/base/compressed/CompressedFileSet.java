@@ -38,6 +38,7 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 public class CompressedFileSet extends AbstractFileSet {
   private RepoProject project;
   private CompressedFileSet(RepoProject project) {
+    super(project.getRepository());
     this.project = project;
   }
   
@@ -111,5 +112,10 @@ public class CompressedFileSet extends AbstractFileSet {
       FileUtils.close(fos);
     }
     return tmp;
+  }
+  
+  @Override
+  public String convertToRelativePath(String path) {
+    return convertToRelativePath(path, project.getRepository().getTempDir().getPath());
   }
 }

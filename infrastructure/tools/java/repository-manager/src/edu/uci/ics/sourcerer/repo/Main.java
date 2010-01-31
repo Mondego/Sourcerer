@@ -23,10 +23,12 @@ import static edu.uci.ics.sourcerer.repo.general.JarIndex.JAR_INDEX_FILE;
 import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.LINKS_FILE;
 import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.MAVEN_URL;
 import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
+import static edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository.EXTRACTION_STATS_FILE;
 
 import java.util.Set;
 
 import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.maven.MavenCrawlStats;
 import edu.uci.ics.sourcerer.repo.maven.MavenCrawler;
 import edu.uci.ics.sourcerer.repo.maven.MavenDownloader;
@@ -49,6 +51,8 @@ public class Main {
   private static final Property<Boolean> CRAWL_MAVEN = new BooleanProperty("crawl-maven", false, "Repository Manager", "Crawls the target maven repository.");
   private static final Property<Boolean> DOWNLOAD_MAVEN = new BooleanProperty("download-maven", false, "Repository Manager", "Downloads the jar file links retreived from a maven crawl.");
   private static final Property<Boolean> MAVEN_STATS = new BooleanProperty("maven-stats", false, "Repository Manager", "Gets some statistics on the links retreived from a maven crawl.");
+  private static final Property<Boolean> EXTRACTION_STATS = new BooleanProperty("extraction-stats", false, "Repository Manager", "Get extraction stats.");
+  private static final Property<Boolean> CLONE_EXTRACTED_REPOSITORY = new BooleanProperty("clone-extracted", false, "Repository Manager", "Copies the property files into a new repositroy.");
 
   public static void main(String[] args) {
     PropertyManager.initializeProperties(args);
@@ -85,8 +89,14 @@ public class Main {
     } else if (MAVEN_STATS.getValue()) {
       PropertyManager.registerAndVerify(MAVEN_STATS, INPUT, LINKS_FILE, MAVEN_URL);
       MavenCrawlStats.crawlStats();
+    } else if (EXTRACTION_STATS.getValue()) {
+      PropertyManager.registerAndVerify(INPUT_REPO, EXTRACTION_STATS_FILE);
+      ExtractedRepository.getRepository().computeExtractionStats();
+    } else if (CLONE_EXTRACTED_REPOSITORY.getValue()) {
+      PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);
+      ExtractedRepository.getRepository().cloneProperties(ExtractedRepository.getRepository(OUTPUT_REPO.getValue()));
     } else {
-      PropertyManager.registerUsedProperties(CREATE_JAR_INDEX, PRINT_JAR_STATS, AGGREGATE_JAR_FILES, CLEAN_REPOSITORY, MIGRATE_REPOSITORY, CRAWL_MAVEN, DOWNLOAD_MAVEN, MAVEN_STATS);
+      PropertyManager.registerUsedProperties(CREATE_JAR_INDEX, PRINT_JAR_STATS, AGGREGATE_JAR_FILES, CLEAN_REPOSITORY, MIGRATE_REPOSITORY, CRAWL_MAVEN, DOWNLOAD_MAVEN, MAVEN_STATS, EXTRACTION_STATS);
       PropertyManager.printUsage();
     }
   }

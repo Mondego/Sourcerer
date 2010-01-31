@@ -114,7 +114,7 @@ public class ExtractorOutputTest {
       RepoProject project = repo.getProject(extractedProject.getRelativePath());
       IFileSet files = project.getFileSet();
       for (IJavaFile file : files.getUniqueJavaFiles()) {
-        String relativePath = repo.convertToRelativePath(file.getPath());
+        String relativePath = files.convertToRelativePath(file.getPath());
         verifyLine = "Verifying " + relativePath;
         verifyOutput(file, map.getExtractorOutput(relativePath));
       }

@@ -1,63 +1,51 @@
+/* 
+ * Sourcerer: an infrastructure for large-scale source code analysis.
+ * Copyright (C) by contributors. See CONTRIBUTORS.txt for full list.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package edu.uci.ics.sourcerer.repo.general;
 
 import java.io.File;
 import java.util.Properties;
 
-public class LibraryProperties extends AbstractProperties {
-  private static final String NAME = "name";
-  private static final String EXTRACTED = "extracted";
-  private static final String HAS_SOURCE = "hasSource";
-  private static final String SOURCE_ERROR = "sourceError";
-  
-  // Base properties
-  private String name;
-  
-  // Extraction properties
-  private boolean extracted;
-  private boolean hasSource;
-  private boolean sourceError;
-  
+/**
+ * @author Joel Ossher (jossher@uci.edu)
+ */
+public class LibraryProperties extends AbstractBinaryProperties {
   private LibraryProperties() {}
   
   public static LibraryProperties load(File file) {
     LibraryProperties props = new LibraryProperties();
     props.loadProperties(file);
-    
-    props.name = props.properties.getProperty(NAME);
-    
-    props.extracted = "true".equals(props.properties.getProperty(EXTRACTED));
-    props.hasSource = "true".equals(props.properties.getProperty(HAS_SOURCE));
-    props.sourceError = "true".equals(props.properties.getProperty(SOURCE_ERROR));
-    
     return props;
   }
   
-  public static void create(File file, String name, boolean hasSource, boolean sourceError) {
+  public static void create(File file, String name, int fromBinary, int binaryExceptions, int fromSource, int sourceExceptions) {
     Properties properties = new Properties();
     
     properties.setProperty(NAME, name);
     properties.setProperty(EXTRACTED, "true");
-    properties.setProperty(HAS_SOURCE, Boolean.toString(hasSource));
-    properties.setProperty(SOURCE_ERROR, Boolean.toString(sourceError));
+    properties.setProperty(FROM_BINARY, Integer.toString(fromBinary));
+    properties.setProperty(BINARY_EXCEPTIONS, Integer.toString(binaryExceptions));
+    properties.setProperty(FROM_SOURCE, Integer.toString(fromSource));
+    properties.setProperty(SOURCE_EXCEPTIONS, Integer.toString(sourceExceptions));
     
     write(file, properties);
   }
-
-  public String getName() {
-    return name;
-  }
-
-  public boolean extracted() {
-    return extracted;
-  }
-
-  public boolean hasSource() {
-    return hasSource;
-  }
-
-  public boolean sourceError() {
-    return sourceError;
-  }
   
-  
+  public void save(File file) {
+    super.save(file);
+  }
 }

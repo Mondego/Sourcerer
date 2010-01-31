@@ -22,6 +22,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
@@ -36,24 +38,49 @@ public abstract class Extracted {
   public static final Property<String> FILE_FILE = new StringProperty("file-file", "files.txt", "Repository Manager", "Filename for the extracted files.");
   public static final Property<String> PROBLEM_FILE = new StringProperty("problem-file", "problems.txt", "Repository Manager", "Filename for the extracted problems.");
   public static final Property<String> IMPORT_FILE = new StringProperty("import-file", "imports.txt", "Repository Manager", "Filename for the extracted imports.");
+  public static final Property<String> USED_JAR_FILE = new StringProperty("used-jar-file", "used-jars.txt", "Repository Manager", "Filename for used jar files.");
+  public static final Property<String> MISSING_TYPE_FILE = new StringProperty("missing-type-file", "missing-types.txt", "Repository Manager", "Filename for missing types.");
   
   protected File content;
+  protected String relativePath;
 
-  public Extracted(File content) {
+  public Extracted(File content, String relativePath) {
     this.content = content;
+    this.relativePath = relativePath;
   }
 
   public File getContent() {
     return content;
   }
   
+  public String getRelativePath() {
+    return relativePath;
+  }
+  
   protected File getPropertiesFile() {
-    return new File(content, ".properties");
+    File file = new File(content, ".properties");
+    if (file.exists()) {
+      return file;
+    } else {
+      return new File(content, "extracted.properties");
+    }
+  }
+  
+  protected void clonePropertiesFile(ExtractedRepository target) {
+    File properties = getPropertiesFile();
+    if (properties.exists()) {
+      File newProperties = new File(target.getBaseDir().getPath(), relativePath + "/" + properties.getName());
+      FileUtils.copyFile(properties, newProperties);
+    }
   }
   
   protected InputStream getInputStream(Property<String> property) throws IOException {
     File file = new File(content, property.getValue());
-    return new FileInputStream(file);
+    if (file.exists()) {
+      return new FileInputStream(file);
+    } else {
+      return null;
+    }
   }
 
   public InputStream getEntityInputStream() throws IOException {
@@ -68,7 +95,7 @@ public abstract class Extracted {
     return getInputStream(LOCAL_VARIABLE_FILE);
   }
   
-  public InputStream getCommentFile() throws IOException {
+  public InputStream getCommentInputStream() throws IOException {
     return getInputStream(COMMENT_FILE);
   }
   
@@ -82,5 +109,59 @@ public abstract class Extracted {
   
   public InputStream getImportInputStream() throws IOException {
     return getInputStream(IMPORT_FILE);
+  }
+  
+  public InputStream getMissingTypeInputStream() throws IOException {
+    return getInputStream(MISSING_TYPE_FILE);
+  }
+  
+  public boolean usesJars() {
+    return new File(content, USED_JAR_FILE.getValue()).exists();
+  }
+  
+  public InputStream getUsedJarInputStream() throws IOException {
+    return getInputStream(USED_JAR_FILE);
+  }
+  
+  protected abstract AbstractProperties getProperties();
+  
+  public String getName() {
+    return getProperties().getName();
+  }
+  
+  public boolean extracted() {
+    return getProperties().extracted();
+  }
+  
+  public boolean hasMissingTypes() {
+    return getProperties().missingTypes();
+  }
+  
+  public boolean empty() {
+    return !hasSource();
+  }
+  
+  public boolean hasSource() {
+    return getExtractedFromSource() + getSourceExceptions() > 0;
+  }
+  
+  public int getExtractedFromSource() {
+    return getProperties().getExtractedFromSource();
+  }
+  
+  public boolean hasSourceExceptions() {
+    return getSourceExceptions() > 0;
+  }
+  
+  public int getSourceExceptions() {
+    return getProperties().getSourceExceptions();
+  }
+  
+  public int getFirstOrderJars() {
+    return getProperties().getFirstOrderJars();
+  }
+  
+  public int getJars() {
+    return getProperties().getJars();
   }
 }

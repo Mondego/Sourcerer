@@ -62,6 +62,6 @@ public class CommentEX implements ModelEX {
   }
   
   public String toString() {
-    return type + " " + path;
+    return type.name() + " " + path;
   }
 }

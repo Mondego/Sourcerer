@@ -118,10 +118,14 @@ public class QueryExecutor {
     return executeSingle("SELECT " + column + " FROM " + table + " WHERE " + where + ";");
   }
   
-  public <T> Collection<T> select(String table, String column, String where, ResultTranslator<T> translator) {
-    return execute("SELECT " + column + " FROM " + table + " WHERE " + where + ";", translator);
+  public <T> T selectSingle(String table, String column, String where, ResultTranslator<T> translator) {
+    return executeSingle("SELECT " + column + " FROM " + table + " WHERE " + where + ";", translator);
   }
   
+  public <T> Collection<T> select(String table, String columns, String where, ResultTranslator<T> translator) {
+    return execute("SELECT " + columns + " FROM " + table + " WHERE " + where + ";", translator);
+  }
+    
   public void insertSingle(String table, String value) {
     executeUpdate("INSERT INTO " + table + " VALUES " + value + ";");
   }

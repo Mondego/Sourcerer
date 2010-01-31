@@ -15,13 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.extractor.io;
+package edu.uci.ics.sourcerer.extractor.io.dummy;
+
+import edu.uci.ics.sourcerer.extractor.io.IMissingTypeWriter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IJarFileWriter extends IExtractorWriter {
+public class DummyMissingTypeWriter implements IMissingTypeWriter {
+  @Override
+  public void writeMissingType(String fqn) {}
 
-  public void writeJarFile(String filename);
-
+  @Override
+  public void close() {}
 }

@@ -50,7 +50,7 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public final class Logging {
   protected static final Property<Boolean> SUPPRESS_FILE_LOGGING = new BooleanProperty("suppress-file-logging", false, "Logging", "Suppresses all logging to files.");
   protected static final Property<Boolean> REPORT_TO_CONSOLE = new BooleanProperty("report-to-console", false, "Logging", "Prints all the logging messages to the console.");
-  protected static final Property<String> ERROR_LOG = new StringProperty("error-log", "error.log", "Logging", "Filename for error log.");
+  protected static final Property<String> ERROR_LOG = new StringProperty("error-log", "error%d.log", "Logging", "Filename for error log.");
   protected static final Property<String> INFO_LOG = new StringProperty("info-log", "info.log", "Logging", "Filename for the info log.");
   protected static final Property<String> RESUME_LOG = new StringProperty("resume-log", "resume.log", "Logging", "Filename for the resume log.");
   protected static final Property<Boolean> CLEAR_RESUME_LOG = new BooleanProperty("clear-resume-log", false, "Logging", "Clears the resume log before beginning."); 
@@ -74,10 +74,13 @@ public final class Logging {
     Formatter formatter = new Formatter() {
       @Override
       public String format(LogRecord record) {
-        return Logging.formatError(record);
+        String msg = Logging.formatError(record);
+        System.err.print(msg);
+        return msg;
       }
     };
     defaultHandler = new StreamHandler(System.err, formatter);
+    defaultHandler.setLevel(Level.INFO);
     logger.addHandler(defaultHandler);
   }
     
@@ -96,6 +99,11 @@ public final class Logging {
     } else {
       return Collections.emptySet();
     }
+  }
+  
+  private static String getFileHandlerPattern(Property<String> prop) {
+    SimpleDateFormat format = new SimpleDateFormat("-MMM-dd-yyyy-HH-mm-ss");
+    return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + prop.getValue().replace("%d", format.format(new Date()));
   }
   
   public synchronized static Set<String> initializeResumeLogger() {
@@ -186,10 +194,10 @@ public final class Logging {
             }
           }
         };
-        errorHandler = new FileHandler(new File(OUTPUT.getValue(), ERROR_LOG.getValue()).getPath());
+        errorHandler = new FileHandler(getFileHandlerPattern(ERROR_LOG));
         errorHandler.setFormatter(errorFormatter);
       }
-      errorHandler.setLevel(Level.WARNING);
+      errorHandler.setLevel(Level.INFO);
       
       StreamHandler infoHandler = null;
       if (suppressFileLogging) {
@@ -215,7 +223,7 @@ public final class Logging {
             }
           }
         };
-        infoHandler = new FileHandler(new File(OUTPUT.getValue(), INFO_LOG.getValue()).getPath());
+        infoHandler = new FileHandler(getFileHandlerPattern(INFO_LOG));
         infoHandler.setFormatter(infoFormatter);
       }
       infoHandler.setLevel(Level.INFO);
@@ -255,7 +263,7 @@ public final class Logging {
     
     try {
       file.mkdirs();
-      StreamHandler handler = new FileHandler(new File(file, "log").getPath());
+      StreamHandler handler = new FileHandler(new File(file, "log").getPath(), true);
       handler.setFormatter(formatter);
       handler.setLevel(Level.INFO);
       handlerMap.put(file, handler);

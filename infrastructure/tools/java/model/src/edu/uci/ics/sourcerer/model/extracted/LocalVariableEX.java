@@ -105,6 +105,10 @@ public class LocalVariableEX implements ModelEX {
     return length;
   }
   
+  public String toString() {
+    return type.name() + " " + name + " " + parent;
+  }
+  
   public boolean equals(Object o) {
     if (this == o) {
       return true;

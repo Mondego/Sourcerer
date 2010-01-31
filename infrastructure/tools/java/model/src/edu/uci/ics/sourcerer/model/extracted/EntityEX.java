@@ -30,6 +30,9 @@ public final class EntityEX implements ModelEX {
   private String startPos;
   private String length;
   
+  protected EntityEX(Entity type, String fqn) {
+    this(type, fqn, null, null, null, null);
+  }
   protected EntityEX(Entity type, String fqn, String mods) {
     this(type, fqn, mods, null, null, null);
   }
@@ -68,6 +71,6 @@ public final class EntityEX implements ModelEX {
   }
   
   public String toString() {
-    return type + " " + fqn;
+    return type.name() + " " + fqn;
   }
 }

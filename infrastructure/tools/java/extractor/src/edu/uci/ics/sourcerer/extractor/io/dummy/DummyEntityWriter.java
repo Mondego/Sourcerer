@@ -28,6 +28,10 @@ public class DummyEntityWriter implements IEntityWriter {
   public void close() {}
 
   @Override
+  public void writePackage(String fqn) {
+  }
+  
+  @Override
   public void writeAnnotation(String fqn, int modifiers, Location location) {}
 
   @Override
@@ -56,4 +60,6 @@ public class DummyEntityWriter implements IEntityWriter {
 
   @Override
   public void writeMethod(String fqn, int modifiers, Location location) {}
+
+
 }

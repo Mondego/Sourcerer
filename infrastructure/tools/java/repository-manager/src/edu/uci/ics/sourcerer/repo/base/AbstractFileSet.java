@@ -19,26 +19,31 @@ package edu.uci.ics.sourcerer.repo.base;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Map;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractFileSet implements IFileSet {
+  protected AbstractRepository repo;
+  
   private Collection<IJarFile> jarFiles;
   
   private Collection<RepoDir> roots;
   private Map<String, RepoDir> repoMap;
   
-  Collection<IJavaFile> uniqueFiles = null;
-  Collection<IJavaFile> bestDuplicateFiles = null; 
+  private Collection<IJavaFile> uniqueFiles = null;
+  private Collection<IJavaFile> bestDuplicateFiles = null; 
   
-  protected AbstractFileSet() {
+  protected AbstractFileSet(AbstractRepository repo) {
+    this.repo = repo;
     jarFiles = Helper.newLinkedList();
     roots = Helper.newLinkedList();
     repoMap = Helper.newHashMap();
@@ -194,6 +199,32 @@ public abstract class AbstractFileSet implements IFileSet {
       repoDir = repoDir.getParent();
     }
     return count;
+  }
+
+  @Override
+  public String convertToRelativePath(String path) {
+    return convertToRelativePath(path, repo.getBaseDir().getPath());
+  }
+  
+  @Override
+  public String convertToRelativePath(File file, File base) {
+    return convertToRelativePath(file.getPath(), base.getPath());
+  }
+  
+  @Override
+  public String convertToRelativePath(String path, String base) {
+    path = path.replace('\\', '/');
+    base = base.replace('\\', '/');
+    if (base == null) {
+      return path.replace(' ', '*');
+    } else {
+      if (path.startsWith(base)) {
+        return path.substring(base.length()).replace(' ', '*');
+      } else {
+        logger.severe("Unable to convert " + path + " to relative path (" + base + "");
+        return path.replace(' ', '*');
+      }
+    }
   }
   
   private class RepoDir {

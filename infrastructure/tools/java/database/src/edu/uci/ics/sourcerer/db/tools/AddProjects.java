@@ -30,7 +30,7 @@ import edu.uci.ics.sourcerer.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.db.schema.FilesTable;
 import edu.uci.ics.sourcerer.db.schema.ImportsTable;
 import edu.uci.ics.sourcerer.db.schema.JarEntitiesTable;
-import edu.uci.ics.sourcerer.db.schema.JarUsesTable;
+import edu.uci.ics.sourcerer.db.schema.UsedJarsTable;
 import edu.uci.ics.sourcerer.db.schema.JarsTable;
 import edu.uci.ics.sourcerer.db.schema.LibraryEntitiesTable;
 import edu.uci.ics.sourcerer.db.schema.ProblemsTable;
@@ -48,7 +48,7 @@ import edu.uci.ics.sourcerer.model.extracted.CommentEX;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.FileEX;
 import edu.uci.ics.sourcerer.model.extracted.ImportEX;
-import edu.uci.ics.sourcerer.model.extracted.JarEX;
+import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
@@ -158,9 +158,9 @@ public class AddProjects extends DatabaseAccessor {
         }
       });
       for (EntityEX entity : ExtractedReader.getEntityReader(project)) {
-        String fileID = getFileID(fileMap, entity.getPath());
-        if (fileID == null) {
-          logger.log(Level.SEVERE, "Unknown file: " + entity.getPath());
+        String fileID = null;
+        if (entity.getType() != Entity.PACKAGE) {
+          fileID = getFileID(fileMap, entity.getPath());
         }
         EntitiesTable.insert(batcher, entity, projectID, fileID, entity);
         count++;
@@ -174,14 +174,14 @@ public class AddProjects extends DatabaseAccessor {
     String inClause = null;
     {
       StringBuilder inClauseBuilder = new StringBuilder("(");
-      for (JarEX jar : ExtractedReader.getJarReader(project)) {
+      for (UsedJarEX jar : ExtractedReader.getUsedJarReader(project)) {
         String jarID = JarsTable.getJarIDByHash(executor, jar.getHash());
         if (jarID == null) {
           logger.log(Level.SEVERE, "Unable to locate jar: " + jar.getHash());
         } else {
           inClauseBuilder.append(jarID).append(',');
           // Add it to the jar uses table
-          JarUsesTable.insert(executor, jarID, projectID);
+          UsedJarsTable.insert(executor, jarID, null, projectID);
         }
       }
       if (inClauseBuilder.length() > 1) {
@@ -203,11 +203,7 @@ public class AddProjects extends DatabaseAccessor {
       for (LocalVariableEX var : ExtractedReader.getLocalVariableReader(project)) {
         // Get the file
         String fileID = getFileID(fileMap, var.getPath());
-        
-        if (fileID == null) {
-          logger.log(Level.SEVERE, "Unknown file: " + var.getPath());
-        }
-        
+                
         // Add the entity
         String eid = EntitiesTable.insertLocalVariable(executor, var, projectID, fileID);
         
@@ -237,10 +233,6 @@ public class AddProjects extends DatabaseAccessor {
       for (RelationEX relation : ExtractedReader.getRelationReader(project)) {
         // Get the file
         String fileID = getFileID(fileMap, relation.getPath());
-
-        if (fileID == null) {
-          logger.log(Level.SEVERE, "Unknown file: " + relation.getPath());
-        }
         
         // Look up the lhs eid
         TypedEntityID lhsEid = entityMap.get(relation.getLhs());
@@ -419,7 +411,7 @@ public class AddProjects extends DatabaseAccessor {
     }
     
     // Some jar reference?
-    Collection<TypedEntityID> eids = JarEntitiesTable.getEntityIDsByFqn(executor, fqn, inClause);
+    Collection<TypedEntityID> eids = JarEntitiesTable.getFilteredEntityIDsByFqn(executor, fqn, inClause);
     if (!eids.isEmpty()) {
       if (eids.size() == 1) {
         TypedEntityID teid = eids.iterator().next();
@@ -430,7 +422,9 @@ public class AddProjects extends DatabaseAccessor {
         for (TypedEntityID jeid : eids) {
           RelationsTable.insert(batcher, Relation.MATCHES, dup, jeid, projectID);
         }
-        entityMap.put(fqn, TypedEntityID.getSourceEntityID(dup));
+        TypedEntityID teid = TypedEntityID.getSourceEntityID(dup);
+        entityMap.put(fqn, teid);
+        return teid;
       }
     }
 
@@ -446,7 +440,7 @@ public class AddProjects extends DatabaseAccessor {
     } else {
       // Report the problem
       logger.log(Level.SEVERE, "File not found: " + path);
-      return "NULL";
+      return null;
     }
   }
 }

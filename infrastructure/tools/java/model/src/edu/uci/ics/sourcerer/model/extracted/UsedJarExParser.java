@@ -17,22 +17,35 @@
  */
 package edu.uci.ics.sourcerer.model.extracted;
 
+import java.util.Collection;
+
+import edu.uci.ics.sourcerer.util.Helper;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarExParser implements ModelExParser<JarEX> {
-  private JarExParser() {}
+public class UsedJarExParser implements ModelExParser<UsedJarEX> {
+  private UsedJarExParser() {}
   
-  public static JarExParser getParser() {
-    return new JarExParser();
+  public static UsedJarExParser getParser() {
+    return new UsedJarExParser();
   }
   
-  public static String getLine(String hash) {
-    return hash;
+  public static String getLine(String hash, String ... missingTypes) {
+    StringBuilder line = new StringBuilder(hash);
+    for (String missingType : missingTypes) {
+      line.append(" ").append(missingType);
+    }
+    return line.toString();
   }
   
   @Override
-  public JarEX parseLine(String line) {
-    return new JarEX(line);
+  public UsedJarEX parseLine(String line) {
+    String parts[] = line.split(" ");
+    Collection<String> missingTypes = Helper.newLinkedList();
+    for (int i = 1; i < parts.length; i++) {
+      missingTypes.add(parts[i]);
+    }
+    return new UsedJarEX(parts[0], missingTypes);
   }
 }

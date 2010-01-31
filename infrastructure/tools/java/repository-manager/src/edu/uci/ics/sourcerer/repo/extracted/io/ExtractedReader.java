@@ -37,18 +37,19 @@ import edu.uci.ics.sourcerer.model.extracted.FileEX;
 import edu.uci.ics.sourcerer.model.extracted.FileExParser;
 import edu.uci.ics.sourcerer.model.extracted.ImportEX;
 import edu.uci.ics.sourcerer.model.extracted.ImportExParser;
-import edu.uci.ics.sourcerer.model.extracted.JarEX;
-import edu.uci.ics.sourcerer.model.extracted.JarExParser;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableExParser;
+import edu.uci.ics.sourcerer.model.extracted.MissingTypeEX;
+import edu.uci.ics.sourcerer.model.extracted.MissingTypeExParser;
 import edu.uci.ics.sourcerer.model.extracted.ModelEX;
 import edu.uci.ics.sourcerer.model.extracted.ModelExParser;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.model.extracted.ProblemExParser;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationExParser;
+import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
+import edu.uci.ics.sourcerer.model.extracted.UsedJarExParser;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
-import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -67,7 +68,24 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
   
   private ExtractedReader(ModelExParser<T> parser, InputStream entityInputStream) throws IOException {
     this.parser = parser;
-    this.input = new BufferedReader(new InputStreamReader(entityInputStream));
+    if (entityInputStream != null) {
+      this.input = new BufferedReader(new InputStreamReader(entityInputStream));
+    }
+  }
+  
+  public int getCount() {
+    try {
+      int count = 0;
+      for (String line = input.readLine(); line != null; line = input.readLine()) {
+        count++;
+      }
+      input.close();
+      input = null;
+      return count;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error getting count", e);
+      return -1;
+    }
   }
   
   public Iterator<T> iterator() {
@@ -148,9 +166,9 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
     }
   }
   
-  public static ExtractedReader<JarEX> getJarReader(ExtractedProject project) {
+  public static ExtractedReader<UsedJarEX> getUsedJarReader(Extracted extracted) {
     try {
-      return new ExtractedReader<JarEX>(JarExParser.getParser(), project.getJarInputStream());
+      return new ExtractedReader<UsedJarEX>(UsedJarExParser.getParser(), extracted.getUsedJarInputStream());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to create jar reader", e);
       return null;
@@ -186,9 +204,18 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
   
   public static ExtractedReader<CommentEX> getCommentReader(Extracted extracted) {
     try {
-      return new ExtractedReader<CommentEX>(CommentExParser.getParser(), extracted.getCommentFile());
+      return new ExtractedReader<CommentEX>(CommentExParser.getParser(), extracted.getCommentInputStream());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to create comment reader", e);
+      return null;
+    }
+  }
+  
+  public static ExtractedReader<MissingTypeEX> getMissingTypeReader(Extracted extracted) {
+    try {
+      return new ExtractedReader<MissingTypeEX>(MissingTypeExParser.getParser(), extracted.getMissingTypeInputStream());
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to create missing type reader", e);
       return null;
     }
   }

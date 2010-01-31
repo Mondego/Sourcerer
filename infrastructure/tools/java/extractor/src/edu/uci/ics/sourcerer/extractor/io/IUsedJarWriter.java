@@ -15,19 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model.extracted;
+package edu.uci.ics.sourcerer.extractor.io;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarEX implements ModelEX {
-  private String hash;
-  
-  protected JarEX(String hash) {
-    this.hash = hash;
-  }
-  
-  public String getHash() {
-    return hash;
-  }
+public interface IUsedJarWriter extends IExtractorWriter {
+  public void writeUsedJar(String hash, String ... missingTypes);
 }

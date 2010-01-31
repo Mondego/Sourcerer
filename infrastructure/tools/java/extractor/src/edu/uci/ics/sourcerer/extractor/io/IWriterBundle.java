@@ -27,19 +27,15 @@ public interface IWriterBundle {
 
   public IEntityWriter getEntityWriter();
 
-  public IJarEntityWriter getJarEntityWriter();
-
   public ILocalVariableWriter getLocalVariableWriter();
 
   public IRelationWriter getRelationWriter();
-
-  public IJarRelationWriter getJarRelationWriter();
 
   public ICommentWriter getCommentWriter();
 
   public IFileWriter getFileWriter();
 
-  public IJarFileWriter getJarFileWriter();
+  public IUsedJarWriter getUsedJarWriter();
 
   public void close();
 }

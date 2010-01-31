@@ -169,9 +169,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
    * <li>All the non-associated comments from the file to <code>ICommentWriter</code>.</li>
    * </ul>
    */
-  @SuppressWarnings("unchecked")
   @Override
   public boolean visit(CompilationUnit node) {
+    fqnStack.clear();
     // Get the file path
     if (node.getJavaElement().getResource() == null) {
       if (node.getPackage() == null) {
@@ -183,19 +183,26 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       compilationUnitPath = node.getJavaElement().getResource().getRawLocation().toString();
     }
     
+    // Get the package fqn
+    if (node.getPackage() == null) {
+      fqnStack.push("default", Entity.PACKAGE);
+    } else {
+      entityWriter.writePackage(node.getPackage().getName().getFullyQualifiedName());
+      fqnStack.push(node.getPackage().getName().getFullyQualifiedName(), Entity.PACKAGE);
+    }
+    
+    return true;
+  }
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  public void endVisit(CompilationUnit node) {
     // Write the file path
     fileWriter.writeFile(compilationUnitPath);
     
     // Write the problems
     for (IProblem problem : node.getProblems()) {
       problemWriter.writeProblem(compilationUnitPath, problem.isError(), problem.getID(), problem.getMessage());
-    }
-    
-    // Get the package fqn
-    if (node.getPackage() == null) {
-      fqnStack.push("default", Entity.PACKAGE);
-    } else {
-      fqnStack.push(node.getPackage().getName().getFullyQualifiedName(), Entity.PACKAGE);
     }
     
     // Visit the comments
@@ -205,11 +212,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         comment.accept(this);
       }
     }
-    return true;
-  }
-  
-  @Override
-  public void endVisit(CompilationUnit node) {
+    
     compilationUnitPath = null;
     fqnStack.pop();
   }
@@ -222,20 +225,23 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
    */
   @Override
   public boolean visit(ImportDeclaration node) {
-    try {
-      IBinding binding = node.resolveBinding();
-      if (binding == null) {
-        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
-      } else {
+    IBinding binding = node.resolveBinding();
+    if (binding == null) {
+        // Cut things short
+        logger.severe("Import binding is null - giving up for: " + compilationUnitPath);
+        throw new IllegalStateException("Binding resolution appears to have failed!");
+//        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
+    } else {
+      try {
         if (binding instanceof ITypeBinding) {
           importWriter.writeImport(getTypeFqn((ITypeBinding)binding), node.isStatic(), node.isOnDemand(), getLocation(node));
         } else {
           importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
         }
+      } catch (NullPointerException e) {
+        logger.log(Level.WARNING, "Eclipse NPE bug in import");
+        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
       }
-    } catch (Exception e) {
-      logger.log(Level.FINE, "Eclipse NPE bug in import");
-      importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
     }
     return false;
   }
@@ -270,6 +276,11 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     String fqn = null;
     Entity type = null;
     ITypeBinding binding = node.resolveBinding();
+    if (binding == null) {
+      // Cut things short
+      logger.severe("Type binding is null - giving up for: " + compilationUnitPath);
+      throw new IllegalStateException("Binding resolution appears to have failed!");
+    }
     if (node.isPackageMemberTypeDeclaration()) {
       fqn = fqnStack.getTypeFqn(node.getName().getIdentifier());
     } else if (node.isMemberTypeDeclaration()) {
@@ -285,10 +296,6 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       } else {
         fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), binding.getBinaryName());
       }
-    } else if (binding == null) {
-      // Cut things short
-      logger.severe("Type binding is null - giving up for: " + compilationUnitPath);
-      throw new IllegalStateException("Binding resolution appears to have failed!");
     } else {
       logger.severe("Unsure what type the declaration is!");
       fqn = "(ERROR)" + node.getName().getIdentifier();
@@ -326,10 +333,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         logger.log(Level.SEVERE, "A type declaration should not declare an annonymous type!");
       } else {
         // Verify the fqn
-        String fqn2 = getTypeFqn(binding);
-        if (!fqn.equals(fqn2)) {
-          logger.log(Level.SEVERE, "Mismatch between " + fqn + " and " + fqn2);
-        }
+//        String fqn2 = getTypeFqn(binding);
+//        if (!fqn.equals(fqn2)) {
+//          logger.log(Level.SEVERE, "Mismatch between " + fqn + " and " + fqn2);
+//        }
 
         // Write out the synthesized constructors
         for (IMethodBinding method : binding.getDeclaredMethods()) {
@@ -1845,7 +1852,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   @SuppressWarnings("unchecked")
   private String getFuzzyMethodFqn(MethodInvocation invocation) {
     StringBuilder fqnBuilder = new StringBuilder();
-    fqnBuilder.append("_UNRESOLVED_.").append(invocation.getName().getFullyQualifiedName());
+    fqnBuilder.append("(1UKNOWN).").append(invocation.getName().getFullyQualifiedName());
     getFuzzyMethodArgs(fqnBuilder, invocation.arguments());
     return fqnBuilder.toString();
   }
@@ -1875,7 +1882,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         argBuilder.append(',');
       }
       if (binding == null) {
-        argBuilder.append("_UNKNOWN_");
+        argBuilder.append("(1UKNOWN)");
       } else {
         argBuilder.append(getTypeFqn(binding));
       }
@@ -1954,11 +1961,11 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private static final String BRACKETS = "[][][][][][][][][][][][][][][][][][][][]";
  
   private String getUnknownFqn(String name) {
-    return "(UNKNOWN)" + name;
+    return "(1UNKNOWN)" + name;
   }
   
   private String getUnknownSuperFqn(String name) {
-    return "(SUPER)" + name;
+    return "(1SUPER)" + name;
   }
   
   @SuppressWarnings("unchecked")
@@ -2142,6 +2149,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
 
     private FQNStack() {
       stack = Helper.newStack();
+    }
+    
+    public void clear() {
+      stack.clear();
     }
 
     public void push(String fqn, Entity type) {

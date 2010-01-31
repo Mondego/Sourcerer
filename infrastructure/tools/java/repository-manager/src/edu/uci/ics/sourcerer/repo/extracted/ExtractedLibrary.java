@@ -19,36 +19,25 @@ package edu.uci.ics.sourcerer.repo.extracted;
 
 import java.io.File;
 
+import edu.uci.ics.sourcerer.repo.general.AbstractBinaryProperties;
 import edu.uci.ics.sourcerer.repo.general.LibraryProperties;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ExtractedLibrary extends Extracted {
+public class ExtractedLibrary extends ExtractedBinary {
   private LibraryProperties properties;
   
-  public ExtractedLibrary(File content) {
-    super(content);
+  public ExtractedLibrary(File content, String relativePath) {
+    super(content, relativePath);
     properties = LibraryProperties.load(getPropertiesFile());
   }
     
-  public void createPropertiesFile(String name, boolean hasSource, boolean sourceError) {
-    LibraryProperties.create(getPropertiesFile(), name, hasSource, sourceError);
+  public void createPropertiesFile(String name, int fromBinary, int binaryExceptions, int fromSource, int sourceExceptions) {
+    LibraryProperties.create(getPropertiesFile(), name, fromBinary, binaryExceptions, fromSource, sourceExceptions);
   }
   
-  public String getName() {
-    return properties.getName();
-  }
-  
-  public boolean extracted() {
-    return properties.extracted();
-  }
-  
-  public boolean hasSource() {
-    return properties.hasSource();
-  }
-  
-  public boolean sourceError() {
-    return properties.sourceError();
+  protected AbstractBinaryProperties getBinaryProperties() {
+    return properties;
   }
 }

@@ -18,8 +18,8 @@
 package edu.uci.ics.sourcerer.db.tools;
 
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
 import java.util.Map;
@@ -35,6 +35,7 @@ import edu.uci.ics.sourcerer.db.schema.JarRelationsTable;
 import edu.uci.ics.sourcerer.db.schema.JarsTable;
 import edu.uci.ics.sourcerer.db.schema.LibraryEntitiesTable;
 import edu.uci.ics.sourcerer.db.schema.RelationsTable;
+import edu.uci.ics.sourcerer.db.schema.UsedJarsTable;
 import edu.uci.ics.sourcerer.db.util.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.db.util.InsertBatcher;
@@ -50,23 +51,27 @@ import edu.uci.ics.sourcerer.model.extracted.ImportEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
+import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Logging;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class AddJars extends DatabaseAccessor {
+  public Property<Boolean> ENTITIES_ONLY = new BooleanProperty("entities-only", false, "Database", "Only add entities to database");
   private Set<String> completed;
 
   public AddJars(DatabaseConnection connection) {
     super(connection);
     completed = Logging.initializeResumeLogger();
   }
-  
+
   public void addJars() {
     ExtractedRepository extracted = ExtractedRepository.getRepository(INPUT_REPO.getValue());
     
@@ -78,100 +83,306 @@ public class AddJars extends DatabaseAccessor {
     logger.info("--- Inserting " + jars.size() + " jars into database ---");
     
     int count = 0;
-    for (ExtractedJar jar : jars) {
-      logger.info("Inserting " + jar.getName() + "(" + ++count + " of " + jars.size() + ")");
-      addJar(jar);
+    int size = jars.size();
+    if (ENTITIES_ONLY.getValue()) {
+      logger.info("-- Inserting jars --");
+      for (ExtractedJar jar : jars) {
+        if (jar.extracted()) {
+          logger.info("Inserting " + jar.getName() + "'s entities " + "(" + ++count + " of " + size + ")");
+          addEntities(jar);
+        } else {
+          logger.info("Skipping " + jar.getName() + "'s entities " + "(" + ++count + " of " + size + ")");
+        }
+      }
+    } else {
+      logger.info("-- Inserting lone jars --");
+      for (ExtractedJar jar : jars) {
+        // in the first go, skip jars that use jars
+        if (!jar.usesJars()) {
+          if (jar.extracted()) {
+            logger.info("Inserting " + jar.getName() + " " + "(" + ++count + " of " + size + ")");
+            addJar(jar);
+          } else {
+            logger.info("Skipping " + jar.getName() + " " + "(" + ++count + " of " + size + ")");
+          }
+        }
+      }
+      int newCount = 0;
+      logger.info("-- Inserting " + (size - count) + " remaining entities --");
+      for (ExtractedJar jar : jars) {
+        if (jar.usesJars()) {
+          if (jar.extracted()) {
+            logger.info("Inserting " + jar.getName() + "'s entities " + "(" + (++newCount + count) + " of " + size + ")");
+            addEntities(jar);
+          } else {
+            logger.info("Skipping " + jar.getName() + " " + "(" + (++newCount + count) + " of " + size + ")");
+          }
+        }
+      }
+      newCount = 0;
+      logger.info("-- Inserting " + (size - count) + " remaining relations --");
+      for (ExtractedJar jar : jars) {
+        if (jar.usesJars()) {
+          if (jar.extracted()) {
+            logger.info("Inserting " + jar.getName() + "'s relations " + "(" + (++newCount + count) + " of " + size + ")");
+            addRelations(jar);
+          } else {
+            logger.info("Skipping " + jar.getName() + " " + "(" + (++newCount + count) + " of " + size + ")");
+          }
+        }
+      }
     }
   }
   
-  public void addJar(ExtractedJar jar) {
+  private void addJar(ExtractedJar jar) {
+    Map<String, String> fileMap = Helper.newHashMap();
+    Map<String, TypedEntityID> entityMap = Helper.newHashMap();
+    String jarID = addEntities(jar, fileMap, entityMap);
+    addRelations(jar, jarID, fileMap, entityMap);
+  }
+  
+  private void addEntities(ExtractedJar jar) {
+    Map<String, String> fileMap = Helper.newHashMap();
+    addEntities(jar, fileMap, null);
+  }
+  
+  private String addEntities(ExtractedJar jar, final Map<String, String> fileMap, final Map<String, TypedEntityID> entityMap) {
     // Check if the jar was added already
     String oldID = JarsTable.getJarIDByHash(executor, jar.getHash());
     if (oldID != null) {
-      if (completed.contains(jar.getHash())) {
+      if (completed.contains("e-" + jar.getHash())) {
         logger.info("  Already inserted.");
-        return;
+        return null;
       } else {
         logger.info("  Deleting existing jar...");
         JarsTable.deleteJar(executor, oldID);
       }
     }
-      
+    
     // Add jar to the database
-    final String jarID = JarsTable.insert(executor, jar);
+    String jarID = JarsTable.insert(executor, jar);
     
-    // Add the files to the database
-    final Map<String, String> fileMap = Helper.newHashMap();
-    {
-      logger.info("  Beginning insert of class files...");
-      locker.addWrite(JarClassFilesTable.TABLE);
-      locker.lock();
-      int count = 0;
-      KeyInsertBatcher<FileEX> batcher = JarClassFilesTable.getKeyInsertBatcher(executor, new KeyInsertBatcher.KeyProcessor<FileEX>() {
-        public void processKey(String key, FileEX file) {
-          fileMap.put(file.getRelativePath(), key);
-        }
-      });
-      for (FileEX file : ExtractedReader.getFileReader(jar)) {
-        JarClassFilesTable.insert(batcher, file, jarID, file);
-        count++;
-      }
-      batcher.insert();
-      locker.unlock();
-      logger.info("    " + count + " files inserted.");
-    }
-    
-    // Add the problems to the database
-    {
-      logger.info("  Beginning insert of problems...");
-      locker.addWrite(JarProblemsTable.TABLE);
-      locker.lock();
-      int count = 0;
-      InsertBatcher batcher = JarProblemsTable.getInsertBatcher(executor);
-      for (ProblemEX problem : ExtractedReader.getProblemReader(jar)) {
-        String fileID = fileMap.get(problem.getRelativePath());
-        if (fileID != null) {
-          JarProblemsTable.insert(batcher, problem, jarID, fileID);
+    if (entityMap != null) {
+      // Add the files to the database
+      {
+        logger.info("  Beginning insert of class files...");
+        locker.addWrite(JarClassFilesTable.TABLE);
+        locker.lock();
+        int count = 0;
+        KeyInsertBatcher<FileEX> batcher = JarClassFilesTable.getKeyInsertBatcher(executor, new KeyInsertBatcher.KeyProcessor<FileEX>() {
+          public void processKey(String key, FileEX file) {
+            fileMap.put(file.getRelativePath(), key);
+          }
+        });
+        for (FileEX file : ExtractedReader.getFileReader(jar)) {
+          JarClassFilesTable.insert(batcher, file, jarID, file);
           count++;
-        } else {
-          logger.log(Level.SEVERE, "Unknown file: " + problem.getRelativePath());
         }
+        batcher.insert();
+        locker.unlock();
+        logger.info("    " + count + " files inserted.");
       }
-      batcher.insert();
-      locker.unlock();
-      logger.info("    " + count + " problems inserted.");
-    }
-
-    // Add the entities to the database
-    final Map<String, TypedEntityID> entityMap = Helper.newHashMap();
-    {
-      logger.info("  Beginning insert of entities...");
-      locker.addWrite(JarEntitiesTable.TABLE);
-      locker.lock();
-      int count = 0;
-      KeyInsertBatcher<EntityEX> batcher = JarEntitiesTable.<EntityEX>getKeyInsertBatcher(executor, new KeyInsertBatcher.KeyProcessor<EntityEX>() {
-        public void processKey(String key, EntityEX entity) {
-          entityMap.put(entity.getFqn(), TypedEntityID.getJarEntityID(key));
-        }
-      });
-      for (EntityEX entity : ExtractedReader.getEntityReader(jar)) {
-        String fileID = null;
-        if (entity.getPath() != null) {
-          fileID = fileMap.get(entity.getPath());
-          if (fileID == null) {
-            logger.log(Level.SEVERE, "Unknown file: " + entity.getPath());
+      
+      // Add the problems to the database
+      {
+        logger.info("  Beginning insert of problems...");
+        locker.addWrite(JarProblemsTable.TABLE);
+        locker.lock();
+        int count = 0;
+        InsertBatcher batcher = JarProblemsTable.getInsertBatcher(executor);
+        for (ProblemEX problem : ExtractedReader.getProblemReader(jar)) {
+          String fileID = fileMap.get(problem.getRelativePath());
+          if (fileID != null) {
+            try {
+              JarProblemsTable.insert(batcher, problem, jarID, fileID);
+              count++;
+            } catch (IllegalArgumentException e) {
+              logger.log(Level.SEVERE, "Unable to insert problem: " + problem, e);
+            }
+          } else {
+            logger.log(Level.SEVERE, "Unknown file: " + problem.getRelativePath());
           }
         }
-        if (fileID == null) {
-          JarEntitiesTable.insert(batcher, entity, jarID, entity);
-        } else {
-          JarEntitiesTable.insert(batcher, entity, jarID, fileID, entity);
-        }
-        count++;
+        batcher.insert();
+        locker.unlock();
+        logger.info("    " + count + " problems inserted.");
       }
-      batcher.insert();
-      locker.unlock();
-      logger.info("    " + count + " entities inserted.");
+      
+      // Add the entities to the database
+      {
+        logger.info("  Beginning insert of entities...");
+        locker.addWrite(JarEntitiesTable.TABLE);
+        locker.lock();
+        int count = 0;
+        KeyInsertBatcher<EntityEX> batcher = JarEntitiesTable.<EntityEX>getKeyInsertBatcher(executor, new KeyInsertBatcher.KeyProcessor<EntityEX>() {
+          @Override
+          public void processKey(String key, EntityEX entity) {
+            entityMap.put(entity.getFqn(), TypedEntityID.getJarEntityID(key));
+          }
+        });
+        for (EntityEX entity : ExtractedReader.getEntityReader(jar)) {
+          String fileID = null;
+          if (entity.getPath() != null) {
+            fileID = fileMap.get(entity.getPath());
+            if (fileID == null) {
+              logger.log(Level.SEVERE, "Unknown file: " + entity.getPath());
+            }
+          }
+          
+          try {
+            if (fileID == null) {
+              JarEntitiesTable.insert(batcher, entity, jarID, entity);
+            } else {
+              JarEntitiesTable.insert(batcher, entity, jarID, fileID, entity);
+            }
+            count++;
+          } catch (IllegalArgumentException e) {
+            logger.log(Level.SEVERE, "Unable to insert entity: " + entity, e);
+          }
+        }
+        batcher.insert();
+        locker.unlock();
+        logger.info("    " + count + " entities inserted.");
+      }
+    } else {
+      if (ENTITIES_ONLY.getValue()) {
+        logger.info("  Beginning insert of entities...");
+        locker.addWrite(JarEntitiesTable.TABLE);
+        locker.lock();
+        InsertBatcher batcher = JarEntitiesTable.getInsertBatcher(executor);
+        int count = 0;
+        for (EntityEX entity : ExtractedReader.getEntityReader(jar)) {
+          try {
+            JarEntitiesTable.insert(batcher, entity, jarID);
+            count++;
+          } catch (IllegalArgumentException e) {
+            logger.log(Level.SEVERE, "Unable to insert entity: " + entity, e);
+          }
+        }
+        batcher.insert();
+        locker.unlock();
+        logger.info("    " + count + " entities inserted.");
+      } else {
+        // Add the files to the database
+        {
+          logger.info("  Beginning insert of class files...");
+          locker.addWrite(JarClassFilesTable.TABLE);
+          locker.lock();
+          int count = 0;
+          KeyInsertBatcher<FileEX> batcher = JarClassFilesTable.getKeyInsertBatcher(executor, new KeyInsertBatcher.KeyProcessor<FileEX>() {
+            public void processKey(String key, FileEX file) {
+              fileMap.put(file.getRelativePath(), key);
+            }
+          });
+          for (FileEX file : ExtractedReader.getFileReader(jar)) {
+            JarClassFilesTable.insert(batcher, file, jarID, file);
+            count++;
+          }
+          batcher.insert();
+          locker.unlock();
+          logger.info("    " + count + " files inserted.");
+        }
+        
+        // Add the problems to the database
+        {
+          logger.info("  Beginning insert of problems...");
+          locker.addWrite(JarProblemsTable.TABLE);
+          locker.lock();
+          int count = 0;
+          InsertBatcher batcher = JarProblemsTable.getInsertBatcher(executor);
+          for (ProblemEX problem : ExtractedReader.getProblemReader(jar)) {
+            String fileID = fileMap.get(problem.getRelativePath());
+            if (fileID != null) {
+              try {
+                JarProblemsTable.insert(batcher, problem, jarID, fileID);
+                count++;
+              } catch (IllegalArgumentException e) {
+                logger.log(Level.SEVERE, "Unable to insert problem: " + problem, e);
+              }
+            } else {
+              logger.log(Level.SEVERE, "Unknown file: " + problem.getRelativePath());
+            }
+          }
+          batcher.insert();
+          locker.unlock();
+          logger.info("    " + count + " problems inserted.");
+        }
+        
+        // Add the entities to the database
+        {
+          logger.info("  Beginning insert of entities...");
+          locker.addWrite(JarEntitiesTable.TABLE);
+          locker.lock();
+          int count = 0;
+          InsertBatcher batcher = JarEntitiesTable.getInsertBatcher(executor);
+          for (EntityEX entity : ExtractedReader.getEntityReader(jar)) {
+            String fileID = null;
+            if (entity.getPath() != null) {
+              fileID = fileMap.get(entity.getPath());
+              if (fileID == null) {
+                logger.log(Level.SEVERE, "Unknown file: " + entity.getPath());
+              }
+            }
+            
+            try {
+              if (fileID == null) {
+                JarEntitiesTable.insert(batcher, entity, jarID);
+              } else {
+                JarEntitiesTable.insert(batcher, entity, jarID, fileID);
+              }
+              count++;
+            } catch (IllegalArgumentException e) {
+              logger.log(Level.SEVERE, "Unable to insert entity: " + entity, e);
+            }
+          }
+          batcher.insert();
+          locker.unlock();
+          logger.info("    " + count + " entities inserted.");
+        }
+      }
+    }
+    logger.log(RESUME, "e-" + jar.getHash());
+    return jarID;
+  }
+  
+  public void addRelations(ExtractedJar jar) {
+    String jarID = JarsTable.getJarIDByHash(executor, jar.getHash());
+    if (jarID == null) {
+      logger.log(Level.SEVERE, "May not insert relations before entities: " + jar.getName());
+    } else {
+      Map<String, String> fileMap = JarClassFilesTable.getFileMap(executor);
+      Map<String, TypedEntityID> entityMap = Helper.newHashMap();
+      addRelations(jar, jarID, fileMap, entityMap);
+    }
+  }
+  
+  public void addRelations(ExtractedJar jar, final String jarID, final Map<String, String> fileMap, final Map<String, TypedEntityID> entityMap) {
+    // Check if the jar was added already
+    if (completed.contains("r-" + jar.getHash())) {
+      logger.info("  Already inserted.");
+      return;
+    }
+    
+    // Look up the used jars
+    String inClause = null;
+    {
+      executor.lock(UsedJarsTable.getWriteLock(), JarsTable.getReadLock());
+      StringBuilder inClauseBuilder = new StringBuilder("(");
+      for (UsedJarEX used : ExtractedReader.getUsedJarReader(jar)) {
+        String usedID = JarsTable.getJarIDByHash(executor, used.getHash());
+        if (usedID == null) {
+          logger.log(Level.SEVERE, "Unable to locate jar: " + used.getHash());
+        } else {
+          inClauseBuilder.append(usedID);
+          // Add it to the used_jars table
+          UsedJarsTable.insert(executor, usedID, jarID, null);
+        }
+      }
+      executor.unlock();
+      if (inClauseBuilder.length() > 1) {
+        inClauseBuilder.setCharAt(inClauseBuilder.length() - 1, ')');
+        inClause = inClauseBuilder.toString();
+      }
     }
       
     // Add the local variables to the database
@@ -192,23 +403,27 @@ public class AddJars extends DatabaseAccessor {
         }
         // Add the entity
         String eid = null;
-        if (fileID == null) {
-          eid = JarEntitiesTable.insertLocal(executor, var, jarID);
-        } else {
-          eid = JarEntitiesTable.insertLocal(executor, var, jarID, fileID);
+        try {
+          if (fileID == null) {
+            eid = JarEntitiesTable.insertLocal(executor, var, jarID);
+          } else {
+            eid = JarEntitiesTable.insertLocal(executor, var, jarID, fileID);
+          }
+          
+          // Add the holds relation
+          TypedEntityID typeEid = getEid(batcher, entityMap, inClause, jarID, var.getTypeFqn());
+          if (fileID == null) {
+            JarRelationsTable.insert(batcher, Relation.HOLDS, eid, typeEid, jarID);
+          } else {
+            JarRelationsTable.insert(batcher, Relation.HOLDS, eid, typeEid, jarID, fileID, var.getTypeStartPos(), var.getTypeLength());
+          }
+          
+          // Add the inside relation
+          TypedEntityID parentEid = getEid(batcher, entityMap, inClause, jarID, var.getParent());
+          JarRelationsTable.insert(batcher, Relation.INSIDE, eid, parentEid, jarID);
+        } catch (IllegalArgumentException e) {
+          logger.log(Level.SEVERE, "Unable to insert local: " + var, e);
         }
-        
-        // Add the holds relation
-        TypedEntityID typeEid = getEid(batcher, entityMap, jarID, var.getTypeFqn(), false);
-        if (fileID == null) {
-          JarRelationsTable.insert(batcher, Relation.HOLDS, eid, typeEid, jarID);
-        } else {
-          JarRelationsTable.insert(batcher, Relation.HOLDS, jarID, typeEid, jarID, fileID, var.getTypeStartPos(), var.getTypeLength());
-        }
-        
-        // Add the inside relation
-        TypedEntityID parentEid = getEid(batcher, entityMap, jarID, var.getParent(), false);
-        JarRelationsTable.insert(batcher, Relation.INSIDE, eid, parentEid, jarID);
         
         count++;
       }
@@ -235,22 +450,26 @@ public class AddJars extends DatabaseAccessor {
         }
         
         // Look up the lhs eid
-        TypedEntityID lhsEid = entityMap.get(relation.getLhs());
+        TypedEntityID lhsEid = checkEntityMap(entityMap, relation.getLhs(), jarID);
         if (lhsEid == null) {
           logger.log(Level.SEVERE, "Missing lhs for a relation! " + relation.getLhs());
           continue;
         }
         
         // Look up the rhs eid
-        TypedEntityID rhsEid = getEid(batcher, entityMap, jarID, relation.getRhs(), relation.getType() == Relation.INSIDE);
+        TypedEntityID rhsEid = getEid(batcher, entityMap, inClause, jarID, relation.getRhs());
         
         // Add the relation
-        if (fileID == null) {
-          JarRelationsTable.insert(batcher, relation.getType(), lhsEid.getID(), rhsEid, jarID);
-        } else {
-          JarRelationsTable.insert(batcher, relation.getType(), lhsEid.getID(), rhsEid, jarID, fileID, relation.getStartPosition(), relation.getLength());
+        try {
+          if (fileID == null) {
+            JarRelationsTable.insert(batcher, relation.getType(), lhsEid.getID(), rhsEid, jarID);
+          } else {
+            JarRelationsTable.insert(batcher, relation.getType(), lhsEid.getID(), rhsEid, jarID, fileID, relation.getStartPosition(), relation.getLength());
+          }
+          count++;
+        } catch (IllegalArgumentException e) {
+          logger.log(Level.SEVERE, "Unable to insert relation: " + relation, e);
         }
-        count++;
       }
       batcher.insert();
       locker.unlock();
@@ -272,9 +491,13 @@ public class AddJars extends DatabaseAccessor {
           logger.log(Level.SEVERE, "Missing file for import: " + imp.getFile());
         } else {
           // Look up the entity
-          TypedEntityID eid = getEid(relBatcher, entityMap, jarID, imp.getImported(), imp.isOnDemand());
-          JarImportsTable.insert(batcher, imp.isStatic(), imp.isOnDemand(), eid, jarID, fileID, imp.getOffset(), imp.getLength());
-          count++;
+          TypedEntityID eid = getEid(relBatcher, entityMap, inClause, jarID, imp.getImported());
+          try {
+            JarImportsTable.insert(batcher, imp.isStatic(), imp.isOnDemand(), eid, jarID, fileID, imp.getOffset(), imp.getLength());
+            count++;
+          } catch (IllegalArgumentException e) {
+            logger.log(Level.SEVERE, "Unable to insert import: " + imp, e);
+          }
         }
       }
       batcher.insert();
@@ -298,35 +521,57 @@ public class AddJars extends DatabaseAccessor {
         if (fileID == null) {
           logger.log(Level.SEVERE, "Missing file for comment: " + comment.getPath());
         } else {
-          // If it's a javadoc comment
-          if (comment.getType() == Comment.JAVADOC) {
-            // Look up the eid
-            TypedEntityID eid = entityMap.get(comment.getFqn());
-            if (eid == null) {
-              logger.log(Level.SEVERE, "Missing declared type for comment: " + comment.getFqn());
+          try {
+            // If it's a javadoc comment
+            if (comment.getType() == Comment.JAVADOC) {
+              // Look up the eid
+              TypedEntityID eid = checkEntityMap(entityMap, comment.getFqn(), jarID);
+              if (eid == null) {
+                logger.log(Level.SEVERE, "Missing declared type for comment: " + comment.getFqn());
+              } else {
+                JarCommentsTable.insertJavadoc(batcher, eid.getID(), jarID, fileID, comment.getOffset(), comment.getLength());
+              }
+            } else if (comment.getType() == Comment.UJAVADOC) {
+              JarCommentsTable.insertUnassociatedJavadoc(batcher, jarID, fileID, comment.getOffset(), comment.getLength());
             } else {
-              JarCommentsTable.insertJavadoc(batcher, eid.getID(), jarID, fileID, comment.getOffset(), comment.getLength());
+              JarCommentsTable.insertComment(batcher, comment.getType(), jarID, fileID, comment.getOffset(), comment.getLength());
             }
-          } else if (comment.getType() == Comment.UJAVADOC) {
-            JarCommentsTable.insertUnassociatedJavadoc(batcher, jarID, fileID, comment.getOffset(), comment.getLength());
-          } else {
-            JarCommentsTable.insertComment(batcher, comment.getType(), jarID, fileID, comment.getOffset(), comment.getLength());
+            count++;
+          } catch (IllegalArgumentException e) {
+            logger.log(Level.SEVERE, "Unable to insert comment: " + comment, e);
           }
-          count++;
         }
       }
       batcher.insert();
       locker.unlock();
       logger.info("    " + count + " comments inserted.");
     }
-    logger.log(RESUME, jar.getHash());
+
+    logger.log(RESUME, "r-" + jar.getHash());
     executor.reset();
   }
   
-  private TypedEntityID getEid(InsertBatcher batcher, Map<String, TypedEntityID> entityMap, String jarID, String fqn, boolean maybePackage) {
-    // Maybe it's just in the map
+  private TypedEntityID checkEntityMap(Map<String, TypedEntityID> entityMap, String fqn, String jarID) {
     if (entityMap.containsKey(fqn)) {
       return entityMap.get(fqn);
+    }
+    
+    // Maybe it's from this project
+    String eid = JarEntitiesTable.getEntityIDByFqn(executor, fqn, jarID);
+    if (eid == null) {
+      return null;
+    } else {
+      TypedEntityID teid = TypedEntityID.getJarEntityID(eid);
+      entityMap.put(fqn, teid);
+      return teid;
+    }
+  }
+  
+  private TypedEntityID getEid(InsertBatcher batcher, Map<String, TypedEntityID> entityMap, String inClause, String jarID, String fqn) {
+    // Maybe it's just in the map
+    TypedEntityID teid = checkEntityMap(entityMap, fqn, jarID);
+    if (teid != null) {
+      return teid;
     }
     
     // If it's a method, skip the type entities
@@ -336,9 +581,9 @@ public class AddJars extends DatabaseAccessor {
         int arrIndex = fqn.indexOf("[]");
         String elementFqn = fqn.substring(0, arrIndex);
         int dimensions = (fqn.length() - arrIndex) / 2;
-        TypedEntityID eid = TypedEntityID.getJarEntityID(JarEntitiesTable.insertArray(executor, elementFqn, dimensions, jarID));
+        TypedEntityID eid = TypedEntityID.getJarEntityID(JarEntitiesTable.insertArray(executor, fqn, dimensions, jarID));
             
-        TypedEntityID elementEid = getEid(batcher, entityMap, jarID, elementFqn, false);
+        TypedEntityID elementEid = getEid(batcher, entityMap, inClause, jarID, elementFqn);
         JarRelationsTable.insert(batcher, Relation.HAS_ELEMENTS_OF, eid.getID(), elementEid, jarID);
         entityMap.put(fqn, eid);
         return eid;
@@ -350,7 +595,7 @@ public class AddJars extends DatabaseAccessor {
         
         if (!fqn.equals("<?>")) {
           boolean isLower = TypeUtils.isLowerBound(fqn);
-          TypedEntityID bound = getEid(batcher, entityMap, jarID, TypeUtils.getWildcardBound(fqn), false);
+          TypedEntityID bound = getEid(batcher, entityMap, inClause, jarID, TypeUtils.getWildcardBound(fqn));
           if (isLower) {
             JarRelationsTable.insert(batcher, Relation.HAS_LOWER_BOUND, eid.getID(), bound, jarID);
           } else {
@@ -367,7 +612,7 @@ public class AddJars extends DatabaseAccessor {
         TypedEntityID eid = TypedEntityID.getJarEntityID(JarEntitiesTable.insert(executor, Entity.TYPE_VARIABLE, fqn, jarID));
         
         for (String bound : TypeUtils.breakTypeVariable(fqn)) {
-          TypedEntityID boundEid = getEid(batcher, entityMap, jarID, bound, false);
+          TypedEntityID boundEid = getEid(batcher, entityMap, inClause, jarID, bound);
           JarRelationsTable.insert(batcher, Relation.HAS_UPPER_BOUND, eid.getID(), boundEid, jarID);
         }
         
@@ -381,37 +626,48 @@ public class AddJars extends DatabaseAccessor {
         TypedEntityID eid = TypedEntityID.getJarEntityID(JarEntitiesTable.insert(executor, Entity.PARAMETERIZED_TYPE, fqn, jarID));
         
         String baseType = TypeUtils.getBaseType(fqn);
-        TypedEntityID baseTypeEid = getEid(batcher, entityMap, jarID, baseType, false);
+        TypedEntityID baseTypeEid = getEid(batcher, entityMap, inClause, jarID, baseType);
         
         JarRelationsTable.insert(batcher, Relation.HAS_BASE_TYPE, eid.getID(), baseTypeEid, jarID);
         
         for (String arg : TypeUtils.breakParametrizedType(fqn)) {
-          TypedEntityID argEid = getEid(batcher, entityMap, jarID, arg, false);
+          TypedEntityID argEid = getEid(batcher, entityMap, inClause, jarID, arg);
           JarRelationsTable.insert(batcher, Relation.HAS_TYPE_ARGUMENT, eid.getID(), argEid, jarID);
         }
         
         entityMap.put(fqn, eid);
         return eid;
       }
-      
-      // Perhaps a package
-      if (maybePackage) {
-        TypedEntityID eid = TypedEntityID.getLibraryEntityID(JarEntitiesTable.insert(executor, Entity.PACKAGE , fqn, jarID));
-        entityMap.put(fqn, eid);
-        return eid;
-      }
     }
     
     // Some Java library reference?
-    String eid = LibraryEntitiesTable.getEntityIDByFqn(executor, fqn);
+    String eid = LibraryEntitiesTable.getFilteredEntityIDByFqn(executor, fqn);
     if (eid != null) {
-      TypedEntityID teid = TypedEntityID.getLibraryEntityID(eid);
+      teid = TypedEntityID.getLibraryEntityID(eid);
       entityMap.put(fqn, teid);
       return teid;
     }
     
+    // Some jar reference?
+    Collection<TypedEntityID> eids = JarEntitiesTable.getFilteredEntityIDsByFqn(executor, fqn, inClause);
+    if (!eids.isEmpty()) {
+      if (eids.size() == 1) {
+        teid = eids.iterator().next();
+        entityMap.put(fqn, teid);
+        return teid;
+      } else {
+        String dup = JarEntitiesTable.insert(executor, Entity.DUPLICATE, fqn, jarID);
+        for (TypedEntityID jeid : eids) {
+          JarRelationsTable.insert(batcher, Relation.MATCHES, dup, jeid, jarID);
+        }
+        teid = TypedEntityID.getJarEntityID(dup);
+        entityMap.put(fqn, teid);
+        return teid;
+      }
+    }
+    
     // Well, I give up
-    TypedEntityID teid = TypedEntityID.getJarEntityID(JarEntitiesTable.insert(executor, Entity.UNKNOWN, fqn, jarID));
+    teid = TypedEntityID.getJarEntityID(JarEntitiesTable.insert(executor, Entity.UNKNOWN, fqn, jarID));
     entityMap.put(fqn, teid);
     return teid;
   }

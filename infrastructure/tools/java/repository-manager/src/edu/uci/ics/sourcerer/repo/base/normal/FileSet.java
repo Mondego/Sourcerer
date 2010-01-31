@@ -23,7 +23,7 @@ import java.util.Deque;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
-import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.RepoJar;
 import edu.uci.ics.sourcerer.util.Helper;
 
@@ -31,8 +31,8 @@ import edu.uci.ics.sourcerer.util.Helper;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FileSet extends AbstractFileSet {
-  private Repository repo;
-  public FileSet(File content, Repository repo) {
+  public FileSet(File content, AbstractRepository repo) {
+    super(repo);
     this.repo = repo;
     populateFileSet(content);
   }
@@ -53,7 +53,7 @@ public class FileSet extends AbstractFileSet {
           } else if (file.getName().endsWith(".jar")) {
             addJarFile(new JarFile(file, RepoJar.getHash(file)));
           } else if (file.getName().endsWith(".java")) {
-            addJavaFile(new JavaFile(repo.convertToRelativePath(file, content), file));
+            addJavaFile(new JavaFile(convertToRelativePath(file, content), file));
           }
         }
       }

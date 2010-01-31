@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 
+import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.ResultTranslator;
@@ -82,6 +83,10 @@ public final class JarEntitiesTable {
   }
   
   // ---- INSERT ----
+  public static InsertBatcher getInsertBatcher(QueryExecutor executor) {
+    return executor.getInsertBatcher(TABLE);
+  }
+  
   public static <T> KeyInsertBatcher<T> getKeyInsertBatcher(QueryExecutor executor, KeyInsertBatcher.KeyProcessor<T> processor) {
     return executor.getKeyInsertBatcher(TABLE, processor);
   }
@@ -98,8 +103,16 @@ public final class JarEntitiesTable {
 				SchemaUtils.convertLength(length));
   }
   
+  public static void insert(InsertBatcher batcher, EntityEX entity, String jarID) {
+    batcher.addValue(getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), null, jarID, null, null, null));
+  }
+  
   public static <T> void insert(KeyInsertBatcher<T> batcher, EntityEX entity, String jarID, T pairing) {
     batcher.addValue(getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), null, jarID, null, null, null), pairing);
+  }
+  
+  public static void insert(InsertBatcher batcher, EntityEX entity, String jarID, String jarClassFileID) {
+    batcher.addValue(getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), null, jarID, jarClassFileID, entity.getStartPosition(), entity.getLength()));
   }
   
   public static <T> void insert(KeyInsertBatcher<T> batcher, EntityEX entity, String jarID, String jarClassFileID, T pairing) {
@@ -147,12 +160,28 @@ public final class JarEntitiesTable {
     }
   };
   
-  public static Collection<TypedEntityID> getEntityIDsByFqn(QueryExecutor executor, String fqn, String inClause) {
+  public static Collection<TypedEntityID> getFilteredEntityIDsByFqn(QueryExecutor executor, String fqn, String inClause) {
     if (inClause == null) {
       return Collections.emptySet();
     } else {
-      return executor.select(TABLE, "entity_id", "fqn='" + fqn + "' AND entity_type<>'UNKNOWN' AND jar_id IN " + inClause, TRANSLATOR_TEID);
+      return executor.select(TABLE, "entity_id", "fqn='" + fqn + "' AND entity_type NOT IN ('UNKNOWN','LOCAL_VARIABLE','INITIALIZER','PARAMETER','ARRAY','DUPLICATE') AND jar_id IN " + inClause, TRANSLATOR_TEID);
     }
+  }
+  
+  public static String getEntityIDByFqn(QueryExecutor executor, String fqn, String jarID) {
+    return executor.selectSingle(TABLE, "entity_id", "fqn='" + fqn + "' AND jar_id=" + jarID);
+  }
+  
+  public static Collection<String> getJarIDsByFqn(QueryExecutor executor, String fqn) {
+    return executor.select(TABLE, "jar_id", "fqn='" + fqn + "'", ResultTranslator.SIMPLE_RESULT_TRANSLATOR);
+  }
+  
+  public static Collection<String> getJarIDsByPackage(QueryExecutor executor, String fqn) {
+    return executor.select(TABLE, "jar_id", "fqn LIKE '" + fqn + ".%' AND entity_type='PACKAGE'" , ResultTranslator.SIMPLE_RESULT_TRANSLATOR);
+  }
+  
+  public static Collection<String> getJarIDsByFuzzyFqn(QueryExecutor executor, String fqn) {
+    return executor.select(TABLE, "jar_id", "fqn LIKE '" + fqn.replace('.', '_') + "'", ResultTranslator.SIMPLE_RESULT_TRANSLATOR);
   }
 //  public static final ResultTranslator<EntityDB> TRANSLATOR = new ResultTranslator<EntityDB>() {
 //    @Override
