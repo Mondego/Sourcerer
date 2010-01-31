@@ -1,0 +1,138 @@
+/*
+ * Sourcerer: An infrastructure for large-scale source code analysis.
+ * Copyright (C) by contributors. See CONTRIBUTORS.txt for full list.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */
+
+pre.src {
+    background: #ffffff;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+table.src {
+	border: #dcdcdc 1px solid;
+	font-size: 16px;
+}
+
+td.numLine {
+    background: #f0f0f0;
+    border-right: #dcdcdc 1px solid;
+    padding-right: 3px;
+    text-align: right;
+}
+
+td.numLineCover {
+    background: #80ff80;
+    border-right: #dcdcdc 1px solid;
+    padding-right: 3px;
+    text-align: right;
+}
+
+td.nbHits {
+    background: #f0f0f0;
+    border-right: #dcdcdc 1px solid;
+    padding-right: 3px;
+    text-align: right;
+}
+
+td.nbHitsCovered {
+    background: #80ff80;
+    border-right: #dcdcdc 1px solid;
+    padding-right: 3px;
+    text-align: right;
+}
+
+td.nbHitsUncovered {
+    background: #ff9090;
+    border-right: #dcdcdc 1px solid;
+    font-weight: bold;
+    padding-right: 3px;
+    text-align: right;
+}
+
+td.src {
+    width: 100%;
+}
+
+div.result_code{
+	font-family: courier;
+	margin: 1px;
+	margin-top:8px;
+/*	background: #e6e6e6;*/
+	padding: 8px;
+/*	border-bottom: 1px solid silver;*/
+}
+
+span.comment {
+    color: #4E896B; /*#b22222;*/
+    font-style: italic;
+}
+
+span.keyword {
+    color:   #830A5B		; /*#2020bf;*/
+    font-weight: bold;
+}
+
+span.srcUncovered {
+    background: #ff9090;
+    font-weight: bold;
+}
+
+span.string {
+    color: #2a00dd;
+}
+
+span.text_italic {
+	font-size: 12px;
+    font-style: italic;
+}
+
+span.search-term {
+	background: #B3FFC0;	
+}
+
+span.used-api {
+	background: yellow;
+}
+
+
+/* from sourcerer */
+
+.javadoc-comment{
+	  color: #4463C0;
+	}
+	
+	.java-comment{
+	  color: #4E896B;
+	}
+	
+	.java-keyword{
+	  color: #830A5B;
+	  font-weight:bold;
+	}
+	
+	.search-keyword{
+	  background: #ffff99;
+	  font-weight: bold;
+	}
+	
+	.search-keyword-entity{
+	  border: solid 1px silver;
+	  background: #eeffff; 
+	  padding: 8px;
+	}
+	
