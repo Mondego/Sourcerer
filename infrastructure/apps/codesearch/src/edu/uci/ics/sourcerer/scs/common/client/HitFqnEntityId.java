@@ -19,6 +19,7 @@
 package edu.uci.ics.sourcerer.scs.common.client;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
@@ -33,6 +34,7 @@ public class HitFqnEntityId implements Serializable {
 	public String useCount;
 	public int rank;
 	public String score;
+	public List<String> snippetParts;
 	
 	public HitFqnEntityId(){
 		

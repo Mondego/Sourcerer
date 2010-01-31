@@ -18,6 +18,7 @@
  */
 package edu.uci.ics.sourcerer.scs.client;
 
+import java.util.HashSet;
 import java.util.List;
 
 import com.google.gwt.user.client.rpc.RemoteService;
@@ -25,6 +26,8 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
 import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
 import edu.uci.ics.sourcerer.scs.common.client.HitFqnEntityId;
+import edu.uci.ics.sourcerer.scs.common.client.SearchHeuristic;
+import edu.uci.ics.sourcerer.scs.common.client.SearchResultsWithSnippets;
 import edu.uci.ics.sourcerer.scs.common.client.UsedFqn;
 
 /**
@@ -38,4 +41,6 @@ public interface SourcererDBService extends RemoteService {
 	ERTables getERTables(List<String> hitEntities);
 	UsedFqn fillUsedFqnDetails(HitFqnEntityId fqn, EntityCategory cat);
 	List<UsedFqn> fillUsedFqnDetails(List<HitFqnEntityId> fqns, EntityCategory cat);
+	SearchResultsWithSnippets getSearchResultsWithSnippets(String query, long start, int rows, SearchHeuristic heuristic);
+	SearchResultsWithSnippets getSearchResultsWithSnippets(String query, long from, int rows, SearchHeuristic heuristic, HashSet<String> filterFqns);
 }

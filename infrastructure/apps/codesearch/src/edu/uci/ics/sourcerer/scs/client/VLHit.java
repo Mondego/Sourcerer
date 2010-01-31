@@ -28,7 +28,7 @@ import com.smartgwt.client.widgets.layout.VLayout;
  * @created Aug 11, 2009
  */
 public class VLHit extends VLayout implements
-		VLTopApis.ITakesSelectionUpdateEvent {
+		ITakesSelectionUpdateEvent {
 	boolean selected;
 	private String entityId;
 
@@ -47,14 +47,9 @@ public class VLHit extends VLayout implements
 	}
 
 	public void process(ApiSelectionUpdateEvent event) {
-		// DeferredCommand.addCommand(new Command() {
-		// public void execute() {
-		//
+		
 		highlightHit(((VLTopApis) event.getSource()).getSelectedUsedJdkFqns(),
 				((VLTopApis) event.getSource()).getSelectedUsedLibFqns());
-
-		// }
-		// });
 
 	}
 
@@ -75,24 +70,6 @@ public class VLHit extends VLayout implements
 			usedJdkFqns = new LinkedList<String>();
 		if (usedLibFqns == null)
 			usedLibFqns = new LinkedList<String>();
-
-		// System.out.println("==used j==");
-		// for(String s: usedJdkFqns){
-		// System.out.println(s);
-		// }
-		// System.out.println("==selected j==");
-		// for(String s: selectedJdkFqns){
-		// System.out.println(s);
-		// }
-		// System.out.println("==used l==");
-		// for(String s: usedLibFqns){
-		// System.out.println(s);
-		// }
-		// System.out.println("==selected l==");
-		// for(String s: selectedLibFqns){
-		// System.out.println(s);
-		// }
-		// System.out.println("-");
 
 		boolean _highlight = false;
 
@@ -122,8 +99,6 @@ public class VLHit extends VLayout implements
 		} else {
 			this.setBorder("0px");
 		}
-
-		// System.err.println(entityId + " " + _highlight);
 
 	}
 

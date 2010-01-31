@@ -124,6 +124,7 @@ public class SnippetServiceAdapter {
 				heuristic);
 		
 		HitsStat stat = ResultProcessorNonGWT.getStatsFromHits(queryResult);
+		
 //		System.out.println("Query: " + query);
 //		System.out.println("(" 
 //				+ heuristic.toString()

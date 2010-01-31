@@ -36,7 +36,7 @@ import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
  */
 public class ApiFqnLink extends HTMLFlow{
 	boolean selected = false;
-	VLTopApis container;
+	IApiFqnLinkContainer container;
 	
 	public void onFqnSelect(String fqn, EntityCategory cat, 
 			ApiSelectedEvent.Operation op){
@@ -45,26 +45,24 @@ public class ApiFqnLink extends HTMLFlow{
 		
 	}
 	
-
 		
 	public ApiFqnLink(final String fqn, 
 			final EntityCategory cat,
-			VLTopApis container){
+			IApiFqnLinkContainer container){
 		
 		this.container = container;
+		
 		
 		this.addClickHandler(new ClickHandler(){
 
 			public void onClick(ClickEvent event) {
 				ApiFqnLink.this.selected = !ApiFqnLink.this.selected;
 				if(ApiFqnLink.this.selected == true){
-					((HTMLFlow) event.getSource()).setBackgroundColor("#C8FCB7");
-					// fqnSelectionOberver.addFqnAsSelected(fqn, cat);
+					// ((HTMLFlow) event.getSource()).setBackgroundColor("#C8FCB7");
 					ApiFqnLink.this.onFqnSelect(fqn, cat, ApiSelectedEvent.Operation.SELECT);
 					
 				} else {
-					((HTMLFlow) event.getSource()).setBackgroundColor("#FEFBB6");
-					// fqnSelectionOberver.removeFqnAsSelected(fqn, cat);
+					// ((HTMLFlow) event.getSource()).setBackgroundColor("#FEFBB6");
 					ApiFqnLink.this.onFqnSelect(fqn, cat, ApiSelectedEvent.Operation.DESELECT);
 				}
 			

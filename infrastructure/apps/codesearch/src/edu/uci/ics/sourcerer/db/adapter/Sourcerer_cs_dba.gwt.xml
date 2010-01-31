@@ -2,6 +2,7 @@
 <!DOCTYPE module PUBLIC "-//Google Inc.//DTD Google Web Toolkit 1.7.0//EN" "http://google-web-toolkit.googlecode.com/svn/tags/1.7.0/distro-source/core/src/gwt-module.dtd">
 <module rename-to='sourcerer_dba'>
 	<inherits name='com.google.gwt.user.User'/>	
+	  <inherits name="edu.uci.ics.sourcerer.scs.common.Sourcerer_cs_common"/>
 </module>
 
 <!-- 

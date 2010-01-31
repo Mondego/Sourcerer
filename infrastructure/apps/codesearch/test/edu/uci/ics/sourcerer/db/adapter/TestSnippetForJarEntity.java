@@ -45,16 +45,17 @@ public class TestSnippetForJarEntity extends TestSourcererDbAdapterBase {
 		
 		
 		String query = 
+			"copy data from clipboard";
 			// "mouse hover track";
-			"copy paste data from clipboard";
+			// "copy paste data from clipboard";
 		SearchHeuristic heuristic = 
 		//	SearchHeuristic.FQN_USEDFQN_JdkLibSimSNAME_SNAME;
 		//	SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_JdkLibSimSNAME_SNAME;
 		//	SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_JdkLibHdSimSNAME_SNAME;
-		// SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME;
+		 SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_JdkLibTcSimSNAME_SNAME;
 		// SearchHeuristic.TEXT_UJDOC_USEDFQN_FQN_SNAME;
 			 //SearchHeuristic.TEXT_USEDFQN_FQN_SNAME;
-		SearchHeuristic.FQN_USEDFQN_JdkLibSimSNAME_SNAME;
+		// SearchHeuristic.FQN_USEDFQN_JdkLibSimSNAME_SNAME;
 		//	 SearchHeuristic.TEXT_FQN_SNAME;
 		//	 SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibSimSNAME_SNAME;
 		//	SearchHeuristic.TEXT_USEDFQN_FQN_JdkLibHdSimSNAME_SNAME;

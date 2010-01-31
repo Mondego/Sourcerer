@@ -19,11 +19,18 @@
 
 package edu.uci.ics.sourcerer.scs.common.client;
 
+import java.io.Serializable;
+
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
  * @created Aug 10, 2009 
  */
-public class HitsStat {
+public class HitsStat implements Serializable {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8569437906540909363L;
 	public long start;
 	public long numOfResults;
 	public double timeTaken;
@@ -32,6 +39,10 @@ public class HitsStat {
 		this.start = s;
 		this.numOfResults = r;
 		this.timeTaken = t;
+		
+	}
+	
+	public HitsStat(){
 		
 	}
 }

@@ -45,9 +45,11 @@ public class HitsPager extends ToolStrip{
 	Button btnPrevious = new Button("<");
 	Button btnNext = new Button(">");
 	
-	Label lblShowing = new Label("Navigate");
+	Label lblShowing = new Label("Results (Click for details)");
+	Label lblNav = new Label("Navigate");
 	HTMLPane lblResults = new HTMLPane();
-	ToolStripSeparator stripSeparator = new ToolStripSeparator();  
+	ToolStripSeparator stripSeparator = new ToolStripSeparator();
+	ToolStripSeparator stripSeparator0 = new ToolStripSeparator();
 	
 	public ScsSearcher getSearcher(){
 		return this.searcher;
@@ -64,8 +66,10 @@ public class HitsPager extends ToolStrip{
 		btnFirst.setWidth(26);
 		btnPrevious.setWidth(26);
 		btnNext.setWidth(26);
-		lblShowing.setWidth(60);
+		lblShowing.setWidth(140);
 		lblShowing.setStyleName("sc-label");
+		lblNav.setWidth(60);
+		lblNav.setStyleName("sc-label");
 		lblResults.setStyleName("sc-label");
 		
 		lblResults.setLayoutAlign(VerticalAlignment.CENTER);
@@ -75,6 +79,8 @@ public class HitsPager extends ToolStrip{
 		stripSeparator.setHeight(8);  
 		
 		this.addMember(lblShowing);
+		this.addMember(stripSeparator);
+		this.addMember(lblNav);
 		this.addMember(btnFirst);
 		this.addMember(btnPrevious);
 		this.addMember(btnNext);

@@ -52,7 +52,7 @@
   
   <servlet-mapping>
     <servlet-name>scsServlet</servlet-name>
-    <url-pattern>/sourcerer_cs/scs</url-pattern>
+    <url-pattern>/edu.uci.ics.sourcerer.scs.Sourcerer_cs/scs</url-pattern>
   </servlet-mapping>
   
   <servlet>
@@ -77,7 +77,7 @@
   
   <servlet-mapping>
     <servlet-name>sdbServlet</servlet-name>
-    <url-pattern>/sourcerer_cs/sdb</url-pattern>
+    <url-pattern>/edu.uci.ics.sourcerer.scs.Sourcerer_cs/sdb</url-pattern>
   </servlet-mapping>
   
    <servlet>

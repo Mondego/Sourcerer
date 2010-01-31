@@ -23,7 +23,6 @@ import static edu.uci.ics.sourcerer.scs.client.JavaNameUtil.extractShortName;
 import java.util.HashSet;
 import java.util.List;
 
-import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 
 import com.smartgwt.client.types.Overflow;
@@ -33,8 +32,7 @@ import com.smartgwt.client.widgets.HTMLFlow;
 import com.smartgwt.client.widgets.layout.SectionStack;
 import com.smartgwt.client.widgets.layout.SectionStackSection;
 import com.smartgwt.client.widgets.layout.VLayout;
-import com.smartgwt.client.widgets.tab.Tab;
-import com.smartgwt.client.widgets.tab.TabSet;
+
 
 import edu.uci.ics.sourcerer.scs.client.event.ApiSelectedEvent;
 import edu.uci.ics.sourcerer.scs.client.event.ApiSelectedEventHandler;
@@ -46,64 +44,41 @@ import edu.uci.ics.sourcerer.scs.common.client.UsedFqn;
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
  * @created Aug 11, 2009
  */
-public class VLTopApis extends VLayout implements ISelectedFqnsProvider {
+public class VLTopApis extends VLayout implements ISelectedFqnsProvider, IApiFqnLinkContainer {
 	
-	public interface ITakesSelectionUpdateEvent extends EventHandler{
-	      void process(ApiSelectionUpdateEvent event);
-	   }
-
+	// TODO make this a parameter
+	int maxToShow = 10;
 	
 	HashSet<String> selectedUsedJdkFqns = new HashSet<String>();
 	HashSet<String> selectedUsedLibFqns = new HashSet<String>();
 	
-	public void setTopUsedJdkApis(List<UsedFqn> jdkFqns){
-		vlJdkApisCI.removeMembers(vlJdkApisCI.getMembers());
-		vlJdkApisMC.removeMembers(vlJdkApisMC.getMembers());
-		vlJdkApisFi.removeMembers(vlJdkApisFi.getMembers());
-		vlJdkApisOt.removeMembers(vlJdkApisOt.getMembers());
-		
-		for(UsedFqn jdkFqn: jdkFqns){
-			switch(jdkFqn.getType()){
-			case CLASS_INF:
-				this.vlJdkApisCI.addMember(makeApiFqnLink(jdkFqn, EntityCategory.JDK));
-				break;
-			case METHOD_CONST:
-				this.vlJdkApisMC.addMember(makeApiFqnLink(jdkFqn, EntityCategory.JDK));
-				break;
-			case FIELD:
-				this.vlJdkApisFi.addMember(makeApiFqnLink(jdkFqn, EntityCategory.JDK));
-				break;
-			case OTHER:
-				this.vlJdkApisOt.addMember(makeApiFqnLink(jdkFqn, EntityCategory.JDK));
-				break;
-			default: break;
-			}
-			
-		}
-	}
-	
 	public void setTopUsedLibApis(List<UsedFqn> libFqns){
 		
-		vlLibApisCI.removeMembers(vlLibApisCI.getMembers());
-		vlLibApisMC.removeMembers(vlLibApisMC.getMembers());
-		vlLibApisFi.removeMembers(vlLibApisFi.getMembers());
-		vlLibApisOt.removeMembers(vlLibApisOt.getMembers());
+		vlLibApisC.removeMembers(vlLibApisC.getMembers());
+		vlLibApisCo.removeMembers(vlLibApisCo.getMembers());
+		vlLibApisM.removeMembers(vlLibApisM.getMembers());
+		vlLibApisI.removeMembers(vlLibApisI.getMembers());
+		vlLibApisO.removeMembers(vlLibApisO.getMembers());
 		
 		for(UsedFqn libFqn: libFqns){
 			switch(libFqn.getType()){
-			case CLASS_INF:
-				this.vlLibApisCI.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
+			case CLASS:
+				if(vlLibApisC.getMembers().length<maxToShow) this.vlLibApisC.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
 				break;
-			case METHOD_CONST:
-				this.vlLibApisMC.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
+			case INTERFACE:
+				if(vlLibApisI.getMembers().length<maxToShow) this.vlLibApisI.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
 				break;
-			case FIELD:
-				this.vlLibApisFi.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
+			case CONSTRUCTOR:
+				if(vlLibApisCo.getMembers().length<maxToShow) this.vlLibApisCo.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
 				break;
-			case OTHER:
-				this.vlLibApisOt.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
+			case METHOD:
+				if(vlLibApisM.getMembers().length<maxToShow) this.vlLibApisM.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
 				break;
-			default: break;
+			
+			default:
+				if(vlLibApisO.getMembers().length<maxToShow) this.vlLibApisO.addMember(makeApiFqnLink(libFqn, EntityCategory.LIB));
+				break;
+			
 			}
 			
 		}
@@ -134,8 +109,7 @@ public class VLTopApis extends VLayout implements ISelectedFqnsProvider {
 		
 	}
 	
-	public void register(final VLTopApis.ITakesSelectionUpdateEvent component){
-		
+	public void register(final ITakesSelectionUpdateEvent component){
 		
 		HandlerRegistration reg = doAddHandler(
 			new ApiSelectionUpdateEventHandler() {
@@ -145,142 +119,101 @@ public class VLTopApis extends VLayout implements ISelectedFqnsProvider {
 					if (event.op == ApiSelectedEvent.Operation.SELECT) {
 						((VLTopApis) event.getSource()).addFqnAsSelected(event.fqn,
 								event.cat);
+						
 					} else if (event.op == ApiSelectedEvent.Operation.DESELECT) {
 						((VLTopApis) event.getSource()).removeFqnAsSelected(
 								event.fqn, event.cat);
 					}
 	
-					// highlightHit(((VLTopApis)
-					// event.getSource()).getSelectedUsedJdkFqns(),
-					// ((VLTopApis) event.getSource()).getSelectedUsedLibFqns(),
-					// hit);
 					component.process(event);
 	
 				}
 			}, ApiSelectionUpdateEvent.getType()
 
 		);
-		
 	}
-	
-	
 
 	
-
-	
-	private IFqnSelectionObserver fqnSelectionObserver;
-	private ApiSelectedEventHandler apiSelectHandler; 
-	
-	
-	public void setSelectionObserver(IFqnSelectionObserver fh){
-		this.fqnSelectionObserver = fh;
-	}
+//	private IFqnSelectionObserver fqnSelectionObserver;
+//	private ApiSelectedEventHandler apiSelectHandler; 
+//	
+//	public void setSelectionObserver(IFqnSelectionObserver fh){
+//		this.fqnSelectionObserver = fh;
+//	}
 	
 	SectionStack ss = new SectionStack();
-	SectionStackSection ssJdk = new SectionStackSection("from JDK");
-	SectionStackSection ssLib = new SectionStackSection("from Libraries");
 	
-//	VLayout vlJdkApis = new VLayout();
-//	VLayout vlLibApis = new VLayout();
+	SectionStackSection ssI = new SectionStackSection("Interfaces");
+	SectionStackSection ssC = new SectionStackSection("Classes");
+	SectionStackSection ssM = new SectionStackSection("Methods");
+	SectionStackSection ssCo = new SectionStackSection("Constructors");
+	SectionStackSection ssO = new SectionStackSection("Others");
 	
-	VLayout vlLibApisMC = new VLayout();
-	VLayout vlLibApisCI = new VLayout();
-	VLayout vlLibApisFi = new VLayout();
-	VLayout vlLibApisOt = new VLayout();
-	
-	VLayout vlJdkApisMC = new VLayout();
-	VLayout vlJdkApisCI = new VLayout();
-	VLayout vlJdkApisFi = new VLayout();
-	VLayout vlJdkApisOt = new VLayout();
-	
-	TabSet tsJdk = new TabSet();
-	TabSet tsLib = new TabSet();
-	
-	Tab tabLibApisMC = new Tab("Meth/Cons");
-	Tab tabLibApisCI = new Tab("Clas/Inf");
-	Tab tabLibApisFi = new Tab("Fields");
-	Tab tabLibApisOt = new Tab("Other");
-	
-	Tab tabJdkApisMC = new Tab("Meth/Cons");
-	Tab tabJdkApisCI = new Tab("Clas/Inf");
-	Tab tabJdkApisFi = new Tab("Fields");
-	Tab tabJdkApisOt = new Tab("Other");
-	
-	
-	
+	VLayout vlLibApisM = new VLayout();
+	VLayout vlLibApisC = new VLayout();
+	VLayout vlLibApisI = new VLayout();
+	VLayout vlLibApisCo = new VLayout();
+	VLayout vlLibApisO = new VLayout();
 	
 	
 	public VLTopApis(){
 		
+		vlLibApisM.setOverflow(Overflow.AUTO);
+		vlLibApisI.setOverflow(Overflow.AUTO);
+		vlLibApisC.setOverflow(Overflow.AUTO);
+		vlLibApisCo.setOverflow(Overflow.AUTO);
+		vlLibApisO.setOverflow(Overflow.AUTO);
+		
 		ss.setVisibilityMode(VisibilityMode.MULTIPLE);
 		
-//		vlJdkApis.setOverflow(Overflow.AUTO);
-//		vlLibApis.setOverflow(Overflow.AUTO);
+		ssI.setExpanded(true);
+		ssC.setExpanded(true);
+		ssM.setExpanded(true);
+		ssCo.setExpanded(true);
+		ssO.setExpanded(true);
 		
-		ssJdk.setExpanded(true);
-		ssLib.setExpanded(true);
-		ssJdk.setResizeable(true);
-		ssLib.setResizeable(true);
+		ssI.setResizeable(true);
+		ssC.setResizeable(true);
+		ssM.setResizeable(true);
+		ssCo.setResizeable(true);
+		ssO.setResizeable(true);
+		
 		
 		ss.setHeight100();
-		ss.setOverflow(Overflow.AUTO);
+		ss.setOverflow(Overflow.HIDDEN);
 		
-		ss.addSection(ssJdk);
-		ss.addSection(ssLib);
+		ss.addSection(ssI);
+		ss.addSection(ssC);
+		ss.addSection(ssM);
+		ss.addSection(ssCo);
+		ss.addSection(ssO);
 		
-//		ssJdk.addItem(vlJdkApis);
-//		ssLib.addItem(vlLibApis);
+		ssC.addItem(vlLibApisC);
+		ssI.addItem(vlLibApisI);
+		ssM.addItem(vlLibApisM);
+		ssCo.addItem(vlLibApisCo);
+		ssO.addItem(vlLibApisO);
 		
-		ssJdk.addItem(tsJdk);
-		ssLib.addItem(tsLib);
 		
-		tsJdk.addTab(tabJdkApisMC);
-		tsJdk.addTab(tabJdkApisCI);
-		tsJdk.addTab(tabJdkApisFi);
-		tsJdk.addTab(tabJdkApisOt);
 		
-		tsLib.addTab(tabLibApisMC);
-		tsLib.addTab(tabLibApisCI);
-		tsLib.addTab(tabLibApisFi);
-		tsLib.addTab(tabLibApisOt);
-		
-		tabJdkApisMC.setPane(vlJdkApisMC);
-		tabJdkApisCI.setPane(vlJdkApisCI);
-		tabJdkApisFi.setPane(vlJdkApisFi);
-		tabJdkApisOt.setPane(vlJdkApisOt);
-		
-		tabLibApisMC.setPane(vlLibApisMC);
-		tabLibApisCI.setPane(vlLibApisCI);
-		tabLibApisFi.setPane(vlLibApisFi);
-		tabLibApisOt.setPane(vlLibApisOt);
+		vlLibApisM.setScrollbarSize(10);
+		vlLibApisI.setScrollbarSize(10);
+		vlLibApisC.setScrollbarSize(10);
+		vlLibApisCo.setScrollbarSize(10);
+		vlLibApisO.setScrollbarSize(10);
 		
 		this.addMember(ss);
 		this.setLayoutAlign(VerticalAlignment.TOP);
 		
-//		this.addApiSelectionUpdateHandler(new ApiSelectionUpdateEventHandler(){
-//
-//			public void onApiSelectionUpdate(ApiSelectionUpdateEvent event) {
-//				for(String s: ((VLTopApis) event.getSource()).getSelectedUsedJdkFqns()){
-//					System.out.println(s);
-//				}
-//				
-//			}
-//			
-//		});
-		
-		
 	}
 	
 	public void clearContents(){
-		vlJdkApisCI.removeMembers(vlJdkApisCI.getMembers());
-		vlJdkApisMC.removeMembers(vlJdkApisMC.getMembers());
-		vlJdkApisFi.removeMembers(vlJdkApisFi.getMembers());
-		vlJdkApisOt.removeMembers(vlJdkApisOt.getMembers());
+		vlLibApisC.removeMembers(vlLibApisC.getMembers());
+		vlLibApisCo.removeMembers(vlLibApisCo.getMembers());
+		vlLibApisM.removeMembers(vlLibApisM.getMembers());
+		vlLibApisI.removeMembers(vlLibApisI.getMembers());
+		vlLibApisO.removeMembers(vlLibApisO.getMembers());
 		
-		vlLibApisCI.removeMembers(vlLibApisCI.getMembers());
-		vlLibApisMC.removeMembers(vlLibApisMC.getMembers());
-		vlLibApisFi.removeMembers(vlLibApisFi.getMembers());
-		vlLibApisOt.removeMembers(vlLibApisOt.getMembers());
 		
 		selectedUsedJdkFqns.clear();
 		selectedUsedLibFqns.clear();
@@ -288,52 +221,35 @@ public class VLTopApis extends VLayout implements ISelectedFqnsProvider {
 		
 	}
 	
-//	public void setTopJdkApis(List<HitFqnEntityId> jdkApis){
-//		vlJdkApis.removeMembers(vlJdkApis.getMembers());
-//		
-//		for(HitFqnEntityId _h: jdkApis){
-//			this.vlJdkApis.addMember(makeApiFqnLink(_h, EntityCategory.JDK));
-//		}
-//		
-//	}
-//	
-//	public void setTopLibApis(List<HitFqnEntityId> libApis){
-//		vlLibApis.removeMembers(vlLibApis.getMembers());
-//		
-//		for(HitFqnEntityId _h: libApis){
-//			this.vlLibApis.addMember(makeApiFqnLink(_h, EntityCategory.LIB));
-//		}
-//	}
-	
 	private ApiFqnLink makeApiFqnLink(UsedFqn uFqn, EntityCategory cat){
 		return makeApiFqnLink(uFqn.getFqn(), uFqn.getUseCount() + "", cat);
 	}
 
-	
-//	private ApiFqnLink makeApiFqnLink(HitFqnEntityId hitInfo, EntityCategory cat){
-//		return makeApiFqnLink(hitInfo.fqn, hitInfo.useCount, cat);
-//	}
-	
 	private ApiFqnLink makeApiFqnLink(String fqn, String useCount, EntityCategory cat){
 		ApiFqnLink _f = new ApiFqnLink(fqn, cat, this);
 		
 		String sname = extractShortName(fqn);
 		if(sname.trim().equals("<init>")) sname = "&lt;init&gt";
 		
-		_f.setContents("<b>" + sname + "</b>  (" 
-				+ useCount + ") <small>" 
+		_f.setContents("<b>" + sname + "</b>"
+				+ "&nbsp;&nbsp;"
+				//+ "(" + useCount + ") " 
+				+ "<small>" 
 				+ fqn + "</small>");
 		return _f;
 	}
 
 	public void showWaiting() {
 		clearContents();
-		vlJdkApisMC.addMember(new HTMLFlow("Calculating.."));
-		vlLibApisMC.addMember(new HTMLFlow("Calculating.."));
+		vlLibApisC.addMember(new HTMLFlow("Calculating.."));
+		vlLibApisI.addMember(new HTMLFlow("Calculating.."));
+		vlLibApisM.addMember(new HTMLFlow("Calculating.."));
+		vlLibApisCo.addMember(new HTMLFlow("Calculating.."));
+		vlLibApisO.addMember(new HTMLFlow("Calculating.."));
+		
 	}
 
 	public void update(String fqn, EntityCategory cat, Operation op) {
-		
 		
 		fireEvent(new ApiSelectionUpdateEvent(fqn, cat, op));
 	}

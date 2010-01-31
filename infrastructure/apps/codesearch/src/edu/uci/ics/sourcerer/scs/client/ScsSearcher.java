@@ -30,4 +30,11 @@ public interface ScsSearcher{
 	
 	public void setMode(ScsClientMode mode);
 	
+	public void addFqnFilter(String fqn);
+	public void removeFqnFilter(String fqn);
+	public void clearAllFilters();
+	public void enableFilter();
+	public void disableFilter();
+	public boolean isFilterEnabled();
+	
 }

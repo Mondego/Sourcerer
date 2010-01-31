@@ -34,6 +34,13 @@ import org.apache.tools.ant.util.FileUtils;
 public class DummyTest {
 	
 	@Test
+	public void testEscape(){
+		String pattern = "([\\(\\)\\[\\]\\*\\?])";
+		String	s = "foo<T?>(org.goo<?>[])";
+
+		System.out.println(s.replaceAll(pattern,"\\\\$1"));
+	}
+	
 	public void testCast(){
 		long l = 10;
 		l = Integer.MAX_VALUE + 0l;
@@ -91,7 +98,7 @@ public class DummyTest {
 		assertEquals("./parent/", FileUtility.extractParentFolderName(path));
 	}
 	
-	@Test
+	
 	public void testRegex(){
 		String _url = "https://itext.svn.sourceforge.net/trunk/svnroot/trunk";
 		_url = _url.replaceAll("/trunk[/]{0,1}+$", "");
