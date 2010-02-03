@@ -80,4 +80,8 @@ public class ExtractedProject extends Extracted {
   protected AbstractProperties getProperties() {
     return properties;
   }
+  
+  public String getDescription() {
+    return properties.getDescription();
+  }
 }

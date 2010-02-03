@@ -36,14 +36,15 @@ public final class EntityEX implements ModelEX {
   private String startPos;
   private String length;
   
-  protected EntityEX(Entity type, String fqn) {
+  private EntityEX(Entity type, String fqn) {
     this(type, fqn, null, null, null, null);
   }
-  protected EntityEX(Entity type, String fqn, String mods) {
-    this(type, fqn, mods, null, null, null);
+  
+  private EntityEX(Entity type, String fqn, String mods, String path) {
+    this(type, fqn, mods, path, null, null);
   }
   
-  protected EntityEX(Entity type, String fqn, String mods, String path, String offset, String length) {
+  private EntityEX(Entity type, String fqn, String mods, String path, String offset, String length) {
     this.type = type;
     this.fqn = fqn;
     this.mods = mods;
@@ -104,7 +105,7 @@ public final class EntityEX implements ModelEX {
               return null;
             }
           } else if (parts.length == 3) {
-            return new EntityEX(Entity.valueOf(parts[0]), parts[1], parts[2]);
+            return new EntityEX(Entity.valueOf(parts[0]), parts[1], parts[2], parts[3]);
           } else if (parts.length == 6) {
             return new EntityEX(Entity.valueOf(parts[0]), parts[1], parts[2], parts[3], parts[4], parts[5]);
           } else {
@@ -123,11 +124,11 @@ public final class EntityEX implements ModelEX {
     return Entity.PACKAGE.name() + " " + fqn;
   }
   
-  public static String getLine(Entity type, String fqn, int modifiers, String compilationUnitPath, int startPos, int length) {
-    return type.name() + " " + fqn + " " + modifiers + " " + compilationUnitPath + " " + startPos + " " + length;
+  public static String getSourceLine(Entity type, String fqn, int modifiers, String path, int startPos, int length) {
+    return type.name() + " " + fqn + " " + modifiers + " " + path + " " + startPos + " " + length;
   }
   
-  public static String getJarLine(Entity type, String fqn, int modifiers) {
-    return type.name() + " " + fqn + " " + modifiers;
+  public static String getClassLine(Entity type, String fqn, int modifiers, String path) {
+    return type.name() + " " + fqn + " " + modifiers + " " + path;
   }
 }

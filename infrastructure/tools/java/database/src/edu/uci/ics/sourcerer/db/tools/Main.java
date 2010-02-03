@@ -31,7 +31,8 @@ import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
-  public static final Property<Boolean> INITIALIZE_DATABASE = new BooleanProperty("initialize-database", false, "Database", "Clean and initialize the database, inserting all library entities/relations.");
+  public static final Property<Boolean> INITIALIZE_DATABASE = new BooleanProperty("initialize-database", false, "Database", "Clean and initialize the database.");
+  public static final Property<Boolean> ADD_JAVA_LIBRARIES = new BooleanProperty("add-libraries", false, "Database", "Adds extracted Java libraries to the database.");
   public static final Property<Boolean> ADD_JARS = new BooleanProperty("add-jars", false, "Database", "Adds extracted jars to the database.");
   public static final Property<Boolean> ADD_PROJECTS = new BooleanProperty("add-projects", false, "Database", "Adds extracted projects to the database.");
   
@@ -44,17 +45,20 @@ public class Main {
     connection.open();
 
     if (INITIALIZE_DATABASE.getValue()) {
-      PropertyManager.registerAndVerify(INITIALIZE_DATABASE, INPUT_REPO);
-      InitializeDatabase tool = new InitializeDatabase(connection);
-      tool.initializeDatabase();
+      DatabaseImporter importer = new DatabaseImporter(connection);
+      importer.initializeDatabase();
+    } else if (ADD_JAVA_LIBRARIES.getValue()) {
+      PropertyManager.registerAndVerify(ADD_JAVA_LIBRARIES, INPUT_REPO);
+      DatabaseImporter importer = new DatabaseImporter(connection);
+      importer.importJavaLibraries();
     } else if (ADD_JARS.getValue()) {
       PropertyManager.registerAndVerify(ADD_JARS, INPUT_REPO);
-      AddJars tool = new AddJars(connection);
-      tool.addJars();
+      DatabaseImporter importer = new DatabaseImporter(connection);
+      importer.importJarFiles();
     } else if (ADD_PROJECTS.getValue()) {
       PropertyManager.registerAndVerify(ADD_PROJECTS, INPUT_REPO);
-       AddProjects tool = new AddProjects(connection);
-       tool.addProjects();
+      DatabaseImporter importer = new DatabaseImporter(connection);
+      importer.importProjects();
     } else {
       PropertyManager.registerUsedProperties(INITIALIZE_DATABASE, ADD_JARS, ADD_PROJECTS);
       PropertyManager.printUsage();

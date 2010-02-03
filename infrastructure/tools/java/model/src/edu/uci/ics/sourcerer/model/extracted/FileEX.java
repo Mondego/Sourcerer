@@ -17,6 +17,10 @@
  */
 package edu.uci.ics.sourcerer.model.extracted;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.logging.Level;
+
 import edu.uci.ics.sourcerer.model.File;
 
 /**
@@ -25,19 +29,12 @@ import edu.uci.ics.sourcerer.model.File;
 public class FileEX implements ModelEX {
   private File type;
   private String name;
-  private String relativePath;
-  private String hash;
+  private String path;
   
-  protected FileEX(File type, String name, String relativePath) {
+  private FileEX(File type, String name, String path) {
     this.type = type;
     this.name = name;
-    this.relativePath = relativePath;
-  }
-  
-  protected FileEX(String name, String hash) {
-    this.type = File.JAR;
-    this.name = name;
-    this.hash = hash; 
+    this.path = path;
   }
 
   public File getType() {
@@ -48,17 +45,17 @@ public class FileEX implements ModelEX {
     return name;
   }
   
-  public String getRelativePath() {
+  public String getPath() {
     if (type == File.JAR) {
-      throw new IllegalStateException("Cannot get the relative path for a jar");
+      throw new IllegalStateException("Cannot get the path for a jar");
     } else {
-      return relativePath;
+      return path;
     }
   }
   
   public String getHash() {
     if (type == File.JAR) {
-      return hash;
+      return path;
     } else {
       throw new IllegalStateException("Cannot get the hash for a non-jar");
     }
@@ -68,7 +65,14 @@ public class FileEX implements ModelEX {
   private static ModelExParser<FileEX> parser = new ModelExParser<FileEX>() {
     @Override
     public FileEX parseLine(String line) {
-      return null;
+      String[] parts = line.split(" ");
+      File type = File.valueOf(parts[0]);
+      if (parts.length == 3 && type != null) {
+        return new FileEX(type, parts[1], parts[2]);
+      } else {
+        logger.log(Level.SEVERE, "Unable to parse file: " + line);
+        return null;
+      }
     }
   };
   
@@ -76,7 +80,15 @@ public class FileEX implements ModelEX {
     return parser;
   }
   
-  public static String getLine(String relativePath) {
-    return relativePath;
+  public static String getSourceLine(String name, String path) {
+    return File.SOURCE + " " + name + " " + path;
+  }
+  
+  public static String getClassLine(String name, String path) {
+    return File.CLASS + " " + name + " " + path;
+  }
+  
+  public static String getJarLine(String name, String hash) {
+    return File.JAR + " " + name + " " + hash;
   }
 }

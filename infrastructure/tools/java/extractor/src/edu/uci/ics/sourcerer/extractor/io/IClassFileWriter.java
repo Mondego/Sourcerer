@@ -20,24 +20,6 @@ package edu.uci.ics.sourcerer.extractor.io;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IJarEntityWriter extends IExtractorWriter {
-  public void writePackage(String fqn);
-  
-  public void writeClass(String fqn, int modifiers);
-
-  public void writeInterface(String fqn, int modifiers);
-
-  public void writeAnnotation(String fqn, int modifiers);
-
-  public void writeAnnotationElement(String fqn, int modifiers);
-
-  public void writeEnum(String fqn, int modifiers);
-
-  public void writeEnumConstant(String fqn, int modifiers);
-
-  public void writeField(String fqn, int modifiers);
-
-  public void writeMethod(String fqn, int modifiers);
-
-  public void writeConstructor(String fqn, int modifiers);
+public interface IClassFileWriter extends IExtractorWriter {
+  public void writeClassFile(String name, String path);
 }

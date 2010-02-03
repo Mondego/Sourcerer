@@ -123,6 +123,10 @@ public class QueryExecutor {
     return executeSingle("SELECT " + column + " FROM " + table + " WHERE " + where + ";", translator);
   }
   
+  public Collection<String> select(String table, String columns, String where) {
+    return select(table, columns, where, ResultTranslator.SIMPLE_RESULT_TRANSLATOR);
+  }
+  
   public <T> Collection<T> select(String table, String columns, String where, ResultTranslator<T> translator) {
     return execute("SELECT " + columns + " FROM " + table + " WHERE " + where + ";", translator);
   }

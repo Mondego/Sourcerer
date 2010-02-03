@@ -17,19 +17,50 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import edu.uci.ics.sourcerer.extractor.io.IFileWriter;
+import edu.uci.ics.sourcerer.extractor.io.IClassEntityWriter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyFileWriter implements IFileWriter {
+public class DummyClassEntityWriter implements IClassEntityWriter {
   @Override
-  public void writeSourceFile(String name, String path) {
+  public void writePackage(String fqn) {
   }
   
   @Override
-  public void writeJarFile(String name, String hash) {
-    
+  public void writeAnnotation(String fqn, int modifiers, String path) {
+  }
+
+  @Override
+  public void writeAnnotationElement(String fqn, int modifiers, String path) {
+  }
+
+  @Override
+  public void writeClass(String fqn, int modifiers, String path) {
+  }
+
+  @Override
+  public void writeConstructor(String fqn, int modifiers, String path) {
+  }
+
+  @Override
+  public void writeEnum(String fqn, int modifiers, String path) {
+  }
+
+  @Override
+  public void writeEnumConstant(String fqn, int modifiers, String path) {
+  }
+
+  @Override
+  public void writeField(String fqn, int modifiers, String path) {
+  }
+
+  @Override
+  public void writeInterface(String fqn, int modifiers, String path) {
+  }
+
+  @Override
+  public void writeMethod(String fqn, int modifiers, String path) {
   }
 
   @Override

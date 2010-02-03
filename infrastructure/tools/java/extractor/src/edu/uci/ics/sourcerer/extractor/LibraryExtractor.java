@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.extractor;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.File;
 import java.util.Collection;
 
 import org.eclipse.jdt.core.IClassFile;
@@ -73,6 +74,9 @@ public class LibraryExtractor {
         
         // Close the output files
         extractor.close();
+        
+        // Copy the library jar
+        extracted.copyLibraryJar(new File(library.getPath()));
         
         // Write the properties files
         extracted.createPropertiesFile(library.getName(), report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());

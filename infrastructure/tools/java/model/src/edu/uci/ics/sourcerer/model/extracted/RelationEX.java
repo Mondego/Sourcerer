@@ -30,50 +30,33 @@ public class RelationEX implements ModelEX {
   private Relation type;
   private String lhs;
   private String rhs;
-  private String compilationUnitPath;
+  private String path;
   private String startPos;
   private String length;
   private String paramPos;
   private String paramName;
   
-  private RelationEX(Relation type, String lhs, String rhs, String compilationUnitPath, String startPos, String length) {
+  private RelationEX(Relation type, String lhs, String rhs, String path) {
+    this(type, lhs, rhs, path, null, null);
+  }
+  private RelationEX(Relation type, String lhs, String rhs, String path, String startPos, String length) {
     this.type = type;
     this.lhs = lhs;
     this.rhs = rhs;
-    this.compilationUnitPath = compilationUnitPath;
+    this.path = path;
     this.startPos = startPos;
     this.length = length;
   }
   
-  private RelationEX(Relation type, String lhs, String rhs, String paramPos, String compilationUnitPath, String startPos, String length) {
+  private RelationEX(Relation type, String lhs, String rhs, String paramPos, String path, String startPos, String length) {
     this.type = type;
     this.lhs = lhs;
     this.rhs = rhs;
-    this.compilationUnitPath = compilationUnitPath;
+    this.path = path;
     this.startPos = startPos;
     this.length = length;
     this.paramPos = paramPos;
     this.paramName = rhs.substring(1, rhs.length() - 1);
-  }
-  
-  protected static RelationEX getJarRelation(Relation type, String lhs, String rhs) {
-    return new RelationEX(type, lhs, rhs, null, null, null);
-  }
-  
-  protected static RelationEX getJarParametrizedByRelation(String lhs, String rhs, String pos) {
-    return new RelationEX(Relation.PARAMETRIZED_BY, lhs, rhs, pos, null, null, null);
-  }
-  
-  protected static RelationEX getRelation(Relation type, String lhs, String rhs, String compilationUnitPath, String startPos, String length) {
-    return new RelationEX(type, lhs, rhs, compilationUnitPath, startPos, length);
-  }
-  
-  protected static RelationEX getInsideRelation(String lhs, String rhs, String compilationUnitPath) {
-    return new RelationEX(Relation.INSIDE, lhs, rhs, compilationUnitPath, null, null);
-  }
-  
-  protected static RelationEX getParametrizedByRelation(String lhs, String rhs, String position, String compilationUnitPath, String startPos, String length) {
-    return new RelationEX(Relation.PARAMETRIZED_BY, lhs, rhs, position, compilationUnitPath, startPos, length);
   }
   
   public Relation getType() {
@@ -89,7 +72,7 @@ public class RelationEX implements ModelEX {
   }
   
   public String getPath() {
-    return compilationUnitPath;
+    return path;
   }
   
   public String getStartPosition() {
@@ -120,11 +103,11 @@ public class RelationEX implements ModelEX {
     if (o instanceof RelationEX) {
       RelationEX other = (RelationEX)o;
       if (type == Relation.PARAMETRIZED_BY) {
-        return type.equals(other.type) && lhs.equals(other.lhs) && startPos.equals(other.startPos) && rhs.equals(other.rhs) && length.equals(other.length) && paramPos.equals(other.paramPos) && compilationUnitPath.equals(other.compilationUnitPath);
+        return type.equals(other.type) && lhs.equals(other.lhs) && startPos.equals(other.startPos) && rhs.equals(other.rhs) && length.equals(other.length) && paramPos.equals(other.paramPos) && path.equals(other.path);
       } else if (type == Relation.INSIDE) {
-        return type.equals(other.type) && lhs.equals(other.lhs) && rhs.equals(other.rhs) && compilationUnitPath.equals(other.compilationUnitPath);
+        return type.equals(other.type) && lhs.equals(other.lhs) && rhs.equals(other.rhs) && path.equals(other.path);
       } else {
-        return type.equals(other.type) && lhs.equals(other.lhs) && startPos.equals(other.startPos) && rhs.equals(other.rhs) && length.equals(other.length) && compilationUnitPath.equals(other.compilationUnitPath);
+        return type.equals(other.type) && lhs.equals(other.lhs) && startPos.equals(other.startPos) && rhs.equals(other.rhs) && length.equals(other.length) && path.equals(other.path);
       }
     } else {
       return false;
@@ -140,22 +123,18 @@ public class RelationEX implements ModelEX {
       try {
         Relation type = Relation.valueOf(parts[0]);
         if (type == Relation.INSIDE) {
-          if (parts.length == 3) {
-            return RelationEX.getJarRelation(type, parts[1], parts[2]);
-          } else {
-            return RelationEX.getInsideRelation(parts[1], parts[2], parts[3]);
-          }
+          return new RelationEX(type, parts[1], parts[2], parts[3]);
         } else if (type == Relation.PARAMETRIZED_BY) {
-          if (parts.length == 4) {
-            return RelationEX.getJarParametrizedByRelation(parts[1], parts[2], parts[3]);
+          if (parts.length == 5) {
+            return new RelationEX(type, parts[1], parts[2], parts[3], parts[4], null, null);
           } else {
-            return RelationEX.getParametrizedByRelation(parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]);
+            return new RelationEX(type, parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]);
           }
         } else {
-          if (parts.length == 3) {
-            return RelationEX.getJarRelation(type, parts[1], parts[2]);
+          if (parts.length == 4) {
+            return new RelationEX(type, parts[1], parts[2], parts[3]);
           } else {
-            return RelationEX.getRelation(type, parts[1], parts[2], parts[3], parts[4], parts[5]);
+            return new RelationEX(type, parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]);
           }
         }
       } catch (ArrayIndexOutOfBoundsException e) {
@@ -172,23 +151,23 @@ public class RelationEX implements ModelEX {
     return parser;
   }
   
-  public static String getLine(Relation type, String lhs, String rhs, String compilationUnitPath, int startPos, int length) {
-    return type.name() + " " + lhs + " " + rhs + " " + compilationUnitPath + " " + startPos + " " + length; 
+  public static String getSourceLine(Relation type, String lhs, String rhs, String path, int startPos, int length) {
+    return type.name() + " " + lhs + " " + rhs + " " + path + " " + startPos + " " + length; 
   }
   
-  public static String getLineInside(String lhs, String rhs, String compilationUnitPath) {
+  public static String getSourceLineInside(String lhs, String rhs, String compilationUnitPath) {
     return Relation.INSIDE.name() + " " + lhs + " " + rhs + " " + compilationUnitPath;
   }
   
-  public static String getLineParametrizedBy(String lhs, String rhs, int position, String compilationUnitPath, int startPos, int length) {
+  public static String getSourceLineParametrizedBy(String lhs, String rhs, int position, String compilationUnitPath, int startPos, int length) {
     return Relation.PARAMETRIZED_BY.name() + " " + lhs + " " + rhs + " " + position + " " + compilationUnitPath + " " + startPos + " " + length;
   }
   
-  public static String getJarLine(Relation type, String lhs, String rhs) {
-    return type.name() + " " + lhs + " " + rhs;
+  public static String getClassLine(Relation type, String lhs, String rhs, String path) {
+    return type.name() + " " + lhs + " " + rhs + " " + path;
   }
   
-  public static String getJarLineParametrizedBy(String lhs, String rhs, int position) {
-    return Relation.PARAMETRIZED_BY + " " + lhs + " " + rhs + " " + position;
+  public static String getClassLineParametrizedBy(String lhs, String rhs, int position, String path) {
+    return Relation.PARAMETRIZED_BY + " " + lhs + " " + rhs + " " + position + " " + path;
   }
 }

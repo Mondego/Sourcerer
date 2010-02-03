@@ -53,18 +53,6 @@ public class LocalVariableEX implements ModelEX {
     this.length = length; 
   }
   
-  public static LocalVariableEX getJarParam(String name, String type, String parent, String position) {
-    return new LocalVariableEX(LocalVariable.PARAM, name, null, type, null, null, parent, position, null, null, null);
-  }
-  
-  public static LocalVariableEX getParam(String name, String modifiers, String type, String typeStartPos, String typeLength, String parent, String position, String path, String startPos, String length) {
-    return new LocalVariableEX(LocalVariable.PARAM, name, modifiers, type, typeStartPos, typeLength, parent, position, path, startPos, length);
-  }
-  
-  public static LocalVariableEX getLocal(String name, String modifiers, String type, String typeStartPos, String typeLength, String parent, String path, String startPos, String length) {
-    return new LocalVariableEX(LocalVariable.LOCAL, name, modifiers, type, typeStartPos, typeLength, parent, null, path, startPos, length);
-  }
-  
   public LocalVariable getType() {
     return type;
   }
@@ -137,13 +125,16 @@ public class LocalVariableEX implements ModelEX {
       try {
         LocalVariable type = LocalVariable.valueOf(parts[0]);
         if (type == LocalVariable.PARAM) {
-          if (parts.length == 5) {
-            return LocalVariableEX.getJarParam(parts[1], parts[2], parts[3], parts[4]);
+          if (parts.length == 6) {
+            return new LocalVariableEX(type, parts[1], null, parts[2], null, null, parts[3], parts[4], parts[5], null, null);
+          } else if (parts.length == 11) {
+            return new LocalVariableEX(type, parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8], parts[9], parts[10]);
           } else {
-            return LocalVariableEX.getParam(parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8], parts[9], parts[10]);
+            logger.log(Level.SEVERE, "Unable to parse local variable: " + line);
+            return null;
           }
         } else if (type == LocalVariable.LOCAL) {
-          return LocalVariableEX.getLocal(parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8], parts[9]);
+          return new LocalVariableEX(type, parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], null, parts[7], parts[8], parts[9]);
         } else {
           logger.log(Level.SEVERE, "Unable to parse local variable: " + line);
           return null;
@@ -159,15 +150,15 @@ public class LocalVariableEX implements ModelEX {
     return parser;
   }
   
-  public static String getLineParam(String name, int modifiers, String type, int typeStartPos, int typeLength, int position, String parent, String path, int startPos, int length) {
+  public static String getSourceLineParam(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, int position, String path, int startPos, int length) {
     return LocalVariable.PARAM + " " + name + " " + modifiers + " " + type + " " + typeStartPos + " " + typeLength + " " + parent + " " + position + " " + path + " " + startPos + " " + length;
   }
   
-  public static String getLineLocal(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, String path, int startPos, int length) {
-    return LocalVariable.LOCAL + " " + name + " " + modifiers + " " + type + " " + typeStartPos + " " + typeLength + " "+ parent + " " + path + " " + startPos + " " + length;
+  public static String getSourceLineLocal(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, String path, int startPos, int length) {
+    return LocalVariable.LOCAL + " " + name + " " + modifiers + " " + type + " " + typeStartPos + " " + typeLength + " " + parent + " " + path + " " + startPos + " " + length;
   }
   
-  public static String getJarLineParam(String name, String type, String parent, int position) {
-    return LocalVariable.PARAM + " " + name + " " + type + " " + parent + " " + position;
+  public static String getClassLineParam(String name, String type, String parent, int position, String path) {
+    return LocalVariable.PARAM + " " + name + " " + type + " " + parent + " " + position + " " + path;
   }
 }

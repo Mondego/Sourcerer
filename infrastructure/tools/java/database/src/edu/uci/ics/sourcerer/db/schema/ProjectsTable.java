@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
+import java.util.Collection;
+
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Project;
@@ -38,6 +40,7 @@ public final class ProjectsTable extends DatabaseTable {
    *  | project_id   | SERIAL        | No    | Yes    |
    *  | project_type | ENUM(values)  | No    | Yes    |
    *  | name         | VARCHAR(1024) | No    | Yes    |
+   *  | description  | VARCHAR(4096) | Yes   | No     |
    *  | version      | VARCHAR(1024) | Yes   | No     |
    *  | groop        | VARCHAR(1024) | Yes   | Yes    |
    *  | path         | VARCHAR(1024) | Yes   | No     |
@@ -52,6 +55,7 @@ public final class ProjectsTable extends DatabaseTable {
         "project_id SERIAL",
         "project_type " + getEnumCreate(Project.values()) + " NOT NULL",
         "name VARCHAR(1024) BINARY NOT NULL",
+        "description VARCHAR)4096) BINARY",
         "version VARCHAR(1024) BINARY",
         "groop VARCHAR(1024) BINARY",
         "path VARCHAR(1024) BINARY",
@@ -65,10 +69,11 @@ public final class ProjectsTable extends DatabaseTable {
   }
   
   // ---- INSERT ----
-  private String getInsertValue(Project type, String name, String version, String group, String path, String hash, boolean hasSource) {
+  private String getInsertValue(Project type, String name, String description, String version, String group, String path, String hash, boolean hasSource) {
     return buildSerialInsertValue(
         convertNotNullVarchar(type.name()),
         convertNotNullVarchar(name),
+        convertVarchar(description),
         convertVarchar(version),
         convertVarchar(group),
         convertVarchar(path),
@@ -80,6 +85,7 @@ public final class ProjectsTable extends DatabaseTable {
     return executor.insertSingleWithKey(name,
         getInsertValue(Project.SYSTEM, 
             "primitives",
+            "Primitive types",
             null, // no version 
             null, // no group 
             null, // no path
@@ -91,6 +97,7 @@ public final class ProjectsTable extends DatabaseTable {
     return executor.insertSingleWithKey(name,
         getInsertValue(Project.SYSTEM,
             "unknowns",
+            "Project for unknown entities",
             null, // no version
             null, // no group
             null, // no path
@@ -102,6 +109,7 @@ public final class ProjectsTable extends DatabaseTable {
     return executor.insertSingleWithKey(name, 
         getInsertValue(Project.JAVA_LIBRARY,
             library.getName(),
+            null, // no description
             null, // no version
             null, // no group
             library.getRelativePath(),
@@ -115,6 +123,7 @@ public final class ProjectsTable extends DatabaseTable {
           getInsertValue(
               Project.JAR, 
               jar.getName(),
+              null, // no description
               null, // no version
               null, // no group 
               null, // no path 
@@ -124,6 +133,7 @@ public final class ProjectsTable extends DatabaseTable {
       return executor.insertSingleWithKey(name,
           getInsertValue(
               Project.MAVEN,
+              null, // no description
               jar.getName(),
               jar.getVersion(),
               jar.getGroup(), 
@@ -138,6 +148,7 @@ public final class ProjectsTable extends DatabaseTable {
         getInsertValue(
             Project.CRAWLED,
             project.getName(),
+            project.getDescription(),
             null, // no version
             null, // no group
             project.getRelativePath(),
@@ -159,7 +170,23 @@ public final class ProjectsTable extends DatabaseTable {
     return executor.selectSingle(name, "project_id", "name='" + name + "'");
   }
   
+  public String getHashByProjectID(String projectID) {
+    return executor.selectSingle(name, "hash", "project_id=" + projectID);
+  }
+  
+  public String getProjectIDByHash(String hash) {
+    return executor.selectSingle(name, "project_id", "hash='" + hash + "'");
+  }
+  
   public String getUnknownsProject() {
     return executor.selectSingle(name, "project_id", "name='unknowns'");
+  }
+  
+  public String getPrimitiveProject() {
+    return executor.selectSingle(name, "project_id", "name='primitives'");
+  }
+  
+  public Collection<String> getJavaLibraryProjects() {
+    return executor.select(name, "project_id", "project_type='" + Project.JAVA_LIBRARY + "'");
   }
 }

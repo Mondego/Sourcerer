@@ -183,7 +183,7 @@ public class EclipseUtils {
   
 //  public static void initializeProject(Iterable<IJarFile> jarFiles) {
  
-  public static void initializeProject(Collection<String> jars) {
+  public static void initializeProject(Collection<IndexedJar> jars) {
     initializeProject();
     try {
       srcFolder = project.getFolder("src");
@@ -197,8 +197,8 @@ public class EclipseUtils {
       for (LibraryLocation location : JavaRuntime.getLibraryLocations(vmInstall)) {
         entries.add(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), location.getSystemLibrarySourcePath(), null));
       }
-      for (String jar : jars) {
-        entries.add(JavaCore.newLibraryEntry(new Path(jar), null, null));
+      for (IndexedJar jar : jars) {
+        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), null, null));
       }
       entries.add(JavaCore.newSourceEntry(srcFolder.getFullPath()));
       javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
@@ -219,17 +219,17 @@ public class EclipseUtils {
     }
   }
   
-  public static void addToClasspath(Collection<String> paths) {
-    try {
-      List<IClasspathEntry> entries = Helper.newArrayList(Arrays.asList(javaProject.getRawClasspath()));
-      for (String path : paths) {
-        entries.add(JavaCore.newLibraryEntry(new Path(path), null, null));
-      }
-      javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
-    } catch (CoreException e) {
-      logger.log(Level.SEVERE, "Error in project classpath initialization", e);
-    }
-  }
+//  public static void addToClasspath(Collection<String> paths) {
+//    try {
+//      List<IClasspathEntry> entries = Helper.newArrayList(Arrays.asList(javaProject.getRawClasspath()));
+//      for (String path : paths) {
+//        entries.add(JavaCore.newLibraryEntry(new Path(path), null, null));
+//      }
+//      javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
+//    } catch (CoreException e) {
+//      logger.log(Level.SEVERE, "Error in project classpath initialization", e);
+//    }
+//  }
   
 //  public static void buildProject() {
 //    IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();

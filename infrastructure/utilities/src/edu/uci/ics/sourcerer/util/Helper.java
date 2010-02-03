@@ -112,6 +112,10 @@ public class Helper {
 	  return new HashSet<T>();
 	}
 	
+	public static <T> HashSet<T> newHashSet(Collection<? extends T> c) {
+	  return new HashSet<T>(c);
+	}
+	
 	public static <T> TreeSet<T> newTreeSet() {
     return new TreeSet<T>();
   }

@@ -15,35 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.extractor.io.dummy;
+package edu.uci.ics.sourcerer.extractor.io.file;
 
-import edu.uci.ics.sourcerer.extractor.io.IJarRelationWriter;
+import java.io.File;
+
+import edu.uci.ics.sourcerer.extractor.io.IClassFileWriter;
+import edu.uci.ics.sourcerer.model.extracted.FileEX;
+import edu.uci.ics.sourcerer.repo.base.IFileSet;
+import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyJarRelationWriter implements IJarRelationWriter {
-  @Override
-  public void writeExtends(String subTypeFqn, String superTypeFqn) {}
-
-  @Override
-  public void writeHolds(String fqn, String type) {}
-
-  @Override
-  public void writeImplements(String subTypeFqn, String superTypeFqn) {}
-
-  @Override
-  public void writeInside(String innerFqn, String outerFqn) {}
-
-  @Override
-  public void writeReturns(String fqn, String returnType) {}
-
-  @Override
-  public void writeThrows(String fqn, String exceptionType) {}
-
-  @Override
-  public void writeParametrizedBy(String fqn, String typeVariable, int position) {}
+public class ClassFileWriter extends ExtractorWriter implements IClassFileWriter {
+  public ClassFileWriter(File output, IFileSet input) {
+    super(new File(output, Extracted.FILE_FILE.getValue()), input);
+  }
   
-  @Override
-  public void close() {}
+  public void writeClassFile(String name, String path) {
+    write(FileEX.getClassLine(name, path));
+  }
 }

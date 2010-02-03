@@ -15,35 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model.extracted;
+package edu.uci.ics.sourcerer.extractor.io;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class MissingTypeEX implements ModelEX {
-  private String fqn;
+public interface IClassEntityWriter extends IExtractorWriter {
+  public void writePackage(String fqn);
   
-  private MissingTypeEX(String fqn) {
-    this.fqn = fqn;
-  }
-  
-  public String getFqn() {
-    return fqn;
-  }
-  
-  // ---- PARSER ----
-  private static ModelExParser<MissingTypeEX> parser = new ModelExParser<MissingTypeEX>() {
-    @Override
-    public MissingTypeEX parseLine(String line) {
-      return new MissingTypeEX(line);
-    }
-  };
-  
-  public static ModelExParser<MissingTypeEX> getParser() {
-    return parser;
-  }
-  
-  public static String getLine(String fqn) {
-    return fqn;
-  }
+  public void writeClass(String fqn, int modifiers, String path);
+
+  public void writeInterface(String fqn, int modifiers, String path);
+
+  public void writeAnnotation(String fqn, int modifiers, String path);
+
+  public void writeAnnotationElement(String fqn, int modifiers, String path);
+
+  public void writeEnum(String fqn, int modifiers, String path);
+
+  public void writeEnumConstant(String fqn, int modifiers, String path);
+
+  public void writeField(String fqn, int modifiers, String path);
+
+  public void writeMethod(String fqn, int modifiers, String path);
+
+  public void writeConstructor(String fqn, int modifiers, String path);
 }

@@ -21,5 +21,6 @@ package edu.uci.ics.sourcerer.extractor.io;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface IFileWriter extends IExtractorWriter {
-  public void writeFile(String path);
+  public void writeSourceFile(String name, String path);
+  public void writeJarFile(String name, String hash);
 }

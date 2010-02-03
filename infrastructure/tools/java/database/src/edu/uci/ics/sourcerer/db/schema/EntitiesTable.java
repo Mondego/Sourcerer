@@ -133,6 +133,14 @@ public final class EntitiesTable extends DatabaseTable {
     }
   };
   
+  public Collection<String> getProjectIDsByFqn(String fqn) {
+    return executor.select(name, "project_id", "fqn='" + fqn + "'");
+  }
+  
+  public Collection<String> getProjectIDsByPackage(String prefix) {
+    return executor.select(name, "project_id", "fqn LIKE '" + prefix + ".%' AND entity_type='PACKAGE'");
+  }
+  
   public Collection<LimitedEntityDB> getLimitedEntitiesByFqn(String fqn, String inClause) {
     return executor.select(name, "project_id,entity_id,entity_type", "fqn='" + fqn + "' AND projectID IN " + inClause, LIMITED_ENTITY_TRANSLATOR);
   }

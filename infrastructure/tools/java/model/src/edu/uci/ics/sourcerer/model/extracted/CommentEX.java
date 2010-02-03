@@ -33,11 +33,11 @@ public class CommentEX implements ModelEX {
   private String offset;
   private String length;
   
-  protected CommentEX(Comment type, String path, String offset, String length) {
+  private CommentEX(Comment type, String path, String offset, String length) {
    this(type, null, path, offset, length);
   }
   
-  protected CommentEX(Comment type, String fqn, String path, String offset, String length) {
+  private CommentEX(Comment type, String fqn, String path, String offset, String length) {
     this.type = type;
     this.fqn = fqn;
     this.path = path;
@@ -94,11 +94,11 @@ public class CommentEX implements ModelEX {
     return parser;
   }
   
-  public static String getLine(Comment type, String path, int offset, int length) {
+  public static String getUnlinkedLine(Comment type, String path, int offset, int length) {
     return type.name() + " " + path + " " + offset + " " + length;
   }
   
-  public static String getLine(Comment type, String fqn, String path, int offset, int length) {
+  public static String getLinkedLine(Comment type, String fqn, String path, int offset, int length) {
     return type.name() + " " + fqn + " " + path + " " + offset + " " + length;
   }
 }

@@ -17,22 +17,33 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import edu.uci.ics.sourcerer.extractor.io.IFileWriter;
+import edu.uci.ics.sourcerer.extractor.io.IClassRelationWriter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyFileWriter implements IFileWriter {
+public class DummyClassRelationWriter implements IClassRelationWriter {
   @Override
-  public void writeSourceFile(String name, String path) {
-  }
-  
-  @Override
-  public void writeJarFile(String name, String hash) {
-    
-  }
+  public void writeExtends(String subTypeFqn, String superTypeFqn, String path) {}
 
   @Override
-  public void close() {
-  }
+  public void writeHolds(String fqn, String type, String path) {}
+
+  @Override
+  public void writeImplements(String subTypeFqn, String superTypeFqn, String path) {}
+
+  @Override
+  public void writeInside(String innerFqn, String outerFqn, String path) {}
+
+  @Override
+  public void writeReturns(String fqn, String returnType, String path) {}
+
+  @Override
+  public void writeThrows(String fqn, String exceptionType, String path) {}
+
+  @Override
+  public void writeParametrizedBy(String fqn, String typeVariable, int position, String path) {}
+  
+  @Override
+  public void close() {}
 }

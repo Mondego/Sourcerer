@@ -20,18 +20,18 @@ package edu.uci.ics.sourcerer.extractor.io;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IJarRelationWriter extends IExtractorWriter {
-  public void writeInside(String innerFqn, String outerFqn);
+public interface IClassRelationWriter extends IExtractorWriter {
+  public void writeInside(String innerFqn, String outerFqn, String path);
 
-  public void writeExtends(String subTypeFqn, String superTypeFqn);
+  public void writeExtends(String subTypeFqn, String superTypeFqn, String path);
 
-  public void writeImplements(String subTypeFqn, String superTypeFqn);
+  public void writeImplements(String subTypeFqn, String superTypeFqn, String path);
 
-  public void writeHolds(String fqn, String type);
+  public void writeHolds(String fqn, String type, String path);
  
-  public void writeReturns(String fqn, String returnType);
+  public void writeReturns(String fqn, String returnType, String path);
   
-  public void writeThrows(String fqn, String exceptionType);
+  public void writeThrows(String fqn, String exceptionType, String path);
   
-  public void writeParametrizedBy(String fqn, String typeVariable, int position);
+  public void writeParametrizedBy(String fqn, String typeVariable, int position, String path);
 }

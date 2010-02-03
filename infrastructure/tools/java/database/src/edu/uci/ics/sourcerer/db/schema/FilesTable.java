@@ -83,7 +83,7 @@ public final class FilesTable extends DatabaseTable {
           getInsertValue(
               file.getType(), 
               file.getName(), 
-              file.getRelativePath(),
+              file.getPath(),
               null, // non-jars don't have hashes 
               projectID), 
           pairing);

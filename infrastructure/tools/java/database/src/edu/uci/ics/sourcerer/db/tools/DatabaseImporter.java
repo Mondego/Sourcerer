@@ -21,13 +21,17 @@ import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.model.extracted.ModelEX;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
+import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
 
 public class DatabaseImporter extends DatabaseAccessor {
+  private String unknownProject;
   private Map<String, String> fileMap;
   private Map<String, Ent> entityMap;
   
@@ -79,8 +83,8 @@ public class DatabaseImporter extends DatabaseAccessor {
     logger.info("  Initialization complete.");
   }
   
-  protected void importJavaLibrary() {
-    logger.info("Importing Java library...");
+  protected void importJavaLibraries() {
+    logger.info("Importing Java libraries...");
     
     logger.info("  Loading extracted repository...");
     ExtractedRepository extracted = ExtractedRepository.getRepository();
@@ -92,13 +96,18 @@ public class DatabaseImporter extends DatabaseAccessor {
     fileMap = Helper.newHashMap();
     entityMap = Helper.newHashMap();
     
+    unknownProject = projectsTable.getUnknownsProject();
+    
+    Collection<String> projectIDs = Helper.newLinkedList();
+    
     locker.addWrites(projectsTable, filesTable, problemsTable, entitiesTable);
     locker.lock();
     for (ExtractedLibrary library : libraries) {
       logger.info("  Partial import of " + library.getName());
       
       logger.info("    Inserting project...");
-      final String projectID = projectsTable.insert(library);
+      String projectID = projectsTable.insert(library);
+      projectIDs.add(projectID);
       
       insertFiles(library, projectID);
       insertProblems(library, projectID);
@@ -106,19 +115,125 @@ public class DatabaseImporter extends DatabaseAccessor {
     }
     locker.unlock();
     
+    projectIDs.add(projectsTable.getPrimitiveProject());
+    String inClause = buildInClause(projectIDs);
+    
     locker.addReads(projectsTable);
-    locker.addWrites();
+    locker.addWrites(entitiesTable, relationsTable, importsTable, commentsTable);
     locker.lock();
     for (ExtractedLibrary library : libraries) {
       logger.info("  Remaining import of " + library.getName());
       
       String projectID = projectsTable.getProjectIDByName(library.getName());
 
-      insertLocalVariables(library, projectID, null);
-      insertRelations(library, projectID, null);
-      insertImports(library, projectID, null);
-      insertComments(library, projectID, null);
+      insertLocalVariables(library, projectID, inClause);
+      insertRelations(library, projectID, inClause);
+      insertImports(library, projectID, inClause);
+      insertComments(library, projectID, inClause);
     }
+    locker.unlock();
+    
+    logger.info("  Done with Java library import.");
+  }
+  
+  protected void importJarFiles() {
+    logger.info("Importing jar files...");
+    
+    logger.info("  Loading exracted repository...");
+    ExtractedRepository extracted = ExtractedRepository.getRepository();
+    
+    logger.info("  Loading exracted jar files...");
+    Collection<ExtractedJar> jars = extracted.getJars();
+    
+    logger.info("  Importing " + jars.size() + " jars...");
+    fileMap = Helper.newHashMap();
+    entityMap = Helper.newHashMap();
+    
+    unknownProject = projectsTable.getUnknownsProject();
+    Collection<String> projectIDs = projectsTable.getJavaLibraryProjects();
+    projectIDs.add(projectsTable.getPrimitiveProject());
+    
+    for (ExtractedJar jar : jars) {
+      logger.info("  Import of " + jar.getName());
+      
+      locker.addWrites(projectsTable, filesTable, problemsTable, entitiesTable, relationsTable, importsTable, commentsTable);
+      locker.lock();
+      
+      logger.info("    Inserting project...");
+      String projectID = projectsTable.insert(jar);
+      
+      String inClause = buildInClause(Helper.newHashSet(projectIDs), jar);
+      
+      insertFiles(jar, projectID);
+      insertProblems(jar, projectID);
+      insertEntities(jar, projectID);
+      insertRelations(jar, projectID, inClause);
+      insertImports(jar, projectID, inClause);
+      insertComments(jar, projectID, inClause);
+      
+      locker.unlock();
+      fileMap.clear();
+      entityMap.clear();
+    }
+    logger.info("  Done with jar import.");
+  }
+  
+  protected void importProjects() {
+    logger.info("Importing projects...");
+    
+    logger.info("  Loading exracted repository...");
+    ExtractedRepository extracted = ExtractedRepository.getRepository();
+    
+    logger.info("  Loading exracted projects...");
+    Collection<ExtractedProject> projects = extracted.getProjects();
+    
+    logger.info("  Importing " + projects.size() + " projects...");
+    fileMap = Helper.newHashMap();
+    entityMap = Helper.newHashMap();
+    
+    unknownProject = projectsTable.getUnknownsProject();
+    Collection<String> projectIDs = projectsTable.getJavaLibraryProjects();
+    projectIDs.add(projectsTable.getPrimitiveProject());
+    
+    for (ExtractedProject project : projects) {
+      logger.info("  Import of " + project.getName());
+      
+      locker.addWrites(projectsTable, filesTable, problemsTable, entitiesTable, relationsTable, importsTable, commentsTable);
+      locker.lock();
+      
+      logger.info("    Inserting project...");
+      String projectID = projectsTable.insert(project);
+      
+      String inClause = buildInClause(Helper.newHashSet(projectIDs), project);
+      
+      insertFiles(project, projectID);
+      insertProblems(project, projectID);
+      insertEntities(project, projectID);
+      insertRelations(project, projectID, inClause);
+      insertImports(project, projectID, inClause);
+      insertComments(project, projectID, inClause);
+      
+      locker.unlock();
+      fileMap.clear();
+      entityMap.clear();
+    }
+    logger.info("  Done with project import.");
+  }
+  
+  private String buildInClause(Collection<String> projectIDs, Extracted extracted) {
+    for (UsedJarEX usedJar : extracted.getUsedJarReader()) {
+      projectIDs.add(projectsTable.getProjectIDByHash(usedJar.getHash()));
+    }
+    return buildInClause(projectIDs);
+  }
+  
+  private String buildInClause(Collection<String> projectIDs) {
+    StringBuilder builder = new StringBuilder("(");
+    for (String projectID : projectIDs) {
+      builder.append(projectID).append(',');
+    }
+    builder.setCharAt(builder.length() - 1, ')');
+    return builder.toString();
   }
   
   private void insertFiles(Extracted extracted, String projectID) {
@@ -128,10 +243,10 @@ public class DatabaseImporter extends DatabaseAccessor {
     KeyInsertBatcher<FileEX> batcher = filesTable.getKeyInsertBatcher(new KeyInsertBatcher.KeyProcessor<FileEX>() {
       @Override
       public void processKey(String key, FileEX value) {
-        if (fileMap.containsKey(value.getRelativePath())) {
-          logger.log(Level.SEVERE, "File collision: " + value.getRelativePath());
+        if (fileMap.containsKey(value.getPath())) {
+          logger.log(Level.SEVERE, "File collision: " + value.getPath());
         } else {
-          fileMap.put(value.getRelativePath(), key);
+          fileMap.put(value.getPath(), key);
         }
       }
     });
@@ -408,7 +523,7 @@ public class DatabaseImporter extends DatabaseAccessor {
     }
     
     // Give up
-    String eid = entitiesTable.insert(Entity.UNKNOWN, fqn, projectID);
+    String eid = entitiesTable.insertUnknown(fqn, unknownProject);
     Ent result = new Ent(fqn);
     result.addPair(projectID, eid, Entity.UNKNOWN);
     entityMap.put(fqn, result);

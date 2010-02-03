@@ -32,7 +32,7 @@ public class ImportEX implements ModelEX {
   private String offset;
   private String length;
 
-  protected ImportEX(String imported, boolean isStatic, boolean onDemand, String file, String offset, String length) {
+  private ImportEX(String imported, boolean isStatic, boolean onDemand, String file, String offset, String length) {
     this.imported = imported;
     this.isStatic = isStatic;
     this.onDemand = onDemand;

@@ -18,6 +18,10 @@ public class LibraryJar {
     return entry;
   }
   
+  public String getPath() {
+    return entry.getPath().toString();
+  }
+  
   public String getName() {
     return entry.getPath().lastSegment();
   }
