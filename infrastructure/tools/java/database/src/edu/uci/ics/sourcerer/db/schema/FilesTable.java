@@ -63,8 +63,8 @@ public final class FilesTable extends DatabaseTable {
     return buildSerialInsertValue(
         convertNotNullVarchar(type.name()),
         convertNotNullVarchar(name),
-    		convertNotNullVarchar(relativePath),
-    		convertNotNullVarchar(hash),
+    		convertVarchar(relativePath),
+    		convertVarchar(hash),
     		convertNotNullNumber(projectID));
   }
   

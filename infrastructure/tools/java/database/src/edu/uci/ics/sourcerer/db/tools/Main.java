@@ -21,6 +21,7 @@ import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_PASSWORD
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_URL;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_USER;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -31,7 +32,7 @@ import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
-  public static final Property<Boolean> INITIALIZE_DATABASE = new BooleanProperty("initialize-database", false, "Database", "Clean and initialize the database.");
+  public static final Property<Boolean> INITIALIZE_DB = new BooleanProperty("initialize-db", false, "Database", "Clean and initialize the database.");
   public static final Property<Boolean> ADD_JAVA_LIBRARIES = new BooleanProperty("add-libraries", false, "Database", "Adds extracted Java libraries to the database.");
   public static final Property<Boolean> ADD_JARS = new BooleanProperty("add-jars", false, "Database", "Adds extracted jars to the database.");
   public static final Property<Boolean> ADD_PROJECTS = new BooleanProperty("add-projects", false, "Database", "Adds extracted projects to the database.");
@@ -44,7 +45,7 @@ public class Main {
     DatabaseConnection connection = new DatabaseConnection();
     connection.open();
 
-    if (INITIALIZE_DATABASE.getValue()) {
+    if (INITIALIZE_DB.getValue()) {
       DatabaseImporter importer = new DatabaseImporter(connection);
       importer.initializeDatabase();
     } else if (ADD_JAVA_LIBRARIES.getValue()) {
@@ -60,7 +61,8 @@ public class Main {
       DatabaseImporter importer = new DatabaseImporter(connection);
       importer.importProjects();
     } else {
-      PropertyManager.registerUsedProperties(INITIALIZE_DATABASE, ADD_JARS, ADD_PROJECTS);
+      logger.info("No action selected");
+      PropertyManager.registerUsedProperties(INITIALIZE_DB, ADD_JARS, ADD_PROJECTS);
       PropertyManager.printUsage();
     }
 

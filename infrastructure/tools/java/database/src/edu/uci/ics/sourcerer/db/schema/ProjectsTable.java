@@ -55,7 +55,7 @@ public final class ProjectsTable extends DatabaseTable {
         "project_id SERIAL",
         "project_type " + getEnumCreate(Project.values()) + " NOT NULL",
         "name VARCHAR(1024) BINARY NOT NULL",
-        "description VARCHAR)4096) BINARY",
+        "description VARCHAR(4096) BINARY",
         "version VARCHAR(1024) BINARY",
         "groop VARCHAR(1024) BINARY",
         "path VARCHAR(1024) BINARY",

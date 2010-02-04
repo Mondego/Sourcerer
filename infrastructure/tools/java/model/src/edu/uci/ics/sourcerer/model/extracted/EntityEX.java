@@ -104,7 +104,7 @@ public final class EntityEX implements ModelEX {
               logger.log(Level.SEVERE, "Unable to parse entity: " + line);
               return null;
             }
-          } else if (parts.length == 3) {
+          } else if (parts.length == 4) {
             return new EntityEX(Entity.valueOf(parts[0]), parts[1], parts[2], parts[3]);
           } else if (parts.length == 6) {
             return new EntityEX(Entity.valueOf(parts[0]), parts[1], parts[2], parts[3], parts[4], parts[5]);

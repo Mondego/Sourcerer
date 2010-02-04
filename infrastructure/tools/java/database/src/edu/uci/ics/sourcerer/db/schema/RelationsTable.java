@@ -59,8 +59,6 @@ public final class RelationsTable extends DatabaseTable {
         "length INT UNSIGNED",
         "INDEX(relation_type)",
         "INDEX(lhs_eid)",
-        "INDEX(rhs_leid)",
-        "INDEX(rhs_jeid)",
         "INDEX(rhs_eid)",
         "INDEX(project_id)",
         "INDEX(file_id)");

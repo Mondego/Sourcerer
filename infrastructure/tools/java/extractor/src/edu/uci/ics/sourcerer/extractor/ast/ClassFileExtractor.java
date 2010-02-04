@@ -62,7 +62,12 @@ public class ClassFileExtractor {
   }
   
   public static boolean isTopLevel(IClassFile classFile) {
-    return !classFile.getType().getFullyQualifiedName().contains("$");
+    if (classFile.getParent() == null) {
+      return true;
+    } else {
+      return classFile.getParent().getElementType() == IJavaElement.PACKAGE_FRAGMENT;
+    }
+//    return !classFile.getType().getFullyQualifiedName().contains("$");
 //    try {
 //      IType declaring = classFile.getType();
 //      boolean topLevel = true;
@@ -92,26 +97,19 @@ public class ClassFileExtractor {
   
   public void extractClassFile(IClassFile classFile) {
     // Verify that it's a top-level type, or a subtype of a top-level type
-    try {
-      IType declaring = classFile.getType();
-      while (declaring != null) {
-        if (declaring.isLocal() || declaring.isAnonymous()) {
-          return;
-        }
-        declaring = declaring.getDeclaringType();
-      }
-    } catch (JavaModelException e) {
-      logger.log(Level.SEVERE, "Error in extracting class file", e);
-      return;
-    }
-    
-    // Write the class file
-    path = classFile.getElementName();
-    name = path.substring(path.lastIndexOf('.') + 1);
-    fileWriter.writeClassFile(name, path);
-    
-    extractIType(classFile.getType());
-    
+//    try {
+//      IType declaring = classFile.getType();
+//      while (declaring != null) {
+//        if (declaring.isLocal() || declaring.isAnonymous()) {
+//          return;
+//        }
+//        declaring = declaring.getDeclaringType();
+//      }
+//    } catch (JavaModelException e) {
+//      logger.log(Level.SEVERE, "Error in extracting class file", e);
+//      return;
+//    }
+        
     IJavaElement parent = classFile.getParent();
     while (true) {
       if (parent == null) {
@@ -120,11 +118,20 @@ public class ClassFileExtractor {
       } else if (parent.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
         relationWriter.writeInside(classFile.getType().getFullyQualifiedName(), parent.getElementName(), path);
         entityWriter.writePackage(parent.getElementName());
+        
+        // Write the class file
+        name = classFile.getElementName();
+        path = parent.getElementName() + "." + name;
+        fileWriter.writeClassFile(name, path);
+
         break;
       } else {
+        logger.log(Level.SEVERE, classFile.getType().getFullyQualifiedName() + " should be top-level!");
         parent = parent.getParent();
       }
     }
+    
+    extractIType(classFile.getType());
   }
   
   private void extractIType(IType type) {
