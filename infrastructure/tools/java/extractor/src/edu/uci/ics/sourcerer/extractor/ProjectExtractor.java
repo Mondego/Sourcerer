@@ -40,7 +40,12 @@ public class ProjectExtractor {
     logger.info("Getting the jar index...");
     JarIndex index = input.getJarIndex();
     logger.info("Getting the project listing...");
-    Collection<RepoProject> projects = input.getProjects();
+    Collection<RepoProject> projects = null;
+    if (Extractor.PROJECT_FILTER.hasValue()) {
+      
+    } else {
+      projects = input.getProjects();  
+    }
     logger.info("--- Extracting " + projects.size() + " projects ---");
     int count = 0;
     for (RepoProject project : projects) {

@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.zip.ZipFile;
 
@@ -104,6 +105,14 @@ public final class FileUtils {
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to read file.", e);
       return null;
+    }
+  }
+  
+  public static Set<String> getFileAsSet(File file) {
+    try {
+      
+    } catch (IOException e) {
+      
     }
   }
   

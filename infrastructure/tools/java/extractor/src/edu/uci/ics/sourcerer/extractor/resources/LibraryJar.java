@@ -22,6 +22,14 @@ public class LibraryJar {
     return entry.getPath().toString();
   }
   
+  public String getSourcePath() {
+    if (entry.getSourceAttachmentPath() == null) {
+      return null;
+    } else {
+      return entry.getSourceAttachmentPath().toString();
+    }
+  }
+  
   public String getName() {
     return entry.getPath().lastSegment();
   }

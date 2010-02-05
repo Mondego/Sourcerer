@@ -78,11 +78,11 @@ public final class RelationsTable extends DatabaseTable {
   }
   
   public void insert(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID) {
-    batcher.insert(getInsertValue(type, lhsEid, rhsEid, internal, projectID, null, null, null));
+    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, null, null, null));
   }
   
   public void insert(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID, String fileID, String offset, String length) {
-    batcher.insert(getInsertValue(type, lhsEid, rhsEid, internal, projectID, fileID, offset, length));
+    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, fileID, offset, length));
   }
   
   // ---- DELETE ----

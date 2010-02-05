@@ -77,6 +77,10 @@ public class LibraryExtractor {
         
         // Copy the library jar
         extracted.copyLibraryJar(new File(library.getPath()));
+        String sourcePath = library.getSourcePath();
+        if (sourcePath != null) {
+          extracted.copyLibraryJarSource(new File(sourcePath));
+        }
         
         // Write the properties files
         extracted.createPropertiesFile(library.getName(), report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());

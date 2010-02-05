@@ -40,6 +40,8 @@ import static edu.uci.ics.sourcerer.repo.extracted.Extracted.RELATION_FILE;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 
+import java.io.File;
+
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 
@@ -62,6 +64,7 @@ import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
+import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -71,6 +74,9 @@ public class Extractor implements IApplication {
   public static final Property<Boolean> EXTRACT_JARS = new BooleanProperty("extract-jars", false, "Extractor", "Extract the jars.");
   public static final Property<Boolean> EXTRACT_PROJECTS = new BooleanProperty("extract-projects", false, "Extractor", "Extract the projects.");
 
+  public static final Property<File> JAR_FILTER = new FileProperty("jar-filter", "Extractor", "Only extract these jars.");
+  public static final Property<File> PROJECT_FILTER = new FileProperty("project-filter", "Extractor", "Only extract these projects.");
+  		
   public static final Property<Boolean> EXTRACT_BINARY = new BooleanProperty("extract-binary", false, "Extractor", "Extract jars as binary only.");
   public static final Property<Boolean> EXTRACT_LATEST_MAVEN = new BooleanProperty("extract-latest-maven", false, "Extractor", "Extract only the latest maven jars.");
   public static final Property<Boolean> RESOLVE_MISSING_TYPES = new BooleanProperty("resolve-missing-types", false, "Extractor", "Re-attempt extraction on failed missing type extractions.");

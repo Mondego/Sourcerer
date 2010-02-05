@@ -134,7 +134,7 @@ public class RelationEX implements ModelEX {
           if (parts.length == 4) {
             return new RelationEX(type, parts[1], parts[2], parts[3]);
           } else {
-            return new RelationEX(type, parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]);
+            return new RelationEX(type, parts[1], parts[2], null, parts[3], parts[4], parts[5]);
           }
         }
       } catch (ArrayIndexOutOfBoundsException e) {

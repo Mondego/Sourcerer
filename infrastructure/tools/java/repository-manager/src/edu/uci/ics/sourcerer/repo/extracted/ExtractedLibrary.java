@@ -46,4 +46,9 @@ public class ExtractedLibrary extends ExtractedBinary {
     File copy = new File(content, "lib.jar");
     FileUtils.copyFile(orig, copy);
   }
+  
+  public void copyLibraryJarSource(File orig) {
+    File copy = new File(content, "source.jar");
+    FileUtils.copyFile(orig, copy);
+  }
 }

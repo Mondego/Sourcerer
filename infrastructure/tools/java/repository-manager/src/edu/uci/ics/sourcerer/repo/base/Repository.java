@@ -103,7 +103,7 @@ public class Repository extends AbstractRepository {
     if (!jars.exists()) {
       jars.mkdir();
     }
-    for (IndexedJar jar : repo.getJarIndex().getIndexedJars()) {
+    for (IndexedJar jar : repo.getJarIndex().getJars()) {
       if (!completed.contains(jar.toString())) {
         jar.migrateIndexedJar(jars);
         logger.log(RESUME, jar.toString());
@@ -225,11 +225,25 @@ public class Repository extends AbstractRepository {
   }
     
   public Collection<RepoProject> getProjects() {
+    return getProjects(null);
+  }
+  
+  public Collection<RepoProject> getProjects(Set<String> filter) {
     if (projects == null) {
       projects = Helper.newHashMap();
       populateRepository();
     }
-    return projects.values();
+    if (filter == null) {
+      return projects.values();
+    } else {
+      Collection<RepoProject> result = Helper.newArrayList();
+      for (RepoProject project : projects.values()) {
+        if (filter.contains(project.getProjectPath())) {
+          result.add(project);
+        }
+      }
+      return result;
+    }
   }
   
   public RepoProject getProject(String projectPath) {

@@ -523,7 +523,11 @@ public class DatabaseImporter extends DatabaseAccessor {
     }
     
     // Give up
-    String eid = entitiesTable.insertUnknown(fqn, unknownProject);
+    // Check if it's an already known unknown
+    String eid = entitiesTable.getEntityIDByFqnAndProject(fqn, unknownProject);
+    if (eid == null) {
+      eid = entitiesTable.insertUnknown(fqn, unknownProject);
+    }
     Ent result = new Ent(fqn);
     result.addPair(projectID, eid, Entity.UNKNOWN);
     entityMap.put(fqn, result);

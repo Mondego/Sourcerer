@@ -57,6 +57,19 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public class JarIndex {
   public static final Property<String> JAR_INDEX_FILE = new StringProperty("jar-index", "index.txt", "Repository Manager", "The filename of the jar index.");
   
+  public enum MavenFilter {
+    NONE,
+    LATEST,
+    MANUAL,
+    ALL;
+  }
+  
+  public enum ProjectFilter {
+    NONE,
+    MANUAL,
+    ALL;
+  }
+  
   private Map<String, IndexedJar> index;
   private Map<String, IndexedJar> nameIndex;
   
@@ -603,26 +616,55 @@ public class JarIndex {
     }
   }
   
-  public Collection<IndexedJar> getIndexedJars() {
-    return index.values();
+  public Collection<IndexedJar> getJars() {
+    return getJars(MavenFilter.ALL, ProjectFilter.ALL, null);
   }
   
-  public Collection<IndexedJar> getLatestMavenIndexedJars() {
-    Map<String, IndexedJar> byProject = Helper.newHashMap();
-    for (IndexedJar jar : index.values()) {
-      if (jar.isMavenJar()) {
-        String key = jar.getGroupName() + jar.getArtifactName();
-        IndexedJar other = byProject.get(key);
-        if (other == null) {
-          byProject.put(key, jar);
+  public Collection<IndexedJar> getJars(MavenFilter maven, ProjectFilter project, Set<String> filter) {
+    if (maven == MavenFilter.ALL && project == ProjectFilter.ALL) {
+      return index.values();
+    } else {
+      Collection<IndexedJar> jars = Helper.newArrayList();
+      Map<String, IndexedJar> byProject = null;
+      if (maven == MavenFilter.LATEST) {
+        byProject = Helper.newHashMap();
+      }
+      for (IndexedJar jar : index.values()) {
+        if (jar.isMavenJar()) {
+          if (maven == MavenFilter.ALL) {
+            jars.add(jar);
+          } else if (maven == MavenFilter.LATEST) {
+            String key = jar.getGroupName() + jar.getArtifactName();
+            IndexedJar other = byProject.get(key);
+            if (other == null) {
+              byProject.put(key, jar);
+            } else {
+              if (newestVersion(jar.getVersion(), other.getVersion())) {
+                byProject.put(key, jar);
+              }
+            }
+          } else if (maven == MavenFilter.MANUAL) {
+            if (filter.contains(jar.getHash())) {
+              jars.add(jar);
+            }
+          }
         } else {
-          if (newestVersion(jar.getVersion(), other.getVersion())) {
-            byProject.put(key, jar);
+          if (project == ProjectFilter.ALL) {
+            jars.add(jar);
+          } else if (project == ProjectFilter.MANUAL) {
+            if (filter.contains(jar.getHash())) {
+              jars.add(jar);
+            }
           }
         }
       }
+      if (maven == MavenFilter.LATEST) {
+        for (IndexedJar jar : byProject.values()) {
+          jars.add(jar);
+        }
+      }
+      return jars;
     }
-    return byProject.values();
   }
   
 //  private static Pattern leadingDigits = Pattern.compile("(\\d+)(.*)");

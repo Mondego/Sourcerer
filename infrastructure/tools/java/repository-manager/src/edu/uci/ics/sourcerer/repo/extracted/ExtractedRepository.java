@@ -86,7 +86,7 @@ public class ExtractedRepository extends AbstractRepository {
         @Override
         public Iterator<ExtractedJar> iterator() {
           return new Iterator<ExtractedJar>() {
-            private Iterator<IndexedJar> iter = index.getIndexedJars().iterator();
+            private Iterator<IndexedJar> iter = index.getJars().iterator();
             
             @Override
             public void remove() {

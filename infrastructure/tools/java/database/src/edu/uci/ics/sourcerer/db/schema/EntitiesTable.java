@@ -142,6 +142,10 @@ public final class EntitiesTable extends DatabaseTable {
   }
   
   public Collection<LimitedEntityDB> getLimitedEntitiesByFqn(String fqn, String inClause) {
-    return executor.select(name, "project_id,entity_id,entity_type", "fqn='" + fqn + "' AND projectID IN " + inClause, LIMITED_ENTITY_TRANSLATOR);
+    return executor.select(name, "project_id,entity_id,entity_type", "fqn='" + fqn + "' AND project_id IN " + inClause, LIMITED_ENTITY_TRANSLATOR);
+  }
+  
+  public String getEntityIDByFqnAndProject(String fqn, String projectID) {
+    return executor.selectSingle(name, "entity_id", "project_id=" + projectID);
   }
 }

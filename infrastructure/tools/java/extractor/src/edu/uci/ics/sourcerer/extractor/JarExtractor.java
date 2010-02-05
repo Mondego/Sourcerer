@@ -35,6 +35,8 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
+import edu.uci.ics.sourcerer.repo.general.JarIndex.MavenFilter;
+import edu.uci.ics.sourcerer.repo.general.JarIndex.ProjectFilter;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
@@ -55,10 +57,10 @@ public class JarExtractor {
     JarIndex index = input.getJarIndex();
     Collection<IndexedJar> toExtract = null;
     if (Extractor.EXTRACT_LATEST_MAVEN.getValue()) {
-      toExtract = index.getLatestMavenIndexedJars();
+      toExtract = index.getJars(MavenFilter.LATEST, ProjectFilter.NONE, null);
       logger.info("--- Extracting " + toExtract.size() + " latest maven jars ---");
     } else {
-      toExtract = index.getIndexedJars();
+      toExtract = index.getJars();
       logger.info("--- Extracting " + toExtract.size() + " jars ---");
     }
     int count = 0;

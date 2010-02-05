@@ -21,6 +21,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.eclipse.core.resources.IFile;
@@ -33,10 +34,12 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.internal.core.BinaryType;
 
 import edu.uci.ics.sourcerer.extractor.Extractor;
 import edu.uci.ics.sourcerer.extractor.io.IMissingTypeWriter;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 
@@ -90,11 +93,14 @@ public final class FeatureExtractor {
     }
   }
   
+  @SuppressWarnings("restriction")
   public ClassExtractionReport extractClassFiles(Collection<IClassFile> classFiles, boolean force) {
     ClassExtractionReport report = new ClassExtractionReport();
     ClassFileExtractor extractor = new ClassFileExtractor(bundle);
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
     IMissingTypeWriter missingTypeWriter = bundle.getMissingTypeWriter();
+    
+    Set<String> sourceFiles = Helper.newHashSet();
     for (IClassFile classFile : classFiles) {
       try {
         if (ClassFileExtractor.isTopLevel(classFile)) {
@@ -105,6 +111,17 @@ public final class FeatureExtractor {
             source = classFile.getSourceRange();
             if (source == null || source.getLength() == 0) {
               hasSource = false;
+            }
+          }
+          
+          if (hasSource) {
+            BinaryType type = (BinaryType)classFile.getType();
+            String sourceFile = type.getPackageFragment().getElementName() + "." + type.getSourceFileName(null);
+            
+            if (sourceFiles.contains(sourceFile)) {
+              continue;
+            } else {
+              sourceFiles.add(sourceFile);
             }
           }
           
