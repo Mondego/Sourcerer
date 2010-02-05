@@ -32,6 +32,7 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.maven.MavenCrawlStats;
 import edu.uci.ics.sourcerer.repo.maven.MavenCrawler;
 import edu.uci.ics.sourcerer.repo.maven.MavenDownloader;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
@@ -67,7 +68,7 @@ public class Main {
       repo.printJarStats();
     } else if (AGGREGATE_JAR_FILES.getValue()) {
       PropertyManager.registerAndVerify(AGGREGATE_JAR_FILES, INPUT_REPO);
-      Repository repo = Repository.getRepository(INPUT_REPO.getValue());
+      Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
       repo.aggregateJarFiles();
     } else if (CLEAN_REPOSITORY.getValue()) {
       PropertyManager.registerAndVerify(CLEAN_REPOSITORY, INPUT_REPO);

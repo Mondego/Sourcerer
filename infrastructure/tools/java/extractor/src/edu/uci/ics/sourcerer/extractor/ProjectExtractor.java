@@ -42,7 +42,7 @@ public class ProjectExtractor {
     logger.info("Getting the project listing...");
     Collection<RepoProject> projects = null;
     if (Extractor.PROJECT_FILTER.hasValue()) {
-      
+      projects = input.getProjects(FileUtils.getFileAsSet(Extractor.PROJECT_FILTER.getValue()));
     } else {
       projects = input.getProjects();  
     }

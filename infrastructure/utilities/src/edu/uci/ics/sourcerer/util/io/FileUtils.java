@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.util.io;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,10 +28,12 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.zip.ZipFile;
 
+import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
@@ -110,9 +113,14 @@ public final class FileUtils {
   
   public static Set<String> getFileAsSet(File file) {
     try {
-      
+      Set<String> set = Helper.newHashSet();
+      BufferedReader br = new BufferedReader(new FileReader(file));
+      for (String line = br.readLine(); line != null; line = br.readLine()) {
+        set.add(line);
+      }
+      return set;
     } catch (IOException e) {
-      
+      return Collections.emptySet();
     }
   }
   
