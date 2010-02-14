@@ -4,7 +4,6 @@ import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.logging.Level;
 
@@ -22,6 +21,7 @@ import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.util.Helper;
@@ -41,8 +41,8 @@ public class ProjectExtractor {
     JarIndex index = input.getJarIndex();
     logger.info("Getting the project listing...");
     Collection<RepoProject> projects = null;
-    if (Extractor.PROJECT_FILTER.hasValue()) {
-      projects = input.getProjects(FileUtils.getFileAsSet(Extractor.PROJECT_FILTER.getValue()));
+    if (AbstractRepository.PROJECT_FILTER.hasValue()) {
+      projects = input.getProjects(FileUtils.getFileAsSet(AbstractRepository.PROJECT_FILTER.getValue()));
     } else {
       projects = input.getProjects();  
     }
@@ -57,7 +57,7 @@ public class ProjectExtractor {
         logger.info("  Project has missing types");
       } else {
         // Set up logging
-        Logging.addFileLogger(extracted.getContent());
+        Logging.addFileLogger(extracted.getOutputDir());
         
         logger.info("  Getting file list...");
         IFileSet files = project.getFileSet();
@@ -83,7 +83,7 @@ public class ProjectExtractor {
         boolean missingTypes = false;
         while (true) {
           // Set up the writer bundle
-          WriterBundle bundle = new WriterBundle(new File(project.getOutputPath(output.getBaseDir())), files);
+          WriterBundle bundle = new WriterBundle(extracted.getOutputDir(), files);
           
           // Write out the jars
           IFileWriter fileWriter = bundle.getFileWriter();
@@ -156,7 +156,7 @@ public class ProjectExtractor {
           }
         }
         logger.info("  Finished extracting project.");
-        Logging.removeFileLogger(extracted.getContent());
+        Logging.removeFileLogger(extracted.getOutputDir());
         FileUtils.resetTempDir();
       }
     }

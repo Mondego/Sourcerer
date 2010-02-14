@@ -33,6 +33,7 @@ import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
+import edu.uci.ics.sourcerer.repo.general.RepoPath;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
@@ -51,41 +52,37 @@ public abstract class Extracted {
   public static final Property<String> USED_JAR_FILE = new StringProperty("used-jar-file", "used-jars.txt", "Repository Manager", "Filename for used jar files.");
   public static final Property<String> MISSING_TYPE_FILE = new StringProperty("missing-type-file", "missing-types.txt", "Repository Manager", "Filename for missing types.");
   
-  protected File content;
-  protected String relativePath;
+  protected RepoPath content;
 
-  public Extracted(File content, String relativePath) {
+  public Extracted(RepoPath content) {
     this.content = content;
-    this.relativePath = relativePath;
   }
 
-  public File getContent() {
-    return content;
+  public File getOutputDir() {
+    return content.toFile();
   }
+//  public RepoPath getContent() {
+//    return content;
+//  }
   
   public String getRelativePath() {
-    return relativePath;
+    return content.getRelativePath();
   }
   
   protected File getPropertiesFile() {
-    File file = new File(content, ".properties");
-    if (file.exists()) {
-      return file;
-    } else {
-      return new File(content, "extracted.properties");
-    }
+    return content.getChildFile("extracted.properties");
   }
   
   protected void clonePropertiesFile(ExtractedRepository target) {
     File properties = getPropertiesFile();
     if (properties.exists()) {
-      File newProperties = new File(target.getBaseDir().getPath(), relativePath + "/" + properties.getName());
+      File newProperties = target.convertPath(content).getChildFile("extracted.properties");
       FileUtils.copyFile(properties, newProperties);
     }
   }
   
   protected File getInputFile(Property<String> property) {
-    return new File(content, property.getValue());
+    return content.getChildFile(property.getValue());
   }
   
   protected InputStream getInputStream(Property<String> property) throws IOException {
@@ -170,7 +167,7 @@ public abstract class Extracted {
   }
   
   public boolean usesJars() {
-    return new File(content, USED_JAR_FILE.getValue()).exists();
+    return getInputFile(USED_JAR_FILE).exists();
   }
   
   protected abstract AbstractProperties getProperties();

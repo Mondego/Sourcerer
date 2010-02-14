@@ -21,7 +21,6 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 
 import org.eclipse.core.resources.IFile;
@@ -39,13 +38,13 @@ import org.eclipse.jdt.internal.core.BinaryType;
 import edu.uci.ics.sourcerer.extractor.Extractor;
 import edu.uci.ics.sourcerer.extractor.io.IMissingTypeWriter;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
+@SuppressWarnings("restriction")
 public final class FeatureExtractor {
   public static final Property<Boolean> PPA = new BooleanProperty("ppa", false, "Extractor", "Do partial program analysis.");
   
@@ -93,14 +92,12 @@ public final class FeatureExtractor {
     }
   }
   
-  @SuppressWarnings("restriction")
   public ClassExtractionReport extractClassFiles(Collection<IClassFile> classFiles, boolean force) {
     ClassExtractionReport report = new ClassExtractionReport();
     ClassFileExtractor extractor = new ClassFileExtractor(bundle);
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
     IMissingTypeWriter missingTypeWriter = bundle.getMissingTypeWriter();
     
-    Set<String> sourceFiles = Helper.newHashSet();
     for (IClassFile classFile : classFiles) {
       try {
         if (ClassFileExtractor.isTopLevel(classFile)) {
@@ -115,13 +112,13 @@ public final class FeatureExtractor {
           }
           
           if (hasSource) {
+            // Verify that the source file matches the binary file
             BinaryType type = (BinaryType)classFile.getType();
             String sourceFile = type.getPackageFragment().getElementName() + "." + type.getSourceFileName(null);
-            
-            if (sourceFiles.contains(sourceFile)) {
+            String fqn = classFile.getType().getFullyQualifiedName();
+            if (!fqn.equals(sourceFile)) {
+              logger.log(Level.WARNING, "Fqn mismatch: " + sourceFile + " " + fqn);
               continue;
-            } else {
-              sourceFiles.add(sourceFile);
             }
           }
           

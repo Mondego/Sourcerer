@@ -56,7 +56,7 @@ public class LibraryExtractor {
         logger.info("  Library already extracted");
       } else {
         // Set up logging
-        Logging.addFileLogger(extracted.getContent());
+        Logging.addFileLogger(extracted.getOutputDir());
 
         logger.info("  Getting class files...");
         Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(library);
@@ -64,7 +64,7 @@ public class LibraryExtractor {
         logger.info("  Extracting " + classFiles.size() + " class files...");
         
         // Set up the writer bundle
-        WriterBundle bundle = new WriterBundle(extracted.getContent());
+        WriterBundle bundle = new WriterBundle(extracted.getOutputDir());
         
         // Set up the feature extractor
         FeatureExtractor extractor = new FeatureExtractor(bundle);
@@ -86,7 +86,7 @@ public class LibraryExtractor {
         extracted.createPropertiesFile(library.getName(), report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());
 
         // End the error logging
-        Logging.removeFileLogger(extracted.getContent());
+        Logging.removeFileLogger(extracted.getOutputDir());
       }
     }
     

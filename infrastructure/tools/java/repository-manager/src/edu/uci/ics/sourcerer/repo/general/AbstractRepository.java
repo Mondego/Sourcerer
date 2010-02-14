@@ -30,6 +30,14 @@ public abstract class AbstractRepository {
   public static final Property<File> INPUT_REPO = new FileProperty("input-repo", "Repository Manager", "The root directory of the input repository.");
   public static final Property<File> OUTPUT_REPO = new FileProperty("output-repo", "Repository Manager", "The root directory of the output repository.");
   
+  public static final Property<File> JAR_FILTER = new FileProperty("jar-filter", "Extractor", "Only extract these jars.");
+  public static final Property<File> PROJECT_FILTER = new FileProperty("project-filter", "Extractor", "Only extract these projects.");
+
+  protected static final String JARS = "jars";
+  protected static final String LIBS = "libs";
+  protected static final String PROJECT_JARS = JARS + "/project";
+  protected static final String MAVEN_JARS = JARS + "/maven";
+  
   protected File repoRoot;
   
   protected File jarIndexFile;
@@ -37,10 +45,10 @@ public abstract class AbstractRepository {
   
   protected AbstractRepository(File repoRoot) {
     this.repoRoot = repoRoot;
-    this.jarIndexFile = new File(getJarsDir(), JarIndex.JAR_INDEX_FILE.getValue());
+    this.jarIndexFile = getJarsPath().getChildFile(JarIndex.JAR_INDEX_FILE.getValue());
   }
   
-  protected abstract void addFile(File checkout);
+  protected abstract void addProject(RepoPath path);
   
   protected void populateRepository() {
     if (repoRoot.exists()) { 
@@ -49,7 +57,7 @@ public abstract class AbstractRepository {
         if (batch.isDirectory() && pattern.matcher(batch.getName()).matches()) {
           for (File checkout : batch.listFiles()) {
             if (pattern.matcher(checkout.getName()).matches()) {
-              addFile(checkout);
+              addProject(RepoPath.getNewPath(checkout, batch.getName() + "/" + checkout.getName()));
             }
           }
         }
@@ -76,20 +84,28 @@ public abstract class AbstractRepository {
     return repoRoot;
   }
   
-  public File getMavenJarsDir() {
-    return new File(getJarsDir(), "maven");
+  protected RepoPath getPath(String relativePath) {
+    return RepoPath.getNewPath(new File(repoRoot, relativePath), relativePath);
   }
   
-  public File getProjectJarsDir() {
-    return new File(getJarsDir(), "project");
+  public RepoPath getMavenJarsPath() {
+    return getPath(MAVEN_JARS);
   }
   
-  public File getJarsDir() {
-    return new File(repoRoot, "jars");
+  protected RepoPath getProjectJarsPath() {
+    return getPath(PROJECT_JARS);
   }
   
-  public File getLibsDir() {
-    return new File(repoRoot, "libs");
+  protected RepoPath getJarsPath() {
+    return getPath(JARS);
+  }
+  
+  public RepoPath getLibsPath() {
+    return getPath(LIBS);
+  }
+  
+  public RepoPath convertPath(RepoPath other) {
+    return other.getNewPath(repoRoot.getPath());
   }
   
   public String toString() {

@@ -163,8 +163,8 @@ public class JarIndex {
     File indexFile = repo.getJarIndexFile();
     JarIndex index = new JarIndex();
     if (indexFile.exists()) {
-      String projectBasePath = repo.getProjectJarsDir().getPath().replace('\\', '/');
-      String mavenBasePath = repo.getMavenJarsDir().getPath().replace('\\', '/');
+      RepoPath projectPath = repo.getProjectJarsPath();
+      RepoPath mavenPath = repo.getMavenJarsPath();
       BufferedReader br = null;
       try {
         br = new BufferedReader(new FileReader(indexFile));
@@ -174,19 +174,19 @@ public class JarIndex {
           // It has two parts if it's a project jar
           if (parts.length == 4) {
             if ("PROJECT".equals(parts[1])) {
-              jar = new IndexedJar(parts[0], projectBasePath, parts[2], parts[3]);
+              jar = new IndexedJar(parts[0], projectPath.getChild(parts[2]), parts[3]);
             } else {
               logger.log(Level.SEVERE, "Invalid index line: " + line);
             }
           } else if (parts.length == 7) {
             if ("MAVEN".equals(parts[1])) {
-              jar = new IndexedJar(parts[0], parts[2], parts[3], parts[4], mavenBasePath, parts[5], parts[6]);
+              jar = new IndexedJar(parts[0], parts[2], parts[3], parts[4], mavenPath.getChild(parts[5]), parts[6]);
             } else {
               logger.log(Level.SEVERE, "Invalid index line: " + line);
             }
           } else if (parts.length == 8) {
             if ("MAVEN".equals(parts[1])) {
-              jar = new IndexedJar(parts[0], parts[2], parts[3], parts[4], mavenBasePath, parts[5], parts[6], parts[7]);
+              jar = new IndexedJar(parts[0], parts[2], parts[3], parts[4], mavenPath.getChild(parts[5]), parts[6], parts[7]);
             } else {
               logger.log(Level.SEVERE, "Invalid index line: " + line);
             }
@@ -303,7 +303,7 @@ public class JarIndex {
     logger.info("--- Aggregating jar files for: " + repo.toString() + " ---");
     
     // Create the jar folder
-    File repoJarFolder = repo.getProjectJarsDir() ;
+    File repoJarFolder = repo.getProjectJarsPath().toFile();
     if (!repoJarFolder.exists()) {
       repoJarFolder.mkdirs();
     }
@@ -460,7 +460,7 @@ public class JarIndex {
   public static void createJarIndexFile(Repository repo) {
     Set<String> completed = Logging.initializeResumeLogger();
     
-    File indexFile = new File(repo.getJarsDir(), JAR_INDEX_FILE.getValue());
+    File indexFile = repo.getJarIndexFile();
     
     if (completed.isEmpty() && indexFile.exists()) {
       indexFile.delete();
@@ -470,15 +470,15 @@ public class JarIndex {
     try {
       writer = new FileWriter(indexFile, true);
       
-      if (repo.getMavenJarsDir().exists()) {
+      if (repo.getMavenJarsPath().toFile().exists()) {
         logger.info("Indexing maven jars...");
         // Start by indexing the maven jars
-        String mavenBaseDir = repo.getMavenJarsDir().getPath().replace('\\', '/');
+        String mavenBaseDir = repo.getMavenJarsPath().toFile().getPath().replace('\\', '/');
         if (!mavenBaseDir.endsWith("/")) {
           mavenBaseDir += "/";
         }
         
-        for (File dir : repo.getMavenJarsDir().listFiles()) {
+        for (File dir : repo.getMavenJarsPath().toFile().listFiles()) {
           if (dir.isDirectory()) {
             Deque<File> stack = Helper.newStack();
             stack.push(dir);
@@ -548,12 +548,12 @@ public class JarIndex {
         
       logger.info("Indexing project jars...");
       // Now index the project jars
-      String projectBaseDir = repo.getProjectJarsDir().getPath().replace('\\', '/');
+      String projectBaseDir = repo.getProjectJarsPath().toFile().getPath().replace('\\', '/');
       if (!projectBaseDir.endsWith("/")) {
         projectBaseDir += "/";
       }
       
-      for (File one : repo.getProjectJarsDir().listFiles()) {
+      for (File one : repo.getProjectJarsPath().toFile().listFiles()) {
         if (one.isDirectory()) {
           for (File two : one.listFiles()) {
             if (two.isDirectory()) {

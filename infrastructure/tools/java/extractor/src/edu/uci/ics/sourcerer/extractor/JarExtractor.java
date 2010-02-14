@@ -33,6 +33,7 @@ import edu.uci.ics.sourcerer.extractor.resources.EclipseUtils;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.repo.general.JarIndex.MavenFilter;
@@ -59,6 +60,9 @@ public class JarExtractor {
     if (Extractor.EXTRACT_LATEST_MAVEN.getValue()) {
       toExtract = index.getJars(MavenFilter.LATEST, ProjectFilter.NONE, null);
       logger.info("--- Extracting " + toExtract.size() + " latest maven jars ---");
+    } else if (AbstractRepository.JAR_FILTER.hasValue()) {
+      toExtract = index.getJars(MavenFilter.MANUAL, ProjectFilter.MANUAL, FileUtils.getFileAsSet(AbstractRepository.JAR_FILTER.getValue()));
+      logger.info("--- Extracting " + toExtract.size() + " filtered jars ---");
     } else {
       toExtract = index.getJars();
       logger.info("--- Extracting " + toExtract.size() + " jars ---");
@@ -77,14 +81,14 @@ public class JarExtractor {
         logger.info("  Jar already extracted");
       } else {
         // Set up logging
-        Logging.addFileLogger(extracted.getContent());
+        Logging.addFileLogger(extracted.getOutputDir());
 
         Collection<IndexedJar> jars = Helper.newHashSet();
         boolean missingTypes = false;
         int firstOrderImports = 0;
         while (true) {
           // Set up the writer bundle
-          WriterBundle bundle = new WriterBundle(extracted.getContent());
+          WriterBundle bundle = new WriterBundle(extracted.getOutputDir());
 
           boolean force = false;
           if (missingTypes) {
@@ -147,7 +151,7 @@ public class JarExtractor {
         }
        
         // End the error logging
-        Logging.removeFileLogger(extracted.getContent());
+        Logging.removeFileLogger(extracted.getOutputDir());
       }
     }
     

@@ -17,54 +17,51 @@
  */
 package edu.uci.ics.sourcerer.extractor;
 
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.CLASS_ENTITY_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.CLASS_FILE_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.CLASS_RELATION_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.COMMENT_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.ENTITY_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.FILE_WRITER;
-import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.CLASS_FILE_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.IMPORT_WRITER;
-import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.CLASS_ENTITY_WRITER;
-import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.USED_JAR_WRITER;
-import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.CLASS_RELATION_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.LOCAL_VARIABLE_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.MISSING_TYPE_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.PROBLEM_WRITER;
 import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.RELATION_WRITER;
+import static edu.uci.ics.sourcerer.extractor.io.WriterBundle.USED_JAR_WRITER;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.COMMENT_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.ENTITY_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.FILE_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.IMPORT_FILE;
-import static edu.uci.ics.sourcerer.repo.extracted.Extracted.USED_JAR_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.LOCAL_VARIABLE_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.MISSING_TYPE_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.RELATION_FILE;
+import static edu.uci.ics.sourcerer.repo.extracted.Extracted.USED_JAR_FILE;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
-
-import java.io.File;
 
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
+import edu.uci.ics.sourcerer.extractor.io.file.ClassEntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.ClassFileWriter;
+import edu.uci.ics.sourcerer.extractor.io.file.ClassRelationWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.CommentWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.EntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.FileWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.ImportWriter;
-import edu.uci.ics.sourcerer.extractor.io.file.ClassEntityWriter;
-import edu.uci.ics.sourcerer.extractor.io.file.UsedJarWriter;
-import edu.uci.ics.sourcerer.extractor.io.file.ClassRelationWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.LocalVariableWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.MissingTypeWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.ProblemWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.RelationWriter;
+import edu.uci.ics.sourcerer.extractor.io.file.UsedJarWriter;
 import edu.uci.ics.sourcerer.extractor.resolver.MissingTypeResolver;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
-import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -73,9 +70,6 @@ public class Extractor implements IApplication {
   public static final Property<Boolean> EXTRACT_LIBRARIES = new BooleanProperty("extract-libraries", false, "Extractor", "Extract the libraries.");
   public static final Property<Boolean> EXTRACT_JARS = new BooleanProperty("extract-jars", false, "Extractor", "Extract the jars.");
   public static final Property<Boolean> EXTRACT_PROJECTS = new BooleanProperty("extract-projects", false, "Extractor", "Extract the projects.");
-
-  public static final Property<File> JAR_FILTER = new FileProperty("jar-filter", "Extractor", "Only extract these jars.");
-  public static final Property<File> PROJECT_FILTER = new FileProperty("project-filter", "Extractor", "Only extract these projects.");
   		
   public static final Property<Boolean> EXTRACT_BINARY = new BooleanProperty("extract-binary", false, "Extractor", "Extract jars as binary only.");
   public static final Property<Boolean> EXTRACT_LATEST_MAVEN = new BooleanProperty("extract-latest-maven", false, "Extractor", "Extract only the latest maven jars.");

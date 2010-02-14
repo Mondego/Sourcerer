@@ -29,6 +29,7 @@ import java.util.Set;
 
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.maven.MavenCrawlStats;
 import edu.uci.ics.sourcerer.repo.maven.MavenCrawler;
 import edu.uci.ics.sourcerer.repo.maven.MavenDownloader;
@@ -54,6 +55,7 @@ public class Main {
   private static final Property<Boolean> MAVEN_STATS = new BooleanProperty("maven-stats", false, "Repository Manager", "Gets some statistics on the links retreived from a maven crawl.");
   private static final Property<Boolean> EXTRACTION_STATS = new BooleanProperty("extraction-stats", false, "Repository Manager", "Get extraction stats.");
   private static final Property<Boolean> CLONE_EXTRACTED_REPOSITORY = new BooleanProperty("clone-extracted", false, "Repository Manager", "Copies the property files into a new repositroy.");
+  private static final Property<Boolean> GENERATE_JAR_FILTER = new BooleanProperty("generate-jar-filter", false, "Repository Manager", "Generate a jar filter list from a project filter list");
 
   public static void main(String[] args) {
     PropertyManager.initializeProperties(args);
@@ -96,6 +98,11 @@ public class Main {
     } else if (CLONE_EXTRACTED_REPOSITORY.getValue()) {
       PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);
       ExtractedRepository.getRepository().cloneProperties(ExtractedRepository.getRepository(OUTPUT_REPO.getValue()));
+    } else if (GENERATE_JAR_FILTER.getValue()) {
+      PropertyManager.registerResumeLoggingProperties();
+      PropertyManager.registerAndVerify(INPUT_REPO, AbstractRepository.PROJECT_FILTER);
+      Set<String> completed = Logging.initializeResumeLogger();
+      Repository.getRepository(INPUT_REPO.getValue()).generateJarFilterList(completed);
     } else {
       PropertyManager.registerUsedProperties(CREATE_JAR_INDEX, PRINT_JAR_STATS, AGGREGATE_JAR_FILES, CLEAN_REPOSITORY, MIGRATE_REPOSITORY, CRAWL_MAVEN, DOWNLOAD_MAVEN, MAVEN_STATS, EXTRACTION_STATS);
       PropertyManager.printUsage();

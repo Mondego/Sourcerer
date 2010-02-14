@@ -32,63 +32,69 @@ public class IndexedJar {
   private String groupName;
   private String version;
   private String artifactName;
-  private String basePath;
-  private String relativePath;
+  private RepoPath path;
   private String jarName;
   private String sourceName;
   
-  protected IndexedJar(String hash, String basePath, String relativePath, String jarName) {
-    this(false, hash, null, null, null, basePath, relativePath, jarName, null);
+  protected IndexedJar(String hash, RepoPath path, String jarName) {
+    this(false, hash, null, null, null, path, jarName, null);
   }
   
-  protected IndexedJar(String hash, String groupName, String version, String artifactName, String basePath, String relativePath, String jarName) {
-    this(true, hash, groupName, version, artifactName, basePath, relativePath, jarName, null);
+  protected IndexedJar(String hash, String groupName, String version, String artifactName, RepoPath path, String jarName) {
+    this(true, hash, groupName, version, artifactName, path, jarName, null);
   }
   
-  protected IndexedJar(String hash, String groupName, String version, String artifactName, String basePath, String relativePath, String jarName, String sourceName) {
-    this(true, hash, groupName, version, artifactName, basePath, relativePath, jarName, sourceName);
+  protected IndexedJar(String hash, String groupName, String version, String artifactName, RepoPath path, String jarName, String sourceName) {
+    this(true, hash, groupName, version, artifactName, path, jarName, sourceName);
   }
   
-  private IndexedJar(boolean maven, String hash, String groupName, String version, String artifactName, String basePath, String relativePath, String jarName, String sourceName) {
+  private IndexedJar(boolean maven, String hash, String groupName, String version, String artifactName, RepoPath path, String jarName, String sourceName) {
     this.maven = maven;
     this.hash = hash;
     this.groupName = groupName;
     this.version = version;
     this.artifactName = artifactName;
-    this.basePath = basePath;
-    this.relativePath = relativePath;
+    this.path = path;
     this.jarName = jarName;
     this.sourceName = sourceName;
   }
   
-  public void migrateIndexedJar(File newBasePath) {
-    String basePath = newBasePath.getPath();
+  public void migrateIndexedJar(String newBasePath) {
+    RepoPath newPath = path.getNewPath(newBasePath);
     
-    FileUtils.copyFile(getJarFile(), getJarFile(basePath));
+    FileUtils.copyFile(getJarFile(), getJarFile(newPath));
     if (sourceName != null) {
-      FileUtils.copyFile(getSourceFile(), getSourceFile(basePath));
+      FileUtils.copyFile(getSourceFile(), getSourceFile(newPath));
     }
-    FileUtils.copyFile(getPropertiesFile(), getPropertiesFile(basePath));
-    FileUtils.copyFile(getInfoFile(), getInfoFile(basePath));
+    FileUtils.copyFile(getPropertiesFile(), getPropertiesFile(newPath));
+    FileUtils.copyFile(getInfoFile(), getInfoFile(newPath));
   }
-
-  private File getJarFile(String basePath) {
-    return new File(basePath + "/" + relativePath + "/" + jarName);
+    
+  private File getInfoFile(RepoPath path) {
+    return path.getChildFile(jarName + ".info");
+  }
+  
+  public File getInfoFile() {
+    return getInfoFile(path);
+  }
+  
+  private File getJarFile(RepoPath path) {
+    return path.getChildFile(jarName);
   }
   
   public File getJarFile() {
-    return getJarFile(basePath);
+    return getJarFile(path);
   }
   
-  private File getSourceFile(String basePath) {
-    return new File(basePath + "/" + relativePath + "/" + sourceName);
+  private File getSourceFile(RepoPath path) {
+    return path.getChildFile(sourceName);
   }
   
   public File getSourceFile() {
     if (sourceName == null) {
       return null;
     } else {
-      return getSourceFile(basePath);
+      return getSourceFile(path);
     }
   }
   
@@ -104,24 +110,16 @@ public class IndexedJar {
     return jarName;
   }
   
-  private File getPropertiesFile(String basePath) {
-    return new File(basePath + "/" + relativePath + "/" + jarName + ".properties");
+  private File getPropertiesFile(RepoPath path) {
+    return path.getChildFile(jarName + ".properties");
   }
   
   private File getPropertiesFile() {
-    return getPropertiesFile(basePath);
+    return getPropertiesFile(path);
   }
   
   public JarProperties getProperties() {
     return JarProperties.load(getPropertiesFile());
-  }
-  
-  private File getInfoFile(String basePath) {
-    return new File(basePath + "/" + jarName + ".info");
-  }
-  
-  public File getInfoFile() {
-    return getInfoFile(basePath);
   }
   
   public String getHash() {
@@ -142,41 +140,21 @@ public class IndexedJar {
   
   public ExtractedJar getExtractedJar(ExtractedRepository repo) {
     if (maven) {
-      return new ExtractedJar(getOutputPath(repo.getMavenJarsDir()), getPropertiesFile(), getRelativePath());
+      return new ExtractedJar(path.getNewPath(repo.getBaseDir().getPath()), getPropertiesFile());
     } else {
-      return new ExtractedJar(getOutputPath(repo.getProjectJarsDir()), getPropertiesFile(), getRelativePath());
+      return new ExtractedJar(path.getNewPath(repo.getBaseDir().getPath()).getChild(jarName), getPropertiesFile());
     }
   }
   
   public ExtractedJar getExtractedJar() {
-    return new ExtractedJar(new File(getOutputPath(basePath)), getRelativePath());
-  }
-  
-  private File getOutputPath(File baseDir) {
-    return new File(getOutputPath(baseDir.getPath()));
-  }
-  
-  private String getRelativePath() {
     if (maven) {
-      return relativePath;
+      return new ExtractedJar(path);
     } else {
-      return relativePath + "/" + jarName;
+      return new ExtractedJar(path.getChild(jarName));
     }
   }
-  
-  private String getOutputPath(String baseDir) {
-    if (maven) {
-      return baseDir + "/" + relativePath;
-    } else {
-      return baseDir + "/" + relativePath + "/" + jarName;
-    }
-  }
-  
+
   public String toString() {
-    if (relativePath == null) {
-      return jarName;
-    } else {
-      return relativePath + "/" + jarName;
-    }
+    return path.toString();
   }
 }
