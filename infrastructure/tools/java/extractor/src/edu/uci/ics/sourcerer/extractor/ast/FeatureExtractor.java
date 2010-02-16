@@ -115,9 +115,9 @@ public final class FeatureExtractor {
             // Verify that the source file matches the binary file
             BinaryType type = (BinaryType)classFile.getType();
             String sourceFile = type.getPackageFragment().getElementName() + "." + type.getSourceFileName(null);
-            String fqn = classFile.getType().getFullyQualifiedName();
+            String fqn = classFile.getType().getFullyQualifiedName() + ".java";
             if (!fqn.equals(sourceFile)) {
-              logger.log(Level.WARNING, "Fqn mismatch: " + sourceFile + " " + fqn);
+              logger.log(Level.WARNING, "Source fqn mismatch: " + sourceFile + " " + fqn);
               continue;
             }
           }

@@ -24,6 +24,7 @@ import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
@@ -150,6 +151,23 @@ public class ExtractedRepository extends AbstractRepository {
     return jars;
   }
   
+  public Collection<ExtractedJar> getJars(Set<String> filter) {
+    if (jars == null) {
+      populateJars();
+    }
+    if (filter == null) {
+      return jars;
+    } else {
+      Collection<ExtractedJar> result = Helper.newArrayList();
+      for (ExtractedJar jar : jars) {
+        if (filter.contains(jar.getHash())) {
+          result.add(jar);
+        }
+      }
+      return result;
+    }
+  }
+  
   public Collection<ExtractedProject> getProjects() {
     if (projects == null) {
       projects = Helper.newLinkedList();
@@ -157,6 +175,25 @@ public class ExtractedRepository extends AbstractRepository {
     }
     return projects;
   }
+  
+  public Collection<ExtractedProject> getProjects(Set<String> filter) {
+    if (projects == null) {
+      projects = Helper.newLinkedList();
+      populateRepository();
+    }
+    if (filter == null) {
+      return projects;
+    } else {
+      Collection<ExtractedProject> result = Helper.newArrayList();
+      for (ExtractedProject project : projects) {
+        if (filter.contains(project.getProjectPath())) {
+          result.add(project);
+        }
+      }
+      return result;
+    }
+  }
+    
   
   public void cloneProperties(ExtractedRepository target) {
     logger.info("Cloning extracted library properties...");

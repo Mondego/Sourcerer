@@ -155,6 +155,10 @@ public class IndexedJar {
   }
 
   public String toString() {
-    return path.toString();
+    if (maven) {
+      return path.toString();
+    } else {
+      return path.toString() + "/" + jarName;
+    }
   }
 }
