@@ -42,7 +42,9 @@ public class ExtractedReader <T extends ModelEX> implements Iterable<T>, Iterato
   
   private ExtractedReader(ModelExParser<T> parser, File file) throws IOException {
     this.parser = parser;
-    this.input = new BufferedReader(new FileReader(file));
+    if (file.exists()) {
+      this.input = new BufferedReader(new FileReader(file));
+    }
   }
   
   public static <T extends ModelEX> ExtractedReader<T> getExtractedReader(ModelExParser<T> parser, File file) {

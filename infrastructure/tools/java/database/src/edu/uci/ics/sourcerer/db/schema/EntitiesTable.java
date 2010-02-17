@@ -60,7 +60,7 @@ public final class EntitiesTable extends DatabaseTable {
     executor.createTable(name,
         "entity_id SERIAL",
         "entity_type " + getEnumCreate(Entity.values()) + " NOT NULL",
-        "fqn VARCHAR(2048) BINARY NOT NULL",
+        "fqn VARCHAR(4096) BINARY NOT NULL",
         "modifiers INT UNSIGNED",
         "multi INT UNSIGNED",
         "project_id BIGINT UNSIGNED NOT NULL",

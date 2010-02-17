@@ -31,6 +31,8 @@ import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.repo.general.RepoPath;
+import edu.uci.ics.sourcerer.repo.general.JarIndex.MavenFilter;
+import edu.uci.ics.sourcerer.repo.general.JarIndex.ProjectFilter;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -75,7 +77,7 @@ public class ExtractedRepository extends AbstractRepository {
     }
   }
 
-  private void populateJars() {
+  private void populateJars(final Set<String> filter) {
     final JarIndex index = getJarIndex();
     if (index == null) {
       jars = Collections.emptyList();
@@ -85,10 +87,11 @@ public class ExtractedRepository extends AbstractRepository {
         public int size() {
           return index.getIndexSize();
         }
+        
         @Override
         public Iterator<ExtractedJar> iterator() {
           return new Iterator<ExtractedJar>() {
-            private Iterator<IndexedJar> iter = index.getJars().iterator();
+            private Iterator<IndexedJar> iter = (filter == null ? index.getJars() : index.getJars(MavenFilter.ALL, ProjectFilter.ALL, filter)).iterator();
             
             @Override
             public void remove() {
@@ -145,27 +148,13 @@ public class ExtractedRepository extends AbstractRepository {
   }
   
   public Collection<ExtractedJar> getJars() {
-    if (jars == null) {
-      populateJars();
-    }
+    populateJars(null);
     return jars;
   }
   
   public Collection<ExtractedJar> getJars(Set<String> filter) {
-    if (jars == null) {
-      populateJars();
-    }
-    if (filter == null) {
-      return jars;
-    } else {
-      Collection<ExtractedJar> result = Helper.newArrayList();
-      for (ExtractedJar jar : jars) {
-        if (filter.contains(jar.getHash())) {
-          result.add(jar);
-        }
-      }
-      return result;
-    }
+    populateJars(filter);
+    return jars;
   }
   
   public Collection<ExtractedProject> getProjects() {
@@ -324,7 +313,7 @@ public class ExtractedRepository extends AbstractRepository {
     
     if (jars == null) {
       logger.info("Loading jars...");
-      populateJars();
+      populateJars(null);
     }
     
     logger.info("Computing stats for " + jars.size() + " jars.");

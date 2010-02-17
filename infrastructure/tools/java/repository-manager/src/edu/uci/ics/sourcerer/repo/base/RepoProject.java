@@ -48,7 +48,7 @@ public class RepoProject {
 //  }
 //  
   public String getProjectPath() {
-    return content.getRelativePath();
+    return content.getRelativePath().substring(0, content.getRelativePath().lastIndexOf('/'));
   }
   
   public IFileSet getFileSet() {

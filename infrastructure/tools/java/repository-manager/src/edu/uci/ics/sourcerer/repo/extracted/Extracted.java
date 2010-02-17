@@ -180,6 +180,11 @@ public abstract class Extracted {
     return getProperties().extracted();
   }
   
+  public boolean reallyExtracted() {
+    File file = getInputFile(ENTITY_FILE);
+    return file.exists() && file.length() > 0;
+  }
+  
   public boolean hasMissingTypes() {
     return getProperties().missingTypes();
   }

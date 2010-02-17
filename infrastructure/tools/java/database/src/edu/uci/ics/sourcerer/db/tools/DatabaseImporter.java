@@ -13,6 +13,7 @@ import edu.uci.ics.sourcerer.model.Comment;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.db.LimitedEntityDB;
+import edu.uci.ics.sourcerer.model.db.LimitedProjectDB;
 import edu.uci.ics.sourcerer.model.extracted.CommentEX;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.FileEX;
@@ -27,8 +28,10 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 public class DatabaseImporter extends DatabaseAccessor {
   private String unknownProject;
@@ -143,7 +146,12 @@ public class DatabaseImporter extends DatabaseAccessor {
     ExtractedRepository extracted = ExtractedRepository.getRepository();
     
     logger.info("  Loading exracted jar files...");
-    Collection<ExtractedJar> jars = extracted.getJars();
+    Collection<ExtractedJar> jars = null;
+    if (AbstractRepository.JAR_FILTER.hasValue()) {
+      jars = extracted.getJars(FileUtils.getFileAsSet(AbstractRepository.JAR_FILTER.getValue()));
+    } else { 
+      jars = extracted.getJars();
+    }
     
     logger.info("  Importing " + jars.size() + " jars...");
     fileMap = Helper.newHashMap();
@@ -155,6 +163,25 @@ public class DatabaseImporter extends DatabaseAccessor {
     
     for (ExtractedJar jar : jars) {
       logger.info("  Import of " + jar.getName());
+      logger.info("    Verifying that jar should be imported...");
+      if (!jar.extracted()) {
+        logger.info("      Extraction not completed... skipping");
+        continue;
+      }
+      if (!jar.reallyExtracted()) {
+        logger.info("      Extraction copied... skipping");
+        continue;
+      }
+      LimitedProjectDB project = projectsTable.getLimitedProjectByHash(jar.getHash());
+      if (project != null) {
+        if (project.completed()) {
+          logger.info("      Import already completed... skipping");
+          continue;
+        } else {
+          logger.info("      Import not completed... deleting");
+          deleteByProject(project.getProjectID());
+        }
+      }
       
       locker.addWrites(projectsTable, filesTable, problemsTable, entitiesTable, relationsTable, importsTable, commentsTable);
       locker.lock();
@@ -170,6 +197,7 @@ public class DatabaseImporter extends DatabaseAccessor {
       insertRelations(jar, projectID, inClause);
       insertImports(jar, projectID, inClause);
       insertComments(jar, projectID, inClause);
+      projectsTable.completeJarProjectInsert(projectID);
       
       locker.unlock();
       fileMap.clear();
@@ -185,7 +213,12 @@ public class DatabaseImporter extends DatabaseAccessor {
     ExtractedRepository extracted = ExtractedRepository.getRepository();
     
     logger.info("  Loading exracted projects...");
-    Collection<ExtractedProject> projects = extracted.getProjects();
+    Collection<ExtractedProject> projects = null;
+    if (AbstractRepository.PROJECT_FILTER.hasValue()) {
+      projects = extracted.getProjects(FileUtils.getFileAsSet(AbstractRepository.PROJECT_FILTER.getValue()));
+    } else {
+      projects = extracted.getProjects();
+    }
     
     logger.info("  Importing " + projects.size() + " projects...");
     fileMap = Helper.newHashMap();
@@ -197,6 +230,26 @@ public class DatabaseImporter extends DatabaseAccessor {
     
     for (ExtractedProject project : projects) {
       logger.info("  Import of " + project.getName());
+      
+      logger.info("    Verifying that jar should be imported...");
+      if (!project.extracted()) {
+        logger.info("      Extraction not completed... skipping");
+        continue;
+      }
+      if (!project.reallyExtracted()) {
+        logger.info("      Extraction copied... skipping");
+        continue;
+      }
+      LimitedProjectDB oldProject = projectsTable.getLimitedProjectByPath(project.getRelativePath());
+      if (oldProject != null) {
+        if (oldProject.completed()) {
+          logger.info("      Import already completed... skipping");
+          continue;
+        } else {
+          logger.info("      Import not completed... deleting");
+          deleteByProject(oldProject.getProjectID());
+        }
+      }
       
       locker.addWrites(projectsTable, filesTable, problemsTable, entitiesTable, relationsTable, importsTable, commentsTable);
       locker.lock();
@@ -212,6 +265,7 @@ public class DatabaseImporter extends DatabaseAccessor {
       insertRelations(project, projectID, inClause);
       insertImports(project, projectID, inClause);
       insertComments(project, projectID, inClause);
+      projectsTable.completeCrawledProjectInsert(projectID);
       
       locker.unlock();
       fileMap.clear();

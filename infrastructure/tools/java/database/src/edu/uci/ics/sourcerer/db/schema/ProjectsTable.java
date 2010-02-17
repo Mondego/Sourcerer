@@ -17,11 +17,15 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
 
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Project;
+import edu.uci.ics.sourcerer.model.db.LimitedProjectDB;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
@@ -126,18 +130,18 @@ public final class ProjectsTable extends DatabaseTable {
               null, // no description
               null, // no version
               null, // no group 
-              null, // no path 
+              "INVALID", // no path 
               jar.getHash(), 
               jar.hasSource()));
     } else {
       return executor.insertSingleWithKey(name,
           getInsertValue(
               Project.MAVEN,
-              null, // no description
               jar.getName(),
+              null, // no description
               jar.getVersion(),
               jar.getGroup(), 
-              null, // no path
+              "INVALID", // no path
               jar.getHash(),
               jar.hasSource()));
     }
@@ -152,8 +156,16 @@ public final class ProjectsTable extends DatabaseTable {
             null, // no version
             null, // no group
             project.getRelativePath(),
-            null, // no hash
+            "INVALID", // no hash
             true));
+  }
+  
+  public void completeCrawledProjectInsert(String projectID) {
+    executor.executeUpdate("UPDATE " + name + " SET hash = NULL where project_id=" + projectID);
+  }
+  
+  public void completeJarProjectInsert(String projectID) {
+    executor.executeUpdate("UPDATE " + name + " SET path = NULL where project_id=" + projectID); 
   }
   
   // ---- DELETE ----
@@ -162,8 +174,23 @@ public final class ProjectsTable extends DatabaseTable {
   }
   
   // ---- SELECT ----
+  private ResultTranslator<LimitedProjectDB> LIMITED_PROJECT_TRANSLATOR = new ResultTranslator<LimitedProjectDB>() {
+    @Override
+    public LimitedProjectDB translate(ResultSet result) throws SQLException {
+      return new LimitedProjectDB(result.getString(1), Project.valueOf(result.getString(2)), result.getString(3), result.getString(4));
+    }
+  };
+  
   public String getProjectCount() {
     return executor.getRowCount(name);
+  }
+  
+  public LimitedProjectDB getLimitedProjectByPath(String path) {
+    return executor.selectSingle(name, "project_id,project_type,path,hash", "path='" + path + "'", LIMITED_PROJECT_TRANSLATOR);
+  }
+  
+  public LimitedProjectDB getLimitedProjectByHash(String hash) {
+    return executor.selectSingle(name, "project_id,project_type,path,hash", "hash='" + hash + "'", LIMITED_PROJECT_TRANSLATOR);
   }
   
   public String getProjectIDByName(String project) {

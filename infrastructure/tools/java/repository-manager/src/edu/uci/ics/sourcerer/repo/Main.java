@@ -102,7 +102,7 @@ public class Main {
       PropertyManager.registerResumeLoggingProperties();
       PropertyManager.registerAndVerify(INPUT_REPO, AbstractRepository.PROJECT_FILTER);
       Set<String> completed = Logging.initializeResumeLogger();
-      Repository.getRepository(INPUT_REPO.getValue()).generateJarFilterList(completed);
+      Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir()).generateJarFilterList(completed);
     } else {
       PropertyManager.registerUsedProperties(CREATE_JAR_INDEX, PRINT_JAR_STATS, AGGREGATE_JAR_FILES, CLEAN_REPOSITORY, MIGRATE_REPOSITORY, CRAWL_MAVEN, DOWNLOAD_MAVEN, MAVEN_STATS, EXTRACTION_STATS);
       PropertyManager.printUsage();

@@ -97,6 +97,7 @@ public class Repository extends AbstractRepository {
         }
       }
     }
+    logger.info("Done!");
   }
 
   public static void migrateRepository(File source, File target, Set<String> completed) {
@@ -250,6 +251,9 @@ public class Repository extends AbstractRepository {
     if (filter == null) {
       return projects.values();
     } else {
+      if (filter.isEmpty()) {
+        logger.log(Level.SEVERE, "Empty project filter!");
+      }
       Collection<RepoProject> result = Helper.newArrayList();
       for (RepoProject project : projects.values()) {
         if (filter.contains(project.getProjectPath())) {
