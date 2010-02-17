@@ -17,6 +17,10 @@
  */
 package edu.uci.ics.sourcerer.model.extracted;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.logging.Level;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
@@ -24,15 +28,15 @@ public class ImportEX implements ModelEX {
   private String imported;
   private boolean isStatic;
   private boolean onDemand;
-  private String file;
+  private String path;
   private String offset;
   private String length;
 
-  protected ImportEX(String imported, boolean isStatic, boolean onDemand, String file, String offset, String length) {
+  private ImportEX(String imported, boolean isStatic, boolean onDemand, String file, String offset, String length) {
     this.imported = imported;
     this.isStatic = isStatic;
     this.onDemand = onDemand;
-    this.file = file;
+    this.path = file;
     this.offset = offset;
     this.length = length;
   }
@@ -49,8 +53,8 @@ public class ImportEX implements ModelEX {
     return onDemand;
   }
   
-  public String getFile() {
-    return file;
+  public String getPath() {
+    return path;
   }
   
   public String getOffset() {
@@ -62,6 +66,28 @@ public class ImportEX implements ModelEX {
   }
   
   public String toString() {
-    return imported + " " + file;
+    return imported + " " + path;
+  }
+  
+  // ---- PARSER ----
+  private static ModelExParser<ImportEX> parser = new ModelExParser<ImportEX>() {
+    @Override
+    public ImportEX parseLine(String line) {
+      String[] parts = line.split(" ");
+      if (parts.length == 6) {
+        return new ImportEX(parts[0], parts[1].equals("STATIC"), parts[2].equals("ON_DEMAND"), parts[3], parts[4], parts[5]);
+      } else {
+        logger.log(Level.SEVERE, "Unable to parse import: " + line);
+        return null;
+      }
+    }
+  };
+  
+  public static ModelExParser<ImportEX> getParser() {
+    return parser;
+  }
+  
+  public static String getLine(String imported, boolean isStatic, boolean onDemand, String compilationUnitPath, int startPos, int length) {
+    return imported + " " + (isStatic ? "STATIC" : "NULL") + " " + (onDemand ? "ON_DEMAND" : "NULL") + " " + compilationUnitPath + " " + startPos + " " + length;
   }
 }

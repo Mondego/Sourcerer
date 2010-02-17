@@ -51,7 +51,7 @@ public class KeyInsertBatcher <T> extends AbstractInsertBatcher {
     incrementCount();
   }
   
-  public void insert(String value) {
+  protected void insert(String value) {
     if (count > 0) {
       QueryResult result = executor.executeUpdateWithKeys(value);
       for (T t : pairedTs) {

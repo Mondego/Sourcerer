@@ -17,6 +17,10 @@
  */
 package edu.uci.ics.sourcerer.model.extracted;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.logging.Level;
+
 import edu.uci.ics.sourcerer.model.Comment;
 
 /**
@@ -29,11 +33,11 @@ public class CommentEX implements ModelEX {
   private String offset;
   private String length;
   
-  protected CommentEX(Comment type, String path, String offset, String length) {
+  private CommentEX(Comment type, String path, String offset, String length) {
    this(type, null, path, offset, length);
   }
   
-  protected CommentEX(Comment type, String fqn, String path, String offset, String length) {
+  private CommentEX(Comment type, String fqn, String path, String offset, String length) {
     this.type = type;
     this.fqn = fqn;
     this.path = path;
@@ -63,5 +67,38 @@ public class CommentEX implements ModelEX {
   
   public String toString() {
     return type.name() + " " + path;
+  }
+  
+  // ---- PARSER ----
+  private static ModelExParser<CommentEX> parser = new ModelExParser<CommentEX>() {
+    @Override
+    public CommentEX parseLine(String line) {
+      try {
+        String parts[] = line.split(" ");
+        if (parts.length == 4) {
+          return new CommentEX(Comment.valueOf(parts[0]), parts[1], parts[2], parts[3]);
+        } else if (parts.length == 5) {
+          return new CommentEX(Comment.valueOf(parts[0]), parts[1], parts[2], parts[3], parts[4]);
+        } else {
+          logger.log(Level.SEVERE, "Unable to parse entity: " + line);
+          return null;
+        }
+      } catch (IllegalArgumentException e) {
+        logger.log(Level.SEVERE, "Unable to parse entity: " + line);
+        return null;
+      }
+    }
+  };
+  
+  public static ModelExParser<CommentEX> getParser() {
+    return parser;
+  }
+  
+  public static String getUnlinkedLine(Comment type, String path, int offset, int length) {
+    return type.name() + " " + path + " " + offset + " " + length;
+  }
+  
+  public static String getLinkedLine(Comment type, String fqn, String path, int offset, int length) {
+    return type.name() + " " + fqn + " " + path + " " + offset + " " + length;
   }
 }

@@ -21,7 +21,7 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.ICommentWriter;
 import edu.uci.ics.sourcerer.model.Comment;
-import edu.uci.ics.sourcerer.model.extracted.CommentExParser;
+import edu.uci.ics.sourcerer.model.extracted.CommentEX;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
@@ -34,18 +34,18 @@ public final class CommentWriter extends ExtractorWriter implements ICommentWrit
   }
 
   public void writeLineComment(String containingFile, int startPos, int length) {
-    write(CommentExParser.getLine(Comment.LINE, convertToRelativePath(containingFile), startPos, length));
+    write(CommentEX.getUnlinkedLine(Comment.LINE, convertToRelativePath(containingFile), startPos, length));
   }
   
   public void writeBlockComment(String containingFile, int startPos, int length) {
-    write(CommentExParser.getLine(Comment.BLOCK, convertToRelativePath(containingFile), startPos, length));
+    write(CommentEX.getUnlinkedLine(Comment.BLOCK, convertToRelativePath(containingFile), startPos, length));
   }
   
   public void writeUnassociatedJavadocComment(String containingFile, int startPos, int length) {
-    write(CommentExParser.getLine(Comment.UJAVADOC, convertToRelativePath(containingFile), startPos, length));
+    write(CommentEX.getUnlinkedLine(Comment.UJAVADOC, convertToRelativePath(containingFile), startPos, length));
   }
   
   public void writeJavadocComment(String containingFqn, String containingFile, int startPos, int length) {
-    write(CommentExParser.getLine(Comment.JAVADOC, containingFqn, convertToRelativePath(containingFile), startPos, length));
+    write(CommentEX.getLinkedLine(Comment.JAVADOC, containingFqn, convertToRelativePath(containingFile), startPos, length));
   }
 }

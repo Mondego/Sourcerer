@@ -22,7 +22,7 @@ import java.io.File;
 import edu.uci.ics.sourcerer.extractor.io.IEntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.Location;
 import edu.uci.ics.sourcerer.model.Entity;
-import edu.uci.ics.sourcerer.model.extracted.EntityExParser;
+import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
@@ -35,12 +35,12 @@ public final class EntityWriter extends ExtractorWriter implements IEntityWriter
   }
 
   private void writeEntity(Entity type, String fqn, int modifiers, Location location) {
-    write(EntityExParser.getLine(type, fqn, modifiers, convertToRelativePath(location.getCompilationUnitPath()), location.getStartPosition(), location.getLength()));
+    write(EntityEX.getSourceLine(type, fqn, modifiers, convertToRelativePath(location.getPath()), location.getStartPosition(), location.getLength()));
   }
   
   @Override
   public void writePackage(String fqn) {
-    write(EntityExParser.getPackageLine(fqn));
+    write(EntityEX.getPackageLine(fqn));
   }
   
   @Override

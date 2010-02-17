@@ -28,7 +28,7 @@ public class DummyLocalVariableWriter implements ILocalVariableWriter {
   public void close() {}
 
   @Override
-  public void writeJarParameter(String name, String type, String parent, int position) {}
+  public void writeClassParameter(String name, String type, String parent, int position, String path) {}
 
   @Override
   public void writeLocalVariable(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, Location location) {}

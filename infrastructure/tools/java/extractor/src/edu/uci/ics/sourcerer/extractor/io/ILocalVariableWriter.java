@@ -21,7 +21,7 @@ package edu.uci.ics.sourcerer.extractor.io;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface ILocalVariableWriter extends IExtractorWriter{
-  public void writeJarParameter(String name, String type, String parent, int position);
+  public void writeClassParameter(String name, String type, String parent, int position, String path);
   
   public void writeParameter(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, int position, Location location);
   

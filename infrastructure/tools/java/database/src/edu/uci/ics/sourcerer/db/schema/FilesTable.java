@@ -19,78 +19,84 @@ package edu.uci.ics.sourcerer.db.schema;
 
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.db.util.TableLocker;
+import edu.uci.ics.sourcerer.model.File;
 import edu.uci.ics.sourcerer.model.extracted.FileEX;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class FilesTable {
-  private FilesTable() {}
-  
-  public static final String TABLE = "files";
+public final class FilesTable extends DatabaseTable {
+  protected FilesTable(QueryExecutor executor, TableLocker locker) {
+    super(executor, locker, "files", false);
+  }
   /*  
    *  +-------------+-----------------+-------+--------+
    *  | Column name | Type            | Null? | Index? |
    *  +-------------+-----------------+-------+--------+
    *  | file_id     | SERIAL          | No    | Yes    |
+   *  | file_type   | ENUM(values)    | No    | Yes    |
    *  | name        | VARCHAR(1024)   | No    | Yes    |
-   *  | path        | VARCHAR(1024)   | No    | No     |
+   *  | path        | VARCHAR(1024)   | Yes   | No     |
+   *  | hash        | VARCHAR(32)     | Yes   | Yes    |
    *  | project_id  | BIGINT UNSIGNED | No    | Yes    |
    *  +-------------+-----------------+-------+--------+
    */
   
   // ---- CREATE ----
-  public static void createTable(QueryExecutor executor) {
-    executor.createTable(TABLE,
+  public void createTable() {
+    executor.createTable(name,
         "file_id SERIAL",
+        "file_type " + getEnumCreate(File.values()) + " NOT NULL",
         "name VARCHAR(1024) BINARY NOT NULL",
-        "path VARCHAR(1024) BINARY NOT NULL",
+        "path VARCHAR(1024) BINARY",
+        "hash VARCHAR(32) BINARY",
         "project_id BIGINT UNSIGNED NOT NULL",
+        "INDEX(file_type)",
         "INDEX(name(48))",
+        "INDEX(hash)",
         "INDEX(project_id)");
   }
   
   // ---- INSERT ----
-  public static <T> KeyInsertBatcher<T> getKeyInsertBatcher(QueryExecutor executor, KeyInsertBatcher.KeyProcessor<T> processor) {
-    return executor.getKeyInsertBatcher(TABLE, processor);
+  private String getInsertValue(File type, String name, String relativePath, String hash, String projectID) {
+    return buildSerialInsertValue(
+        convertNotNullVarchar(type.name()),
+        convertNotNullVarchar(name),
+    		convertVarchar(relativePath),
+    		convertVarchar(hash),
+    		convertNotNullNumber(projectID));
   }
   
-  private static String getInsertValue(String name, String relativePath, String projectID) {
-    return SchemaUtils.getSerialInsertValue(
-        SchemaUtils.convertNotNullVarchar(name),
-    		SchemaUtils.convertNotNullVarchar(relativePath),
-    		SchemaUtils.convertNotNullNumber(projectID));
-  }
-  
-  public static <T> void insert(KeyInsertBatcher<T> batcher, FileEX file, String projectID, T pairing) {
-    batcher.addValue(getInsertValue(file.getName(), file.getRelativePath(), projectID), pairing);
+  public <T> void insert(KeyInsertBatcher<T> batcher, FileEX file, String projectID, T pairing) {
+    if (file.getType() == File.JAR) {
+      batcher.addValue(
+          getInsertValue(
+              File.JAR, 
+              file.getName(), 
+              null, // jars don't have relative paths
+              file.getHash(), 
+              projectID), 
+          pairing);
+    } else {
+      batcher.addValue(
+          getInsertValue(
+              file.getType(), 
+              file.getName(), 
+              file.getPath(),
+              null, // non-jars don't have hashes 
+              projectID), 
+          pairing);
+    }
   }
   
   // ---- DELETE ----
-  public static void deleteByProjectID(QueryExecutor executor, String projectID) {
-    executor.delete(TABLE, "project_id=" + projectID);
+  public void deleteByProjectID(String projectID) {
+    executor.delete(name, "project_id=" + projectID);
   }
   
   // ---- SELECT ----
-  public static String getFilePathByFileID(QueryExecutor executor, String fileID) {
-    return executor.selectSingle(TABLE, "path", "file_id=" + fileID);
+  public String getFilePathByFileID(String fileID) {
+    return executor.selectSingle(name, "path", "file_id=" + fileID);
   }
-//  public static final ResultTranslator<FileDB> TRANSLATOR = new ResultTranslator<FileDB>() {
-//    @Override
-//    public FileDB translate(ResultSet result) throws SQLException {
-//      return new FileDB(result.getString(1), result.getString(2), result.getString(3));
-//    }
-//  };
-//  
-//  public static String getNameByFid(QueryExecutor executor, String fid) {
-//    return executor.executeSingle("SELECT name FROM files WHERE file_id=" + fid + ";");
-//  }
-//  
-//  public static FileDB getFileByFileID(QueryExecutor executor, String fileID) {
-//    return executor.executeSingle("SELECT file_id, name, error_count FROM files WHERE file_id=" + fileID + ";", TRANSLATOR);
-//  }
-//  
-//  public static String getProjectsWithFiles(QueryExecutor executor) {
-//    return executor.executeSingle("SELECT COUNT(DISTINCT project_id) FROM files;");
-//  }
 }

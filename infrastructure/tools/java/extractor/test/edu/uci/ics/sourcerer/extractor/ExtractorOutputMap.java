@@ -23,7 +23,6 @@ import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
-import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
@@ -37,7 +36,7 @@ public class ExtractorOutputMap {
   }
   
   private void buildEntitiesByFileMap(ExtractedProject project) {
-    for (EntityEX entity : ExtractedReader.getEntityReader(project)) {
+    for (EntityEX entity : project.getEntityReader()) {
       ExtractorOutput output = outputByFile.get(entity.getPath());
       if (output == null) {
         output = new ExtractorOutput();
@@ -48,7 +47,7 @@ public class ExtractorOutputMap {
   }
   
   private void buildRelationsByFileMap(ExtractedProject project) {
-    for (RelationEX relation : ExtractedReader.getRelationReader(project)) {
+    for (RelationEX relation : project.getRelationReader()) {
       ExtractorOutput output = outputByFile.get(relation.getPath());
       if (output == null) {
         output = new ExtractorOutput();
@@ -59,7 +58,7 @@ public class ExtractorOutputMap {
   }
   
   private void buildLocalVariablesByFileMap(ExtractedProject project) {
-    for (LocalVariableEX localVariable : ExtractedReader.getLocalVariableReader(project)) {
+    for (LocalVariableEX localVariable : project.getLocalVariableReader()) {
       ExtractorOutput output = outputByFile.get(localVariable.getPath());
       if (output == null) {
         output = new ExtractorOutput();

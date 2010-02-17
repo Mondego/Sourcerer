@@ -17,26 +17,23 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
-import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.model.db.TypedEntityID;
+import edu.uci.ics.sourcerer.db.util.TableLocker;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class ImportsTable {
-  private ImportsTable() {}
-  
-  public static final String TABLE = "imports";
+public final class ImportsTable extends DatabaseTable {
+  protected ImportsTable(QueryExecutor executor, TableLocker locker) {
+    super(executor, locker, "imports", true);
+  }
   /*  
    *  +-------------+-------------------+-------+--------+
    *  | Column name | Type              | Null? | Index? |
    *  +-------------+-------------------+-------+--------+
    *  | static      | BOOLEAN           | No    | No     |
    *  | on_demand   | BOOLEAN           | No    | No     |
-   *  | leid        | BIGINT UNSIGNED   | Yes   | Yes    |
-   *  | jeid        | BIGINT UNSIGNED   | Yes   | Yes    |
-   *  | eid         | BIGINT UNSIGNED   | Yes   | Yes    |
+   *  | eid         | BIGINT UNSIGNED   | No    | Yes    |
    *  | project_id  | BIGINT UNSIGNED   | No    | Yes    |
    *  | file_id     | BIGINT UNSIGNED   | No    | Yes    |
    *  | offset      | INT UNSIGNED      | No    | No     |
@@ -44,79 +41,39 @@ public final class ImportsTable {
    *  +-------------+-------------------+-------+--------+
    */
   
-  //---- LOCK ----
-  public static String getReadLock() {
-    return SchemaUtils.getReadLock(TABLE);
-  }
-  
-  public static String getWriteLock() {
-    return SchemaUtils.getWriteLock(TABLE);
-  }
-  
   // ---- CREATE ----
-  public static void createTable(QueryExecutor executor) {
-    executor.createTable(TABLE, 
+  public void createTable() {
+    executor.createTable(name, 
         "static BOOLEAN NOT NULL",
         "on_demand BOOLEAN NOT NULL",
-        "leid BIGINT UNSIGNED",
-        "jeid BIGINT UNSIGNED",
-        "eid BIGINT UNSIGNED",
+        "eid BIGINT UNSIGNED NOT NULL",
         "project_id BIGINT UNSIGNED NOT NULL",
         "file_id BIGINT UNSIGNED NOT NULL",
         "offset INT UNSIGNED NOT NULL",
         "length INT UNSIGNED NOT NULL",
-        "INDEX(leid)",
-        "INDEX(jeid)",
         "INDEX(eid)",
         "INDEX(project_id)",
         "INDEX(file_id)");
   }
   
   // ---- INSERT ----
-  public static InsertBatcher getInsertBatcher(QueryExecutor executor) {
-    return executor.getInsertBatcher(TABLE);
+  private String getInsertValue(boolean isStatic, boolean onDemand, String eid, String projectID, String fileID, String offset, String length) {
+    return buildInsertValue(
+        convertNotNullBoolean(isStatic),
+        convertNotNullBoolean(onDemand),
+        convertNotNullNumber(eid),
+        convertNotNullNumber(projectID),
+        convertNotNullNumber(fileID),
+        convertOffset(offset),
+        convertLength(length));
   }
   
-  private static String getInsertValue(boolean isStatic, boolean onDemand, TypedEntityID eid, String projectID, String fileID, String offset, String length) {
-    return SchemaUtils.getInsertValue(
-        SchemaUtils.convertBoolean(isStatic),
-        SchemaUtils.convertBoolean(onDemand),
-        SchemaUtils.convertProjectTypedEntityID(eid),
-        SchemaUtils.convertNotNullNumber(projectID),
-        SchemaUtils.convertNotNullNumber(fileID),
-        SchemaUtils.convertOffset(offset),
-        SchemaUtils.convertLength(length));
-  }
-  
-  public static void insert(InsertBatcher batcher, boolean isStatic, boolean onDemand, TypedEntityID eid, String projectID, String fileID, String offset, String length) {
+  public void insert(boolean isStatic, boolean onDemand, String eid, String projectID, String fileID, String offset, String length) {
     batcher.addValue(getInsertValue(isStatic, onDemand, eid, projectID, fileID, offset, length));
   }
   
   // ---- DELETE ----
-  public static void deleteByProjectID(QueryExecutor executor, String projectID) {
-    executor.delete(TABLE, "project_id=" + projectID);
+  public void deleteByProjectID(String projectID) {
+    executor.delete(name, "project_id=" + projectID);
   }
-  
-  // ---- SELECT ----
-//  public static final ResultTranslator<ImportDB> TRANSLATOR = new ResultTranslator<ImportDB>() {
-//    @Override
-//    public ImportDB translate(ResultSet result) throws SQLException {
-//      TypedEntityID target = null;
-//      if (result.getString(4) != null) {
-//        target = TypedEntityID.getSourceEntityID(result.getString(4));
-//      } else if (result.getString(5) != null) {
-//        target = TypedEntityID.getJarEntityID(result.getString(5));
-//      } else if (result.getString(6) != null) {
-//        target = TypedEntityID.getLibraryEntityID(result.getString(6));
-//      } else {
-//        return null;
-//      }
-//
-//      return new ImportDB(result.getString(1), result.getString(2) != null, result.getString(3) != null, target);
-//    }
-//  };
-//  
-//  public static Collection<ImportDB> getImports(QueryExecutor executor, String fileID) {
-//    return executor.execute("SELECT file_id, static, on_demand, eid, jeid, leid FROM imports WHERE file_id=" + fileID + ";", TRANSLATOR);
-//  }
 }

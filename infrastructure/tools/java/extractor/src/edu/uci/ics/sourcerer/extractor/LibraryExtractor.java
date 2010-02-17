@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.extractor;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.File;
 import java.util.Collection;
 
 import org.eclipse.jdt.core.IClassFile;
@@ -55,7 +56,7 @@ public class LibraryExtractor {
         logger.info("  Library already extracted");
       } else {
         // Set up logging
-        Logging.addFileLogger(extracted.getContent());
+        Logging.addFileLogger(extracted.getOutputDir());
 
         logger.info("  Getting class files...");
         Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(library);
@@ -63,7 +64,7 @@ public class LibraryExtractor {
         logger.info("  Extracting " + classFiles.size() + " class files...");
         
         // Set up the writer bundle
-        WriterBundle bundle = new WriterBundle(extracted.getContent());
+        WriterBundle bundle = new WriterBundle(extracted.getOutputDir());
         
         // Set up the feature extractor
         FeatureExtractor extractor = new FeatureExtractor(bundle);
@@ -74,11 +75,18 @@ public class LibraryExtractor {
         // Close the output files
         extractor.close();
         
+        // Copy the library jar
+        extracted.copyLibraryJar(new File(library.getPath()));
+        String sourcePath = library.getSourcePath();
+        if (sourcePath != null) {
+          extracted.copyLibraryJarSource(new File(sourcePath));
+        }
+        
         // Write the properties files
         extracted.createPropertiesFile(library.getName(), report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions());
 
         // End the error logging
-        Logging.removeFileLogger(extracted.getContent());
+        Logging.removeFileLogger(extracted.getOutputDir());
       }
     }
     

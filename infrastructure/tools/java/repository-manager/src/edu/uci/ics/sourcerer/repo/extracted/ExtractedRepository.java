@@ -24,11 +24,15 @@ import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
+import edu.uci.ics.sourcerer.repo.general.RepoPath;
+import edu.uci.ics.sourcerer.repo.general.JarIndex.MavenFilter;
+import edu.uci.ics.sourcerer.repo.general.JarIndex.ProjectFilter;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -51,8 +55,8 @@ public class ExtractedRepository extends AbstractRepository {
   }
   
   @Override
-  protected void addFile(File checkout) {
-    ExtractedProject extracted = new ExtractedProject(checkout, checkout.getParentFile().getName() + "/" + checkout.getName());
+  protected void addProject(RepoPath path) {
+    ExtractedProject extracted = new ExtractedProject(path);
     if (includeNotExtracted || extracted.extracted()) {
       projects.add(extracted);
     }
@@ -60,11 +64,11 @@ public class ExtractedRepository extends AbstractRepository {
   
   private void populateLibraries() {
     libraries = Helper.newLinkedList();
-    File libsDir = getLibsDir();
+    File libsDir = getLibsPath().toFile();
     if (libsDir.exists()) {
       for (File lib : libsDir.listFiles()) {
         if (lib.isDirectory()) {
-          ExtractedLibrary extracted = new ExtractedLibrary(lib, libsDir.getName());
+          ExtractedLibrary extracted = new ExtractedLibrary(RepoPath.getNewPath(lib, LIBS + "/" + lib.getName()));
           if (includeNotExtracted || extracted.extracted()) {
             libraries.add(extracted);
           }
@@ -73,7 +77,7 @@ public class ExtractedRepository extends AbstractRepository {
     }
   }
 
-  private void populateJars() {
+  private void populateJars(final Set<String> filter) {
     final JarIndex index = getJarIndex();
     if (index == null) {
       jars = Collections.emptyList();
@@ -83,10 +87,11 @@ public class ExtractedRepository extends AbstractRepository {
         public int size() {
           return index.getIndexSize();
         }
+        
         @Override
         public Iterator<ExtractedJar> iterator() {
           return new Iterator<ExtractedJar>() {
-            private Iterator<IndexedJar> iter = index.getIndexedJars().iterator();
+            private Iterator<IndexedJar> iter = (filter == null ? index.getJars() : index.getJars(MavenFilter.ALL, ProjectFilter.ALL, filter)).iterator();
             
             @Override
             public void remove() {
@@ -143,9 +148,12 @@ public class ExtractedRepository extends AbstractRepository {
   }
   
   public Collection<ExtractedJar> getJars() {
-    if (jars == null) {
-      populateJars();
-    }
+    populateJars(null);
+    return jars;
+  }
+  
+  public Collection<ExtractedJar> getJars(Set<String> filter) {
+    populateJars(filter);
     return jars;
   }
   
@@ -156,6 +164,25 @@ public class ExtractedRepository extends AbstractRepository {
     }
     return projects;
   }
+  
+  public Collection<ExtractedProject> getProjects(Set<String> filter) {
+    if (projects == null) {
+      projects = Helper.newLinkedList();
+      populateRepository();
+    }
+    if (filter == null) {
+      return projects;
+    } else {
+      Collection<ExtractedProject> result = Helper.newArrayList();
+      for (ExtractedProject project : projects) {
+        if (filter.contains(project.getProjectPath())) {
+          result.add(project);
+        }
+      }
+      return result;
+    }
+  }
+    
   
   public void cloneProperties(ExtractedRepository target) {
     logger.info("Cloning extracted library properties...");
@@ -286,7 +313,7 @@ public class ExtractedRepository extends AbstractRepository {
     
     if (jars == null) {
       logger.info("Loading jars...");
-      populateJars();
+      populateJars(null);
     }
     
     logger.info("Computing stats for " + jars.size() + " jars.");
@@ -445,7 +472,7 @@ public class ExtractedRepository extends AbstractRepository {
                 missingUsingJars++;
                 missingJars.addValue(usedCount);
               }
-              logger.log(Level.SEVERE, "MISSING - " + project.getRelativePath());
+              logger.log(Level.SEVERE, "MISSING - " + project);
             } else {
               correctSource.addValue(project.getExtractedFromSource());
             
@@ -457,13 +484,13 @@ public class ExtractedRepository extends AbstractRepository {
             }
           } else {
             if (project.hasMissingTypes()) {
-              logger.info("MISSING + EMPTY: " + project.getRelativePath());
+              logger.info("MISSING + EMPTY: " + project);
             }
           }
         } else if (project.hasMissingTypes()) {
           withMissingTypes++;
         } else {
-          logger.info(project.getRelativePath());
+          logger.info(project.toString());
         }
       }
       

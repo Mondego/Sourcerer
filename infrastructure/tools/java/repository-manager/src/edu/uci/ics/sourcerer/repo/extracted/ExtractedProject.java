@@ -21,6 +21,7 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
 import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
+import edu.uci.ics.sourcerer.repo.general.RepoPath;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
@@ -32,13 +33,13 @@ public class ExtractedProject extends Extracted {
   
   private ProjectProperties properties;
    
-  public ExtractedProject(File content, String relativePath) {
-    super(content, relativePath);
+  public ExtractedProject(RepoPath content) {
+    super(content);
     properties = ProjectProperties.load(getPropertiesFile());
   }
   
-  public ExtractedProject(File content, String relativePath, File propFile) {
-    super(content, relativePath);
+  public ExtractedProject(RepoPath content, File propFile) {
+    super(content);
     File exPropFile = getPropertiesFile();
     if (exPropFile.exists()) {
       properties = ProjectProperties.load(exPropFile);
@@ -79,5 +80,13 @@ public class ExtractedProject extends Extracted {
   
   protected AbstractProperties getProperties() {
     return properties;
+  }
+  
+  public String getDescription() {
+    return properties.getDescription();
+  }
+  
+  public String getProjectPath() {
+    return content.getRelativePath();
   }
 }

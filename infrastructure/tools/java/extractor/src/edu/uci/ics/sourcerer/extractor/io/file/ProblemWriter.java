@@ -21,7 +21,7 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.IProblemWriter;
 import edu.uci.ics.sourcerer.model.Problem;
-import edu.uci.ics.sourcerer.model.extracted.ProblemExParser;
+import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -39,6 +39,6 @@ public class ProblemWriter extends ExtractorWriter implements IProblemWriter {
 
   @Override
   public void writeProblem(String filename, boolean isError, int errorCode, String message) {
-    write(ProblemExParser.getLine(isError ? Problem.ERROR : Problem.WARNING, errorCode, message, convertToRelativePath(filename)));
+    write(ProblemEX.getLine(isError ? Problem.ERROR : Problem.WARNING, errorCode, message, convertToRelativePath(filename)));
   }
 }

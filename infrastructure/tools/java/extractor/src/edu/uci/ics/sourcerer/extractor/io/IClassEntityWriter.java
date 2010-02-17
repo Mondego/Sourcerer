@@ -15,24 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model.extracted;
+package edu.uci.ics.sourcerer.extractor.io;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class MissingTypeExParser implements ModelExParser<MissingTypeEX> {
-  private MissingTypeExParser() {}
-
-  public static MissingTypeExParser getParser() {
-    return new MissingTypeExParser();
-  }
-
-  public static String getLine(String fqn) {
-    return fqn;
-  }
+public interface IClassEntityWriter extends IExtractorWriter {
+  public void writePackage(String fqn);
   
-  @Override
-  public MissingTypeEX parseLine(String line) {
-    return new MissingTypeEX(line);
-  }
+  public void writeClass(String fqn, int modifiers, String path);
+
+  public void writeInterface(String fqn, int modifiers, String path);
+
+  public void writeAnnotation(String fqn, int modifiers, String path);
+
+  public void writeAnnotationElement(String fqn, int modifiers, String path);
+
+  public void writeEnum(String fqn, int modifiers, String path);
+
+  public void writeEnumConstant(String fqn, int modifiers, String path);
+
+  public void writeField(String fqn, int modifiers, String path);
+
+  public void writeMethod(String fqn, int modifiers, String path);
+
+  public void writeConstructor(String fqn, int modifiers, String path);
 }

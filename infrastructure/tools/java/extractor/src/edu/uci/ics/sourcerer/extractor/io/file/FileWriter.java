@@ -20,7 +20,7 @@ package edu.uci.ics.sourcerer.extractor.io.file;
 import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.IFileWriter;
-import edu.uci.ics.sourcerer.model.extracted.FileExParser;
+import edu.uci.ics.sourcerer.model.extracted.FileEX;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
@@ -32,7 +32,11 @@ public final class FileWriter extends ExtractorWriter implements IFileWriter {
     super(new File(output, Extracted.FILE_FILE.getValue()), input);
   }
 
-  public void writeFile(String path) {
-    write(FileExParser.getLine(convertToRelativePath(path)));
+  public void writeSourceFile(String name, String path) {
+    write(FileEX.getSourceLine(name, convertToRelativePath(path)));
+  }
+  
+  public void writeJarFile(String name, String hash) {
+    write(FileEX.getJarLine(name, hash));
   }
 }

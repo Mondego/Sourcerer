@@ -21,7 +21,7 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.ILocalVariableWriter;
 import edu.uci.ics.sourcerer.extractor.io.Location;
-import edu.uci.ics.sourcerer.model.extracted.LocalVariableExParser;
+import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
@@ -35,16 +35,16 @@ public class LocalVariableWriter extends ExtractorWriter implements ILocalVariab
 
   @Override
   public void writeLocalVariable(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, Location location) {
-    write(LocalVariableExParser.getLineLocal(name, modifiers, type, typeStartPos, typeLength, parent, convertToRelativePath(location.getCompilationUnitPath()), location.getStartPosition(), location.getLength()));
+    write(LocalVariableEX.getSourceLineLocal(name, modifiers, type, typeStartPos, typeLength, parent, convertToRelativePath(location.getPath()), location.getStartPosition(), location.getLength()));
   }
 
   @Override
-  public void writeJarParameter(String name, String type, String parent, int position) {
-    write(LocalVariableExParser.getJarLineParam(name, type, parent, position));
+  public void writeClassParameter(String name, String type, String parent, int position, String path) {
+    write(LocalVariableEX.getClassLineParam(name, type, parent, position, path));
   }
   
   @Override
   public void writeParameter(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, int position, Location location) {
-    write(LocalVariableExParser.getLineParam(name, modifiers, type, typeStartPos, typeLength, position, parent, convertToRelativePath(location.getCompilationUnitPath()), location.getStartPosition(), location.getLength()));
+    write(LocalVariableEX.getSourceLineParam(name, modifiers, type, typeStartPos, typeLength, parent, position, convertToRelativePath(location.getPath()), location.getStartPosition(), location.getLength()));
   }
 }

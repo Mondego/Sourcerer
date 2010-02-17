@@ -30,4 +30,8 @@ public class ProjectProperties extends AbstractProperties {
     props.loadProperties(file);
     return props;
   }
+  
+  public String getDescription() {
+    return properties.getProperty("description");
+  }
 }

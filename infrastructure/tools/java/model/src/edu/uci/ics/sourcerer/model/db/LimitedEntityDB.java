@@ -15,25 +15,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model.extracted;
+package edu.uci.ics.sourcerer.model.db;
 
-/**
- * @author Joel Ossher (jossher@uci.edu)
- */
-public class FileExParser implements ModelExParser<FileEX> {
-  private FileExParser() {}
-  
-  public static FileExParser getParser() {
-    return new FileExParser();
-  }
-  
-  public static String getLine(String relativePath) {
-    return relativePath;
-  }
-  
-  @Override
-  public FileEX parseLine(String line) {
-    return new FileEX(line);
-  }
+import edu.uci.ics.sourcerer.model.Entity;
 
+public class LimitedEntityDB {
+  private String projectID;
+  private String entityID;
+  private Entity type;
+  public LimitedEntityDB(String projectID, String entityID, Entity type) {
+    this.projectID = projectID;
+    this.entityID = entityID;
+    this.type = type;
+  }
+  
+  public String getProjectID() {
+    return projectID;
+  }
+  
+  public String getEntityID() {
+    return entityID;
+  }
+  
+  public Boolean isInternal(String projectID) {
+    if (type.isSyntheticTypeEntity()) {
+      return null;
+    } else {
+      return projectID.equals(this.projectID);
+    }
+  }
 }

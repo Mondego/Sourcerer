@@ -17,7 +17,13 @@
  */
 package edu.uci.ics.sourcerer.model.extracted;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.Set;
+import java.util.logging.Level;
+
 import edu.uci.ics.sourcerer.model.Entity;
+import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -30,14 +36,15 @@ public final class EntityEX implements ModelEX {
   private String startPos;
   private String length;
   
-  protected EntityEX(Entity type, String fqn) {
+  private EntityEX(Entity type, String fqn) {
     this(type, fqn, null, null, null, null);
   }
-  protected EntityEX(Entity type, String fqn, String mods) {
-    this(type, fqn, mods, null, null, null);
+  
+  private EntityEX(Entity type, String fqn, String mods, String path) {
+    this(type, fqn, mods, path, null, null);
   }
   
-  protected EntityEX(Entity type, String fqn, String mods, String path, String offset, String length) {
+  private EntityEX(Entity type, String fqn, String mods, String path, String offset, String length) {
     this.type = type;
     this.fqn = fqn;
     this.mods = mods;
@@ -72,5 +79,56 @@ public final class EntityEX implements ModelEX {
   
   public String toString() {
     return type.name() + " " + fqn;
+  }
+  
+  // ---- PARSER ----
+  public static ModelExParser<EntityEX> getParser() {
+    return new ModelExParser<EntityEX>() {
+      private Set<String> uniqueChecker = Helper.newHashSet();
+      
+      @Override
+      public EntityEX parseLine(String line) {
+        String[] parts = line.split(" ");
+        
+        try {
+          if (parts.length == 2) {
+            Entity type = Entity.valueOf(parts[0]);
+            if (type == Entity.PACKAGE) {
+              if (!uniqueChecker.contains(parts[1])) {
+                uniqueChecker.add(parts[1]);
+                return new EntityEX(type, parts[1]);
+              } else {
+                return null;
+              }
+            } else {
+              logger.log(Level.SEVERE, "Unable to parse entity: " + line);
+              return null;
+            }
+          } else if (parts.length == 4) {
+            return new EntityEX(Entity.valueOf(parts[0]), parts[1], parts[2], parts[3]);
+          } else if (parts.length == 6) {
+            return new EntityEX(Entity.valueOf(parts[0]), parts[1], parts[2], parts[3], parts[4], parts[5]);
+          } else {
+            logger.log(Level.SEVERE, "Unable to parse entity: " + line);
+            return null;
+          }
+        } catch (IllegalArgumentException e) {
+          logger.log(Level.SEVERE, "Unable to parse entity: " + line);
+          return null;
+        }
+      }
+    };
+  }
+  
+  public static String getPackageLine(String fqn) {
+    return Entity.PACKAGE.name() + " " + fqn;
+  }
+  
+  public static String getSourceLine(Entity type, String fqn, int modifiers, String path, int startPos, int length) {
+    return type.name() + " " + fqn + " " + modifiers + " " + path + " " + startPos + " " + length;
+  }
+  
+  public static String getClassLine(Entity type, String fqn, int modifiers, String path) {
+    return type.name() + " " + fqn + " " + modifiers + " " + path;
   }
 }

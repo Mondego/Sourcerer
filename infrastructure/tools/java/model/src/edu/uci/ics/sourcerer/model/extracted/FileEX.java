@@ -17,21 +17,78 @@
  */
 package edu.uci.ics.sourcerer.model.extracted;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.logging.Level;
+
+import edu.uci.ics.sourcerer.model.File;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FileEX implements ModelEX {
-  private String relativePath;
+  private File type;
+  private String name;
+  private String path;
   
-  protected FileEX(String relativePath) {
-    this.relativePath = relativePath;
+  private FileEX(File type, String name, String path) {
+    this.type = type;
+    this.name = name;
+    this.path = path;
+  }
+
+  public File getType() {
+    return type;
   }
   
   public String getName() {
-    return relativePath.substring(relativePath.lastIndexOf('/') + 1);
+    return name;
   }
   
-  public String getRelativePath() {
-    return relativePath;
+  public String getPath() {
+    if (type == File.JAR) {
+      throw new IllegalStateException("Cannot get the path for a jar");
+    } else {
+      return path;
+    }
+  }
+  
+  public String getHash() {
+    if (type == File.JAR) {
+      return path;
+    } else {
+      throw new IllegalStateException("Cannot get the hash for a non-jar");
+    }
+  }
+  
+  // ---- PARSER ----
+  private static ModelExParser<FileEX> parser = new ModelExParser<FileEX>() {
+    @Override
+    public FileEX parseLine(String line) {
+      String[] parts = line.split(" ");
+      File type = File.valueOf(parts[0]);
+      if (parts.length == 3 && type != null) {
+        return new FileEX(type, parts[1], parts[2]);
+      } else {
+        logger.log(Level.SEVERE, "Unable to parse file: " + line);
+        return null;
+      }
+    }
+  };
+  
+  public static ModelExParser<FileEX> getParser() {
+    return parser;
+  }
+  
+  public static String getSourceLine(String name, String path) {
+    return File.SOURCE + " " + name + " " + path;
+  }
+  
+  public static String getClassLine(String name, String path) {
+    return File.CLASS + " " + name + " " + path;
+  }
+  
+  public static String getJarLine(String name, String hash) {
+    return File.JAR + " " + name + " " + hash;
   }
 }
