@@ -1,6 +1,5 @@
 package edu.uci.ics.sourcerer.server.file;
 
-import edu.uci.ics.sourcerer.db.queries.FileQueries;
 import edu.uci.ics.sourcerer.db.schema.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.db.FileDB;
@@ -21,7 +20,7 @@ public class FileServerDatabaseAccessor extends DatabaseAccessor {
   }
   
   public LocationDB getLocationByCommentID(String commentID) {
-    return FileQueries.getLocationByCommentID(executor, commentID);
+    return commentsTable.getLocationByCommentID(commentID);
   }
   
   public FileDB getFileByFileID(String fileID) {
