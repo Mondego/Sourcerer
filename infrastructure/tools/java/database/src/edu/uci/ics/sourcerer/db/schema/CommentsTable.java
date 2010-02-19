@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.db.schema;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Comment;
+import edu.uci.ics.sourcerer.model.db.LocationDB;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -88,5 +89,10 @@ public final class CommentsTable extends DatabaseTable {
   // ---- DELETE ----
   public void deleteByProjectID(String projectID) {
     executor.delete(name, "project_id=" + projectID);
+  }
+  
+  // ---- SELECT ----
+  public LocationDB getLocationByCommentID(String commentID) {
+    return executor.selectSingle(name, EntitiesTable.LOCATION_RESULT_TRANSLATOR.getSelect(), "comment_id=" + commentID, EntitiesTable.LOCATION_RESULT_TRANSLATOR); 
   }
 }

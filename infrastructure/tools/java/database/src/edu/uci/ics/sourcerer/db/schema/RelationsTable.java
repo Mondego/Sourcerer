@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.db.schema;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Relation;
+import edu.uci.ics.sourcerer.model.db.LocationDB;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -91,4 +92,7 @@ public final class RelationsTable extends DatabaseTable {
   }
   
   // ---- SELECT ----
+  public LocationDB getLocationByRelationID(String relationID) {
+    return executor.selectSingle(name, EntitiesTable.LOCATION_RESULT_TRANSLATOR.getSelect(), "relation_id=" + relationID, EntitiesTable.LOCATION_RESULT_TRANSLATOR); 
+  }
 }

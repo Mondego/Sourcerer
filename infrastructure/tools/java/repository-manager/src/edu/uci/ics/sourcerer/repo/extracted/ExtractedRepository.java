@@ -182,7 +182,14 @@ public class ExtractedRepository extends AbstractRepository {
       return result;
     }
   }
+  
+  public File getJavaLibrary(String path) {
+    return new File(repoRoot, path + "/lib.jar");
+  }
     
+  public File getJavaLibrarySource(String path) {
+    return new File(repoRoot, path + "/source.jar"); 
+  }
   
   public void cloneProperties(ExtractedRepository target) {
     logger.info("Cloning extracted library properties...");

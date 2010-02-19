@@ -26,6 +26,7 @@ import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.db.LimitedProjectDB;
+import edu.uci.ics.sourcerer.model.db.ProjectDB;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
@@ -179,6 +180,23 @@ public final class ProjectsTable extends DatabaseTable {
     public LimitedProjectDB translate(ResultSet result) throws SQLException {
       return new LimitedProjectDB(result.getString(1), Project.valueOf(result.getString(2)), result.getString(3), result.getString(4));
     }
+    
+    @Override
+    public String getSelect() {
+      return "project_id,project_type,path,hash";
+    }
+  };
+  
+  private ResultTranslator<ProjectDB> PROJECT_TRANSLATOR = new ResultTranslator<ProjectDB>() {
+    @Override
+    public ProjectDB translate(ResultSet result) throws SQLException {
+      return new ProjectDB(result.getString(1), Project.valueOf(result.getString(2)), result.getString(3), result.getString(4), result.getString(5), result.getString(6), result.getString(7), result.getString(8), result.getBoolean(9));
+    }
+    
+    @Override
+    public String getSelect() {
+      return "project_id,project_type,name,description,version,groop,path,hash,has_source";
+    }
   };
   
   public String getProjectCount() {
@@ -186,11 +204,15 @@ public final class ProjectsTable extends DatabaseTable {
   }
   
   public LimitedProjectDB getLimitedProjectByPath(String path) {
-    return executor.selectSingle(name, "project_id,project_type,path,hash", "path='" + path + "'", LIMITED_PROJECT_TRANSLATOR);
+    return executor.selectSingle(name, LIMITED_PROJECT_TRANSLATOR.getSelect(), "path='" + path + "'", LIMITED_PROJECT_TRANSLATOR);
   }
   
   public LimitedProjectDB getLimitedProjectByHash(String hash) {
-    return executor.selectSingle(name, "project_id,project_type,path,hash", "hash='" + hash + "'", LIMITED_PROJECT_TRANSLATOR);
+    return executor.selectSingle(name, LIMITED_PROJECT_TRANSLATOR.getSelect(), "hash='" + hash + "'", LIMITED_PROJECT_TRANSLATOR);
+  }
+  
+  public ProjectDB getProjectByProjectID(String projectID) {
+    return executor.selectSingle(name, PROJECT_TRANSLATOR.getSelect(), "project_id=" + projectID, PROJECT_TRANSLATOR);
   }
   
   public String getProjectIDByName(String project) {

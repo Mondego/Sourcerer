@@ -17,19 +17,22 @@
  */
 package edu.uci.ics.sourcerer.model.db;
 
+/**
+ * @author Joel Ossher (jossher@uci.edu)
+ */
 public class LocationDB {
-  private String path;
+  private String fileID;
   private int offset;
   private int length;
   
-  public LocationDB(String path, int offset, int length) {
-    this.path = path;
+  public LocationDB(String fileID, int offset, int length) {
+    this.fileID = fileID;
     this.offset = offset;
     this.length = length;
   }
 
-  public String getPath() {
-    return path;
+  public String getFileID() {
+    return fileID;
   }
 
   public int getOffset() {

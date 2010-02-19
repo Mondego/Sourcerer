@@ -17,38 +17,56 @@
  */
 package edu.uci.ics.sourcerer.model.db;
 
-import edu.uci.ics.sourcerer.model.File;
+import edu.uci.ics.sourcerer.model.Project;
 
 /**
- * @author Joel Ossher (jossher@uci.edu)
+ * @author Joel Ossher (josshed@uci.edu)
  */
-public class FileDB {
-  private String fileID;
-  private File type;
+public class ProjectDB {
+  private String projectID;
+  private Project type;
   private String name;
+  private String description;
+  private String version;
+  private String group;
   private String path;
   private String hash;
-  private String projectID;
+  private boolean hasSource;
   
-  public FileDB(String fileID, File type, String name, String path, String hash, String projectID) {
-    this.fileID = fileID;
+  public ProjectDB(String projectID, Project type, String name, String description, String version, String group, String path, String hash, boolean hasSource) {
+    this.projectID = projectID;
     this.type = type;
     this.name = name;
+    this.description = description;
+    this.version = version;
+    this.group = group;
     this.path = path;
     this.hash = hash;
-    this.projectID = projectID;
+    this.hasSource = hasSource;
   }
 
-  public String getFileID() {
-    return fileID;
+  public String getProjectID() {
+    return projectID;
   }
 
-  public File getType() {
+  public Project getType() {
     return type;
   }
 
   public String getName() {
     return name;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public String getGroup() {
+    return group;
   }
 
   public String getPath() {
@@ -59,7 +77,11 @@ public class FileDB {
     return hash;
   }
 
-  public String getProjectID() {
-    return projectID;
+  public boolean hasSource() {
+    return hasSource;
+  }
+  
+  public String toString() {
+    return name + "(" + projectID + ")";
   }
 }

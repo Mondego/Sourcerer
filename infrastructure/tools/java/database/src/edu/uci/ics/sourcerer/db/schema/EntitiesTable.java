@@ -28,6 +28,7 @@ import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.LocalVariable;
 import edu.uci.ics.sourcerer.model.db.LimitedEntityDB;
+import edu.uci.ics.sourcerer.model.db.LocationDB;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 
@@ -126,6 +127,18 @@ public final class EntitiesTable extends DatabaseTable {
     return executor.selectSingle(name, "file_id", "entity_id="+eid);
   }
   
+  protected static final ResultTranslator<LocationDB> LOCATION_RESULT_TRANSLATOR = new ResultTranslator<LocationDB>() {
+    @Override
+    public LocationDB translate(ResultSet result) throws SQLException {
+      return new LocationDB(result.getString(1), result.getInt(2), result.getInt(3));
+    }
+    
+    @Override
+    public String getSelect() {
+      return "file_id,offset,length";
+    }
+  };
+  
   private static final ResultTranslator<LimitedEntityDB> LIMITED_ENTITY_TRANSLATOR = new ResultTranslator<LimitedEntityDB>() {
     @Override
     public LimitedEntityDB translate(ResultSet result) throws SQLException {
@@ -147,5 +160,9 @@ public final class EntitiesTable extends DatabaseTable {
   
   public String getEntityIDByFqnAndProject(String fqn, String projectID) {
     return executor.selectSingle(name, "entity_id", "project_id=" + projectID);
+  }
+  
+  public LocationDB getLocationByEntityID(String entityID) {
+    return executor.selectSingle(name, LOCATION_RESULT_TRANSLATOR.getSelect(), "entity_id=" + entityID, LOCATION_RESULT_TRANSLATOR); 
   }
 }

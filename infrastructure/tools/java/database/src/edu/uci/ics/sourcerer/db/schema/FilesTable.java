@@ -17,10 +17,15 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.File;
+import edu.uci.ics.sourcerer.model.db.FileDB;
 import edu.uci.ics.sourcerer.model.extracted.FileEX;
 
 /**
@@ -96,7 +101,19 @@ public final class FilesTable extends DatabaseTable {
   }
   
   // ---- SELECT ----
-  public String getFilePathByFileID(String fileID) {
-    return executor.selectSingle(name, "path", "file_id=" + fileID);
+  private ResultTranslator<FileDB> FILE_TRANSLATOR = new ResultTranslator<FileDB>() {
+    @Override
+    public FileDB translate(ResultSet result) throws SQLException {
+      return new FileDB(result.getString(1), File.valueOf(result.getString(2)), result.getString(3), result.getString(4), result.getString(5), result.getString(6));
+    }
+
+    @Override
+    public String getSelect() {
+      return "file_id,file_type,name,path,hash,project_id";
+    }
+  };
+  
+  public FileDB getFileByFileID(String fileID) {
+    return executor.selectSingle(name, FILE_TRANSLATOR.getSelect(), "file_id=" + fileID, FILE_TRANSLATOR);
   }
 }
