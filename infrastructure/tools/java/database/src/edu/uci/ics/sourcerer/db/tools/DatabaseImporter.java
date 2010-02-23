@@ -142,10 +142,10 @@ public class DatabaseImporter extends DatabaseAccessor {
   protected void importJarFiles() {
     logger.info("Importing jar files...");
     
-    logger.info("  Loading exracted repository...");
+    logger.info("  Loading extracted repository...");
     ExtractedRepository extracted = ExtractedRepository.getRepository();
     
-    logger.info("  Loading exracted jar files...");
+    logger.info("  Loading extracted jar files...");
     Collection<ExtractedJar> jars = null;
     if (AbstractRepository.JAR_FILTER.hasValue()) {
       jars = extracted.getJars(FileUtils.getFileAsSet(AbstractRepository.JAR_FILTER.getValue()));
