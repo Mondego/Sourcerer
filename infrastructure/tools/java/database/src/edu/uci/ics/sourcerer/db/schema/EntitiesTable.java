@@ -150,8 +150,16 @@ public final class EntitiesTable extends DatabaseTable {
     return executor.select(name, "project_id", "fqn='" + fqn + "'");
   }
   
+  public Collection<String> getMavenProjectIDsByFqn(String fqn) {
+    return executor.execute("SELECT projects.project_id FROM projects INNER JOIN entities ON projects.project_id=entities.project_id WHERE project_type='MAVEN' AND fqn='" + fqn + "'", ResultTranslator.SIMPLE_RESULT_TRANSLATOR);
+  }
+  
   public Collection<String> getProjectIDsByPackage(String prefix) {
     return executor.select(name, "project_id", "fqn LIKE '" + prefix + ".%' AND entity_type='PACKAGE'");
+  }
+  
+  public Collection<String> getMavenProjectIDsByPackage(String prefix) {
+    return executor.execute("SELECT projects.project_id FROM projects INNER JOIN entities ON projects.project_id=entities.project_id WHERE project_type='MAVEN' AND fqn LIKE '" + prefix + ".%' AND entity_type='PACKAGE'", ResultTranslator.SIMPLE_RESULT_TRANSLATOR);
   }
   
   public Collection<LimitedEntityDB> getLimitedEntitiesByFqn(String fqn, String inClause) {

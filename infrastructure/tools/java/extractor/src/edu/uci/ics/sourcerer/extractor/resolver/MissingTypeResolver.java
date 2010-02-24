@@ -29,10 +29,10 @@ public class MissingTypeResolver extends DatabaseAccessor {
     for (MissingTypeEX type : extracted.getMissingTypeReader()) {
       if (!types.contains(type.getFqn())) {
         types.add(type.getFqn());
-        Collection<String> results = entitiesTable.getProjectIDsByFqn(type.getFqn());
+        Collection<String> results = entitiesTable.getMavenProjectIDsByFqn(type.getFqn());
         // Try it as a package
         if (results.size() == 0) {
-          results = entitiesTable.getProjectIDsByPackage(type.getFqn());
+          results = entitiesTable.getMavenProjectIDsByPackage(type.getFqn());
         }
         if (results.size() == 0) {
           logger.severe("  Unable to find missing type: " + type.getFqn());

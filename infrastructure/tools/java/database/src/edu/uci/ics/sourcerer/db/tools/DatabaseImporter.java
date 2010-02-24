@@ -231,7 +231,7 @@ public class DatabaseImporter extends DatabaseAccessor {
     for (ExtractedProject project : projects) {
       logger.info("  Import of " + project.getName());
       
-      logger.info("    Verifying that jar should be imported...");
+      logger.info("    Verifying that project should be imported...");
       if (!project.extracted()) {
         logger.info("      Extraction not completed... skipping");
         continue;
