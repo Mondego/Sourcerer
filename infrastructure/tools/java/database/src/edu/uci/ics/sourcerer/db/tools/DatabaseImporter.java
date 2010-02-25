@@ -11,6 +11,7 @@ import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.model.Comment;
 import edu.uci.ics.sourcerer.model.Entity;
+import edu.uci.ics.sourcerer.model.File;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.db.LimitedEntityDB;
 import edu.uci.ics.sourcerer.model.db.LimitedProjectDB;
@@ -229,7 +230,7 @@ public class DatabaseImporter extends DatabaseAccessor {
     projectIDs.add(projectsTable.getPrimitiveProject());
     
     for (ExtractedProject project : projects) {
-      logger.info("  Import of " + project.getName());
+      logger.info("  Import of " + project);
       
       logger.info("    Verifying that project should be imported...");
       if (!project.extracted()) {
@@ -297,10 +298,12 @@ public class DatabaseImporter extends DatabaseAccessor {
     KeyInsertBatcher<FileEX> batcher = filesTable.getKeyInsertBatcher(new KeyInsertBatcher.KeyProcessor<FileEX>() {
       @Override
       public void processKey(String key, FileEX value) {
-        if (fileMap.containsKey(value.getPath())) {
-          logger.log(Level.SEVERE, "File collision: " + value.getPath());
-        } else {
-          fileMap.put(value.getPath(), key);
+        if (value.getType() != File.JAR) {
+          if (fileMap.containsKey(value.getPath())) {
+            logger.log(Level.SEVERE, "File collision: " + value.getPath());
+          } else {
+            fileMap.put(value.getPath(), key);
+          }
         }
       }
     });
