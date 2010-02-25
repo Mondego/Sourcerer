@@ -40,7 +40,7 @@ public class RepoProject {
   }
  
   public ExtractedProject getExtractedProject(ExtractedRepository repo) {
-    return new ExtractedProject(repo.convertPath(content), properties);
+    return new ExtractedProject(repo.convertPath(content.getParent()), properties);
   }
   
 //  public String getOutputPath(File baseDir) {
@@ -48,7 +48,7 @@ public class RepoProject {
 //  }
 //  
   public String getProjectPath() {
-    return content.getRelativePath().substring(0, content.getRelativePath().lastIndexOf('/'));
+    return content.getParent().getRelativePath();
   }
   
   public IFileSet getFileSet() {

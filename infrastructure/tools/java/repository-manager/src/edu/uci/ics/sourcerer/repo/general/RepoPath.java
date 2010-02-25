@@ -51,6 +51,10 @@ public class RepoPath {
     return new RepoPath(new File(content, child), relativePath + "/" + child);
   }
   
+  public RepoPath getParent() {
+    return new RepoPath(content.getParentFile(), relativePath.substring(0, relativePath.lastIndexOf('/')));
+  }
+  
   public String getRelativePath() {
     return relativePath;
   }

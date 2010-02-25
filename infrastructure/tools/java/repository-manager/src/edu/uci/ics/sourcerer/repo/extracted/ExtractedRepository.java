@@ -59,6 +59,11 @@ public class ExtractedRepository extends AbstractRepository {
     ExtractedProject extracted = new ExtractedProject(path);
     if (includeNotExtracted || extracted.extracted()) {
       projects.add(extracted);
+    } else {
+      extracted = new ExtractedProject(path.getChild("content"));
+      if (includeNotExtracted || extracted.extracted()) {
+        projects.add(extracted);
+      }
     }
   }
   
