@@ -56,7 +56,11 @@ public class RelationEX implements ModelEX {
     this.startPos = startPos;
     this.length = length;
     this.paramPos = paramPos;
-    this.paramName = rhs.substring(1, rhs.length() - 1);
+    if (rhs.length() < 2) {
+      this.paramName = rhs;
+    } else {
+      this.paramName = rhs.substring(1, rhs.length() - 1);
+    }
   }
   
   public Relation getType() {

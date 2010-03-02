@@ -395,14 +395,16 @@ public class DatabaseImporter extends DatabaseAccessor {
       // Get the file
       String fileID = getFileID(relation.getPath(), relation);
       
-      // Look up the lhs eid
-      LimitedEntityDB lhs = getLocalEid(relation.getLhs(), projectID);
-      
-      // Look up the rhs eid
-      LimitedEntityDB rhs = getEid(relation.getRhs(), projectID, inClause);
-      
-      // Add the relation
-      relationsTable.insert(relation.getType(), lhs.getEntityID(), rhs.getEntityID(), relation.getType() == Relation.INSIDE ? null : rhs.isInternal(projectID), projectID, fileID, relation.getStartPosition(), relation.getLength());
+      if (fileID != null) {
+        // Look up the lhs eid
+        LimitedEntityDB lhs = getLocalEid(relation.getLhs(), projectID);
+        
+        // Look up the rhs eid
+        LimitedEntityDB rhs = getEid(relation.getRhs(), projectID, inClause);
+        
+        // Add the relation
+        relationsTable.insert(relation.getType(), lhs.getEntityID(), rhs.getEntityID(), relation.getType() == Relation.INSIDE ? null : rhs.isInternal(projectID), projectID, fileID, relation.getStartPosition(), relation.getLength());
+      }
       
       count++;
     }
@@ -418,11 +420,13 @@ public class DatabaseImporter extends DatabaseAccessor {
       // Get the file
       String fileID = getFileID(imp.getPath(), imp);
       
-      // Look up the imported entity
-      LimitedEntityDB imported = getEid(imp.getImported(), projectID, inClause);
-      
-      // Add the import
-      importsTable.insert(imp.isStatic(), imp.isOnDemand(), imported.getEntityID(), projectID, fileID, imp.getOffset(), imp.getLength());
+      if (fileID != null) {
+        // Look up the imported entity
+        LimitedEntityDB imported = getEid(imp.getImported(), projectID, inClause);
+        
+        // Add the import
+        importsTable.insert(imp.isStatic(), imp.isOnDemand(), imported.getEntityID(), projectID, fileID, imp.getOffset(), imp.getLength());
+      }
       
       count++;
     }
@@ -438,17 +442,19 @@ public class DatabaseImporter extends DatabaseAccessor {
       // Get the file
       String fileID = getFileID(comment.getPath(), comment);
       
-      if (comment.getType() == Comment.JAVADOC) {
-        // Look up the entity
-        LimitedEntityDB commented = getLocalEid(comment.getFqn(), projectID);
-        
-        // Add the comment
-        commentsTable.insertJavadoc(commented.getEntityID(), projectID, fileID, comment.getOffset(), comment.getLength());
-      } else if (comment.getType() == Comment.UJAVADOC) {
-        // Add the comment
-        commentsTable.insertUnassociatedJavadoc(projectID, fileID, comment.getOffset(), comment.getLength());
-      } else {
-        commentsTable.insertComment(comment.getType(), projectID, fileID, comment.getOffset(), comment.getLength());
+      if (fileID != null) {
+        if (comment.getType() == Comment.JAVADOC) {
+          // Look up the entity
+          LimitedEntityDB commented = getLocalEid(comment.getFqn(), projectID);
+          
+          // Add the comment
+          commentsTable.insertJavadoc(commented.getEntityID(), projectID, fileID, comment.getOffset(), comment.getLength());
+        } else if (comment.getType() == Comment.UJAVADOC) {
+          // Add the comment
+          commentsTable.insertUnassociatedJavadoc(projectID, fileID, comment.getOffset(), comment.getLength());
+        } else {
+          commentsTable.insertComment(comment.getType(), projectID, fileID, comment.getOffset(), comment.getLength());
+        }
       }
       count++;
     }
