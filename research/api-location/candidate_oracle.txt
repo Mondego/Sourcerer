@@ -1,5 +1,4 @@
 == Candidate Queries and their solutions used for evaluation of retrieval schemes for locating API usage examples
-== submitted to MSR2010
 
 
 // Query 1: 
@@ -304,5 +303,37 @@ file.createLink(location, IResource.NONE, null);
 IWorkbenchPage page = window.getActivePage();
 if (page != null)
    page.openEditor(file);
+
+-- new --
+
+// Query 21:
+// "eclipse face filedialog save"
+
+// Snipplr
+FileDialog fileDialog = new FileDialog(shell, SWT.SAVE);
+
+fileDialog.setFilterNames(new String[] {"Javascript Files (*.js)"});
+fileDialog.setFilterExtensions(new String[] {"*.js"});
+fileDialog.setText("Select file..");
+fileDialog.setFilterPath(folder.getRawLocation().toString());
+
+String directory = fileDialog.open();
+
+// Query 22:
+// "Get a system color in SWT"
+
+// Snipplr
+Display.getCurrent().getSystemColor(SWT.COLOR_INFO_BACKGROUND)
+
+
+// Query 23:
+// "create modeless JFace dialog"
+
+// Snipplr
+public MyDialog(Shell parentShell) {
+ super(parentShell);
+ setShellStyle(SWT.CLOSE | SWT.MODELESS | SWT.BORDER | SWT.TITLE);
+ setBlockOnOpen(false);
+}
 
 
