@@ -35,7 +35,7 @@ public interface IFileSet {
   
   public Iterable<IJavaFile> getBestDuplicateJavaFiles();
 
-  public String getBasePath();
+//  public String getBasePath();
   
   public String convertToRelativePath(String path);
   

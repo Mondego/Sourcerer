@@ -32,8 +32,9 @@ import org.eclipse.jdt.core.ITypeParameter;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 
-import edu.uci.ics.sourcerer.extractor.io.IJarEntityWriter;
-import edu.uci.ics.sourcerer.extractor.io.IJarRelationWriter;
+import edu.uci.ics.sourcerer.extractor.io.IClassEntityWriter;
+import edu.uci.ics.sourcerer.extractor.io.IClassFileWriter;
+import edu.uci.ics.sourcerer.extractor.io.IClassRelationWriter;
 import edu.uci.ics.sourcerer.extractor.io.ILocalVariableWriter;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.util.Helper;
@@ -42,20 +43,42 @@ import edu.uci.ics.sourcerer.util.Helper;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ClassFileExtractor {
-  private IJarEntityWriter jarEntityWriter;
+  private IClassFileWriter fileWriter;
+  private IClassEntityWriter entityWriter;
   private ILocalVariableWriter localVariableWriter;
-  private IJarRelationWriter relationWriter;
+  private IClassRelationWriter relationWriter;
+  
+  private String name;
+  private String path;
+  
   private Deque<String> fqnStack;
   
   public ClassFileExtractor(WriterBundle writers) {
-    jarEntityWriter = writers.getJarEntityWriter();
+    fileWriter = writers.getClassFileWriter();
+    entityWriter = writers.getJarEntityWriter();
     localVariableWriter = writers.getLocalVariableWriter();
     relationWriter = writers.getJarRelationWriter();
     fqnStack = Helper.newStack();
   }
   
   public static boolean isTopLevel(IClassFile classFile) {
-    return !classFile.getType().getFullyQualifiedName().contains("$");
+    if (classFile.getType() == null) {
+      logger.log(Level.SEVERE, "Null type!" + classFile);
+      return false;
+    } else {
+      IType type = classFile.getType();
+      try {
+        if (type.isMember() || type.isAnonymous() || type.isLocal()) {
+          return false;
+        } else {
+          return true;
+        }
+      } catch (JavaModelException e) {
+        logger.log(Level.SEVERE, "Error determining if class is top level", e);
+        return true;
+      }
+    }
+//    return !classFile.getType().getFullyQualifiedName().contains("$");
 //    try {
 //      IType declaring = classFile.getType();
 //      boolean topLevel = true;
@@ -70,7 +93,7 @@ public class ClassFileExtractor {
 //      
 //      if (topLevel) {
 //        // check if there is any $ in the fqn
-//        if (classFile.getType().getFullyQualifiedName().indexOf('$') == -1) {
+//        if (classFile.getType().getFullyQualifiedName().indexOf('$') == -1) { 
 //          return true;
 //        } else {
 //          logger.log(Level.SEVERE, "isTopLevel thinks " + classFile.getType().getFullyQualifiedName() + " is top-level");
@@ -85,33 +108,43 @@ public class ClassFileExtractor {
   
   public void extractClassFile(IClassFile classFile) {
     // Verify that it's a top-level type, or a subtype of a top-level type
-    try {
-      IType declaring = classFile.getType();
-      while (declaring != null) {
-        if (declaring.isLocal() || declaring.isAnonymous()) {
-          return;
-        }
-        declaring = declaring.getDeclaringType();
-      }
-    } catch (JavaModelException e) {
-      logger.log(Level.SEVERE, "Error in extracting class file", e);
-      return;
-    }
-    extractIType(classFile.getType());
-    
+//    try {
+//      IType declaring = classFile.getType();
+//      while (declaring != null) {
+//        if (declaring.isLocal() || declaring.isAnonymous()) {
+//          return;
+//        }
+//        declaring = declaring.getDeclaringType();
+//      }
+//    } catch (JavaModelException e) {
+//      logger.log(Level.SEVERE, "Error in extracting class file", e);
+//      return;
+//    }
+
     IJavaElement parent = classFile.getParent();
     while (true) {
       if (parent == null) {
         logger.log(Level.SEVERE, "Unable to find package for: " + classFile.getElementName());
         break;
       } else if (parent.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
-        relationWriter.writeInside(classFile.getType().getFullyQualifiedName(), parent.getElementName());
-        jarEntityWriter.writePackage(parent.getElementName());
+        // Write the class file
+        name = classFile.getElementName();
+        path = parent.getElementName() + "." + name;
+        fileWriter.writeClassFile(name, path);
+        
+        relationWriter.writeInside(classFile.getType().getFullyQualifiedName(), parent.getElementName(), path);
+        entityWriter.writePackage(parent.getElementName());
+        
         break;
       } else {
+        logger.log(Level.SEVERE, classFile.getType().getFullyQualifiedName() + " should be top-level!");
         parent = parent.getParent();
       }
     }
+    
+    extractIType(classFile.getType());
+    name = null;
+    path = null;
   }
   
   private void extractIType(IType type) {
@@ -120,28 +153,28 @@ public class ClassFileExtractor {
       
       // Write the entity
       if (type.isClass()) {
-        jarEntityWriter.writeClass(fqn, type.getFlags());
+        entityWriter.writeClass(fqn, type.getFlags(), path);
         
         // Write the superclass
         String superSig = type.getSuperclassTypeSignature();
         if (superSig != null) {
-          relationWriter.writeExtends(fqn, typeSignatureToFqn(superSig));
+          relationWriter.writeExtends(fqn, typeSignatureToFqn(superSig), path);
         }
       } else if (type.isAnnotation()) {
-        jarEntityWriter.writeAnnotation(fqn, type.getFlags());
+        entityWriter.writeAnnotation(fqn, type.getFlags(), path);
       } else if (type.isInterface()) {
-        jarEntityWriter.writeInterface(fqn, type.getFlags());
+        entityWriter.writeInterface(fqn, type.getFlags(), path);
       }  else if (type.isEnum()) {
-        jarEntityWriter.writeEnum(fqn, type.getFlags());
+        entityWriter.writeEnum(fqn, type.getFlags(), path);
       }
       
       // Write the superinterfaces
       for (String superIntSig : type.getSuperInterfaceTypeSignatures()) {
-        relationWriter.writeImplements(fqn, typeSignatureToFqn(superIntSig));
+        relationWriter.writeImplements(fqn, typeSignatureToFqn(superIntSig), path);
       }
       
       if (!fqnStack.isEmpty()) {
-        relationWriter.writeInside(type.getFullyQualifiedName(), fqnStack.peek());
+        relationWriter.writeInside(type.getFullyQualifiedName(), fqnStack.peek(), path);
       }
       
       fqnStack.push(type.getFullyQualifiedName());
@@ -164,7 +197,7 @@ public class ClassFileExtractor {
       
       int pos = 0;
       for (ITypeParameter param : type.getTypeParameters()) {
-        relationWriter.writeParametrizedBy(fqn, getTypeParam(param), pos++);
+        relationWriter.writeParametrizedBy(fqn, getTypeParam(param), pos++, path);
       }
       
       fqnStack.pop();
@@ -178,16 +211,16 @@ public class ClassFileExtractor {
       String fqn = fqnStack.peek() + "." + field.getElementName();
       // Write the entity
       if (field.isEnumConstant()) {
-        jarEntityWriter.writeEnumConstant(fqn, field.getFlags());
+        entityWriter.writeEnumConstant(fqn, field.getFlags(), path);
       } else {
-        jarEntityWriter.writeField(fqn, field.getFlags());
+        entityWriter.writeField(fqn, field.getFlags(), path);
       }
       
       // Write the inside relation
-      relationWriter.writeInside(fqn, fqnStack.peek());
+      relationWriter.writeInside(fqn, fqnStack.peek(), path);
       
       // Write the holds relation
-      relationWriter.writeHolds(fqn, typeSignatureToFqn(field.getTypeSignature()));
+      relationWriter.writeHolds(fqn, typeSignatureToFqn(field.getTypeSignature()), path);
     } catch(JavaModelException e) {
       logger.log(Level.SEVERE, "Error in extracting class file", e);
     }
@@ -218,29 +251,29 @@ public class ClassFileExtractor {
       
       // Write the entity
       if (annotationElement) {
-        jarEntityWriter.writeAnnotationElement(fqn, method.getFlags());
+        entityWriter.writeAnnotationElement(fqn, method.getFlags(), path);
       } else if (method.isConstructor()) {
-        jarEntityWriter.writeConstructor(fqn, method.getFlags());
+        entityWriter.writeConstructor(fqn, method.getFlags(), path);
       } else {
-        jarEntityWriter.writeMethod(fqn, method.getFlags());
+        entityWriter.writeMethod(fqn, method.getFlags(), path);
       }
       
       // Write the inside relation
-      relationWriter.writeInside(fqn, fqnStack.peek());
+      relationWriter.writeInside(fqn, fqnStack.peek(), path);
       
       // Write the returns relation
-      relationWriter.writeReturns(fqn, typeSignatureToFqn(method.getReturnType()));
+      relationWriter.writeReturns(fqn, typeSignatureToFqn(method.getReturnType()), path);
       
       // Write the receives relation
       String[] paramTypes = method.getParameterTypes();
       for (int i = 0; i < paramTypes.length; i++) {
-        localVariableWriter.writeJarParameter("arg" + i, typeSignatureToFqn(paramTypes[i]), fqn, i);
+        localVariableWriter.writeClassParameter("arg" + i, typeSignatureToFqn(paramTypes[i]), fqn, i, path);
 //        relationWriter.writeReceives(fqn, typeSignatureToFqn(paramTypes[i]), "arg" + i, i);
       }
       
       int pos = 0;
       for (ITypeParameter param : method.getTypeParameters()) {
-        relationWriter.writeParametrizedBy(fqn, getTypeParam(param), pos++);
+        relationWriter.writeParametrizedBy(fqn, getTypeParam(param), pos++, path);
       }
     } catch(JavaModelException e) {
       logger.log(Level.SEVERE, "Error in extracting class file", e);

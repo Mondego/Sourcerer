@@ -32,7 +32,7 @@ public class InsertBatcher extends AbstractInsertBatcher {
   }
   
   @Override
-  public void insert(String value) {
+  protected void insert(String value) {
     executor.executeUpdate(value);
   }
 }

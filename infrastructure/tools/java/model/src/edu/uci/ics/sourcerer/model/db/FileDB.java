@@ -17,29 +17,49 @@
  */
 package edu.uci.ics.sourcerer.model.db;
 
+import edu.uci.ics.sourcerer.model.File;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FileDB {
   private String fileID;
+  private File type;
   private String name;
-  private String errorCount;
+  private String path;
+  private String hash;
+  private String projectID;
   
-  public FileDB(String fileID, String name, String errorCount) {
+  public FileDB(String fileID, File type, String name, String path, String hash, String projectID) {
     this.fileID = fileID;
+    this.type = type;
     this.name = name;
-    this.errorCount = errorCount;
+    this.path = path;
+    this.hash = hash;
+    this.projectID = projectID;
   }
 
   public String getFileID() {
     return fileID;
   }
 
+  public File getType() {
+    return type;
+  }
+
   public String getName() {
     return name;
   }
-  
-  public String getErrorCount() {
-    return errorCount;
+
+  public String getPath() {
+    return path;
+  }
+
+  public String getHash() {
+    return hash;
+  }
+
+  public String getProjectID() {
+    return projectID;
   }
 }

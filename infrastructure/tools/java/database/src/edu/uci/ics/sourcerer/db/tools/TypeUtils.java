@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.db.tools;
 import java.util.Collection;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.Pair;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -27,14 +28,46 @@ import edu.uci.ics.sourcerer.util.Helper;
 public final class TypeUtils {
   private TypeUtils() {}
   
+  public static boolean isMethod(String fqn) {
+    // ...(...)
+    return fqn.contains("(") && fqn.endsWith(")");
+  }
+  
+  public static boolean isArray(String fqn) {
+    // ...[]
+    return fqn.endsWith("[]");
+  }
+  
+  public static Pair<String, Integer> breakArray(String fqn) {
+    int arrIndex = fqn.indexOf("[]");
+    String elementFqn = fqn.substring(0, arrIndex);
+    int dimensions = (fqn.length() - arrIndex) / 2;
+    return new Pair<String, Integer>(elementFqn, dimensions);
+  }
+  
+  public static boolean isWildcard(String fqn) {
+    // <?...>
+    return fqn.startsWith("<?") && fqn.endsWith(">");
+  }
+  
+  public static boolean isUnboundedWildcard(String fqn) {
+    // <?>
+    return "<?>".equals(fqn);
+  }
+  
   public static boolean isLowerBound(String fqn) {
-    // <?+...>
+    // <?-...>
     return fqn.charAt(2) == '-';
   }
   
   public static String getWildcardBound(String fqn) {
     // <?+...>
     return fqn.substring(3, fqn.length() - 1);
+  }
+  
+  public static boolean isTypeVariable(String fqn) {
+    // <...>
+    return fqn.startsWith("<") && fqn.endsWith(">");
   }
   
   public static Collection<String> breakTypeVariable(String typeVariable) {
@@ -79,6 +112,11 @@ public final class TypeUtils {
     }
    
     return parts;
+  }
+  
+  public static boolean isParametrizedType(String fqn) {
+    int baseIndex = fqn.indexOf('<');
+    return baseIndex > 0 && fqn.indexOf('>') > baseIndex;
   }
   
   public static String getBaseType(String parametrizedType) {

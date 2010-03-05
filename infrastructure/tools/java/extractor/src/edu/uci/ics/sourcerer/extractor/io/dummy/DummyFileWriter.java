@@ -24,7 +24,12 @@ import edu.uci.ics.sourcerer.extractor.io.IFileWriter;
  */
 public class DummyFileWriter implements IFileWriter {
   @Override
-  public void writeFile(String path) {
+  public void writeSourceFile(String name, String path) {
+  }
+  
+  @Override
+  public void writeJarFile(String name, String hash) {
+    
   }
 
   @Override

@@ -17,17 +17,16 @@
  */
 package edu.uci.ics.sourcerer.repo.extracted;
 
-import java.io.File;
-
 import edu.uci.ics.sourcerer.repo.general.AbstractBinaryProperties;
 import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
+import edu.uci.ics.sourcerer.repo.general.RepoPath;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class ExtractedBinary extends Extracted {
-  public ExtractedBinary(File content, String relativePath) {
-    super(content, relativePath);
+  public ExtractedBinary(RepoPath content) {
+    super(content);
   }
   
   protected abstract AbstractBinaryProperties getBinaryProperties();

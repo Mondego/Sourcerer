@@ -144,6 +144,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private ILocalVariableWriter localVariableWriter;
   private IRelationWriter relationWriter;
   
+  private String compilationUnitName = null;
   private String compilationUnitPath = null;
 
   private boolean inLhsAssignment = false;
@@ -173,11 +174,12 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   public boolean visit(CompilationUnit node) {
     fqnStack.clear();
     // Get the file path
+    compilationUnitName = node.getJavaElement().getElementName();
     if (node.getJavaElement().getResource() == null) {
       if (node.getPackage() == null) {
-        compilationUnitPath = node.getJavaElement().getElementName();
+        compilationUnitPath = compilationUnitName;
       } else {
-        compilationUnitPath = node.getPackage().getName() + "." + node.getJavaElement().getElementName();
+        compilationUnitPath = node.getPackage().getName() + "." + compilationUnitName;
       }
     } else {
       compilationUnitPath = node.getJavaElement().getResource().getRawLocation().toString();
@@ -198,7 +200,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   @Override
   public void endVisit(CompilationUnit node) {
     // Write the file path
-    fileWriter.writeFile(compilationUnitPath);
+    fileWriter.writeSourceFile(compilationUnitName, compilationUnitPath);
     
     // Write the problems
     for (IProblem problem : node.getProblems()) {

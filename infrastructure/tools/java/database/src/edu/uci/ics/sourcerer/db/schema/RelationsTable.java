@@ -17,18 +17,19 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
-import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Relation;
-import edu.uci.ics.sourcerer.model.db.TypedEntityID;
+import edu.uci.ics.sourcerer.model.db.LocationDB;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class RelationsTable {
-  private RelationsTable() {}
+public final class RelationsTable extends DatabaseTable {
+  protected RelationsTable(QueryExecutor executor, TableLocker locker) {
+    super(executor, locker, "relations", true);
+  }
   
-  public static final String TABLE = "relations";
   /*  
    *  +---------------+-----------------+-------+--------+
    *  | Column name   | Type            | Null? | Index? |
@@ -36,9 +37,8 @@ public final class RelationsTable {
    *  | relation_id   | SERIAL          | No    | Yes    |
    *  | relation_type | ENUM(values)    | No    | Yes    |
    *  | lhs_eid       | BIGINT UNSIGNED | No    | Yes    |
-   *  | rhs_leid      | BIGINT UNSIGNED | Yes   | Yes    |
-   *  | rhs_jeid      | BIGINT UNSIGNED | Yes   | Yes    |
-   *  | rhs_eid       | BIGINT UNSIGNED | Yes   | Yes    |
+   *  | rhs_eid       | BIGINT UNSIGNED | No    | Yes    |
+   *  | internal      | BOOLEAN         | Yes   | Yes    |
    *  | project_id    | BIGINT UNSIGNED | No    | Yes    |
    *  | file_id       | BIGINT UNSIGNED | Yes   | Yes    |
    *  | offset        | INT UNSIGNED    | Yes   | No     |
@@ -46,118 +46,53 @@ public final class RelationsTable {
    *  +---------------+-----------------+-------+--------+
    */
   
-  //---- LOCK ----
-  public static String getReadLock() {
-    return SchemaUtils.getReadLock(TABLE);
-  }
-  
-  public static String getWriteLock() {
-    return SchemaUtils.getWriteLock(TABLE);
-  }
-  
   // ---- CREATE ----
-  public static void createTable(QueryExecutor executor) {
-    executor.createTable(TABLE,
+  public void createTable() {
+    executor.createTable(name,
         "relation_id SERIAL",
-        "relation_type " + SchemaUtils.getEnumCreate(Relation.values()) + " NOT NULL",
+        "relation_type " + getEnumCreate(Relation.values()) + " NOT NULL",
         "lhs_eid BIGINT UNSIGNED NOT NULL",
-        "rhs_leid BIGINT UNSIGNED",
-        "rhs_jeid BIGINT UNSIGNED",
-        "rhs_eid BIGINT UNSIGNED",
+        "rhs_eid BIGINT UNSIGNED NOT NULL",
+        "internal BOOLEAN",
         "project_id BIGINT UNSIGNED NOT NULL",
         "file_id BIGINT UNSIGNED",
         "offset INT UNSIGNED",
         "length INT UNSIGNED",
         "INDEX(relation_type)",
         "INDEX(lhs_eid)",
-        "INDEX(rhs_leid)",
-        "INDEX(rhs_jeid)",
         "INDEX(rhs_eid)",
         "INDEX(project_id)",
         "INDEX(file_id)");
   }
   
   // ---- INSERT ----
-  public static InsertBatcher getInsertBatcher(QueryExecutor executor) {
-    return executor.getInsertBatcher(TABLE);
+  private String getInsertValue(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID, String fileID, String offset, String length) {
+    return buildSerialInsertValue(
+        convertNotNullVarchar(type.name()),
+        convertNotNullNumber(lhsEid),
+        convertNotNullNumber(rhsEid),
+        convertBoolean(internal),
+        convertNotNullNumber(projectID), 
+        convertNumber(fileID),
+        convertOffset(offset), 
+        convertLength(length));
   }
   
-  private static String getInsertValue(Relation type, String lhsEid, TypedEntityID rhsEid, String projectID, String fileID, String offset, String length) {
-    return SchemaUtils.getSerialInsertValue(
-        SchemaUtils.convertNotNullVarchar(type.name()),
-        SchemaUtils.convertNotNullNumber(lhsEid),
-        SchemaUtils.convertProjectTypedEntityID(rhsEid),
-        SchemaUtils.convertNotNullNumber(projectID), 
-        SchemaUtils.convertNumber(fileID),
-        SchemaUtils.convertOffset(offset), 
-        SchemaUtils.convertLength(length));
+  public void insert(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID) {
+    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, null, null, null));
   }
   
-  public static void insert(InsertBatcher batcher, Relation type, String lhsEid, TypedEntityID rhsEid, String projectID, String fileID, String offset, String length) {
-    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, projectID, fileID, offset, length));
+  public void insert(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID, String fileID, String offset, String length) {
+    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, fileID, offset, length));
   }
   
-  public static void insert(InsertBatcher batcher, Relation type, String lhsEid, TypedEntityID rhsEid, String projectID) {
-    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, projectID, null, null, null));
-  }
-    
   // ---- DELETE ----
-  public static void deleteByProjectID(QueryExecutor executor, String projectID) {
-    executor.delete(TABLE, "project_id=" + projectID);
+  public void deleteByProjectID(String projectID) {
+    executor.delete(name, "project_id=" + projectID);
   }
   
   // ---- SELECT ----
-//  public static final ResultTranslator<TypedEntityID> TRANSLATOR_TARGET = new ResultTranslator<TypedEntityID>() {
-//    @Override
-//    public TypedEntityID translate(ResultSet result) throws SQLException {
-//      if (result.getString(1) != null) {
-//        return TypedEntityID.getSourceEntityID(result.getString(1));
-//      } else if (result.getString(2) != null) {
-//        return TypedEntityID.getJarEntityID(result.getString(2));
-//      } else if (result.getString(3) != null) {
-//        return TypedEntityID.getLibraryEntityID(result.getString(3));
-//      } else {
-//        return null;
-//      }
-//    }
-//  };
-//  
-//  public static final ResultTranslator<TypedEntityID> TRANSLATOR_SOURCE = new ResultTranslator<TypedEntityID>() {
-//    @Override
-//    public TypedEntityID translate(ResultSet result) throws SQLException {
-//      return TypedEntityID.getSourceEntityID(result.getString(1));
-//    }
-//  };
-//  
-//  public static String getRhsEidByLhsEidSingle(QueryExecutor executor, Relation relationType, String lhsEid) {
-//    return executor.executeSingle("SELECT rhs_eid FROM relations WHERE relation_type='" + relationType.name() + "' AND lhs_eid=" + lhsEid + ";");
-//  }
-//  
-//  public static EntityDB getTargetEntityBySource(QueryExecutor executor, Relation relationType, String lhsEid) {
-//    return executor.executeSingle("SELECT entity_id, entity_type, fqn, modifiers FROM relations INNER JOIN entities ON rhs_eid=entity_id WHERE relation_type='" + relationType.name() + "' AND lhs_eid=" + lhsEid + ";", EntitiesTable.TRANSLATOR);
-//  }
-//  
-//  public static TypedEntityID getTargetBySource(QueryExecutor executor, Relation relationType, String lhsEid) {
-//    return executor.executeSingle("SELECT rhs_eid, rhs_jeid, rhs_leid FROM relations WHERE relation_type='" + relationType.name() + "' AND lhs_eid=" + lhsEid + ";", TRANSLATOR_TARGET);
-//  }
-//  
-//  public static Collection<TypedEntityID> getTargetsBySource(QueryExecutor executor, Relation relationType, String lhsEid) {
-//    return executor.execute("SELECT rhs_eid, rhs_jeid, rhs_leid FROM relations WHERE relation_type='" + relationType.name() + "' AND lhs_eid=" + lhsEid + ";", TRANSLATOR_TARGET);
-//  }
-//  
-//  public static Collection<EntityDB> getTargetEntitiesBySource(QueryExecutor executor, Relation relationType, String lhsEid) {
-//    return executor.execute("SELECT entity_id, entity_type, fqn, modifiers FROM relations INNER JOIN entities ON rhs_eid=entity_id WHERE relation_type='" + relationType.name() + "' AND lhs_eid=" + lhsEid + ";", EntitiesTable.TRANSLATOR);
-//  }
-//  
-//  public static Collection<EntityDB> getSourceEntitiesByTarget(QueryExecutor executor, Relation relationType, String rhsEid) {
-//    return executor.execute("SELECT entity_id, entity_type, fqn, modifiers FROM relations INNER JOIN entities ON lhs_eid=entity_id WHERE relation_type='" + relationType.name() + "' AND rhs_eid=" + rhsEid + ";", EntitiesTable.TRANSLATOR);
-//  }
-//  
-//  public static Collection<TypedEntityID> getSourcesByTargetAndType(QueryExecutor executor, Relation relationType, String rhsEid, Entity lhsType) {
-//    return executor.execute("SELECT entity_id FROM relations INNER JOIN entities ON lhs_eid=entity_id WHERE relation_type='" + relationType.name() + "' AND entity_type='" + lhsType.name() + "' AND rhs_eid=" + rhsEid + ";", TRANSLATOR_SOURCE);
-//  }
-//  
-//  public static Collection<TypedEntityID> getLhsEidByRhsEid(QueryExecutor executor, Relation relationType, String rhsEid) {
-//    return executor.execute("SELECT lhs_eid FROM relations WHERE relation_type='" + relationType.name() + "' AND rhs_eid=" + rhsEid + ";", TRANSLATOR_SOURCE);
-//  }
+  public LocationDB getLocationByRelationID(String relationID) {
+    return executor.selectSingle(name, EntitiesTable.LOCATION_RESULT_TRANSLATOR.getSelect(), "relation_id=" + relationID, EntitiesTable.LOCATION_RESULT_TRANSLATOR); 
+  }
 }

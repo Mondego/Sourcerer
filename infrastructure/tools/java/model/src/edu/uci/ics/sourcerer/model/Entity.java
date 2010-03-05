@@ -46,6 +46,10 @@ public enum Entity {
     public boolean isDeclaredType() {
       return this == CLASS || this == INTERFACE || this == ENUM || this == ANNOTATION;
     }
+    
+    public boolean isSyntheticTypeEntity() {
+      return this == PACKAGE || this == ARRAY || this == TYPE_VARIABLE || this == WILDCARD || this == PARAMETERIZED_TYPE || this == DUPLICATE || this == UNKNOWN;
+    }
 
     public boolean isPackage() {
       return this == PACKAGE;

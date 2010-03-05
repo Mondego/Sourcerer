@@ -20,7 +20,7 @@ package edu.uci.ics.sourcerer.extractor.io.file;
 import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.IUsedJarWriter;
-import edu.uci.ics.sourcerer.model.extracted.UsedJarExParser;
+import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
@@ -33,6 +33,6 @@ public final class UsedJarWriter extends ExtractorWriter implements IUsedJarWrit
   }
   
   public void writeUsedJar(String hash, String ... missingTypes) {
-    write(UsedJarExParser.getLine(hash, missingTypes));
+    write(UsedJarEX.getLine(hash, missingTypes));
   }
 }

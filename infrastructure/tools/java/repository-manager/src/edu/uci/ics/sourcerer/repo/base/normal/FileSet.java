@@ -37,9 +37,9 @@ public class FileSet extends AbstractFileSet {
     populateFileSet(content);
   }
   
-  public String getBasePath() {
-    return repo.getBaseDir().getPath();
-  }
+//  public String getBasePath() {
+//    return repo.getBaseDir().getPath();
+//  }
   
   private void populateFileSet(File content) {
     Deque<File> fileStack = Helper.newStack();

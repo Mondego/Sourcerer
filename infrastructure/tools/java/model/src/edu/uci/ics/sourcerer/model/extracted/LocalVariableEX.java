@@ -17,6 +17,10 @@
  */
 package edu.uci.ics.sourcerer.model.extracted;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.logging.Level;
+
 import edu.uci.ics.sourcerer.model.LocalVariable;
 
 /**
@@ -47,18 +51,6 @@ public class LocalVariableEX implements ModelEX {
     this.path = path;
     this.startPos = startPos;
     this.length = length; 
-  }
-  
-  public static LocalVariableEX getJarParam(String name, String type, String parent, String position) {
-    return new LocalVariableEX(LocalVariable.PARAM, name, null, type, null, null, parent, position, null, null, null);
-  }
-  
-  public static LocalVariableEX getParam(String name, String modifiers, String type, String typeStartPos, String typeLength, String parent, String position, String path, String startPos, String length) {
-    return new LocalVariableEX(LocalVariable.PARAM, name, modifiers, type, typeStartPos, typeLength, parent, position, path, startPos, length);
-  }
-  
-  public static LocalVariableEX getLocal(String name, String modifiers, String type, String typeStartPos, String typeLength, String parent, String path, String startPos, String length) {
-    return new LocalVariableEX(LocalVariable.LOCAL, name, modifiers, type, typeStartPos, typeLength, parent, null, path, startPos, length);
   }
   
   public LocalVariable getType() {
@@ -123,4 +115,50 @@ public class LocalVariableEX implements ModelEX {
   public int hashCode() {
     return (name + parent).hashCode();
   }
- }
+  
+  // ---- PARSER ----
+  private static ModelExParser<LocalVariableEX> parser = new ModelExParser<LocalVariableEX>() {
+    @Override
+    public LocalVariableEX parseLine(String line) {
+      String[] parts = line.split(" ");
+      
+      try {
+        LocalVariable type = LocalVariable.valueOf(parts[0]);
+        if (type == LocalVariable.PARAM) {
+          if (parts.length == 6) {
+            return new LocalVariableEX(type, parts[1], null, parts[2], null, null, parts[3], parts[4], parts[5], null, null);
+          } else if (parts.length == 11) {
+            return new LocalVariableEX(type, parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8], parts[9], parts[10]);
+          } else {
+            logger.log(Level.SEVERE, "Unable to parse local variable: " + line);
+            return null;
+          }
+        } else if (type == LocalVariable.LOCAL) {
+          return new LocalVariableEX(type, parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], null, parts[7], parts[8], parts[9]);
+        } else {
+          logger.log(Level.SEVERE, "Unable to parse local variable: " + line);
+          return null;
+        }
+      } catch (Exception e) {
+        logger.log(Level.SEVERE, "Unable to parse local variable: " + line, e);
+        return null;
+      }
+    }
+  };
+  
+  public static ModelExParser<LocalVariableEX> getParser() {
+    return parser;
+  }
+  
+  public static String getSourceLineParam(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, int position, String path, int startPos, int length) {
+    return LocalVariable.PARAM + " " + name + " " + modifiers + " " + type + " " + typeStartPos + " " + typeLength + " " + parent + " " + position + " " + path + " " + startPos + " " + length;
+  }
+  
+  public static String getSourceLineLocal(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, String path, int startPos, int length) {
+    return LocalVariable.LOCAL + " " + name + " " + modifiers + " " + type + " " + typeStartPos + " " + typeLength + " " + parent + " " + path + " " + startPos + " " + length;
+  }
+  
+  public static String getClassLineParam(String name, String type, String parent, int position, String path) {
+    return LocalVariable.PARAM + " " + name + " " + type + " " + parent + " " + position + " " + path;
+  }
+}

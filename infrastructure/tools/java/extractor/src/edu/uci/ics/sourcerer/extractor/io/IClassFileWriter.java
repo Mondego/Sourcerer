@@ -15,21 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.db.util;
+package edu.uci.ics.sourcerer.extractor.io;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class DatabaseAccessor {
-  protected QueryExecutor executor;
-  protected TableLocker locker;
-
-  protected DatabaseAccessor(DatabaseConnection connection) {
-    executor = new QueryExecutor(connection.getConnection());
-    locker = executor.getTableLocker();
-  }
-  
-  public void close() {
-    executor.close();
-  }
+public interface IClassFileWriter extends IExtractorWriter {
+  public void writeClassFile(String name, String path);
 }

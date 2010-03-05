@@ -17,50 +17,50 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import edu.uci.ics.sourcerer.extractor.io.IJarEntityWriter;
+import edu.uci.ics.sourcerer.extractor.io.IClassEntityWriter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyJarEntityWriter implements IJarEntityWriter {
+public class DummyClassEntityWriter implements IClassEntityWriter {
   @Override
   public void writePackage(String fqn) {
   }
   
   @Override
-  public void writeAnnotation(String fqn, int modifiers) {
+  public void writeAnnotation(String fqn, int modifiers, String path) {
   }
 
   @Override
-  public void writeAnnotationElement(String fqn, int modifiers) {
+  public void writeAnnotationElement(String fqn, int modifiers, String path) {
   }
 
   @Override
-  public void writeClass(String fqn, int modifiers) {
+  public void writeClass(String fqn, int modifiers, String path) {
   }
 
   @Override
-  public void writeConstructor(String fqn, int modifiers) {
+  public void writeConstructor(String fqn, int modifiers, String path) {
   }
 
   @Override
-  public void writeEnum(String fqn, int modifiers) {
+  public void writeEnum(String fqn, int modifiers, String path) {
   }
 
   @Override
-  public void writeEnumConstant(String fqn, int modifiers) {
+  public void writeEnumConstant(String fqn, int modifiers, String path) {
   }
 
   @Override
-  public void writeField(String fqn, int modifiers) {
+  public void writeField(String fqn, int modifiers, String path) {
   }
 
   @Override
-  public void writeInterface(String fqn, int modifiers) {
+  public void writeInterface(String fqn, int modifiers, String path) {
   }
 
   @Override
-  public void writeMethod(String fqn, int modifiers) {
+  public void writeMethod(String fqn, int modifiers, String path) {
   }
 
   @Override

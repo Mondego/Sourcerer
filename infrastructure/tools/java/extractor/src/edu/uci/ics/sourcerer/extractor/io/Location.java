@@ -21,18 +21,18 @@ package edu.uci.ics.sourcerer.extractor.io;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Location {
-  private String compilationUnitPath;
+  private String path;
   private int startPos;
   private int length;
   
-  public Location(String compilationUnitPath, int startPos, int length) {
-    this.compilationUnitPath = compilationUnitPath;
+  public Location(String path, int startPos, int length) {
+    this.path = path;
     this.startPos = startPos;
     this.length = length;
   }
   
-  public String getCompilationUnitPath() {
-    return compilationUnitPath;
+  public String getPath() {
+    return path;
   }
   
   public int getStartPosition() {

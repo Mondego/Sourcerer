@@ -17,131 +17,225 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collection;
+
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.db.util.ResultTranslator;
+import edu.uci.ics.sourcerer.db.util.TableLocker;
+import edu.uci.ics.sourcerer.model.Project;
+import edu.uci.ics.sourcerer.model.db.LimitedProjectDB;
+import edu.uci.ics.sourcerer.model.db.ProjectDB;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class ProjectsTable {
-  private ProjectsTable() {}
-  
-  public static String TABLE = "projects";
+public final class ProjectsTable extends DatabaseTable {
+  protected ProjectsTable(QueryExecutor executor, TableLocker locker) {
+    super(executor, locker, "projects", false);
+  }
   /*  
-   *  +-------------+---------------+-------+--------+
-   *  | Column name | Type          | Null? | Index? |
-   *  +-------------+---------------+-------+--------+
-   *  | project_id  | SERIAL        | No    | Yes    |
-   *  | name        | VARCHAR(1024) | No    | Yes    |
-   *  | path        | VARCHAR(256)  | No    | No     |
-   *  | version     | VARCHAR(128)  | Yes   | No     |
-   *  +-------------+---------------+-------+--------+
+   *  +--------------+---------------+-------+--------+
+   *  | Column name  | Type          | Null? | Index? |
+   *  +--------------+---------------+-------+--------+
+   *  | project_id   | SERIAL        | No    | Yes    |
+   *  | project_type | ENUM(values)  | No    | Yes    |
+   *  | name         | VARCHAR(1024) | No    | Yes    |
+   *  | description  | VARCHAR(4096) | Yes   | No     |
+   *  | version      | VARCHAR(1024) | Yes   | No     |
+   *  | groop        | VARCHAR(1024) | Yes   | Yes    |
+   *  | path         | VARCHAR(1024) | Yes   | No     |
+   *  | hash         | VARCHAR(32)   | Yes   | Yes    |
+   *  | has_source   | BOOLEAN       | No    | Yes    |
+   *  +--------------+---------------+-------+--------+
    */
   
   // ---- CREATE ----
-  public static void createTable(QueryExecutor executor) {
-    executor.createTable(TABLE,
+  public void createTable() {
+    executor.createTable(name,
         "project_id SERIAL",
+        "project_type " + getEnumCreate(Project.values()) + " NOT NULL",
         "name VARCHAR(1024) BINARY NOT NULL",
-        "path VARCHAR(256) BINARY NOT NULL",
-        "version VARCHAR(128) BINARY",
-        "INDEX(name(48))");
+        "description VARCHAR(4096) BINARY",
+        "version VARCHAR(1024) BINARY",
+        "groop VARCHAR(1024) BINARY",
+        "path VARCHAR(1024) BINARY",
+        "hash VARCHAR(32) BINARY",
+        "has_source BOOLEAN NOT NULL",
+        "INDEX(project_type)",
+        "INDEX(name(48))",
+        "INDEX(groop(48))",
+        "INDEX(hash)",
+        "INDEX(has_source)");
   }
   
   // ---- INSERT ----
-  private static String getInsertValue(String name, String path) {
-    return SchemaUtils.getSerialInsertValue( 
-        SchemaUtils.convertNotNullVarchar(name), 
-        SchemaUtils.convertNotNullVarchar(path), 
-        SchemaUtils.convertVarchar(null));
+  private String getInsertValue(Project type, String name, String description, String version, String group, String path, String hash, boolean hasSource) {
+    return buildSerialInsertValue(
+        convertNotNullVarchar(type.name()),
+        convertNotNullVarchar(name),
+        convertVarchar(description),
+        convertVarchar(version),
+        convertVarchar(group),
+        convertVarchar(path),
+        convertVarchar(hash),
+        convertNotNullBoolean(hasSource));
   }
   
-  public static String insert(QueryExecutor executor, ExtractedProject project) {
-    return executor.insertSingleWithKey(TABLE, getInsertValue(project.getName(), project.getRelativePath()));
+  public String insertPrimitivesProject() {
+    return executor.insertSingleWithKey(name,
+        getInsertValue(Project.SYSTEM, 
+            "primitives",
+            "Primitive types",
+            null, // no version 
+            null, // no group 
+            null, // no path
+            null, // no hash 
+            false));
+  }
+  
+  public String insertUnknownsProject() {
+    return executor.insertSingleWithKey(name,
+        getInsertValue(Project.SYSTEM,
+            "unknowns",
+            "Project for unknown entities",
+            null, // no version
+            null, // no group
+            null, // no path
+            null, // no hash
+            false));
+  }
+  
+  public String insert(ExtractedLibrary library) {
+    return executor.insertSingleWithKey(name, 
+        getInsertValue(Project.JAVA_LIBRARY,
+            library.getName(),
+            null, // no description
+            null, // no version
+            null, // no group
+            library.getRelativePath(),
+            null, // no hash
+            library.hasSource()));
+  }
+  
+  public String insert(ExtractedJar jar) {
+    if (jar.getGroup() == null) {
+      return executor.insertSingleWithKey(name, 
+          getInsertValue(
+              Project.JAR, 
+              jar.getName(),
+              null, // no description
+              null, // no version
+              null, // no group 
+              "INVALID", // no path 
+              jar.getHash(), 
+              jar.hasSource()));
+    } else {
+      return executor.insertSingleWithKey(name,
+          getInsertValue(
+              Project.MAVEN,
+              jar.getName(),
+              null, // no description
+              jar.getVersion(),
+              jar.getGroup(), 
+              "INVALID", // no path
+              jar.getHash(),
+              jar.hasSource()));
+    }
+  }
+  
+  public String insert(ExtractedProject project) {
+    return executor.insertSingleWithKey(name, 
+        getInsertValue(
+            Project.CRAWLED,
+            project.getName(),
+            project.getDescription(),
+            null, // no version
+            null, // no group
+            project.getRelativePath(),
+            "INVALID", // no hash
+            true));
+  }
+  
+  public void completeCrawledProjectInsert(String projectID) {
+    executor.executeUpdate("UPDATE " + name + " SET hash = NULL where project_id=" + projectID);
+  }
+  
+  public void completeJarProjectInsert(String projectID) {
+    executor.executeUpdate("UPDATE " + name + " SET path = NULL where project_id=" + projectID); 
   }
   
   // ---- DELETE ----
-  public static void deleteProject(QueryExecutor executor, String projectID) {
-    // Delete the files
-    FilesTable.deleteByProjectID(executor, projectID);
-    
-    // Delete the problems
-    ProblemsTable.deleteByProjectID(executor, projectID);
-    
-    // Delete the imports
-    ImportsTable.deleteByProjectID(executor, projectID);
-    
-    // Delete the entities
-    EntitiesTable.deleteByProjectID(executor, projectID);
-    
-    // Delete the relations
-    RelationsTable.deleteByProjectID(executor, projectID);
-        
-    // Delete the comments
-    CommentsTable.deleteByProjectID(executor, projectID);
-    
-    // Delete the project
-    executor.delete(TABLE, "project_id=" + projectID);
+  public void deleteProject(String projectID) {
+    executor.delete(name, "project_id=" + projectID);
   }
   
   // ---- SELECT ----
-  public static String getProjectCount(QueryExecutor executor) {
-    return executor.getRowCount(TABLE);
+  private ResultTranslator<LimitedProjectDB> LIMITED_PROJECT_TRANSLATOR = new ResultTranslator<LimitedProjectDB>() {
+    @Override
+    public LimitedProjectDB translate(ResultSet result) throws SQLException {
+      return new LimitedProjectDB(result.getString(1), Project.valueOf(result.getString(2)), result.getString(3), result.getString(4));
+    }
+    
+    @Override
+    public String getSelect() {
+      return "project_id,project_type,path,hash";
+    }
+  };
+  
+  private ResultTranslator<ProjectDB> PROJECT_TRANSLATOR = new ResultTranslator<ProjectDB>() {
+    @Override
+    public ProjectDB translate(ResultSet result) throws SQLException {
+      return new ProjectDB(result.getString(1), Project.valueOf(result.getString(2)), result.getString(3), result.getString(4), result.getString(5), result.getString(6), result.getString(7), result.getString(8), result.getBoolean(9));
+    }
+    
+    @Override
+    public String getSelect() {
+      return "project_id,project_type,name,description,version,groop,path,hash,has_source";
+    }
+  };
+  
+  public String getProjectCount() {
+    return executor.getRowCount(name);
   }
   
-  public static String getProjectIDByName(QueryExecutor executor, String name) {
-    return executor.selectSingle(TABLE, "project_id", "name='" + name + "'");
+  public LimitedProjectDB getLimitedProjectByPath(String path) {
+    return executor.selectSingle(name, LIMITED_PROJECT_TRANSLATOR.getSelect(), "path='" + path + "'", LIMITED_PROJECT_TRANSLATOR);
   }
   
-//  
-//  public static String getJarProject(QueryExecutor executor, String jarName) {
-//    String query = "SELECT projects.project_id FROM projects WHERE name = '" + jarName + "' AND path IS NULL;";
-//    QueryResult result = executor.execute(query);
-//    if (result.next()) {
-//      String eid = result.getString(1);
-//      if (result.next()) {
-//        logger.log(Level.SEVERE, "There should not be two identically named jar projects: " + jarName);
-//        return null; 
-//      }
-//      return eid;
-//    } else {
-//      logger.log(Level.SEVERE, "Missing a referenced jar: " + jarName);
-//      return null;
-//    }
-//  }
-//  
-//  public static void updateProjectPath(QueryExecutor executor, String projectID, String path) {
-//    String query = "UPDATE projects SET path = '" + path + "' WHERE project_id = " + projectID;
-//    executor.execute(query);
-//  }
-// 
-
-//  
-//  public static String addJarProjectToDatabase(QueryExecutor executor, String name) {
-//    return addProjectToDatabase(executor, Type.JAR.name(), name, null);
-//  }
-//  
-//  public static String addJarUnionProjectToDatabase(QueryExecutor executor, String name) {
-//    return addProjectToDatabase(executor, Type.JAR_UNION.name(), name, null);
-//  }
-//  
-//  public static String addJavaLibraryProjectToDatabase(QueryExecutor executor, String name) {
-//    return addProjectToDatabase(executor, Type.LIBRARY.name(), name, "NULL");
-//  }
-//  
-//  private static String addProjectToDatabase(QueryExecutor executor, String type, String name, String path) {
-//    String query = "INSERT INTO projects " +
-//      "VALUES(NULL, " + 
-//      "'" + type + "', " +
-//      "'" + name + "', " + 
-//      (path == null ? "NULL" : ("'" + path + "'")) +
-//      ");";
-//    QueryResult result = executor.executeUpdateWithKeys(query);
-//    if (result.next()) {
-//      return result.getString(1);
-//    } else {
-//      logger.log(Level.SEVERE, "Unable to read project_id in add");
-//      return "NULL";
-//    }
-//  }
+  public LimitedProjectDB getLimitedProjectByHash(String hash) {
+    return executor.selectSingle(name, LIMITED_PROJECT_TRANSLATOR.getSelect(), "hash='" + hash + "'", LIMITED_PROJECT_TRANSLATOR);
+  }
+  
+  public ProjectDB getProjectByProjectID(String projectID) {
+    return executor.selectSingle(name, PROJECT_TRANSLATOR.getSelect(), "project_id=" + projectID, PROJECT_TRANSLATOR);
+  }
+  
+  public String getProjectIDByName(String project) {
+    return executor.selectSingle(name, "project_id", "name='" + project + "'");
+  }
+  
+  public String getHashByProjectID(String projectID) {
+    return executor.selectSingle(name, "hash", "project_id=" + projectID);
+  }
+  
+  public String getProjectIDByHash(String hash) {
+    return executor.selectSingle(name, "project_id", "hash='" + hash + "'");
+  }
+  
+  public String getUnknownsProject() {
+    return executor.selectSingle(name, "project_id", "name='unknowns'");
+  }
+  
+  public String getPrimitiveProject() {
+    return executor.selectSingle(name, "project_id", "name='primitives'");
+  }
+  
+  public Collection<String> getJavaLibraryProjects() {
+    return executor.select(name, "project_id", "project_type='" + Project.JAVA_LIBRARY + "'");
+  }
 }

@@ -58,11 +58,11 @@ public class CompressedFileSet extends AbstractFileSet {
   private boolean populateFileSet() {
     ZipFile zip = null;
     try {
-      if (project.getContent().length() == 0) {
-        project.getContent().delete();
+      if (project.getContent().toFile().length() == 0) {
+        project.getContent().toFile().delete();
         return false;
       }
-      zip = new ZipFile(project.getContent());
+      zip = new ZipFile(project.getContent().toFile());
       for (Enumeration<? extends ZipEntry> en = zip.entries(); en.hasMoreElements();) {
         ZipEntry entry = en.nextElement();
         String path = entry.getName();
@@ -74,7 +74,7 @@ public class CompressedFileSet extends AbstractFileSet {
       }
       return true;
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error in reading zip: " + project.getContent().getPath(), e);
+      logger.log(Level.SEVERE, "Error in reading zip: " + project, e);
       return false;
     } finally {
       FileUtils.close(zip);
@@ -94,7 +94,7 @@ public class CompressedFileSet extends AbstractFileSet {
     ZipFile zip = null;
     FileOutputStream fos = null;
     try {
-      zip = new ZipFile(project.getContent());
+      zip = new ZipFile(project.getContent().toFile());
       ZipEntry entry = zip.getEntry(relativePath);
       if (entry != null) {
         InputStream is = zip.getInputStream(entry);

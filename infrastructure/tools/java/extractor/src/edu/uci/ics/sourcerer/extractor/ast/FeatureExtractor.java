@@ -33,6 +33,7 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.internal.core.BinaryType;
 
 import edu.uci.ics.sourcerer.extractor.Extractor;
 import edu.uci.ics.sourcerer.extractor.io.IMissingTypeWriter;
@@ -43,6 +44,7 @@ import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
+@SuppressWarnings("restriction")
 public final class FeatureExtractor {
   public static final Property<Boolean> PPA = new BooleanProperty("ppa", false, "Extractor", "Do partial program analysis.");
   
@@ -95,6 +97,7 @@ public final class FeatureExtractor {
     ClassFileExtractor extractor = new ClassFileExtractor(bundle);
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
     IMissingTypeWriter missingTypeWriter = bundle.getMissingTypeWriter();
+    
     for (IClassFile classFile : classFiles) {
       try {
         if (ClassFileExtractor.isTopLevel(classFile)) {
@@ -105,6 +108,17 @@ public final class FeatureExtractor {
             source = classFile.getSourceRange();
             if (source == null || source.getLength() == 0) {
               hasSource = false;
+            }
+          }
+          
+          if (hasSource) {
+            // Verify that the source file matches the binary file
+            BinaryType type = (BinaryType)classFile.getType();
+            String sourceFile = type.getPackageFragment().getElementName() + "." + type.getSourceFileName(null);
+            String fqn = classFile.getType().getFullyQualifiedName() + ".java";
+            if (!fqn.equals(sourceFile)) {
+              logger.log(Level.WARNING, "Source fqn mismatch: " + sourceFile + " " + fqn);
+              continue;
             }
           }
           

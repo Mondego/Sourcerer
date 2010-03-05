@@ -46,7 +46,7 @@ public class MavenDownloader {
       File input = new File(INPUT.getValue(), LINKS_FILE.getValue());
      
       Repository repo = Repository.getRepository(AbstractRepository.INPUT_REPO.getValue());
-      File outputDir = repo.getJarsDir();
+      File outputDir = repo.getMavenJarsPath().toFile();
       String baseUrl = MAVEN_URL.getValue();
       if (baseUrl.endsWith("/")) {
         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);

@@ -23,40 +23,38 @@ import edu.uci.ics.sourcerer.repo.base.compressed.CompressedFileSet;
 import edu.uci.ics.sourcerer.repo.base.normal.FileSet;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
+import edu.uci.ics.sourcerer.repo.general.RepoPath;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class RepoProject {
   private Repository repo;
-  private String batch;
-  private String checkout;
-  private File content;
+  private RepoPath content;
   private File properties;
   
-  public RepoProject(Repository repo, String batch, String checkout, File content, File properties) {
+  public RepoProject(Repository repo, RepoPath content, File properties) {
     this.repo = repo;
-    this.batch = batch;
-    this.checkout = checkout;
     this.content = content;
     this.properties = properties;
   }
  
   public ExtractedProject getExtractedProject(ExtractedRepository repo) {
-    return new ExtractedProject(new File(getOutputPath(repo.getBaseDir())), getProjectPath(), properties);
+    return new ExtractedProject(repo.convertPath(content.getParent()), properties);
   }
   
-  public String getOutputPath(File baseDir) {
-    return baseDir.getPath() + File.separatorChar + getProjectPath();
-  }
-  
+//  public String getOutputPath(File baseDir) {
+//    return baseDir.getPath() + File.separatorChar + getProjectPath();
+//  }
+//  
   public String getProjectPath() {
-    return batch + File.separatorChar + checkout;
+    return content.getParent().getRelativePath();
   }
   
   public IFileSet getFileSet() {
-    if (content.isDirectory()) {
-      return new FileSet(content, repo);
+    File contentFile = content.toFile();
+    if (contentFile.isDirectory()) {
+      return new FileSet(contentFile, repo);
     } else {
       if (repo.getTempDir() == null) {
         throw new IllegalStateException("Compressed file sets may only be used if a temp dir is specified.");
@@ -69,11 +67,15 @@ public class RepoProject {
     return repo;
   }
   
-  public File getContent() {
+  public RepoPath getContent() {
     return content;
   }
   
   public File getPropertiesFile() {
     return properties;
+  }
+  
+  public String toString() {
+    return getProjectPath();
   }
 }

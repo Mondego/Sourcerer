@@ -1,5 +1,7 @@
 package edu.uci.ics.sourcerer.db.util;
 
+import edu.uci.ics.sourcerer.db.schema.DatabaseTable;
+
 public class TableLocker {
   private boolean locked;
   private QueryExecutor executor;
@@ -15,31 +17,31 @@ public class TableLocker {
     tables = new StringBuffer("LOCK TABLES ");
   }
   
-  public void addWrites(String ... tables) {
-    for (String table : tables) {
+  public void addWrite(DatabaseTable table) {
+    if (locked) {
+      throw new IllegalStateException("Cannot add when already locked");
+    } else {
+      tables.append(table.getName()).append(" WRITE,");
+    }
+  }
+  
+  public void addWrites(DatabaseTable... tables) {
+    for (DatabaseTable table : tables) {
       addWrite(table);
     }
   }
   
-  public void addWrite(String table) {
+  public void addRead(DatabaseTable table) {
     if (locked) {
       throw new IllegalStateException("Cannot add when already locked");
     } else {
-      tables.append(table).append(" WRITE,");
+      tables.append(table.getName()).append(" READ,");
     }
   }
   
-  public void addReads(String ... tables) {
-    for (String table : tables) {
-      addWrite(table);
-    }
-  }
-  
-  public void addRead(String table) {
-    if (locked) {
-      throw new IllegalStateException("Cannot add when already locked");
-    } else {
-      tables.append(table).append(" READ,");
+  public void addReads(DatabaseTable... tables) {
+    for (DatabaseTable table : tables) {
+      addRead(table);
     }
   }
   

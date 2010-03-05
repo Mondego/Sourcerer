@@ -1,7 +1,5 @@
 package edu.uci.ics.sourcerer.extractor.resources;
 
-import java.io.File;
-
 import org.eclipse.jdt.core.IClasspathEntry;
 
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
@@ -18,6 +16,18 @@ public class LibraryJar {
     return entry;
   }
   
+  public String getPath() {
+    return entry.getPath().toString();
+  }
+  
+  public String getSourcePath() {
+    if (entry.getSourceAttachmentPath() == null) {
+      return null;
+    } else {
+      return entry.getSourceAttachmentPath().toString();
+    }
+  }
+  
   public String getName() {
     return entry.getPath().lastSegment();
   }
@@ -27,6 +37,6 @@ public class LibraryJar {
   }
   
   public ExtractedLibrary getExtractedLibrary(ExtractedRepository repo) {
-    return new ExtractedLibrary(new File(repo.getLibsDir(), entry.getPath().lastSegment()), "libs/" + entry.getPath().lastSegment());
+   return new ExtractedLibrary(repo.getLibsPath().getChild(entry.getPath().lastSegment()));
   }
 }

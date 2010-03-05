@@ -22,7 +22,7 @@ import java.io.File;
 import edu.uci.ics.sourcerer.extractor.io.IRelationWriter;
 import edu.uci.ics.sourcerer.extractor.io.Location;
 import edu.uci.ics.sourcerer.model.Relation;
-import edu.uci.ics.sourcerer.model.extracted.RelationExParser;
+import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
@@ -35,12 +35,12 @@ public final class RelationWriter extends ExtractorWriter implements IRelationWr
   }
 
   private void writeRelation(Relation type, String lhs, String rhs, Location location) {
-    write(RelationExParser.getLine(type, lhs, rhs, convertToRelativePath(location.getCompilationUnitPath()), location.getStartPosition(), location.getLength()));
+    write(RelationEX.getSourceLine(type, lhs, rhs, convertToRelativePath(location.getPath()), location.getStartPosition(), location.getLength()));
   }
   
   @Override
   public void writeInside(String innerFqn, String outerFqn, Location location) {
-    write(RelationExParser.getLineInside(innerFqn, outerFqn, convertToRelativePath(location.getCompilationUnitPath())));
+    write(RelationEX.getSourceLineInside(innerFqn, outerFqn, convertToRelativePath(location.getPath())));
   }
   
   @Override
@@ -105,7 +105,7 @@ public final class RelationWriter extends ExtractorWriter implements IRelationWr
   
   @Override
   public void writeParametrizedBy(String fqn, String typeVariable, int pos, Location location) {
-    write(RelationExParser.getLineParametrizedBy(fqn, typeVariable, pos, convertToRelativePath(location.getCompilationUnitPath()), location.getStartPosition(), location.getLength()));
+    write(RelationEX.getSourceLineParametrizedBy(fqn, typeVariable, pos, convertToRelativePath(location.getPath()), location.getStartPosition(), location.getLength()));
   }
 
   @Override

@@ -37,8 +37,10 @@ import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.repo.general.RepoJar;
+import edu.uci.ics.sourcerer.repo.general.RepoPath;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.Logging;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -53,14 +55,14 @@ public class Repository extends AbstractRepository {
   }
   
   @Override
-  protected void addFile(File checkout) {
-    File content = new File(checkout, "content");
-    if (!content.exists()) {
-      content = new File(checkout, "content.zip");
+  protected void addProject(RepoPath path) {
+    RepoPath content = path.getChild("content");
+    if (!content.toFile().exists()) {
+      content = path.getChild("content.zip");
     }
-    File properties = new File(checkout, "project.properties");
-    if (content.exists()) {
-      RepoProject project = new RepoProject(this, checkout.getParentFile().getName(), checkout.getName(), content, properties);
+    if (content.toFile().exists()) {
+      File properties = path.getChildFile("project.properties");
+      RepoProject project = new RepoProject(this, content, properties);
       projects.put(project.getProjectPath(), project);
     }
   }
@@ -78,11 +80,24 @@ public class Repository extends AbstractRepository {
   }
   
   public void printJarStats() {
-    JarIndex.printJarStats(getJarsDir());
+    JarIndex.printJarStats(getJarsPath().toFile());
   }
   
   public void aggregateJarFiles() {
     JarIndex.aggregateJars(this);
+  }
+  
+  public void generateJarFilterList(Set<String> completed) {
+    logger.info("Looking through project jars...");
+    for (RepoProject project : getProjects(FileUtils.getFileAsSet(PROJECT_FILTER.getValue()))) {
+      IFileSet fileSet = project.getFileSet();
+      for (IJarFile jar : fileSet.getJarFiles()) {
+        if (!completed.contains(jar.getHash())) {
+          logger.log(Logging.RESUME, jar.getHash());
+        }
+      }
+    }
+    logger.info("Done!");
   }
 
   public static void migrateRepository(File source, File target, Set<String> completed) {
@@ -99,13 +114,13 @@ public class Repository extends AbstractRepository {
     Repository targetRepo = new Repository(target, null);
     
     logger.info("Migrating " + repo.jarIndex.getIndexSize() + " jar files...");
-    File jars = targetRepo.getJarsDir();
+    File jars = targetRepo.getJarsPath().toFile();
     if (!jars.exists()) {
       jars.mkdir();
     }
-    for (IndexedJar jar : repo.getJarIndex().getIndexedJars()) {
+    for (IndexedJar jar : repo.getJarIndex().getJars()) {
       if (!completed.contains(jar.toString())) {
-        jar.migrateIndexedJar(jars);
+        jar.migrateIndexedJar(targetRepo.getBaseDir().getPath());
         logger.log(RESUME, jar.toString());
       }
     }
@@ -119,7 +134,7 @@ public class Repository extends AbstractRepository {
     logger.info("Migrating " + repo.projects.size() + " projects.");
     for (RepoProject project : repo.getProjects()) {
       File targetProject = new File(target, project.getProjectPath());
-      File content = project.getContent();
+      File content = project.getContent().toFile();
       File contentTarget = new File(targetProject, "content.zip");
       if (contentTarget.exists() && completed.contains(project.getProjectPath())) {
         logger.info(project.getProjectPath() + " already migrated.");
@@ -159,9 +174,9 @@ public class Repository extends AbstractRepository {
     
     logger.info("Deleting compressed content from " + repo.projects.size() + " projects...");
     for (RepoProject project : repo.getProjects()) {
-      File content = project.getContent();
+      File content = project.getContent().toFile();
       if (content.isFile()) {
-        logger.info("Deleting compressed content for: " + project.getProjectPath());
+        logger.info("Deleting compressed content for: " + project);
         content.delete();
       }
     }
@@ -225,11 +240,28 @@ public class Repository extends AbstractRepository {
   }
     
   public Collection<RepoProject> getProjects() {
+    return getProjects(null);
+  }
+  
+  public Collection<RepoProject> getProjects(Set<String> filter) {
     if (projects == null) {
       projects = Helper.newHashMap();
       populateRepository();
     }
-    return projects.values();
+    if (filter == null) {
+      return projects.values();
+    } else {
+      if (filter.isEmpty()) {
+        logger.log(Level.SEVERE, "Empty project filter!");
+      }
+      Collection<RepoProject> result = Helper.newArrayList();
+      for (RepoProject project : projects.values()) {
+        if (filter.contains(project.getProjectPath())) {
+          result.add(project);
+        }
+      }
+      return result;
+    }
   }
   
   public RepoProject getProject(String projectPath) {
