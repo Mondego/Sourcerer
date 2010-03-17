@@ -1,13 +1,32 @@
+/* 
+ * Sourcerer: an infrastructure for large-scale source code analysis.
+ * Copyright (C) by contributors. See CONTRIBUTORS.txt for full list.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package edu.uci.ics.sourcerer.db.tools;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.db.schema.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
+import edu.uci.ics.sourcerer.db.util.InFileInserter;
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.model.Comment;
 import edu.uci.ics.sourcerer.model.Entity;
@@ -15,6 +34,7 @@ import edu.uci.ics.sourcerer.model.File;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.db.LimitedEntityDB;
 import edu.uci.ics.sourcerer.model.db.LimitedProjectDB;
+import edu.uci.ics.sourcerer.model.db.SlightlyLessLimitedEntityDB;
 import edu.uci.ics.sourcerer.model.extracted.CommentEX;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.FileEX;
@@ -32,15 +52,25 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
+import edu.uci.ics.sourcerer.util.TimeUtils;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 
+/**
+ * @author Joel Ossher (jossher@uci.edu)
+ */
 public class DatabaseImporter extends DatabaseAccessor {
+  public static final Property<Boolean> INFILE_INSERT = new BooleanProperty("infile-insert", false, "Database", "Use load data infile to attempt to speed up inserts.");
+  
   private String unknownProject;
   private Map<String, String> fileMap;
   private Map<String, Ent> entityMap;
+  private java.io.File tempDir;
   
   protected DatabaseImporter(DatabaseConnection connection) {
     super(connection);
+    tempDir = FileUtils.getTempDir();
   }
 
   protected void initializeDatabase() {
@@ -90,6 +120,8 @@ public class DatabaseImporter extends DatabaseAccessor {
   protected void importJavaLibraries() {
     logger.info("Importing Java libraries...");
     
+    long startTime = System.currentTimeMillis();
+    
     logger.info("  Loading extracted repository...");
     ExtractedRepository extracted = ExtractedRepository.getRepository();
     
@@ -137,7 +169,7 @@ public class DatabaseImporter extends DatabaseAccessor {
     }
     locker.unlock();
     
-    logger.info("  Done with Java library import.");
+    logger.info("  Done with Java library import in " + TimeUtils.getElapsedTimeInSeconds(startTime) + ".");
   }
   
   protected void importJarFiles() {
@@ -294,97 +326,193 @@ public class DatabaseImporter extends DatabaseAccessor {
   private void insertFiles(Extracted extracted, String projectID) {
     logger.info("    Inserting files...");
     
+    long startTime = System.currentTimeMillis();
     int count = 0;
-    KeyInsertBatcher<FileEX> batcher = filesTable.getKeyInsertBatcher(new KeyInsertBatcher.KeyProcessor<FileEX>() {
-      @Override
-      public void processKey(String key, FileEX value) {
-        if (value.getType() != File.JAR) {
-          if (fileMap.containsKey(value.getPath())) {
-            logger.log(Level.SEVERE, "File collision: " + value.getPath());
-          } else {
-            fileMap.put(value.getPath(), key);
+    
+    if (INFILE_INSERT.getValue()) {
+      InFileInserter inserter = filesTable.getInFileInserter(tempDir);
+      for (FileEX file : extracted.getFileReader()) {
+        filesTable.insert(inserter, file, projectID);
+        count++;
+      }
+      inserter.insert();
+      filesTable.populateFileMap(fileMap, projectID);
+    } else {
+      KeyInsertBatcher<FileEX> batcher = filesTable.getKeyInsertBatcher(new KeyInsertBatcher.KeyProcessor<FileEX>() {
+        @Override
+        public void processKey(String key, FileEX value) {
+          if (value.getType() != File.JAR) {
+            if (fileMap.containsKey(value.getPath())) {
+              logger.log(Level.SEVERE, "File collision: " + value.getPath());
+            } else {
+              fileMap.put(value.getPath(), key);
+            }
           }
         }
+      });
+      for (FileEX file : extracted.getFileReader()) {
+        filesTable.insert(batcher, file, projectID, file);
+        count++;
       }
-    });
-    for (FileEX file : extracted.getFileReader()) {
-      filesTable.insert(batcher, file, projectID, file);
-      count++;
+      batcher.insert();
     }
-    batcher.insert();
-    logger.info("      " + count + " files inserted.");
+    logger.info("      " + count + " files inserted in " + TimeUtils.getElapsedTimeInSeconds(startTime) + ".");
   }
   
   private void insertProblems(Extracted extracted, String projectID) {
     logger.info("    Inserting problems...");
 
+    long startTime = System.currentTimeMillis();
     int count = 0;
-    for (ProblemEX problem : extracted.getProblemReader()) {
-      String fileID = fileMap.get(problem.getRelativePath());
-      if (fileID == null) {
-        logger.log(Level.SEVERE, "Unknown file: " + problem.getRelativePath() + " for " + problem);
-      } else {
-        problemsTable.insert(problem, projectID, fileID);
-        count++;
+    
+    if (INFILE_INSERT.getValue()) {
+      InFileInserter inserter = problemsTable.getInFileInserter(tempDir);
+      for (ProblemEX problem : extracted.getProblemReader()) {
+        String fileID = fileMap.get(problem.getRelativePath());
+        if (fileID == null) {
+          logger.log(Level.SEVERE, "Unknown file: " + problem.getRelativePath() + " for " + problem);
+        } else {
+          problemsTable.insert(inserter, problem, projectID, fileID);
+          count++;
+        }
       }
+      inserter.insert();
+    } else {
+      for (ProblemEX problem : extracted.getProblemReader()) {
+        String fileID = fileMap.get(problem.getRelativePath());
+        if (fileID == null) {
+          logger.log(Level.SEVERE, "Unknown file: " + problem.getRelativePath() + " for " + problem);
+        } else {
+          problemsTable.insert(problem, projectID, fileID);
+          count++;
+        }
+      }
+      problemsTable.flushInserts();
     }
-    problemsTable.flushInserts();
-    logger.info("      " + count + " problems inserted.");
+    logger.info("      " + count + " problems inserted in " + TimeUtils.getElapsedTimeInSeconds(startTime) + ".");
   }
   
   private void insertEntities(Extracted extracted, final String projectID) {
     logger.info("    Inserting entities....");
 
+    long startTime = System.currentTimeMillis();
     int count = 0;
-    KeyInsertBatcher<EntityEX> batcher = entitiesTable.getKeyInsertBatcher(new KeyInsertBatcher.KeyProcessor<EntityEX>() {
-      @Override
-      public void processKey(String key, EntityEX value) {
-        Ent ent = entityMap.get(value.getFqn());
-        if (ent == null) {
-          ent = new Ent(value.getFqn());
-          entityMap.put(value.getFqn(), ent);
-        } else {
-          logger.log(Level.SEVERE, "FQN collision: " + value.getFqn());
-        }
-        ent.addPair(projectID, key, value.getType());
+    
+    if (INFILE_INSERT.getValue()) {
+      InFileInserter inserter = entitiesTable.getInFileInserter(tempDir);
+      for (EntityEX entity : extracted.getEntityReader()) {
+        String fileID = getFileID(entity.getPath(), entity);
+        entitiesTable.insert(inserter, entity, projectID, fileID);
+        count++;
       }
-    });
-    for (EntityEX entity : extracted.getEntityReader()) {
-      String fileID = getFileID(entity.getPath(), entity);
-      entitiesTable.insert(batcher, entity, projectID, fileID, entity);
-      count++;
+      inserter.insert();
+      for (SlightlyLessLimitedEntityDB entity : entitiesTable.getSlightlyLessLimitedEntitiesByProject(projectID)) {
+        Ent ent = entityMap.get(entity.getFqn());
+        if (ent == null) {
+          ent = new Ent(entity.getFqn());
+          entityMap.put(entity.getFqn(), ent);
+        } else {
+          logger.log(Level.SEVERE, "FQN collision: " + entity.getFqn());
+        }
+        ent.addPair(entity);
+      }
+    } else {
+      KeyInsertBatcher<EntityEX> batcher = entitiesTable.getKeyInsertBatcher(new KeyInsertBatcher.KeyProcessor<EntityEX>() {
+        @Override
+        public void processKey(String key, EntityEX value) {
+          Ent ent = entityMap.get(value.getFqn());
+          if (ent == null) {
+            ent = new Ent(value.getFqn());
+            entityMap.put(value.getFqn(), ent);
+          } else {
+            logger.log(Level.SEVERE, "FQN collision: " + value.getFqn());
+          }
+          ent.addPair(projectID, key, value.getType());
+        }
+      });
+      for (EntityEX entity : extracted.getEntityReader()) {
+        String fileID = getFileID(entity.getPath(), entity);
+        entitiesTable.insert(batcher, entity, projectID, fileID, entity);
+        count++;
+      }
+      batcher.insert();
     }
-    batcher.insert();
-    logger.info("      " + count + " entities inserted.");
+    logger.info("      " + count + " entities inserted in " + TimeUtils.getElapsedTimeInSeconds(startTime) + ".");
   }
   
   private void insertLocalVariables(Extracted extracted, String projectID, String inClause) {
     logger.info("    Inserting local variables / parameters...");
 
+    long startTime = System.currentTimeMillis();
     int count = 0;
-    for (LocalVariableEX local : extracted.getLocalVariableReader()) {
-      // Get the file
-      String fileID = getFileID(local.getPath(), local);
+    
+    if (INFILE_INSERT.getValue()) {
+      InFileInserter inserter = entitiesTable.getInFileInserter(tempDir);
       
-      // Add the entity
-      String eid = entitiesTable.insertLocalVariable(local, projectID, fileID);
-      
-      // Add the holds relation
-      LimitedEntityDB type = getEid(local.getTypeFqn(), projectID, inClause);
-      if (fileID == null) {
-        relationsTable.insert(Relation.HOLDS, eid, type.getEntityID(), type.isInternal(projectID), projectID);
-      } else {
-        relationsTable.insert(Relation.HOLDS, eid, type.getEntityID(), type.isInternal(projectID), projectID, fileID, local.getStartPos(), local.getLength());
+      for (LocalVariableEX local : extracted.getLocalVariableReader()) {
+        // Get the file
+        String fileID = getFileID(local.getPath(), local);
+        
+        // Add the entity
+        entitiesTable.insertLocalVariable(inserter, local, projectID, fileID);
       }
+      inserter.insert();
       
-      // Add the inside relation
-      LimitedEntityDB parent = getLocalEid(local.getParent(), projectID);
-      relationsTable.insert(Relation.INSIDE, eid, parent.getEntityID(), null, projectID, fileID, null, null);
-      
-      count++;
+      inserter = relationsTable.getInFileInserter(tempDir);
+      Iterator<LocalVariableEX> iter = extracted.getLocalVariableReader().iterator();
+      for (LimitedEntityDB entity : entitiesTable.getLocalVariablesByProject(projectID)) {
+        if (iter.hasNext()) {
+          LocalVariableEX local = iter.next();
+          
+          // Get the file
+          String fileID = getFileID(local.getPath(), local);
+          
+          // Add the holds relation
+          LimitedEntityDB type = getEid(local.getTypeFqn(), projectID, inClause);
+          if (fileID == null) {
+            relationsTable.insert(inserter, Relation.HOLDS, entity.getEntityID(), type.getEntityID(), type.isInternal(projectID), projectID);
+          } else {
+            relationsTable.insert(inserter, Relation.HOLDS, entity.getEntityID(), type.getEntityID(), type.isInternal(projectID), projectID, fileID, local.getStartPos(), local.getLength());
+          }
+          
+          // Add the inside relation
+          LimitedEntityDB parent = getLocalEid(local.getParent(), projectID);
+          relationsTable.insert(inserter, Relation.INSIDE, entity.getEntityID(), parent.getEntityID(), null, projectID, fileID, null, null);
+          
+          count++;
+        } else {
+          logger.log(Level.SEVERE, "Missing db local variable for " + entity);
+        }
+      }
+      inserter.insert();
+      if (iter.hasNext()) {
+        logger.log(Level.SEVERE, "Missing local local variable for " + iter.next());
+      }
+    } else {
+      for (LocalVariableEX local : extracted.getLocalVariableReader()) {
+        // Get the file
+        String fileID = getFileID(local.getPath(), local);
+        
+        // Add the entity
+        String eid = entitiesTable.insertLocalVariable(local, projectID, fileID);
+        
+        // Add the holds relation
+        LimitedEntityDB type = getEid(local.getTypeFqn(), projectID, inClause);
+        if (fileID == null) {
+          relationsTable.insert(Relation.HOLDS, eid, type.getEntityID(), type.isInternal(projectID), projectID);
+        } else {
+          relationsTable.insert(Relation.HOLDS, eid, type.getEntityID(), type.isInternal(projectID), projectID, fileID, local.getStartPos(), local.getLength());
+        }
+        
+        // Add the inside relation
+        LimitedEntityDB parent = getLocalEid(local.getParent(), projectID);
+        relationsTable.insert(Relation.INSIDE, eid, parent.getEntityID(), null, projectID, fileID, null, null);
+        
+        count++;
+      }
+      relationsTable.flushInserts();
     }
-    relationsTable.flushInserts();
-    logger.info("      " + count + " local variables / parameters inserted.");
+    logger.info("      " + count + " local variables / parameters inserted in " + TimeUtils.getElapsedTimeInSeconds(startTime) + ".");
   }
   
   private void insertRelations(Extracted extracted, String projectID, String inClause) {

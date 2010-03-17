@@ -19,9 +19,11 @@ package edu.uci.ics.sourcerer.db.schema;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.File;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
+import edu.uci.ics.sourcerer.db.util.InFileInserter;
 import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
@@ -55,6 +57,10 @@ public class DatabaseTable {
   // ---- INSERT ----
   public <T> KeyInsertBatcher<T> getKeyInsertBatcher(KeyInsertBatcher.KeyProcessor<T> processor) {
     return executor.getKeyInsertBatcher(name, processor);
+  }
+  
+  public InFileInserter getInFileInserter(File tempDir) {
+    return executor.getInFileInserter(tempDir, name);
   }
   
   public void flushInserts() {

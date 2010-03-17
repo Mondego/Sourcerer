@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
+import edu.uci.ics.sourcerer.db.util.InFileInserter;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Relation;
@@ -84,6 +85,14 @@ public final class RelationsTable extends DatabaseTable {
   
   public void insert(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID, String fileID, String offset, String length) {
     batcher.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, fileID, offset, length));
+  }
+  
+  public void insert(InFileInserter inserter, Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID) {
+    inserter.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, null, null, null));
+  }
+  
+  public void insert(InFileInserter inserter, Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID, String fileID, String offset, String length) {
+    inserter.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, fileID, offset, length));
   }
   
   // ---- DELETE ----
