@@ -17,7 +17,6 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
-import edu.uci.ics.sourcerer.db.util.InFileInserter;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Relation;
@@ -28,7 +27,7 @@ import edu.uci.ics.sourcerer.model.db.LocationDB;
  */
 public final class RelationsTable extends DatabaseTable {
   protected RelationsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "relations", true);
+    super(executor, locker, "relations");
   }
   
   /*  
@@ -80,18 +79,10 @@ public final class RelationsTable extends DatabaseTable {
   }
   
   public void insert(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID) {
-    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, null, null, null));
-  }
-  
-  public void insert(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID, String fileID, String offset, String length) {
-    batcher.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, fileID, offset, length));
-  }
-  
-  public void insert(InFileInserter inserter, Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID) {
     inserter.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, null, null, null));
   }
   
-  public void insert(InFileInserter inserter, Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID, String fileID, String offset, String length) {
+  public void insert(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID, String fileID, String offset, String length) {
     inserter.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, fileID, offset, length));
   }
   

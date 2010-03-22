@@ -21,8 +21,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-import edu.uci.ics.sourcerer.db.util.InFileInserter;
-import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.QueryResult;
 import edu.uci.ics.sourcerer.db.util.ResultTranslator;
@@ -36,7 +34,7 @@ import edu.uci.ics.sourcerer.model.extracted.FileEX;
  */
 public final class FilesTable extends DatabaseTable {
   protected FilesTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "files", false);
+    super(executor, locker, "files");
   }
   /*  
    *  +-------------+-----------------+-------+--------+
@@ -96,11 +94,7 @@ public final class FilesTable extends DatabaseTable {
     }
   }
   
-  public <T> void insert(KeyInsertBatcher<T> batcher, FileEX file, String projectID, T pairing) {
-    batcher.addValue(getInsertValue(file, projectID), pairing);
-  }
-  
-  public void insert(InFileInserter inserter, FileEX file, String projectID) {
+  public void insert(FileEX file, String projectID) {
     inserter.addValue(getInsertValue(file, projectID));
   }
   

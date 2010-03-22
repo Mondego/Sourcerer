@@ -21,8 +21,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 
-import edu.uci.ics.sourcerer.db.util.InFileInserter;
-import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
@@ -39,7 +37,7 @@ import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
  */
 public final class EntitiesTable extends DatabaseTable {
   protected EntitiesTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "entities", false);
+    super(executor, locker, "entities");
   }
 
   /*  
@@ -92,28 +90,24 @@ public final class EntitiesTable extends DatabaseTable {
   private String getInsertValue(EntityEX entity, String projectID, String fileID) {
     return getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), null, projectID, fileID, entity.getStartPosition(), entity.getLength());
   }
-  
-  public <T> void insert(KeyInsertBatcher<T> batcher, EntityEX entity, String projectID, String fileID, T pairing) {
-    batcher.addValue(getInsertValue(entity, projectID, fileID), pairing);
-  }
-  
-  public void insert(InFileInserter inserter, EntityEX entity, String projectID, String fileID) {
+ 
+  public void insert(EntityEX entity, String projectID, String fileID) {
     inserter.addValue(getInsertValue(entity, projectID, fileID));
   }
-  
-  public String insert(Entity type, String fqn, String projectID) {
-    return executor.insertSingleWithKey(name, getInsertValue(type, fqn, null, null, projectID, null, null, null));
+ 
+  public void insert(Entity type, String fqn, String projectID) {
+    inserter.addValue(getInsertValue(type, fqn, null, null, projectID, null, null, null));
   }
   
-  public String insertUnknown(String fqn, String unknownProject) {
-    return insert(Entity.UNKNOWN, fqn, unknownProject);
+  public void forceInsert(Entity type, String fqn, String projectID) {
+    executor.insertSingle(name, getInsertValue(type, fqn, null, null, projectID, null, null, null));
   }
   
-  public String insertArray(String fqn, int size, String projectID) {
-    return executor.insertSingleWithKey(name, getInsertValue(Entity.ARRAY, fqn, null, "" + size, projectID, null, null, null));
+  public void insertArray(String fqn, int size, String projectID) {
+    inserter.addValue(getInsertValue(Entity.ARRAY, fqn, null, "" + size, projectID, null, null, null));
   }
   
-  public void insertLocalVariable(InFileInserter inserter, LocalVariableEX var, String projectID, String fileID) {
+  public void insertLocalVariable(LocalVariableEX var, String projectID, String fileID) {
     Entity type = null;
     if (var.getType() == LocalVariable.LOCAL) {
       type = Entity.LOCAL_VARIABLE;
@@ -124,20 +118,6 @@ public final class EntitiesTable extends DatabaseTable {
       inserter.addValue(getInsertValue(type, var.getName(), var.getModifiers(), var.getPosition(), projectID, null, null, null));
     } else {
       inserter.addValue(getInsertValue(type, var.getName(), var.getModifiers(), var.getPosition(), projectID, fileID, var.getStartPos(), var.getLength()));
-    }
-  }
-  
-  public String insertLocalVariable(LocalVariableEX var, String projectID, String fileID) {
-    Entity type = null;
-    if (var.getType() == LocalVariable.LOCAL) {
-      type = Entity.LOCAL_VARIABLE;
-    } else if (var.getType() == LocalVariable.PARAM) {
-      type = Entity.PARAMETER;
-    }
-    if (fileID == null) {
-      return executor.insertSingleWithKey(name, getInsertValue(type, var.getName(), var.getModifiers(), var.getPosition(), projectID, null, null, null));
-    } else {
-      return executor.insertSingleWithKey(name, getInsertValue(type, var.getName(), var.getModifiers(), var.getPosition(), projectID, fileID, var.getStartPos(), var.getLength()));
     }
   }
   
@@ -201,12 +181,20 @@ public final class EntitiesTable extends DatabaseTable {
     return executor.executeStreamed("SELECT project_id,entity_id,entity_type,fqn FROM " + name + " WHERE project_id=" + projectID, SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
   }
   
+  public Iterable<SlightlyLessLimitedEntityDB> getSyntheticEntitiesByProject(String projectID) {
+    return executor.executeStreamed("SELECT project_id,entity_id,entity_type,fqn FROM " + name + " WHERE entity_type IN ('ARRAY','WILDCARD','TYPE_VARIABLE','PARAMETERIZED_TYPE','DUPLICATE') AND project_id=" + projectID, SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
+  }
+  
+  public Iterable<SlightlyLessLimitedEntityDB> getUnknownEntities(String projectID) {
+    return executor.executeStreamed("SELECT project_id,entity_id,entity_type,fqn FROM " + name + " WHERE entity_type='UNKNOWN' AND project_id=" + projectID, SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
+  }
+  
   public Iterable<LimitedEntityDB> getLocalVariablesByProject(String projectID) {
     return executor.executeStreamed("SELECT project_id,entity_id,entity_type FROM " + name + " WHERE entity_type IN ('LOCAL_VARIABLE','PARAMETER') AND project_id=" + projectID + " ORDER BY entity_id ASC", LIMITED_ENTITY_TRANSLATOR);
   }
   
   public String getEntityIDByFqnAndProject(String fqn, String projectID) {
-    return executor.selectSingle(name, "entity_id", "project_id=" + projectID);
+    return executor.selectSingle(name, "entity_id", "project_id=" + projectID + " AND fqn='" + fqn + "'");
   }
   
   public LocationDB getLocationByEntityID(String entityID) {

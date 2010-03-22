@@ -17,7 +17,6 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
-import edu.uci.ics.sourcerer.db.util.InFileInserter;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Problem;
@@ -28,7 +27,7 @@ import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
  */
 public final class ProblemsTable extends DatabaseTable {
   protected ProblemsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "problems", true);
+    super(executor, locker, "problems");
   }
   
   /*  
@@ -71,12 +70,8 @@ public final class ProblemsTable extends DatabaseTable {
     return getInsertValue(problem.getType(), problem.getErrorCode(), problem.getMessage(), projectID, fileID);
   }
   
-  public void insert(InFileInserter inserter, ProblemEX problem, String projectID, String fileID) {
-    inserter.addValue(getInsertValue(problem, projectID, fileID));
-  }
-  
   public void insert(ProblemEX problem, String projectID, String fileID) {
-    batcher.addValue(getInsertValue(problem, projectID, fileID));
+    inserter.addValue(getInsertValue(problem, projectID, fileID));
   }
   
   // ---- DELETE ----

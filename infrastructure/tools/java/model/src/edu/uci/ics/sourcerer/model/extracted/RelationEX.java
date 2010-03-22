@@ -36,9 +36,14 @@ public class RelationEX implements ModelEX {
   private String paramPos;
   private String paramName;
   
+  private RelationEX(Relation type, String lhs, String rhs) {
+    this(type, lhs, rhs, null, null, null);
+  }
+  
   private RelationEX(Relation type, String lhs, String rhs, String path) {
     this(type, lhs, rhs, path, null, null);
   }
+  
   private RelationEX(Relation type, String lhs, String rhs, String path, String startPos, String length) {
     this.type = type;
     this.lhs = lhs;
@@ -57,6 +62,10 @@ public class RelationEX implements ModelEX {
     this.length = length;
     this.paramPos = paramPos;
     this.paramName = rhs.substring(1, rhs.length() - 1);
+  }
+  
+  public static RelationEX getSyntheticRelation(Relation type, String lhs, String rhs) {
+    return new RelationEX(type, lhs, rhs);
   }
   
   public Relation getType() {

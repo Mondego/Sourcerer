@@ -36,7 +36,7 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
  */
 public final class ProjectsTable extends DatabaseTable {
   protected ProjectsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "projects", false);
+    super(executor, locker, "projects");
   }
   /*  
    *  +--------------+---------------+-------+--------+

@@ -49,4 +49,8 @@ public class LimitedEntityDB {
       return projectID.equals(this.projectID);
     }
   }
+  
+  public boolean notDuplicate() {
+    return type != Entity.DUPLICATE;
+  }
 }
