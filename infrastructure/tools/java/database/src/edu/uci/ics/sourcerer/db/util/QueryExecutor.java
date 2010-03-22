@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.db.util;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -69,6 +70,10 @@ public class QueryExecutor {
   
   public <T> KeyInsertBatcher<T> getKeyInsertBatcher(String table, KeyInsertBatcher.KeyProcessor<T> processor) {
     return new KeyInsertBatcher<T>(this, table, processor);
+  }
+  
+  public InFileInserter getInFileInserter(File tempDir, String table) {
+    return InFileInserter.getInFileInserter(tempDir, this, table);
   }
   
   public void executeUpdate(String sql) {

@@ -27,7 +27,7 @@ import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
  */
 public final class ProblemsTable extends DatabaseTable {
   protected ProblemsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "problems", true);
+    super(executor, locker, "problems");
   }
   
   /*  
@@ -66,8 +66,12 @@ public final class ProblemsTable extends DatabaseTable {
         convertNotNullNumber(fileID));
   }
   
+  private String getInsertValue(ProblemEX problem, String projectID, String fileID) {
+    return getInsertValue(problem.getType(), problem.getErrorCode(), problem.getMessage(), projectID, fileID);
+  }
+  
   public void insert(ProblemEX problem, String projectID, String fileID) {
-    batcher.addValue(getInsertValue(problem.getType(), problem.getErrorCode(), problem.getMessage(), projectID, fileID));
+    inserter.addValue(getInsertValue(problem, projectID, fileID));
   }
   
   // ---- DELETE ----

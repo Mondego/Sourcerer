@@ -19,10 +19,15 @@ package edu.uci.ics.sourcerer.model.db;
 
 import edu.uci.ics.sourcerer.model.Entity;
 
+/**
+ * @author Joel Ossher (jossher@uci.edu)
+ */
 public class LimitedEntityDB {
   private String projectID;
   private String entityID;
   private Entity type;
+  
+  
   public LimitedEntityDB(String projectID, String entityID, Entity type) {
     this.projectID = projectID;
     this.entityID = entityID;
@@ -36,12 +41,16 @@ public class LimitedEntityDB {
   public String getEntityID() {
     return entityID;
   }
-  
+   
   public Boolean isInternal(String projectID) {
     if (type.isSyntheticTypeEntity()) {
       return null;
     } else {
       return projectID.equals(this.projectID);
     }
+  }
+  
+  public boolean notDuplicate() {
+    return type != Entity.DUPLICATE;
   }
 }
