@@ -161,6 +161,22 @@ public final class ProjectsTable extends DatabaseTable {
             true));
   }
   
+  public void endFirstStageCrawledProjectInsert(String projectID) {
+    executor.executeUpdate("UPDATE " + name + " SET hash = 'END_FIRST' where project_id=" + projectID);
+  }
+  
+  public void endFirstStageJarProjectInsert(String projectID) {
+    executor.executeUpdate("UPDATE " + name + " SET path = 'END_FIRST' where project_id=" + projectID); 
+  }
+  
+  public void beginSecondStageCrawledProjectInsert(String projectID) {
+    executor.executeUpdate("UPDATE " + name + " SET hash = 'BEGIN_SECOND' where project_id=" + projectID);
+  }
+  
+  public void beginSecondStageJarProjectInsert(String projectID) {
+    executor.executeUpdate("UPDATE " + name + " SET path = 'BEGIN_SECOND' where project_id=" + projectID); 
+  }
+  
   public void completeCrawledProjectInsert(String projectID) {
     executor.executeUpdate("UPDATE " + name + " SET hash = NULL where project_id=" + projectID);
   }
