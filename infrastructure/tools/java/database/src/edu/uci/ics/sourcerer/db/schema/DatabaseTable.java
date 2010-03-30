@@ -115,6 +115,26 @@ public class DatabaseTable {
     }
   }
   
+  private static Pattern decimalNumber =  Pattern.compile("(-{0,1})((\\d+)|(\\d+[.]\\d+))");
+  protected static String convertDecimalNumber(String value) {
+    if (value == null) {
+      return "NULL";
+    } else if (!decimalNumber.matcher(value).matches()) {
+      logger.log(Level.SEVERE, value + " is not a decimal number");
+      return "NULL";
+    } else {
+      return value;
+    }
+  }
+  
+  protected static String convertNotNullDecimalNumber(String value) {
+    if (value == null || !decimalNumber.matcher(value).matches()) {
+      throw new IllegalArgumentException(value + " is not a decimal number");
+    } else {
+      return value;
+    }
+  }
+  
   protected static String convertOffset(String offset) {
     if ("-1".equals(offset)) {
       return convertNumber(null);
