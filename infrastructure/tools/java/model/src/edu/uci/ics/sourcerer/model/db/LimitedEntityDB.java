@@ -43,10 +43,12 @@ public class LimitedEntityDB {
   }
    
   public Boolean isInternal(String projectID) {
-    if (type.isSyntheticTypeEntity()) {
-      return null;
-    } else {
+    if (type == Entity.DUPLICATE) {
+      return true;
+    } else if (type.isInternalMeaningful()) {
       return projectID.equals(this.projectID);
+    } else {
+      return null;
     }
   }
   
