@@ -731,6 +731,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       
       // Write the uses relation
       accept(parent.getType());
+      
+      // Write the javadoc comment
+      accept(parent.getJavadoc());
+      
       inFieldDeclaration = true;
     } else if (node.getParent() instanceof VariableDeclarationStatement) {
       VariableDeclarationStatement parent = (VariableDeclarationStatement)node.getParent();
@@ -1209,6 +1213,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         if (!inFieldDeclaration) {
           relationWriter.writeUses(fqnStack.getFqn(), fqn, getLocation(node));
         }
+      } else {
+        // Write the uses relation
+        relationWriter.writeUses(fqnStack.getFqn(), getTypeFqn(getBaseType(varBinding.getType())), getLocation(node));
       }
     } else if (binding instanceof ITypeBinding) {
       ITypeBinding typeBinding = (ITypeBinding) binding;
