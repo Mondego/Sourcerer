@@ -243,6 +243,14 @@ public class Repository extends AbstractRepository {
     return getProjects(null);
   }
   
+  public Collection<RepoProject> getFilteredProjects() {
+    if (PROJECT_FILTER.hasValue()) {
+      return getProjects(FileUtils.getFileAsSet(PROJECT_FILTER.getValue()));
+    } else {
+      return getProjects(null);
+    }
+  }
+  
   public Collection<RepoProject> getProjects(Set<String> filter) {
     if (projects == null) {
       projects = Helper.newHashMap();

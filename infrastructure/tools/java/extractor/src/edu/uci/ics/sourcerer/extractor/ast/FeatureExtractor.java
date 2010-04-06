@@ -100,7 +100,7 @@ public final class FeatureExtractor {
     
     for (IClassFile classFile : classFiles) {
       try {
-        if (ClassFileExtractor.isTopLevel(classFile)) {
+        if (ClassFileExtractor.isTopLevelOrAnonymous(classFile)) {
           ISourceRange source = classFile.getSourceRange();
           
           boolean hasSource = true; 
@@ -114,6 +114,9 @@ public final class FeatureExtractor {
           if (hasSource) {
             // Verify that the source file matches the binary file
             BinaryType type = (BinaryType)classFile.getType();
+            if (type.isAnonymous()) {
+              continue;
+            }
             String sourceFile = type.getPackageFragment().getElementName() + "." + type.getSourceFileName(null);
             String fqn = classFile.getType().getFullyQualifiedName() + ".java";
             if (!fqn.equals(sourceFile)) {

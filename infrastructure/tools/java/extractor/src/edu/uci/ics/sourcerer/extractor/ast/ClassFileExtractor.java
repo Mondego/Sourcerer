@@ -61,14 +61,14 @@ public class ClassFileExtractor {
     fqnStack = Helper.newStack();
   }
   
-  public static boolean isTopLevel(IClassFile classFile) {
+  public static boolean isTopLevelOrAnonymous(IClassFile classFile) {
     if (classFile.getType() == null) {
       logger.log(Level.SEVERE, "Null type!" + classFile);
       return false;
     } else {
       IType type = classFile.getType();
       try {
-        if (type.isMember() || type.isAnonymous() || type.isLocal()) {
+        if (type.isMember() || type.isLocal()) {
           return false;
         } else {
           return true;
@@ -131,10 +131,19 @@ public class ClassFileExtractor {
         name = classFile.getElementName();
         path = parent.getElementName() + "." + name;
         fileWriter.writeClassFile(name, path);
-        
-        relationWriter.writeInside(classFile.getType().getFullyQualifiedName(), parent.getElementName(), path);
-        entityWriter.writePackage(parent.getElementName());
-        
+
+        try {
+          if (classFile.getType().isAnonymous()) {
+            String fqn = classFile.getType().getFullyQualifiedName();
+            String containingFqn = fqn.substring(0, fqn.lastIndexOf('$'));
+            relationWriter.writeInside(classFile.getType().getFullyQualifiedName(), containingFqn, path);
+          } else {
+            relationWriter.writeInside(classFile.getType().getFullyQualifiedName(), parent.getElementName(), path);
+            entityWriter.writePackage(parent.getElementName());
+          }
+        } catch (JavaModelException e) {
+          logger.log(Level.SEVERE, "Error in extracting class file", e);
+        }
         break;
       } else {
         logger.log(Level.SEVERE, classFile.getType().getFullyQualifiedName() + " should be top-level!");
@@ -289,7 +298,13 @@ public class ClassFileExtractor {
         case Signature.CLASS_TYPE_SIGNATURE:
           String args[] = Signature.getTypeArguments(signature);
           if (args.length == 0) {
-            return Signature.getSignatureQualifier(signature) + "." + Signature.getSignatureSimpleName(signature).replace('.', '$');
+            int firstDollar = signature.indexOf('$');
+            if (firstDollar == -1) {
+              return Signature.getSignatureQualifier(signature) + "." + Signature.getSignatureSimpleName(signature);
+            } else {
+              String shortSig = signature.substring(0, firstDollar) + ";";
+              return Signature.getSignatureQualifier(shortSig) + "." + Signature.getSignatureSimpleName(shortSig) + signature.substring(firstDollar, signature.length() - 1);
+            }
           } else {
             StringBuilder fqnBuilder = new StringBuilder(typeSignatureToFqn(Signature.getTypeErasure(signature)));
             fqnBuilder.append('<');
@@ -335,7 +350,7 @@ public class ClassFileExtractor {
       StringBuilder builder = new StringBuilder();
       builder.append('<').append(typeParam.getElementName());
       boolean first = true;
-    
+      
       for (String bound : typeParam.getBounds()) {
         if (first) {
           first = false;
@@ -343,7 +358,7 @@ public class ClassFileExtractor {
         } else {
           builder.append('&');
         }
-        builder.append(bound);
+        builder.append(bound.replace(" extends ", "+"));
       }
       
       builder.append('>');

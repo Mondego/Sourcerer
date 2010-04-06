@@ -368,12 +368,14 @@ public class JarIndex {
     
     JarIndex index = repo.getJarIndex();
     
-    logger.info("Extracting jars from " + repo.getProjects().size() + " projects...");
+    Collection<RepoProject> projects = repo.getFilteredProjects();
+    
+    logger.info("Extracting jars from " + projects.size() + " projects...");
     int projectCount = 0;
     int totalFiles = nameIndex.size();
     int uniqueFiles = nameIndex.size();
     int currentThree = 0;
-    for (RepoProject project : repo.getProjects()) {
+    for (RepoProject project : projects) {
       projectCount++;
       if (completed.contains(project.getProjectPath())) {
         logger.info("Already completed: " + project.getProjectPath());

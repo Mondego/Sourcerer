@@ -177,8 +177,8 @@ public final class EntitiesTable extends DatabaseTable {
     return executor.select(name, "project_id,entity_id,entity_type", "fqn='" + fqn + "' AND project_id IN " + inClause, LIMITED_ENTITY_TRANSLATOR);
   }
   
-  public Iterable<SlightlyLessLimitedEntityDB> getSlightlyLessLimitedEntitiesByProject(String projectID) {
-    return executor.executeStreamed("SELECT project_id,entity_id,entity_type,fqn FROM " + name + " WHERE project_id=" + projectID, SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
+  public Iterable<SlightlyLessLimitedEntityDB> getEntityMapByProject(String projectID) {
+    return executor.executeStreamed("SELECT project_id,entity_id,entity_type,fqn FROM " + name + " WHERE project_id=" + projectID + " AND entity_type NOT IN ('PARAMETER','LOCAL_VARIABLE')", SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
   }
   
   public Iterable<SlightlyLessLimitedEntityDB> getSyntheticEntitiesByProject(String projectID) {

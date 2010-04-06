@@ -287,69 +287,68 @@ public class DatabaseImporter extends DatabaseAccessor {
       fileMap.clear();
     }
     
-    return;
+    for (ExtractedJar jar : jars) {
+      if (!jar.extracted()) {
+        continue;
+      }
+      if (!jar.reallyExtracted()) {
+        continue;
+      }
+      LimitedProjectDB project = projectsTable.getLimitedProjectByHash(jar.getHash());
+      if (project != null) {
+        if (project.completed()) {
+          continue;
+        }
+      }
+      logger.info("  Remaining import of " + jar.getName());
+      
+      String inClause = buildInClause(Helper.newHashSet(projectIDs), jar);
+      String projectID = projectsTable.getProjectIDByHash(jar.getHash());
+
+      projectsTable.beginSecondStageJarProjectInsert(projectID);
+      
+      locker.addRead(entitiesTable);
+      locker.lock();
+      loadEntityMap(projectID);
+      locker.unlock();
+      
+      locker.addRead(filesTable);
+      locker.lock();
+      loadFileMap(projectID);
+      locker.unlock();
+      
+      locker.addWrite(entitiesTable);
+      locker.lock();
+      insertRemainingEntities(jar, projectID, inClause);
+      locker.unlock();
+      
+      locker.addRead(entitiesTable);
+      locker.addWrite(relationsTable);
+      locker.lock();
+      loadRemainingEntityMap(projectID);
+      locker.unlock();
+      
+      locker.addWrites(relationsTable);
+      locker.lock();
+      insertRelations(jar, projectID);
+      locker.unlock();
+      
+      locker.addWrite(importsTable);
+      locker.lock();
+      insertImports(jar, projectID);
+      locker.unlock();
+      
+      locker.addWrite(commentsTable);
+      locker.lock();
+      insertComments(jar, projectID);
+      locker.unlock();
+      
+      projectsTable.completeJarProjectInsert(projectID);
+      entityMap.clear();
+      fileMap.clear();
+    }
     
-//    for (ExtractedJar jar : jars) {
-//      if (!jar.extracted()) {
-//        continue;
-//      }
-//      if (!jar.reallyExtracted()) {
-//        continue;
-//      }
-//      LimitedProjectDB project = projectsTable.getLimitedProjectByHash(jar.getHash());
-//      if (project != null) {
-//        if (project.completed()) {
-//          continue;
-//        }
-//      }
-//      logger.info("  Remaining import of " + jar.getName());
-//      
-//      String inClause = buildInClause(Helper.newHashSet(projectIDs), jar);
-//      String projectID = projectsTable.getProjectIDByName(jar.getName());
-//
-//      projectsTable.beginSecondStageJarProjectInsert(projectID);
-//      
-//      locker.addRead(entitiesTable);
-//      locker.lock();
-//      loadEntityMap(projectID);
-//      locker.unlock();
-//      
-//      locker.addRead(filesTable);
-//      locker.lock();
-//      loadFileMap(projectID);
-//      locker.unlock();
-//      
-//      locker.addWrite(entitiesTable);
-//      locker.lock();
-//      insertRemainingEntities(jar, projectID, inClause);
-//      locker.unlock();
-//      
-//      locker.addRead(entitiesTable);
-//      locker.lock();
-//      loadRemainingEntityMap(projectID);
-//      locker.unlock();
-//      
-//      locker.addWrites(relationsTable);
-//      locker.lock();
-//      insertRelations(jar, projectID);
-//      locker.unlock();
-//      
-//      locker.addWrite(importsTable);
-//      locker.lock();
-//      insertImports(jar, projectID);
-//      locker.unlock();
-//      
-//      locker.addWrite(commentsTable);
-//      locker.lock();
-//      insertComments(jar, projectID);
-//      locker.unlock();
-//      
-//      projectsTable.completeJarProjectInsert(projectID);
-//      entityMap.clear();
-//      fileMap.clear();
-//    }
-//    
-//    logger.info(counter.reportTimeAndCount(2, "jars imported"));
+    logger.info(counter.reportTimeAndCount(2, "jars imported"));
   }
   
   protected void importProjects() {
@@ -444,7 +443,7 @@ public class DatabaseImporter extends DatabaseAccessor {
       String inClause = buildInClause(Helper.newHashSet(projectIDs), project);
       String projectID = projectsTable.getProjectIDByName(project.getName());
 
-      projectsTable.beginSecondStageJarProjectInsert(projectID);
+      projectsTable.beginSecondStageCrawledProjectInsert(projectID);
       
       locker.addRead(entitiesTable);
       locker.lock();
@@ -634,7 +633,7 @@ public class DatabaseImporter extends DatabaseAccessor {
     
     TimeCounter counter = new TimeCounter();
     
-    for (SlightlyLessLimitedEntityDB entity : entitiesTable.getSlightlyLessLimitedEntitiesByProject(projectID)) {
+    for (SlightlyLessLimitedEntityDB entity : entitiesTable.getEntityMapByProject(projectID)) {
       Ent ent = entityMap.get(entity.getFqn());
       if (ent == null) {
         ent = new Ent(entity.getFqn());
@@ -652,6 +651,7 @@ public class DatabaseImporter extends DatabaseAccessor {
     logger.info("    Updating entity map...");
     
     TimeCounter counter = new TimeCounter();
+    relationsTable.initializeInserter(tempDir);
     
     logger.info("      Loading project entities...");
     for (SlightlyLessLimitedEntityDB entity : entitiesTable.getSyntheticEntitiesByProject(projectID)) {
@@ -674,6 +674,12 @@ public class DatabaseImporter extends DatabaseAccessor {
       }
     }
     logger.info(counter.reportTimeAndCount(8, "synthetic entities loaded"));
+    
+    counter.reset();
+    
+    logger.info("      Performing db insert on duplicate relations...");
+    relationsTable.flushInserts();
+    logger.info(counter.reportTime(8, "Db insert performed"));
     
     counter.reset();
     
