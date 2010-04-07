@@ -7,133 +7,23 @@ libraries (in ../lib) to run most of the sourcerer tools. Thus a suggested
 layout for these files can be as follows
 
 <sourcerer tools folder>
-|-- clusterroot
-|   |-- abortindex.py
-|   |-- indexroot
-|   |-- indexsolrrange.py
-|   |-- jettylogs
-|   |-- jobs
-|   |-- runindex.sh
-|   |-- runqsub.sh
-|   |-- solrbin
-|   |-- solrlogs
-|   `-- solrpolr.py
 |-- core-repomanager
 |   |-- content-fetcher.sh
 |   |-- core-repomanager.jar
 |   `-- repo-folder-creator.sh
-|-- db
-|   |-- artifact-index
-|   |-- eclipse-repo
-|   |-- output
-|   |-- sourcerer-db-old.jar
-|   |-- sourcerer-db.jar
-|   `-- test-db-insert
-|-- extractor
-|   |-- eclipse
-|   |-- eclipse-repo
-|   |-- extract-projects-no-jars.sh
-|   |-- extract-projects-resolve.sh
-|   |-- extract-projects.sh
-|   |-- jar-bin-maven-extract.sh
-|   |-- jar-extract.sh
-|   |-- jar-maven-extract.sh
-|   |-- lib-extract.sh
-|   |-- output
-|   |-- small-no-jars.sh
-|   |-- small-resolve-no-jars.sh
-|   |-- small-resolve.sh
-|   |-- small.sh
-|   |-- test
-|   |-- test-jar-bin-extract.sh
-|   |-- test-jar-extract.sh
-|   |-- test-lib-extract.sh
-|   |-- test-output
-|   |-- test-project-extract.sh
-|   |-- ws
-|   `-- ws-test
 |-- indexing
 |   |-- merge-cluster-index.sh
 |   |-- run-index-merger.sh
 |   `-- sourcerer-search.jar
-|-- lib
-|   |-- ant-1.7.0.jar
-|   |-- ant-commons-net-1.7.0.jar
-|   |-- ant-launcher-1.7.0.jar
-|   |-- apache-solr-cell-1.4.0.jar
-|   |-- apache-solr-clustering-1.4.0.jar
-|   |-- apache-solr-common-1.3.0.jar
-|   |-- apache-solr-core-1.3.0.jar
-|   |-- apache-solr-core-1.4.0.jar
-|   |-- apache-solr-dataimporthandler-1.3.0.jar
-|   |-- apache-solr-dataimporthandler-1.4.0.jar
-|   |-- apache-solr-dataimporthandler-extras-1.4.0.jar
-|   |-- apache-solr-solrj-1.4.0.jar
-|   |-- commons-cli-1.1.jar
-|   |-- commons-codec-1.3.jar
-|   |-- commons-csv-1.0-SNAPSHOT-r609327.jar
-|   |-- commons-dbcp-1.2.2.jar
-|   |-- commons-fileupload-1.2.1.jar
-|   |-- commons-httpclient-3.0.jar
-|   |-- commons-httpclient-3.1.jar
-|   |-- commons-io-1.4.jar
-|   |-- commons-logging-1.1.1.jar
-|   |-- commons-pool-1.5.4.jar
-|   |-- easymock.jar
-|   |-- geronimo-stax-api_1.0_spec-1.0.1.jar
-|   |-- guice-1.0.jar
-|   |-- gwt-servlet.jar
-|   |-- htmlparser-1.6.jar
-|   |-- j2ee.jar
-|   |-- jaws-bin.jar
-|   |-- jcl-over-slf4j-1.5.5.jar
-|   |-- junit-4.3.jar
-|   |-- log4j-1.2.8.jar
-|   |-- lucene-analyzers-2.4-dev.jar
-|   |-- lucene-analyzers-2.9.1.jar
-|   |-- lucene-core-2.4-dev.jar
-|   |-- lucene-core-2.9.1.jar
-|   |-- lucene-highlighter-2.9.1.jar
-|   |-- lucene-memory-2.9.1.jar
-|   |-- lucene-misc-2.9.1.jar
-|   |-- lucene-queries-2.9.1.jar
-|   |-- lucene-snowball-2.9.1.jar
-|   |-- lucene-spellchecker-2.9.1.jar
-|   |-- mahout-core-0.3-SNAPSHOT.jar
-|   |-- mysql-connector-java-5.1.7-bin.jar
-|   |-- servlet-api-2.4.jar
-|   |-- servlet-api.jar
-|   |-- slf4j-api-1.5.5.jar
-|   |-- slf4j-api-1.5.8.jar
-|   |-- slf4j-jcl-1.5.8.jar
-|   |-- slf4j-jdk14-1.5.5.jar
-|   |-- smartgwt-skins.jar
-|   |-- smartgwt.jar
-|   |-- svnclientadapter-svnant_1.2.1.jar
-|   |-- tagcloud_0.4.jar
-|   |-- uncommons-maths-1.2.jar
-|   `-- wstx-asl-3.2.7.jar
-|-- repo
-|   |-- aggregate-jar-files.sh
-|   |-- clean-manifests.sh
-|   |-- clone-repo.sh
-|   |-- create-jar-index.sh
-|   |-- extraction-resolve-stats.sh
-|   |-- extraction-stats.sh
-|   |-- generate-jar-filter.sh
-|   |-- jar-bin-extraction-stats.sh
-|   |-- no-jars-extraction-stats.sh
-|   |-- output
-|   |-- repo-tools.jar
-|   |-- test-aggregate-jar-files.sh
-|   |-- test-create-jar-index.sh
-|   `-- test-output
-|-- scripts
-|   |-- print-project-desc.sh
-|   `-- print-projects-with-usage.sh
-`-- similarity
-    |-- run-filtered-usage-writer.sh
-    |-- run-raw-usage-writer.sh
-    |-- run-similarity-writer.sh
-    |-- sourcerer-db.jar
-    `-- sourcerer-ml.jar
+|-- similarity
+|   |-- run-filtered-usage-writer.sh
+|   |-- run-raw-usage-writer.sh
+|   |-- run-similarity-writer.sh
+|   |-- sourcerer-db.jar
+|    `-- sourcerer-ml.jar
+`-- lib
+    |-- < all required external dependencies >
+    |-- apache-solr-clustering-1.4.0.jar
+    |-- apache-solr-common-1.3.0.jar
+    |-- apache-solr-core-1.3.0.jar
+    `-- etc..
