@@ -35,7 +35,7 @@ import edu.uci.ics.sourcerer.search.SourcererGateway;
 public class UsedEntityCommentTransformer extends Transformer {
 
 	
-	SourcererGateway sg = SourcererGateway.getInstance("", "");
+	SourcererGateway sg = SourcererGateway.getInstance("", "", "");
 	
 	/* (non-Javadoc)
 	 * @see org.apache.solr.handler.dataimport.Transformer#transformRow(java.util.Map, org.apache.solr.handler.dataimport.Context)
@@ -45,19 +45,19 @@ public class UsedEntityCommentTransformer extends Transformer {
 		String codeServerUrl = context.getEntityAttribute("code-server-url");
 		if(codeServerUrl!=null) sg.setCodeServerUrl(codeServerUrl);
 		
-		String jarCommentId =  ((BigInteger) row.get("used_jcid")) + "";
+		String commentId =  ((BigInteger) row.get("commentId")) + "";
         //String ctype = (String) row.get("comment_type");
         
-        if (jarCommentId != null /*&& ctype!=null*/){             
+        if (commentId != null /*&& ctype!=null*/){             
         	
-        	String commentText = sg.getJarComment(jarCommentId);
+        	String commentText = sg.getComment(commentId);
         	
         	if(commentText!=null 
         			&& commentText.length()>0 
         			&& !commentText.startsWith("Unable to find location for")){
     			
     			//if(ctype.equals("JAVADOC")){
-    	        	row.put("lp_javadoc", commentText);
+    	        	row.put("p_javadoc", commentText);
             	//} else {
     	        //	row.put("lp_comment",commentText);
             	//}
