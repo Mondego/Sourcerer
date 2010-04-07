@@ -42,27 +42,28 @@
 	<property name="solr-root" location="../infrastructure/services/solr-1.3-patched" />
 	<property name="codecrawler" location="../infrastructure/tools/core/codecrawler/src" />
 	<property name="file-server" location="../infrastructure/services/file-server/src" />
+	<property name="similarity-server" location="../infrastructure/services/similarity-server/src" />
 	<property name="test-repo" location="../infrastructure/tools/java/extractor/test-repo" />
 	<property name="lib" location="../lib" />
 	<property name="extractor-bin" location="../infrastructure/tools/java/extractor/bin" />
 	<property name="machine-learning" location="../infrastructure/tools/core/machine-learning/src" />
-	
+
 	<target name="init">
 		<mkdir dir="${build}" />
 	</target>
 
 	<target name="init-java-tools-core" depends="init">
-    <mkdir dir="${build-java-tools-core}"/>
-  </target>
-	
+		<mkdir dir="${build-java-tools-core}" />
+	</target>
+
 	<target name="compile-java-tools-core" depends="init-java-tools-core">
 		<javac destdir="${build-java-tools-core}" debug="on">
-		  <classpath>
-		    <pathelement path="${classpath}" />
-        <fileset dir="${lib}">
-          <include name="**/servlet-api.jar" />
-        </fileset>
-      </classpath>
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/servlet-api.jar" />
+				</fileset>
+			</classpath>
 			<src path="${utilities}" />
 			<src path="${repository-manager}" />
 			<src path="${model}" />
@@ -82,9 +83,9 @@
 			<fileset dir="${database}" includes="**/*.java" />
 		</copy>
 		<copy todir="${build-java-tools-core}">
-		  <fileset dir="${file-server}" includes="**/*.java" />
+			<fileset dir="${file-server}" includes="**/*.java" />
 		</copy>
-		<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-java-tools-core}"/>
+		<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-java-tools-core}" />
 	</target>
 
 	<target name="sourcerer-lib" depends="compile-java-tools-core">
@@ -98,36 +99,56 @@
 			</manifest>
 		</jar>
 	</target>
-	
+
 	<target name="database" depends="compile-java-tools-core">
-    <jar destfile="sourcerer-db.jar" basedir="${build-java-tools-core}">
-      <manifest>
-        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.db.tools.Main" />
-      </manifest>
-    </jar>
-  </target>
-	
+		<jar destfile="sourcerer-db.jar" basedir="${build-java-tools-core}">
+			<manifest>
+				<attribute name="Main-Class" value="edu.uci.ics.sourcerer.db.tools.Main" />
+			</manifest>
+		</jar>
+	</target>
+
 	<target name="file-server" depends="compile-java-tools-core">
 		<war destfile="file-server.war" webxml="${file-server}/edu/uci/ics/sourcerer/server/file/web.xml">
 			<lib dir="${file-server}/edu/uci/ics/sourcerer/server/file">
 				<include name="*.properties" />
 			</lib>
-		  <classes dir="${build-java-tools-core}" />
+			<classes dir="${build-java-tools-core}" />
 		</war>
 	</target>
-	
+
+	<target name="similarity-server" depends="compile-machine-learning">
+		<war destfile="similarity-server.war" webxml="${similarity-server}/edu/uci/ics/sourcerer/server/similarity/web.xml">
+			<lib dir="${similarity-server}/edu/uci/ics/sourcerer/server/similarity">
+				
+			</lib>
+			<lib dir="${lib}">
+				<include name="**/mahout-core-*.jar" />
+				<include name="**/slf4j-jdk14-1.5.5.jar" />
+				<include name="**/slf4j-api-1.5.5.jar" />
+				<include name="**/commons-*.jar" />
+				<include name="**/uncommons-*.jar" />
+				<include name="**/j2ee-*.jar" />
+			</lib>
+			<lib dir="${build-java-tools-core}">
+				<include name="sourcerer-lib.jar"/>
+			</lib>	
+			<classes dir="${build-machine-learning}" />
+		</war>
+	</target>
+
 	<target name="clean-java-tools">
 		<delete dir="${build-java-tools-core}" />
 		<delete>
 			<fileset dir=".">
-			  <include name="sourcerer-lib.jar" />
+				<include name="sourcerer-lib.jar" />
 				<include name="repo-tools.jar" />
 				<include name="sourcerer-db.jar" />
 				<include name="file-server.war" />
 			</fileset>
 		</delete>
 	</target>
-	
+
 	<!--
 	<target name="init-database" depends="init">
 		<mkdir dir="${build-database}" />
@@ -173,21 +194,21 @@
 	</target>-->
 
 	<target name="extractor">
-	  <pde.exportPlugins destination="." exportSource="true" exportType="directory" plugins="Extractor" useJARFormat="true"/>
+		<pde.exportPlugins destination="." exportSource="true" exportType="directory" plugins="Extractor" useJARFormat="true" />
 	</target>
-	
+
 	<target name="repackage-extractor" depends="compile-java-tools-core">
 		<unjar src="./plugins/Extractor_1.0.0.jar" dest="${build-extractor}" />
 		<copy todir="${build-extractor}">
-		  <fileset dir="${build-java-tools-core}" includes="**/*" />
+			<fileset dir="${build-java-tools-core}" includes="**/*" />
 		</copy>
 		<zip destfile="./Extractor_1.0.0.jar" basedir="${build-extractor}" />
 	</target>
-	
+
 	<target name="clean-extractor">
 		<delete dir="./plugins.xml" />
 	</target>
-	
+
 	<target name="scs">
 		<war destfile="scs.war" webxml="../infrastructure/apps/codesearch/war/WEB-INF/web.xml" basedir="../infrastructure/apps/codesearch/war">
 			<lib dir="${lib}">
@@ -202,9 +223,9 @@
 	</target>
 
 	<target name="init-search-eval" depends="init">
-    <mkdir dir="${build-search-eval}" />
-  </target>
-	
+		<mkdir dir="${build-search-eval}" />
+	</target>
+
 	<target name="compile-search-eval" depends="init-search-eval">
 		<javac destdir="${build-search-eval}" debug="on" excludes="**/sourcerer/db/**/*.java,**/sourcerer/scs/**/*.java,**/sourcerer/eval/client/**/*.java,**/sourcerer/eval/server/**/*.java">
 			<src path="${utilities}" />
@@ -225,7 +246,7 @@
 			<fileset dir="${search-eval}" includes="**/*.java" />
 		</copy>
 	</target>
-	
+
 	<target name="search-eval" depends="compile-search-eval">
 		<jar destfile="search-eval.jar" basedir="${build-search-eval}">
 			<manifest>
@@ -233,7 +254,7 @@
 			</manifest>
 		</jar>
 	</target>
-	
+
 	<target name="clean-search-eval">
 		<delete dir="${build-search-eval}" />
 	</target>
@@ -241,20 +262,25 @@
 	<target name="init-search-server" depends="init">
 		<mkdir dir="${build-search-server}" />
 	</target>
-	
+
 	<target name="compile-search-server" depends="init-search-server">
 		<javac destdir="${build-search-server}" debug="on">
 			<classpath>
 				<pathelement path="${classpath}" />
 				<fileset dir="${lib}">
-					<include name="**/apache-solr*.jar" />
-					<include name="**/lucene-*.jar" />
+					<include name="**/apache-solr-core-1.4.0.jar" />
+					<include name="**/apache-solr-solrj-1.4.0.jar" />
+					<include name="**/apache-solr-dataimporthandler-1.4.0.jar" />
+					<include name="**/lucene-core-2.9.1.jar" />
+					<include name="**/lucene-snowball-2.9.1.jar" />
 					<include name="**/commons-httpclient-*.jar" />
 					<include name="**/commons-cli-*.jar" />
+					<include name="**/servlet-api.jar" />
 				</fileset>
 			</classpath>
 			<src path="${search-server}" />
 			<src path="${utilities}" />
+			
 		</javac>
 		<copy todir="${build-search-server}">
 			<fileset dir="${utilities}" includes="**/*.java" />
@@ -266,16 +292,16 @@
 
 	<target name="search-server" depends="compile-search-server">
 		<jar destfile="sourcerer-search.jar" basedir="${build-search-server}" />
-	</target>	
-	
+	</target>
+
 	<target name="clean-search-server">
 		<delete dir="${build-search-server}" />
 	</target>
 
 	<target name="init-core-repomanager" depends="init">
-	  <mkdir dir="${build-core-repomanager}" />
+		<mkdir dir="${build-core-repomanager}" />
 	</target>
-	
+
 	<target name="compile-core-repomanager" depends="init-core-repomanager">
 		<javac destdir="${build-core-repomanager}" debug="on">
 			<classpath>
@@ -299,15 +325,15 @@
 		<copy file="${core-repository-manager}/../scripts/content-fetcher.sh" todir="." />
 		<copy file="${core-repository-manager}/../scripts/repo-folder-creator.sh" todir="." />
 	</target>
-	
+
 	<target name="clean-core-repomanager">
-	  <delete dir="${build-core-repomanager}" />
+		<delete dir="${build-core-repomanager}" />
 	</target>
 
 	<target name="init-codecrawler" depends="init">
-		<mkdir dir="${build-codecrawler}"/>
+		<mkdir dir="${build-codecrawler}" />
 	</target>
-	
+
 	<target name="compile-codecrawler" depends="init-codecrawler">
 		<javac destdir="${build-codecrawler}" debug="on" source="1.5">
 			<classpath>
@@ -329,10 +355,10 @@
 		<copy file="${codecrawler}/../scripts/run-codecrawler.sh" todir="." />
 	</target>
 
-  <target name="clean-codecrawler">
-	  <delete dir="${build-codecrawler}" />
+	<target name="clean-codecrawler">
+		<delete dir="${build-codecrawler}" />
 	</target>
-  	
+
 	<target name="fetch-patch-solr" depends="init">
 		<get src="http://www.apache.org/dist/lucene/solr/1.3.0/apache-solr-1.3.0.tgz" dest="${build}/apache-solr-1.3.0.tgz" />
 		<untar src="${build}/apache-solr-1.3.0.tgz" dest="${build}" compression="gzip" />
@@ -347,31 +373,31 @@
 	</target>
 
 	<target name="update-test-repo" depends="compile-java-tools-core,sourcerer-lib,repo-tools">
-		<!-- Setup 0/1 with sourcerer-lib --> 
+		<!-- Setup 0/1 with sourcerer-lib -->
 		<copy todir="${test-repo}/0/1/content/src">
-      <fileset dir="${utilities}" includes="**/*.java" />
-    </copy>
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
 		<copy todir="${test-repo}/0/1/content/src">
-      <fileset dir="${repository-manager}" includes="**/*.java" />
-    </copy>
+			<fileset dir="${repository-manager}" includes="**/*.java" />
+		</copy>
 		<copy todir="${test-repo}/0/1/content/src">
-      <fileset dir="${model}" includes="**/*.java" />
-    </copy>
-		
+			<fileset dir="${model}" includes="**/*.java" />
+		</copy>
+
 		<!-- Setup 0/2 with sourcerer-db and sourcerer-lib.jar -->
 		<copy todir="${test-repo}/0/2/content/src">
-		  <fileset dir="${database}" includes="**/*.java" />
-	  </copy>
+			<fileset dir="${database}" includes="**/*.java" />
+		</copy>
 		<copy todir="${test-repo}/0/2/content/lib">
 			<fileset dir=".">
-			  <include name="sourcerer-lib.jar" />
+				<include name="sourcerer-lib.jar" />
 			</fileset>
 		</copy>
 
 		<!-- Clear the old output -->
 		<delete dir="${test-repo}/output" />
 		<delete dir="${test-repo}/jars" />
-		
+
 		<!-- Aggregate the jar repository -->
 		<java jar="repo-tools.jar" fork="true">
 			<arg value="--aggregate-jar-files" />
@@ -380,7 +406,7 @@
 			<arg value="--output" />
 			<arg value="${test-repo}/output/agg" />
 		</java>
-		
+
 		<!-- Create jar index -->
 		<java jar="repo-tools.jar" fork="true">
 			<arg value="--create-jar-index" />
@@ -390,42 +416,45 @@
 			<arg value="${test-repo}/output/index" />
 		</java>
 	</target>
-	
+
 	<target name="clean" description="clean up" depends="clean-java-tools">
 		<delete dir="${build}" />
 	</target>
-	
+
 	<target name="init-machine-learning" depends="init">
-			<mkdir dir="${build-machine-learning}" />
+		<mkdir dir="${build-machine-learning}" />
 	</target>
-		
+
 	<target name="compile-machine-learning" depends="init-machine-learning, database">
 		<javac destdir="${build-machine-learning}" debug="on">
 			<src path="${machine-learning}" />
-			<!--
+			<src path="${similarity-server}" />
 			<src path="${utilities}" />
+			<!--
 			<src path="${database}" />
 			-->
 			<classpath>
 				<pathelement path="${classpath}" />
 				<fileset dir="${lib}">
 					<include name="**/mahout-core-*.jar" />
-					<include name="**/slf4j-*.jar" />	
+					<include name="**/slf4j-*.jar" />
 					<include name="**/commons-*.jar" />
 					<include name="**/mahout-core-*.jar" />
 					<include name="**/uncommons-*.jar" />
 					<include name="**/mysql-*.jar" />
 					<include name="**/j2ee-*.jar" />
+					<include name="**/servlet-api.jar" />
+					
 				</fileset>
 				<fileset dir=".">
-					<include name="**/sourcerer-db.jar"/>
+					<include name="**/sourcerer-db.jar" />
 				</fileset>
 			</classpath>
-		 </javac>
+		</javac>
 		<copy todir="${build-machine-learning}">
-	      <fileset dir="${machine-learning}" includes="**/*.java" />
-	    </copy>
-		
+			<fileset dir="${machine-learning}" includes="**/*.java" />
+		</copy>
+
 		<!--
 		<copy todir="${build-machine-learning}">
 		      <fileset dir="${database}" includes="**/*.java" />
@@ -434,21 +463,21 @@
 		      <fileset dir="${utilities}" includes="**/*.java" />
 		</copy>
 		-->
-		
+
 	</target>
-		
+
 	<target name="machine-learning" depends="compile-machine-learning">
 		<jar destfile="sourcerer-ml.jar" basedir="${build-machine-learning}">
-	  	</jar>
+		</jar>
 	</target>
-	  		
+
 	<target name="clean-machine-learning">
-		 <delete dir="${build-machine-learning}" />
-		 <delete>
-		    <fileset dir=".">
-		      <include name="sourcerer-ml.jar" />
-	      </fileset>
-	  	</delete>
+		<delete dir="${build-machine-learning}" />
+		<delete>
+			<fileset dir=".">
+				<include name="sourcerer-ml.jar" />
+			</fileset>
+		</delete>
 	</target>
-	
+
 </project>
