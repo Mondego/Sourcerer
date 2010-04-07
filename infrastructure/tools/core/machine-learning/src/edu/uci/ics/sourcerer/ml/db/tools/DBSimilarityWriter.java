@@ -26,11 +26,12 @@ import org.apache.mahout.cf.taste.model.DataModel;
 import org.apache.mahout.cf.taste.similarity.UserSimilarity;
 import org.apache.mahout.cf.taste.impl.model.file.FileDataModel;
 
-import edu.uci.ics.sourcerer.db.util.DatabaseAccessor;
+import edu.uci.ics.sourcerer.db.schema.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.ml.SimilarUserCalculator;
 import edu.uci.ics.sourcerer.ml.TasteFileModelWithStringItemIds;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 
 /**
@@ -41,14 +42,19 @@ import edu.uci.ics.sourcerer.ml.TasteFileModelWithStringItemIds;
 public abstract class DBSimilarityWriter extends DatabaseAccessor implements ISimilarityWriter{
 
 	SimilarUserCalculator suCalc; 
+	protected java.io.File tempDir;
+	public boolean clearTable = false;
 	
 	public DBSimilarityWriter(String dataFileLocation, 
 			int neighborhoodSize,
 			double similarityThreshold,
 			long lowUserId,
 			long highUserId,
-			DatabaseConnection conn) throws FileNotFoundException, TasteException{
+			DatabaseConnection conn,
+			boolean clearTable2) throws FileNotFoundException, TasteException{
 		super(conn);
+		this.clearTable = clearTable2;
+		tempDir = FileUtils.getTempDir();
 		suCalc = new SimilarUserCalculator(this);
 		suCalc.setLowEntityId(lowUserId);
 		suCalc.setHighEntityId(highUserId);
@@ -66,6 +72,6 @@ public abstract class DBSimilarityWriter extends DatabaseAccessor implements ISi
 	
 	public abstract UserSimilarity getUserSimilarity(DataModel dm);
 	public abstract void initializeSimilarityTable();
-	public abstract void startWrite() throws TasteException;
-	public abstract InsertBatcher getBatcher();
+	public abstract void write() throws TasteException;
+
 }

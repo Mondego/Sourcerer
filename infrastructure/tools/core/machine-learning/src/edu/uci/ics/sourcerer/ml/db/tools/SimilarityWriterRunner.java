@@ -52,8 +52,11 @@ public class SimilarityWriterRunner {
 		new StringProperty("fqn-use-file", null, "SimDatabase", 
 				"Path to fqn use file.");
 	public static final Property<Integer> NEIGHBORHOOD_SIZE =
-		new IntegerProperty("n-size", 45, "SimDatabase",
+		new IntegerProperty("n-size", 120, "SimDatabase",
 				"Neighborhood size.").makeOptional();
+	public static final Property<Boolean> CLEAN_DB =
+		new BooleanProperty("clean-db", false, "SimDatabase",
+				"Set true to clear similarity tables first.").makeOptional();
 	public static final Property<Boolean> FQN_USE_FROM_DB =
 		new BooleanProperty("fqn-use-from-db", false, "SimDatabase",
 				"Set true to load fqn use model from database.").makeOptional();
@@ -98,6 +101,7 @@ public class SimilarityWriterRunner {
 	    try {
 			
 	    	switch (SIMILARITY_TYPE.getValue()) {
+	    	
 	    	case HAMMING_DISTANCE:
 	    		writer = 
 					new HammingDistanceDBSimilarityWriter(
@@ -106,7 +110,8 @@ public class SimilarityWriterRunner {
 							SIM_THRESHOLD.getValue(),
 							LOW_ID.getValue(),
 							HIGH_ID.getValue(),
-							connection);
+							connection,
+							CLEAN_DB.getValue());
 	    		break;
 	    		
 	    	case TANIMOTO_COEFFICIENT:
@@ -117,8 +122,10 @@ public class SimilarityWriterRunner {
 							SIM_THRESHOLD.getValue(),
 							LOW_ID.getValue(),
 							HIGH_ID.getValue(),
-							connection);
+							connection,
+							CLEAN_DB.getValue());
 	    		break;
+	    	
 	    	default:
 	    		System.err.println("Invalid selection for " + SIMILARITY_TYPE.getName());
 	    		PropertyManager.printUsage();
@@ -137,7 +144,7 @@ public class SimilarityWriterRunner {
 		if(writer!=null){
 			writer.initializeSimilarityTable();
 			try {
-				writer.startWrite();
+				writer.write();
 			} catch (TasteException e) {
 				// TODO Log this
 				e.printStackTrace();

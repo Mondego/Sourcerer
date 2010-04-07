@@ -64,27 +64,27 @@ public class UsageWriterRunner {
     		System.exit(-1);
 	    }
 	    
-	    PropertyManager.registerAndVerify(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
-	    FileUsageWriter writer = new FileUsageWriter(Properties.OUTPUT.getValue().getPath());
+	    FileUsageWriter writer = new FileUsageWriter(Properties.OUTPUT.getValue().getPath(), true);
 	    
 	    String input = Properties.INPUT.getValue().getPath();
-	    String usedFqnCountFileJdk = input + File.separator + "jdk-usage-by-entity.txt"; 
-		String usedFqnCountFileJars = input + File.separator + "jar-usage-by-entity.txt"; 
-		String popularFqnsFile = input + File.separator + "popular-fqn.txt";
+	    String entityEachUsedFqnFile = input + File.separator + "entity_eachfqn_usage.txt";
+	    String entityAllUsedFqnsCountFile = input + File.separator + "entity_allfqn_count.txt";
+		String usedFqnsCountFile = input + File.separator + "fqns.txt"; 
+		String popularFqnsFile = input + File.separator + "popular-fqns.txt";
 	    
-	    UsageCalculator ucalc = new UsageCalculator();
+	    FilteredUsageCalculator ucalc = new FilteredUsageCalculator();
 	    ucalc.setWriter(writer);
 	    ucalc.init(
-	    		DATABASE_URL.getValue(), 
-	    		DATABASE_USER.getValue(), 
-	    		DATABASE_PASSWORD.getValue(), 
 	    		MIN_FQNs_USED_BY_ENTITY.getValue().intValue(), 
 	    		MIN_USES_OF_FQN.getValue().intValue(), 
-	    		usedFqnCountFileJdk, 
-	    		usedFqnCountFileJars, 
-	    		popularFqnsFile);
+	    		entityEachUsedFqnFile,
+	    		entityAllUsedFqnsCountFile,
+	    		usedFqnsCountFile,
+	    		popularFqnsFile
+	    );
 	    
 		try {
+			writer.USAGE_FILE = "entity_eachfqn_usage_filtered.txt";
 			writer.openFiles();
 			ucalc.writeUsage();
 			writer.closeFiles();

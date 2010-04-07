@@ -16,26 +16,37 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package edu.uci.ics.sourcerer.ml;
+package edu.uci.ics.sourcerer.util.io;
+
+import edu.uci.ics.sourcerer.ml.db.tools.UsagePreCalculator;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
- * @created Dec 3, 2009
+ * @created Mar 26, 2010
  *
  */
-public enum Similarities {
-	TANIMOTO_COEFFICIENT,
-	HAMMING_DISTANCE;
-	
-	public static String allElementNames(){
-		StringBuffer buf = new StringBuffer();
-		for(Similarities s: Similarities.values()){
-			buf.append(s.toString());
-			buf.append(" ");
-		}
-		
-		return buf.toString();
-	}
-	
-}
+public class EntityTypeOptionProperty extends Property<UsagePreCalculator.EntityType> {
 
+	public EntityTypeOptionProperty(String name, UsagePreCalculator.EntityType defaultValue, String category, String description) {
+	    super(name, defaultValue, category, description);
+	  }
+	
+
+	@Override
+	public String getType() {
+		return "Usage";
+	}
+
+	
+	@Override
+	protected UsagePreCalculator.EntityType parseString(String value) {
+	    
+		try{
+		  return UsagePreCalculator.EntityType.valueOf(value.toUpperCase());
+		}catch(Exception e){
+			throw new IllegalArgumentException("Please choose a valid value for " + this.name + ", or skip the option to use the default value.");
+		}
+		 
+	  }
+
+}

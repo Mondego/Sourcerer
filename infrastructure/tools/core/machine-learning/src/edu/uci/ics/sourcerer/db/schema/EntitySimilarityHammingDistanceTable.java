@@ -25,29 +25,24 @@ import java.util.Collection;
 import edu.uci.ics.sourcerer.db.util.InsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.ResultTranslator;
+import edu.uci.ics.sourcerer.db.util.TableLocker;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
  * @created Dec 3, 2009
  *
  */
-public class EntitySimilarityHammingDistanceTable {
-	private EntitySimilarityHammingDistanceTable() {}
+public class EntitySimilarityHammingDistanceTable 
+	extends DatabaseTable{
+		
+		public EntitySimilarityHammingDistanceTable(QueryExecutor executor, TableLocker locker) {
+		    super(executor, locker, "similarity_hamming");
+		  }
 	  
-	  public static final String TABLE = "similarity_hamming";
-	  
-	  //---- LOCK ----
-	  public static String getReadLock() {
-	    return SchemaUtils.getReadLock(TABLE);
-	  }
-	  
-	  public static String getWriteLock() {
-	    return SchemaUtils.getWriteLock(TABLE);
-	  }
-	  
+	 
 	  // ---- CREATE ----
-	  public static void createTable(QueryExecutor executor) {
-	    executor.createTable(TABLE,
+	  public void createTable(QueryExecutor executor) {
+	    executor.createTable(name,
 	    		"lhs_eid BIGINT UNSIGNED NOT NULL",
 	            "rhs_eid BIGINT UNSIGNED NOT NULL",
 	            "similarity DOUBLE NOT NULL",
@@ -56,19 +51,16 @@ public class EntitySimilarityHammingDistanceTable {
 	  }
 	  
 	  // ---- INSERT ----
-	  public static InsertBatcher getInsertBatcher(QueryExecutor executor) {
-		    return executor.getInsertBatcher(TABLE);
-		  }
 	  
-	  private static String getInsertValue(String lhsEid, String rhsEid, String simValue) {
-	    return SchemaUtils.getInsertValue(
-	        SchemaUtils.convertNotNullNumber(lhsEid),
-	        SchemaUtils.convertNotNullNumber(rhsEid),
-	        SchemaUtils.convertNotNullNumber(simValue));
+	  private  String getInsertValue(String lhsEid, String rhsEid, String simValue) {
+	    return buildInsertValue(
+	        convertNotNullNumber(lhsEid),
+	        convertNotNullNumber(rhsEid),
+	        convertNotNullDecimalNumber(simValue));
 	  }
 	  
-	  public static void insert(InsertBatcher batcher, String lhsEid, String rhsEid, String similarity) {
-		    batcher.addValue(getInsertValue(lhsEid, rhsEid, similarity));
+	  public  void insert(String lhsEid, String rhsEid, String similarity) {
+		    inserter.addValue(getInsertValue(lhsEid, rhsEid, similarity));
 		  }
 	  
 	//  // ---- DELETE ----
@@ -85,14 +77,15 @@ public class EntitySimilarityHammingDistanceTable {
 	    }
 	  };
 	  
-	  public static Collection<Long> getSimilarEntityIds(QueryExecutor executor, long lhsEid){
-		  return executor.select(TABLE, "rhs_eid", "lhs_eid=" + lhsEid, TRANSLATOR_RHS_EID);
+	  public  Collection<Long> getSimilarEntityIds(QueryExecutor executor, long lhsEid){
+		  return executor.select(name, "rhs_eid", "lhs_eid=" + lhsEid, TRANSLATOR_RHS_EID);
 	  }
 	  
-	  public static Collection<Long> getTopKSimilarEntityIds(QueryExecutor executor, long lhsEid, int k){
-		  return executor.select(TABLE, "rhs_eid", "lhs_eid=" + lhsEid 
+	  public  Collection<Long> getTopKSimilarEntityIds(QueryExecutor executor, long lhsEid, int k){
+		  return executor.select(name, "rhs_eid", "lhs_eid=" + lhsEid 
 				  + " ORDER BY similarity desc LIMIT " + k, 
 				  TRANSLATOR_RHS_EID);
 	  }
+
 
 	}
