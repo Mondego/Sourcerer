@@ -36,20 +36,25 @@ JAVA_HOME=$9"/"
 JETTYXML=${10}
 PORT=${11}
 
+JOBDIR=$ROOT"/jobs/pass"$PASS
+
 export JAVA_HOME
-PATH=$PATH:$JAVA_HOME/bin
+# note hardcoded python path
+PATH=$PATH:$JAVA_HOME/bin:"/pkg/python/2.6.2/bin"
 export PATH
 
 time_start=`date +%s`
 
 # log requests sent so far
-echo `date`"    "$HOSTNAME" "$PORT" "$LOEID"    "$HIEID"    "$PASS >> $ROOT"/jobs/pass"$PASS"/REQ.log"
+echo "!REQ!	"`date`"    "$HOSTNAME" "$PORT" "$LOEID"    "$HIEID"    "$PASS
 
-# change to the Solr installation directory to start the server from
+# change to the Solr directory to start the server from
 cd $SOLR
 
+SOLR_HOME=$JOBDIR"/"$LOEID"_"$HIEID"_solrhome"
+
 # start Solr server
-java -Djetty.requestlogs=$JETTYLOGDIR -Dsolr.data.dir=$INDEXDIR -Djava.util.logging.config.file=$LPROP -Dsolr.solr.home=$SOLR"/installation/solr/" -Djetty.port=$PORT -jar start.jar $JETTYXML &
+java -Djetty.requestlogs=$JETTYLOGDIR -Dsolr.data.dir=$INDEXDIR -Djava.util.logging.config.file=$LPROP -Dsolr.solr.home=$SOLR_HOME -Djetty.port=$PORT -jar start.jar $JETTYXML &
 
 # wait 5 min before sending indexing command
 sleep 300
@@ -61,14 +66,15 @@ python $ROOT/indexsolrrange.py $HOSTNAME $PORT $LOEID $HIEID
 sleep 300
 
 # start polling the Solr server
-python $ROOT/solrpolr.py $HOSTNAME $PORT $LOEID"_"$HIEID $PASS > $ROOT"/jobs/pass"$PASS"/"$LOEID"_"$HIEID".solrpolr.out"
+python $ROOT/solrpolr.py $HOSTNAME $PORT $LOEID"_"$HIEID $PASS # > $ROOT"/jobs/pass"$PASS"/"$LOEID"_"$HIEID".solrpolr.out"
 
 # polling process ended (either indexing done or problem with Solr server)
 time_end=`date +%s`
 RUNTIME=`expr $(( $time_end - $time_start ))`
 time_exec=`printf "%02d:%02d:%02d\n" $((RUNTIME/3600)) $((RUNTIME/60%60)) $((RUNTIME%60))`
 
-echo $HOSTNAME" Indexing job request ended in time (hh:mm:ss) - "$time_exec". Pass "$PASS" Range "$LOEID"_"$HIEID" (check for problems in logs/stderr)" > $ROOT"/jobs/pass"$PASS"/"$LOEID"_"$HIEID".jobend.out"
-
 # log responses received
-echo `date`"    "$HOSTNAME" "$PORT" "$LOEID"    "$HIEID"    "$PASS" "$RUNTIME"  "$time_exec >> $ROOT"/jobs/pass"$PASS"/RES.log"
+echo "!RES!	"`date`"    "$HOSTNAME" "$PORT" "$LOEID"    "$HIEID"    "$PASS" "$RUNTIME"  "$time_exec
+
+echo $HOSTNAME" :"$PORT" Indexing job request ended in time (hh:mm:ss) - "$time_exec". Pass "$PASS" Range "$LOEID"_"$HIEID" (check for problems in logs/stderr)" > $ROOT"/jobs/pass"$PASS"/"$LOEID"_"$HIEID".jobend.out"
+

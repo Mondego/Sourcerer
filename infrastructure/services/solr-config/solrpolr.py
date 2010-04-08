@@ -31,29 +31,47 @@ port = sys.argv[2]
 RANGE = sys.argv[3]
 PASS  = sys.argv[4]
 
-SOLR_STAT = host + ' not contacted yet'
+SOLR_STAT = host + ' :' + port + ' not contacted yet for ' + ' Range:' + RANGE + ' Pass:' + PASS
 pollcycle = 1
 
 while (True):
     
-    print host + ' - ' + str(datetime.now()) + ' - Entering poll cycle: ' + `pollcycle`
+    print '!POL!\t' + host + ' :' + port + ' - ' + str(datetime.now()) + ' - Entering poll cycle: ' + `pollcycle`
     
     params = urllib.urlencode({'command': 'status','wt':'python'})
     headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
-    conn = httplib.HTTPConnection(host, port, timeout=300) # 5 minutes timeout
     
+    conn = None
     response = None
+
+    fail = False
+    err_m = ""
+    
     try:
+        conn = httplib.HTTPConnection(host, port, timeout=3) # 5 minutes timeout
         conn.request("POST", "/solr/scs/dataimport", params, headers)
         response = conn.getresponse()
-    except IOError, err:
-        print >> sys.stderr, str(datetime.now()) + ' - ' + host + ' - Solr server had problem during polling (Cycle:' + `pollcycle` + ' Range:' + RANGE + ' Pass:' + PASS  + ') - ' + `err`
-        break    
+    except IOError as ioe:
+        err_m = err_m + ' :: ' +  `ioe`
+        fail = True
+    except Exception as e:
+        err_m = err_m + ' :: ' +  `e`
+        fail = True
+    except:
+        fail = True    
     
-    assert not response == None
+    if conn == None or response == None:
+        fail = True
+        err_m = err_m + ' :: Connection or Response is None' 
+    
+    if fail:
+        print >> sys.stderr, str(datetime.now()) + ' - ' + host + ' :' + port + ' - Solr server had problem during polling (Cycle:' + `pollcycle` + ' Range:' + RANGE + ' Pass:' + PASS  + ') - ' + err_m
+        conn.close()
+        break
     
     if not (response.status == 200):
-        print >> sys.stderr, str(datetime.now()) + ' - ' + host + ' - Solr server did not send HTTP 200 during polling (Cycle:' + `pollcycle` + ' Range:' + RANGE + ' Pass:' + PASS  + ') - ' + "Got: " + response.status
+        print >> sys.stderr, str(datetime.now()) + ' - ' + host + ' :' + port + ' - Solr server did not send HTTP 200 during polling (Cycle:' + `pollcycle` + ' Range:' + RANGE + ' Pass:' + PASS  + ') - ' + "Got: " + response.status
+        conn.close()
         break
     
     result = response.read()
@@ -75,18 +93,19 @@ while (True):
     
     if finish or idle:
         if idle and finish:
-            SOLR_STAT = host + ' Done Indexing' + ' Range:' + RANGE + ' Pass:' + PASS
+            SOLR_STAT = host + ' :' + port + ' Done Indexing' + ' Range:' + RANGE + ' Pass:' + PASS
         elif idle and (not finish):
-            SOLR_STAT = host + ' Idle but not indexed'  + ' Range:' + RANGE + ' Pass:' + PASS
+            SOLR_STAT = host + ' :' + port + ' Idle but not indexed'  + ' Range:' + RANGE + ' Pass:' + PASS
             print >> sys.stderr, host + ' Possibly did not finish indexing'  + ' Range:' + RANGE + ' Pass:' + PASS
         elif (not idle) and finish:
-            SOLR_STAT = host + ' Not idle but indexing finished'  + ' Range:' + RANGE + ' Pass:' + PASS
+            SOLR_STAT = host + ' :' + port + ' Not idle but indexing finished'  + ' Range:' + RANGE + ' Pass:' + PASS
         
-        print str(datetime.now()) + ' - ' + host + ' - ' + str(rsp['statusMessages'])
+        print '!POL!\t' + str(datetime.now()) + ' - ' + host + ' :' + port + ' - ' + str(rsp['statusMessages'])
+        conn.close()
         break
     
-    print str(datetime.now()) + ' - ' + host + ' - ' + str(rsp['statusMessages'])
+    print '!POL!\t' + str(datetime.now()) + ' - ' + host + ' :' + port + ' - ' + str(rsp['statusMessages'])
     pollcycle = pollcycle + 1
     time.sleep(sleeptime)
 
-print SOLR_STAT
+print '!POL!\t' + SOLR_STAT

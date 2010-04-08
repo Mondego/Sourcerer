@@ -64,4 +64,9 @@ sed "s#!SOLR_LOG_FOLDER!#$SOLRLOGDIR#g" $SOLR/logging.properties > $LPROP
 SERVERID=$RANGE"_"$PASS
 sed "s#!SERVER_ID!#$SERVERID#g" $SOLR/etc/jetty.xml > $JETTYXML
 
+# make a copy of own Solr home
+SOLR_HOME=$JOBSDIR"/"$LOEID"_"$HIEID"_solrhome"
+mkdir $SOLR_HOME
+cp -r $SOLR'/installation/solr/'* $SOLR_HOME'/'
+
 qsub -v PATH -b y -o $OUT -e $ERR -q $Q $ROOT/runindex.sh $INDEXDIR $LPROP $SOLR $LOEID $HIEID $ROOT $PASS $JETTYLOGDIR $JAVA_HOME $JETTYXML $PORT > $JOBSDIR/$RANGE".qsub.out"
