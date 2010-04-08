@@ -26,16 +26,21 @@ loeid = sys.argv[3]
 hieid = sys.argv[4]
 
 params = urllib.urlencode({'command': 'full-import', 'lo_eid_incl': loeid, 'hi_eid_excl': hieid, 'wt':'python'})
-
 headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+conn = httplib.HTTPConnection(host, port, timeout=300) # 5 mins seconds timeout
+    
+response = None
+try:
+    conn.request("POST", "/solr/scs/dataimport", params, headers)
+    response = conn.getresponse()
+except IOError, err:
+    sys.exit( str(datetime.now()) + ' - ' + host + ' - Problem after sending command full-import. Range:' + loeid + '_' + hieid + ' - ' + `err` + '\n')
+    
+assert not response == None
 
-conn = httplib.HTTPConnection(host, port)
-conn.request("POST", "/solr/scs/dataimport", params, headers)
-response = conn.getresponse()
-	
 if not (response.status == 200):
-	print host + ' Solr server did not send HTTP 200. Got ' + str(response.status) + '. Command: full-import. Range: ' + loeid + ' to ' + hieid
+	print >> sys.stderr, str(datetime.now()) + " - " + host + ' - Solr server did not send HTTP 200 after full-import command. Got ' + str(response.status) + '. Range:'+ loeid + '_' + hieid
 else:
 	rsp = eval(response.read())
-	print host + ' ' + str(datetime.now()) + ' ' + str(rsp)
+	print str(datetime.now()) + " - " + host + ' - Done with command full-import. Range:' + loeid + '_' + hieid + ' - ' + str(rsp)
 

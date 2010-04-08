@@ -25,16 +25,19 @@ host = sys.argv[1]
 port = sys.argv[2]
 
 params = urllib.urlencode({'command': 'abort', 'wt':'python'})
-
 headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+conn = httplib.HTTPConnection(host, port, timeout=300)
 
-conn = httplib.HTTPConnection(host, port)
-conn.request("POST", "/solr/scs/dataimport", params, headers)
-response = conn.getresponse()
+response = None
+try:
+    conn.request("POST", "/solr/scs/dataimport", params, headers)
+    response = conn.getresponse()
+except IOError, err:
+    sys.exit(str(datetime.now()) + " - " + host + ' - Solr server had problem when asked to abort indexing. ' + `err` + '\n')
 	
 if not (response.status == 200):
-	print host + ' Solr server did not send HTTP 200. Got ' + str(response.status) + '. Command: abort'
+	print >> sys.stderr, str(datetime.now()) + " - " + host + ' - Solr server did not send HTTP 200 after abort command. Got ' + str(response.status)
 else:
 	rsp = eval(response.read())
-	print host + ' ' + str(datetime.now()) + ' ' + str(rsp)
+	print str(datetime.now()) + " - " + host + ' - Solr server done after asked to abort indexing. ' + str(rsp)
 

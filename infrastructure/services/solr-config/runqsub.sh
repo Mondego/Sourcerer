@@ -21,9 +21,9 @@
 
 # run this from solr-server-pass(1|2) folder
 
-if [ $# -ne 6 ] ; then
-    echo 'This script requires 6 aruments: low_eid hi_eid cluster_root_path pass_number java_home cluster_q_name'
-    echo 'Run this script from solr-server_pass(1|2)/'
+if [ $# -ne 7 ] ; then
+    echo 'This script requires 7 aruments: low_eid hi_eid cluster_root_path pass_number java_home cluster_q_name solr_port'
+    # echo 'Run this script from solr-server_pass(1|2)/'
     exit 0
 fi
 
@@ -33,6 +33,7 @@ ROOT=$3
 PASS=$4
 JAVA_HOME=$5
 Q=$6
+PORT=$7
 
 SOLR=$ROOT/solrbin/solr-server-pass$PASS
 
@@ -63,5 +64,4 @@ sed "s#!SOLR_LOG_FOLDER!#$SOLRLOGDIR#g" $SOLR/logging.properties > $LPROP
 SERVERID=$RANGE"_"$PASS
 sed "s#!SERVER_ID!#$SERVERID#g" $SOLR/etc/jetty.xml > $JETTYXML
 
-qsub -cwd -v PATH -b y -o $OUT -e $ERR -q $Q $ROOT/runindex.sh $INDEXDIR $LPROP $SOLR $LOEID $HIEID $ROOT $PASS $JETTYLOGDIR $JAVA_HOME $JETTYXML > $JOBSDIR/$RANGE".qsub.out"
- 
+qsub -v PATH -b y -o $OUT -e $ERR -q $Q $ROOT/runindex.sh $INDEXDIR $LPROP $SOLR $LOEID $HIEID $ROOT $PASS $JETTYLOGDIR $JAVA_HOME $JETTYXML $PORT > $JOBSDIR/$RANGE".qsub.out"

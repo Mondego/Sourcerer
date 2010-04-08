@@ -19,8 +19,8 @@
 # ===================================================================== 
 # @author Sushil Bajracharya (bajracharya@gmail.com)
 
-if [ $# -ne 10 ] ; then
-    echo '$HOSTNAME says: expecting 10 arguments; runindex.sh to be called by runqsub.sh. Do not run it directly.'
+if [ $# -ne 11 ] ; then
+    echo '$HOSTNAME says: runindex.sh needs 11 arguments. (runindex.sh to be called by runqsub.sh, do not run it directly)' >&2
     exit 0
 fi
 
@@ -34,14 +34,41 @@ PASS=$7
 JETTYLOGDIR=$8
 JAVA_HOME=$9"/"
 JETTYXML=${10}
+PORT=${11}
 
 export JAVA_HOME
 PATH=$PATH:$JAVA_HOME/bin
 export PATH
 
-java -Djetty.requestlogs=$JETTYLOGDIR -Dsolr.data.dir=$INDEXDIR -Djava.util.logging.config.file=$LPROP -Dsolr.solr.home=$SOLR"/installation/solr/" -Djetty.port=8983 -jar start.jar $JETTYXML &
-sleep 60s
-python $ROOT/indexsolrrange.py $HOSTNAME 8983 $LOEID $HIEID
-sleep 30s
-python $ROOT/solrpolr.py $HOSTNAME 8983 > $ROOT"/jobs/pass"$PASS/$LOEID"_"$HIEID".solrstat.txt"
-echo $HOSTNAME Indexing Job done. Pass $PASS Range $LOEID"_"$HIEID > $ROOT"/jobs/pass"$PASS/$LOEID"_"$HIEID".jobstat.txt"
+time_start=`date +%s`
+
+# log requests sent so far
+echo `date`"    "$HOSTNAME" "$PORT" "$LOEID"    "$HIEID"    "$PASS >> $ROOT"/jobs/pass"$PASS"/REQ.log"
+
+# change to the Solr installation directory to start the server from
+cd $SOLR
+
+# start Solr server
+java -Djetty.requestlogs=$JETTYLOGDIR -Dsolr.data.dir=$INDEXDIR -Djava.util.logging.config.file=$LPROP -Dsolr.solr.home=$SOLR"/installation/solr/" -Djetty.port=$PORT -jar start.jar $JETTYXML &
+
+# wait 5 min before sending indexing command
+sleep 300
+
+# send indexing command 
+python $ROOT/indexsolrrange.py $HOSTNAME $PORT $LOEID $HIEID
+
+# wait 5 min before starting polling the index server
+sleep 300
+
+# start polling the Solr server
+python $ROOT/solrpolr.py $HOSTNAME $PORT $LOEID"_"$HIEID $PASS > $ROOT"/jobs/pass"$PASS"/"$LOEID"_"$HIEID".solrpolr.out"
+
+# polling process ended (either indexing done or problem with Solr server)
+time_end=`date +%s`
+RUNTIME=`expr $(( $time_end - $time_start ))`
+time_exec=`printf "%02d:%02d:%02d\n" $((RUNTIME/3600)) $((RUNTIME/60%60)) $((RUNTIME%60))`
+
+echo $HOSTNAME" Indexing job request ended in time (hh:mm:ss) - "$time_exec". Pass "$PASS" Range "$LOEID"_"$HIEID" (check for problems in logs/stderr)" > $ROOT"/jobs/pass"$PASS"/"$LOEID"_"$HIEID".jobend.out"
+
+# log responses received
+echo `date`"    "$HOSTNAME" "$PORT" "$LOEID"    "$HIEID"    "$PASS" "$RUNTIME"  "$time_exec >> $ROOT"/jobs/pass"$PASS"/RES.log"

@@ -44,6 +44,7 @@ mkdir $ROOT/jettylogs/pass1
 mkdir $ROOT/jettylogs/pass2
 
 mkdir $ROOT/solrbin
+mkdir $ROOT/batchruns
 
 BIN=./bin
 cp -r $BIN/ $ROOT/solrbin/
@@ -53,3 +54,4 @@ cp runqsub.sh $ROOT/
 cp solrpolr.py $ROOT/
 cp indexsolrrange.py $ROOT/
 cp abortindex.py $ROOT/
+cp genqsubbatches.py $ROOT/
