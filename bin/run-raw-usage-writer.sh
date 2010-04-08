@@ -25,5 +25,5 @@ SW_JAR="sourcerer-ml.jar"
 
 java -Xmx6048m -cp ./:$LIB_INCLUDES:./sourcerer-db.jar:./$SW_JAR edu.uci.ics.sourcerer.ml.db.tools.UsagePreCalculatorRunner $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12}
 
-# nohup ./run-raw-usage-writer.sh --exclude-internal false  --output /data/sourcerer/ml-data/method-usage-all/ --database-url jdbc:mysql://tagus.ics.uci.edu:3306/sourcerer_eclipse --database-user <user> --database-password <pass> --entity-type METHOD > rawusage-mall.out &
+# nohup ./run-raw-usage-writer.sh --exclude-internal false  --output /data/sourcerer/ml-data/method-usage-all/ --database-url jdbc:mysql://localhost/db --database-user <user> --database-password <pass> --entity-type METHOD > rawusage-mall.out &
 

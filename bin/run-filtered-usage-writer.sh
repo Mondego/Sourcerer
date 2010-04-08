@@ -25,4 +25,4 @@ SW_JAR="sourcerer-ml.jar"
 
 java -Xmx2048m -cp ./:$LIB_INCLUDES:./sourcerer-db.jar:./$SW_JAR edu.uci.ics.sourcerer.ml.db.tools.UsageWriterRunner $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12} ${13} ${14}
 
-#./run-usage-writer.sh --output /Users/shoeseal/sandbox/Sourcerer/infrastructure/tools/core/machine-learning/output --input /Users/shoeseal/sandbox/Sourcerer/infrastructure/tools/core/machine-learning/test/data.big --database-url jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_t2 --database-user <sourcerer.db.user> --database-password <sourcerer.db.password>
+#./run-usage-writer.sh --output /Users/shoeseal/sandbox/Sourcerer/infrastructure/tools/core/machine-learning/output --input /Users/shoeseal/sandbox/Sourcerer/infrastructure/tools/core/machine-learning/test/data.big --database-url jdbc:mysql://localhost/db --database-user u --database-password p

@@ -25,6 +25,5 @@ SW_JAR="sourcerer-ml.jar"
 
 java -Xmx2048m -cp ./:$LIB_INCLUDES:./sourcerer-db.jar:./$SW_JAR edu.uci.ics.sourcerer.ml.db.tools.SimilarityWriterRunner $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12} ${13} ${14} ${15} ${16}
 
-#./run-similarity-writer.sh --output /Users/shoeseal/sandbox/Sourcerer/infrastructure/tools/core/machine-learning/sw.output --database-url jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_t2 --database-user sourcerer --database-password sourcerer4us --fqn-use-file /Users/shoeseal/sandbox/Sourcerer/infrastructure/tools/core/machine-learning/test/data.big/usage.txt --similarity HAMMING_DISTANCE
-#./run-similarity-writer.sh --output ../data/op/simw --database-url jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_t2 --database-user <sourcerer.db.user> --database-password <sourcerer.db.user> --fqn-use-file ../data/ip/usage.txt --similarity TANIMOTO_COEFFICIENT
+#./run-similarity-writer.sh --output ../data/op/simw --database-url jdbc:mysql://localhost/db --database-user u --database-password p --fqn-use-file ../data/ip/usage.txt --similarity TANIMOTO_COEFFICIENT
 
