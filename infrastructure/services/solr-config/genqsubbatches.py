@@ -71,6 +71,7 @@ for start in range(LOEID, HIEID, EIDS_PER_NODE):
     batch = batch + 1
     
     if batch % BATCH_SIZE == 0:
+        batchfile.write('echo "Done submitting all jobs in batch ' + `(batch/BATCH_SIZE)-1` + '"')
         batchfile.close()
         _fpath = BATCH_RUNS + "/pass-" + PASS + "_batch-" + `batch/BATCH_SIZE`  + ".sh"
         batchfile = open(_fpath, 'w')
