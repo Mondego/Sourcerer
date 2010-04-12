@@ -55,9 +55,9 @@ for start in range(LOEID, HIEID, EIDS_PER_NODE):
     if end > HIEID:
         end = HIEID
     
-    # 2 min delay before each submission
+    # 1 min delay before each submission
     if(start > LOEID):
-        batchfile.write("sleep 120") 
+        batchfile.write("sleep 60") 
         batchfile.write("\n")
     
     # execute runqsub.sh 
@@ -71,7 +71,7 @@ for start in range(LOEID, HIEID, EIDS_PER_NODE):
     batch = batch + 1
     
     if batch % BATCH_SIZE == 0:
-        batchfile.write('echo "Done submitting all jobs in batch ' + `(batch/BATCH_SIZE)-1` + '"')
+        batchfile.write('echo "Done submitting all jobs in batch ' + `(batch/BATCH_SIZE)-1` + '"\n')
         batchfile.close()
         _fpath = BATCH_RUNS + "/pass-" + PASS + "_batch-" + `batch/BATCH_SIZE`  + ".sh"
         batchfile = open(_fpath, 'w')

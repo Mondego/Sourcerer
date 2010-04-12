@@ -19,8 +19,8 @@
 # ===================================================================== 
 # @author Sushil Bajracharya (bajracharya@gmail.com)
 
-if [ $# -ne 2 ] ; then
-    echo 'This script requires 2 arguments: user password'
+if [ $# -ne 3 ] ; then
+    echo 'This script requires 3 arguments: user password db-url:port'
     echo 'Run this script from <Sourcerer>/infrastructure/services/solr-config'
     exit 0
 fi
@@ -29,12 +29,18 @@ fi
 ant search-server -f ../../../bin/build.xml
 cp ../../../bin/sourcerer-search.jar ./deployment-base/installation/solr/scs/lib/
 
-url='jdbc:mysql:\/\/tagus.ics.uci.edu:3306\/sourcerer_eclipse?netTimeoutForStreamingResults=3600'
+# append to end of url to prevent timeout ?netTimeoutForStreamingResults=3600
+url='jdbc:mysql:\/\/'$3'\/sourcerer_eclipse'
 user=$1
 password=$2
 
+jettyxmlin='./conf/jetty.xml'
+jettyxml1='./bin/solr-server-pass1/etc/jetty.xml'
+jettyxml2='./bin/solr-server-pass2/etc/jetty.xml'
+
 dbcfg1in='./conf/db-data-config-pass1.xml'
 dbcfg1out='./bin/solr-server-pass1/installation/solr/scs/conf/db-data-config.xml'
+
 
 dbcfg2in='./conf/db-data-config-pass2.xml'
 dbcfg2out='./bin/solr-server-pass2/installation/solr/scs/conf/db-data-config.xml'
@@ -47,6 +53,7 @@ mkdir ./bin/solr-server-pass1
 cp -r ./deployment-base/* ./bin/solr-server-pass1
 cp ./conf/schema-pass1.xml ./bin/solr-server-pass1/installation/solr/scs/conf/schema.xml
 sed "s/!sourcerer.db.url!/$url/g;s/!sourcerer.db.user!/$user/g;s/!sourcerer.db.password!/$password/g" $dbcfg1in > $dbcfg1out
+sed "s/!sourcerer.db.url!/$url/g;s/!sourcerer.db.user!/$user/g;s/!sourcerer.db.password!/$password/g" $jettyxmlin > $jettyxml1
 cp ./conf/solrconfig-pass1.xml ./bin/solr-server-pass1/installation/solr/scs/conf/solrconfig.xml
 
 # make second pass
@@ -54,4 +61,5 @@ mkdir ./bin/solr-server-pass2
 cp -r ./deployment-base/* ./bin/solr-server-pass2
 cp ./conf/schema-pass2.xml ./bin/solr-server-pass2/installation/solr/scs/conf/schema.xml
 sed "s/!sourcerer.db.url!/$url/g;s/!sourcerer.db.user!/$user/g;s/!sourcerer.db.password!/$password/g" $dbcfg2in > $dbcfg2out 
+sed "s/!sourcerer.db.url!/$url/g;s/!sourcerer.db.user!/$user/g;s/!sourcerer.db.password!/$password/g" $jettyxmlin > $jettyxml2
 cp ./conf/solrconfig-pass2.xml ./bin/solr-server-pass2/installation/solr/scs/conf/solrconfig.xml

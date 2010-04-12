@@ -1,7 +1,8 @@
 <dataConfig>
-
-	<dataSource driver="com.mysql.jdbc.Driver" 
-		url="!sourcerer.db.url!"
+    <!-- url="!sourcerer.db.url!"
+    	driver="com.mysql.jdbc.Driver"  -->
+	<dataSource 
+		jndiName="java:comp/env/jdbc/DSSourcerer"
 		user="!sourcerer.db.user!" 
 		password="!sourcerer.db.password!"
 		autoCommit="false" 
@@ -35,7 +36,8 @@
 				query="SELECT entity_id as eid, entity_type as etype from entities where
 					entity_id='${code_entity.entity_id}'"
 				code-server-url="http://nile.ics.uci.edu:9180/file-server"
-				mlt-server-url="http://localhost:8983/solr/scs/mlt" sim-server-url="http://localhost:8080/similarity-server">
+				mlt-server-url="http://kathmandu.ics.uci.edu:8983/solr/scs/mlt" 
+				sim-server-url="http://nile.ics.uci.edu:9180/similarity-server">
 
 				<field column="code_text" name="full_text" />
 
