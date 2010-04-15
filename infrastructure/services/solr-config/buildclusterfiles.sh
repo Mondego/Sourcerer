@@ -49,6 +49,7 @@ mkdir $ROOT/batchruns
 BIN=./bin
 cp -r $BIN/ $ROOT/solrbin/
 
+cp cleanop.sh $ROOT/
 cp runindex.sh $ROOT/
 cp runqsub.sh $ROOT/
 cp solrpolr.py $ROOT/

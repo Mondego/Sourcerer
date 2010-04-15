@@ -71,14 +71,14 @@ public class SourcererGateway {
 
 	Logger logger = Logger.getLogger(this.getClass().getName());
 	
-	String simUrlPart = "http://loalhost:9180/similarity-server";
+	String simUrlPart = "noserver"; // "http://localhost:9180/similarity-server";
 	String urlPart = "http://localhost:8983/solr/scs/mlt";
 	String codeUrlPart = "http://localhost:9180/file-server";
 	String dbDriver = "com.mysql.jdbc.Driver";
 	String dbUri = "jdbc:mysql://localhost:3307/sourcerer_test";
 	String dbUser = "sourcerer";
 	String dbPassword = "";
-	String timeout = "2500";
+	String timeout = "1500";
 	
 	HttpClient client;
 	JdbcDataSource ds;
@@ -87,8 +87,10 @@ public class SourcererGateway {
 	{
 		MultiThreadedHttpConnectionManager httpConnectionManager = new MultiThreadedHttpConnectionManager();
 		httpConnectionManager.getParams().setConnectionTimeout(1000);
-		httpConnectionManager.getParams().setSoTimeout(1500);
+		httpConnectionManager.getParams().setSoTimeout(1200);
 		client = new HttpClient(httpConnectionManager);
+		
+		
 	}
 
 	private void initDb() {
@@ -450,7 +452,7 @@ public class SourcererGateway {
 		get.setQueryString(queryString.trim());
 
 		get.addRequestHeader("Cache-Control", "no-cache");
-		get.setFollowRedirects(false);
+		get.setFollowRedirects(true);
 
 		get.getParams().setParameter("http.socket.timeout", getTimeout());
 		try {

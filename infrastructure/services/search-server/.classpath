@@ -15,5 +15,6 @@
 	<classpathentry kind="lib" path="/lib/lucene-snowball-2.9.1.jar"/>
 	<classpathentry kind="lib" path="/lib/apache-solr-dataimporthandler-1.4.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/apache-solr-1.4.0"/>
+	<classpathentry kind="src" path="/machine-learning"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -15,7 +15,8 @@
     	<init-param>
         	<param-name>usage-file</param-name>
         	<!-- /Users/shoeseal/sandbox/Sourcerer/infrastructure/tools/core/machine-learning/test/data.m.usage/entity_eachfqn_usage_filtered.txt -->
-        	<param-value>/data/sourcerer/ml-data/method-usage-nointernal/entity_eachfqn_usage_filtered.txt</param-value>
+        	<!--  /data/sourcerer/ml-data/method-usage-nointernal/entity_eachfqn_usage_filtered.txt -->
+        	<param-value>/home/cerk/skb/sourcerertools/data/entity_eachfqn_usage_filtered.txt</param-value>
     	</init-param>
     	<init-param>
         	<param-name>neigh-size</param-name>

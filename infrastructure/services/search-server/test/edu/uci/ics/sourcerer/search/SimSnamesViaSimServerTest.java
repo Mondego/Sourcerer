@@ -15,9 +15,12 @@ public class SimSnamesViaSimServerTest extends TestCase{
 
 	public void testSim() {
 		
-		g.setSimServerUrl("http://localhost:8080/similarity-server");
+		g.setSimServerUrl("http://mine8.ics.uci.edu:9010/similarity-server"
+				// "http://localhost:8080/similarity-server"
+				);
 		
-		String entityId = "6821103";
+		String entityId = "45138875"; 
+			// "6821103";
 			// "42958433";
 			// "42958349";
 			//"42958434";

@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 import org.apache.solr.handler.dataimport.Context;
 import org.apache.solr.handler.dataimport.Transformer;
 
+import edu.uci.ics.sourcerer.ml.SimEidGateway;
 import edu.uci.ics.sourcerer.search.SourcererGateway;
 
 /**
@@ -71,12 +72,24 @@ public class EidToSimSnamesTransformer extends Transformer{
 //	        	Logger.getLogger(this.getClass().getName()).log(Level.INFO, 
 //	        			"Got sim fqns via MLT: " + simMlt);
 //	        	
-	        	String simTC = sg.eidsViaSimEntitiesTC(eid); 
+	        	String simTC = "''"; 
+	        	String simHD = "''";
+	        	
+	        	if(simServerUrl == null){
+	        		simTC = SimEidGateway.eidsViaSimEntitiesTC(eid); 
+		        	simHD = SimEidGateway.eidsViaSimEntitiesHD(eid);
+	        	} else {
+	        	simTC = sg.eidsViaSimEntitiesTC(eid); 
+	        	simHD = sg.eidsViaSimEntitiesHD(eid);
+	        	}
+	        	
+	        	
+	        	
 	        	row.put("simTC_eids_via_jdkLib_use", simTC);
 //	        	Logger.getLogger(this.getClass().getName()).log(Level.INFO, 
 //	        			"Got sim eids via TC: " + simTC);
 	        	
-	        	String simHD = sg.eidsViaSimEntitiesHD(eid);
+	        	
 	        	row.put("simHD_eids_via_jdkLib_use", simHD);
 //	        	Logger.getLogger(this.getClass().getName()).log(Level.INFO, 
 //	        			"Got sim eids via HD: " + simHD);

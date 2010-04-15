@@ -54,7 +54,7 @@ cd $SOLR
 SOLR_HOME=$JOBDIR"/"$LOEID"_"$HIEID"_solrhome"
 
 # start Solr server
-java -Xmx1024m -Djetty.requestlogs=$JETTYLOGDIR -Dsolr.data.dir=$INDEXDIR -Djava.util.logging.config.file=$LPROP -Dsolr.solr.home=$SOLR_HOME -Djetty.port=$PORT -jar start.jar $JETTYXML &
+java -Xmx1200m -Djetty.requestlogs=$JETTYLOGDIR -Dsolr.data.dir=$INDEXDIR -Djava.util.logging.config.file=$LPROP -Dsolr.solr.home=$SOLR_HOME -Djetty.port=$PORT -jar start.jar $JETTYXML &
 
 # wait 5 min before sending indexing command
 sleep 300

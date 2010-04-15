@@ -120,7 +120,7 @@
 	<target name="similarity-server" depends="compile-machine-learning">
 		<war destfile="similarity-server.war" webxml="${similarity-server}/edu/uci/ics/sourcerer/server/similarity/web.xml">
 			<lib dir="${similarity-server}/edu/uci/ics/sourcerer/server/similarity">
-				
+
 			</lib>
 			<lib dir="${lib}">
 				<include name="**/mahout-core-*.jar" />
@@ -131,8 +131,8 @@
 				<include name="**/j2ee-*.jar" />
 			</lib>
 			<lib dir="${build-java-tools-core}">
-				<include name="sourcerer-lib.jar"/>
-			</lib>	
+				<include name="sourcerer-lib.jar" />
+			</lib>
 			<classes dir="${build-machine-learning}" />
 		</war>
 	</target>
@@ -263,7 +263,7 @@
 		<mkdir dir="${build-search-server}" />
 	</target>
 
-	<target name="compile-search-server" depends="init-search-server">
+	<target name="compile-search-server" depends="init-search-server, database">
 		<javac destdir="${build-search-server}" debug="on">
 			<classpath>
 				<pathelement path="${classpath}" />
@@ -276,18 +276,32 @@
 					<include name="**/commons-httpclient-*.jar" />
 					<include name="**/commons-cli-*.jar" />
 					<include name="**/servlet-api.jar" />
+					<!-- ml dependencies -->
+					<include name="**/mahout-core-0.3-SNAPSHOT.jar" />
+					<include name="**/slf4j-api-1.5.5.jar" />
+					<include name="**/slf4j-jdk14-1.5.5.jar" />
+					<include name="**/commons-*.jar" />
+					<include name="**/uncommons-*.jar" />
+					<include name="**/mysql-*.jar" />
+					<include name="**/j2ee-*.jar" />
+				</fileset>
+				<fileset dir=".">
+					<include name="**/sourcerer-db.jar" />
 				</fileset>
 			</classpath>
 			<src path="${search-server}" />
 			<src path="${utilities}" />
-			
+			<src path="${machine-learning}" />
+
 		</javac>
+		<!--
 		<copy todir="${build-search-server}">
 			<fileset dir="${utilities}" includes="**/*.java" />
 		</copy>
 		<copy todir="${build-search-server}">
 			<fileset dir="${search-server}" includes="**/*.java" />
 		</copy>
+		-->
 	</target>
 
 	<target name="search-server" depends="compile-search-server">
@@ -444,7 +458,7 @@
 					<include name="**/mysql-*.jar" />
 					<include name="**/j2ee-*.jar" />
 					<include name="**/servlet-api.jar" />
-					
+
 				</fileset>
 				<fileset dir=".">
 					<include name="**/sourcerer-db.jar" />

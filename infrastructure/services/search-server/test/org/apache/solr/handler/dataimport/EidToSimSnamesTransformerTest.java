@@ -53,9 +53,9 @@ public class EidToSimSnamesTransformerTest {
 		fields.add(c);
 		
 		HashMap<String,String> ef1 = new HashMap<String,String>();
-		ef1.put("sim-server-url","http://localhost:8080/similarity-server");
-		ef1.put("mlt-server-url","http://localhost:8983/solr/scs/mlt");
-		ef1.put("http-timeout","1");
+		// ef1.put("sim-server-url","http://localhost:8080/similarity-server");
+		ef1.put("mlt-server-url","http://kathmandu.ics.uci.edu:8983/solr/scs/mlt");
+		ef1.put("http-timeout","500");
 		
 		Context context = AbstractDataImportHandlerTest.getContext(null, null,
 				null, Context.FULL_DUMP, fields, ef1);

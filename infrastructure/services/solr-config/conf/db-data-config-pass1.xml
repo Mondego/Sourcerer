@@ -1,13 +1,11 @@
 <dataConfig>
-    <!-- url="!sourcerer.db.url!"
-    	driver="com.mysql.jdbc.Driver"  -->
-    	
+   
     <dataSource 
-		jndiName="java:comp/env/jdbc/DSSourcerer"
+		url="!sourcerer.db.url!"
+    	driver="com.mysql.jdbc.Driver"
 		user="!sourcerer.db.user!" 
 		password="!sourcerer.db.password!"
 		autoCommit="false" 
-		readOnly="true" 
 		batchSize="-1" />
     	
     <document name="entity">

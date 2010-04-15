@@ -23,7 +23,7 @@ from socket import socket
 
 finish = False
 idle = False
-sleeptime = 1800 # 30mins, poll solr server every half hour
+sleeptime = 900 # 15mins, poll solr server every half hour
 
 host = sys.argv[1]
 port = sys.argv[2]

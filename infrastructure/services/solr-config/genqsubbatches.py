@@ -22,7 +22,7 @@ import sys
 if not len(sys.argv) == 9:
     sys.exit(sys.argv[0] + " needs 8 arguments:\n  loeid_inclusive hieid_exclusive cluster_root_path index_pass java_home_path cluster_q_name eids_per_node batch_size")
 
-PORT  = 9000
+PORT  = 9010
 LOEID = int(sys.argv[1])
 HIEID = int(sys.argv[2])
 
@@ -62,11 +62,15 @@ for start in range(LOEID, HIEID, EIDS_PER_NODE):
     
     # execute runqsub.sh 
     # low_eid hi_eid cluster_root_path pass_number java_home cluster_q_name
+    batchfile.write("echo 'submitting range:" + `start` + "_" + `end` + " port:" + `PORT` + "'")
+    batchfile.write("\n")
     _cmd =  ROOT+"/runqsub.sh", start, end, ROOT, PASS, JAVA_HOME, Q, PORT, " > ", BATCH_RUNS + "/" + `start` + "_" + `end` + ".out &"
     PORT = PORT + 1
     batchfile.write(' '.join([str(s) for  s in _cmd]))
     batchfile.write("\n")
-    
+    batchfile.write("echo 'submitted range:" + `start` + "_" + `end` + " port:" + `PORT` + "'")
+    batchfile.write("\n")
+
     
     batch = batch + 1
     

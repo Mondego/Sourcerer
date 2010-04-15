@@ -28,9 +28,10 @@ fi
 
 ant search-server -f ../../../bin/build.xml
 cp ../../../bin/sourcerer-search.jar ./deployment-base/installation/solr/scs/lib/
+cp ../../../bin/sourcerer-db.jar ./deployment-base/installation/solr/scs/lib/
 
-# append to end of url to prevent timeout ?netTimeoutForStreamingResults=3600
-url='jdbc:mysql:\/\/'$3'\/sourcerer_eclipse'
+# append to end of url to prevent timeout ?netTimeoutForStreamingResults=3660
+url='jdbc:mysql:\/\/'$3'\/sourcerer_eclipse?netTimeoutForStreamingResults=10800'
 user=$1
 password=$2
 
