@@ -50,4 +50,6 @@ public interface IRelationWriter extends IExtractorWriter {
   public void writeUses(String fqn, String type, Location location);
 
   public void writeParametrizedBy(String fqn, String typeVariable, int pos, Location location);
+  
+  public void writeOverrides(String fqn, String overriddenFqn, Location location);
 }

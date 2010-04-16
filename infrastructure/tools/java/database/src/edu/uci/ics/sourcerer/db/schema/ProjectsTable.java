@@ -231,8 +231,12 @@ public final class ProjectsTable extends DatabaseTable {
     return executor.selectSingle(name, PROJECT_TRANSLATOR.getSelect(), "project_id=" + projectID, PROJECT_TRANSLATOR);
   }
   
-  public String getProjectIDByName(String project) {
-    return executor.selectSingle(name, "project_id", "name='" + project + "'");
+  public String getProjectIDByPath(String path) {
+    return executor.selectSingle(name, "project_id", "path='" + path + "'");
+  }
+  
+  public String getProjectIDByName(String name) {
+    return executor.selectSingle(name, "project_id", "name='" + name + "'");
   }
   
   public String getHashByProjectID(String projectID) {

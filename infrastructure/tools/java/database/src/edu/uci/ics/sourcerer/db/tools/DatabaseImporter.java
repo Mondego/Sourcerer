@@ -441,7 +441,7 @@ public class DatabaseImporter extends DatabaseAccessor {
       logger.info("  Remaining import of " + project.getName());
 
       String inClause = buildInClause(Helper.newHashSet(projectIDs), project);
-      String projectID = projectsTable.getProjectIDByName(project.getName());
+      String projectID = projectsTable.getProjectIDByPath(project.getProjectPath());
 
       projectsTable.beginSecondStageCrawledProjectInsert(projectID);
       
@@ -563,7 +563,7 @@ public class DatabaseImporter extends DatabaseAccessor {
       
       // Add the entity
       entitiesTable.insert(entity, projectID, fileID);
-      
+        
       counter.increment();
     }
     logger.info(counter.reportTimeAndCount(8, "entities processed"));
@@ -749,16 +749,20 @@ public class DatabaseImporter extends DatabaseAccessor {
         
         // Add the holds relation
         LimitedEntityDB type = getEid(local.getTypeFqn(), projectID);
-        if (fileID == null) {
-          relationsTable.insert(Relation.HOLDS, entity.getEntityID(), type.getEntityID(), type.isInternal(projectID), projectID);
-        } else {
-          relationsTable.insert(Relation.HOLDS, entity.getEntityID(), type.getEntityID(), type.isInternal(projectID), projectID, fileID, local.getStartPos(), local.getLength());
+        if (type != null) {
+          if (fileID == null) {
+            relationsTable.insert(Relation.HOLDS, entity.getEntityID(), type.getEntityID(), type.isInternal(projectID), projectID);
+          } else {
+            relationsTable.insert(Relation.HOLDS, entity.getEntityID(), type.getEntityID(), type.isInternal(projectID), projectID, fileID, local.getStartPos(), local.getLength());
+          }
+          counter.increment();
         }
-        counter.increment();
         
         // Add the inside relation
         LimitedEntityDB parent = getEid(local.getParent(), projectID);
-        relationsTable.insert(Relation.INSIDE, entity.getEntityID(), parent.getEntityID(), null, projectID, fileID, null, null);
+        if (parent != null) {
+          relationsTable.insert(Relation.INSIDE, entity.getEntityID(), parent.getEntityID(), null, projectID, fileID, null, null);
+        }
         
         counter.increment();
       } else {
@@ -782,13 +786,15 @@ public class DatabaseImporter extends DatabaseAccessor {
     for (ImportEX imp : extracted.getImportReader()) {
       String fileID = getFileID(imp.getPath(), imp);
       
-      // Look up the imported entity
-      LimitedEntityDB imported = getEid(imp.getImported(), projectID);
-      
-      // Add the import
-      if (imported != null) {
-        importsTable.insert(imp.isStatic(), imp.isOnDemand(), imported.getEntityID(), projectID, fileID, imp.getOffset(), imp.getLength());
-        counter.increment();
+      if (fileID != null) {
+        // Look up the imported entity
+        LimitedEntityDB imported = getEid(imp.getImported(), projectID);
+        
+        // Add the import
+        if (imported != null) {
+          importsTable.insert(imp.isStatic(), imp.isOnDemand(), imported.getEntityID(), projectID, fileID, imp.getOffset(), imp.getLength());
+          counter.increment();
+        }
       }
     }
     logger.info(counter.reportTimeAndCount(8, "imports processed"));
@@ -810,22 +816,24 @@ public class DatabaseImporter extends DatabaseAccessor {
     for (CommentEX comment : extracted.getCommentReader()) {
       String fileID = getFileID(comment.getPath(), comment);
       
-      if (comment.getType() == Comment.JAVADOC) {
-        // Look up the entity
-        LimitedEntityDB commented = getEid(comment.getFqn(), projectID);
-        
-        // Add the comment
-        if (commented != null) {
-          commentsTable.insertJavadoc(commented.getEntityID(), projectID, fileID, comment.getOffset(), comment.getLength());
+      if (fileID != null) {
+        if (comment.getType() == Comment.JAVADOC) {
+          // Look up the entity
+          LimitedEntityDB commented = getEid(comment.getFqn(), projectID);
+          
+          // Add the comment
+          if (commented != null) {
+            commentsTable.insertJavadoc(commented.getEntityID(), projectID, fileID, comment.getOffset(), comment.getLength());
+            counter.increment();
+          }
+        } else if (comment.getType() == Comment.UJAVADOC) {
+          // Add the comment
+          commentsTable.insertUnassociatedJavadoc(projectID, fileID, comment.getOffset(), comment.getLength());
+          counter.increment();
+        } else {
+          commentsTable.insertComment(comment.getType(), projectID, fileID, comment.getOffset(), comment.getLength());
           counter.increment();
         }
-      } else if (comment.getType() == Comment.UJAVADOC) {
-        // Add the comment
-        commentsTable.insertUnassociatedJavadoc(projectID, fileID, comment.getOffset(), comment.getLength());
-        counter.increment();
-      } else {
-        commentsTable.insertComment(comment.getType(), projectID, fileID, comment.getOffset(), comment.getLength());
-        counter.increment();
       }
     }
     logger.info(counter.reportTimeAndCount(8, "comments processed"));

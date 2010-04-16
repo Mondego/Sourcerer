@@ -55,4 +55,8 @@ public class LimitedEntityDB {
   public boolean notDuplicate() {
     return type != Entity.DUPLICATE;
   }
+  
+  public String toString() {
+    return type.toString() + "(" + entityID + ")";
+  }
 }
