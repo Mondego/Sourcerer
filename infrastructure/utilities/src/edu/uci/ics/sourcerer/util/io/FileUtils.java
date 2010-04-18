@@ -21,6 +21,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -97,9 +98,14 @@ public final class FileUtils {
   }
   
   public static String getFileAsString(String path) {
+    return getFileAsString(new File(path));
+  }
+  
+  public static String getFileAsString(File file) {
+    FileReader reader = null;
     try {
       StringBuilder builder = new StringBuilder();
-      FileReader reader = new FileReader(path);
+      reader = new FileReader(file);
       char[] buff = new char[1024];
       for (int read = reader.read(buff); read > 0; read = reader.read(buff)) {
         builder.append(buff, 0, read);
@@ -108,19 +114,112 @@ public final class FileUtils {
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to read file.", e);
       return null;
+    } finally {
+      close(reader);
+    }
+  }
+  
+  public static byte[] getFileAsByteArray(File file) {
+    InputStream is = null;
+    try {
+      long length = file.length();
+      if (length > Integer.MAX_VALUE) {
+        logger.log(Level.SEVERE, file.getPath() + " too big to read");
+        return null;
+      }
+      byte[] retval = new byte[(int)length];
+      is = new FileInputStream(file);
+      int off = 0;
+      for (int read = is.read(retval, off, retval.length - off); read > 0; read = is.read(retval, off, retval.length - off)) {
+        off += read;
+      }
+      if (off < retval.length) {
+        logger.log(Level.SEVERE, "Unable to completely read file " + file.getPath());
+        return null;
+      }
+      return retval;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to read file.", e);
+      return null;
+    } finally {
+      close(is);
+    }
+  }
+  
+  public static byte[] getInputStreamAsByteArray(InputStream is, int estimated) {
+    ByteArrayOutputStream bos = new ByteArrayOutputStream(estimated);
+    try {
+      byte[] buff = new byte[1024];
+      int read = 0;
+      while ((read = is.read(buff)) > 0) {
+        bos.write(buff, 0, read);
+      }
+      return bos.toByteArray();
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error reading from stream", e);
+      return null;
+    } finally {
+      close(is);
+    }
+  }
+  
+  public static byte[] getFileFragmentAsByteArray(File file, int offset, int length) {
+    InputStream is = null;
+    try {
+      byte[] retval = new byte[length];
+      is = new FileInputStream(file);
+      while (offset > 0) {
+        offset -= is.skip(offset);
+      }
+      for (int read = is.read(retval, offset, retval.length - offset); read > 0; read = is.read(retval, offset, retval.length - offset)) {
+        offset += read;
+      }
+      if (offset < retval.length) {
+        logger.log(Level.SEVERE, "Unable to completely read file " + file.getPath());
+        return null;
+      }
+      return retval;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to read file.", e);
+      return null;
+    } finally {
+      close(is);
+    }
+  }
+  
+  public static byte[] getInputStreamFragmentAsByteArray(InputStream is, int offset, int length) {
+    try {
+      byte[] buff = new byte[length];
+      while (offset > 0) {
+        offset -= is.skip(offset);
+      }
+      
+      int read = 0;
+      while (read < length) {
+        read += is.read(buff, read, length - read);
+      }
+      return buff;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error reading from stream", e);
+      return null;
+    } finally {
+      close(is);
     }
   }
   
   public static Set<String> getFileAsSet(File file) {
+    BufferedReader br = null;
     try {
       Set<String> set = Helper.newHashSet();
-      BufferedReader br = new BufferedReader(new FileReader(file));
+      br = new BufferedReader(new FileReader(file));
       for (String line = br.readLine(); line != null; line = br.readLine()) {
         set.add(line);
       }
       return set;
     } catch (IOException e) {
       return Collections.emptySet();
+    } finally {
+      close(br);
     }
   }
   
@@ -141,15 +240,8 @@ public final class FileUtils {
       logger.log(Level.SEVERE, "Unable to write stream to " + file.getPath(), e);
       return false;
     } finally {
-      if (os != null) {
-        try {
-          os.close();
-        } catch (IOException e) {}
-      }
-      try {
-        stream.close();
-      } catch (IOException e) {}
-      
+      close(os);
+      close(stream);      
     }
   }
   

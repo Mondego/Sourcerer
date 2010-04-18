@@ -82,6 +82,6 @@ public class ProjectDB {
   }
   
   public String toString() {
-    return name + "(" + projectID + ")";
+    return "project " + name + "(" + projectID + ")";
   }
 }

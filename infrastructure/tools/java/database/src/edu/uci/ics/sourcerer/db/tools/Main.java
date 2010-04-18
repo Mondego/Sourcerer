@@ -21,6 +21,7 @@ import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_PASSWORD
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_URL;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_USER;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.io.Logging;
@@ -36,6 +37,7 @@ public class Main {
   public static final Property<Boolean> ADD_JAVA_LIBRARIES = new BooleanProperty("add-libraries", false, "Database", "Adds extracted Java libraries to the database.");
   public static final Property<Boolean> ADD_JARS = new BooleanProperty("add-jars", false, "Database", "Adds extracted jars to the database.");
   public static final Property<Boolean> ADD_PROJECTS = new BooleanProperty("add-projects", false, "Database", "Adds extracted projects to the database.");
+  public static final Property<Boolean> INTERACTIVE_FILE_ACCESSOR = new BooleanProperty("interactive-file-accessor", false, "Database", "Interactive test of the file accessor."); 
   
   public static void main(String[] args) {
     PropertyManager.initializeProperties(args);
@@ -60,6 +62,9 @@ public class Main {
       PropertyManager.registerAndVerify(ADD_PROJECTS, INPUT_REPO);
       DatabaseImporter importer = new DatabaseImporter(connection);
       importer.importProjects();
+    } if (INTERACTIVE_FILE_ACCESSOR.getValue()) {
+      PropertyManager.registerAndVerify(INTERACTIVE_FILE_ACCESSOR, INPUT_REPO, OUTPUT_REPO);
+      FileAccessor.testConsole();
     } else {
       logger.info("No action selected");
       PropertyManager.registerUsedProperties(INITIALIZE_DB, ADD_JARS, ADD_PROJECTS);

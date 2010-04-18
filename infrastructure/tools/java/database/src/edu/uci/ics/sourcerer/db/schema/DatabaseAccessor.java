@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
+import java.io.Closeable;
+
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
@@ -24,7 +26,7 @@ import edu.uci.ics.sourcerer.db.util.TableLocker;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class DatabaseAccessor {
+public abstract class DatabaseAccessor implements Closeable {
   protected final QueryExecutor executor;
   protected final TableLocker locker;
 
@@ -49,7 +51,7 @@ public abstract class DatabaseAccessor {
     relationsTable = new RelationsTable(executor, locker);
   }
   
-  protected void close() {
+  public void close() {
     executor.close();
   }
   
