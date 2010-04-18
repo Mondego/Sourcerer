@@ -12,6 +12,14 @@ public class ServletUtils {
 
 	public static void writeEntityIds(HttpServletResponse response, long[] eids)
 	throws IOException {
+		OutputStream os = response.getOutputStream();
+		
+		if(eids==null || eids.length<1){
+			os.write("Error : no entity ids to write".getBytes());
+			os.close();
+			return;
+		}
+		
 		StringBuilder sb = new StringBuilder();
 		for(long eid: eids){
 			sb.append(eid);
@@ -19,7 +27,7 @@ public class ServletUtils {
 		}
 		String eidsStr = sb.substring(0,sb.length()-1);
 		setResponse(response);
-		OutputStream os = response.getOutputStream();
+		
 		os.write(eidsStr.getBytes());
 		os.close();
  	}

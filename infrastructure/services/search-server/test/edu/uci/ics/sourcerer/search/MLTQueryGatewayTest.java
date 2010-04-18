@@ -18,11 +18,11 @@
  */
 package edu.uci.ics.sourcerer.search;
 
-import java.text.MessageFormat;
 import java.util.List;
 
 import edu.uci.ics.sourcerer.search.HitFqnEntityId;
 import edu.uci.ics.sourcerer.search.SourcererGateway;
+import static edu.uci.ics.sourcerer.search.Timeutil.formatElapsedTime;
 
 import junit.framework.TestCase;
 
@@ -34,7 +34,11 @@ import junit.framework.TestCase;
  */
 public class MLTQueryGatewayTest extends TestCase {
 
-	SourcererGateway g = SourcererGateway.getInstance("", "");
+	SourcererGateway g = SourcererGateway.getInstance(
+			// "http://localhost:8983/solr/scs/mlt",
+			// "http://kathmandu.ics.uci.edu:8984/solr/scs/mlt",
+			 "http://kathmandu.ics.uci.edu:8983/solr/scs/mlt",
+			"", "");
 	
 	protected void setUp() throws Exception {
 		super.setUp();
@@ -47,7 +51,12 @@ public class MLTQueryGatewayTest extends TestCase {
 	public void testMLT(){
 		
 		String entityId = //"6821103";
-				"3475569";
+				// "6512435";
+			// "42958433";
+			// "42958375";
+			// "42958371";
+			// "42965004";
+			"46438891";
 		
 		
 		
@@ -72,6 +81,33 @@ public class MLTQueryGatewayTest extends TestCase {
 			System.out.println(h.fqn);
 		}
 		System.out.println("time " +  formatElapsedTime(end-start) );
+		
+	
+		
+		System.out.println("-jdk lib binary-");
+		start = System.currentTimeMillis();
+		List<HitFqnEntityId> jsim3 = g.searchMltViaJdkLibUse(entityId);
+		end = System.currentTimeMillis();
+		assertNotNull(jsim3);
+		// assertEquals(15, jsim.size());
+		for (HitFqnEntityId h : jsim3) {
+			System.out.println(h.fqn);
+		}
+		System.out.println("time " + Timeutil.formatElapsedTime(end - start));
+		
+//		System.out.println("--jdk lib--");
+//		start = System.currentTimeMillis();
+//		List<HitFqnEntityId> libsim2 = g.searchMltViaJdkLibUse(entityId);
+//		end = System.currentTimeMillis();
+//		assertNotNull(libsim2);
+//		//assertEquals(15, libsim.size());
+//		for(HitFqnEntityId h: libsim2){
+//			System.out.println(h.fqn);
+//		}
+//		System.out.println("time " +  formatElapsedTime(end-start) );
+		
+		System.out.println("- via wt=javabin -");
+		System.out.println(g.eidsViaMlt(entityId));
 		
 		// local disabled for now
 //		System.out.println("--local--");
@@ -163,20 +199,6 @@ public class MLTQueryGatewayTest extends TestCase {
 		
 	}
 	
-	public String formatElapsedTime(long elapsedTime) {
-        long millis = elapsedTime;
-        millis = millis>1000?elapsedTime % 1000:millis;
-        long seconds = millis / 1000;
-        seconds = seconds > 60 ? seconds % 60 : seconds;
-        long minutes = seconds / 60;
-        Object[] PARAMS = {
-              new Long(minutes), new Long(seconds), new Long(millis)
-        };
-
-        String format = "{2} msec";
-        if ( seconds > 0 ) format = "{1} seconds "+format;
-        if ( minutes > 0 ) format = "{0} minutes"+format;
-        return MessageFormat.format(format, PARAMS);
-    }
+	
 
 }

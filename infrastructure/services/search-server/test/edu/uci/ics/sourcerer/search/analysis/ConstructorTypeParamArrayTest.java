@@ -26,6 +26,7 @@ import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.WhitespaceTokenizer;
 import org.apache.solr.analysis.BaseTokenTestCase;
+import org.apache.solr.analysis.KeywordTokenizerFactory;
 
 import edu.uci.ics.sourcerer.search.analysis.DelimiterFilterFactory;
 import edu.uci.ics.sourcerer.search.analysis.FqnFilter;
@@ -65,7 +66,8 @@ public class ConstructorTypeParamArrayTest extends BaseTokenTestCaseSourcerer {
 //		// note .. there is no whitespace here 
 //		is = new WhitespaceTokenizer(new StringReader("AnnotatedMethod.asList(<T>[])"));
 		
-		NoTokenizerFactory ntf = new NoTokenizerFactory();
+		// NoTokenizerFactory ntf = new NoTokenizerFactory();
+		KeywordTokenizerFactory ntf = new KeywordTokenizerFactory();
 		is = ntf.create(new StringReader("AnnotatedMethod.asList(<T>[])"));
 
 		FqnFilter ff = fqnFactory.create(is);
@@ -90,7 +92,8 @@ public class ConstructorTypeParamArrayTest extends BaseTokenTestCaseSourcerer {
 //		// note .. there is no whitespace here 
 //		is = new WhitespaceTokenizer(new StringReader("java.util.List<<?+dalma.Condition<<?+<T>>>>>"));
 		
-		NoTokenizerFactory ntf = new NoTokenizerFactory();
+		//NoTokenizerFactory ntf = new NoTokenizerFactory();
+		KeywordTokenizerFactory ntf = new KeywordTokenizerFactory();
 		is = ntf.create(new StringReader("java.util.List<<?+dalma.Condition<<?+<T>>>>>"));
 
 		FqnFilter ff = fqnFactory.create(is);

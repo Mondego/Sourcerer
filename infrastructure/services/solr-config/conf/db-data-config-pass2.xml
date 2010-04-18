@@ -1,156 +1,112 @@
 <dataConfig>
     <!-- 
-    <dataSource driver="com.mysql.jdbc.Driver" 
-		url="jdbc:mysql://localhost:3307/sourcerer_test" 
-    	user="" 
-    	password=""  />
-     -->
+    url="!sourcerer.db.url!"
+    	driver="com.mysql.jdbc.Driver"
     
-    <dataSource driver="com.mysql.jdbc.Driver" 
-		url="jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_t" 
-    	user="$sourcerer.db.user$" 
-    	password="$sourcerer.db.password$"  />
-    	
-    <document name="entity">
-	    <entity name="code_entity" pk="entity_id" 
-		    transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
-			query="select entity_id, fqn, entity_type from entities 
-					where entity_type='METHOD'
-					and (project_id=38 or project_id=97 or project_id=60)"
-		    deltaQuery="select entity_id from entities 
+          -->
+	<dataSource 
+		jndiName="java:comp/env/jdbc/DSSourcerer"
+		user="!sourcerer.db.user!" 
+		password="!sourcerer.db.password!"
+		autoCommit="false"
+		readonly="true"
+		transactionIsolation="TRANSACTION_READ_COMMITTED" 
+		holdability="CLOSE_CURSORS_AT_COMMIT" 
+		batchSize="-1" />
+
+	<document name="entity">
+		<entity name="code_entity" pk="entity_id"
+			transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+			query="select entity_id, fqn, entity_type
+			 from entities as e
+			 inner join projects as proj on proj.project_id=e.project_id
+			 where e.length IS NOT NULL
+			 and e.entity_type in ('CLASS','METHOD','CONSTRUCTOR')
+			 and proj.project_type='CRAWLED'
+			 and (e.entity_id &gt;= '${dataimporter.request.lo_eid_incl}' and e.entity_id &lt; '${dataimporter.request.hi_eid_excl}')"
+
+			deltaQuery="select entity_id from entities 
 		    		where last_modified > '${dataimporter.last_index_time}'">
 
-		<field column="fqn" name="sname_contents" />
-		<field column="fqn" name="fqn_contents" clean-fqn="true" />
-		<field column="fqn" name="fqn_full" clean-fqn="true"/>
-		
-		<field column="entity_id" name="entity_id" />
-		<field column="entity_type" name="entity_type" />
+			<field column="fqn" name="sname_contents" fix-init="true" />
+			<field column="fqn" name="fqn_contents" clean-fqn="true" />
+			<field column="fqn" name="fqn_full" clean-fqn="true" />
+			<field column="fqn" name="fqn" />
+			<field column="entity_id" name="entity_id" />
+			<field column="entity_type" name="entity_type" />
 
-		<entity name="second_pass"
-			transformer="edu.uci.ics.sourcerer.search.analysis.EidToSimSnamesTransformer"
-			query="SELECT entity_id as eid, entity_type as etype from entities where
-				entity_id=${code_entity.entity_id}"
-			code-server-url=""	
-			mlt-server-url="http://localhost:8983/solr/scs/mlt" >
-			<field column="sim_fqns_via_jdk_use" name="sim_sname_contents_via_jdk_use"/>
-			<field column="sim_fqns_via_lib_use" name="sim_sname_contents_via_lib_use"/>
-			<field column="sim_fqns_via_local_use" name="sim_sname_contents_via_local_use"/>
-			<field column="sim_fqns_via_jdkLib_use" name="sim_sname_contents_via_jdkLib_use"/>
-			<field column="sim_fqns_via_all_use" name="sim_sname_contents_via_all_use"/>
-			<!-- 
-			<field column="simTC_fqns_via_jdkLib_use" name="simTC_sname_contents_via_jdkLib_use"/>
-			 -->
-			
-			<!--  field column="code_text" name="full_text"/ -->
-			
+			<entity name="second_pass"
+				transformer="edu.uci.ics.sourcerer.search.analysis.EidToSimSnamesTransformer"
+				query="SELECT entity_id as eid, entity_type as etype from entities where
+					entity_id='${code_entity.entity_id}'"
+				code-server-url="http://nile.ics.uci.edu:9180/file-server"
+				mlt-server-url="http://kathmandu.ics.uci.edu:8983/solr/scs/mlt" 
+				>
+				<!-- sim-server-url="http://nile.ics.uci.edu:9180/similarity-server" -->
+
+				<field column="code_text" name="full_text" />
+
+				<!-- these need not be declared here, the transformer adds these columns -->
+				<!-- 
+				<field column="simTC_eids_via_jdkLib_use" />
+				<field column="simHD_eids_via_jdkLib_use" />
+				<field column="simMLT_eids_via_jdkLib_use" />
+				 -->
+
+				<entity name="simMLT"
+					transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+					query="select fqn as simMLT_fqn_via_jdkLib_use from entities where entity_id in (${second_pass.simMLT_eids_via_jdkLib_use})">
+					<field column="simMLT_fqn_via_jdkLib_use" name="sim_sname_contents_via_jdkLib_use"
+						fix-init="true" />
+				</entity>
+
+				<entity name="simTC"
+					transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+					query="select fqn as simTC_fqn_via_jdkLib_use from entities where entity_id in (${second_pass.simTC_eids_via_jdkLib_use})">
+					<field column="simTC_fqn_via_jdkLib_use" name="simTC_sname_contents_via_jdkLib_use"
+						fix-init="true" />
+				</entity>
+
+				<entity name="simHD"
+					transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+					query="select fqn as simHD_fqn_via_jdkLib_use from entities where entity_id in (${second_pass.simHD_eids_via_jdkLib_use})">
+					<field column="simHD_fqn_via_jdkLib_use" name="simHD_sname_contents_via_jdkLib_use"
+						fix-init="true" />
+				</entity>
+
+			</entity>
+
+
+			<entity name="jdkLib_use"
+				transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+				query="select provE.fqn as pfqn_jdkLib, provE.entity_id as peid_jdkLib
+				 from relations as R
+				 inner join entities as provE on provE.entity_id=R.rhs_eid
+				 where R.internal = 0 
+				 and R.relation_type in ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES')			 
+				 and R.lhs_eid='${code_entity.entity_id}'">
+				<field column="pfqn_jdkLib" name="jdkLib_use_sname_contents"
+					fix-init="true" />
+				<field column="pfqn_jdkLib" name="jdkLib_use_fqn_full" />
+				<field column="pfqn_jdkLib" name="jdkLib_use_fqn_contents"
+					clean-fqn="true" />
+
+				<entity name="jdkLib_use_comment"
+					transformer="edu.uci.ics.sourcerer.search.analysis.UsedEntityCommentTransformer"
+					code-server-url="http://nile.ics.uci.edu:9180/file-server"
+					query="select C.comment_id as commentId from 
+                       entities as E 
+                       inner join comments as C
+                           on C.following_eid=E.entity_id
+                       where
+                           E.length IS NOT NULL
+                       and E.fqn='${jdkLib_use.pfqn_jdkLib}'
+                       limit 1">
+					<field column="p_javadoc" name="jdkLib_use_javadoc" />
+				</entity>
+			</entity>
+
 		</entity>
-		
-		<entity name="TC_use"
-			query="SELECT e.fqn as simTC_fqn from similarity_tanimoto as stc
-					INNER JOIN entities as e on stc.rhs_eid=e.entity_id
-					WHERE stc.lhs_eid='${code_entity.entity_id}'">
-			<field column="simTC_fqn" name="simTC_sname_contents_via_jdkLib_use"/>
-		</entity>
-
-		<!--returns, holds not needed -->
-		<entity name="local_use" 
-			transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
-			query="SELECT e_provider.fqn as pfqn FROM entities AS e_provider INNER JOIN
-				(relations AS r INNER JOIN entities AS e ON
-				        r.lhs_eid = e.entity_id AND
-				         (r.relation_type='EXTENDS' OR
-				                r.relation_type='IMPLEMENTS' OR
-				                r.relation_type='CALLS' OR
-								r.relation_type='RETURNS' OR
-				                r.relation_type='HOLDS' OR
-				                r.relation_type='USES') AND
-				        e.entity_id = '${code_entity.entity_id}'
-				)  ON
-				r.rhs_eid=e_provider.entity_id
-				UNION ALL
-				SELECT E1.fqn as pfqn FROM entities AS E1 INNER JOIN
-				(relations as R1 INNER JOIN
-				        (relations as R2 INNER JOIN entities AS E2 ON
-				                R2.rhs_eid='${code_entity.entity_id}' AND
-				                E2.entity_type='FIELD' AND
-				                R2.relation_type='INSIDE' AND
-				                R2.lhs_eid=E2.entity_id
-				        ) ON R1.lhs_eid=R2.lhs_eid
-				) ON E1.entity_id=R1.rhs_eid AND R1.relation_type='HOLDS'">
-			
-			<field column="pfqn" name="local_use_fqn_full" />
-			<field column="pfqn" name="all_use_fqn_full" />
-			<field column="pfqn" name="local_use_sname_contents" />
-			<field column="pfqn" name="local_use_fqn_contents" clean-fqn="true"/>
-
-		</entity>
-
-		<entity name="jdk_use" 
-			transformer="RegexTransformer"
-			query="SELECT jdk_provider.fqn AS pfqn_jdk FROM library_entities AS jdk_provider INNER JOIN 
-				(relations AS r INNER JOIN entities AS e ON 
-					r.lhs_eid=e.entity_id AND
-				       (r.relation_type='EXTENDS' OR
-						r.relation_type='IMPLEMENTS' OR
-						r.relation_type='CALLS' OR
-						r.relation_type='RETURNS' OR
-						r.relation_type='HOLDS' OR
-						r.relation_type='USES') AND		
-					e.entity_id='${code_entity.entity_id}')  ON  
-					r.rhs_leid=jdk_provider.entity_id
-				UNION ALL
-				SELECT E1.fqn as pfqn_jdk FROM library_entities AS E1 INNER JOIN
-				(relations as R1 INNER JOIN
-					(relations as R2 INNER JOIN entities AS E2 ON
-						R2.rhs_eid='${code_entity.entity_id}' AND
-						E2.entity_type='FIELD' AND
-						R2.relation_type='INSIDE' AND
-						R2.lhs_eid=E2.entity_id
-					) ON R1.lhs_eid=R2.lhs_eid 
-				) ON E1.entity_id=R1.rhs_leid AND R1.relation_type='HOLDS'">
-		
-			<field column="pfqn_jdk" name="jdk_use_sname_contents" />
-			<field column="pfqn_jdk" name="jdk_use_fqn_contents" clean-fqn="true"/>
-			<field column="pfqn_jdk" name="jdk_use_fqn_full" />
-			<field column="pfqn_jdk" name="jdkLib_use_fqn_full"  />
-			<field column="pfqn_jdk" name="all_use_fqn_full" />
-			
-				
-		</entity>
-
-		<entity name="lib_use" 
-			transformer="RegexTransformer"
-			query="SELECT jar_provider.fqn AS pfqn_lib FROM jar_entities AS jar_provider INNER JOIN 
-				(relations AS r INNER JOIN entities AS e ON 
-					r.lhs_eid=e.entity_id AND
-				       (r.relation_type='EXTENDS' OR
-						r.relation_type='IMPLEMENTS' OR
-						r.relation_type='CALLS' OR
-						r.relation_type='RETURNS' OR
-						r.relation_type='HOLDS' OR
-						r.relation_type='USES') AND		
-					e.entity_id='${code_entity.entity_id}')  ON  
-				r.rhs_jeid=jar_provider.entity_id
-				UNION ALL
-				SELECT E1.fqn as pfqn_lib FROM jar_entities AS E1 INNER JOIN
-				(relations as R1 INNER JOIN
-					(relations as R2 INNER JOIN entities AS E2 ON
-						R2.rhs_eid='${code_entity.entity_id}' AND
-						E2.entity_type='FIELD' AND
-						R2.relation_type='INSIDE' AND
-						R2.lhs_eid=E2.entity_id
-					) ON R1.lhs_eid=R2.lhs_eid 
-				) ON E1.entity_id=R1.rhs_jeid AND R1.relation_type='HOLDS'">
-		
-			<field column="pfqn_lib" name="lib_use_sname_contents" />
-			<field column="pfqn_lib" name="lib_use_fqn_full" />
-			<field column="pfqn_lib" name="all_use_fqn_full" />
-			<field column="pfqn_lib" name="jdkLib_use_fqn_full" />
-			<field column="pfqn_lib" name="lib_use_fqn_contents" clean-fqn="true"/>
-		</entity>
-
-	</entity>
-    </document>
+	</document>
 </dataConfig>
 

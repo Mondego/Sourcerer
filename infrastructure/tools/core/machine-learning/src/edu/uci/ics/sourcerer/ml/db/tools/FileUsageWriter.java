@@ -26,50 +26,76 @@ import java.io.IOException;
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
  * @created Dec 8, 2009
- *
+ * 
  */
 public class FileUsageWriter implements IUsageWriter {
 
 	String outputFolder;
 	final String FQN_FILE = "fqns.txt";
-	final String USAGE_FILE = "usage.txt";
-	
-    File fqnFile;
-    File usageFile;
-	
-    BufferedWriter fqnFileWriter;
-    BufferedWriter usageFileWriter;
-    
-    public FileUsageWriter(String outputFolder){
-    	this.outputFolder = outputFolder;
-    }
-    
+	final String ENTITY_ALLFQNCOUNT_FILE = "entity_allfqn_count.txt";
+
+	boolean filteredUsage = false;
+
+	public String USAGE_FILE = "entity_eachfqn_usage.txt";
+
+	File fqnFile;
+	File usageFile;
+	File entityAllUsedFqnCountFile;
+
+	BufferedWriter fqnFileWriter;
+	BufferedWriter usageFileWriter;
+	BufferedWriter entityAllUsedFqnCountWriter;
+
+	public FileUsageWriter(String outputFolder) {
+		this.outputFolder = outputFolder;
+	}
+
+	public FileUsageWriter(String outputFolder, boolean filteredUsage2) {
+		this.outputFolder = outputFolder;
+		this.filteredUsage = filteredUsage2;
+	}
+
 	public void openFiles() throws IOException {
-		if(!outputFolder.endsWith(File.separator))
+		if (!outputFolder.endsWith(File.separator))
 			outputFolder = outputFolder + File.separator;
-		
-		fqnFile = new File(outputFolder + FQN_FILE);
+
+		if (!filteredUsage) {
+			fqnFile = new File(outputFolder + FQN_FILE);
+			assert !fqnFile.exists();
+			fqnFileWriter = new BufferedWriter(new FileWriter(fqnFile));
+
+			entityAllUsedFqnCountFile = new File(outputFolder
+					+ ENTITY_ALLFQNCOUNT_FILE);
+			assert !entityAllUsedFqnCountFile.exists();
+			entityAllUsedFqnCountWriter = new BufferedWriter(new FileWriter(
+					entityAllUsedFqnCountFile));
+		}
+
 		usageFile = new File(outputFolder + USAGE_FILE);
-		
-		assert !fqnFile.exists();
 		assert !usageFile.exists();
-		
-		fqnFileWriter = new BufferedWriter(new FileWriter(fqnFile));
 		usageFileWriter = new BufferedWriter(new FileWriter(usageFile));
-		
+
 	}
-	
-	public void closeFiles() throws IOException{
-		fqnFileWriter.close();
+
+	public void closeFiles() throws IOException {
+
+		if (!filteredUsage) {
+			fqnFileWriter.close();
+			fqnFileWriter = null;
+
+			entityAllUsedFqnCountWriter.close();
+			entityAllUsedFqnCountWriter = null;
+		}
+
 		usageFileWriter.close();
-		fqnFileWriter = null;
 		usageFileWriter = null;
+
 	}
-	
+
 	@Override
-	public void writeFqnId(long fqnId, String fqn) {
+	public void writeFqnId(long fqnId, String fqn, int count) {
 		try {
-			fqnFileWriter.write(fqnId + "\t" + fqn);
+			fqnFileWriter.write(fqnId + "\t" + fqn + "\t" + count);
 			fqnFileWriter.newLine();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -80,13 +106,25 @@ public class FileUsageWriter implements IUsageWriter {
 	@Override
 	public void writeUsage(long entityId, long fqnId, int useCount) {
 		try {
-				usageFileWriter.write(entityId + "\t" + fqnId + "\t" + useCount);
-				usageFileWriter.newLine();
-			
+			usageFileWriter.write(entityId + "\t" + fqnId + "\t" + useCount);
+			usageFileWriter.newLine();
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
+		}
+	}
+
+	@Override
+	public void writeNumFqnsUsed(long entityId, int count) {
+		try {
+			entityAllUsedFqnCountWriter.write(entityId + "\t" + count);
+			entityAllUsedFqnCountWriter.newLine();
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

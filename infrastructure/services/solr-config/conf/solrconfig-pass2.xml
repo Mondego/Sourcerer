@@ -32,7 +32,7 @@
   <!-- Used to specify an alternate directory to hold all index data
        other than the default ./data under the Solr home.
        If replication is in use, this should match the replication configuration. -->
-       <dataDir>${solr.data.dir:./solr/scs/data.minimal}</dataDir>
+       <dataDir>${solr.data.dir}</dataDir>
 
 
   <indexDefaults>
@@ -65,7 +65,7 @@
      NOTE: Despite the name, this value does not have any relation to Solr's autoCommit functionality
 
      -->
-    <!--<luceneAutoCommit>false</luceneAutoCommit>-->
+    <luceneAutoCommit>false</luceneAutoCommit>
     <!--
      Expert:
      The Merge Policy in Lucene controls how merging is handled by Lucene.  The default in 2.3 is the LogByteSizeMergePolicy, previous
@@ -139,11 +139,12 @@
          maxDocs - number of updates since last commit is greater than this
          maxTime - oldest uncommited update (in ms) is this long ago
 	-->
+	<!-- 
     <autoCommit> 
       <maxDocs>300000</maxDocs>
       <maxTime>10800000</maxTime> 
     </autoCommit>
-    
+     -->
 
     <!-- The RunExecutableListener executes an external command.
          exe - the name of the executable to run
@@ -345,7 +346,8 @@
     </httpCaching>
   </requestDispatcher>
   
-  <searchComponent name="collapse" class="org.apache.solr.handler.component.CollapseComponent" />     
+  <!--  searchComponent name="collapse" class="org.apache.solr.handler.component.CollapseComponent" / -->     
+  
   <!-- requestHandler plugins... incoming queries will be dispatched to the
      correct handler based on the path or the qt (query type) param.
      Names starting with a '/' are accessed with the a path equal to the 
@@ -365,10 +367,13 @@
         -->
      </lst>
      <arr name="components">
-	<str>collapse</str>
-	<str>debug</str>
-     </arr>
-
+      <str>query</str>
+      <str>facet</str>
+      <str>mlt</str>
+      <str>highlight</str>
+      <str>debug</str>
+      <!--  str>collapse</str -->
+    </arr>
   </requestHandler>
 
 
@@ -382,11 +387,11 @@
      <str name="echoParams">explicit</str>
      <float name="tie">0.01</float>
      <str name="qf">
-	full_text^0.5
-		 jdk_use_fqn_contents^1.0 lib_use_fqn_contents^1.0 local_use_fqn_contents^1.0
-		 jdk_use_sname_contents^2.0 lib_use_sname_contents^2.0 local_use_sname_contents^2.0
+		 full_text^0.5
+		 jdk_use_fqn_contents^1.0 lib_use_fqn_contents^1.0 
+		 jdk_use_sname_contents^2.0 lib_use_sname_contents^2.0 
 		 fqn_contents^3.0
-		 sim_sname_contents_via_jdk_use^5.0 sim_sname_contents_via_lib_use^7.0 sim_sname_contents_via_local_use^4.0
+		 sim_sname_contents_via_all_use^5.0 
 		 sname_contents^10.0	     
      </str>
      <!-- 
@@ -408,9 +413,13 @@
      <!-- example highlighter config, enable per-query with hl=true -->     
      <str name="hl.fl">full_text</str>
     </lst>
-    <arr name="components">
-        <str>collapse</str>
-	<str>debug</str>    
+   <arr name="components">
+      <str>query</str>
+      <str>facet</str>
+      <str>mlt</str>
+      <str>highlight</str>
+      <str>debug</str>
+      <!-- str>collapse</str -->  
     </arr>
  </requestHandler>
 
@@ -532,7 +541,7 @@
    
    <requestHandler name="/mlt" class="solr.MoreLikeThisHandler">
      <lst name="defaults">
-       <str name="mlt.fl">all_use_sname,all_use_fqn_full</str>
+       <str name="mlt.fl">jdkLib_use_fqn_full</str>
        <int name="mlt.mindf">1</int>
        <int name="mlt.mintf">1</int>
      </lst>
@@ -567,6 +576,15 @@
     <lst name="defaults">
       <str name="echoParams">explicit</str>
     </lst>
+    
+    <arr name="components">
+      <str>query</str>
+      <str>facet</str>
+      <str>mlt</str>
+      <str>highlight</str>
+      <str>debug</str>
+      <!--  str>collapse</str -->
+    </arr>
     <!--
     By default, this will register the following components:
     

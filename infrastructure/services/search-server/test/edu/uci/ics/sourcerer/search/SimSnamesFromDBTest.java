@@ -28,7 +28,7 @@ import junit.framework.TestCase;
  */
 public class SimSnamesFromDBTest extends TestCase{
 	public void testSimEntity(){
-		SourcererGateway g = SourcererGateway.getInstance("", "",
+		SourcererGateway g = SourcererGateway.getInstance("", "", "",
 				"jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_test",
 				System.getProperty( "sourcerer.db.user" ),
 				System.getProperty( "sourcerer.db.password" ));

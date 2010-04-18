@@ -9,14 +9,33 @@
 <!--                                                                 -->
 <!-- =============================================================== -->
 
-
-<Configure id="Server" class="org.mortbay.jetty.Server">
-
+<!-- Configure id="Server1" class="org.mortbay.jetty.Server" -->
+<Configure id="!SERVER_ID!" class="org.mortbay.jetty.Server">
+	
     <!-- Increase the maximum POST size to 1 MB to be able to handle large shard requests -->
     <Call class="java.lang.System" name="setProperty">
       <Arg>org.mortbay.jetty.Request.maxFormContentSize</Arg>
       <Arg>1000000</Arg>
     </Call>
+    
+    
+    <New id="DSSourcerer" class="org.mortbay.jetty.plus.naming.Resource">
+    <Arg>java:comp/env/jdbc/DSSourcerer</Arg>
+    <Arg>
+     <New class="com.mchange.v2.c3p0.ComboPooledDataSource">
+     	<Set name="driverClass">com.mysql.jdbc.Driver</Set>
+        <Set name="jdbcUrl">!sourcerer.db.url!</Set>
+        <Set name="user">!sourcerer.db.user!</Set>
+        <Set name="password">!sourcerer.db.password!</Set>
+        <Set name="maxPoolSize">8</Set>
+        <Set name="minPoolSize">7</Set>
+        <Set name="idleConnectionTestPeriod">3600</Set>
+        <Set name="numHelperThreads">8</Set>
+        <Set name="automaticTestTable">ConnTestC3P0</Set>
+     </New>
+    </Arg>
+   </New>
+    
 
     <!-- =========================================================== -->
     <!-- Server Thread Pool                                          -->
@@ -52,7 +71,7 @@
     <Call name="addConnector">
       <Arg>
           <New class="org.mortbay.jetty.nio.SelectChannelConnector">
-            <Set name="port"><SystemProperty name="jetty.port" default="8983"/></Set>
+            <Set name="port"><SystemProperty name="jetty.port" default="8984"/></Set>
             <Set name="maxIdleTime">30000</Set>
             <Set name="Acceptors">2</Set>
             <Set name="confidentialPort">8443</Set>
@@ -70,7 +89,7 @@
     <Call name="addConnector">
       <Arg>
           <New class="org.mortbay.jetty.bio.SocketConnector">
-            <Set name="port"><SystemProperty name="jetty.port" default="8983"/></Set>
+            <Set name="port"><SystemProperty name="jetty.port" default="8984"/></Set>
             <Set name="maxIdleTime">50000</Set>
             <Set name="lowResourceMaxIdleTime">1500</Set>
           </New>
@@ -192,7 +211,7 @@
     <Ref id="RequestLog">
       <Set name="requestLog">
         <New id="RequestLogImpl" class="org.mortbay.jetty.NCSARequestLog">
-          <Arg><SystemProperty name="jetty.logs" default="./logs"/>/yyyy_mm_dd.request.log</Arg>
+          <Arg><SystemProperty name="jetty.requestlogs" default="/Users/shoeseal/Temp"/>/yyyy_mm_dd.request.log</Arg>
           <Set name="retainDays">90</Set>
           <Set name="append">true</Set>
           <Set name="extended">false</Set>

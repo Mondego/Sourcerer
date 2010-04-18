@@ -1,0 +1,29 @@
+This folder hosts the build file (build.xml) and some of the shell scripts
+to run the various tools produced by executing the corresponding targets
+in the build.
+
+You only need the binaries (.jars) and scripts (.sh, .py) along with the
+libraries (in ../lib) to run most of the sourcerer tools. Thus a suggested
+layout for these files can be as follows
+
+<sourcerer tools folder>
+|-- core-repomanager
+|   |-- content-fetcher.sh
+|   |-- core-repomanager.jar
+|   `-- repo-folder-creator.sh
+|-- indexing
+|   |-- merge-cluster-index.sh
+|   |-- run-index-merger.sh
+|   `-- sourcerer-search.jar
+|-- similarity
+|   |-- run-filtered-usage-writer.sh
+|   |-- run-raw-usage-writer.sh
+|   |-- run-similarity-writer.sh
+|   |-- sourcerer-db.jar
+|    `-- sourcerer-ml.jar
+`-- lib
+    |-- < all required external dependencies >
+    |-- apache-solr-clustering-1.4.0.jar
+    |-- apache-solr-common-1.3.0.jar
+    |-- apache-solr-core-1.3.0.jar
+    `-- etc..

@@ -20,10 +20,13 @@ package edu.uci.ics.sourcerer.search.analysis;
 
 import java.math.BigInteger;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.solr.handler.dataimport.Context;
 import org.apache.solr.handler.dataimport.Transformer;
 
+import edu.uci.ics.sourcerer.ml.SimEidGateway;
 import edu.uci.ics.sourcerer.search.SourcererGateway;
 
 /**
@@ -33,7 +36,7 @@ import edu.uci.ics.sourcerer.search.SourcererGateway;
  */
 public class EidToSimSnamesTransformer extends Transformer{
 	// use default urls
-	SourcererGateway sg = SourcererGateway.getInstance("", "");
+	SourcererGateway sg = SourcererGateway.getInstance("", "", "");
 	
 	public Object transformRow(Map<String, Object> row, Context context)     {
         String codeServerUrl = context.getEntityAttribute("code-server-url");
@@ -42,21 +45,54 @@ public class EidToSimSnamesTransformer extends Transformer{
 		String mltServerUrl = context.getEntityAttribute("mlt-server-url");
 		if(mltServerUrl!=null) sg.setMltServerUrl(mltServerUrl);
 		
+		String simServerUrl = context.getEntityAttribute("sim-server-url");
+		if(simServerUrl!=null) sg.setSimServerUrl(simServerUrl);
+		
+		String timeout = context.getEntityAttribute("http-timeout");
+		if(timeout!=null) sg.setTimeout(timeout);
+		
 		String eid =  ((BigInteger) row.get("eid")) + "";
         String etype = (String) row.get("etype");
+        
+//        Logger.getLogger(this.getClass().getName()).log(Level.INFO, 
+//    			"sim server: " + simServerUrl + " eid: " + eid);
+//        
+        
         if (eid != null && etype!=null){             
         	
         	if(etype.equals("CLASS") 
         			|| etype.equals("METHOD") 
-        			|| etype.equals("CONSTRCUTOR")
-        			|| etype.equals("UNKNOWN")){
+        			|| etype.equals("CONSTRUCTOR")
+        			// || etype.equals("UNKNOWN")
+        			){
         		
-	        	row.put("sim_fqns_via_jdk_use", sg.mltSnamesViaJdkUse(eid));
-	        	row.put("sim_fqns_via_lib_use", sg.mltSnamesViaLibUse(eid));
-	        	// row.put("sim_fqns_via_local_use", sg.mltSnamesViaLocalUse(eid));
-	        	row.put("sim_fqns_via_jdkLib_use", sg.mltSnamesViaJdkLibUse(eid));
-	        	// row.put("sim_fqns_via_all_use", sg.mltSnamesViaAllUse(eid));
-	        	// row.put("simTC_fqns_via_jdkLib_use", sg.snamesViaSimEntitiesTC(eid));
+        		String simMlt = sg.eidsViaMlt(eid);
+	        	
+        		row.put("simMLT_eids_via_jdkLib_use", simMlt);
+//	        	Logger.getLogger(this.getClass().getName()).log(Level.INFO, 
+//	        			"Got sim fqns via MLT: " + simMlt);
+//	        	
+	        	String simTC = "''"; 
+	        	String simHD = "''";
+	        	
+	        	if(simServerUrl == null){
+	        		simTC = SimEidGateway.eidsViaSimEntitiesTC(eid); 
+		        	simHD = SimEidGateway.eidsViaSimEntitiesHD(eid);
+	        	} else {
+	        	simTC = sg.eidsViaSimEntitiesTC(eid); 
+	        	simHD = sg.eidsViaSimEntitiesHD(eid);
+	        	}
+	        	
+	        	
+	        	
+	        	row.put("simTC_eids_via_jdkLib_use", simTC);
+//	        	Logger.getLogger(this.getClass().getName()).log(Level.INFO, 
+//	        			"Got sim eids via TC: " + simTC);
+	        	
+	        	
+	        	row.put("simHD_eids_via_jdkLib_use", simHD);
+//	        	Logger.getLogger(this.getClass().getName()).log(Level.INFO, 
+//	        			"Got sim eids via HD: " + simHD);
 	        	
 	        	if(codeServerUrl!=null && codeServerUrl.length()>0){
 	        		String code = sg.getCode(eid);

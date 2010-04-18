@@ -26,6 +26,7 @@ import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.WhitespaceTokenizer;
 import org.apache.solr.analysis.BaseTokenTestCase;
+import org.apache.solr.analysis.KeywordTokenizerFactory;
 
 import edu.uci.ics.sourcerer.search.analysis.CamelCaseSplitFilter;
 import edu.uci.ics.sourcerer.search.analysis.CamelCaseSplitFilterFactory;
@@ -141,7 +142,11 @@ public class TestCamelCase extends BaseTokenTestCaseSourcerer {
 	
 	private CamelCaseSplitFilter getCCF(String name){
 		
-		NoTokenizerFactory ntf = new NoTokenizerFactory();
+		//NoTokenizerFactory ntf = new NoTokenizerFactory();
+		
+		KeywordTokenizerFactory ntf = new KeywordTokenizerFactory();
+
+		
 		is = ntf.create(new StringReader(name));
 		
 		//is = new WhitespaceTokenizer(new StringReader(name));

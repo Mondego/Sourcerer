@@ -32,30 +32,38 @@ import edu.uci.ics.sourcerer.ml.HammingDistanceSimilarity;
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
  * @created Dec 3, 2009
- *
+ * 
  */
 public class HammingDistanceDBSimilarityWriter extends DBSimilarityWriter {
-	InsertBatcher batcher = EntitySimilarityHammingDistanceTable.getInsertBatcher(executor);
+
+	EntitySimilarityHammingDistanceTable simHDTable;
+
 	HammingDistanceDBSimilarityWriter(String dataFileLocation,
 			int neighborhoodSize, double similarityThreshold, long lowUserId,
-			long highUserId, DatabaseConnection conn)
+			long highUserId, DatabaseConnection conn, boolean clearTable)
 			throws FileNotFoundException, TasteException {
-		super(dataFileLocation, neighborhoodSize, similarityThreshold, lowUserId,
-				highUserId, conn);
+		super(dataFileLocation, neighborhoodSize, similarityThreshold,
+				lowUserId, highUserId, conn, clearTable);
+		simHDTable = new EntitySimilarityHammingDistanceTable(executor,
+				executor.getTableLocker());
+		simHDTable.initializeInserter(tempDir);
+
 	}
-	
+
 	@Override
-	public void initializeSimilarityTable(){
-		executor.dropTables(EntitySimilarityHammingDistanceTable.TABLE);
-		EntitySimilarityHammingDistanceTable.createTable(executor);
+	public void initializeSimilarityTable() {
+		if (clearTable) {
+			executor.dropTables(simHDTable);
+			simHDTable.createTable(executor);
+		}
 	}
-	
+
 	@Override
-	public void startWrite() throws TasteException{
+	public void write() throws TasteException {
 		suCalc.calculate();
-		getBatcher().insert();
+		simHDTable.flushInserts();
 	}
-	
+
 	@Override
 	public UserSimilarity getUserSimilarity(DataModel dm) {
 		return
@@ -64,17 +72,10 @@ public class HammingDistanceDBSimilarityWriter extends DBSimilarityWriter {
 		// , dm)
 		;
 	}
-	
+
 	@Override
 	public void writeSimilarty(String lhsEid, String rhsEid, String similarity) {
-		EntitySimilarityHammingDistanceTable.insert(
-				getBatcher(), 
-				lhsEid, rhsEid, similarity);
-	}
-	
-	@Override
-	public InsertBatcher getBatcher(){
-		return batcher;
+		simHDTable.insert(lhsEid, rhsEid, similarity);
 	}
 
 }
