@@ -38,7 +38,6 @@ import edu.uci.ics.sourcerer.scs.common.client.UsedFqn;
 @RemoteServiceRelativePath("sdb")
 public interface SourcererDBService extends RemoteService {
 	
-	ERTables getERTables(List<String> hitEntities);
 	UsedFqn fillUsedFqnDetails(HitFqnEntityId fqn, EntityCategory cat);
 	List<UsedFqn> fillUsedFqnDetails(List<HitFqnEntityId> fqns, EntityCategory cat);
 	SearchResultsWithSnippets getSearchResultsWithSnippets(String query, long start, int rows, SearchHeuristic heuristic);

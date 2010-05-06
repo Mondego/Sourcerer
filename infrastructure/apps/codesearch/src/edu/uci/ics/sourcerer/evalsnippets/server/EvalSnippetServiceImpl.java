@@ -48,11 +48,15 @@ public class EvalSnippetServiceImpl extends RemoteServiceServlet implements
 	
 	public void init(){
 		
+		String dbUrl = "jdbc:mysql://tagus.ics.uci.edu:3306/sourcerer_eclipse";//getInitParameter("db-url");
+		String dbUser = "sourcerer";//getInitParameter("db-user");
+		String dbPassword = "sourcerer4us";//getInitParameter("db-password");
+		
 		Properties p = new Properties();
 	    p.put("driver", "com.mysql.jdbc.Driver");
-	    p.put("url", "jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_t2");
-	    p.put("user", System.getProperty( "sourcerer.db.user" ));
-	    p.put("password", System.getProperty( "sourcerer.db.password" ));
+	    p.put("url", dbUrl);
+	    p.put("user", dbUser);
+	    p.put("password", dbPassword);
 	    dataSource.init(p);
 	    
 	    dba.setDataSource(dataSource);

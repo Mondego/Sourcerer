@@ -20,7 +20,6 @@
 package edu.uci.ics.sourcerer.db.adapter;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -33,14 +32,10 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import edu.uci.ics.sourcerer.db.adapter.client.Entity;
-import edu.uci.ics.sourcerer.db.adapter.client.Relation;
-import edu.uci.ics.sourcerer.scs.client.ERTables;
 import edu.uci.ics.sourcerer.scs.common.SourcererSearchAdapter;
 import edu.uci.ics.sourcerer.scs.common.client.EntityCategory;
 import edu.uci.ics.sourcerer.scs.common.client.EntityType;
 import edu.uci.ics.sourcerer.scs.common.client.HitFqnEntityId;
-import edu.uci.ics.sourcerer.scs.common.client.RelationType;
 import edu.uci.ics.sourcerer.scs.common.client.UsedFqn;
 
 /**
@@ -52,554 +47,25 @@ public class SourcererDbAdapter {
 
 	private JdbcDataSource dataSource;
 
-	private HashSet<Long> entitiesInHit;
-	private HashSet<RelationType> useRelations;
-
-	private Map<Long, Entity> usedLocalEntities;
-	private Map<Long, Entity> usedJdkEntities;
-	private Map<Long, Entity> usedLibEntities;
-
-	private LinkedList<Relation> relations;
-
-	private HashMap<Long, Integer> localEntityUseCount = new HashMap<Long, Integer>();
-	private HashMap<Long, Integer> jdkEntityUseCount = new HashMap<Long, Integer>();
-	private HashMap<Long, Integer> libEntityUseCount = new HashMap<Long, Integer>();
-
-	private LinkedList<Entity> getUsedEntities() {
-		LinkedList<Entity> entities = new LinkedList<Entity>();
-
-		for (Entity e : usedLocalEntities.values()) {
-			e.parentId = getParent(e) == null ? 0 : getParent(e).entityId;
-			e.useCount = getUseCount(e);
-			entities.add(e);
-		}
-
-		for (Entity e : usedLibEntities.values()) {
-			e.parentId = getParent(e) == null ? 0 : getParent(e).entityId;
-			e.useCount = getUseCount(e);
-			entities.add(e);
-		}
-
-		for (Entity e : usedJdkEntities.values()) {
-			e.parentId = getParent(e) == null ? 0 : getParent(e).entityId;
-			e.useCount = getUseCount(e);
-			entities.add(e);
-		}
-
-		return entities;
-	}
-
-	// public List<Relation> getRelations(){
-	// return this.relations;
-	// }
-	//	
-	// public List<Entity> getUsedLocalEntities(){
-	// return listFromMap(usedLocalEntities);
-	// }
-	//	
-	// public List<Entity> getUsedJdkEntities(){
-	// return listFromMap(usedJdkEntities);
-	// }
-	//	
-	// public List<Entity> getUsedLibEntities(){
-	// return listFromMap(usedLibEntities);
-	// }
-
-	private int getUseCount(Entity e) {
-
-		Long key = new Long(e.entityId);
-		Integer value = null;
-
-		if (e.category.equals(EntityCategory.JDK)) {
-			value = jdkEntityUseCount.get(key);
-		} else if (e.category.equals(EntityCategory.LIB)) {
-			value = libEntityUseCount.get(key);
-		} else if (e.category.equals(EntityCategory.LOCAL)) {
-			value = localEntityUseCount.get(key);
-		} else {
-			return 0;
-		}
-
-		if (value == null)
-			return 0;
-		else
-			return value.intValue();
-	}
-
-	/**
-	 * 
-	 * @param e
-	 * @return only searches for the parent of this entity e in the list of
-	 *         entities that are used by the entities in the hits
-	 */
-	private Entity getParent(Entity e) {
-		Entity parent = null;
-
-		for (Relation r : relations) {
-			if (r.leid == e.entityId && r.lhsEntityCategory.equals(e.category)
-					&& r.type.equals(RelationType.INSIDE)) {
-
-				if (r.rhsEntityCategory.equals(EntityCategory.LOCAL)) {
-					parent = usedLocalEntities.get(new Long(r.reid));
-				} else if (r.rhsEntityCategory.equals(EntityCategory.LIB)) {
-					parent = usedLibEntities.get(new Long(r.reid));
-				} else if (r.rhsEntityCategory.equals(EntityCategory.JDK)) {
-					parent = usedJdkEntities.get(new Long(r.reid));
-				}
-
-			}
-		}
-
-		return parent;
-	}
-
 	// initialization
 
 	public void setDataSource(JdbcDataSource ds) {
 		this.dataSource = ds;
 	}
 
-	public ERTables buildDbForHitEntities(List<String> entityIds) {
-
-		entitiesInHit = new HashSet<Long>(entityIds.size());
-		for (String e : entityIds) {
-			try {
-				Long eid = Long.parseLong(e);
-				if (eid.longValue() > 0) {
-					entitiesInHit.add(eid);
-				}
-			} catch (NumberFormatException nfe) {
-			}
-
-		}
-
-		initTables();
-
-		fillUseRelationsWithHitsAsSource(entityIds);
-
-		loadUsedEntities();
-
-		// get inside relations
-		fillLocalEntityRelations();
-		fillJdkEntityRelations();
-		fillLibEntityRelations();
-
-		ERTables erTables = new ERTables();
-		erTables.entities = getUsedEntities();
-		erTables.relations = relations;
-		return erTables;
-
-	}
-
-	// private List<Entity> listFromMap(Map<Long,Entity> m){
-	// List<Entity> _localEntities = new LinkedList<Entity>();
-	// for(Entity e: m.values()){
-	// _localEntities.add(e);
-	// }
-	// return _localEntities;
-	// }
-
-	private void initTables() {
-
-		useRelations = new HashSet<RelationType>();
-		useRelations.add(RelationType.EXTENDS);
-		useRelations.add(RelationType.IMPLEMENTS);
-		useRelations.add(RelationType.CALLS);
-		useRelations.add(RelationType.RETURNS);
-		useRelations.add(RelationType.HOLDS);
-		useRelations.add(RelationType.USES);
-
-		if (usedLocalEntities == null)
-			usedLocalEntities = new HashMap<Long, Entity>();
-		else
-			usedLocalEntities.clear();
-
-		if (usedJdkEntities == null)
-			usedJdkEntities = new HashMap<Long, Entity>();
-		else
-			usedJdkEntities.clear();
-
-		if (usedLibEntities == null)
-			usedLibEntities = new HashMap<Long, Entity>();
-		else
-			usedLibEntities.clear();
-
-		if (relations == null)
-			relations = new LinkedList<Relation>();
-		else
-			relations.clear();
-
-		localEntityUseCount.clear();
-		jdkEntityUseCount.clear();
-		libEntityUseCount.clear();
-	}
-
-	private void loadUsedEntities() {
-
-		updateUseCounts();
-
-		fillLocalEntities(new LinkedList<Long>(localEntityUseCount.keySet()));
-		fillJdkEntities(new LinkedList<Long>(jdkEntityUseCount.keySet()));
-		fillLibEntities(new LinkedList<Long>(libEntityUseCount.keySet()));
-
-	}
-
-	private void updateUseCounts() {
-		for (Relation r : relations) {
-
-			if ((!entitiesInHit.contains(new Long(r.leid)))
-					|| (!useRelations.contains(r.type))) {
-				continue;
-			}
-
-			Long targetEntityId = new Long(r.reid);
-
-			if (r.rhsEntityCategory.equals(EntityCategory.LOCAL)) {
-				updateUseCountForEntityCategory(localEntityUseCount,
-						targetEntityId);
-			} else if (r.rhsEntityCategory.equals(EntityCategory.JDK)) {
-				updateUseCountForEntityCategory(jdkEntityUseCount,
-						targetEntityId);
-			} else if (r.rhsEntityCategory.equals(EntityCategory.LIB)) {
-				updateUseCountForEntityCategory(libEntityUseCount,
-						targetEntityId);
-			}
-		}
-	}
-
-	private void updateUseCountForEntityCategory(
-			HashMap<Long, Integer> entityCountMap, Long targetEntityId) {
-		Integer newValue = new Integer(1);
-		if (entityCountMap.containsKey(targetEntityId)) {
-			newValue = new Integer(entityCountMap.get(targetEntityId)
-					.intValue() + 1);
-			entityCountMap.remove(targetEntityId);
-		}
-		entityCountMap.put(targetEntityId, newValue);
-	}
-
-	private void fillUseRelationsWithHitsAsSource(List<String> entityIds) {
-		String _sql = "select lhs_eid, rhs_eid, rhs_leid, rhs_jeid, relation_type from relations where lhs_eid in("
-				+ delimitStringListWithComma(entityIds)
-				+ ") "
-				+ " AND ("
-				+ " relation_type='EXTENDS' OR "
-				+ " relation_type='IMPLEMENTS' OR"
-				+ " relation_type='CALLS' OR"
-				+ " relation_type='RETURNS' OR"
-				+ " relation_type='HOLDS' OR" + " relation_type='USES')";
-
-		Iterator<Map<String, Object>> _dbRelations = dataSource.getData(_sql);
-
-		while (_dbRelations.hasNext()) {
-			Map<String, Object> relationMap = _dbRelations.next();
-			Relation rel = makeRelationWithLocalSource(relationMap);
-			relations.add(rel);
-		}
-	}
-
-	private Relation makeRelationWithLocalSource(Map<String, Object> relationMap) {
-		Relation rel = new Relation();
-		rel.leid = ((BigInteger) relationMap.get("lhs_eid")).longValue();
-		rel.lhsEntityCategory = EntityCategory.LOCAL;
-		rel.type = RelationType.valueOf((String) relationMap
-				.get("relation_type"));
-
-		Object reid = relationMap.get("rhs_eid");
-		rel.rhsEntityCategory = EntityCategory.LOCAL;
-
-		if (reid == null) {
-			reid = relationMap.get("rhs_leid");
-			rel.rhsEntityCategory = EntityCategory.JDK;
-		}
-
-		if (reid == null) {
-			reid = relationMap.get("rhs_jeid");
-			rel.rhsEntityCategory = EntityCategory.LIB;
-		}
-
-		// TODO handle properly, well this never happens
-		assert reid != null;
-
-		rel.reid = ((BigInteger) reid).longValue();
-
-		return rel;
-
-	}
-
-	private Entity makeEntity(Map<String, Object> entityMap,
-			EntityCategory entityCategory) {
-		Entity entity = new Entity();
-
-		entity.fqn = (String) entityMap.get("fqn");
-		entity.type = EntityType.valueOf((String) entityMap.get("entity_type"));
-		entity.entityId = ((BigInteger) entityMap.get("entity_id")).longValue();
-		entity.category = entityCategory;
-
-		return entity;
-
-	}
-
-	private void fillLocalEntities(List<Long> entityIds) {
-		String _sql = "select entity_id, entity_type, fqn from entities where entity_id in("
-				+ delimitLongListWithComma(entityIds) + ") ";
-
-		Iterator<Map<String, Object>> _dbEntities = dataSource.getData(_sql);
-
-		while (_dbEntities.hasNext()) {
-			Map<String, Object> entityMap = _dbEntities.next();
-			Entity entity = makeEntity(entityMap, EntityCategory.LOCAL);
-			usedLocalEntities.put(new Long(entity.entityId), entity);
-		}
-	}
-
-	private void fillJdkEntities(List<Long> entityIds) {
-		String _sql = "select entity_id, entity_type, fqn from library_entities where entity_id in("
-				+ delimitLongListWithComma(entityIds) + ") ";
-
-		Iterator<Map<String, Object>> _dbEntities = dataSource.getData(_sql);
-
-		while (_dbEntities.hasNext()) {
-			Map<String, Object> entityMap = _dbEntities.next();
-			Entity entity = makeEntity(entityMap, EntityCategory.JDK);
-			usedJdkEntities.put(new Long(entity.entityId), entity);
-		}
-	}
-
-	private void fillLibEntities(List<Long> entityIds) {
-		String _sql = "select entity_id, entity_type, fqn from jar_entities where entity_id in("
-				+ delimitLongListWithComma(entityIds) + ") ";
-
-		Iterator<Map<String, Object>> _dbEntities = dataSource.getData(_sql);
-
-		while (_dbEntities.hasNext()) {
-			Map<String, Object> entityMap = _dbEntities.next();
-			Entity entity = makeEntity(entityMap, EntityCategory.LIB);
-			usedLibEntities.put(new Long(entity.entityId), entity);
-		}
-	}
-
-	private void fillLocalEntityRelations() {
-		String _sql = "select lhs_eid, rhs_eid, relation_type from relations where "
-				+ " lhs_eid in("
-				+ delimitLongListWithComma(new ArrayList<Long>(entitiesInHit))
-				+ ") "
-				+ " AND "
-				+ " rhs_eid in("
-				+ delimitLongListWithComma(new ArrayList<Long>(entitiesInHit))
-				+ ") " + " AND " + " relation_type='INSIDE'";
-
-		Iterator<Map<String, Object>> _dbLocalRelationsInside = dataSource
-				.getData(_sql);
-
-		while (_dbLocalRelationsInside.hasNext()) {
-			Map<String, Object> relationMap = _dbLocalRelationsInside.next();
-			Relation rel = makeInsideRelationAmongHitEntities(relationMap);
-			relations.add(rel);
-		}
-	}
-
-	private Relation makeInsideRelationAmongHitEntities(
-			Map<String, Object> relationMap) {
-
-		Relation rel = new Relation();
-		rel.leid = ((BigInteger) relationMap.get("lhs_eid")).longValue();
-		rel.lhsEntityCategory = EntityCategory.LOCAL;
-
-		rel.reid = ((BigInteger) relationMap.get("rhs_eid")).longValue();
-		rel.rhsEntityCategory = EntityCategory.LOCAL;
-
-		rel.type = RelationType.valueOf((String) relationMap
-				.get("relation_type"));
-
-		return rel;
-	}
-
-	private void fillJdkEntityRelations() {
-		String _sql = "select lhs_leid, rhs_leid, relation_type from library_relations where "
-				+ " lhs_leid in("
-				+ delimitLongListWithComma(new ArrayList<Long>(
-						jdkEntityUseCount.keySet()))
-				+ ") "
-				+ " AND "
-				+ " rhs_leid in("
-				+ delimitLongListWithComma(new ArrayList<Long>(
-						jdkEntityUseCount.keySet()))
-				+ ") "
-				+ " AND "
-				+ " relation_type='INSIDE'";
-
-		Iterator<Map<String, Object>> _dbJdkRelations = dataSource
-				.getData(_sql);
-
-		while (_dbJdkRelations.hasNext()) {
-			Map<String, Object> relationMap = _dbJdkRelations.next();
-			Relation rel = makeRelationAmongUsedJdkEntities(relationMap);
-			relations.add(rel);
-		}
-	}
-
-	private Relation makeRelationAmongUsedJdkEntities(
-			Map<String, Object> relationMap) {
-
-		Relation rel = new Relation();
-		rel.leid = ((BigInteger) relationMap.get("lhs_leid")).longValue();
-		rel.lhsEntityCategory = EntityCategory.JDK;
-
-		rel.reid = ((BigInteger) relationMap.get("rhs_leid")).longValue();
-		rel.rhsEntityCategory = EntityCategory.JDK;
-
-		rel.type = RelationType.valueOf((String) relationMap
-				.get("relation_type"));
-
-		return rel;
-	}
-
-	private void fillLibEntityRelations() {
-		fillLib2LibEntityRelations();
-		fillLib2JdkEntityRelations();
-	}
-
-	private void fillLib2LibEntityRelations() {
-		String _sql = "select lhs_jeid, rhs_jeid, rhs_leid, relation_type from jar_relations where "
-				+ " lhs_jeid in("
-				+ delimitLongListWithComma(new ArrayList<Long>(
-						libEntityUseCount.keySet()))
-				+ ") "
-				+ " AND "
-				+ " rhs_jeid in("
-				+ delimitLongListWithComma(new ArrayList<Long>(
-						libEntityUseCount.keySet()))
-				+ ") AND "
-				+ " relation_type='INSIDE'";
-
-		Iterator<Map<String, Object>> _dbJdkRelations = dataSource
-				.getData(_sql);
-
-		while (_dbJdkRelations.hasNext()) {
-			Map<String, Object> relationMap = _dbJdkRelations.next();
-			Relation rel = makeLib2LibRelationAmongUsedLibEntities(relationMap);
-			if (rel != null)
-				relations.add(rel);
-
-		}
-	}
-
-	private void fillLib2JdkEntityRelations() {
-		String _sql = "select lhs_jeid, rhs_jeid, rhs_leid, relation_type from jar_relations where "
-				+ " lhs_jeid in("
-				+ delimitLongListWithComma(new ArrayList<Long>(
-						libEntityUseCount.keySet()))
-				+ ") "
-				+ " AND "
-				+ " rhs_leid in("
-				+ delimitLongListWithComma(new ArrayList<Long>(
-						jdkEntityUseCount.keySet()))
-				+ ") AND "
-				+ " relation_type='INSIDE'";
-
-		Iterator<Map<String, Object>> _dbJdkRelations = dataSource
-				.getData(_sql);
-
-		while (_dbJdkRelations.hasNext()) {
-			Map<String, Object> relationMap = _dbJdkRelations.next();
-
-			Relation rel2 = makeLib2JdkRelationAmongUsedLibEntities(relationMap);
-			if (rel2 != null)
-				relations.add(rel2);
-		}
-	}
-
-	private Relation makeLib2LibRelationAmongUsedLibEntities(
-			Map<String, Object> relationMap) {
-
-		if (relationMap.get("rhs_jeid") == null)
-			return null;
-
-		Relation rel = new Relation();
-		rel.leid = ((BigInteger) relationMap.get("lhs_jeid")).longValue();
-		rel.lhsEntityCategory = EntityCategory.LIB;
-
-		rel.reid = ((BigInteger) relationMap.get("rhs_jeid")).longValue();
-		rel.rhsEntityCategory = EntityCategory.LIB;
-
-		rel.type = RelationType.valueOf((String) relationMap
-				.get("relation_type"));
-
-		return rel;
-	}
-
-	private Relation makeLib2JdkRelationAmongUsedLibEntities(
-			Map<String, Object> relationMap) {
-
-		if (relationMap.get("rhs_leid") == null)
-			return null;
-
-		Relation rel = new Relation();
-		rel.leid = ((BigInteger) relationMap.get("lhs_jeid")).longValue();
-		rel.lhsEntityCategory = EntityCategory.LIB;
-
-		rel.reid = ((BigInteger) relationMap.get("rhs_leid")).longValue();
-		rel.rhsEntityCategory = EntityCategory.JDK;
-
-		rel.type = RelationType.valueOf((String) relationMap
-				.get("relation_type"));
-
-		return rel;
-	}
-
-	private String delimitStringListWithComma(List<String> list) {
-		if (list == null || list.size() == 0)
-			return null;
-
-		StringBuffer sb = new StringBuffer();
-
-		if (list.size() > 0) {
-			int i = 0;
-			for (String s : list) {
-				sb.append(s);
-				if (i < list.size() - 1)
-					sb.append(", ");
-
-				i++;
-			}
-		}
-
-		return sb.toString();
-	}
-
-	private String delimitLongListWithComma(List<Long> list) {
-		if (list == null || list.size() == 0)
-			return null;
-
-		StringBuffer sb = new StringBuffer();
-
-		if (list.size() > 0) {
-			int i = 0;
-			for (Long s : list) {
-				sb.append(s.longValue() + "");
-				if (i < list.size() - 1)
-					sb.append(", ");
-
-				i++;
-			}
-		}
-
-		return sb.toString();
-	}
-
 	public UsedFqn fillUsedFqnDetails(HitFqnEntityId hitFqn, EntityCategory cat) {
 
-		String table;
-		if (cat == EntityCategory.JDK) {
-			table = "library_entities";
-		} else if (cat == EntityCategory.LIB) {
-			table = "jar_entities";
-		} else if (cat == EntityCategory.LOCAL) {
-			table = "entities";
-		} else {
-			return null; // never
-		}
+		String table = "entities";
+
+		// if (cat == EntityCategory.JDK) {
+		// table = "library_entities";
+		// } else if (cat == EntityCategory.LIB) {
+		// table = "jar_entities";
+		// } else if (cat == EntityCategory.LOCAL) {
+		// table = "entities";
+		// } else {
+		// return null; // never
+		// }
 
 		String _sql = "select entity_id, entity_type from " + table
 				+ " where fqn='" + hitFqn.fqn + "'";
@@ -661,7 +127,7 @@ public class SourcererDbAdapter {
 	public String lookupJarEntityTypeForUnknown(String fqn) {
 
 		fqn = fqn.replaceFirst("\\.\\(", ".<init>(");
-		String sql = "select distinct entity_type from jar_entities where fqn='"
+		String sql = "select distinct entity_type from entities where fqn='"
 				+ fqn + "'" + " and entity_type <> 'UNKNOWN'";
 
 		String type = "UNKNOWN";
@@ -697,18 +163,18 @@ public class SourcererDbAdapter {
 	 */
 	public String getSnippetForJarEntityHit(String entityId,
 			List<UsedFqn> usedTopLibApis, int topKApis) {
-		
+
 		StringBuffer buf = new StringBuffer();
-		
-		for(String s: getSnippetsForJarEntityHit(entityId, usedTopLibApis, topKApis)){
+
+		for (String s : getSnippetsForJarEntityHit(entityId, usedTopLibApis,
+				topKApis)) {
 			buf.append("\n\n    ...\n\n");
 			buf.append(s);
 		}
-		
+
 		return buf.toString();
 	}
-	
-	
+
 	/**
 	 * 
 	 * @param entityId
@@ -721,7 +187,7 @@ public class SourcererDbAdapter {
 			List<UsedFqn> usedTopLibApis, int topKApis) {
 
 		List<String> returnVal = new LinkedList<String>();
-		
+
 		if (usedTopLibApis == null)
 			return returnVal;
 		else if (usedTopLibApis.size() == 0)
@@ -799,99 +265,88 @@ public class SourcererDbAdapter {
 
 		}
 
-		String topUsedEntities = "";
+		List<String> _topUsedEids = new LinkedList<String>();
+
 		StringBuffer _sbufTopUsedEntities = new StringBuffer();
 		_sbufTopUsedEntities.append("(");
 
 		for (String cl : topClasses) {
-			_sbufTopUsedEntities.append(cl);
-			_sbufTopUsedEntities.append(",");
+			_topUsedEids.add(cl);
 		}
 
 		for (String in : topInterfaces) {
-			_sbufTopUsedEntities.append(in);
-			_sbufTopUsedEntities.append(",");
+			_topUsedEids.add(in);
 		}
 
 		for (String me : topMethods) {
-			_sbufTopUsedEntities.append(me);
-			_sbufTopUsedEntities.append(",");
+			_topUsedEids.add(me);
 		}
 
 		// for(String fi: topFields){
-		// _sbufTopUsedEntities.append(fi);
-		// _sbufTopUsedEntities.append(",");
+		// 				_topUsedEids.add(fi);
 		// }
 
 		for (String co : topConstructors) {
-			_sbufTopUsedEntities.append(co);
-			_sbufTopUsedEntities.append(",");
+			_topUsedEids.add(co);
 		}
 
-		// for(String ot: topOthers){
-		// _sbufTopUsedEntities.append(ot);
-		// _sbufTopUsedEntities.append(",");
-		// }
 
-		_sbufTopUsedEntities.append(")");
-
-		// will this be faster: s.substring(0,s.length()-2) + ")"
-		topUsedEntities = _sbufTopUsedEntities.toString().replaceFirst(",\\)",
-				")");
 
 		// no used apis
-		if (topUsedEntities.equals("()"))
+		if (_topUsedEids.size() < 1)
 			return returnVal;
-
-		String _sql = "select jr.offset, jr.length, jr.jclass_fid, jr.relation_type, used_je.fqn from jar_relations as jr "
-				+ " inner join jar_entities as used_je on jr.rhs_jeid=used_je.entity_id "
-				+ " where jr.lhs_jeid="
-				+ entityId
-				+ " and jr.rhs_jeid is not null and jr.length is not null and jr.offset is not null and jr.rhs_jeid in "
-				+ topUsedEntities
-		// + " order by jr.offset asc"
-		;
-
-		// System.err.println(_sql);
-
-		Iterator<Map<String, Object>> _results = dataSource.getData(_sql);
 
 		SortedMap<Long, Long> _offsetLengths = new TreeMap<Long, Long>();
 		// only include a rationale-comment once (ie only one instance of usage)
 		SortedMap<Long, Set<String>> _offsetComments = new TreeMap<Long, Set<String>>();
 		String classFileId = "";
 
-		while (_results.hasNext()) {
-			Map<String, Object> resultMap = _results.next();
+		for (String _usedEid : _topUsedEids) {
 
-			Long _off = (Long) resultMap.get("offset");
-			Long _length = (Long) resultMap.get("length");
-			String _relation = (String) resultMap.get("relation_type");
-			String _usedFqn = (String) resultMap.get("fqn");
+			String _sql = "select jr.offset, jr.length, jr.file_id, jr.relation_type, used_je.fqn from relations as jr "
+					+ " inner join entities as used_je on jr.rhs_eid=used_je.entity_id "
+					+ " where jr.lhs_eid="
+					+ entityId
+					+ " and jr.rhs_eid is not null and jr.length is not null and jr.offset is not null "
+					+ " and internal=0 " 
+					+ " and jr.rhs_eid=" + _usedEid
+			;
 
-			if (_offsetLengths.containsKey(_off)) {
-				if (_offsetLengths.get(_off).longValue() > _length) {
+			Iterator<Map<String, Object>> _results = dataSource.getData(_sql);
+
+			while (_results.hasNext()) {
+				Map<String, Object> resultMap = _results.next();
+
+				Long _off = (Long) resultMap.get("offset");
+				Long _length = (Long) resultMap.get("length");
+				String _relation = (String) resultMap.get("relation_type");
+				String _usedFqn = (String) resultMap.get("fqn");
+
+				if (_offsetLengths.containsKey(_off)) {
+					if (_offsetLengths.get(_off).longValue() > _length) {
+						_offsetLengths.put(_off, _length);
+					}
+					_offsetComments.get(_off).add(
+							"/// " + _relation + " " + _usedFqn); // TODO
+					// remove
+					// hard-coded
+					// markup
+
+				} else {
+
 					_offsetLengths.put(_off, _length);
+					_offsetComments.put(_off, new HashSet<String>());
+					_offsetComments.get(_off).add(
+							"/// " + _relation + " " + _usedFqn);
 				}
-				_offsetComments.get(_off).add(
-						"/// " + _relation + " " + _usedFqn); // TODO
-																			// remove
-																			// hard-coded
-																			// markup
 
-			} else {
+				String _cfid = ((BigInteger) resultMap.get("file_id"))
+						.toString()
+						+ "";
+				if (_cfid.length() > 0)
+					classFileId = _cfid;
 
-				_offsetLengths.put(_off, _length);
-				_offsetComments.put(_off, new HashSet<String>());
-				_offsetComments.get(_off).add(
-						"/// " + _relation + " " + _usedFqn);
 			}
-
-			String _cfid = ((BigInteger) resultMap.get("jclass_fid"))
-					.toString()
-					+ "";
-			if (_cfid.length() > 0)
-				classFileId = _cfid;
 
 		}
 
@@ -905,7 +360,7 @@ public class SourcererDbAdapter {
 				_offsetComments);
 	}
 
-	class SnippetPart  {
+	class SnippetPart {
 		String line;
 		Set<String> comments;
 		Long offset;
@@ -920,7 +375,6 @@ public class SourcererDbAdapter {
 			comments.addAll(comments2);
 		}
 
-		
 	}
 
 	class SC implements Comparator {
@@ -975,19 +429,21 @@ public class SourcererDbAdapter {
 			}
 			commentedLines.get(line).addAllComments(offsetComments.get(off));
 		}
-		
-		Map<String, SnippetPart> sortedCommentedLines = new TreeMap<String, SnippetPart>(new SC(commentedLines));
+
+		Map<String, SnippetPart> sortedCommentedLines = new TreeMap<String, SnippetPart>(
+				new SC(commentedLines));
 		sortedCommentedLines.putAll(commentedLines);
 
 		for (String line : sortedCommentedLines.keySet()) {
 			StringBuffer snippetLines = new StringBuffer();
-			
-			if (_commentsSoFar.contains(sortedCommentedLines.get(line).comments)) {
+
+			if (_commentsSoFar
+					.contains(sortedCommentedLines.get(line).comments)) {
 				continue;
 			}
 
 			_commentsSoFar.add(sortedCommentedLines.get(line).comments);
-			
+
 			snippetLines
 					.append(stringSetToLines(sortedCommentedLines.get(line).comments));
 			snippetLines.append(line);
@@ -1086,11 +542,12 @@ public class SourcererDbAdapter {
 		sbufUserJeids.append(")");
 		String userJeids = sbufUserJeids.toString().replaceFirst(",\\)", ")");
 
-		String sqlUsedJarEntities = "select provider_je.entity_id as pjeid, provider_je.fqn as pfqn, provider_je.entity_type as etype, jr.lhs_jeid as ujeid "
-				+ " from jar_relations as jr inner join jar_entities as provider_je on "
-				+ " jr.rhs_jeid=provider_je.entity_id "
+		String sqlUsedJarEntities = "select provider_je.entity_id as pjeid, provider_je.fqn as pfqn, provider_je.entity_type as etype, jr.lhs_eid as ujeid "
+				+ " from relations as jr inner join entities as provider_je on "
+				+ " jr.rhs_eid=provider_je.entity_id "
 				+ " and jr.relation_type in ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES', 'OVERRIDES')"
-				+ " and jr.lhs_jeid in" + userJeids;
+				+ " and internal=0 "
+				+ " and jr.lhs_eid in" + userJeids;
 
 		// System.err.println(sqlUsedJarEntities);
 		if (userJeids.equals("()")) {
@@ -1167,28 +624,6 @@ public class SourcererDbAdapter {
 				return -1;
 			}
 		}
-	}
-
-	// TODO works only for jar entities, using tanimoto
-	public Set<String> getSimilartEntityFqns(String entityId) {
-
-		String sql = "select je.fqn as simfqn from similarity_tanimoto as s inner join jar_entities as je"
-				+ " on je.entity_id=s.rhs_eid where s.lhs_eid="
-				+ entityId
-				+ " order by s.similarity desc limit 30";
-
-		Iterator<Map<String, Object>> _results = dataSource.getData(sql);
-
-		HashSet<String> fqns = new HashSet<String>();
-
-		while (_results.hasNext()) {
-			Map<String, Object> resultMap = _results.next();
-
-			String similarFqn = (String) resultMap.get("simfqn");
-			fqns.add(similarFqn);
-		}
-
-		return fqns;
 	}
 
 }

@@ -58,9 +58,9 @@ public class SourcererDBServiceImpl extends RemoteServiceServlet implements
 	
 	public void init(){
 		
-		String dbUrl = getInitParameter("db-url");
-		String dbUser = getInitParameter("db-user");
-		String dbPassword = getInitParameter("db-password");
+		String dbUrl = "jdbc:mysql://tagus.ics.uci.edu:3306/sourcerer_eclipse";//getInitParameter("db-url");
+		String dbUser = "sourcerer";//getInitParameter("db-user");
+		String dbPassword = "sourcerer4us";//getInitParameter("db-password");
 		
 		Properties p = new Properties();
 	    p.put("driver", "com.mysql.jdbc.Driver");
@@ -72,11 +72,7 @@ public class SourcererDBServiceImpl extends RemoteServiceServlet implements
 	    dba.setDataSource(ds);
 	}
 
-	public ERTables getERTables(List<String> hitEntities) {
-		
-		return dba.buildDbForHitEntities(hitEntities);
-		
-	}
+	
 
 	public UsedFqn fillUsedFqnDetails(HitFqnEntityId fqn, EntityCategory cat) {
 		return dba.fillUsedFqnDetails(fqn, cat);
@@ -175,10 +171,11 @@ public class SourcererDBServiceImpl extends RemoteServiceServlet implements
 			String[] terms = JavaTermExtractor.extractShortNameFragments(_hit.fqn);
 			putTermsInMap(terms, _wc);
 			
-			Set<String> _simFqns = dba.getSimilartEntityFqns(_hit.entityId);
-			for(String s: _simFqns){
-				putTermsInMap(JavaTermExtractor.extractShortNameFragments(s), _wc);
-			}
+			// TODO get similar entity fqns from search server
+//			Set<String> _simFqns = dba.getSimilartEntityFqns(_hit.entityId);
+//			for(String s: _simFqns){
+//				putTermsInMap(JavaTermExtractor.extractShortNameFragments(s), _wc);
+//			}
 			
 		}
 		

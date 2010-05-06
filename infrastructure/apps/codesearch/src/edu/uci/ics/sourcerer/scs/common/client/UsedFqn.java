@@ -19,8 +19,10 @@
 package edu.uci.ics.sourcerer.scs.common.client;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
@@ -54,11 +56,11 @@ public class UsedFqn implements Serializable {
 		return category;
 	}
 
-	private List<Long> entityIds;
+	private Set<Long> entityIds;
 	private EntityType type;
 	private EntityCategory category;
 	
-	public List<Long> getEntityIdsMatchingFqns(){
+	public Set<Long> getEntityIdsMatchingFqns(){
 		return entityIds;
 	}
 	
@@ -71,7 +73,7 @@ public class UsedFqn implements Serializable {
 		this.category = category;
 		this.useCount = useCount;
 		this.type = EntityType.UNKNOWN;
-		this.entityIds = new LinkedList<Long>();
+		this.entityIds = new HashSet<Long>();
 	}
 	
 	public void addEntityId(Long long1){

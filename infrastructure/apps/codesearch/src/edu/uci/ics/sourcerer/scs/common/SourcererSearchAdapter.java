@@ -44,25 +44,25 @@ public class SourcererSearchAdapter {
 
 	private static String SEARCH_SERVER = 
 	//	"http://localhost:8984"; 
-	 "http://kathmandu.ics.uci.edu:8984"; 
+	// "http://kathmandu.ics.uci.edu:8984";
+	"http://mine8.ics.uci.edu:8984";
 	// "http://nile.ics.uci.edu:8984";
 	private static String FACET_SERVER  = 
 	//	"http://localhost:8984"; 
-	 "http://kathmandu.ics.uci.edu:8984"; 
+	 "http://mine8.ics.uci.edu:8984"; 
 	// "http://nile.ics.uci.edu:8983"; 
 	private static String MLT_SERVER    = 
 	//	"http://localhost:8984"; 
-	"http://kathmandu.ics.uci.edu:8984"; 
+	"http://mine8.ics.uci.edu:8984"; 
 	// "http://nile.ics.uci.edu:8983";
 	private static String FILE_SERVER   = 
-	//	"http://nile.ics.uci.edu:9180/file-server";		
-		"http://kathmandu.ics.uci.edu:8080/file-server";
+		"http://nile.ics.uci.edu:9180/file-server";		
+	//	"http://kathmandu.ics.uci.edu:8080/file-server";
 	
 	private static String QUERY_PART_SNAME_CONTENTS = "sname_contents^50.0%20";
 	private static String QUERY_PART_JDKLIB_SIM_SNAME_CONTENTS =   
-		// "sim_sname_contents_via_jdk_use^10.0%20sim_sname_contents_via_lib_use^10.0%20sim_sname_contents_via_local_use^10.0%20";
-		//  "sim_sname_contents_via_jdk_use^20.0%20sim_sname_contents_via_lib_use^20.0%20sim_sname_contents_via_local_use^20.0%20";
-		  	"sim_sname_contents_via_jdk_use^1.0%20sim_sname_contents_via_lib_use^50.0%20";
+		  //	"sim_sname_contents_via_jdk_use^1.0%20sim_sname_contents_via_lib_use^50.0%20";
+		"sim_sname_contents_via_jdkLib_use^50.0%20";
 	private static String QUERY_PART_JDKLIB_TC_SIM_SNAME_CONTENTS =
 			"simTC_sname_contents_via_jdkLib_use^50.0%20";
 	private static String QUERY_PART_JDKLIB_HD_SIM_SNAME_CONTENTS =
@@ -73,14 +73,16 @@ public class SourcererSearchAdapter {
 	private static String QUERY_PART_FQN_CONTENTS = "fqn_contents^25.0%20";
 	
 	private static String QUERY_PART_USE_SNAME_CONTENTS = 
-		"jdk_use_sname_contents^1.0%20lib_use_sname_contents^100.0%20"; 
+	//	"jdk_use_sname_contents^1.0%20lib_use_sname_contents^100.0%20";
+		"jdkLib_use_sname_contents^100.0%20";
 	//local_use_sname_contents^20.0%20";
 	private static String QUERY_PART_USE_FQN_CONTENTS = 
-		"jdk_use_fqn_contents^1.0%20lib_use_fqn_contents^50.0%20"; 
+	//	"jdk_use_fqn_contents^1.0%20lib_use_fqn_contents^50.0%20";
+		"jdkLib_use_fqn_contents^50.0%20";
 	//local_use_fqn_contents^10.0%20";
 	
 	private static String QUERY_PART_FULL_TEXT = "full_text^1.0%20"; // switch to 25
-	private static String QUERY_PART_USED_JAVADOC = "lib_use_javadoc^50.0%20";
+	private static String QUERY_PART_USED_JAVADOC = "jdkLib_use_javadoc^50.0%20";
 	static JavaToHtml j2h = new JavaToHtml();
 	
 	public static String searchSCSServer(String query) {
@@ -116,11 +118,11 @@ public class SourcererSearchAdapter {
 	
 	public static String getEntityCodeRaw(String entityId){
 		
-		return(getEntityCodeRaw(entityId, "jarEntityID"));
+		return(getEntityCodeRaw(entityId, "entityID"));
 	}
 	
 	public static String getJarClassFileCodeRaw(String jarClassFileID){
-		return(getEntityCodeRaw(jarClassFileID, "jarClassFileID"));
+		return(getEntityCodeRaw(jarClassFileID, "fileID"));
 	}
 	
 	/**
@@ -181,7 +183,7 @@ public class SourcererSearchAdapter {
 	private static String buildQueryFqnFilterPart(HashSet<String> filterFqns) {
 		StringBuffer _buf = new StringBuffer();
 		
-		String _pre = "&fq=lib_use_fqn_full:";
+		String _pre = "&fq=jdkLib_use_fqn_full:";
 		
 		for(String s : filterFqns){
 			_buf.append(_pre);
@@ -571,7 +573,7 @@ public class SourcererSearchAdapter {
 		
 		String queryString = "start=" + 1 + "&rows=" + 0 
 			+ buildQueryPart(query, heuristic)
-			+ "&facet=true&facet.field=lib_use_fqn_full&facet.field=jdk_use_fqn_full&facet.field=entity_type&facet.mincount=1";
+			+ "&facet=true&facet.field=jdkLib_use_fqn_full&facet.field=jdkLib_use_fqn_full&facet.field=entity_type&facet.mincount=1";
 		
 		String result = "";
 		
@@ -607,14 +609,14 @@ public class SourcererSearchAdapter {
 
 		return result;
 	}
-
+//lib_use_fqn_full
 	public static String searchMltViaJdkUsage(String entityId) {
 		return searchMlt(entityId, "jdk_use_fqn_full");
 	}
 
 
 	public static String searchMltViaLibUsage(String entityId) {
-		return searchMlt(entityId, "lib_use_fqn_full");
+		return searchMlt(entityId, "jdkLib_use_fqn_full");
 	}
 
 
