@@ -82,7 +82,7 @@ public class FilteredUsageCalculator {
 		if (filter == null)
 			return;
 
-		fqnsToSkip = new BitSet(5000000);
+		fqnsToSkip = new BitSet(10000000);
 
 		if (filter.popularFqnsFile != null) {
 			initPopularFqnsToSkip();
@@ -97,7 +97,7 @@ public class FilteredUsageCalculator {
 
 	private void initEntitiesToSkip() {
 
-		entitiesToSkip = new BitSet(3000000);
+		entitiesToSkip = new BitSet(10000000);
 
 		String fileName = filter.entityAllUsedFqnsCountFile;
 

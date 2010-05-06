@@ -43,7 +43,7 @@ import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 public class UsagePreCalculatorRunner {
 
 	public static final Property<UsagePreCalculator.EntityType> ENTITY_TYPE  =
-		new EntityTypeOptionProperty("entity-type", UsagePreCalculator.EntityType.METHOD, "UsageCalculator",
+		new EntityTypeOptionProperty("entity-type", UsagePreCalculator.EntityType.CLASS_METHOD, "UsageCalculator",
 				"Types of entities. One of: "+  UsagePreCalculator.EntityType.allElementNames() + ".").makeOptional();
 	public static final Property<Boolean> EXCLUDE_INTERNAL =
 		new BooleanProperty("exclude-internal", true, "UsageCalculator",
