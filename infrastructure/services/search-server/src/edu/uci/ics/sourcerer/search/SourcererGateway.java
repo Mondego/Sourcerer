@@ -22,6 +22,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -86,7 +88,7 @@ public class SourcererGateway {
 
 	{
 		MultiThreadedHttpConnectionManager httpConnectionManager = new MultiThreadedHttpConnectionManager();
-		httpConnectionManager.getParams().setConnectionTimeout(1000);
+		httpConnectionManager.getParams().setConnectionTimeout(1200);
 		httpConnectionManager.getParams().setSoTimeout(1200);
 		client = new HttpClient(httpConnectionManager);
 		
@@ -347,8 +349,6 @@ public class SourcererGateway {
 		if(javabin == null) return hitsInfo;
 		
 		NamedList<Object> nl = (NamedList<Object>) javabin;
-		
-		
 
 		SolrDocumentList list = (SolrDocumentList) nl.getVal(2);
 
@@ -356,12 +356,20 @@ public class SourcererGateway {
 			return hitsInfo;
 		}
 		
+		HashSet<String> fqns = new HashSet<String>();
+		
 		for (int i = 0; i < list.size(); i++) {
 			SolrDocument doc = list.get(i);
-			hitsInfo.add(new HitFqnEntityId(
-					(String) doc.getFieldValue("fqn_full"),
-					((Long) doc.getFieldValue("entity_id")).longValue() + "")
-			);
+			String _fqn = (String) doc.getFieldValue("fqn_full");
+			
+			if(! fqns.contains(_fqn)){
+				fqns.add(_fqn);
+				
+				hitsInfo.add(new HitFqnEntityId(
+						_fqn,
+						((Long) doc.getFieldValue("entity_id")).longValue() + "")
+				);
+			}
 		}
 		
 		return hitsInfo;
@@ -403,9 +411,10 @@ public class SourcererGateway {
 //	}
 
 	private Object searchMltJavabin(String eid, String mltFields) {
-		String queryString = "start=0&rows=100&q=entity_id:" + eid + "&mlt.fl="
+		String queryString = "start=0&rows=300&q=entity_id:" + eid + "&mlt.fl="
 				+ mltFields + "&mlt.mindf=3&mlt.mintf=1&fl=fqn_full,entity_id"
 				+ "&wt=javabin"
+				// + "&collapse.field=fqn_full&collapse.max=1&collapse.type=normal"
 		// + "&mlt.boost=true"
 		;
 
@@ -415,9 +424,11 @@ public class SourcererGateway {
 	}
 	
 	private Object searchMltJavabin4eids(String eid, String mltFields) {
-		String queryString = "start=0&rows=100&q=entity_id:" + eid + "&mlt.fl="
-				+ mltFields + "&mlt.mindf=3&mlt.mintf=1&fl=entity_id"
+		String queryString = "start=0&rows=300&q=entity_id:" + eid + "&mlt.fl="
+				+ mltFields + "&mlt.mindf=3&mlt.mintf=1&fl=fqn_full,entity_id"
 				+ "&wt=javabin"
+				// collapse duplicate FQNs
+				// + "&collapse.field=fqn_full&collapse.max=1&collapse.type=normal"
 		// + "&mlt.boost=true"
 		;
 

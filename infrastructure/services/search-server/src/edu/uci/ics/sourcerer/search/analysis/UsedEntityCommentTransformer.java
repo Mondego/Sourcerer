@@ -25,44 +25,56 @@ import java.util.Map;
 import org.apache.solr.handler.dataimport.Context;
 import org.apache.solr.handler.dataimport.Transformer;
 
+import edu.uci.ics.sourcerer.db.tools.FileAccessor;
 import edu.uci.ics.sourcerer.search.SourcererGateway;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
  * @created Dec 23, 2009
- *
+ * 
  */
 public class UsedEntityCommentTransformer extends Transformer {
 
-	
-	SourcererGateway sg = SourcererGateway.getInstance("", "", "");
-	
-	/* (non-Javadoc)
-	 * @see org.apache.solr.handler.dataimport.Transformer#transformRow(java.util.Map, org.apache.solr.handler.dataimport.Context)
+	// SourcererGateway sg = SourcererGateway.getInstance("", "", "");
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.apache.solr.handler.dataimport.Transformer#transformRow(java.util
+	 * .Map, org.apache.solr.handler.dataimport.Context)
 	 */
 	@Override
-	public Map<String, Object> transformRow(Map<String, Object> row, Context context) {
-		String codeServerUrl = context.getEntityAttribute("code-server-url");
-		if(codeServerUrl!=null) sg.setCodeServerUrl(codeServerUrl);
+	public Map<String, Object> transformRow(Map<String, Object> row,
+			Context context) {
 		
-		String commentId =  ((BigInteger) row.get("commentId")) + "";
-        //String ctype = (String) row.get("comment_type");
-        
-        if (commentId != null /*&& ctype!=null*/){             
-        	
-        	String commentText = sg.getComment(commentId);
-        	
-        	if(commentText!=null 
-        			&& commentText.length()>0 
-        			&& !commentText.startsWith("Unable to find location for")){
-    			
-    			//if(ctype.equals("JAVADOC")){
-    	        	row.put("p_javadoc", commentText);
-            	//} else {
-    	        //	row.put("lp_comment",commentText);
-            	//}
-        	}
-        }
+		// String codeServerUrl = context.getEntityAttribute("code-server-url");
+		// if (codeServerUrl != null)
+		//	sg.setCodeServerUrl(codeServerUrl);
+
+		String commentId = ((BigInteger) row.get("commentId")) + "";
+		// String ctype = (String) row.get("comment_type");
+
+		if (commentId != null /* && ctype!=null */) {
+
+			// String commentText = sg.getComment(commentId);
+			//        	
+			// if(commentText!=null
+			// && commentText.length()>0
+			// && !commentText.startsWith("Unable to find location for")){
+			//    			
+			// //if(ctype.equals("JAVADOC")){
+			// row.put("p_javadoc", commentText);
+			// //} else {
+			// // row.put("lp_comment",commentText);
+			// //}
+
+			byte[] bcomment = FileAccessor.lookupByCommentID(commentId);
+			if (bcomment != null && bcomment.length > 0) {
+				String commentText = new String(bcomment);
+				row.put("p_javadoc", commentText);
+			}
+		}
 		return row;
 	}
 

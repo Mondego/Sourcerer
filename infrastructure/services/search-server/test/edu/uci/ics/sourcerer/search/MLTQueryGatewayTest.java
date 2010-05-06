@@ -37,7 +37,9 @@ public class MLTQueryGatewayTest extends TestCase {
 	SourcererGateway g = SourcererGateway.getInstance(
 			// "http://localhost:8983/solr/scs/mlt",
 			// "http://kathmandu.ics.uci.edu:8984/solr/scs/mlt",
-			 "http://kathmandu.ics.uci.edu:8983/solr/scs/mlt",
+			// "http://kathmandu.ics.uci.edu:8983/solr/scs/mlt",
+			 "http://mine8.ics.uci.edu:8983/solr/scs/mlt",
+			// "http://cerkdb.ics.uci.edu:8983/solr/scs/mlt",
 			"", "");
 	
 	protected void setUp() throws Exception {
@@ -56,7 +58,8 @@ public class MLTQueryGatewayTest extends TestCase {
 			// "42958375";
 			// "42958371";
 			// "42965004";
-			"46438891";
+			// "46438891";
+			"76104468";
 		
 		
 		

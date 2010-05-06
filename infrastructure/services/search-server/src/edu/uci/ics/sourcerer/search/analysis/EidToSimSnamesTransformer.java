@@ -26,8 +26,11 @@ import java.util.logging.Logger;
 import org.apache.solr.handler.dataimport.Context;
 import org.apache.solr.handler.dataimport.Transformer;
 
+import edu.uci.ics.sourcerer.db.tools.FileAccessor;
 import edu.uci.ics.sourcerer.ml.SimEidGateway;
 import edu.uci.ics.sourcerer.search.SourcererGateway;
+import edu.uci.ics.sourcerer.util.io.Logging;
+import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
@@ -35,6 +38,13 @@ import edu.uci.ics.sourcerer.search.SourcererGateway;
  *
  */
 public class EidToSimSnamesTransformer extends Transformer{
+	
+	// needed to initialize FileAccessor
+	static{
+		PropertyManager.initializeProperties(null);
+	    Logging.initializeLogger();
+	}
+	
 	// use default urls
 	SourcererGateway sg = SourcererGateway.getInstance("", "", "");
 	
@@ -94,11 +104,20 @@ public class EidToSimSnamesTransformer extends Transformer{
 //	        	Logger.getLogger(this.getClass().getName()).log(Level.INFO, 
 //	        			"Got sim eids via HD: " + simHD);
 	        	
+	        	// use file server
 	        	if(codeServerUrl!=null && codeServerUrl.length()>0){
 	        		String code = sg.getCode(eid);
 	        		if(code!=null 
 	        				&& code.length()>0 
 	        				&& !code.startsWith("Unable to find")){
+	        			row.put("code_text", code);
+	        		}
+	        	} 
+	        	// direct file access
+	        	else {
+	        		byte[] bcode = FileAccessor.lookupByEntityID(eid);
+	        		if(bcode!=null && bcode.length>0){
+	        			String code = new String(bcode);
 	        			row.put("code_text", code);
 	        		}
 	        	}
