@@ -22,10 +22,10 @@ from datetime import datetime
 
 host = sys.argv[1]
 port = sys.argv[2]
-loeid = sys.argv[3]
-hieid = sys.argv[4]
+projids = sys.argv[3]
 
-params = urllib.urlencode({'command': 'full-import', 'lo_eid_incl': loeid, 'hi_eid_excl': hieid, 'wt':'python'})
+params = urllib.urlencode({'command': 'full-import', 'project_ids': projids, 'wt':'python'})
+
 headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
 conn = httplib.HTTPConnection(host, port, timeout=300) # 5 mins seconds timeout
     
@@ -34,13 +34,13 @@ try:
     conn.request("POST", "/solr/scs/dataimport", params, headers)
     response = conn.getresponse()
 except IOError, err:
-    sys.exit( str(datetime.now()) + ' - ' + host + ' - Problem after sending command full-import. Range:' + loeid + '_' + hieid + ' - ' + `err` + '\n')
+    sys.exit( str(datetime.now()) + ' - ' + host + ' - Problem after sending command full-import. Projects:' + projids + ' - ' + `err` + '\n')
     
 assert not response == None
 
 if not (response.status == 200):
-	print >> sys.stderr, str(datetime.now()) + " - " + host + ' - Solr server did not send HTTP 200 after full-import command. Got ' + str(response.status) + '. Range:'+ loeid + '_' + hieid
+	print >> sys.stderr, str(datetime.now()) + " - " + host + ' - Solr server did not send HTTP 200 after full-import command. Got ' + str(response.status) + '. Projects:'+ projids
 else:
 	rsp = eval(response.read())
-	print str(datetime.now()) + " - " + host + ' - Done with command full-import. Range:' + loeid + '_' + hieid + ' - ' + str(rsp)
+	print str(datetime.now()) + " - " + host + ' - Done with command full-import. Projects:' + projids + ' - ' + str(rsp)
 

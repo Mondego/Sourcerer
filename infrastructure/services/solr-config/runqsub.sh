@@ -21,19 +21,18 @@
 
 # run this from solr-server-pass(1|2) folder
 
-if [ $# -ne 7 ] ; then
-    echo 'This script requires 7 aruments: low_eid hi_eid cluster_root_path pass_number java_home cluster_q_name solr_port'
+if [ $# -ne 6 ] ; then
+    echo 'This script requires 6 aruments: cluster_root_path pass_number java_home cluster_q_name solr_port project_ids'
     # echo 'Run this script from solr-server_pass(1|2)/'
     exit 0
 fi
 
-LOEID=$1
-HIEID=$2
-ROOT=$3
-PASS=$4
-JAVA_HOME=$5
-Q=$6
-PORT=$7
+ROOT=$1
+PASS=$2
+JAVA_HOME=$3
+Q=$4
+PORT=$5
+PROJ_IDS=$6
 
 SOLR=$ROOT/solrbin/solr-server-pass$PASS
 
@@ -42,7 +41,7 @@ JOBSDIR=$ROOT/jobs/pass$PASS
 SOLRLOGS=$ROOT/solrlogs/pass$PASS
 JETTYLOGS=$ROOT/jettylogs/pass$PASS
 
-RANGE=$LOEID"_"$HIEID
+RANGE=$PROJ_IDS
 
 JETTYXML=$JOBSDIR"/jetty_"$RANGE".xml"
 OUT=$JOBSDIR/$RANGE".stdout"
@@ -65,8 +64,11 @@ SERVERID=$RANGE"_"$PASS
 sed "s#!SERVER_ID!#$SERVERID#g" $SOLR/etc/jetty.xml > $JETTYXML
 
 # make a copy of own Solr home
-SOLR_HOME=$JOBSDIR"/"$LOEID"_"$HIEID"_solrhome"
+SOLR_HOME=$JOBSDIR"/"$RANGE"_solrhome"
 mkdir $SOLR_HOME
 cp -r $SOLR'/installation/solr/'* $SOLR_HOME'/'
 
-qsub -v PATH -b y -o $OUT -e $ERR -q $Q $ROOT/runindex.sh $INDEXDIR $LPROP $SOLR $LOEID $HIEID $ROOT $PASS $JETTYLOGDIR $JAVA_HOME $JETTYXML $PORT > $JOBSDIR/$RANGE".qsub.out"
+OUT=$(echo $OUT|sed 's/,/_/g')
+ERR=$(echo $ERR|sed 's/,/_/g')
+
+qsub -v PATH -b y -o $OUT -e $ERR -q $Q -l mem_free=3G $ROOT/runindex.sh $INDEXDIR $LPROP $SOLR $PROJ_IDS $ROOT $PASS $JETTYLOGDIR $JAVA_HOME $JETTYXML $PORT > $JOBSDIR/$RANGE".qsub.out"

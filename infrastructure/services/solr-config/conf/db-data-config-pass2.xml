@@ -17,13 +17,11 @@
 	<document name="entity">
 		<entity name="code_entity" pk="entity_id"
 			transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
-			query="select entity_id, fqn, entity_type
+			query="select entity_id, fqn, entity_type, project_id
 			 from entities as e
-			 inner join projects as proj on proj.project_id=e.project_id
-			 where e.length IS NOT NULL
-			 and e.entity_type in ('CLASS','METHOD','CONSTRUCTOR')
-			 and proj.project_type='CRAWLED'
-			 and (e.entity_id &gt;= '${dataimporter.request.lo_eid_incl}' and e.entity_id &lt; '${dataimporter.request.hi_eid_excl}')"
+			 where
+			 e.entity_type in ('CLASS','METHOD','CONSTRUCTOR')
+			 and e.project_id in (${dataimporter.request.project_ids})"
 
 			deltaQuery="select entity_id from entities 
 		    		where last_modified > '${dataimporter.last_index_time}'">
@@ -33,16 +31,20 @@
 			<field column="fqn" name="fqn_full" clean-fqn="true" />
 			<field column="fqn" name="fqn" />
 			<field column="entity_id" name="entity_id" />
+			<field column="project_id" name="project_id" />
 			<field column="entity_type" name="entity_type" />
+			
 
 			<entity name="second_pass"
 				transformer="edu.uci.ics.sourcerer.search.analysis.EidToSimSnamesTransformer"
 				query="SELECT entity_id as eid, entity_type as etype from entities where
 					entity_id='${code_entity.entity_id}'"
-				code-server-url="http://nile.ics.uci.edu:9180/file-server"
-				mlt-server-url="http://kathmandu.ics.uci.edu:8983/solr/scs/mlt" 
+				mlt-server-url="http://mine8.ics.uci.edu:8983/solr/scs/mlt" 
 				>
-				<!-- sim-server-url="http://nile.ics.uci.edu:9180/similarity-server" -->
+				<!-- 
+				code-server-url="http://nile.ics.uci.edu:9180/file-server"
+				sim-server-url="http://nile.ics.uci.edu:9180/similarity-server" 
+				-->
 
 				<field column="code_text" name="full_text" />
 
@@ -55,21 +57,21 @@
 
 				<entity name="simMLT"
 					transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
-					query="select fqn as simMLT_fqn_via_jdkLib_use from entities where entity_id in (${second_pass.simMLT_eids_via_jdkLib_use})">
+					query="select distinct fqn as simMLT_fqn_via_jdkLib_use from entities where entity_id in (${second_pass.simMLT_eids_via_jdkLib_use}) limit 100">
 					<field column="simMLT_fqn_via_jdkLib_use" name="sim_sname_contents_via_jdkLib_use"
 						fix-init="true" />
 				</entity>
 
 				<entity name="simTC"
 					transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
-					query="select fqn as simTC_fqn_via_jdkLib_use from entities where entity_id in (${second_pass.simTC_eids_via_jdkLib_use})">
+					query="select distinct fqn as simTC_fqn_via_jdkLib_use from entities where entity_id in (${second_pass.simTC_eids_via_jdkLib_use}) limit 100">
 					<field column="simTC_fqn_via_jdkLib_use" name="simTC_sname_contents_via_jdkLib_use"
 						fix-init="true" />
 				</entity>
 
 				<entity name="simHD"
 					transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
-					query="select fqn as simHD_fqn_via_jdkLib_use from entities where entity_id in (${second_pass.simHD_eids_via_jdkLib_use})">
+					query="select distinct fqn as simHD_fqn_via_jdkLib_use from entities where entity_id in (${second_pass.simHD_eids_via_jdkLib_use}) limit 100">
 					<field column="simHD_fqn_via_jdkLib_use" name="simHD_sname_contents_via_jdkLib_use"
 						fix-init="true" />
 				</entity>
@@ -83,7 +85,7 @@
 				 from relations as R
 				 inner join entities as provE on provE.entity_id=R.rhs_eid
 				 where R.internal = 0 
-				 and R.relation_type in ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES')			 
+				 and R.relation_type in ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES','OVERRIDES')			 
 				 and R.lhs_eid='${code_entity.entity_id}'">
 				<field column="pfqn_jdkLib" name="jdkLib_use_sname_contents"
 					fix-init="true" />
@@ -93,8 +95,7 @@
 
 				<entity name="jdkLib_use_comment"
 					transformer="edu.uci.ics.sourcerer.search.analysis.UsedEntityCommentTransformer"
-					code-server-url="http://nile.ics.uci.edu:9180/file-server"
-					query="select C.comment_id as commentId from 
+					query="select SQL_CACHE C.comment_id as commentId from 
                        entities as E 
                        inner join comments as C
                            on C.following_eid=E.entity_id
@@ -102,6 +103,7 @@
                            E.length IS NOT NULL
                        and E.fqn='${jdkLib_use.pfqn_jdkLib}'
                        limit 1">
+                      <!-- code-server-url="http://nile.ics.uci.edu:9180/file-server"  --> 
 					<field column="p_javadoc" name="jdkLib_use_javadoc" />
 				</entity>
 			</entity>

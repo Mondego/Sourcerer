@@ -1,11 +1,21 @@
 <dataConfig>
    
-    <dataSource 
+    <!--   dataSource 
 		url="!sourcerer.db.url!"
     	driver="com.mysql.jdbc.Driver"
 		user="!sourcerer.db.user!" 
 		password="!sourcerer.db.password!"
 		autoCommit="false" 
+		batchSize="-1" / -->
+		
+	<dataSource 
+		jndiName="java:comp/env/jdbc/DSSourcerer"
+		user="!sourcerer.db.user!" 
+		password="!sourcerer.db.password!"
+		autoCommit="false"
+		readonly="true"
+		transactionIsolation="TRANSACTION_READ_COMMITTED" 
+		holdability="CLOSE_CURSORS_AT_COMMIT" 
 		batchSize="-1" />
     	
     <document name="entity">
@@ -13,24 +23,22 @@
 	    	transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
 		    query="select entity_id, fqn
 			 from entities as e
-			 inner join projects as proj on proj.project_id=e.project_id
-			 where e.length > 0
-			 and e.entity_type in ('CLASS','METHOD','CONSTRUCTOR')
-			 and proj.has_source=1
-			 and proj.project_type='CRAWLED'
-			 and (e.entity_id &gt;= '${dataimporter.request.lo_eid_incl}' and e.entity_id &lt; '${dataimporter.request.hi_eid_excl}')"
+			 where
+			 e.entity_type in ('CLASS','METHOD','CONSTRUCTOR')
+			 and e.project_id in (${dataimporter.request.project_ids})"
 
 		    deltaQuery="select entity_id from entities 
 		    		where last_modified > '${dataimporter.last_index_time}'">
 
 		<field column="entity_id" name="entity_id" />
+		<field column="fqn" name="fqn_full" clean-fqn="true" />
 		
 		<entity name="jdklib_use" 
 			query="select provE.fqn as pfqn
 			 from relations as R
 			 inner join entities as provE on provE.entity_id=R.rhs_eid
 			 where R.internal = 0 
-			 and R.relation_type in ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES')			 
+			 and R.relation_type in ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES','OVERRIDES')			 
 			 and R.lhs_eid='${code_entity.entity_id}'">
 			
 			<field column="pfqn" name="jdkLib_use_fqn_full" />

@@ -36,7 +36,9 @@
 
 		<field name="entity_id" type="long" indexed="true" stored="true"
 			required="true" />
-		
+		<field name="fqn_full" type="string" 
+			indexed="true" stored="true" required="true" 
+			omitNorms="true" />
 		<field name="jdkLib_use_fqn_full" type="FT_use_fqn_full" indexed="true" 
 			stored="true" required="false" multiValued="true" termVector="true" omitNorms="true"/>	
 
