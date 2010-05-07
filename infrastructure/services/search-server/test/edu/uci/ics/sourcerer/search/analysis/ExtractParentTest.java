@@ -158,6 +158,14 @@ public class ExtractParentTest extends BaseTokenTestCaseSourcerer {
 		check(fqn, parent);
 	    
 	}
+	
+	
+	public void testFqnSname11() throws Exception {  
+	    
+		String fqn = "<T+java.lang.Object>";
+		checkEmpty(fqn);
+	    
+	}
 
 	/**
 	 * @param fqn
@@ -187,4 +195,5 @@ public class ExtractParentTest extends BaseTokenTestCaseSourcerer {
 	
 	
 }
+
 
