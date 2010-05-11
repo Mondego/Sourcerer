@@ -240,7 +240,7 @@ public class FileAccessor {
         }
       }
     } else {
-      logger.log(Level.SEVERE, "Unable to look up source for class " + file + " and " + project);
+      logger.log(Level.SEVERE, file + " from " + project + " is a class file with no corresponding source");
       return null;
     }
   }
