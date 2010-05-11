@@ -181,7 +181,7 @@ public abstract class Extracted {
   }
   
   public boolean reallyExtracted() {
-    File file = getInputFile(ENTITY_FILE);
+    File file = getInputFile(FILE_FILE);
     return file.exists() && file.length() > 0;
   }
   
