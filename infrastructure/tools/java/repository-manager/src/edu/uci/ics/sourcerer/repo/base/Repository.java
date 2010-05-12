@@ -282,7 +282,7 @@ public class Repository extends AbstractRepository {
   
   public IJavaFile getFile(String path) {
     // TODO: modify to work on compressed projects
-    File file = new File(repoRoot, path);
+    File file = new File(repoRoot, path.replace('*', ' '));
     if (file.exists()) {
       return new JavaFile(path, file);
     } else {
