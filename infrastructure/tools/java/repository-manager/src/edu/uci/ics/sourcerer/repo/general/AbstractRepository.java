@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -32,11 +33,13 @@ public abstract class AbstractRepository {
   
   public static final Property<File> JAR_FILTER = new FileProperty("jar-filter", "Extractor", "Only extract these jars.");
   public static final Property<File> PROJECT_FILTER = new FileProperty("project-filter", "Extractor", "Only extract these projects.");
+  
+  public static final Property<String> JARS_DIR = new StringProperty("jars-dir", "jars", "Repository Manager", "The subdirectory containing the jar files.");
 
-  protected static final String JARS = "jars";
-  protected static final String LIBS = "libs";
-  protected static final String PROJECT_JARS = JARS + "/project";
-  protected static final String MAVEN_JARS = JARS + "/maven";
+  protected final String JARS;
+  protected final String LIBS;
+  protected final String PROJECT_JARS;
+  protected final String MAVEN_JARS;
   
   protected File repoRoot;
   
@@ -44,6 +47,11 @@ public abstract class AbstractRepository {
   protected JarIndex jarIndex;
   
   protected AbstractRepository(File repoRoot) {
+    JARS = JARS_DIR.getValue();
+    LIBS = "libs";
+    PROJECT_JARS = JARS + "/project";
+    MAVEN_JARS = JARS + "/maven";
+    
     this.repoRoot = repoRoot;
     this.jarIndexFile = getJarsPath().getChildFile(JarIndex.JAR_INDEX_FILE.getValue());
   }
