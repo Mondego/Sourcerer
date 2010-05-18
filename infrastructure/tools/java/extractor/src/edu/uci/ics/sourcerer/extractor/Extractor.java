@@ -73,11 +73,13 @@ public class Extractor implements IApplication {
   		
   public static final Property<Boolean> EXTRACT_BINARY = new BooleanProperty("extract-binary", false, "Extractor", "Extract jars as binary only.");
   public static final Property<Boolean> EXTRACT_LATEST_MAVEN = new BooleanProperty("extract-latest-maven", false, "Extractor", "Extract only the latest maven jars.");
+
+  public static final Property<Boolean> USE_PROJECT_JARS = new BooleanProperty("use-project-jars", true, "Extractor", "Use project jars on the classpath.");
   public static final Property<Boolean> RESOLVE_MISSING_TYPES = new BooleanProperty("resolve-missing-types", false, "Extractor", "Re-attempt extraction on failed missing type extractions.");
 
   public static final Property<Boolean> FORCE_SOURCE_REDO = new BooleanProperty("force-source-redo", false, "Extractor", "Redo completed extraction.");
   public static final Property<Boolean> FORCE_MISSING_REDO = new BooleanProperty("force-missing-redo", false, "Extractor", "Redo completed extraction.");
-  public static final Property<Boolean> USE_PROJECT_JARS = new BooleanProperty("use-project-jars", true, "Extractor", "Use project jars on the classpath.");
+  
   
   @Override
   public Object start(IApplicationContext context) throws Exception {

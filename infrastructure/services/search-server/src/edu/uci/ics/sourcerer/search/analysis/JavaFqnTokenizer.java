@@ -160,5 +160,62 @@ public class JavaFqnTokenizer {
 		token.setTermLength(i - start);
 		return token;
 	}
+	
+	public static Token extractShortsParent(Token token) {
+
+		if(token.termLength()<=0) return null;
+		
+		char[] termBuffer = token.termBuffer();
+		int start = 0;
+		int i = token.termLength()-1;
+		
+		
+		if(termBuffer[i]=='>'){
+			for(int j = 0; j < i; j++){
+				if(termBuffer[j]=='<'){
+					i = j;
+					break;
+				}
+			}
+		} else if (termBuffer[i]==')'){
+			for(int j = 0; j < i; j++){
+				if(termBuffer[j]=='('){
+					i = j;
+					break;
+				}
+			}
+		} else {
+			
+		}
+		
+		for(; i>=0; i--){
+			if(termBuffer[i]=='.'){
+				break;
+			}
+		}
+		
+		if(i<0) i=0;
+		
+		if(i==0){
+			// no parent. fqn is xxx
+			return null;
+		}
+		
+		start = i-1;
+		for(; start >=0; start--){
+			if(termBuffer[start]=='.'){
+				
+				break;
+			}
+		}
+
+		start = start + 1;
+		
+		token.setStartOffset(token.startOffset() + start);
+		token.setEndOffset(token.endOffset() - (token.termLength() - i));
+		token.setTermBuffer(termBuffer, start, i-start);
+		token.setTermLength(i - start);
+		return token;
+	}
 
 }

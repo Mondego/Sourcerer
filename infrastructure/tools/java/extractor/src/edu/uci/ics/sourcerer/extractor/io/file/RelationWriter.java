@@ -112,4 +112,9 @@ public final class RelationWriter extends ExtractorWriter implements IRelationWr
   public void writeInstantiates(String creator, String created, Location location) {
     writeRelation(Relation.INSTANTIATES, creator, created, location);
   }
+  
+  @Override
+  public void writeOverrides(String fqn, String overridenFqn, Location location) {
+    writeRelation(Relation.OVERRIDES, fqn, overridenFqn, location);
+  }
 }

@@ -55,7 +55,6 @@ class JarUsage{
         "jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_t2",
     	System.getProperty( "sourcerer.db.user" ),
         System.getProperty( "sourcerer.db.password" ),
-        //"tyl0n4pi", //password
         "com.mysql.jdbc.Driver")
 
     def _SQL

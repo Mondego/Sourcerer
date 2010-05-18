@@ -30,7 +30,7 @@ import org.apache.solr.analysis.BaseTokenizerFactory;
  */
 public class SingleSpaceTokenizerFactory extends BaseTokenizerFactory{
 
-	public TokenStream create(Reader in) {
+	public SingleSpaceTokenizer create(Reader in) {
 		return new SingleSpaceTokenizer(in);
 	}
 	

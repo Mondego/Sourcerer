@@ -39,14 +39,20 @@ import edu.uci.ics.sourcerer.scs.common.client.UsedFqn;
 public class TestSnippetForJarEntity extends TestSourcererDbAdapterBase {
 	
 	public void testGetSnippet(){
-		String query_raw = "lib_use_javadoc:(get method signature from ast node)" +
+		String query_raw = "jdkLib_use_javadoc:(get method signature from ast node)" +
 				" OR "
-				+ "sim_sname_contents_via_all_use:(get method signature from ast node)";
+				+ "sim_sname_contents:(get method signature from ast node)";
 		
 		
 		String query = 
-			"copy data from clipboard";
-			// "mouse hover track";
+			
+			//"send file socket";
+		
+			//"eclipse open url in html browser";
+			"eclipse get icon image";
+		//	 "eclipse update status line text";
+			//; "copy data from clipboard";
+			// "eclipse mouse hover track";
 			// "copy paste data from clipboard";
 		SearchHeuristic heuristic = 
 		//	SearchHeuristic.FQN_USEDFQN_JdkLibSimSNAME_SNAME;

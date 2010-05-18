@@ -44,6 +44,14 @@ public final class FqnFilter extends TokenFilter {
 	final String UNKNOWN_LITERAL2 = "\\(1UNKNOWN\\)";
 	final char TYPED_PARAMETER_LITERAL = 'T';
 
+	/**
+	 * 
+	 * @param in
+	 * @param extractSig
+	 * @param shortNamesOnly 0 extracts full fqn, 
+	 * 							(when extractSig == 1) 1 extracts short name, 2 extracts short names parent
+	 * 							(when extractSig>1) > 1 extracts short name for signature elements
+	 */
 	public FqnFilter(TokenStream in, int extractSig, int shortNamesOnly) {
 		super(in);
 		this.extractSig = extractSig;
@@ -175,14 +183,16 @@ public final class FqnFilter extends TokenFilter {
 		// extracting fqns
 		else {
 
-			if (shortNamesOnly > 0) {
-
-				token = JavaFqnTokenizer.extractShortName(token);
-
-			} else { // full fqn
-
+			if (shortNamesOnly == 0) {
+				// full fqn
 				token = JavaFqnTokenizer.extractFQN(token);
 
+			} else if (shortNamesOnly == 1){ 
+
+				token = JavaFqnTokenizer.extractShortName(token);
+				
+			} else if (shortNamesOnly == 2){
+				token = JavaFqnTokenizer.extractShortsParent(token);
 			}
 		}
 

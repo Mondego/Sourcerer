@@ -35,6 +35,14 @@ public class LimitedProjectDB {
     this.hash = hash;
   }
   
+  public boolean firstStageCompleted() {
+    if (type == Project.CRAWLED) {
+      return "END_FIRST".equals(hash) || hash == null;
+    } else {
+      return "END_FIRST".equals(path) || path == null;
+    }
+  }
+  
   public boolean completed() {
     if (type == Project.CRAWLED) {
       return hash == null;

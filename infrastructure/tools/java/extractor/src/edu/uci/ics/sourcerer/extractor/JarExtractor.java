@@ -90,7 +90,7 @@ public class JarExtractor {
           // Set up the writer bundle
           WriterBundle bundle = new WriterBundle(extracted.getOutputDir());
 
-          boolean force = false;
+          boolean force = !Extractor.RESOLVE_MISSING_TYPES.getValue();
           if (missingTypes) {
             logger.info("  Resolving missing types...");
             Collection<IndexedJar> newJars = resolver.resolveMissingTypes(index, extracted, bundle.getUsedJarWriter());

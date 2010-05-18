@@ -27,15 +27,15 @@ public enum Similarities {
 	TANIMOTO_COEFFICIENT,
 	HAMMING_DISTANCE;
 	
-	
 	public static String allElementNames(){
 		StringBuffer buf = new StringBuffer();
 		for(Similarities s: Similarities.values()){
 			buf.append(s.toString());
 			buf.append(" ");
-		
 		}
 		
 		return buf.toString();
 	}
+	
 }
+

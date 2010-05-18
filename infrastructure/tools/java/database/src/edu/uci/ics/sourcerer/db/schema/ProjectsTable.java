@@ -36,7 +36,7 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
  */
 public final class ProjectsTable extends DatabaseTable {
   protected ProjectsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "projects", false);
+    super(executor, locker, "projects");
   }
   /*  
    *  +--------------+---------------+-------+--------+
@@ -161,6 +161,22 @@ public final class ProjectsTable extends DatabaseTable {
             true));
   }
   
+  public void endFirstStageCrawledProjectInsert(String projectID) {
+    executor.executeUpdate("UPDATE " + name + " SET hash = 'END_FIRST' where project_id=" + projectID);
+  }
+  
+  public void endFirstStageJarProjectInsert(String projectID) {
+    executor.executeUpdate("UPDATE " + name + " SET path = 'END_FIRST' where project_id=" + projectID); 
+  }
+  
+  public void beginSecondStageCrawledProjectInsert(String projectID) {
+    executor.executeUpdate("UPDATE " + name + " SET hash = 'BEGIN_SECOND' where project_id=" + projectID);
+  }
+  
+  public void beginSecondStageJarProjectInsert(String projectID) {
+    executor.executeUpdate("UPDATE " + name + " SET path = 'BEGIN_SECOND' where project_id=" + projectID); 
+  }
+  
   public void completeCrawledProjectInsert(String projectID) {
     executor.executeUpdate("UPDATE " + name + " SET hash = NULL where project_id=" + projectID);
   }
@@ -215,8 +231,12 @@ public final class ProjectsTable extends DatabaseTable {
     return executor.selectSingle(name, PROJECT_TRANSLATOR.getSelect(), "project_id=" + projectID, PROJECT_TRANSLATOR);
   }
   
-  public String getProjectIDByName(String project) {
-    return executor.selectSingle(name, "project_id", "name='" + project + "'");
+  public String getProjectIDByPath(String path) {
+    return executor.selectSingle(name, "project_id", "path='" + path + "'");
+  }
+  
+  public String getProjectIDByName(String name) {
+    return executor.selectSingle(name, "project_id", "name='" + name + "'");
   }
   
   public String getHashByProjectID(String projectID) {

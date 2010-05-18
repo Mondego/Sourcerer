@@ -62,4 +62,8 @@ public class FileDB {
   public String getProjectID() {
     return projectID;
   }
+  
+  public String toString() {
+    return "file " + name + " (" + fileID + ")";
+  }
 }

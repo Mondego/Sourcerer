@@ -21,6 +21,8 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.eclipse.core.resources.IFile;
@@ -38,16 +40,13 @@ import org.eclipse.jdt.internal.core.BinaryType;
 import edu.uci.ics.sourcerer.extractor.Extractor;
 import edu.uci.ics.sourcerer.extractor.io.IMissingTypeWriter;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
+import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 @SuppressWarnings("restriction")
 public final class FeatureExtractor {
-  public static final Property<Boolean> PPA = new BooleanProperty("ppa", false, "Extractor", "Do partial program analysis.");
-  
   private ASTParser parser;
   private WriterBundle bundle;
   
@@ -100,7 +99,7 @@ public final class FeatureExtractor {
     
     for (IClassFile classFile : classFiles) {
       try {
-        if (ClassFileExtractor.isTopLevel(classFile)) {
+        if (ClassFileExtractor.isTopLevelOrAnonymous(classFile)) {
           ISourceRange source = classFile.getSourceRange();
           
           boolean hasSource = true; 
@@ -114,6 +113,9 @@ public final class FeatureExtractor {
           if (hasSource) {
             // Verify that the source file matches the binary file
             BinaryType type = (BinaryType)classFile.getType();
+            if (type.isAnonymous()) {
+              continue;
+            }
             String sourceFile = type.getPackageFragment().getElementName() + "." + type.getSourceFileName(null);
             String fqn = classFile.getType().getFullyQualifiedName() + ".java";
             if (!fqn.equals(sourceFile)) {
@@ -266,6 +268,10 @@ public final class FeatureExtractor {
   
   @SuppressWarnings("unchecked")
   private void checkForMissingTypes(CompilationUnit unit, SourceExtractionReport report, IMissingTypeWriter writer) {
+    Set<String> onDemandImports = Helper.newHashSet();
+    Map<String, String> singleTypeImports = Helper.newHashMap();
+    Set<String> simpleNames = Helper.newHashSet();
+    
     // Check for the classpath problem
     for (IProblem problem : unit.getProblems()) {
       if (problem.isError()) {
@@ -277,8 +283,20 @@ public final class FeatureExtractor {
           // Go and find all the imports with this prefix
           boolean found = false;
           for (ImportDeclaration imp : (List<ImportDeclaration>)unit.imports()) {
-            if (imp.getName().getFullyQualifiedName().startsWith(prefix)) {
-              writer.writeMissingType(imp.getName().getFullyQualifiedName());
+            String fqn = imp.getName().getFullyQualifiedName();
+            if (fqn.startsWith(prefix)) {
+              if (imp.isOnDemand()) {
+                onDemandImports.add(fqn);
+              } else {
+                String simpleName = fqn.substring(fqn.lastIndexOf('.') + 1);
+                String oldFqn = singleTypeImports.get(simpleName);
+                if (oldFqn != null && !oldFqn.equals(fqn)) {
+                  logger.log(Level.SEVERE, "Two fqns with the same simple name: " + fqn + " and " + oldFqn);
+                } else {
+                  singleTypeImports.put(simpleName, fqn);
+                }
+              }
+//              writer.writeMissingType(imp.getName().getFullyQualifiedName());
               found = true;
             }
           }
@@ -287,6 +305,23 @@ public final class FeatureExtractor {
             writer.writeMissingType(prefix);
           }
           report.reportMissingType();
+        } else if (problem.getID() == IProblem.UndefinedType) {
+          simpleNames.add(problem.getArguments()[0]);
+          report.reportMissingType();
+        }
+      }
+    }
+    
+    for (String imp : onDemandImports) {
+      writer.writeMissingType(imp);
+    }
+    for (String imp : singleTypeImports.values()) {
+      writer.writeMissingType(imp);
+    }
+    for (String simpleName : simpleNames) {
+      if (!singleTypeImports.containsKey(simpleName)) {
+        for (String imp : onDemandImports) {
+          writer.writeMissingType(imp + "." + simpleName);
         }
       }
     }

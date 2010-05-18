@@ -8,7 +8,6 @@ import java.util.TimerTask;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 public class TimeoutManager <T extends Closeable> {
-  final TimeoutManager<T> _this = this;
   private Instantiator<T> instantiator;
   private final int TIMEOUT;
   private transient long lastTimeAccessed;
@@ -28,7 +27,7 @@ public class TimeoutManager <T extends Closeable> {
       TimerTask task = new TimerTask() {
         @Override
         public void run() {
-          synchronized (_this) {
+          synchronized (TimeoutManager.this) {
             if (System.currentTimeMillis() - lastTimeAccessed > TIMEOUT) {
               logger.info("Timeout manager closing...");
               FileUtils.close(instance);

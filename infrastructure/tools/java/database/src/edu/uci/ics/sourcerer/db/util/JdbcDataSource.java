@@ -46,6 +46,11 @@ public class JdbcDataSource {
 	private boolean convertType = false;
 
 	private int batchSize = FETCH_SIZE;
+	
+	
+	
+	// default is 8 hrs
+	private int queryTimeOut = 3600 * 8;
 
 	public void init(Properties initProps) {
 		// Object o = initProps.get(CONVERT_TYPE);
@@ -65,7 +70,18 @@ public class JdbcDataSource {
 				// LOG.log(Level.WARNING, "Invalid batch size: " + bsz);
 			}
 		}
-
+		
+		String qto = initProps.getProperty("queryTimeout");
+		if (qto != null) {
+			try {
+				queryTimeOut = Integer.parseInt(bsz);
+				if (queryTimeOut < 0)
+					queryTimeOut = 0;
+			} catch (NumberFormatException e) {
+				// LOG.log(Level.WARNING, "Invalid query timeout: " + qto);
+			}
+		}
+		
 
 	}
 
@@ -103,6 +119,15 @@ public class JdbcDataSource {
 				Connection c = null;
 				try {
 					c = DriverManager.getConnection(url, initProps);
+					
+					boolean autocommit = false;
+					String ac = initProps.getProperty("autoCommit");
+					if (ac != null) {
+						// is only true if the property exists and is set to true
+						autocommit = Boolean.parseBoolean(ac);
+					}
+					
+					c.setAutoCommit(autocommit);
 				} catch (SQLException e) {
 
 				}
@@ -145,9 +170,13 @@ public class JdbcDataSource {
 
 			try {
 				Connection c = getConnection();
+				
 				stmt = c.createStatement(ResultSet.TYPE_FORWARD_ONLY,
 						ResultSet.CONCUR_READ_ONLY);
 				stmt.setFetchSize(batchSize);
+				
+				stmt.setQueryTimeout(queryTimeOut);
+				
 				// LOG.finer("Executing SQL: " + query);
 				// long start = System.currentTimeMillis();
 				if (stmt.execute(query)) {

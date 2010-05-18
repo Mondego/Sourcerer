@@ -46,21 +46,21 @@ public class TableLocker {
   }
   
   public void lock() {
-    if (locked) {
-      throw new IllegalStateException("Cannot lock when already locked");
-    } else {
-      tables.setCharAt(tables.length() - 1, ';');
-      executor.execute(tables.toString());
-      locked = true;
-    }
+//    if (locked) {
+//      throw new IllegalStateException("Cannot lock when already locked");
+//    } else {
+//      tables.setCharAt(tables.length() - 1, ';');
+//      executor.execute(tables.toString());
+//      locked = true;
+//    }
   }
   
   public void unlock() {
-    if (locked) {
-      executor.execute("UNLOCK TABLES;");
-      reset();
-    } else {
-      throw new IllegalStateException("Cannot unlock when not locked");
-    }
+//    if (locked) {
+//      executor.execute("UNLOCK TABLES;");
+//      reset();
+//    } else {
+//      throw new IllegalStateException("Cannot unlock when not locked");
+//    }
   }
 }

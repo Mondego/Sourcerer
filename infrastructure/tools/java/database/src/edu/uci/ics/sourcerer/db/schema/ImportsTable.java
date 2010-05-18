@@ -25,7 +25,7 @@ import edu.uci.ics.sourcerer.db.util.TableLocker;
  */
 public final class ImportsTable extends DatabaseTable {
   protected ImportsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "imports", true);
+    super(executor, locker, "imports");
   }
   /*  
    *  +-------------+-------------------+-------+--------+
@@ -69,7 +69,7 @@ public final class ImportsTable extends DatabaseTable {
   }
   
   public void insert(boolean isStatic, boolean onDemand, String eid, String projectID, String fileID, String offset, String length) {
-    batcher.addValue(getInsertValue(isStatic, onDemand, eid, projectID, fileID, offset, length));
+    inserter.addValue(getInsertValue(isStatic, onDemand, eid, projectID, fileID, offset, length));
   }
   
   // ---- DELETE ----

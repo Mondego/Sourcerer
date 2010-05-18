@@ -121,18 +121,28 @@ public abstract class Property <T> {
       PropertyManager properties = PropertyManager.getProperties();
       String stringValue = properties.getValue(name);
       if (stringValue == null) {
-        if (defaultValue == null && this != PROMPT_MISSING && PROMPT_MISSING.getValue() && isNotOptional()) {
-          try {
-            System.out.print("Please enter value for " + name + ":");
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            stringValue = br.readLine();
-            value = parseString(stringValue);
-          } catch (Exception e) {
-            logger.log(Level.SEVERE, "Unable to read value for " + name, e);
-            PropertyManager.printUsage();
+        stringValue = System.getProperty(name);
+        if (stringValue == null) {
+          if (defaultValue == null && this != PROMPT_MISSING && PROMPT_MISSING.getValue() && isNotOptional()) {
+            try {
+              System.out.print("Please enter value for " + name + ":");
+              BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+              stringValue = br.readLine();
+              value = parseString(stringValue);
+            } catch (Exception e) {
+              logger.log(Level.SEVERE, "Unable to read value for " + name, e);
+              PropertyManager.printUsage();
+            }
+          } else {
+            value = defaultValue;
           }
         } else {
-          value = defaultValue;
+          try {
+            value = parseString(stringValue);
+          } catch (IllegalArgumentException e) {
+            logger.log(Level.SEVERE, e.getMessage());
+            PropertyManager.printUsage();
+          }
         }
       } else {
         try {

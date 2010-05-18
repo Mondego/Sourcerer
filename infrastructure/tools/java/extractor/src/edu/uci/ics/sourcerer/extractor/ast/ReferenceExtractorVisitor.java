@@ -731,6 +731,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       
       // Write the uses relation
       accept(parent.getType());
+      
+      // Write the javadoc comment
+      accept(parent.getJavadoc());
+      
       inFieldDeclaration = true;
     } else if (node.getParent() instanceof VariableDeclarationStatement) {
       VariableDeclarationStatement parent = (VariableDeclarationStatement)node.getParent();
@@ -820,7 +824,11 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       
       // Write the returns relation
       Type returnType = node.getReturnType2();
-      relationWriter.writeReturns(fqn, getTypeFqn(returnType), getLocation(returnType));
+      if (returnType == null) {
+        logger.severe("Null return type for " + fqn);
+      } else {
+        relationWriter.writeReturns(fqn, getTypeFqn(returnType), getLocation(returnType));
+      }
     }
     
     // Write the inside relation
@@ -833,6 +841,34 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         relationWriter.writeThrows(fqn, getUnknownFqn(name.getFullyQualifiedName()), getLocation(node));
       } else {
         relationWriter.writeThrows(fqn, getTypeFqn(exceptionBinding), getLocation(name));
+      }
+    }
+    
+    // Attempt to determine overrides relations
+    Deque<ITypeBinding> bindingStack = Helper.newStack();
+    IMethodBinding method = node.resolveBinding();
+    if (method != null) {
+      ITypeBinding declaringClass = method.getDeclaringClass();
+      if (declaringClass != null && declaringClass.getSuperclass() != null) {
+        bindingStack.add(declaringClass.getSuperclass());
+      }
+      for (ITypeBinding interfaceBinding : declaringClass.getInterfaces()) {
+        bindingStack.add(interfaceBinding);
+      }
+      while (!bindingStack.isEmpty()) {
+        ITypeBinding top = bindingStack.pop();
+        for (IMethodBinding methodBinding : top.getDeclaredMethods()) {
+          if (method.overrides(methodBinding)) {
+            relationWriter.writeOverrides(fqn, getMethodFqn(methodBinding, false), getLocation(node));
+          }
+        }
+        ITypeBinding superType = top.getSuperclass();
+        if (superType != null) {
+          bindingStack.add(superType);
+        }
+        for (ITypeBinding interfaceBinding : top.getInterfaces()) {
+          bindingStack.add(interfaceBinding);
+        }
       }
     }
       
@@ -1209,6 +1245,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         if (!inFieldDeclaration) {
           relationWriter.writeUses(fqnStack.getFqn(), fqn, getLocation(node));
         }
+      } else {
+        // Write the uses relation
+        relationWriter.writeUses(fqnStack.getFqn(), getTypeFqn(getBaseType(varBinding.getType())), getLocation(node));
       }
     } else if (binding instanceof ITypeBinding) {
       ITypeBinding typeBinding = (ITypeBinding) binding;

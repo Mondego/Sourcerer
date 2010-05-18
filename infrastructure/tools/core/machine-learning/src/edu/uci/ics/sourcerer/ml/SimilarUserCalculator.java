@@ -86,10 +86,12 @@ public class SimilarUserCalculator {
 	}
 
 	public void calculate() throws TasteException{
+		if(writer==null) return;
+		
 		loadNeighborhood();
 		// iterate through each user, and get similar users from neighborhood
 		LongPrimitiveIterator usersIterator = model.getUserIDs();
-		long start = System.currentTimeMillis();
+		//long start = System.currentTimeMillis();
 		while(usersIterator.hasNext()){
 			
 			long uid = usersIterator.nextLong();
@@ -108,10 +110,10 @@ public class SimilarUserCalculator {
 			for(long su: similarUsers){
 				writer.writeSimilarty(uid + "", su + "", "" + userSimilarity.userSimilarity(uid, su));
 			}
-			long end = System.currentTimeMillis();
+			//long end = System.currentTimeMillis();
 			
 			//logger.info("Written similarity tw for entity id:" + uid + TimeUtil.formatMs((long) (end - start)) + "ms");
-			start = System.currentTimeMillis();
+			//start = System.currentTimeMillis();
 		}
 	}
 

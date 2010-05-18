@@ -72,4 +72,6 @@ public class DummyRelationWriter implements IRelationWriter {
   @Override
   public void writeWrites(String writer, String field, Location location) {}
 
+  @Override
+  public void writeOverrides(String fqn, String overriddenFqn, Location location) {}
 }

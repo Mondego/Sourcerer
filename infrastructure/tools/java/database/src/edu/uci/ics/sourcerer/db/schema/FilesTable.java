@@ -19,9 +19,10 @@ package edu.uci.ics.sourcerer.db.schema;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 
-import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.db.util.QueryResult;
 import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.File;
@@ -33,7 +34,7 @@ import edu.uci.ics.sourcerer.model.extracted.FileEX;
  */
 public final class FilesTable extends DatabaseTable {
   protected FilesTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "files", false);
+    super(executor, locker, "files");
   }
   /*  
    *  +-------------+-----------------+-------+--------+
@@ -73,26 +74,28 @@ public final class FilesTable extends DatabaseTable {
     		convertNotNullNumber(projectID));
   }
   
-  public <T> void insert(KeyInsertBatcher<T> batcher, FileEX file, String projectID, T pairing) {
+  private String getInsertValue(FileEX file, String projectID) {
     if (file.getType() == File.JAR) {
-      batcher.addValue(
+      return
           getInsertValue(
               File.JAR, 
               file.getName(), 
               null, // jars don't have relative paths
               file.getHash(), 
-              projectID), 
-          pairing);
+              projectID);
     } else {
-      batcher.addValue(
+      return
           getInsertValue(
               file.getType(), 
               file.getName(), 
               file.getPath(),
               null, // non-jars don't have hashes 
-              projectID), 
-          pairing);
+              projectID);
     }
+  }
+  
+  public void insert(FileEX file, String projectID) {
+    inserter.addValue(getInsertValue(file, projectID));
   }
   
   // ---- DELETE ----
@@ -115,5 +118,12 @@ public final class FilesTable extends DatabaseTable {
   
   public FileDB getFileByFileID(String fileID) {
     return executor.selectSingle(name, FILE_TRANSLATOR.getSelect(), "file_id=" + fileID, FILE_TRANSLATOR);
+  }
+  
+  public void populateFileMap(Map<String, String> fileMap, String projectID) {
+    QueryResult result = executor.execute("SELECT file_id,path FROM " + name + " WHERE file_type <> 'JAR' AND project_id=" + projectID);
+    while (result.next()) {
+      fileMap.put(result.getString(2), result.getString(1));
+    }
   }
 }

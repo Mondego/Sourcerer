@@ -24,11 +24,12 @@ import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
 /**
  * @author <a href="bajracharya@gmail.com">Sushil Bajracharya</a>
  * @created Sep 10, 2009
  * 
- * NOTE: copied from Data Import Handler component of Solr project
+ * NOTE: copied and modified from Data Import Handler component of Solr project
  */
 public class JdbcDataSource {
 
@@ -48,6 +49,11 @@ public class JdbcDataSource {
 	private boolean convertType = false;
 
 	private int batchSize = FETCH_SIZE;
+	
+	
+	
+	// default is 8 hrs
+	private int queryTimeOut = 3600 * 8;
 
 	public void init(Properties initProps) {
 		// Object o = initProps.get(CONVERT_TYPE);
@@ -67,36 +73,20 @@ public class JdbcDataSource {
 				// LOG.log(Level.WARNING, "Invalid batch size: " + bsz);
 			}
 		}
-
-		// initFieldTypes
-		// TODO: make this based on a property file ?
-		// field names should be the same as the names used
-		// in sql query
-
-		// // Entities table
-		// fieldNameVsType.put(Entity.E_entity_id.name(), Types.BIGINT);
-		// fieldNameVsType.put(Entity.E_entity_type.name(), Types.VARCHAR);
-		// fieldNameVsType.put(Entity.E_file_id.name(), Types.BIGINT);
-		// fieldNameVsType.put(Entity.E_fqn.name(), Types.VARCHAR);
-		// fieldNameVsType.put(Entity.E_length.name(), Types.INTEGER);
-		// fieldNameVsType.put(Entity.E_modifiers.name(), Types.INTEGER);
-		// fieldNameVsType.put(Entity.E_offset.name(), Types.INTEGER);
-		// fieldNameVsType.put(Entity.E_project_id.name(), Types.BIGINT);
-		// // Relations table
-		// fieldNameVsType.put(Relation.R_relation_id.name(), Types.BIGINT);
-		// fieldNameVsType.put(Relation.R_relation_type.name(), Types.VARCHAR);
-		// fieldNameVsType.put(Relation.R_project_id.name(), Types.BIGINT);
-		// fieldNameVsType.put(Relation.R_lhs_eid.name(), Types.BIGINT);
-		// fieldNameVsType.put(Relation.R_rhs_eid.name(), Types.BIGINT);
-		// fieldNameVsType.put(Relation.R_rhs_jeid.name(), Types.BIGINT);
-		// fieldNameVsType.put(Relation.R_rhs_leid.name(), Types.BIGINT);
+		
+		String qto = initProps.getProperty("queryTimeout");
+		if (qto != null) {
+			try {
+				queryTimeOut = Integer.parseInt(bsz);
+				if (queryTimeOut < 0)
+					queryTimeOut = 0;
+			} catch (NumberFormatException e) {
+				// LOG.log(Level.WARNING, "Invalid query timeout: " + qto);
+			}
+		}
+		
 
 	}
-
-	// enum Entity { E_entity_id, E_entity_type, E_fqn, E_modifiers,
-	// E_project_id, E_file_id, E_offset, E_length };
-	// enum Relation {R_relation_id, R_project_id, R_relation_type, R_lhs_eid,
-	// R_rhs_eid, R_rhs_leid, R_rhs_jeid};
 
 	private void createConnectionFactory(final Properties initProps) {
 
@@ -132,6 +122,15 @@ public class JdbcDataSource {
 				Connection c = null;
 				try {
 					c = DriverManager.getConnection(url, initProps);
+					
+					boolean autocommit = false;
+					String ac = initProps.getProperty("autoCommit");
+					if (ac != null) {
+						// is only true if the property exists and is set to true
+						autocommit = Boolean.parseBoolean(ac);
+					}
+					
+					c.setAutoCommit(autocommit);
 				} catch (SQLException e) {
 
 				}
@@ -174,9 +173,13 @@ public class JdbcDataSource {
 
 			try {
 				Connection c = getConnection();
+				
 				stmt = c.createStatement(ResultSet.TYPE_FORWARD_ONLY,
 						ResultSet.CONCUR_READ_ONLY);
 				stmt.setFetchSize(batchSize);
+				
+				stmt.setQueryTimeout(queryTimeOut);
+				
 				// LOG.finer("Executing SQL: " + query);
 				// long start = System.currentTimeMillis();
 				if (stmt.execute(query)) {

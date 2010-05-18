@@ -20,11 +20,14 @@ package edu.uci.ics.sourcerer.ml.db.tools;
 
 import java.io.FileNotFoundException;
 
+import javax.swing.text.StyleContext.SmallAttributeSet;
+
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.similarity.TanimotoCoefficientSimilarity;
 import org.apache.mahout.cf.taste.model.DataModel;
 import org.apache.mahout.cf.taste.similarity.UserSimilarity;
 
+import edu.uci.ics.sourcerer.db.schema.EntitySimilarityHammingDistanceTable;
 import edu.uci.ics.sourcerer.db.schema.EntitySimilarityTanimotoCoefficientTable;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.db.util.InsertBatcher;
@@ -35,25 +38,31 @@ import edu.uci.ics.sourcerer.db.util.InsertBatcher;
  *
  */
 public class TanimotoCoefficientDBSimilarityWriter extends DBSimilarityWriter {
-	InsertBatcher batcher = EntitySimilarityTanimotoCoefficientTable.getInsertBatcher(executor);
+	EntitySimilarityTanimotoCoefficientTable simTCTable;
+	InsertBatcher batcher; 
 	public TanimotoCoefficientDBSimilarityWriter(String dataFileLocation,
 			int neighborhoodSize, double similarityThreshold, long lowUserId,
-			long highUserId, DatabaseConnection conn)
+			long highUserId, DatabaseConnection conn, boolean clearTable)
 			throws FileNotFoundException, TasteException {
 		super(dataFileLocation, neighborhoodSize, similarityThreshold, lowUserId,
-				highUserId, conn);
+				highUserId, conn, clearTable);
+		simTCTable = new EntitySimilarityTanimotoCoefficientTable(executor, executor.getTableLocker());
+		simTCTable.initializeInserter(tempDir);
 	}
 	
 	@Override
 	public void initializeSimilarityTable(){
-		executor.dropTables(EntitySimilarityTanimotoCoefficientTable.TABLE);
-		EntitySimilarityTanimotoCoefficientTable.createTable(executor);
+		if(clearTable){
+			executor.dropTables(simTCTable);
+			simTCTable.createTable(executor);
+		}
+		
 	}
 	
 	@Override
-	public void startWrite() throws TasteException{
+	public void write() throws TasteException{
 		suCalc.calculate();
-		getBatcher().insert();
+		simTCTable.flushInserts();
 	}
 	
 	@Override
@@ -67,14 +76,9 @@ public class TanimotoCoefficientDBSimilarityWriter extends DBSimilarityWriter {
 	
 	@Override
 	public void writeSimilarty(String lhsEid, String rhsEid, String similarity) {
-		EntitySimilarityTanimotoCoefficientTable.insert(
-				getBatcher(), 
-				lhsEid, rhsEid, similarity);
+		simTCTable.insert(lhsEid, rhsEid, similarity);
 	}
 	
-	@Override
-	public InsertBatcher getBatcher(){
-		return batcher;
-	}
+	
 
 }

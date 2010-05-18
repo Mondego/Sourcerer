@@ -127,53 +127,71 @@ public class PropertyManager {
   public synchronized static void initializeProperties(String[] args) {
     if (singleton == null) {
       singleton = new PropertyManager();
+    }
       
-      if (args != null) {
-        for (int index = 0; index < args.length; index++) {
-          if (args[index].startsWith("--")) {
-            String prop = args[index].substring(2);
-            if (index == args.length - 1 || args[index + 1].startsWith("--")) {
-              singleton.propertyMap.put(prop, "true");
-            } else {
-              singleton.propertyMap.put(prop, args[++index]);
+    if (args != null) {
+      for (int index = 0; index < args.length; index++) {
+        if (args[index].startsWith("--")) {
+          String prop = args[index].substring(2);
+          String value = null;
+          if (index == args.length - 1 || args[index + 1].startsWith("--")) {
+            value = "true";
+          } else {
+            value = args[++index];
+          }
+          if (singleton.propertyMap.containsKey(prop)) {
+            if (value.equals(singleton.propertyMap.get(prop))) {
+              logger.log(Level.SEVERE, "Conflicting command line inputs: " + prop + " set as " + singleton.propertyMap.get(prop) + " and " + value);
             }
           } else {
-            throw new IllegalArgumentException(args[index] + " is invalid (expecting --)");
+            singleton.propertyMap.put(prop, value);
           }
+        } else {
+          logger.log(Level.SEVERE, args[index] + " is invalid (expecting --)");
         }
       }
-      
-      if (PROPERTIES_FILE.hasValue()) {
-        try {
-          FileInputStream fis = new FileInputStream(PROPERTIES_FILE.getValue());
-  
-          Properties props = new Properties();
-          props.load(fis);
-          fis.close();
+    }
 
-          for (Entry<String, String> entry : (Set<Entry<String,String>>)(Object)props.entrySet()) {
+    if (PROPERTIES_FILE.hasValue()) {
+      try {
+        FileInputStream fis = new FileInputStream(PROPERTIES_FILE.getValue());
+
+        Properties props = new Properties();
+        props.load(fis);
+        fis.close();
+
+        for (Entry<String, String> entry : (Set<Entry<String, String>>) (Object) props.entrySet()) {
+          if (singleton.propertyMap.containsKey(entry.getKey())) {
+            if (entry.getValue().equals(singleton.propertyMap.get(entry.getKey()))) {
+              logger.log(Level.SEVERE, "Conflicting properties file inputs: " + entry.getKey() + " set as " + singleton.propertyMap.get(entry.getKey()) + " and " + entry.getValue());
+            }
+          } else {
             singleton.propertyMap.put(entry.getKey(), entry.getValue());
           }
-        } catch (IOException e) {
-          throw new IllegalArgumentException("Unable to find properties file at " + PROPERTIES_FILE.getValue().getPath());
         }
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to find properties file at " + PROPERTIES_FILE.getValue().getPath());
       }
-        
-      if (PROPERTIES_STREAM.hasValue()) {
-        try {
-          Properties props = new Properties();
-          props.load(PROPERTIES_STREAM.getValue());
-          PROPERTIES_STREAM.getValue().close();
-            
-          for (Entry<String, String> entry : (Set<Entry<String, String>>)(Object)props.entrySet()) {
+    }
+
+    if (PROPERTIES_STREAM.hasValue()) {
+      try {
+        Properties props = new Properties();
+        props.load(PROPERTIES_STREAM.getValue());
+        PROPERTIES_STREAM.getValue().close();
+
+        for (Entry<String, String> entry : (Set<Entry<String, String>>) (Object) props.entrySet()) {
+          if (singleton.propertyMap.containsKey(entry.getKey())) {
+            if (entry.getValue().equals(singleton.propertyMap.get(entry.getKey()))) {
+              logger.log(Level.SEVERE, "Conflicting properties file inputs: " + entry.getKey() + " set as " + singleton.propertyMap.get(entry.getKey()) + " and " + entry.getValue());
+            }
+          } else {
             singleton.propertyMap.put(entry.getKey(), entry.getValue());
           }
-        } catch (IOException e) {
-          logger.log(Level.SEVERE, "Unable to load properties stream", e);
         }
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to load properties stream", e);
       }
-    } else {
-      throw new IllegalStateException("Attempt to initialize PropertyManager twice!");
     }
   }
   

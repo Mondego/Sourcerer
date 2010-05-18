@@ -1,3 +1,20 @@
+/* 
+ * Sourcerer: an infrastructure for large-scale source code analysis.
+ * Copyright (C) by contributors. See CONTRIBUTORS.txt for full list.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package edu.uci.ics.sourcerer.server.file;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
@@ -29,6 +46,9 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 import edu.uci.ics.sourcerer.util.server.ServletUtils;
 
+/**
+ * @author Joel Ossher (jossher@uci.edu)
+ */
 @SuppressWarnings("serial")
 public class FileServer extends HttpServlet {
   private TimeoutManager<DatabaseConnection> connectionManager;
@@ -116,9 +136,9 @@ public class FileServer extends HttpServlet {
           ServletUtils.writeErrorMsg(response, "Unable to find file " + fileID);
         } else {
           ProjectDB project = null;
-          if (file.getType() != edu.uci.ics.sourcerer.model.File.SOURCE) {
+//          if (file.getType() != edu.uci.ics.sourcerer.model.File.SOURCE) {
             project = db.getProjectByProjectID(file.getProjectID());
-          }
+//          }
           writeFile(response, project, file, null, download);
         }
         // Cleanup
@@ -140,9 +160,9 @@ public class FileServer extends HttpServlet {
             ServletUtils.writeErrorMsg(response, "Unable to find file " + loc.getFileID());
           } else {
             ProjectDB project = null;
-            if (file.getType() != edu.uci.ics.sourcerer.model.File.SOURCE) {
+//            if (file.getType() != edu.uci.ics.sourcerer.model.File.SOURCE) {
               project = db.getProjectByProjectID(file.getProjectID());
-            }
+//            }
             writeFile(response, project, file, loc, download);
           }
         }
@@ -165,9 +185,9 @@ public class FileServer extends HttpServlet {
             ServletUtils.writeErrorMsg(response, "Unable to find file " + loc.getFileID());
           } else {
             ProjectDB project = null;
-            if (file.getType() != edu.uci.ics.sourcerer.model.File.SOURCE) {
+//            if (file.getType() != edu.uci.ics.sourcerer.model.File.SOURCE) {
               project = db.getProjectByProjectID(file.getProjectID());
-            }
+//            }
             writeFile(response, project, file, loc, download);
           }
         }
@@ -191,9 +211,9 @@ public class FileServer extends HttpServlet {
               ServletUtils.writeErrorMsg(response, "Unable to find file " + loc.getFileID());
             } else {
               ProjectDB project = null;
-              if (file.getType() != edu.uci.ics.sourcerer.model.File.SOURCE) {
+//              if (file.getType() != edu.uci.ics.sourcerer.model.File.SOURCE) {
                 project = db.getProjectByProjectID(file.getProjectID());
-              }
+//              }
               writeFile(response, project, file, loc, download);
             }
           }
@@ -208,7 +228,7 @@ public class FileServer extends HttpServlet {
   }
   
   private void writeFile(HttpServletResponse response, ProjectDB project, FileDB file, LocationDB location, boolean download) throws IOException {
-    if (file.getType() == edu.uci.ics.sourcerer.model.File.SOURCE) {
+    if (project.getType() == Project.CRAWLED) {
       IJavaFile javaFile = repo.getFile(file.getPath());
       if (javaFile == null) {
         ServletUtils.writeErrorMsg(response, "Unable to find " + file.getPath() + " for file " + file.getFileID());
@@ -223,7 +243,7 @@ public class FileServer extends HttpServlet {
           ServletUtils.writeFileFragment(response, name, javaFile.getFile(), location.getOffset(), location.getLength());
         }
       }
-    } else if (file.getType() == edu.uci.ics.sourcerer.model.File.JAR) {
+    } else if (file.getType() == edu.uci.ics.sourcerer.model.File.JAR && project.getType() == Project.JAR) {
       JarIndex index = repo.getJarIndex();
       IndexedJar indexed = index.getIndexedJar(file.getHash());
       if (indexed == null) {
@@ -235,57 +255,59 @@ public class FileServer extends HttpServlet {
           ServletUtils.writeErrorMsg(response, "Cannot write a fragment of a jar file");
         }
       }
-    } else if (file.getType() == edu.uci.ics.sourcerer.model.File.CLASS) {
-      if (project.getType() == Project.JAR || project.getType() == Project.JAVA_LIBRARY) {
-        File sourceFile = null;
-        if (project.getType() == Project.JAR) {
-          JarIndex index = repo.getJarIndex();
-          IndexedJar indexed = index.getIndexedJar(project.getHash());
-          if (indexed == null) {
-            ServletUtils.writeErrorMsg(response, "Unable to find project " + project.getProjectID() + " for class file " + file.getFileID() + " with hash " + project.getHash());
-          } else {
-            sourceFile = indexed.getSourceFile();
-            if (sourceFile == null) {
-              IndexedJar source = index.getPossibleSourceMatch(indexed);
-              if (source == null) {
-                sourceFile = indexed.getJarFile();
-              } else {
-                sourceFile = source.getJarFile();
-              }
-            }
-          }
-        } else if (project.getType() == Project.JAVA_LIBRARY) {
-          sourceFile = extracted.getJavaLibrarySource(file.getPath());
-        }
-        if (sourceFile != null && sourceFile.exists()) {
-          ZipFile zip = null;
-          try {
-            zip = new ZipFile(sourceFile);
-            String minusClass = file.getPath().substring(0, file.getPath().lastIndexOf('.'));
-            String entryName = minusClass.replace('.', '/') + ".java";
-            ZipEntry entry = zip.getEntry(entryName);
-            if (entry == null) {
-              ServletUtils.writeErrorMsg(response, "Unable to find entry " + entryName + " in " + sourceFile.getName());
+    } else if (file.getType() == edu.uci.ics.sourcerer.model.File.SOURCE && (project.getType() == Project.JAR || project.getType() == Project.MAVEN || project.getType() == Project.JAVA_LIBRARY)) {
+      File sourceFile = null;
+      if (project.getType() == Project.JAR) {
+        JarIndex index = repo.getJarIndex();
+        IndexedJar indexed = index.getIndexedJar(project.getHash());
+        if (indexed == null) {
+          ServletUtils.writeErrorMsg(response, "Unable to find project " + project.getProjectID() + " for class file " + file.getFileID() + " with hash " + project.getHash());
+        } else {
+          sourceFile = indexed.getSourceFile();
+          if (sourceFile == null) {
+            IndexedJar source = index.getPossibleSourceMatch(indexed);
+            if (source == null) {
+              sourceFile = indexed.getJarFile();
             } else {
-              String name = null;
-              if (download) {
-                name = file.getName();
-              }
-              if (location == null) {
-                ServletUtils.writeInputStream(response, name, zip.getInputStream(entry));
-              } else {
-                ServletUtils.writeInputStreamFragment(response, name, zip.getInputStream(entry), location.getOffset(), location.getLength());
-              }
+              sourceFile = source.getJarFile();
             }
-          } catch (Exception e) {
-            logger.log(Level.SEVERE, "Unable to read jar file", e);
-          } finally {
-            FileUtils.close(zip);
           }
         }
-      } else {
-        ServletUtils.writeErrorMsg(response, "File " + file.getFileID() + " has an unexpected project type " + project.getProjectID());
+      } else if (project.getType() == Project.JAVA_LIBRARY) {
+        sourceFile = extracted.getJavaLibrarySource(project.getPath());
       }
+      if (sourceFile == null) {
+        ServletUtils.writeErrorMsg(response, "Null source file " + file.getFileID() + "(" + file.getType() +") in project " + project.getProjectID() + "(" + project.getType() + ")");
+      } else if (!sourceFile.exists()) {
+        ServletUtils.writeErrorMsg(response, "Missing source file " + file.getFileID() + "(" + file.getType() +") in project " + project.getProjectID() + "(" + project.getType() + ")");
+      } else {
+        ZipFile zip = null;
+        try {
+          zip = new ZipFile(sourceFile);
+          String minusClass = file.getPath().substring(0, file.getPath().lastIndexOf('.'));
+          String entryName = minusClass.replace('.', '/') + ".java";
+          ZipEntry entry = zip.getEntry(entryName);
+          if (entry == null) {
+            ServletUtils.writeErrorMsg(response, "Unable to find entry " + entryName + " in " + sourceFile.getName());
+          } else {
+            String name = null;
+            if (download) {
+              name = file.getName();
+            }
+            if (location == null) {
+              ServletUtils.writeInputStream(response, name, zip.getInputStream(entry));
+            } else {
+              ServletUtils.writeInputStreamFragment(response, name, zip.getInputStream(entry), location.getOffset(), location.getLength());
+            }
+          }
+        } catch (Exception e) {
+          logger.log(Level.SEVERE, "Unable to read jar file", e);
+        } finally {
+          FileUtils.close(zip);
+        }
+      }
+    } else {
+      ServletUtils.writeErrorMsg(response, "File " + file.getFileID() + "(" + file.getType() +") has an unexpected file type or project type " + project.getProjectID() + "(" + project.getType() + ")");
     }
   }
 }

@@ -42,7 +42,7 @@ public class TransformerTest {
 		List<Map<String, String>> fields = new ArrayList<Map<String, String>>();
 		fields.add(getField("col1", "colname", "true", "false"));
 		Context context = AbstractDataImportHandlerTest.getContext(null, null,
-				null, 0, fields, null);
+				null, Context.FULL_DUMP, fields, null);
 		Map<String, Object> src = new HashMap<String, Object>();
 		String s = "(1UNKNOWN)a.bb.cc.<init>(x.v.cc)";
 		src.put("col1", s);
@@ -58,7 +58,7 @@ public class TransformerTest {
 		List<Map<String, String>> fields = new ArrayList<Map<String, String>>();
 		fields.add(getField("col1", "colname", "true", "true"));
 		Context context = AbstractDataImportHandlerTest.getContext(null, null,
-				null, 0, fields, null);
+				null, Context.FULL_DUMP, fields, null);
 		Map<String, Object> src = new HashMap<String, Object>();
 		String s = "(1UNKNOWN)a.bb.cc.<init>(x.v.cc)";
 		src.put("col1", s);

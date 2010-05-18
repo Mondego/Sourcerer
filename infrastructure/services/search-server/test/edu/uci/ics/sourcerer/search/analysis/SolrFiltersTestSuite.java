@@ -37,6 +37,7 @@ public class SolrFiltersTestSuite {
 		suite.addTestSuite(FqnFilterFactoryTest.class);
 		suite.addTestSuite(FqnFilterFactoryTest2.class);
 		suite.addTestSuite(ConstructorTypeParamArrayTest.class);
+		suite.addTestSuite(ExtractParentTest.class);
 		//$JUnit-END$
 		return suite;
 	}

@@ -34,7 +34,6 @@ import edu.uci.ics.sourcerer.scs.common.client.UsedFqn;
  * @created Jul 22, 2009
  */
 public interface SourcererDBServiceAsync {
-	void getERTables(List<String> hitEntities, AsyncCallback<ERTables> callback);
 
 	void fillUsedFqnDetails(HitFqnEntityId fqn, EntityCategory cat,
 			AsyncCallback<UsedFqn> callback);

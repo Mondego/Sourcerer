@@ -1,133 +1,49 @@
 <dataConfig>
-    <!-- 
-    <dataSource driver="com.mysql.jdbc.Driver" 
-		url="jdbc:mysql://localhost:3307/sourcerer_test" 
-    	user="" 
-    	password=""  />
-    -->
-    
-    <dataSource driver="com.mysql.jdbc.Driver" 
-		url="jdbc:mysql://mondego.calit2.uci.edu:3307/sourcerer_test" 
-    	user="$sourcerer.db.user$" 
-    	password="$sourcerer.db.password$"  />
-    	
-    	
-    <!-- 
-    entity_type='CLASS' OR
-			   entity_type='INTERFACE' OR
-			   entity_type='METHOD' OR
-			   entity_type='ANNOTATION' OR
-			   entity_type='ENUM' OR
-			   entity_type='CONSTRUCTOR' OR
-		       entity_type='ANNOTATION_ELEMENT'
-		       limit 10000
-     -->
+   
+    <!--   dataSource 
+		url="!sourcerer.db.url!"
+    	driver="com.mysql.jdbc.Driver"
+		user="!sourcerer.db.user!" 
+		password="!sourcerer.db.password!"
+		autoCommit="false" 
+		batchSize="-1" / -->
+		
+	<dataSource 
+		jndiName="java:comp/env/jdbc/DSSourcerer"
+		user="!sourcerer.db.user!" 
+		password="!sourcerer.db.password!"
+		autoCommit="false"
+		readonly="true"
+		transactionIsolation="TRANSACTION_READ_COMMITTED" 
+		holdability="CLOSE_CURSORS_AT_COMMIT" 
+		batchSize="-1" />
     	
     <document name="entity">
 	    <entity name="code_entity" pk="entity_id" 
-		    transformer="RegexTransformer"
-		    query="select entity_id, fqn, entity_type from entities 
-		    		where entity_type='METHOD'
-					and (project_id=38 or project_id=97 or project_id=60)"
+	    	transformer="edu.uci.ics.sourcerer.search.analysis.FqnCleaningTransformer"
+		    query="select entity_id, fqn
+			 from entities as e
+			 where
+			 e.entity_type in ('CLASS','METHOD','CONSTRUCTOR')
+			 and e.project_id in (${dataimporter.request.project_ids})"
 
 		    deltaQuery="select entity_id from entities 
 		    		where last_modified > '${dataimporter.last_index_time}'">
 
-		<field column="fqn" name="fqn_full" />
-		<field column="fqn" name="fqn" />
-		
-		
 		<field column="entity_id" name="entity_id" />
-		<field column="entity_type" name="entity_type" />
-
-		<entity name="local_use" 
-			transformer="RegexTransformer"
-			query="SELECT e_provider.fqn as pfqn FROM entities AS e_provider INNER JOIN
-				(relations AS r INNER JOIN entities AS e ON
-				        r.lhs_eid = e.entity_id AND
-				         (r.relation_type='EXTENDS' OR
-				                r.relation_type='IMPLEMENTS' OR
-				                r.relation_type='CALLS' OR
-						r.relation_type='RETURNS' OR
-				                r.relation_type='HOLDS' OR
-				                r.relation_type='USES') AND
-				        e.entity_id = '${code_entity.entity_id}'
-				)  ON
-				r.rhs_eid=e_provider.entity_id
-				UNION ALL
-				SELECT E1.fqn as pfqn FROM entities AS E1 INNER JOIN
-				(relations as R1 INNER JOIN
-				        (relations as R2 INNER JOIN entities AS E2 ON
-				                R2.rhs_eid='${code_entity.entity_id}' AND
-				                E2.entity_type='FIELD' AND
-				                R2.relation_type='INSIDE' AND
-				                R2.lhs_eid=E2.entity_id
-				        ) ON R1.lhs_eid=R2.lhs_eid
-				) ON E1.entity_id=R1.rhs_eid AND R1.relation_type='HOLDS'">
-			<field column="pfqn" name="local_use_fqn_full" />
-			<field column="pfqn" name="all_use_fqn_full" />
-
-		</entity>
-
-		<entity name="jdk_use" 
-			transformer="RegexTransformer"
-			query="SELECT jdk_provider.fqn AS pfqn_jdk FROM library_entities AS jdk_provider INNER JOIN 
-				(relations AS r INNER JOIN entities AS e ON 
-					r.lhs_eid=e.entity_id AND
-				       (r.relation_type='EXTENDS' OR
-						r.relation_type='IMPLEMENTS' OR
-						r.relation_type='CALLS' OR
-						r.relation_type='RETURNS' OR
-						r.relation_type='HOLDS' OR
-						r.relation_type='USES') AND		
-					e.entity_id='${code_entity.entity_id}')  ON  
-					r.rhs_leid=jdk_provider.entity_id
-				UNION ALL
-				SELECT E1.fqn as pfqn_jdk FROM library_entities AS E1 INNER JOIN
-				(relations as R1 INNER JOIN
-					(relations as R2 INNER JOIN entities AS E2 ON
-						R2.rhs_eid='${code_entity.entity_id}' AND
-						E2.entity_type='FIELD' AND
-						R2.relation_type='INSIDE' AND
-						R2.lhs_eid=E2.entity_id
-					) ON R1.lhs_eid=R2.lhs_eid 
-				) ON E1.entity_id=R1.rhs_leid AND R1.relation_type='HOLDS'">
+		<field column="fqn" name="fqn_full" clean-fqn="true" />
 		
-			<field column="pfqn_jdk" name="jdk_use_fqn_full" />
-			<field column="pfqn_jdk" name="all_use_fqn_full" />
-			<field column="pfqn_jdk" name="jdkLib_use_fqn_full" />
+		<entity name="jdklib_use" 
+			query="select provE.fqn as pfqn
+			 from relations as R
+			 inner join entities as provE on provE.entity_id=R.rhs_eid
+			 where R.internal = 0 
+			 and R.relation_type in ('CALLS','EXTENDS','IMPLEMENTS','INSTANTIATES','USES','OVERRIDES')			 
+			 and R.lhs_eid='${code_entity.entity_id}'">
+			
+			<field column="pfqn" name="jdkLib_use_fqn_full" />
 		</entity>
-
-		<entity name="lib_use" 
-			transformer="RegexTransformer"
-			query="SELECT jar_provider.fqn AS pfqn_lib FROM jar_entities AS jar_provider INNER JOIN 
-				(relations AS r INNER JOIN entities AS e ON 
-					r.lhs_eid=e.entity_id AND
-				       (r.relation_type='EXTENDS' OR
-						r.relation_type='IMPLEMENTS' OR
-						r.relation_type='CALLS' OR
-						r.relation_type='RETURNS' OR
-						r.relation_type='HOLDS' OR
-						r.relation_type='USES') AND		
-					e.entity_id='${code_entity.entity_id}')  ON  
-				r.rhs_jeid=jar_provider.entity_id
-				UNION ALL
-				SELECT E1.fqn as pfqn_lib FROM jar_entities AS E1 INNER JOIN
-				(relations as R1 INNER JOIN
-					(relations as R2 INNER JOIN entities AS E2 ON
-						R2.rhs_eid='${code_entity.entity_id}' AND
-						E2.entity_type='FIELD' AND
-						R2.relation_type='INSIDE' AND
-						R2.lhs_eid=E2.entity_id
-					) ON R1.lhs_eid=R2.lhs_eid 
-				) ON E1.entity_id=R1.rhs_jeid AND R1.relation_type='HOLDS'">
 		
-			<field column="pfqn_lib" name="lib_use_fqn_full" />
-			<field column="pfqn_lib" name="all_use_fqn_full" />
-			<field column="pfqn_lib" name="jdkLib_use_fqn_full" />
-
-		</entity>
-
        </entity>
     </document>
 </dataConfig>

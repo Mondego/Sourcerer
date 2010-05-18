@@ -27,7 +27,7 @@ import edu.uci.ics.sourcerer.model.db.LocationDB;
  */
 public final class CommentsTable extends DatabaseTable {
   protected CommentsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "comments", true);
+    super(executor, locker, "comments");
   }
 
   /*  
@@ -75,15 +75,15 @@ public final class CommentsTable extends DatabaseTable {
    }
   
   public void insertJavadoc(String eid, String projectID, String fileID, String offset, String length) {
-    batcher.addValue(getInsertValue(Comment.JAVADOC, null, eid, projectID, fileID, offset, length));
+    inserter.addValue(getInsertValue(Comment.JAVADOC, null, eid, projectID, fileID, offset, length));
   }
   
   public void insertUnassociatedJavadoc(String projectID, String fileID, String offset, String length) {
-    batcher.addValue(getInsertValue(Comment.JAVADOC, null, null, projectID, fileID, offset, length));
+    inserter.addValue(getInsertValue(Comment.JAVADOC, null, null, projectID, fileID, offset, length));
   }
   
   public void insertComment(Comment type, String projectID, String fileID, String offset, String length) {
-    batcher.addValue(getInsertValue(type, null, null, projectID, fileID, offset, length));
+    inserter.addValue(getInsertValue(type, null, null, projectID, fileID, offset, length));
   }
   
   // ---- DELETE ----

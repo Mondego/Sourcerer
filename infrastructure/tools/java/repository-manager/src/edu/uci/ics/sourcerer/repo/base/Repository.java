@@ -243,6 +243,14 @@ public class Repository extends AbstractRepository {
     return getProjects(null);
   }
   
+  public Collection<RepoProject> getFilteredProjects() {
+    if (PROJECT_FILTER.hasValue()) {
+      return getProjects(FileUtils.getFileAsSet(PROJECT_FILTER.getValue()));
+    } else {
+      return getProjects(null);
+    }
+  }
+  
   public Collection<RepoProject> getProjects(Set<String> filter) {
     if (projects == null) {
       projects = Helper.newHashMap();
@@ -274,7 +282,7 @@ public class Repository extends AbstractRepository {
   
   public IJavaFile getFile(String path) {
     // TODO: modify to work on compressed projects
-    File file = new File(repoRoot, path);
+    File file = new File(repoRoot, path.replace('*', ' '));
     if (file.exists()) {
       return new JavaFile(path, file);
     } else {

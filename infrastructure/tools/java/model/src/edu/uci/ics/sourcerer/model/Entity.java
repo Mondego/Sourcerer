@@ -47,8 +47,8 @@ public enum Entity {
       return this == CLASS || this == INTERFACE || this == ENUM || this == ANNOTATION;
     }
     
-    public boolean isSyntheticTypeEntity() {
-      return this == PACKAGE || this == ARRAY || this == TYPE_VARIABLE || this == WILDCARD || this == PARAMETERIZED_TYPE || this == DUPLICATE || this == UNKNOWN;
+    public boolean isInternalMeaningful() {
+      return !(this == PACKAGE || this == ARRAY || this == TYPE_VARIABLE || this == WILDCARD || this == PARAMETERIZED_TYPE || this == UNKNOWN);
     }
 
     public boolean isPackage() {
