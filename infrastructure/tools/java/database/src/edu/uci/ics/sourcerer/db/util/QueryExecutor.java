@@ -135,6 +135,14 @@ public class QueryExecutor {
   public <T> Collection<T> select(String table, String columns, String where, ResultTranslator<T> translator) {
     return execute("SELECT " + columns + " FROM " + table + " WHERE " + where + ";", translator);
   }
+  
+  public <T> Collection<T> select(String where, ResultTranslator<T> translator) {
+    return execute("SELECT " + translator.getSelect() + " FROM " + translator.getTable() + " WHERE " + where + ";", translator);
+  }
+  
+  public <T> Iterable<T> selectStreamed(String where, ResultTranslator<T> translator) {
+    return executeStreamed("SELECT " + translator.getSelect() + " FROM " + translator.getTable() + (where == null ? "" : (" WHERE " + where)) + ";", translator);
+  }
     
   public void insertSingle(String table, String value) {
     executeUpdate("INSERT INTO " + table + " VALUES " + value + ";");

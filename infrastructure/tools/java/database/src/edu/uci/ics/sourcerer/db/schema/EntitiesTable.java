@@ -36,8 +36,9 @@ import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class EntitiesTable extends DatabaseTable {
+  private static final String NAME = "entities";
   protected EntitiesTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "entities");
+    super(executor, locker, NAME);
   }
 
   /*  
@@ -138,6 +139,11 @@ public final class EntitiesTable extends DatabaseTable {
     }
     
     @Override
+    public String getTable() {
+      return NAME;
+    }
+    
+    @Override
     public String getSelect() {
       return "file_id,offset,length";
     }
@@ -154,6 +160,16 @@ public final class EntitiesTable extends DatabaseTable {
     @Override
     public SlightlyLessLimitedEntityDB translate(ResultSet result) throws SQLException {
       return new SlightlyLessLimitedEntityDB(result.getString(1), result.getString(2), Entity.valueOf(result.getString(3)), result.getString(4));
+    }
+    
+    @Override
+    public String getTable() {
+      return NAME;
+    }
+    
+    @Override
+    public String getSelect() {
+      return "project_id,entity_id,entity_type,fqn";
     }
   };
   
@@ -178,15 +194,19 @@ public final class EntitiesTable extends DatabaseTable {
   }
   
   public Iterable<SlightlyLessLimitedEntityDB> getEntityMapByProject(String projectID) {
-    return executor.executeStreamed("SELECT project_id,entity_id,entity_type,fqn FROM " + name + " WHERE project_id=" + projectID + " AND entity_type NOT IN ('PARAMETER','LOCAL_VARIABLE')", SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
+    return executor.selectStreamed("project_id=" + projectID + " AND entity_type NOT IN ('PARAMETER','LOCAL_VARIABLE')", SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
   }
   
   public Iterable<SlightlyLessLimitedEntityDB> getSyntheticEntitiesByProject(String projectID) {
-    return executor.executeStreamed("SELECT project_id,entity_id,entity_type,fqn FROM " + name + " WHERE entity_type IN ('ARRAY','WILDCARD','TYPE_VARIABLE','PARAMETERIZED_TYPE','DUPLICATE') AND project_id=" + projectID, SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
+    return executor.selectStreamed("entity_type IN ('ARRAY','WILDCARD','TYPE_VARIABLE','PARAMETERIZED_TYPE','DUPLICATE') AND project_id=" + projectID, SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
   }
   
   public Iterable<SlightlyLessLimitedEntityDB> getUnknownEntities(String projectID) {
-    return executor.executeStreamed("SELECT project_id,entity_id,entity_type,fqn FROM " + name + " WHERE entity_type='UNKNOWN' AND project_id=" + projectID, SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
+    return executor.selectStreamed("entity_type='UNKNOWN' AND project_id=" + projectID, SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
+  }
+  
+  public Iterable<SlightlyLessLimitedEntityDB> getEntities() {
+    return executor.selectStreamed(null, SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
   }
   
   public Iterable<LimitedEntityDB> getLocalVariablesByProject(String projectID) {

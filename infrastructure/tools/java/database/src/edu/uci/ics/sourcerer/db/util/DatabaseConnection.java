@@ -47,11 +47,13 @@ public class DatabaseConnection implements Closeable {
     }
   }
   
-  public void open() {
+  public boolean open() {
     try {
       connection = DriverManager.getConnection(DATABASE_URL.getValue(), DATABASE_USER.getValue(), DATABASE_PASSWORD.getValue());
+      return true;
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Exception opening connection", e);
+      return false;
     }
   }
   
