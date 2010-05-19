@@ -35,6 +35,7 @@ import edu.uci.ics.sourcerer.repo.maven.MavenCrawler;
 import edu.uci.ics.sourcerer.repo.maven.MavenDownloader;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
+import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
@@ -56,6 +57,7 @@ public class Main {
   private static final Property<Boolean> EXTRACTION_STATS = new BooleanProperty("extraction-stats", false, "Repository Manager", "Get extraction stats.");
   private static final Property<Boolean> CLONE_EXTRACTED_REPOSITORY = new BooleanProperty("clone-extracted", false, "Repository Manager", "Copies the property files into a new repositroy.");
   private static final Property<Boolean> GENERATE_JAR_FILTER = new BooleanProperty("generate-jar-filter", false, "Repository Manager", "Generate a jar filter list from a project filter list");
+  private static final Property<Boolean> SPLIT_PROJECTS = new BooleanProperty("split-projects", false, "Repository Manager", "Split the projects into filter lists for easy parallelization.");
 
   public static void main(String[] args) {
     PropertyManager.initializeProperties(args);
@@ -98,6 +100,9 @@ public class Main {
     } else if (CLONE_EXTRACTED_REPOSITORY.getValue()) {
       PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);
       ExtractedRepository.getRepository().cloneProperties(ExtractedRepository.getRepository(OUTPUT_REPO.getValue()));
+    } else if (SPLIT_PROJECTS.getValue()) {
+      PropertyManager.registerAndVerify(INPUT_REPO, Properties.OUTPUT, Repository.SPLIT_SIZE);
+      Repository.getRepository(INPUT_REPO.getValue()).splitProjectsForFilterList();
     } else if (GENERATE_JAR_FILTER.getValue()) {
       PropertyManager.registerResumeLoggingProperties();
       PropertyManager.registerAndVerify(INPUT_REPO, AbstractRepository.PROJECT_FILTER);
