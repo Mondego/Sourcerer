@@ -26,11 +26,11 @@ import edu.uci.ics.sourcerer.model.db.SlightlyLessLimitedEntityDB;
  */
 public class ClustererDatabaseAccessor extends DatabaseAccessor {
 
-  protected ClustererDatabaseAccessor(DatabaseConnection connection) {
+  public ClustererDatabaseAccessor(DatabaseConnection connection) {
     super(connection);
   }
   
-  public Iterable<SlightlyLessLimitedEntityDB> getEntities() {
-    return entitiesTable.getEntities();
+  public Iterable<SlightlyLessLimitedEntityDB> getEntityFqns() {
+    return entitiesTable.getEntityFqns();
   }
 }

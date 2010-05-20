@@ -17,9 +17,27 @@
  */
 package edu.uci.ics.sourcerer.clusterer.stats;
 
+import java.util.Set;
+
+import edu.uci.ics.sourcerer.util.Helper;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Project {
-
+  private int id;
+  private Set<FqnFragment> fqns;
+  
+  public Project(int id) {
+    this.id = id;
+    fqns = Helper.newHashSet();
+  }
+  
+  public void addFqn(FqnFragment fqn) {
+    fqns.add(fqn);
+  }
+  
+  public int getID() {
+    return id;
+  }
 }

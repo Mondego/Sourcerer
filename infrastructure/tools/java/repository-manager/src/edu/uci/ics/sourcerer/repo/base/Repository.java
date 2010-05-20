@@ -106,10 +106,13 @@ public class Repository extends AbstractRepository {
       for (RepoProject project : getProjects()) {
         bw.write(project.getProjectPath() + "\n");
         if (++count == SPLIT_SIZE.getValue()) {
+          logger.info("  " + count + " projects written");
           bw.close();
           bw = new BufferedWriter(new FileWriter(new File(outputDir, "project-filter-" + filterNumber++ + ".txt")));
+          count = 0;
         }
       }
+      logger.info("Done!");
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error writing filter list", e);
     } finally {

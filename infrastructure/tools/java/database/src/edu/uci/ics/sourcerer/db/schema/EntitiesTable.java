@@ -205,8 +205,8 @@ public final class EntitiesTable extends DatabaseTable {
     return executor.selectStreamed("entity_type='UNKNOWN' AND project_id=" + projectID, SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
   }
   
-  public Iterable<SlightlyLessLimitedEntityDB> getEntities() {
-    return executor.selectStreamed(null, SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
+  public Iterable<SlightlyLessLimitedEntityDB> getEntityFqns() {
+    return executor.selectStreamed("entity_type IN ('PACKAGE','CLASS','INTERFACE','ENUM','ANNOTATION')", SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
   }
   
   public Iterable<LimitedEntityDB> getLocalVariablesByProject(String projectID) {

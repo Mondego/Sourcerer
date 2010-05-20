@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.clusterer.stats;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import edu.uci.ics.sourcerer.clusterer.db.ClustererDatabaseAccessor;
 import edu.uci.ics.sourcerer.model.db.SlightlyLessLimitedEntityDB;
 
@@ -34,8 +36,27 @@ public class FqnStats {
   public void gatherFqnStats() {
     fqns = new FqnTree();
     
-    for (SlightlyLessLimitedEntityDB entity : db.getEntities()) {
-      fqns.addFqn(entity.getFqn(), null);
+    logger.info("Reading entities from the database...");
+    int count = 0;
+    int reportCount = 1;
+    for (SlightlyLessLimitedEntityDB entity : db.getEntityFqns()) {
+      fqns.addFqn(entity.getFqn(), entity.getProjectID());
+      if (++count % reportCount == 0) {
+        if (reportCount < 100000) {
+          reportCount *= 10;
+        }
+        logger.info("  " + count + " entities processed");
+      }
     }
+    
+    logger.info("Writing FQN tree to disk");
+    fqns.writeToDisk();
+    
+    logger.info("Done!");
+  }
+  
+  public void loadFqnStats() {
+    fqns = new FqnTree();
+    fqns.readFromDisk();
   }
 }
