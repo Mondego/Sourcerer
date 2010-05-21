@@ -20,9 +20,11 @@ package edu.uci.ics.sourcerer.repo.base;
 import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Deque;
@@ -41,11 +43,16 @@ import edu.uci.ics.sourcerer.repo.general.RepoPath;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
+import edu.uci.ics.sourcerer.util.io.Properties;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Repository extends AbstractRepository {
+  public static final Property<Integer> SPLIT_SIZE = new IntegerProperty("split-size", 1000, "Repository Manager", "Number of projects per split fragment");
+  
   private File tempDir;
   private Map<String, RepoProject> projects;
   
@@ -85,6 +92,29 @@ public class Repository extends AbstractRepository {
   
   public void aggregateJarFiles() {
     JarIndex.aggregateJars(this);
+  }
+  
+  public void splitProjectsForFilterList() {
+    logger.info("Loading projects...");
+    File outputDir = Properties.OUTPUT.getValue();
+    
+    BufferedWriter bw = null;
+    try {
+      int filterNumber = 1;
+      bw = new BufferedWriter(new FileWriter(new File(outputDir, "project-filter-" + filterNumber++ + ".txt")));
+      int count = 0;
+      for (RepoProject project : getProjects()) {
+        bw.write(project.getProjectPath() + "\n");
+        if (++count == SPLIT_SIZE.getValue()) {
+          bw.close();
+          bw = new BufferedWriter(new FileWriter(new File(outputDir, "project-filter-" + filterNumber++ + ".txt")));
+        }
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error writing filter list", e);
+    } finally {
+      FileUtils.close(bw);
+    }
   }
   
   public void generateJarFilterList(Set<String> completed) {

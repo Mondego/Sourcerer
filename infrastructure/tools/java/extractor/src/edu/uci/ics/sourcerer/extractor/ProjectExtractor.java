@@ -91,7 +91,7 @@ public class ProjectExtractor {
             fileWriter.writeJarFile(jar.getName(), jar.getHash());
           }
           
-          boolean force = false;
+          boolean force = !Extractor.RESOLVE_MISSING_TYPES.getValue();
           if (missingTypes) {
             logger.info("  Resolving missing types...");
             Collection<IndexedJar> newJars = resolver.resolveMissingTypes(index, extracted, bundle.getUsedJarWriter());
@@ -120,7 +120,7 @@ public class ProjectExtractor {
           // Set up the feature extractor
           FeatureExtractor extractor = new FeatureExtractor(bundle);
           
-          if (force) {
+          if (force && missingTypes) {
             logger.info("  Unable to resolve all missing types, so forcing compilation...");
           }
           
