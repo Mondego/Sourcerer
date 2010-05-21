@@ -19,16 +19,12 @@ package edu.uci.ics.sourcerer.clusterer.stats;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Map;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -41,28 +37,27 @@ public class FqnTree {
   public static Property<String> FQN_TREE = new StringProperty("fqn-tree", "fqn-tree.txt", "Clusterer", "File for storing fqn tree");
   
   private FqnFragment root;
-  private Map<Integer, Project> projects;
   
   public FqnTree() {
-    root = new FqnFragment();
-    projects = Helper.newHashMap();
+    root = FqnFragment.getRootFragment();
   }
   
-  private Project getProject(String projectID) {
-    Integer id = Integer.parseInt(projectID);
-    Project proj = projects.get(id);
-    if (proj == null) {
-      proj = new Project(id);
-      projects.put(id, proj);
-    }
-    return proj;
-  }
+//  private Project getProject(String projectID) {
+//    Integer id = Integer.parseInt(projectID);
+//    Project proj = projects.get(id);
+//    if (proj == null) {
+//      proj = new Project(id);
+//      projects.put(id, proj);
+//    }
+//    return proj;
+//  }
   
   public void addFqn(String fqn, String projectID) {
-    Project project = getProject(projectID);
+//    Project project = getProject(projectID);
+    int id = Integer.parseInt(projectID);
     FqnFragment parentFragment = root;
     for (String name : fqn.split("\\.")) {
-      parentFragment = parentFragment.addChild(name, project);
+      parentFragment = parentFragment.addChild(name, id);
     }
   }
   
@@ -78,29 +73,29 @@ public class FqnTree {
     }
   }
   
-  public void readFromDisk() {
-    BufferedReader br = null;
-    try {
-      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FQN_TREE.getValue())));
-      FqnFragment parent = null;
-      FqnFragment last = root;
-      for (String line = br.readLine(); line != null; line = br.readLine()) {
-        if (line.equals("+")) {
-          parent = last;
-        } else if (line.equals("-")) {
-          parent = parent.getParent();
-        } else {
-          String[] parts = line.split(" ");
-          last = parent.addChild(parts[0]);
-          for (int i = 1; i < parts.length; i++) {
-            last.addProject(getProject(parts[i]));
-          }
-        }
-      }
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error reading from disk.", e);
-    } finally {
-      FileUtils.close(br);
-    }
-  }
+//  public void readFromDisk() {
+//    BufferedReader br = null;
+//    try {
+//      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FQN_TREE.getValue())));
+//      FqnFragment parent = null;
+//      FqnFragment last = root;
+//      for (String line = br.readLine(); line != null; line = br.readLine()) {
+//        if (line.equals("+")) {
+//          parent = last;
+//        } else if (line.equals("-")) {
+//          parent = parent.getParent();
+//        } else {
+//          String[] parts = line.split(" ");
+//          last = parent.addChild(parts[0]);
+//          for (int i = 1; i < parts.length; i++) {
+//            last.addProject(getProject(parts[i]));
+//          }
+//        }
+//      }
+//    } catch (IOException e) {
+//      logger.log(Level.SEVERE, "Error reading from disk.", e);
+//    } finally {
+//      FileUtils.close(br);
+//    }
+//  }
 }

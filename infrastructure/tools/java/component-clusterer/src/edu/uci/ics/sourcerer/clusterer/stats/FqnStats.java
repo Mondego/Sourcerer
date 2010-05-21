@@ -55,8 +55,8 @@ public class FqnStats {
     logger.info("Done!");
   }
   
-  public void loadFqnStats() {
-    fqns = new FqnTree();
-    fqns.readFromDisk();
-  }
+//  public void loadFqnStats() {
+//    fqns = new FqnTree();
+//    fqns.readFromDisk();
+//  }
 }
