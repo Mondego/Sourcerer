@@ -26,6 +26,8 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.util.io.FileUtils;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
@@ -48,10 +50,15 @@ public class RepoJar {
       MessageDigest digest = MessageDigest.getInstance("MD5");
       
       byte[] buff = new byte[1024];
-      InputStream is = new FileInputStream(path);
-      int size;
-      while ((size = is.read(buff)) != -1) {
-        digest.update(buff, 0, size);
+      InputStream is = null; 
+      try {
+        is = new FileInputStream(path);
+        int size;
+        while ((size = is.read(buff)) != -1) {
+          digest.update(buff, 0, size);
+        }
+      } finally {
+        FileUtils.close(is);
       }
       return new BigInteger(1, digest.digest()).toString(16);
     } catch (Exception e) {
