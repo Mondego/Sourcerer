@@ -62,7 +62,7 @@ public class Main {
       PropertyManager.registerAndVerify(ADD_PROJECTS, INPUT_REPO);
       DatabaseImporter importer = new DatabaseImporter(connection);
       importer.importProjects();
-    } if (INTERACTIVE_FILE_ACCESSOR.getValue()) {
+    } else if (INTERACTIVE_FILE_ACCESSOR.getValue()) {
       PropertyManager.registerAndVerify(INTERACTIVE_FILE_ACCESSOR, INPUT_REPO, OUTPUT_REPO);
       FileAccessor.testConsole();
     } else {
