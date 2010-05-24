@@ -3,13 +3,16 @@ package edu.uci.ics.sourcerer.clusterer.stats;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
-public class FqnFragment {
-  public String name;
-  public FqnFragment parent;
-  public FqnFragment[] children;
-  public int[] projects;
+public class FqnFragment implements Comparable<FqnFragment> {
+  private String name;
+  private FqnFragment parent;
+  private FqnFragment[] children;
+  private int[] projects;
+  private int projectCount; 
   
-  private FqnFragment() {}
+  private FqnFragment() {
+    projectCount = 0;
+  }
   
   private FqnFragment(String name, FqnFragment parent) {
     this.name = name;
@@ -20,7 +23,7 @@ public class FqnFragment {
     return new FqnFragment();
   }
 
-  private FqnFragment getChild(String name) {
+  protected FqnFragment addChild(String name) {
     if (children == null) {
       children = new FqnFragment[1];
       children[0] = new FqnFragment(name, this);
@@ -46,19 +49,21 @@ public class FqnFragment {
   }
   
   protected FqnFragment addChild(String name, int project) {
-    FqnFragment child = getChild(name);
+    FqnFragment child = addChild(name);
     child.addProject(project);
     return child;
   }
-
-  private void addProject(int project) {
+  
+  protected void addProject(int project) {
     if (projects == null) {
       projects = new int[1];
       projects[0] = project;
+      projectCount++;
     } else {
       for (int i = 0; i < projects.length; i++) {
         if (projects[i] == 0) {
           projects[i] = project;
+          projectCount++;
           return;
         } else if (projects[i] == project) {
           return;
@@ -70,6 +75,7 @@ public class FqnFragment {
         newArray[i] = projects[i];
       }
       newArray[i] = project;
+      projectCount++;
       projects = newArray;
     }
   }
@@ -89,6 +95,10 @@ public class FqnFragment {
     return parent;
   }
   
+  public FqnFragment[] getChildren() {
+    return children;
+  }
+  
   public void writeToDisk(BufferedWriter bw) throws IOException {
     if (name != null) {
       bw.write(name);
@@ -106,5 +116,26 @@ public class FqnFragment {
       }
       bw.write("-\n");
     }
+  }
+
+  public String getFqn() {
+    if (parent.name == null) {
+      return name;
+    } else {
+      return parent.getFqn() + "." + name;
+    }
+  }
+  
+  public int getProjectCount() {
+    return projectCount;
+  }
+  
+  public boolean isTopLevelClass() {
+    return children == null && name.indexOf('$') == -1;
+  }
+  
+  @Override
+  public int compareTo(FqnFragment o) {
+    return projectCount - o.projectCount;
   }
 }

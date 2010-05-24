@@ -19,12 +19,17 @@ package edu.uci.ics.sourcerer.clusterer.stats;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Deque;
+import java.util.PriorityQueue;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -73,29 +78,56 @@ public class FqnTree {
     }
   }
   
-//  public void readFromDisk() {
-//    BufferedReader br = null;
-//    try {
-//      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FQN_TREE.getValue())));
-//      FqnFragment parent = null;
-//      FqnFragment last = root;
-//      for (String line = br.readLine(); line != null; line = br.readLine()) {
-//        if (line.equals("+")) {
-//          parent = last;
-//        } else if (line.equals("-")) {
-//          parent = parent.getParent();
-//        } else {
-//          String[] parts = line.split(" ");
-//          last = parent.addChild(parts[0]);
-//          for (int i = 1; i < parts.length; i++) {
-//            last.addProject(getProject(parts[i]));
-//          }
-//        }
-//      }
-//    } catch (IOException e) {
-//      logger.log(Level.SEVERE, "Error reading from disk.", e);
-//    } finally {
-//      FileUtils.close(br);
-//    }
-//  }
+  public void readFromDisk() {
+    BufferedReader br = null;
+    try {
+      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FQN_TREE.getValue())));
+      FqnFragment parent = null;
+      FqnFragment last = root;
+      for (String line = br.readLine(); line != null; line = br.readLine()) {
+        if (line.equals("+")) {
+          parent = last;
+        } else if (line.equals("-")) {
+          parent = parent.getParent();
+        } else {
+          String[] parts = line.split(" ");
+          last = parent.addChild(parts[0]);
+          for (int i = 1; i < parts.length; i++) {
+            last.addProject(Integer.parseInt(parts[i]));
+          }
+        }
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error reading from disk.", e);
+    } finally {
+      FileUtils.close(br);
+    }
+  }
+  
+  public FqnFragment[] getTopFqns(int count) {
+    PriorityQueue<FqnFragment> queue = new PriorityQueue<FqnFragment>(count + 1);
+    Deque<FqnFragment> stack = Helper.newStack();
+    stack.push(root);
+    while (!stack.isEmpty()) {
+      FqnFragment top = stack.pop();
+      if (top.isTopLevelClass()) {
+        queue.add(top);
+        if (queue.size() > count) {
+          queue.poll();
+        }
+      }
+      FqnFragment[] children = top.getChildren();
+      if (children != null) {
+        for (int i = 0; i < children.length && children[i] != null; i++) {
+          stack.push(children[i]);
+        }
+      }
+    }
+    count = Math.min(count, queue.size());
+    FqnFragment[] retval = new FqnFragment[count];
+    for (int i = count - 1; i >= 0; i--) {
+      retval[i] = queue.poll();
+    }
+    return retval;
+  }
 }

@@ -67,31 +67,27 @@ public class ServletUtils {
 		}
 	}
 
-	public static void writeFile(HttpServletResponse response, String name,
-			File file) throws IOException {
-		writeInputStream(response, name, new FileInputStream(file));
-	}
+  public static void writeFile(HttpServletResponse response, String name, File file) throws IOException {
+    writeInputStream(response, name, new FileInputStream(file));
+  }
 
-	public static void writeInputStream(HttpServletResponse response,
-			String name, InputStream is) throws IOException {
-		setResponse(response, name);
+  public static void writeInputStream(HttpServletResponse response, String name, InputStream is) throws IOException {
+    setResponse(response, name);
 
-		OutputStream os = response.getOutputStream();
+    OutputStream os = response.getOutputStream();
 
-		byte[] buff = new byte[1024];
-		int read = 0;
-		while ((read = is.read(buff)) > 0) {
-			os.write(buff, 0, read);
-		}
-		os.close();
-		is.close();
-	}
+    byte[] buff = new byte[1024];
+    int read = 0;
+    while ((read = is.read(buff)) > 0) {
+      os.write(buff, 0, read);
+    }
+    os.close();
+    is.close();
+  }
 
-	public static void writeFileFragment(HttpServletResponse response,
-			String name, File file, int offset, int length) throws IOException {
-		writeInputStreamFragment(response, name, new FileInputStream(file),
-				offset, length);
-	}
+  public static void writeFileFragment(HttpServletResponse response, String name, File file, int offset, int length) throws IOException {
+    writeInputStreamFragment(response, name, new FileInputStream(file), offset, length);
+  }
 
 	public static void writeInputStreamFragment(HttpServletResponse response,
 			String name, InputStream is, int offset, int length)

@@ -18,28 +18,33 @@
 package edu.uci.ics.sourcerer.clusterer.stats;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
 import edu.uci.ics.sourcerer.clusterer.db.ClustererDatabaseAccessor;
 import edu.uci.ics.sourcerer.model.db.SlightlyLessLimitedEntityDB;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
+import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
+import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FqnStats {
-  private ClustererDatabaseAccessor db;
+  public static Property<Boolean> CRAWLED_ONLY = new BooleanProperty("crawled-only", false, "Clusterer", "Only look at crawled projects.");
+  public static Property<Integer> TOP_FQN_COUNT = new IntegerProperty("top-fqn-count", 1000, "Clusterer", "Number of top fqns to gather.");
+  public static Property<String> TOP_FQNS_FILE = new StringProperty("top-fqns-file", "top-fqns.txt", "Clusterer", "Filename of top count.");
   private FqnTree fqns;
   
-  public FqnStats(ClustererDatabaseAccessor db) {
-    this.db = db;
+  public FqnStats() {
   }
   
-  public void gatherFqnStats() {
+  public void gatherFqnStats(ClustererDatabaseAccessor db) {
     fqns = new FqnTree();
     
     logger.info("Reading entities from the database...");
     int count = 0;
     int reportCount = 1;
-    for (SlightlyLessLimitedEntityDB entity : db.getEntityFqns()) {
+    for (SlightlyLessLimitedEntityDB entity : (CRAWLED_ONLY.getValue() ? db.getCrawledEntityFqns() : db.getEntityFqns())) {
       fqns.addFqn(entity.getFqn(), entity.getProjectID());
       if (++count % reportCount == 0) {
         if (reportCount < 100000) {
@@ -55,8 +60,27 @@ public class FqnStats {
     logger.info("Done!");
   }
   
-//  public void loadFqnStats() {
-//    fqns = new FqnTree();
-//    fqns.readFromDisk();
-//  }
+  public void loadFqnStats() {
+    fqns = new FqnTree();
+    fqns.readFromDisk();
+  }
+  
+  public void printTopFqns() {
+    FqnFragment[] topFqns = fqns.getTopFqns(TOP_FQN_COUNT.getValue());
+    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(TOP_FQNS_FILE);
+    printer.beginTable(2);
+    printer.addHeader("Top Fqns By Number of Projects");
+    printer.addDividerRow();
+    printer.addRow("FQN", "Project Count");
+    printer.addDividerRow();
+    for (FqnFragment fqn : topFqns) {
+      printer.beginRow();
+      printer.addCell(fqn.getFqn());
+      printer.addCell(fqn.getProjectCount());
+    }
+    printer.addDividerRow();
+    printer.endTable();
+    printer.close();
+
+  }
 }

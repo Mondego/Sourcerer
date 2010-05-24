@@ -33,4 +33,8 @@ public class ClustererDatabaseAccessor extends DatabaseAccessor {
   public Iterable<SlightlyLessLimitedEntityDB> getEntityFqns() {
     return entitiesTable.getEntityFqns();
   }
+  
+  public Iterable<SlightlyLessLimitedEntityDB> getCrawledEntityFqns() {
+    return entitiesTable.getCrawledEntityFqns();
+  }
 }
