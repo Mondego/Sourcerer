@@ -282,20 +282,29 @@ public class Repository extends AbstractRepository {
   }
   
   public Collection<RepoProject> getProjects(Set<String> filter) {
-    if (projects == null) {
-      projects = Helper.newHashMap();
-      populateRepository();
-    }
     if (filter == null) {
+      if (projects == null) {
+        projects = Helper.newHashMap();
+        populateRepository();
+      }
       return projects.values();
     } else {
       if (filter.isEmpty()) {
         logger.log(Level.SEVERE, "Empty project filter!");
       }
       Collection<RepoProject> result = Helper.newArrayList();
-      for (RepoProject project : projects.values()) {
-        if (filter.contains(project.getProjectPath())) {
+      if (projects == null) {
+        projects = Helper.newHashMap();
+        populateFilteredRepository(filter);
+        for (RepoProject project : projects.values()) {
           result.add(project);
+        }
+        projects = null;
+      } else {
+        for (RepoProject project : projects.values()) {
+          if (filter.contains(project.getProjectPath())) {
+            result.add(project);
+          }
         }
       }
       return result;

@@ -7,6 +7,8 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.util.Collection;
 import java.util.logging.Level;
 
+import javax.annotation.Resource;
+
 import org.eclipse.core.resources.IFile;
 
 import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor;

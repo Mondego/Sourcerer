@@ -254,12 +254,16 @@ public final class FeatureExtractor {
       
       checkForMissingTypes(unit, report, missingTypeWriter);
       if (!report.hadMissingType() || force) {
-        try {
-          unit.accept(visitor);
-          report.reportSourceExtraction();
-        } catch (Exception e) {
-          logger.log(Level.SEVERE, "Error in extracting " + source.getName(), e);
-          report.reportSourceExtractionException();
+        if (report.hadMissingSecondOrder()) {
+          logger.warning("Skipping extraction of " + source.getName() + " because of missing second order type.");
+        } else {
+          try {
+            unit.accept(visitor);
+            report.reportSourceExtraction();
+          } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error in extracting " + source.getName(), e);
+            report.reportSourceExtractionException();
+          }
         }
       }
     }

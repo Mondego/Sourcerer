@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.repo.general;
 
 import java.io.File;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -69,6 +70,14 @@ public abstract class AbstractRepository {
             }
           }
         }
+      }
+    }
+  }
+  
+  protected void populateFilteredRepository(Set<String> filter) {
+    if (repoRoot.exists()) {
+      for (String projectPath : filter) {
+        addProject(RepoPath.getNewPath(repoRoot.getPath(), projectPath));
       }
     }
   }
