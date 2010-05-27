@@ -230,7 +230,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     IBinding binding = node.resolveBinding();
     if (binding == null) {
         // Cut things short
-        logger.severe("Import binding is null - giving up for: " + compilationUnitPath);
+//        logger.warning("Import binding is null - giving up for: " + compilationUnitPath);
         throw new IllegalStateException("Binding resolution appears to have failed!");
 //        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
     } else {
@@ -293,11 +293,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         fqn = fqnStack.getAnonymousClassFqn();
       }
     } else if (node.isLocalTypeDeclaration()) {
-      if (binding == null) {
-        fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), null);
-      } else {
-        fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), binding.getBinaryName());
-      }
+      fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), binding);
     } else {
       logger.severe("Unsure what type the declaration is!");
       fqn = "(ERROR)" + node.getName().getIdentifier();
@@ -510,7 +506,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     } else if (node.isMemberTypeDeclaration()) {
       fqn = fqnStack.getFqn() + "$" + node.getName().getIdentifier();
     } else if (node.isLocalTypeDeclaration()) {
-      logger.log(Level.SEVERE, "Can't have local enums!");
+      logger.log(Level.WARNING, "Can't have local enums! eclipse error");
+      fqnStack.push(null, null);
+      return false;
     } else {
       logger.log(Level.SEVERE, "Unsure what type the declaration is!");
       fqn = "(ERROR)";
@@ -1476,11 +1474,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       }
     } else if (node.isLocalTypeDeclaration()) {
       ITypeBinding binding = node.resolveBinding();
-      if (binding == null) {
-        fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), null);
-      } else {
-        fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), binding.getBinaryName());
-      }
+      fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), binding);
     } else {
       logger.severe("Unsure what type the declaration is!");
       fqn = "(ERROR)" + node.getName().getIdentifier();
@@ -2102,7 +2096,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     } else if (binding.isLocal()) {
 //      String fqn = binding.getBinaryName();
 //      if (fqn == null) {
-      return fqnStack.getLocalFqn(binding.getName(), binding.getBinaryName());
+      return fqnStack.getLocalFqn(binding.getName(), binding);
 //        if (fqnStack.isMethodTop()) {
 //          // TODO check local type binary names
 //          return fqnStack.getAnonymousClassFqn() + binding.getName();
@@ -2221,18 +2215,26 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       }
     }
     
-    public String getLocalFqn(String identifier, String binaryName) {
-      if (binaryName == null) {
-        logger.log(Level.SEVERE, "Cannot have local declaration with no binary name.");
+    public String getLocalFqn(String identifier, ITypeBinding binding) {
+      if (binding == null) {
+        logger.log(Level.SEVERE, "Cannot have local declaration with no binding.");
         return getUnknownFqn(identifier);
       }
       if (stack.isEmpty()) {
         logger.log(Level.SEVERE, "Cannot have local declaration with empty stack.");
         return getUnknownFqn(identifier);
       } else {
+        String uniqueID = binding.getBinaryName();
+        if (uniqueID == null) {
+          uniqueID = binding.getDeclaringClass().getBinaryName();
+          if (binding.getDeclaringMethod() != null) {
+            uniqueID += binding.getDeclaringMethod().getName();
+          }
+          uniqueID += identifier;
+        }
         for (Enclosing fqn : stack) {
           if (fqn.isDeclaredType()) {
-            String localFqn = fqn.getLocalClassFqn(identifier, binaryName);
+            String localFqn = fqn.getLocalClassFqn(identifier, uniqueID);
             if (localFqn != null) {
               return localFqn;
             }
@@ -2240,7 +2242,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         }
         for (Enclosing fqn : stack) {
           if (fqn.isDeclaredType()) {
-            return fqn.createLocalClassFqn(identifier, binaryName);
+            return fqn.createLocalClassFqn(identifier, uniqueID);
           }
         }
         logger.log(Level.SEVERE, "Cannot have local declaration with no declared types on stack.");
@@ -2331,12 +2333,12 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       return fqn + "$anonymous-" + ++anonymousClassCount;
     }
     
-    public String createLocalClassFqn(String name, String binaryName) {
+    public String createLocalClassFqn(String name, String uniqueID) {
       if (localClassMap == null) {
         localClassMap = Helper.newHashMap();
       }
       String retval = fqn + "$local-" + (localClassMap.size() + 1) + "-" + name;
-      localClassMap.put(binaryName, retval);
+      localClassMap.put(uniqueID, retval);
       return retval;
     }
     
