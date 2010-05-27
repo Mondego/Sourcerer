@@ -23,11 +23,11 @@ import java.util.Properties;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class LibraryProperties extends AbstractBinaryProperties {
-  private LibraryProperties() {}
+public class ExtractedLibraryProperties extends AbstractBinaryProperties {
+  private ExtractedLibraryProperties() {}
   
-  public static LibraryProperties load(File file) {
-    LibraryProperties props = new LibraryProperties();
+  public static ExtractedLibraryProperties load(File file) {
+    ExtractedLibraryProperties props = new ExtractedLibraryProperties();
     props.loadProperties(file);
     return props;
   }

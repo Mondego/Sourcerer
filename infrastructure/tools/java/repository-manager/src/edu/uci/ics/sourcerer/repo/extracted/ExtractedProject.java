@@ -19,8 +19,8 @@ package edu.uci.ics.sourcerer.repo.extracted;
 
 import java.io.File;
 
-import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
-import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
+import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
+import edu.uci.ics.sourcerer.repo.general.ExtractedProjectProperties;
 import edu.uci.ics.sourcerer.repo.general.RepoPath;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
@@ -31,20 +31,20 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public class ExtractedProject extends Extracted {
   public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Repository Manager", "Filename for the associated jars.");
   
-  private ProjectProperties properties;
+  private ExtractedProjectProperties properties;
    
   public ExtractedProject(RepoPath content) {
     super(content);
-    properties = ProjectProperties.load(getPropertiesFile());
+    properties = ExtractedProjectProperties.load(getPropertiesFile());
   }
   
   public ExtractedProject(RepoPath content, File propFile) {
     super(content);
     File exPropFile = getPropertiesFile();
     if (exPropFile.exists()) {
-      properties = ProjectProperties.load(exPropFile);
+      properties = ExtractedProjectProperties.load(exPropFile);
     } else {
-      properties = ProjectProperties.load(propFile);
+      properties = ExtractedProjectProperties.load(propFile);
     }
   }
   
@@ -78,7 +78,7 @@ public class ExtractedProject extends Extracted {
     properties.save(getPropertiesFile());
   }
   
-  protected AbstractProperties getProperties() {
+  protected AbstractExtractedProperties getProperties() {
     return properties;
   }
   

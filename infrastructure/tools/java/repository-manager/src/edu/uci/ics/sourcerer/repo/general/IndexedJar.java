@@ -118,8 +118,8 @@ public class IndexedJar {
     return getPropertiesFile(path);
   }
   
-  public JarProperties getProperties() {
-    return JarProperties.load(getPropertiesFile());
+  public ExtractedJarProperties getProperties() {
+    return ExtractedJarProperties.load(getPropertiesFile());
   }
   
   public String getHash() {

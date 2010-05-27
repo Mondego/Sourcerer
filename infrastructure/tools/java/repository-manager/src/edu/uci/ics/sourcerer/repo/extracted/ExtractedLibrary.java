@@ -20,7 +20,7 @@ package edu.uci.ics.sourcerer.repo.extracted;
 import java.io.File;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractBinaryProperties;
-import edu.uci.ics.sourcerer.repo.general.LibraryProperties;
+import edu.uci.ics.sourcerer.repo.general.ExtractedLibraryProperties;
 import edu.uci.ics.sourcerer.repo.general.RepoPath;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
@@ -28,15 +28,15 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedLibrary extends ExtractedBinary {
-  private LibraryProperties properties;
+  private ExtractedLibraryProperties properties;
   
   public ExtractedLibrary(RepoPath content) {
     super(content);
-    properties = LibraryProperties.load(getPropertiesFile());
+    properties = ExtractedLibraryProperties.load(getPropertiesFile());
   }
     
   public void createPropertiesFile(String name, int fromBinary, int binaryExceptions, int fromSource, int sourceExceptions) {
-    LibraryProperties.create(getPropertiesFile(), name, fromBinary, binaryExceptions, fromSource, sourceExceptions);
+    ExtractedLibraryProperties.create(getPropertiesFile(), name, fromBinary, binaryExceptions, fromSource, sourceExceptions);
   }
   
   protected AbstractBinaryProperties getBinaryProperties() {

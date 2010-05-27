@@ -38,6 +38,7 @@ import edu.uci.ics.sourcerer.repo.base.normal.JavaFile;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
+import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
 import edu.uci.ics.sourcerer.repo.general.RepoJar;
 import edu.uci.ics.sourcerer.repo.general.RepoPath;
 import edu.uci.ics.sourcerer.util.Helper;
@@ -45,13 +46,16 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Repository extends AbstractRepository {
-  public static final Property<Integer> SPLIT_SIZE = new IntegerProperty("split-size", 1000, "Repository Manager", "Number of projects per split fragment");
+  public static final Property<Integer> SPLIT_SIZE = new IntegerProperty("split-size", 1000, "Repository Manager", "Number of projects per split fragment.");
+  public static final Property<String> PROJECT_NAMES_FILE = new StringProperty("project-names-files", "project-names.txt", "Repository Manager", "File for project names.");
   
   private File tempDir;
   private Map<String, RepoProject> projects;
@@ -88,6 +92,25 @@ public class Repository extends AbstractRepository {
   
   public void printJarStats() {
     JarIndex.printJarStats(getJarsPath().toFile());
+  }
+  
+  public void printProjectNames() {
+    logger.info("Loading projects...");
+    
+    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(PROJECT_NAMES_FILE);
+    printer.beginTable(3);
+    printer.addDividerRow();
+    printer.addRow("host", "project", "crawled date");
+    printer.addDividerRow();
+    for (RepoProject project : getProjects()) {
+      ProjectProperties props = project.getProperties();
+      printer.beginRow();
+      printer.addCell(props.getOriginRepo());
+      printer.addCell(props.getName());
+      printer.addCell(props.getCrawledDate());
+    }
+    printer.endTable();
+    printer.close();
   }
   
   public void aggregateJarFiles() {

@@ -22,12 +22,16 @@ import java.io.File;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ProjectProperties extends AbstractProperties {
-  private ProjectProperties() {}
+public class ExtractedProjectProperties extends AbstractExtractedProperties {
+  private ExtractedProjectProperties() {}
   
-  public static ProjectProperties load(File file) {
-    ProjectProperties props = new ProjectProperties();
+  public static ExtractedProjectProperties load(File file) {
+    ExtractedProjectProperties props = new ExtractedProjectProperties();
     props.loadProperties(file);
     return props;
+  }
+  
+  public String getDescription() {
+    return properties.getProperty("description");
   }
 }

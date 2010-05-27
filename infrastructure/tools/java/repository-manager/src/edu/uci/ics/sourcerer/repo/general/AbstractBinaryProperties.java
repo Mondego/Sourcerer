@@ -2,7 +2,7 @@ package edu.uci.ics.sourcerer.repo.general;
 
 import java.io.File;
 
-public abstract class AbstractBinaryProperties extends AbstractProperties {
+public abstract class AbstractBinaryProperties extends AbstractExtractedProperties {
   protected static final String SOURCE_SKIPPED = "sourceSkipped";
   protected static final String FROM_BINARY = "fromBinary";
   protected static final String BINARY_EXCEPTIONS = "binaryExceptions";

@@ -32,7 +32,7 @@ import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
-import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
+import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
 import edu.uci.ics.sourcerer.repo.general.RepoPath;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -170,7 +170,7 @@ public abstract class Extracted {
     return getInputFile(USED_JAR_FILE).exists();
   }
   
-  protected abstract AbstractProperties getProperties();
+  protected abstract AbstractExtractedProperties getProperties();
   
   public String getName() {
     return getProperties().getName();

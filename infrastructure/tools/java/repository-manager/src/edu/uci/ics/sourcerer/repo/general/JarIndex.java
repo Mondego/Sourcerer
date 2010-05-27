@@ -538,7 +538,7 @@ public class JarIndex {
                         
                   // Write out the properties file
                   File propsFile = new File(top, jar.getName() + ".properties");
-                  JarProperties.create(propsFile, artifactName, groupName, version, hash);
+                  ExtractedJarProperties.create(propsFile, artifactName, groupName, version, hash);
                   
                   logger.log(RESUME, id);
                 }
@@ -574,7 +574,7 @@ public class JarIndex {
                     name = name.substring(0, name.lastIndexOf('.'));
                     
                     File propsFile = new File(two, file.getName() + ".properties");
-                    JarProperties.create(propsFile, name, hash);
+                    ExtractedJarProperties.create(propsFile, name, hash);
                     
                     logger.log(RESUME, file.getName());
                   }

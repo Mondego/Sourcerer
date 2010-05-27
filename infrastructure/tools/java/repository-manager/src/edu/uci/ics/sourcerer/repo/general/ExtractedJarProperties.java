@@ -23,7 +23,7 @@ import java.util.Properties;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarProperties extends AbstractBinaryProperties {
+public class ExtractedJarProperties extends AbstractBinaryProperties {
   private static final String GROUP = "group";
   private static final String VERSION = "version";
   private static final String HASH = "hash";
@@ -33,10 +33,10 @@ public class JarProperties extends AbstractBinaryProperties {
   private String version;
   private String hash;
  
-  private JarProperties() {}
+  private ExtractedJarProperties() {}
   
-  public static JarProperties load(File file) {
-    JarProperties props = new JarProperties();
+  public static ExtractedJarProperties load(File file) {
+    ExtractedJarProperties props = new ExtractedJarProperties();
     props.loadProperties(file);
 
     props.group = props.properties.getProperty(GROUP);

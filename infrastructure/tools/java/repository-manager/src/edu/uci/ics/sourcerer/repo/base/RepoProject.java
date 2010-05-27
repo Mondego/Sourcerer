@@ -23,6 +23,7 @@ import edu.uci.ics.sourcerer.repo.base.compressed.CompressedFileSet;
 import edu.uci.ics.sourcerer.repo.base.normal.FileSet;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
+import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
 import edu.uci.ics.sourcerer.repo.general.RepoPath;
 
 /**
@@ -71,8 +72,12 @@ public class RepoProject {
     return content;
   }
   
-  public File getPropertiesFile() {
-    return properties;
+//  public File getPropertiesFile() {
+//    return properties;
+//  }
+  
+  public ProjectProperties getProperties() {
+    return ProjectProperties.load(properties);
   }
   
   public String toString() {

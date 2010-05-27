@@ -18,7 +18,7 @@
 package edu.uci.ics.sourcerer.repo.extracted;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractBinaryProperties;
-import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
+import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
 import edu.uci.ics.sourcerer.repo.general.RepoPath;
 
 /**
@@ -31,7 +31,7 @@ public abstract class ExtractedBinary extends Extracted {
   
   protected abstract AbstractBinaryProperties getBinaryProperties();
   
-  protected AbstractProperties getProperties() {
+  protected AbstractExtractedProperties getProperties() {
     return getBinaryProperties();
   }
   
