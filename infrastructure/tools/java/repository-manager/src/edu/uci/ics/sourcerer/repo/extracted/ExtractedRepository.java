@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
@@ -226,6 +227,26 @@ public class ExtractedRepository extends AbstractRepository {
       }
       logger.info("  " + count + " projects cloned.");
     }
+  }
+  
+  public void printProjectNames() {
+    logger.info("Loading projects...");
+    
+    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(PROJECT_NAMES_FILE);
+    printer.beginTable(3);
+    printer.addDividerRow();
+    printer.addRow("host", "project", "crawled date");
+    printer.addDividerRow();
+    for (ExtractedProject project : getProjects()) {
+      AbstractExtractedProperties props = project.getProperties();
+      printer.beginRow();
+      printer.addCell(props.getOriginRepo());
+      printer.addCell(props.getName());
+      printer.addCell(props.getCrawledDate());
+    }
+    printer.endTable();
+    printer.close();
+    logger.info("Done!");
   }
   
   public void computeExtractionStats() {

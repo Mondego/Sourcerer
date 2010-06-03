@@ -55,6 +55,10 @@ public abstract class DatabaseAccessor implements Closeable {
     executor.close();
   }
   
+  public void closeConnection() {
+    executor.closeConnection();
+  }
+  
   protected void lock() {
     locker.lock();
   }

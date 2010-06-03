@@ -58,9 +58,11 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class DatabaseImporter extends DatabaseAccessor {
+  // TODO: Multi-threaded version may end up with duplicate unknowns
   private String unknownProject;
   private Map<String, String> fileMap;
   private Map<String, Ent> entityMap;
+  private Collection<Ent> unknownEntities;
   private Set<String> pendingEntities;
   private Collection<RelationEX> newTypeRelations;
   private java.io.File tempDir;
@@ -70,6 +72,7 @@ public class DatabaseImporter extends DatabaseAccessor {
     tempDir = FileUtils.getTempDir();
     fileMap = Helper.newHashMap();
     entityMap = Helper.newHashMap();
+    unknownEntities = Helper.newArrayList();
     pendingEntities = Helper.newHashSet();
     newTypeRelations = Helper.newArrayList();
   }
@@ -236,7 +239,6 @@ public class DatabaseImporter extends DatabaseAccessor {
     Collection<String> projectIDs = projectsTable.getJavaLibraryProjects();
     projectIDs.add(projectsTable.getPrimitiveProject());
     
-    
     for (ExtractedJar jar : jars) {
       logger.info("  Partial import of " + jar.getName());
       logger.info("    Verifying that jar should be imported...");
@@ -287,16 +289,30 @@ public class DatabaseImporter extends DatabaseAccessor {
       fileMap.clear();
     }
     
+    logger.info("  Beginning remaining imports...");
+    
+    logger.info("  Loading unknown entities...");
+    for (SlightlyLessLimitedEntityDB unknown : entitiesTable.getUnknownEntities(unknownProject)) {
+      Ent ent = new Ent(unknown.getFqn());
+      ent.addPair(unknown);
+      unknownEntities.add(ent);
+    }
+    logger.info("    Done loading unknown entities.");
+    
     for (ExtractedJar jar : jars) {
+      logger.info("    Verifying that jar should be imported...");
       if (!jar.extracted()) {
+        logger.info("      Extraction not completed... skipping");
         continue;
       }
       if (!jar.reallyExtracted()) {
+        logger.info("      Extraction copied... skipping");
         continue;
       }
       LimitedProjectDB project = projectsTable.getLimitedProjectByHash(jar.getHash());
       if (project != null) {
         if (project.completed()) {
+          logger.info("      Import already completed... skipping");
           continue;
         }
       }
@@ -425,16 +441,30 @@ public class DatabaseImporter extends DatabaseAccessor {
       fileMap.clear();
     }
     
+    logger.info("  Beginning remaining imports...");
+    
+    logger.info("  Loading unknown entities...");
+    for (SlightlyLessLimitedEntityDB unknown : entitiesTable.getUnknownEntities(unknownProject)) {
+      Ent ent = new Ent(unknown.getFqn());
+      ent.addPair(unknown);
+      unknownEntities.add(ent);
+    }
+    logger.info("    Done loading unknown entities.");
+    
     for (ExtractedProject project : projects) {
+      logger.info("    Verifying that project should be imported...");
       if (!project.extracted()) {
+        logger.info("      Extraction not completed... skipping");
         continue;
       }
       if (!project.reallyExtracted()) {
+        logger.info("      Extraction copied... skipping");
         continue;
       }
       LimitedProjectDB oldProject = projectsTable.getLimitedProjectByPath(project.getProjectPath());
       if (oldProject != null) {
         if (oldProject.completed()) {
+          logger.info("      Import already completed... skipping");
           continue;
         }
       }
@@ -684,15 +714,19 @@ public class DatabaseImporter extends DatabaseAccessor {
     counter.reset();
     
     logger.info("      Loading unknown entities...");
-    for (SlightlyLessLimitedEntityDB entity : entitiesTable.getUnknownEntities(unknownProject)) {
-      Ent ent = entityMap.get(entity.getFqn()); 
-      if (ent == null) {
-        ent = new Ent(entity.getFqn());
-        entityMap.put(entity.getFqn(), ent);
-        ent.addPair(entity);
-        counter.increment();
-      }
+    for (Ent unknown : unknownEntities) {
+      entityMap.put(unknown.fqn, unknown);
+      counter.increment();
     }
+//    for (SlightlyLessLimitedEntityDB entity : entitiesTable.getUnknownEntities(unknownProject)) {
+//      Ent ent = entityMap.get(entity.getFqn()); 
+//      if (ent == null) {
+//        ent = new Ent(entity.getFqn());
+//        entityMap.put(entity.getFqn(), ent);
+//        ent.addPair(entity);
+//        counter.increment();
+//      }
+//    }
     logger.info(counter.reportTimeAndCount(8, "unknown entities loaded"));
      
     pendingEntities.clear();
@@ -978,7 +1012,10 @@ public class DatabaseImporter extends DatabaseAccessor {
     // Check if it's an already known unknown
     String eid = entitiesTable.getEntityIDByFqnAndProject(fqn, unknownProject);
     if (eid == null) {
-      entitiesTable.insert(Entity.UNKNOWN, fqn, unknownProject);
+      eid = entitiesTable.forceInsertUnknown(fqn, unknownProject);
+      Ent ent = new Ent(fqn);
+      ent.addPair(new LimitedEntityDB(unknownProject, eid, Entity.UNKNOWN));
+      unknownEntities.add(ent);
     }
     counter.increment();
     pendingEntities.add(fqn);

@@ -103,6 +103,10 @@ public final class EntitiesTable extends DatabaseTable {
     executor.insertSingle(name, getInsertValue(type, fqn, null, null, projectID, null, null, null));
   }
   
+  public String forceInsertUnknown(String fqn, String projectID) {
+    return executor.insertSingleWithKey(name, getInsertValue(Entity.UNKNOWN, fqn, null, null, projectID, null, null, null));
+  }
+  
   public void insertArray(String fqn, int size, String projectID) {
     inserter.addValue(getInsertValue(Entity.ARRAY, fqn, null, "" + size, projectID, null, null, null));
   }

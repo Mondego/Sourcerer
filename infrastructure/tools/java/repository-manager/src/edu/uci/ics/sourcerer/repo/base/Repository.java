@@ -48,14 +48,12 @@ import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Repository extends AbstractRepository {
   public static final Property<Integer> SPLIT_SIZE = new IntegerProperty("split-size", 1000, "Repository Manager", "Number of projects per split fragment.");
-  public static final Property<String> PROJECT_NAMES_FILE = new StringProperty("project-names-files", "project-names.txt", "Repository Manager", "File for project names.");
   
   private File tempDir;
   private Map<String, RepoProject> projects;
@@ -111,6 +109,7 @@ public class Repository extends AbstractRepository {
     }
     printer.endTable();
     printer.close();
+    logger.info("Done!");
   }
   
   public void aggregateJarFiles() {

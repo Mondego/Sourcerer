@@ -51,6 +51,7 @@ public final class Logging {
   protected static final Property<Boolean> SUPPRESS_FILE_LOGGING = new BooleanProperty("suppress-file-logging", false, "Logging", "Suppresses all logging to files.");
   protected static final Property<Boolean> REPORT_TO_CONSOLE = new BooleanProperty("report-to-console", false, "Logging", "Prints all the logging messages to the console.");
   protected static final Property<String> ERROR_LOG = new StringProperty("error-log", "error%d.log", "Logging", "Filename for error log.");
+  protected static final Property<String> THREAD_LOG = new StringProperty("thread-log", "thread-%t%d.log", "Logging", "Filename for thread log.");
   protected static final Property<String> INFO_LOG = new StringProperty("info-log", "info.log", "Logging", "Filename for the info log.");
   protected static final Property<String> RESUME_LOG = new StringProperty("resume-log", "resume.log", "Logging", "Filename for the resume log.");
   protected static final Property<Boolean> CLEAR_RESUME_LOG = new BooleanProperty("clear-resume-log", false, "Logging", "Clears the resume log before beginning."); 
@@ -66,6 +67,9 @@ public final class Logging {
   private static StreamHandler defaultHandler;
   
   private static Map<File, Handler> handlerMap = Helper.newHashMap();
+  
+  private static long mainThread;
+  private static Map<Long, Handler> threadHandlerMap = Helper.newHashMap();
   
   static {
     logger = Logger.getLogger("edu.uci.ics.sourcerer.util.io");
@@ -103,7 +107,7 @@ public final class Logging {
   
   private static String getFileHandlerPattern(Property<String> prop) {
     SimpleDateFormat format = new SimpleDateFormat("-MMM-dd-yyyy-HH-mm-ss");
-    return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + prop.getValue().replace("%d", format.format(new Date()));
+    return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + prop.getValue().replace("%d", format.format(new Date())).replace("%t", "" + Thread.currentThread().getId());
   }
   
   public synchronized static Set<String> initializeResumeLogger() {
@@ -155,6 +159,8 @@ public final class Logging {
     PropertyManager.verifyUsage();
     
     try {
+      mainThread = Thread.currentThread().getId();
+      
       final boolean suppressFileLogging = SUPPRESS_FILE_LOGGING.getValue();
       final boolean reportToConsole = REPORT_TO_CONSOLE.getValue();
       
@@ -171,7 +177,7 @@ public final class Logging {
         Formatter errorFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
-            if (record.getLevel() == RESUME) {
+            if (record.getLevel() == RESUME || Thread.currentThread().getId() != mainThread) {
               return "";
             } else {
               return Logging.formatError(record);
@@ -183,7 +189,7 @@ public final class Logging {
         Formatter errorFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
-            if (record.getLevel() == RESUME) {
+            if (record.getLevel() == RESUME || Thread.currentThread().getId() != mainThread) {
               return "";
             } else {
               String msg = Logging.formatError(record);
@@ -212,7 +218,7 @@ public final class Logging {
         Formatter infoFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
-            if (record.getLevel() == Level.INFO) {
+            if (record.getLevel() == Level.INFO && Thread.currentThread().getId() == mainThread) {
               String msg = formatInfo(record);
               if (reportToConsole) {
                 System.out.print(msg);
@@ -237,6 +243,58 @@ public final class Logging {
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(1);
+    }
+  }
+  
+  public synchronized static void addThreadLogger() {
+    Thread thread = Thread.currentThread();
+    if (!loggingInitialized) {
+      throw new IllegalStateException("Logging must be initialized before error logs can be added.");
+    } else if (threadHandlerMap.containsKey(thread.getId())) {
+      throw new IllegalArgumentException("Error logging may not be added to the same thread twice: " + thread.getId());
+    }
+
+    final long id = thread.getId();
+    
+    Formatter formatter = new Formatter() {
+      @Override
+      public String format(LogRecord record) {
+        if (Thread.currentThread().getId() == id) {
+          if (record.getLevel() == RESUME) {
+            return "";
+          } else if (record.getLevel() == Level.INFO) {
+            return Logging.formatInfo(record);
+          } else {
+            return Logging.formatError(record);
+          }
+        } else {
+          return "";
+        }
+      }
+    };
+    
+    try {
+      
+      StreamHandler handler = new FileHandler(getFileHandlerPattern(THREAD_LOG));
+      handler.setFormatter(formatter);
+      handler.setLevel(Level.INFO);
+      threadHandlerMap.put(id, handler);
+      logger.addHandler(handler);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error adding file logger.", e);
+    }
+  }
+  
+  public synchronized static void removeThreadLogger() {
+    if (!loggingInitialized) {
+      throw new IllegalStateException("Logging must be initialized before error logs can be removed.");
+    }
+    Thread thread = Thread.currentThread();
+    Handler handler = threadHandlerMap.get(thread.getId());
+    if (handler != null) {
+      logger.removeHandler(handler);
+      handler.close();
+      threadHandlerMap.remove(thread.getId());
     }
   }
   

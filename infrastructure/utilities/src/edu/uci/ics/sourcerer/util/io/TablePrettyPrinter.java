@@ -348,6 +348,9 @@ public class TablePrettyPrinter {
   
   public void addCell(String value) {
     verifyTableBegun();
+    if (value == null) {
+      value = "";
+    }
     TableRow row = table.get(table.size() - 1);
     updateMax(row.getColumnCount(), value.length());
     row.addCell(value);
@@ -355,6 +358,9 @@ public class TablePrettyPrinter {
   
   public void addCell(String value, Alignment alignment) {
     verifyTableBegun();
+    if (value == null) {
+      value = "";
+    }
     TableRow row = table.get(table.size() - 1);
     updateMax(row.getColumnCount(), value.length());
     row.addCell(value, alignment);

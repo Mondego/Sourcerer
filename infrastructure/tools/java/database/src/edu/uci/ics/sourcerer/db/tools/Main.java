@@ -48,20 +48,20 @@ public class Main {
     connection.open();
 
     if (INITIALIZE_DB.getValue()) {
-      DatabaseImporter importer = new DatabaseImporter(connection);
+      ParallelDatabaseImporter importer = new ParallelDatabaseImporter();
       importer.initializeDatabase();
     } else if (ADD_JAVA_LIBRARIES.getValue()) {
       PropertyManager.registerAndVerify(ADD_JAVA_LIBRARIES, INPUT_REPO);
-      DatabaseImporter importer = new DatabaseImporter(connection);
+      ParallelDatabaseImporter importer = new ParallelDatabaseImporter();
       importer.importJavaLibraries();
     } else if (ADD_JARS.getValue()) {
       PropertyManager.registerAndVerify(ADD_JARS, INPUT_REPO);
-      DatabaseImporter importer = new DatabaseImporter(connection);
+      ParallelDatabaseImporter importer = new ParallelDatabaseImporter();
       importer.importJarFiles();
     } else if (ADD_PROJECTS.getValue()) {
-      PropertyManager.registerAndVerify(ADD_PROJECTS, INPUT_REPO);
-      DatabaseImporter importer = new DatabaseImporter(connection);
-      importer.importProjects();
+//      PropertyManager.registerAndVerify(ADD_PROJECTS, INPUT_REPO);
+//      DatabaseImporter importer = new DatabaseImporter(connection);
+//      importer.importProjects();
     } else if (INTERACTIVE_FILE_ACCESSOR.getValue()) {
       PropertyManager.registerAndVerify(INTERACTIVE_FILE_ACCESSOR, INPUT_REPO, OUTPUT_REPO);
       FileAccessor.testConsole();

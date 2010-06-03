@@ -37,6 +37,8 @@ public abstract class AbstractRepository {
   
   public static final Property<String> JARS_DIR = new StringProperty("jars-dir", "jars", "Repository Manager", "The subdirectory containing the jar files.");
 
+  public static final Property<String> PROJECT_NAMES_FILE = new StringProperty("project-names-files", "project-names.txt", "Repository Manager", "File for project names.");
+
   protected final String JARS;
   protected final String LIBS;
   protected final String PROJECT_JARS;

@@ -38,6 +38,7 @@ import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
+import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 
 /**
@@ -46,6 +47,7 @@ import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 public class Main {
   private static final Property<Boolean> CREATE_JAR_INDEX = new BooleanProperty("create-jar-index", false, "Repository Manager", "Creates index of the jars in the target repository.");
   private static final Property<Boolean> PRINT_JAR_STATS = new BooleanProperty("print-jar-stats", false, "Repository Manager", "Prints statistics regarding the jars in the repository.");
+  private static final Property<Boolean> PRINT_PROJECT_NAMES = new BooleanProperty("print-project-names", false, "Repository Manager", "Prints project names.");
   private static final Property<Boolean> AGGREGATE_JAR_FILES = new BooleanProperty("aggregate-jar-files", false, "Repository Manager", "Aggregates the jar files of the target repository.");
   private static final Property<Boolean> CLEAN_REPOSITORY = new BooleanProperty("clean-repository", false, "Repository Manager", "Deletes the compressed portion of the target repository.");
   private static final Property<Boolean> MIGRATE_REPOSITORY = new BooleanProperty("migrate-repository", false, "Repository Manager",
@@ -70,6 +72,17 @@ public class Main {
       PropertyManager.registerAndVerify(PRINT_JAR_STATS, INPUT_REPO);
       Repository repo = Repository.getRepository(INPUT_REPO.getValue());
       repo.printJarStats();
+    } else if (PRINT_PROJECT_NAMES.getValue()){
+      PropertyManager.registerAndVerify(PRINT_PROJECT_NAMES, Repository.PROJECT_NAMES_FILE, TablePrettyPrinter.CSV_MODE);
+      if (INPUT_REPO.hasValue()) {
+        Repository repo = Repository.getRepository(INPUT_REPO.getValue());
+        repo.printProjectNames();
+      } else if (OUTPUT_REPO.hasValue()) {
+        ExtractedRepository repo = ExtractedRepository.getRepository(OUTPUT_REPO.getValue());
+        repo.printProjectNames();
+      } else {
+        PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);
+      }
     } else if (AGGREGATE_JAR_FILES.getValue()) {
       PropertyManager.registerAndVerify(AGGREGATE_JAR_FILES, INPUT_REPO);
       Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());

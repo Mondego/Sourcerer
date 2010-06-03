@@ -63,6 +63,7 @@ public final class FileUtils {
   
   public static File getTempDir() {
     File tempDir = new File(OUTPUT.getValue(), TEMP_DIR.getValue());
+    tempDir = new File(tempDir, "thread-" + Thread.currentThread().getId());
     if (tempDir.exists() || tempDir.mkdirs()) {
       return tempDir;
     } else {

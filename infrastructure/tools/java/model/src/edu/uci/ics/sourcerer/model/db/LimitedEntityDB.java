@@ -41,7 +41,7 @@ public class LimitedEntityDB {
   public String getEntityID() {
     return entityID;
   }
-   
+  
   public Boolean isInternal(String projectID) {
     if (type == Entity.DUPLICATE) {
       return true;
