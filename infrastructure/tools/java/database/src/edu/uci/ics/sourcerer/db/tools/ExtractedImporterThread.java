@@ -83,9 +83,15 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
       filesTable.insert(file, projectID);
       counter.increment();
     }
+    
+    logger.info("    Performing db insert...");
+    locker.addWrite(filesTable);
+    locker.lock();
     filesTable.flushInserts();
+    locker.unlock();
+    logger.info(counter.reportTimeAndCount(6, "files inserted"));
 
-    logger.info(counter.reportTimeAndCount(4, "files inserted"));
+    logger.info(counter.reportTimeAndCount(4, "files processed and inserted"));
   }
   
   protected void loadFileMap(String projectID) {
@@ -117,9 +123,16 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
         counter.increment();
       }
     }
-    problemsTable.flushInserts();
     
-    logger.info(counter.reportTimeAndCount(4, "problems inserted"));
+    counter.lap();
+    logger.info("    Performing db insert...");
+    locker.addWrite(problemsTable);
+    locker.lock();
+    problemsTable.flushInserts();
+    locker.unlock();
+    logger.info(counter.reportTimeAndCount(6, "problems inserted"));
+    
+    logger.info(counter.reportTimeAndCount(4, "problems processed and inserted"));
   }
   
   protected void insertEntities(Extracted extracted, String projectID) {
@@ -144,7 +157,10 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     counter.lap();
     
     logger.info("    Performing db insert...");
+    locker.addWrite(entitiesTable);
+    locker.lock();
     entitiesTable.flushInserts();
+    locker.unlock();
     logger.info(counter.reportTimeAndTotalCount(6, "entities inserted"));
     
     logger.info(counter.reportTotalTimeAndCount(4, "entities processed and inserted"));
@@ -330,8 +346,8 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     // Check if it's an already known unknown
     if (!unknowns.contains(fqn)) {
       unknowns.add(fqn);
+      counter.increment();
     }
-    counter.increment();
     pendingEntities.add(fqn);
   }
   

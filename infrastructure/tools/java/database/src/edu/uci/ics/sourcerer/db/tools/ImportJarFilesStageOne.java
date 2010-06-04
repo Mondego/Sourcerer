@@ -63,26 +63,12 @@ public class ImportJarFilesStageOne extends ExtractedImporterThread {
       
       logger.info("  Inserting project...");
       String projectID = projectsTable.insert(jar);
-      
-      locker.addWrite(filesTable);
-      locker.lock();
+
       insertFiles(jar, projectID);
-      locker.unlock();
-      
-      locker.addRead(filesTable);
-      locker.lock();
       loadFileMap(projectID);
-      locker.unlock();
-      
-      locker.addWrite(problemsTable);
-      locker.lock();
       insertProblems(jar, projectID);
-      locker.unlock();
-      
-      locker.addWrite(entitiesTable);
-      locker.lock();
       insertEntities(jar, projectID);
-      locker.unlock();
+      
       
       projectsTable.endFirstStageJarProjectInsert(projectID);
       clearMaps();

@@ -17,7 +17,10 @@
  */
 package edu.uci.ics.sourcerer.db.tools;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.util.Map;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.db.schema.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
@@ -46,7 +49,12 @@ public class SynchronizedUnknownsMap extends DatabaseAccessor {
   
   protected synchronized void add(String fqn) {
     if (!contains(fqn)) {
-      unknowns.put(fqn, entitiesTable.forceInsertUnknown(fqn, unknownsProject));
+      String eid = entitiesTable.forceInsertUnknown(fqn, unknownsProject);
+      if (eid == null) {
+        logger.log(Level.SEVERE, "Missing eid for unknown: " + fqn);
+      } else {
+        unknowns.put(fqn, eid);
+      }
     }
   }
   
@@ -55,6 +63,11 @@ public class SynchronizedUnknownsMap extends DatabaseAccessor {
   }
   
   protected synchronized LimitedEntityDB getUnknown(String fqn) {
-    return new LimitedEntityDB(unknownsProject, unknowns.get(fqn), Entity.UNKNOWN);
+    String eid = unknowns.get(fqn);
+    if (eid == null) {
+      return null;
+    } else {
+      return new LimitedEntityDB(unknownsProject, unknowns.get(fqn), Entity.UNKNOWN);
+    }
   }
 }
