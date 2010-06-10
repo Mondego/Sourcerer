@@ -181,7 +181,7 @@ public class ExtractedRepository extends AbstractRepository {
     } else {
       Collection<ExtractedProject> result = Helper.newArrayList();
       for (ExtractedProject project : projects) {
-        if (filter.contains(project.getProjectPath())) {
+        if (filter.contains(project.getRelativePath())) {
           result.add(project);
         }
       }

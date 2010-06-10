@@ -86,10 +86,6 @@ public class ExtractedProject extends Extracted {
     return properties.getDescription();
   }
   
-  public String getProjectPath() {
-    return content.getRelativePath();
-  }
-  
   public String toString() {
     return getName() + " (" + content.getRelativePath() + ")";
   }

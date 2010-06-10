@@ -321,7 +321,7 @@ public class JarIndex {
         try {
           currentOne = Math.max(currentOne, 1 + Integer.parseInt(one.getName()));
         } catch (NumberFormatException e) {}
-        for (File two : repoJarFolder.listFiles()) {
+        for (File two : one.listFiles()) {
           if (two.isDirectory()) {
             for (File file : two.listFiles()) {
               // A tmp file is a partially completed jar
@@ -333,12 +333,14 @@ public class JarIndex {
                   // The first line should contain the length
                   String line = br.readLine();
                   if (line == null) {
+                    logger.log(Level.SEVERE, "Incorrect info file: " + file.getPath());
                     continue;
                   }
                   long length = Long.parseLong(line);
                   // The second line should contain the hash
                   String hash = br.readLine();
                   if (hash == null) {
+                    logger.log(Level.SEVERE, "Incorrect info file: " + file.getPath());
                     continue;
                   }
                   RepoJar jar = new RepoJar(length, hash);

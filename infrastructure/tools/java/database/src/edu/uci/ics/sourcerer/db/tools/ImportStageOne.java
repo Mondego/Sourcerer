@@ -20,37 +20,41 @@ package edu.uci.ics.sourcerer.db.tools;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.db.LimitedProjectDB;
-import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
+import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.util.TimeCounter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ImportJarFilesStageOne extends ExtractedImporterThread {
-  private Iterable<ExtractedJar> jars;
+public class ImportStageOne extends ExtractedImporterThread {
+  private Iterable<Extracted> extracted;
   
-  protected ImportJarFilesStageOne(DatabaseConnection connection, Iterable<ExtractedJar> jars) {
+  protected ImportStageOne(DatabaseConnection connection, Iterable<Extracted> extracted) {
     super(connection);
-    this.jars = jars;
+    this.extracted = extracted;
   }
 
   @Override
   public void doImport() {
     TimeCounter counter = new TimeCounter();
     
-    for (ExtractedJar jar : jars) {
-      logger.info("Stage one import of " + jar.getName() + "(" + jar.getRelativePath() + ")");
+    for (Extracted item : extracted) {
+      logger.info("Stage one import of " + item.getName() + "(" + item.getRelativePath() + ")");
       
-      logger.info("  Verifying that jar should be imported...");
-      if (!jar.extracted()) {
+      logger.info("  Verifying that item should be imported...");
+      if (!item.extracted()) {
         logger.info("    Extraction not completed... skipping");
         continue;
-      }
-      if (!jar.reallyExtracted()) {
-        logger.info("    Extraction copied... skipping");
+      } else if (!item.reallyExtracted()) {
+        logger.info("    Extraction empty... skipping");
         continue;
       }
-      LimitedProjectDB project = projectsTable.getLimitedProjectByHash(jar.getHash());
+      LimitedProjectDB project;
+      if (item.getHash() != null) {
+        project = projectsTable.getLimitedProjectByHash(item.getHash());
+      } else {
+        project = projectsTable.getLimitedProjectByPath(item.getRelativePath());
+      }
       if (project != null) {
         if (project.firstStageCompleted()) {
           logger.info("    Import already completed... skipping");
@@ -62,18 +66,22 @@ public class ImportJarFilesStageOne extends ExtractedImporterThread {
       }
       
       logger.info("  Inserting project...");
-      String projectID = projectsTable.insert(jar);
+      String projectID = projectsTable.insert(item);
 
-      insertFiles(jar, projectID);
+      insertFiles(item, projectID);
       loadFileMap(projectID);
-      insertProblems(jar, projectID);
-      insertEntities(jar, projectID);
+      insertProblems(item, projectID);
+      insertEntities(item, projectID);
       
       
-      projectsTable.endFirstStageJarProjectInsert(projectID);
+      if (item.getHash() != null) {
+        projectsTable.endFirstStageJarProjectInsert(projectID);
+      } else {
+        projectsTable.endFirstStageCrawledProjectInsert(projectID);
+      }
       clearMaps();
       counter.increment();
     }
-    logger.info(counter.reportTimeAndCount(2, "jars completed stage one of import"));
+    logger.info(counter.reportTimeAndCount(2, "items completed stage one of import"));
   }
 }

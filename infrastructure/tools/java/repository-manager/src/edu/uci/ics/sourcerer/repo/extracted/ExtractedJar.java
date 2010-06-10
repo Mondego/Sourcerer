@@ -113,6 +113,7 @@ public class ExtractedJar extends ExtractedBinary {
     return properties.getVersion();
   }
   
+  @Override
   public String getHash() {
     return properties.getHash();
   }

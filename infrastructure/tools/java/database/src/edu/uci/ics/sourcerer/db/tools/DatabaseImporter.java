@@ -402,7 +402,7 @@ public class DatabaseImporter extends DatabaseAccessor {
         logger.info("      Extraction copied... skipping");
         continue;
       }
-      LimitedProjectDB oldProject = projectsTable.getLimitedProjectByPath(project.getProjectPath());
+      LimitedProjectDB oldProject = projectsTable.getLimitedProjectByPath(project.getRelativePath());
       if (oldProject != null) {
         if (oldProject.firstStageCompleted()) {
           logger.info("      Import already completed... skipping");
@@ -461,7 +461,7 @@ public class DatabaseImporter extends DatabaseAccessor {
         logger.info("      Extraction copied... skipping");
         continue;
       }
-      LimitedProjectDB oldProject = projectsTable.getLimitedProjectByPath(project.getProjectPath());
+      LimitedProjectDB oldProject = projectsTable.getLimitedProjectByPath(project.getRelativePath());
       if (oldProject != null) {
         if (oldProject.completed()) {
           logger.info("      Import already completed... skipping");
@@ -471,7 +471,7 @@ public class DatabaseImporter extends DatabaseAccessor {
       logger.info("  Remaining import of " + project.getName());
 
       String inClause = buildInClause(Helper.newHashSet(projectIDs), project);
-      String projectID = projectsTable.getProjectIDByPath(project.getProjectPath());
+      String projectID = projectsTable.getProjectIDByPath(project.getRelativePath());
 
       projectsTable.beginSecondStageCrawledProjectInsert(projectID);
       

@@ -216,4 +216,20 @@ public abstract class Extracted {
   public int getJars() {
     return getProperties().getJars();
   }
+  
+  public String getHash() {
+    return null;
+  }
+  
+  public String getGroup() {
+    return null;
+  }
+  
+  public String getVersion() {
+    return null;
+  }
+  
+  public String getDescription() {
+    return null;
+  }
 }

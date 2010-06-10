@@ -66,10 +66,10 @@ public class Repository extends AbstractRepository {
   @Override
   protected void addProject(RepoPath path) {
     RepoPath content = path.getChild("content");
-    if (!content.toFile().exists()) {
+    if (!content.exists()) {
       content = path.getChild("content.zip");
     }
-    if (content.toFile().exists()) {
+    if (content.exists()) {
       File properties = path.getChildFile("project.properties");
       RepoProject project = new RepoProject(this, content, properties);
       projects.put(project.getProjectPath(), project);

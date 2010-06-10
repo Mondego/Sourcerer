@@ -59,9 +59,9 @@ public class Main {
       ParallelDatabaseImporter importer = new ParallelDatabaseImporter();
       importer.importJarFiles();
     } else if (ADD_PROJECTS.getValue()) {
-//      PropertyManager.registerAndVerify(ADD_PROJECTS, INPUT_REPO);
-//      DatabaseImporter importer = new DatabaseImporter(connection);
-//      importer.importProjects();
+      PropertyManager.registerAndVerify(ADD_PROJECTS, INPUT_REPO);
+      ParallelDatabaseImporter importer = new ParallelDatabaseImporter();
+      importer.importProjects();
     } else if (INTERACTIVE_FILE_ACCESSOR.getValue()) {
       PropertyManager.registerAndVerify(INTERACTIVE_FILE_ACCESSOR, INPUT_REPO, OUTPUT_REPO);
       FileAccessor.testConsole();

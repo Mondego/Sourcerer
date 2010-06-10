@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.db.schema.DatabaseAccessor;
+import edu.uci.ics.sourcerer.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.db.LimitedEntityDB;
@@ -45,9 +46,11 @@ public class SynchronizedUnknownsMap extends DatabaseAccessor {
     for (SlightlyLessLimitedEntityDB entity : entitiesTable.getUnknownEntities(unknownsProject)) {
       unknowns.put(entity.getFqn(), entity.getEntityID());
     }
+    close();
+    connection.close();
   }
   
-  protected synchronized void add(String fqn) {
+  protected synchronized void add(EntitiesTable entitiesTable, String fqn) {
     if (!contains(fqn)) {
       String eid = entitiesTable.forceInsertUnknown(fqn, unknownsProject);
       if (eid == null) {

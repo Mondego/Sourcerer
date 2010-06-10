@@ -7,8 +7,6 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.util.Collection;
 import java.util.logging.Level;
 
-import javax.annotation.Resource;
-
 import org.eclipse.core.resources.IFile;
 
 import edu.uci.ics.sourcerer.extractor.ast.FeatureExtractor;
@@ -53,7 +51,7 @@ public class ProjectExtractor {
     for (RepoProject project : projects) {
       logger.info("Extracting " + project.getProjectPath() + " (" + ++count + " of " + projects.size() + ")");
       ExtractedProject extracted = project.getExtractedProject(output);
-      if (extracted.extracted() && !(extracted.hasMissingTypes() && Extractor.FORCE_MISSING_REDO.getValue())) {
+      if (extracted.extracted()  && extracted.reallyExtracted() && !(extracted.hasMissingTypes() && Extractor.FORCE_MISSING_REDO.getValue())) {
         logger.info("  Project already extracted");
       } else if (extracted.hasMissingTypes() && !Extractor.RESOLVE_MISSING_TYPES.getValue()) {
         logger.info("  Project has missing types");

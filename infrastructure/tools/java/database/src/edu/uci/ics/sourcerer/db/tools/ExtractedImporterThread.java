@@ -194,6 +194,8 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     TimeCounter counter = new TimeCounter();
     
     entitiesTable.initializeInserter(tempDir);
+    locker.addWrite(entitiesTable);
+    locker.lock();
     
     counter.lap();
     
@@ -233,8 +235,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     counter.lap();
     
     logger.info("    Performing db insert...");
-    locker.addWrite(entitiesTable);
-    locker.lock();
+    
     entitiesTable.flushInserts();
     locker.unlock();
     logger.info(counter.reportTimeAndTotalCount(6, "entities inserted"));
@@ -345,7 +346,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     // Give up
     // Check if it's an already known unknown
     if (!unknowns.contains(fqn)) {
-      unknowns.add(fqn);
+      unknowns.add(entitiesTable, fqn);
       counter.increment();
     }
     pendingEntities.add(fqn);

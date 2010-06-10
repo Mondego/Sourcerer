@@ -25,8 +25,10 @@ import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
+import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
+import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
@@ -113,13 +115,12 @@ public class ParallelDatabaseImporter {
         logger.log(Level.SEVERE, "Thread interrupted", e);
       }
     }
-    unknowns.close();
-    unknownConnection.close();
     logger.info(counter.reportTime(2, "Java library import stage two completed"));
     
     logger.info(counter.reportTotalTime(0, "Java library import completed"));
   }
   
+  @SuppressWarnings("unchecked")
   public void importJarFiles() {
     logger.info("Importing jar files...");
     
@@ -128,7 +129,7 @@ public class ParallelDatabaseImporter {
     logger.info("Loading extracted repository...");
     ExtractedRepository extracted = ExtractedRepository.getRepository();
     
-    logger.info("Loading extracted Java libraries...");
+    logger.info("Loading extracted jar files...");
     Collection<ExtractedJar> jars = null;
     if (AbstractRepository.JAR_FILTER.hasValue()) {
       jars = extracted.getJars(FileUtils.getFileAsSet(AbstractRepository.JAR_FILTER.getValue()));
@@ -139,16 +140,16 @@ public class ParallelDatabaseImporter {
     int numThreads = THREAD_COUNT.getValue();
     
     logger.info("Beginning stage one of import...");
-    Iterable<ExtractedJar> iterable = createSynchronizedIterable(jars.iterator());
+    Iterable<Extracted> iterable = (Iterable<Extracted>)(Object)createSynchronizedIterable(jars.iterator());
     logger.info("  Initializing " + numThreads + " threads...");
     Collection<Thread> threads = Helper.newArrayList(numThreads);
     for (int i = 0; i < numThreads; i++) {
       logger.info("    Opening database connection...");
       DatabaseConnection connection = new DatabaseConnection();
       connection.open();
-      ImportJarFilesStageOne importJavaLibraries = new ImportJarFilesStageOne(connection, iterable);
+      ImportStageOne importStageOne = new ImportStageOne(connection, iterable);
       logger.info("    Starting thread...");
-      threads.add(importJavaLibraries.start());
+      threads.add(importStageOne.start());
     }
     
     logger.info("    Waiting for termination...");
@@ -164,7 +165,7 @@ public class ParallelDatabaseImporter {
     counter.lap();
     
     logger.info("Beginning stage two of import...");
-    iterable = createSynchronizedIterable(jars.iterator());
+    iterable = (Iterable<Extracted>)(Object)createSynchronizedIterable(jars.iterator());
     DatabaseConnection unknownConnection = new DatabaseConnection();
     unknownConnection.open();
     SynchronizedUnknownsMap unknowns = new SynchronizedUnknownsMap(unknownConnection);
@@ -175,9 +176,9 @@ public class ParallelDatabaseImporter {
       logger.info("    Opening database connection...");
       DatabaseConnection connection = new DatabaseConnection();
       connection.open();
-      ImportJarFilesStageTwo importJavaLibraries = new ImportJarFilesStageTwo(connection, unknowns, iterable);
+      ImportStageTwo importStageTwo = new ImportStageTwo(connection, unknowns, iterable);
       logger.info("    Starting thread...");
-      threads.add(importJavaLibraries.start());
+      threads.add(importStageTwo.start());
     }
     
     logger.info("    Waiting for termination...");
@@ -188,11 +189,83 @@ public class ParallelDatabaseImporter {
         logger.log(Level.SEVERE, "Thread interrupted", e);
       }
     }
-    unknowns.close();
-    unknownConnection.close();
     logger.info(counter.reportTime(2, "Jar files import stage two completed"));
     
     logger.info(counter.reportTotalTime(0, "Jar files import completed"));
+  }
+  
+  @SuppressWarnings("unchecked")
+  public void importProjects() {
+    logger.info("Importing projects...");
+    
+    TimeCounter counter = new TimeCounter();
+    
+    logger.info("Loading extracted repository...");
+    ExtractedRepository extracted = ExtractedRepository.getRepository();
+    
+    logger.info("Loading extracted projects...");
+    Collection<ExtractedProject> projects = null;
+    if (AbstractRepository.PROJECT_FILTER.hasValue()) {
+      projects = extracted.getProjects(FileUtils.getFileAsSet(AbstractRepository.PROJECT_FILTER.getValue()));
+    } else { 
+      projects = extracted.getProjects();
+    }
+
+    int numThreads = THREAD_COUNT.getValue();
+    
+    logger.info("Beginning stage one of import...");
+    Iterable<Extracted> iterable = (Iterable<Extracted>)(Object)createSynchronizedIterable(projects.iterator());
+    logger.info("  Initializing " + numThreads + " threads...");
+    Collection<Thread> threads = Helper.newArrayList(numThreads);
+    for (int i = 0; i < numThreads; i++) {
+      logger.info("    Opening database connection...");
+      DatabaseConnection connection = new DatabaseConnection();
+      connection.open();
+      ImportStageOne importStageOne = new ImportStageOne(connection, iterable);
+      logger.info("    Starting thread...");
+      threads.add(importStageOne.start());
+    }
+    
+    logger.info("    Waiting for termination...");
+    for (Thread t : threads) {
+      try {
+        t.join();
+      } catch (InterruptedException e) {
+        logger.log(Level.SEVERE, "Thread interrupted", e);
+      }
+    }
+    logger.info(counter.reportTime(2, "Projects import stage one completed"));
+    
+    counter.lap();
+    
+    logger.info("Beginning stage two of import...");
+    iterable = (Iterable<Extracted>)(Object)createSynchronizedIterable(projects.iterator());
+    DatabaseConnection unknownConnection = new DatabaseConnection();
+    unknownConnection.open();
+    SynchronizedUnknownsMap unknowns = new SynchronizedUnknownsMap(unknownConnection);
+    
+    logger.info("  Initializing " + numThreads + " threads...");
+    threads.clear();
+    for (int i = 0; i < numThreads; i++) {
+      logger.info("    Opening database connection...");
+      DatabaseConnection connection = new DatabaseConnection();
+      connection.open();
+      ImportStageTwo importStageTwo = new ImportStageTwo(connection, unknowns, iterable);
+      logger.info("    Starting thread...");
+      threads.add(importStageTwo.start());
+    }
+    
+    logger.info("    Waiting for termination...");
+    for (Thread t : threads) {
+      try {
+        t.join();
+      } catch (InterruptedException e) {
+        logger.log(Level.SEVERE, "Thread interrupted", e);
+      }
+    }
+    logger.info(counter.reportTime(2, "Project import stage two completed"));
+    
+    logger.info(counter.reportTotalTime(0, "Projects import completed"));
   }
   
   private <T> Iterable<T> createSynchronizedIterable(final Iterator<T> iterator) {
