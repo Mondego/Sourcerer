@@ -43,25 +43,10 @@ public class ImportJavaLibrariesStageOne extends ExtractedImporterThread {
       logger.info("  Inserting project...");
       String projectID = projectsTable.insert(library);
       
-      locker.addWrite(filesTable);
-      locker.lock();
       insertFiles(library, projectID);
-      locker.unlock();
-      
-      locker.addRead(filesTable);
-      locker.lock();
       loadFileMap(projectID);
-      locker.unlock();
-      
-      locker.addWrite(problemsTable);
-      locker.lock();
       insertProblems(library, projectID);
-      locker.unlock();
-      
-      locker.addWrite(entitiesTable);
-      locker.lock();
       insertEntities(library, projectID);
-      locker.unlock();
       
       clearMaps();
       counter.increment();

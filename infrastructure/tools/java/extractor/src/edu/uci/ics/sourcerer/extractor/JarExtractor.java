@@ -84,6 +84,7 @@ public class JarExtractor {
         Logging.addFileLogger(extracted.getOutputDir());
 
         Collection<IndexedJar> jars = Helper.newHashSet();
+        jars.add(jar);
         boolean missingTypes = false;
         int firstOrderImports = 0;
         while (true) {

@@ -29,13 +29,13 @@ public class MissingTypeResolver extends DatabaseAccessor {
     for (MissingTypeEX type : extracted.getMissingTypeReader()) {
       if (!types.contains(type.getFqn())) {
         types.add(type.getFqn());
-        Collection<String> results = entitiesTable.getMavenProjectIDsByFqn(type.getFqn());
+        Collection<String> results = entitiesTable.getJarProjectIDsByFqn(type.getFqn());
         // Try it as a package
         if (results.size() == 0) {
-          results = entitiesTable.getMavenProjectIDsByPackage(type.getFqn());
+          results = entitiesTable.getJarProjectIDsByPackage(type.getFqn());
         }
         if (results.size() == 0) {
-          logger.severe("  Unable to find missing type: " + type.getFqn());
+//          logger.severe("  Unable to find missing type: " + type.getFqn());
         } else {
           for (String jarID : results ) {
             JarTypeCollection collection = jars.get(jarID);

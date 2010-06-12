@@ -150,6 +150,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private boolean inLhsAssignment = false;
   private boolean inFieldDeclaration = false;
   
+  private boolean bindingFree = false;
+  
   private FQNStack fqnStack = new FQNStack();
 
   public ReferenceExtractorVisitor(WriterBundle writers) {
@@ -162,6 +164,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     relationWriter = writers.getRelationWriter();
   }
 
+  public void setBindingFreeMode(boolean bindingFree) {
+    this.bindingFree = bindingFree;
+  }
+  
   /**
    * This method writes:
    * <ul>
@@ -229,10 +235,11 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   public boolean visit(ImportDeclaration node) {
     IBinding binding = node.resolveBinding();
     if (binding == null) {
-        // Cut things short
-//        logger.warning("Import binding is null - giving up for: " + compilationUnitPath);
+      if (bindingFree) {
+        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
+      } else {
         throw new IllegalStateException("Binding resolution appears to have failed!");
-//        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
+      }
     } else {
       try {
         if (binding instanceof ITypeBinding) {
@@ -278,9 +285,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     String fqn = null;
     Entity type = null;
     ITypeBinding binding = node.resolveBinding();
-    if (binding == null) {
-      // Cut things short
-      logger.severe("Type binding is null - giving up for: " + compilationUnitPath);
+    if (binding == null && !bindingFree) {
       throw new IllegalStateException("Binding resolution appears to have failed!");
     }
     if (node.isPackageMemberTypeDeclaration()) {
@@ -293,7 +298,11 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         fqn = fqnStack.getAnonymousClassFqn();
       }
     } else if (node.isLocalTypeDeclaration()) {
-      fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), binding);
+      if (binding == null) {
+        fqn = getUnknownFqn(node.getName().getIdentifier());
+      } else {
+        fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), binding);
+      }
     } else {
       logger.severe("Unsure what type the declaration is!");
       fqn = "(ERROR)" + node.getName().getIdentifier();
