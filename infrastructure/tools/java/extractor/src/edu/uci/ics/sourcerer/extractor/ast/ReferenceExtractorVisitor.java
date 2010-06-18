@@ -136,6 +136,8 @@ import edu.uci.ics.sourcerer.util.Helper;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ReferenceExtractorVisitor extends ASTVisitor {
+  private static final String UNKNOWN = "(1UNKNOWN)";
+  
   private IFileWriter fileWriter;
   private IProblemWriter problemWriter;
   private IImportWriter importWriter;
@@ -1967,20 +1969,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     if (declaringClass == null) {
       logger.log(Level.SEVERE, "Unresolved declaring class for method!", binding);
     } else {
-      String declaringFqn = getTypeFqn(declaringClass);
-      if (declaringFqn.equals("_ERROR_")) {
-        if (declaration) {
-          fqnBuilder.append(fqnStack.getFqn());
-        } else {
-          fqnBuilder.append("_UNRESOLVED_");
-        }
-      } else if (declaration) {
-//        if (!declaringFqn.equals(fqnStack.getFqn())) {
-//          logger.log(Level.SEVERE, "Mismatch between " + declaringFqn + " and " + fqnStack.getFqn());
-//        }
+      if (declaration) {
         fqnBuilder.append(fqnStack.getFqn());
       } else {
-        fqnBuilder.append(declaringFqn);
+        fqnBuilder.append(getTypeFqn(declaringClass));
       }
       fqnBuilder.append('.').append(binding.isConstructor() ? "<init>" : binding.getName());
     }
@@ -2005,7 +1997,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private static final String BRACKETS = "[][][][][][][][][][][][][][][][][][][][]";
  
   private String getUnknownFqn(String name) {
-    return "(1UNKNOWN)" + name;
+    return UNKNOWN + name;
   }
   
   private String getUnknownSuperFqn(String name) {
@@ -2016,7 +2008,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private String getTypeFqn(Type type) {
     if (type == null) {
       logger.log(Level.SEVERE, "Attempt to get type fqn of null type!");
-      return "_NULL_";
+      throw new NullPointerException("Attempt to get type fqn of null type!");
     }
     ITypeBinding binding = type.resolveBinding();
     if (binding == null) {
@@ -2046,8 +2038,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
           try {
             fqn.append(getTypeFqn(arg));
           } catch (NullPointerException e) {
-            logger.log(Level.FINE, "Eclipse NPE bug in parametrized type");
-            fqn.append("_ERROR_");              
+            logger.log(Level.WARNING, "Eclipse NPE bug in parametrized type", e);
+            fqn.append(UNKNOWN);              
           }
         }
         fqn.append(">");
@@ -2062,7 +2054,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         }
       } else {
         logger.log(Level.SEVERE, "Unexpected node type for unresolved type!" + type.toString());
-        return "_ERROR_";
+        return UNKNOWN;
       }
     } else {
       return getTypeFqn(binding);
@@ -2079,7 +2071,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   
   private String getTypeFqn(ITypeBinding binding) {
     if (binding == null) {
-      return "_ERROR_";
+      logger.log(Level.SEVERE, "Null type binding", new NullPointerException());
+      return UNKNOWN;
     } else if (binding.isTypeVariable()) {
       return "<" + binding.getQualifiedName() + ">";
     } else if (binding.isPrimitive()) {
@@ -2098,7 +2091,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     } else if (binding.isAnonymous()) {
       String fqn = binding.getBinaryName();
       if (fqn == null) {
-        return "_ERROR_";
+        return UNKNOWN;
       } else {
         return fqn;
       }
@@ -2135,8 +2128,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         try {
           fqn.append(getTypeFqn(arg));
         } catch (NullPointerException e) {
-          logger.log(Level.FINE, "Eclipse NPE bug in parametrized type");
-          fqn.append("_ERROR_");              
+          logger.log(Level.WARNING, "Eclipse NPE bug in parametrized type", e);
+          fqn.append(UNKNOWN);              
         }
       }
       fqn.append(">");

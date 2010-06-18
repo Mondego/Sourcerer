@@ -15,42 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model.db;
-
-import edu.uci.ics.sourcerer.model.Entity;
+package edu.uci.ics.sourcerer.model;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class LimitedEntityDB {
-  private String projectID;
-  private String entityID;
-  private Entity type;
-  
-  
-  public LimitedEntityDB(String projectID, String entityID, Entity type) {
-    this.projectID = projectID;
-    this.entityID = entityID;
-    this.type = type;
-  }
-  
-  public String getProjectID() {
-    return projectID;
-  }
-  
-  public String getEntityID() {
-    return entityID;
-  }
-  
-  public boolean notDuplicate() {
-    return type != Entity.DUPLICATE;
-  }
-  
-  public Entity getType() {
-    return type;
-  }
-  
-  public String toString() {
-    return type.toString() + "(" + entityID + ")";
-  }
+public enum RelationClass {
+  JAVA_LIBRARY,
+  INTERNAL,
+  EXTERNAL,
+  UNKNOWN,
+  NOT_APPLICABLE;
 }

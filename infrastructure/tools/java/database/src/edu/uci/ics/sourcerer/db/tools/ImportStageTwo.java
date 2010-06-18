@@ -42,8 +42,9 @@ public class ImportStageTwo extends ExtractedImporterThread {
   public void doImport() {
     TimeCounter counter = new TimeCounter();
     
-    Collection<String> projectIDs = projectsTable.getJavaLibraryProjects();
-    projectIDs.add(projectsTable.getPrimitiveProject());
+    Collection<String> libraryProjects = projectsTable.getJavaLibraryProjects();
+    libraryProjects.add(projectsTable.getPrimitiveProject());
+    classifier = new RelationClassifier(libraryProjects);
     
     for (Extracted item : extracted) {
       logger.info("    Verifying that item should be imported...");
@@ -68,7 +69,7 @@ public class ImportStageTwo extends ExtractedImporterThread {
       }
       logger.info("Stage two import of " + item.getName() + "(" + item.getRelativePath() + ")");
       
-      buildInClause(Helper.newHashSet(projectIDs), item);
+      buildInClause(Helper.newHashSet(libraryProjects), item);
       String projectID = project.getProjectID();
       
       loadEntityMap(projectID);

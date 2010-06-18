@@ -11,7 +11,9 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.Comment;
 import edu.uci.ics.sourcerer.model.Entity;
+import edu.uci.ics.sourcerer.model.File;
 import edu.uci.ics.sourcerer.model.Relation;
+import edu.uci.ics.sourcerer.model.RelationClass;
 import edu.uci.ics.sourcerer.model.db.LimitedEntityDB;
 import edu.uci.ics.sourcerer.model.db.SlightlyLessLimitedEntityDB;
 import edu.uci.ics.sourcerer.model.extracted.CommentEX;
@@ -38,6 +40,8 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
   private Collection<RelationEX> newTypeRelations;
   
   private SynchronizedUnknownsMap unknowns;
+  
+  protected RelationClassifier classifier;
   
   private String inClause;
   
@@ -412,7 +416,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
       LimitedEntityDB rhs = getEid(relation.getRhs(), projectID);
       
       if (lhs != null && rhs != null) {
-        relationsTable.insert(relation.getType(), lhs.getEntityID(), rhs.getEntityID(), rhs.isInternal(projectID), projectID);
+        relationsTable.insert(relation.getType(), classifier.getRelationClass(lhs, rhs), lhs.getEntityID(), rhs.getEntityID(), projectID);
         counter.increment();
       }
     }
@@ -430,9 +434,9 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
       
       if (lhs != null && rhs != null) {
         if (fileID == null) {
-          relationsTable.insert(relation.getType(), lhs.getEntityID(), rhs.getEntityID(), rhs.isInternal(projectID), projectID);
+          relationsTable.insert(relation.getType(), classifier.getRelationClass(lhs, rhs), lhs.getEntityID(), rhs.getEntityID(), projectID);
         } else {
-          relationsTable.insert(relation.getType(), lhs.getEntityID(), rhs.getEntityID(), rhs.isInternal(projectID), projectID, fileID, relation.getStartPosition(), relation.getLength());
+          relationsTable.insert(relation.getType(), classifier.getRelationClass(lhs, rhs), lhs.getEntityID(), rhs.getEntityID(), projectID, fileID, relation.getStartPosition(), relation.getLength());
         }
         counter.increment();
       }
@@ -453,9 +457,9 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
         LimitedEntityDB type = getEid(local.getTypeFqn(), projectID);
         if (type != null) {
           if (fileID == null) {
-            relationsTable.insert(Relation.HOLDS, entity.getEntityID(), type.getEntityID(), type.isInternal(projectID), projectID);
+            relationsTable.insert(Relation.HOLDS, classifier.getRelationClass(entity, type), entity.getEntityID(), type.getEntityID(), projectID);
           } else {
-            relationsTable.insert(Relation.HOLDS, entity.getEntityID(), type.getEntityID(), type.isInternal(projectID), projectID, fileID, local.getStartPos(), local.getLength());
+            relationsTable.insert(Relation.HOLDS, classifier.getRelationClass(entity, type), entity.getEntityID(), type.getEntityID(), projectID, fileID, local.getStartPos(), local.getLength());
           }
           counter.increment();
         }
@@ -463,7 +467,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
         // Add the inside relation
         LimitedEntityDB parent = getEid(local.getParent(), projectID);
         if (parent != null) {
-          relationsTable.insert(Relation.INSIDE, entity.getEntityID(), parent.getEntityID(), null, projectID, fileID, null, null);
+          relationsTable.insert(Relation.INSIDE, classifier.getRelationClass(entity, parent), entity.getEntityID(), parent.getEntityID(), projectID, fileID, null, null);
         }
         
         counter.increment();
@@ -587,6 +591,11 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     for (UsedJarEX usedJar : extracted.getUsedJarReader()) {
       projectIDs.add(projectsTable.getProjectIDByHash(usedJar.getHash()));
     }
+    for (FileEX file : extracted.getFileReader()) {
+      if (file.getType() == File.JAR) {
+        projectIDs.add(projectsTable.getProjectIDByHash(file.getHash()));
+      }
+    }
     buildInClause(projectIDs);
   }
   
@@ -633,7 +642,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     public void updateDuplicate(String eid, String projectID) {
       for (LimitedEntityDB entity : entities.values()) {
         if (entity.notDuplicate()) {
-          relationsTable.insert(Relation.MATCHES, eid, entity.getEntityID(), false, projectID);
+          relationsTable.insert(Relation.MATCHES, RelationClass.NOT_APPLICABLE, eid, entity.getEntityID(), projectID);
         }
       }
       entities.put(projectID, new LimitedEntityDB(projectID, eid, Entity.DUPLICATE));
