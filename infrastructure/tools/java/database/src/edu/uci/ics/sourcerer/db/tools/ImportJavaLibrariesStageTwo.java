@@ -47,40 +47,13 @@ public class ImportJavaLibrariesStageTwo extends ExtractedImporterThread {
       
       String projectID = projectsTable.getProjectIDByName(library.getName());
       
-      locker.addRead(entitiesTable);
-      locker.lock();
       loadEntityMap(projectID);
-      locker.unlock();
-      
-      locker.addRead(filesTable);
-      locker.lock();
       loadFileMap(projectID);
-      locker.unlock();
-      
-      locker.addWrite(entitiesTable);
-      locker.lock();
       insertRemainingEntities(library, projectID);
-      locker.unlock();
-      
-      locker.addRead(entitiesTable);
-      locker.lock();
       loadRemainingEntityMap(projectID);
-      locker.unlock();
-      
-      locker.addWrites(relationsTable);
-      locker.lock();
       insertRelations(library, projectID);
-      locker.unlock();
-      
-      locker.addWrite(importsTable);
-      locker.lock();
       insertImports(library, projectID);
-      locker.unlock();
-      
-      locker.addWrite(commentsTable);
-      locker.lock();
       insertComments(library, projectID);
-      locker.unlock();
       
       clearMaps();
       counter.increment();

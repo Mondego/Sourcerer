@@ -67,6 +67,14 @@ public class ServletUtils {
 		}
 	}
 
+	public static void writeByteArray(HttpServletResponse response, String name, byte[] bytes) throws IOException {
+	  setResponse(response, name);
+
+	  OutputStream os = response.getOutputStream();
+	  os.write(bytes);
+	  os.close();
+	}
+	
 	public static void writeFile(HttpServletResponse response, String name,
 			File file) throws IOException {
 		writeInputStream(response, name, new FileInputStream(file));
