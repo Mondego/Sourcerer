@@ -187,16 +187,18 @@ public class FileAccessor {
       }
     } else if (file.getType() == File.SOURCE) {
       if (project.getType() == Project.CRAWLED) {
-        IJavaFile javaFile = repo.getFile(file.getPath());
+        byte[] javaFile = repo.getFile(project.getPath(), file.getPath());
         if (javaFile == null) {
           return new Result("Unable to find " + file.getPath() + " for " + file);
         } else {
           if (location == null) {
-            return new Result(javaFile.getName(), FileUtils.getFileAsByteArray(javaFile.getFile()));
+            return new Result(file.getName(), javaFile);
           } else {
-            String name = javaFile.getName();
+            String name = file.getName();
             name = name.substring(0, name.indexOf('.')) + "-" + location.getOffset() + "-" + location.getLength() + ".java";
-            return new Result(name, FileUtils.getFileFragmentAsByteArray(javaFile.getFile(), location.getOffset(), location.getLength()));
+            byte[] fragment = new byte[location.getLength()];
+            System.arraycopy(javaFile, location.getOffset(), fragment, 0, location.getLength());
+            return new Result(name, fragment);
           }
         }
       } else {

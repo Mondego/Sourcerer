@@ -28,10 +28,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import edu.uci.ics.sourcerer.repo.base.normal.JavaFile;
@@ -341,13 +343,35 @@ public class Repository extends AbstractRepository {
     return projects.get(projectPath);
   }
   
-  public IJavaFile getFile(String path) {
-    // TODO: modify to work on compressed projects
-    File file = new File(repoRoot, path.replace('*', ' '));
-    if (file.exists()) {
-      return new JavaFile(path, file);
+  public byte[] getFile(String projectPath, String path) {
+    path = path.replace('*', ' ');
+    
+    RepoProject project = getProject(projectPath);
+    File content = project.getContent().toFile();
+    if (content.isDirectory()) {
+      File file = new File(repoRoot, path);
+      if (file.exists()) {
+        return FileUtils.getFileAsByteArray(file);
+      } else {
+        return null;
+      }
     } else {
-      return null;
+      ZipFile zip = null;
+      try {
+        zip = new ZipFile(content);
+        path = path.substring(1);
+        ZipEntry entry = zip.getEntry(path);
+        if (entry != null) {
+          return FileUtils.getInputStreamAsByteArray(zip.getInputStream(entry), (int)entry.getSize());
+        } else {
+          return null;
+        }
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to read zip file", e);
+        return null;
+      } finally {
+        FileUtils.close(zip);
+      }
     }
   }
   
