@@ -22,6 +22,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -33,7 +34,6 @@ import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.db.FileDB;
 import edu.uci.ics.sourcerer.model.db.LocationDB;
 import edu.uci.ics.sourcerer.model.db.ProjectDB;
-import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
@@ -235,6 +235,15 @@ public class FileAccessor {
             String minusClass = file.getPath().substring(0, file.getPath().lastIndexOf('.'));
             String entryName = minusClass.replace('.', '/') + ".java";
             ZipEntry entry = zip.getEntry(entryName);
+            if (entry == null) {
+              Enumeration<? extends ZipEntry> entries = zip.entries();
+              for (ZipEntry possibleEntry = entries.nextElement(); entries.hasMoreElements(); possibleEntry = entries.nextElement()) {
+                if (possibleEntry.getName().endsWith(entryName)) {
+                  entry = possibleEntry;
+                  break;
+                }
+              }
+            }
             if (entry == null) {
               return new Result("Unable to find entry " + entryName + " in " + sourceFile.getName() + " for " + file + " and " + project);
             } else {
