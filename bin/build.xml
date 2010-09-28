@@ -383,8 +383,8 @@
 	<!-- Construct the test repository -->
 	<target name="create-test-repo" depends="compile-java-tools-core,sourcerer-lib,repo-tools">
 		<!-- Clear 0/1 -->
-		<delete dir="${test-repo/0/1}" />
-		<delete dir="${test-repo/0/2}" />
+		<delete dir="${test-repo}/0/1/content/src" />
+		<delete dir="${test-repo}/0/1/content/src" />
 		
 		<!-- Setup 0/1 with sourcerer-lib -->
 		<copy todir="${test-repo}/0/1/content/src">
