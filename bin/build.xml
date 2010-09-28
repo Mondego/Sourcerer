@@ -384,7 +384,6 @@
 	<target name="create-test-repo" depends="compile-java-tools-core,sourcerer-lib,repo-tools">
 		<!-- Clear 0/1 -->
 		<delete dir="${test-repo}/0/1/content/src" />
-		<delete dir="${test-repo}/0/1/content/src" />
 		
 		<!-- Setup 0/1 with sourcerer-lib -->
 		<copy todir="${test-repo}/0/1/content/src">
@@ -396,14 +395,15 @@
 		<copy todir="${test-repo}/0/1/content/src">
 			<fileset dir="${model}" includes="**/*.java" />
 		</copy>
-
-		<!-- Setup 0/2 with sourcerer-db and sourcerer-lib.jar -->
-		<copy todir="${test-repo}/0/2/content/src">
-			<fileset dir="${database}" includes="**/*.java" />
-		</copy>
-		<copy todir="${test-repo}/0/2/content/lib">
-			<fileset dir=".">
-				<include name="sourcerer-lib.jar" />
+		<copy todir="${test-repo}/0/1/content/src">
+      <fileset dir="${database}" includes="**/*.java" />
+    </copy>
+		<copy todir="${test-repo}/0/1/content/src">
+      <fileset dir="${file-server}" includes="**/*.java" />
+    </copy>
+		<copy todir="${test-repo}/0/1/content/lib">
+			<fileset dir="${lib}">
+				<include name="servlet-api.jar" />
 			</fileset>
 		</copy>
 
