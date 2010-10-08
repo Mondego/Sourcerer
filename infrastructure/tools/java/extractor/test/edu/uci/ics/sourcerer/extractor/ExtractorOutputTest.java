@@ -108,15 +108,17 @@ public class ExtractorOutputTest {
     duplicates = 0;
     logger.info("--- Extractor Output Verification ---");
     for (ExtractedProject extractedProject : extractedRepo.getProjects()) {
-      logger.info("Verifying Project " + extractedProject.getRelativePath());
-      ExtractorOutputMap map = ExtractorOutputMap.getExtractorOutputMap(extractedProject);
-      
-      RepoProject project = repo.getProject(extractedProject.getRelativePath());
-      IFileSet files = project.getFileSet();
-      for (IJavaFile file : files.getUniqueJavaFiles()) {
-        String relativePath = files.convertToRelativePath(file.getPath());
-        verifyLine = "Verifying " + relativePath;
-        verifyOutput(file, map.getExtractorOutput(relativePath));
+      if (extractedProject.shouldVerify()) {
+        logger.info("Verifying Project " + extractedProject.getRelativePath());
+        ExtractorOutputMap map = ExtractorOutputMap.getExtractorOutputMap(extractedProject);
+        
+        RepoProject project = repo.getProject(extractedProject.getRelativePath());
+        IFileSet files = project.getFileSet();
+        for (IJavaFile file : files.getUniqueJavaFiles()) {
+          String relativePath = files.convertToRelativePath(file.getPath());
+          verifyLine = "Verifying " + relativePath;
+          verifyOutput(file, map.getExtractorOutput(relativePath));
+        }
       }
     }
     logger.info("--- Summary ---");

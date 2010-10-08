@@ -23,12 +23,35 @@ import java.io.File;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedProjectProperties extends AbstractExtractedProperties {
+  protected static final String VERIFY = "verify";
+  
+  private boolean shouldVerify;
+  
   private ExtractedProjectProperties() {}
   
   public static ExtractedProjectProperties load(File file) {
     ExtractedProjectProperties props = new ExtractedProjectProperties();
     props.loadProperties(file);
     return props;
+  }
+  
+  @Override
+  protected void loadProperties(File file) {
+    super.loadProperties(file);
+    
+    shouldVerify = readBooleanProperty(VERIFY);
+  }
+  
+  
+  @Override
+  public void save(File file) {
+    set(VERIFY, shouldVerify);
+    
+    super.save(file);
+  }
+  
+  public boolean shouldVerify() {
+    return shouldVerify;
   }
   
   public String getDescription() {

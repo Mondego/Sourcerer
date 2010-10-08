@@ -82,6 +82,10 @@ public class ExtractedProject extends Extracted {
     return properties;
   }
   
+  public boolean shouldVerify() {
+    return properties.shouldVerify();
+  }
+  
   public String getDescription() {
     return properties.getDescription();
   }

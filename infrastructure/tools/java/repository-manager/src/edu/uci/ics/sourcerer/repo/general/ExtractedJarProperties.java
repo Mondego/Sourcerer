@@ -38,12 +38,16 @@ public class ExtractedJarProperties extends AbstractBinaryProperties {
   public static ExtractedJarProperties load(File file) {
     ExtractedJarProperties props = new ExtractedJarProperties();
     props.loadProperties(file);
-
-    props.group = props.properties.getProperty(GROUP);
-    props.version = props.properties.getProperty(VERSION);
-    props.hash = props.properties.getProperty(HASH);
-    
     return props;
+  }
+  
+  @Override
+  protected void loadProperties(File file) {
+    super.loadProperties(file);
+    
+    group = properties.getProperty(GROUP);
+    version = properties.getProperty(VERSION);
+    hash = properties.getProperty(HASH);
   }
 
   public static void create(File file, String name, String group, String version, String hash) {

@@ -13,7 +13,7 @@ public class Main {
   }
   
   public static void main(String[] args) {
-    PropertyManager.initializeProperties();
+    PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
     
     PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO, OUTPUT);
