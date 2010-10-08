@@ -23,8 +23,8 @@ import edu.uci.ics.sourcerer.util.io.Property;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class IntegerProperty extends Property<Integer> {
-  public IntegerProperty(String name, Integer defaultValue, String category, String description) {
-    super(name, defaultValue, category, description);
+  public IntegerProperty(String name, Integer defaultValue, String description) {
+    super(name, defaultValue, description);
   }
 
   @Override

@@ -25,11 +25,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 import java.util.logging.Level;
+
+import com.sun.xml.internal.ws.util.StringUtils;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
@@ -41,13 +44,14 @@ import edu.uci.ics.sourcerer.util.io.properties.StreamProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class PropertyManager {
-  public static final Property<Boolean> PRINT_USAGE = new BooleanProperty("usage", false, "General", "Prints usage information.");
-  public static final Property<File> PROPERTIES_FILE = new FileProperty("properties-file", "General", "File containing Java-style property bindings.").makeOptional();
-  public static final Property<InputStream> PROPERTIES_STREAM = new StreamProperty("properties-stream", "General", "Stream containing Java-style property bindings.").makeOptional();
-  public static final Property<Boolean> REQUIRE_REGISTERED = new BooleanProperty("require-registered-properties", true, "General", "Terminate execution if registered property not present.");
-  
   private static PropertyManager singleton = null;
-  private static Map<String, Collection<Property<?>>> usedProperties = null;
+  
+  private static Collection<Property<?>> registeredProperties = null;
+  
+  public static final Property<Boolean> PRINT_USAGE = new BooleanProperty("usage", false, "Prints usage information.").register("General");
+  public static final Property<File> PROPERTIES_FILE = new FileProperty("properties-file", "File containing Java-style property bindings.").makeOptional().register("General");
+  public static final Property<InputStream> PROPERTIES_STREAM = new StreamProperty("properties-stream", "Stream containing Java-style property bindings.").makeOptional().register("General");
+  
   private Map<String, String> propertyMap;
   
   private PropertyManager() {
@@ -58,65 +62,79 @@ public class PropertyManager {
     return propertyMap.get(name);
   }
   
-  public synchronized static void registerResumeLoggingProperties() {
+  public synchronized Command getCommand(Command ... commands) {
+    LinkedList<Command> activeCommands = Helper.newLinkedList();
     
-  }
-  
-  private static void addProperty(Property<?> prop) {
-    Helper.getFromMap(usedProperties, prop.category, HashSet.class).add(prop);
-  }
-  
-  public synchronized static boolean registerAndVerify(Property<?> ... properties) {
-    registerUsedProperties(properties);
-    return verifyUsage();
-  }
-  
-  public synchronized static void registerUsedProperties(Property<?> ... properties) {
-    if (usedProperties == null) {
-      usedProperties = Helper.newHashMap();   
-      addProperty(PRINT_USAGE);
-      addProperty(REQUIRE_REGISTERED);
+    for (Command command : commands) {
+      if (propertyMap.containsKey(command.getName())) {
+        activeCommands.add(command);
+      }
     }
-    for (Property<?> prop : properties) {
-      addProperty(prop);
+    
+    Command command = null;
+    
+    // Make sure only one command was selected
+    if (activeCommands.size() == 0) {
+      logger.log(Level.SEVERE, "No command selected.");
+      printCommands(commands);
+      return null;
+    } else if (activeCommands.size() > 1) {
+      StringBuilder mult = new StringBuilder();
+      for (Command c : activeCommands) {
+        mult.append(" ").append(c.getName()).append(",");
+      }
+      mult.setCharAt(mult.length() - 1, '.');
+      logger.log(Level.SEVERE, "Multiple commands selected:" + mult.toString());
+      printCommands(commands);
+      return null;
+    } else {
+      command = activeCommands.getFirst();
     }
+    
+    // Verify that the required properties are present
+    Collection<Property<?>> missingProperties = Helper.newLinkedList();
+  }
+  
+  public synchronized static void registerProperty(Property<?> property) {
+    if (registeredProperties == null) {
+      registeredProperties = Helper.newHashSet();   
+    }
+    registeredProperties.add(property);
+  }
+  
+  private synchronized void printCommands(Command[] commands) {
+    TablePrettyPrinter printer = TablePrettyPrinter.getCommandLinePrettyPrinter();
+    printer.addHeader("A single command may be chosen per execution. All commands should be prefixed by '--'. The following commands are available...");
+    printer.beginTable(2, 80);
+    printer.makeColumnWrappable(1);
+    printer.addDividerRow();
+    for (Command command : commands) {
+      printer.beginRow();
+      printer.addCell(command.getName());
+      printer.addCell(command.getDescription());
+    }
+    printer.endTable();
   }
   
   public synchronized static void printUsage() {
-    TablePrettyPrinter printer = TablePrettyPrinter.getCommandLinePrettyPrinter();
-    printer.beginTable(3, 80);
-    printer.makeColumnWrappable(2);
-    printer.addDividerRow();
-    for (Map.Entry<String, Collection<Property<?>>> entry : usedProperties.entrySet()) {
-      printer.beginRow();
-      printer.addCell(entry.getKey() + " Properties", 3, Alignment.CENTER);
-      printer.addDividerRow();
-      for (Property<?> property : entry.getValue()) {
-        printer.beginRow();
-        printer.addCell(property.getName());
-        printer.addCell(property.getType());
-        printer.addCell(property.getDescriptionWithDefault());
-      }
-      printer.addDividerRow();
-    }
-    printer.endTable();
-    System.exit(0);
-  }
-  
-  public synchronized static boolean verifyUsage() {
-    boolean problem = false;
-    for (Collection<Property<?>> properties : usedProperties.values()) {
-      for (Property<?> prop : properties) {
-        if (!prop.hasValue() && prop.isNotOptional()) {
-          logger.log(Level.SEVERE, prop.getName() + " not specified.");
-          problem = true;
-        }
-      }
-    }
-    if ((problem && REQUIRE_REGISTERED.getValue()) || PRINT_USAGE.getValue()) {
-      printUsage();
-    }
-    return problem;
+//    TablePrettyPrinter printer = TablePrettyPrinter.getCommandLinePrettyPrinter();
+//    printer.beginTable(3, 80);
+//    printer.makeColumnWrappable(2);
+//    printer.addDividerRow();
+//    for (Map.Entry<String, Collection<Property<?>>> entry : usedProperties.entrySet()) {
+//      printer.beginRow();
+//      printer.addCell(entry.getKey() + " Properties", 3, Alignment.CENTER);
+//      printer.addDividerRow();
+//      for (Property<?> property : entry.getValue()) {
+//        printer.beginRow();
+//        printer.addCell(property.getName());
+//        printer.addCell(property.getType());
+//        printer.addCell(property.getDescriptionWithDefault());
+//      }
+//      printer.addDividerRow();
+//    }
+//    printer.endTable();
+//    System.exit(0);
   }
   
   public synchronized static void initializeProperties() {
@@ -140,9 +158,7 @@ public class PropertyManager {
             value = args[++index];
           }
           if (singleton.propertyMap.containsKey(prop)) {
-            if (value.equals(singleton.propertyMap.get(prop))) {
-              logger.log(Level.SEVERE, "Conflicting command line inputs: " + prop + " set as " + singleton.propertyMap.get(prop) + " and " + value);
-            }
+            logger.log(Level.SEVERE, "Duplicate value for " + prop + ": ignoring " + value + " for " + singleton.propertyMap.get(prop));
           } else {
             singleton.propertyMap.put(prop, value);
           }
@@ -162,9 +178,7 @@ public class PropertyManager {
 
         for (Entry<String, String> entry : (Set<Entry<String, String>>) (Object) props.entrySet()) {
           if (singleton.propertyMap.containsKey(entry.getKey())) {
-            if (entry.getValue().equals(singleton.propertyMap.get(entry.getKey()))) {
-              logger.log(Level.SEVERE, "Conflicting properties file inputs: " + entry.getKey() + " set as " + singleton.propertyMap.get(entry.getKey()) + " and " + entry.getValue());
-            }
+            logger.log(Level.SEVERE, "Duplicate value for " + entry.getKey() + ": ignoring " + entry.getValue() + " for " + singleton.propertyMap.get(entry.getKey()));
           } else {
             singleton.propertyMap.put(entry.getKey(), entry.getValue());
           }
@@ -182,9 +196,7 @@ public class PropertyManager {
 
         for (Entry<String, String> entry : (Set<Entry<String, String>>) (Object) props.entrySet()) {
           if (singleton.propertyMap.containsKey(entry.getKey())) {
-            if (entry.getValue().equals(singleton.propertyMap.get(entry.getKey()))) {
-              logger.log(Level.SEVERE, "Conflicting properties file inputs: " + entry.getKey() + " set as " + singleton.propertyMap.get(entry.getKey()) + " and " + entry.getValue());
-            }
+            logger.log(Level.SEVERE, "Duplicate value for " + entry.getKey() + ": ignoring " + entry.getValue() + " for " + singleton.propertyMap.get(entry.getKey()));
           } else {
             singleton.propertyMap.put(entry.getKey(), entry.getValue());
           }

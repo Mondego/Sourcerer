@@ -35,27 +35,24 @@ public abstract class Property <T> {
   protected boolean initialized;
   protected T value;
   protected T defaultValue;
-  
-  protected String category;
+
   protected String description;
   
   protected boolean optional = false;
-
-  protected Property(String name, String category, String description) {
-    this.name = name;
-    this.category = category;
-    this.description = description;
-  }
   
-  protected Property(String name, T defaultValue, String category, String description) {
+  protected Property(String name, T defaultValue, String description) {
     this.name = name;
     this.defaultValue = defaultValue;
-    this.category = category;
     this.description = description;
   }
   
   public Property<T> makeOptional() {
     optional = true;
+    return this;
+  }
+  
+  public Property<T> register(String category) {
+    PropertyManager.registerUsedProperty(category, this);
     return this;
   }
   

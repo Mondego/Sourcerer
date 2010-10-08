@@ -23,12 +23,12 @@ import edu.uci.ics.sourcerer.util.io.Property;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class StringProperty extends Property<String> {
-  public StringProperty(String name, String category, String description) {
-    super(name, category, description);
+  public StringProperty(String name, String description) {
+    super(name, null, description);
   }
   
   public StringProperty(String name, String defaultValue, String category, String description) {
-    super(name, defaultValue, category, description);
+    super(name, defaultValue, description);
   }
   
   @Override
