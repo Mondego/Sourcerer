@@ -25,12 +25,12 @@ import edu.uci.ics.sourcerer.util.io.Property;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FileProperty extends Property<File> {
-  public FileProperty(String name, String category, String description) {
-    super(name, category, description);
+  public FileProperty(String name, String description) {
+    super(name, null, description);
   }
   
-  public FileProperty(String name, File defaultValue, String category, String description) {
-    super(name, defaultValue, category, description);
+  public FileProperty(String name, File defaultValue, String description) {
+    super(name, defaultValue, description);
   }
   
   @Override
