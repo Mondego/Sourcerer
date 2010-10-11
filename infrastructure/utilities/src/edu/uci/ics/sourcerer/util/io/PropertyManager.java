@@ -23,16 +23,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 import java.util.logging.Level;
-
-import com.sun.xml.internal.ws.util.StringUtils;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
@@ -46,9 +47,9 @@ import edu.uci.ics.sourcerer.util.io.properties.StreamProperty;
 public class PropertyManager {
   private static PropertyManager singleton = null;
   
-  private static Collection<Property<?>> registeredProperties = null;
+  private static Map<String, Collection<Property<?>>> registeredProperties = null;
   
-  public static final Property<Boolean> PRINT_USAGE = new BooleanProperty("usage", false, "Prints usage information.").register("General");
+  public static final Property<Boolean> HELP = new BooleanProperty("help", false, "Prints usage information.").register("General");
   public static final Property<File> PROPERTIES_FILE = new FileProperty("properties-file", "File containing Java-style property bindings.").makeOptional().register("General");
   public static final Property<InputStream> PROPERTIES_STREAM = new StreamProperty("properties-stream", "Stream containing Java-style property bindings.").makeOptional().register("General");
   
@@ -62,11 +63,12 @@ public class PropertyManager {
     return propertyMap.get(name);
   }
   
-  public synchronized Command getCommand(Command ... commands) {
+  public synchronized static Command getCommand(Command ... commands) {
+    PropertyManager properties = getProperties();
     LinkedList<Command> activeCommands = Helper.newLinkedList();
     
     for (Command command : commands) {
-      if (propertyMap.containsKey(command.getName())) {
+      if (properties.getValue(command.getName()) != null) {
         activeCommands.add(command);
       }
     }
@@ -90,22 +92,82 @@ public class PropertyManager {
     } else {
       command = activeCommands.getFirst();
     }
+       
+    // Add all the command properties
+    Deque<Property<?>> stack = Helper.newStack();
+    stack.addAll(Arrays.asList(command.getProperties()));
+    for (Property<?>[] conditionals : command.getConditionalProperties()) {
+      for (Property<?> prop : conditionals) {
+        stack.add(prop.makeOptional());
+      }
+    }
+    Collection<Property<?>> commandProps = Helper.getFromMap(registeredProperties, command.getName(), LinkedHashMap.class);
+    while (!stack.isEmpty()) {
+      Property<?> prop = stack.pop();
+      commandProps.add(prop);
+      for (Property<?> required : prop.getRequiredProperties()) {
+        if (!Boolean.TRUE.equals(prop.getValue())) {
+          required.makeOptional();
+        }
+        required.isRequiredBy(prop);
+        stack.add(required);
+      }
+    }
     
     // Verify that the required properties are present
     Collection<Property<?>> missingProperties = Helper.newLinkedList();
-  }
-  
-  public synchronized static void registerProperty(Property<?> property) {
-    if (registeredProperties == null) {
-      registeredProperties = Helper.newHashSet();   
+    Collection<Property<?>[]> invalidConditionals = Helper.newLinkedList();
+    
+    // Check the conditional properties
+    for (Property<?>[] conditionals : command.getConditionalProperties()) {
+      boolean foundOne = false;
+      for (Property<?> prop : conditionals) {
+        if (prop.hasValue()) {
+          if (foundOne) {
+            invalidConditionals.add(conditionals);
+            break;
+          } else {
+            foundOne = true;
+          }
+        }
+      }
+      if (!foundOne) {
+        invalidConditionals.add(conditionals);
+      }
     }
-    registeredProperties.add(property);
+    
+    // Check all of the registered properties
+    for (Collection<Property<?>> props :  registeredProperties.values()) {
+      for (Property<?> prop : props) {
+        if (prop.isNotOptional() && !prop.hasValue()) {
+          missingProperties.add(prop);
+        }
+      }
+    }
+    
+    if (HELP.getValue()) {
+      printHelp(command);
+      return null;
+    } else if (missingProperties.isEmpty() && invalidConditionals.isEmpty()) {
+      return command;
+    } else {
+      printCommand(command, missingProperties, invalidConditionals);
+      return null;
+    }
   }
   
-  private synchronized void printCommands(Command[] commands) {
-    TablePrettyPrinter printer = TablePrettyPrinter.getCommandLinePrettyPrinter();
-    printer.addHeader("A single command may be chosen per execution. All commands should be prefixed by '--'. The following commands are available...");
-    printer.beginTable(2, 80);
+  public synchronized static void registerProperty(String category, Property<?> property) {
+    if (registeredProperties == null) {
+      registeredProperties = Helper.newHashMap();   
+    }
+    Helper.getFromMap(registeredProperties, category, HashMap.class).add(property);
+  }
+  
+  private static void printCommands(Command[] commands) {
+    Logging.REPORT_TO_CONSOLE.setValue(true);
+    TablePrettyPrinter printer = TablePrettyPrinter.getLoggerPrinterPrinter();
+    printer.addHeader("A single command may be chosen per execution. All commands should be prefixed by '--'. To view the list of properties for a single command, type --<command> --help. The following commands are available...");
+    printer.beginTable(2, 70);
     printer.makeColumnWrappable(1);
     printer.addDividerRow();
     for (Command command : commands) {
@@ -114,27 +176,75 @@ public class PropertyManager {
       printer.addCell(command.getDescription());
     }
     printer.endTable();
+    printer.close();
   }
   
-  public synchronized static void printUsage() {
-//    TablePrettyPrinter printer = TablePrettyPrinter.getCommandLinePrettyPrinter();
-//    printer.beginTable(3, 80);
-//    printer.makeColumnWrappable(2);
-//    printer.addDividerRow();
-//    for (Map.Entry<String, Collection<Property<?>>> entry : usedProperties.entrySet()) {
-//      printer.beginRow();
-//      printer.addCell(entry.getKey() + " Properties", 3, Alignment.CENTER);
-//      printer.addDividerRow();
-//      for (Property<?> property : entry.getValue()) {
-//        printer.beginRow();
-//        printer.addCell(property.getName());
-//        printer.addCell(property.getType());
-//        printer.addCell(property.getDescriptionWithDefault());
-//      }
-//      printer.addDividerRow();
-//    }
-//    printer.endTable();
-//    System.exit(0);
+  private static void printCommand(Command command, Collection<Property<?>> missingProperties, Collection<Property<?>[]> invalidConditionals) {
+    Logging.REPORT_TO_CONSOLE.setValue(true);
+    TablePrettyPrinter printer = TablePrettyPrinter.getLoggerPrinterPrinter();
+    if (!missingProperties.isEmpty()) {
+      printer.addHeader("The following required properties for " + command.getName() + " were not supplied. Properties should be specified as --<name> <value>.");
+      printer.beginTable(3, 70);
+      printer.makeColumnWrappable(2);
+      printer.addDividerRow();
+      for (Property<?> prop : missingProperties) {
+        printer.beginRow();
+        printer.addCell(prop.getName());
+        printer.addCell(prop.getType());
+        printer.addCell(prop.getDescription());
+      }
+      printer.endTable();
+    }
+    if (!invalidConditionals.isEmpty()) {
+      for (Property<?>[] conditional : invalidConditionals) {
+        printer.addHeader("Exactly one of following required properties for " + command.getName() + " must be supplied. Properties should be specified as --<name> <value>.");
+        printer.beginTable(3, 70);
+        printer.makeColumnWrappable(2);
+        printer.addDividerRow();
+        for (Property<?> prop : conditional) {
+          printer.beginRow();
+          printer.addCell(prop.getName());
+          printer.addCell(prop.getType());
+          printer.addCell(prop.getDescription());
+        }
+        printer.endTable();
+      }
+    }
+    printer.close();
+  }
+  
+  private synchronized static void printHelp(Command command) {
+    Logging.REPORT_TO_CONSOLE.setValue(true);
+    TablePrettyPrinter printer = TablePrettyPrinter.getLoggerPrinterPrinter();
+    printer.addHeader("The following properties are available for " + command.getName() + ". Properties should be specified as --<name> <value>.");
+    printer.beginTable(3, 70);
+    printer.makeColumnWrappable(2);
+    printer.addDividerRow();
+    
+    // Start with the command properties
+    printer.beginRow();
+    printer.addCell(command.getName(), 3, Alignment.CENTER);
+    for (Property<?> prop : registeredProperties.get(command.getName())) {
+      printer.beginRow();
+      printer.addCell(prop.getName());
+      printer.addCell(prop.getType());
+      printer.addCell(prop.getDescription());
+    }
+    
+    // Now do the remainder
+    registeredProperties.remove(command.getName());
+    for (Map.Entry<String, Collection<Property<?>>> entry : registeredProperties.entrySet()) {
+      printer.beginRow();
+      printer.addCell(entry.getKey(), 3, Alignment.CENTER);
+      for (Property<?> prop : entry.getValue()) {
+        printer.beginRow();
+        printer.addCell(prop.getName());
+        printer.addCell(prop.getType());
+        printer.addCell(prop.getDescription());
+      }
+    }
+    printer.endTable();
+    printer.close();
   }
   
   public synchronized static void initializeProperties() {

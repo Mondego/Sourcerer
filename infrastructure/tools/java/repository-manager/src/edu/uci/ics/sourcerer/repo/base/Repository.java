@@ -28,7 +28,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Deque;
-import java.util.Enumeration;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -36,7 +35,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import edu.uci.ics.sourcerer.repo.base.normal.JavaFile;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
@@ -55,7 +53,7 @@ import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Repository extends AbstractRepository {
-  public static final Property<Integer> SPLIT_SIZE = new IntegerProperty("split-size", 1000, "Repository Manager", "Number of projects per split fragment.");
+  public static final Property<Integer> SPLIT_SIZE = new IntegerProperty("split-size", 1000, "Number of projects per split fragment.");
   
   private File tempDir;
   private Map<String, RepoProject> projects;
@@ -218,24 +216,6 @@ public class Repository extends AbstractRepository {
         }
       }
     }
-  }
-  
-  public static void deleteCompressedRepository(File repoRoot) {
-    logger.info("--- Deleting compressed repository at: " + repoRoot.getPath() + " ---");
-    
-    logger.info("Initializing repository...");
-    Repository repo = getRepository(repoRoot, null);
-    
-    logger.info("Deleting compressed content from " + repo.projects.size() + " projects...");
-    for (RepoProject project : repo.getProjects()) {
-      File content = project.getContent().toFile();
-      if (content.isFile()) {
-        logger.info("Deleting compressed content for: " + project);
-        content.delete();
-      }
-    }
-    
-    logger.info("--- Done! ---");
   }
 
   private static boolean zipContent(File input, File output) {

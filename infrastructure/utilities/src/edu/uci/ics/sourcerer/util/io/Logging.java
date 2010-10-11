@@ -48,13 +48,13 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  */
 @SuppressWarnings("serial")
 public final class Logging {
-  protected static final Property<Boolean> SUPPRESS_FILE_LOGGING = new BooleanProperty("suppress-file-logging", false, "Logging", "Suppresses all logging to files.");
-  protected static final Property<Boolean> REPORT_TO_CONSOLE = new BooleanProperty("report-to-console", false, "Logging", "Prints all the logging messages to the console.");
-  protected static final Property<String> ERROR_LOG = new StringProperty("error-log", "error%d.log", "Logging", "Filename for error log.");
-  protected static final Property<String> THREAD_LOG = new StringProperty("thread-log", "thread-%t%d.log", "Logging", "Filename for thread log.");
-  protected static final Property<String> INFO_LOG = new StringProperty("info-log", "info.log", "Logging", "Filename for the info log.");
-  protected static final Property<String> RESUME_LOG = new StringProperty("resume-log", "resume.log", "Logging", "Filename for the resume log.");
-  protected static final Property<Boolean> CLEAR_RESUME_LOG = new BooleanProperty("clear-resume-log", false, "Logging", "Clears the resume log before beginning."); 
+  protected static final Property<Boolean> SUPPRESS_FILE_LOGGING = new BooleanProperty("suppress-file-logging", false, "Suppresses all logging to files.").register("Logging");
+  protected static final Property<Boolean> REPORT_TO_CONSOLE = new BooleanProperty("report-to-console", false, "Prints all the logging messages to the console.").register("Logging");
+  protected static final Property<String> ERROR_LOG = new StringProperty("error-log", "error%d.log", "Filename for error log.").register("Logging");
+  protected static final Property<String> THREAD_LOG = new StringProperty("thread-log", "thread-%t%d.log", "Filename for thread log.").register("Logging");
+  protected static final Property<String> INFO_LOG = new StringProperty("info-log", "info.log", "Filename for the info log.").register("Logging");
+  protected static final Property<String> RESUME_LOG = new StringProperty("resume-log", "resume.log", "Filename for the resume log.");
+  protected static final Property<Boolean> CLEAR_RESUME_LOG = new BooleanProperty("clear-resume-log", false, "Clears the resume log before beginning."); 
   
   public static final Level RESUME = new Level("RESUME", 10000) {};
   
@@ -87,7 +87,7 @@ public final class Logging {
     defaultHandler.setLevel(Level.INFO);
     logger.addHandler(defaultHandler);
   }
-    
+
   private static Set<String> getResumeSet(File resumeFile) {
     if (resumeFile.exists()) {
       Set<String> resumeSet = Helper.newHashSet();
@@ -114,8 +114,6 @@ public final class Logging {
     if (resumeLoggingInitialized) {
       throw new IllegalStateException("Resume logging may only be initialized once");
     }
-    PropertyManager.registerUsedProperties(OUTPUT, RESUME_LOG, CLEAR_RESUME_LOG);
-    PropertyManager.verifyUsage();
     
     File resumeFile = new File(OUTPUT.getValue(), RESUME_LOG.getValue());
     
@@ -154,9 +152,6 @@ public final class Logging {
     if (loggingInitialized) {
       throw new IllegalStateException("The logger may only be initialized once");
     }
-   
-    PropertyManager.registerUsedProperties(OUTPUT, REPORT_TO_CONSOLE, SUPPRESS_FILE_LOGGING, INFO_LOG, ERROR_LOG);
-    PropertyManager.verifyUsage();
     
     try {
       mainThread = Thread.currentThread().getId();

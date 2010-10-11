@@ -29,15 +29,15 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractRepository {
-  public static final Property<File> INPUT_REPO = new FileProperty("input-repo", "Repository Manager", "The root directory of the input repository.");
-  public static final Property<File> OUTPUT_REPO = new FileProperty("output-repo", "Repository Manager", "The root directory of the output repository.");
+  public static final Property<File> INPUT_REPO = new FileProperty("input-repo", "The root directory of the input repository.");
+  public static final Property<File> OUTPUT_REPO = new FileProperty("output-repo", "The root directory of the output repository.");
   
-  public static final Property<File> JAR_FILTER = new FileProperty("jar-filter", "Extractor", "Only extract these jars.");
-  public static final Property<File> PROJECT_FILTER = new FileProperty("project-filter", "Extractor", "Only extract these projects.");
+  public static final Property<File> JAR_FILTER = new FileProperty("jar-filter", "Only extract these jars.");
+  public static final Property<File> PROJECT_FILTER = new FileProperty("project-filter", "Only extract these projects.");
   
-  public static final Property<String> JARS_DIR = new StringProperty("jars-dir", "jars", "Repository Manager", "The subdirectory containing the jar files.");
+  public static final Property<String> JARS_DIR = new StringProperty("jars-dir", "jars", "The subdirectory containing the jar files.");
 
-  public static final Property<String> PROJECT_NAMES_FILE = new StringProperty("project-names-files", "project-names.txt", "Repository Manager", "File for project names.");
+  public static final Property<String> PROJECT_NAMES_FILE = new StringProperty("project-names-files", "project-names.txt", "File for project names.");
 
   protected final String JARS;
   protected final String LIBS;

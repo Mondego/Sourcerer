@@ -21,21 +21,25 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class Property <T> {
-  public static final Property<Boolean> PROMPT_MISSING = new BooleanProperty("prompt-missing", false, "General", "Prompt for missing properties.");
+  public static final Property<Boolean> PROMPT_MISSING = new BooleanProperty("prompt-missing", false, "Prompt for missing properties.").register("General");
   
   protected String name;
   protected boolean initialized;
   protected T value;
   protected T defaultValue;
+  protected Property<?>[] requiredProperties;
 
+  protected Collection<Property<?>> requiredBy;
   protected String description;
   
   protected boolean optional = false;
@@ -46,14 +50,30 @@ public abstract class Property <T> {
     this.description = description;
   }
   
+  protected void isRequiredBy(Property<?> prop) {
+    if (requiredBy == null) {
+      requiredBy = Helper.newLinkedList();
+    }
+    requiredBy.add(prop);
+  }
+  
   public Property<T> makeOptional() {
     optional = true;
     return this;
   }
   
   public Property<T> register(String category) {
-    PropertyManager.registerUsedProperty(category, this);
+    PropertyManager.registerProperty(category, this);
     return this;
+  }
+  
+  public Property<T> requireProperties(Property<?> ... properties) {
+    if (requiredProperties == null) {
+      requiredProperties = properties;
+      return this;
+    } else {
+      throw new IllegalStateException("May not require more than one set of properties.");
+    }
   }
   
   public String getName() {
@@ -62,15 +82,28 @@ public abstract class Property <T> {
   
   public abstract String getType();
   
+  protected Property<?>[] getRequiredProperties() {
+    return requiredProperties;
+  }
+  
   protected String toString(T value) {
     return value.toString();
   }
   
-  public String getDescriptionWithDefault() {
+  public String getDescription() {
+    String required = "";
+    if (requiredBy != null) {
+      StringBuilder builder = new StringBuilder(" Required by");
+      for (Property<?> prop : requiredBy) {
+        builder.append(' ').append(prop.getName()).append(',');
+      }
+      builder.setCharAt(builder.length() - 1, '.');
+      required = builder.toString();
+    }
     if (defaultValue == null) {
-      return description;
+      return description + required;
     } else {
-      return description + " Defaults to " + toString(defaultValue) + ".";
+      return description + " Defaults to " + toString(defaultValue) + "." + required;
     }
   }
   
@@ -99,8 +132,6 @@ public abstract class Property <T> {
       initializeValue();
     }
     if (value == null) {
-      PropertyManager.registerUsedProperties(this);
-      PropertyManager.verifyUsage();
       throw new IllegalStateException(name + " never specified.");
     } else {
       return value;
@@ -128,26 +159,16 @@ public abstract class Property <T> {
               value = parseString(stringValue);
             } catch (Exception e) {
               logger.log(Level.SEVERE, "Unable to read value for " + name, e);
-              PropertyManager.printUsage();
+              throw new RuntimeException(e);
             }
           } else {
             value = defaultValue;
           }
         } else {
-          try {
-            value = parseString(stringValue);
-          } catch (IllegalArgumentException e) {
-            logger.log(Level.SEVERE, e.getMessage());
-            PropertyManager.printUsage();
-          }
+          value = parseString(stringValue);
         }
       } else {
-        try {
-          value = parseString(stringValue);
-        } catch (IllegalArgumentException e) {
-          logger.log(Level.SEVERE, e.getMessage());
-          PropertyManager.printUsage();
-        }
+        value = parseString(stringValue);
       }
       initialized = true;
     }

@@ -55,7 +55,7 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarIndex {
-  public static final Property<String> JAR_INDEX_FILE = new StringProperty("jar-index", "index.txt", "Repository Manager", "The filename of the jar index.");
+  public static final Property<String> JAR_INDEX_FILE = new StringProperty("jar-index", "index.txt", "The filename of the jar index.");
   
   public enum MavenFilter {
     NONE,

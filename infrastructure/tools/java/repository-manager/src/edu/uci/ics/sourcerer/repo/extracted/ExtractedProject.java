@@ -29,7 +29,7 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedProject extends Extracted {
-  public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Repository Manager", "Filename for the associated jars.");
+  public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Filename for the associated jars.");
   
   private ExtractedProjectProperties properties;
    

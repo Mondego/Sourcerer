@@ -44,7 +44,7 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedRepository extends AbstractRepository {
-  public static final Property<String> EXTRACTION_STATS_FILE = new StringProperty("extraction-stats-file", "extraction-stats.txt", "Repository Manager", "Output file for the extraction stats.");
+  public static final Property<String> EXTRACTION_STATS_FILE = new StringProperty("extraction-stats-file", "extraction-stats.txt", "Output file for the extraction stats.");
   
   private boolean includeNotExtracted = false;
   private Collection<ExtractedLibrary> libraries;

@@ -27,7 +27,7 @@ public class StringProperty extends Property<String> {
     super(name, null, description);
   }
   
-  public StringProperty(String name, String defaultValue, String category, String description) {
+  public StringProperty(String name, String defaultValue, String description) {
     super(name, defaultValue, description);
   }
   

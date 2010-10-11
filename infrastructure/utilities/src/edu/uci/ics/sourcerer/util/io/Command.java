@@ -17,6 +17,10 @@
  */
 package edu.uci.ics.sourcerer.util.io;
 
+import java.util.Collection;
+
+import edu.uci.ics.sourcerer.util.Helper;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -25,6 +29,7 @@ public class Command {
   private String name;
   private String description;
   private Property<?>[] properties;
+  private Collection<Property<?>[]> conditionalProperties;
   
   public Command(String name, String description) {
     this.name = name;
@@ -36,11 +41,27 @@ public class Command {
     return this;
   }
   
+  public Command setConditionalProperties(Property<?> ... properties) {
+    if (conditionalProperties == null) {
+      conditionalProperties = Helper.newLinkedList();
+    }
+    conditionalProperties.add(properties);
+    return this;
+  }
+  
   protected String getName() {
     return name;
   }
   
   protected String getDescription() {
     return description;
+  }
+  
+  protected Property<?>[] getProperties() {
+    return properties;
+  }
+  
+  protected Collection<Property<?>[]> getConditionalProperties() {
+    return conditionalProperties;
   }
 }
