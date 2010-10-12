@@ -83,6 +83,7 @@ public class Extractor implements IApplication {
   public static final Property<Boolean> USE_PROJECT_JARS = new BooleanProperty("use-project-jars", true, "Use project jars on the classpath.");
   public static final Property<Boolean> RESOLVE_MISSING_TYPES = new BooleanProperty("resolve-missing-types", false, "Re-attempt extraction on failed missing type extractions.")
       .setRequiredProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+  public static final Property<Boolean> SKIP_MISSING_TYPES = new BooleanProperty("skip-missing-types", false, "Skip extraction of projects with missing types.");
   
   public static final Command EXTRACT_LIBRARIES = 
       new Command("extract-libraries", "Extract the libraries.")
@@ -92,13 +93,13 @@ public class Extractor implements IApplication {
   public static final Command EXTRACT_JARS =
       new Command("extract-jars", "Extract the jars.")
           .setProperties(INPUT_REPO, OUTPUT_REPO, JARS_DIR, JAR_INDEX_FILE, 
-              JAR_FILTER, EXTRACT_LATEST_MAVEN, EXTRACT_BINARY, RESOLVE_MISSING_TYPES,
+              JAR_FILTER, EXTRACT_LATEST_MAVEN, EXTRACT_BINARY, RESOLVE_MISSING_TYPES, SKIP_MISSING_TYPES,
               IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
   
   public static final Command EXTRACT_PROJECTS = 
       new Command("extract-projects", "Extract the projects.")
           .setProperties(INPUT_REPO, OUTPUT_REPO, PROJECT_FILTER,
-              USE_PROJECT_JARS, RESOLVE_MISSING_TYPES,
+              USE_PROJECT_JARS, RESOLVE_MISSING_TYPES, SKIP_MISSING_TYPES,
               IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
   		  
   @Override
@@ -107,6 +108,11 @@ public class Extractor implements IApplication {
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
    
+    Command command = PropertyManager.getCommand(EXTRACT_LIBRARIES, EXTRACT_JARS, EXTRACT_PROJECTS);
+    if (command == null) {
+      return EXIT_OK;
+    }
+      
     IMPORT_WRITER.setValue(ImportWriter.class);
     PROBLEM_WRITER.setValue(ProblemWriter.class);
     ENTITY_WRITER.setValue(EntityWriter.class);
@@ -123,22 +129,17 @@ public class Extractor implements IApplication {
     DatabaseConnection connection = null;
     MissingTypeResolver resolver = null;
     if (RESOLVE_MISSING_TYPES.getValue()) {
-      PropertyManager.registerAndVerify(DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
       connection = new DatabaseConnection();
       connection.open();
       resolver = new MissingTypeResolver(connection);
     }
-    if (EXTRACT_LIBRARIES.getValue()) {
-      PropertyManager.registerAndVerify(OUTPUT_REPO);
+    
+    if (command == EXTRACT_LIBRARIES) {
       LibraryExtractor.extract();
-    } else if (EXTRACT_JARS.getValue()){
-      PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO, EXTRACT_BINARY);
+    } else if (command == EXTRACT_JARS){
       JarExtractor.extract(resolver);
-    } else if (EXTRACT_PROJECTS.getValue()) {
-      PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO, USE_PROJECT_JARS);
+    } else if (command == EXTRACT_PROJECTS) {
       ProjectExtractor.extract(resolver);
-    } else {
-      PropertyManager.printUsage();
     }
     
     FileUtils.close(connection);
