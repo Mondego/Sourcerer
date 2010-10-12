@@ -37,8 +37,16 @@ import static edu.uci.ics.sourcerer.repo.extracted.Extracted.LOCAL_VARIABLE_FILE
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.MISSING_TYPE_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.RELATION_FILE;
 import static edu.uci.ics.sourcerer.repo.extracted.Extracted.USED_JAR_FILE;
+import static edu.uci.ics.sourcerer.repo.extracted.Extracted.PROBLEM_FILE;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JARS_DIR;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JAR_FILTER;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.PROJECT_FILTER;
+import static edu.uci.ics.sourcerer.repo.general.JarIndex.JAR_INDEX_FILE;
+import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_URL;
+import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_USER;
+import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_PASSWORD;
 
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
@@ -57,6 +65,7 @@ import edu.uci.ics.sourcerer.extractor.io.file.ProblemWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.RelationWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.UsedJarWriter;
 import edu.uci.ics.sourcerer.extractor.resolver.MissingTypeResolver;
+import edu.uci.ics.sourcerer.util.io.Command;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -67,37 +76,37 @@ import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Extractor implements IApplication {
-  public static final Property<Boolean> EXTRACT_LIBRARIES = new BooleanProperty("extract-libraries", false, "Extractor", "Extract the libraries.");
-  public static final Property<Boolean> EXTRACT_JARS = new BooleanProperty("extract-jars", false, "Extractor", "Extract the jars.");
-  public static final Property<Boolean> EXTRACT_PROJECTS = new BooleanProperty("extract-projects", false, "Extractor", "Extract the projects.");
-  		
-  public static final Property<Boolean> EXTRACT_BINARY = new BooleanProperty("extract-binary", false, "Extractor", "Extract jars as binary only.");
-  public static final Property<Boolean> EXTRACT_LATEST_MAVEN = new BooleanProperty("extract-latest-maven", false, "Extractor", "Extract only the latest maven jars.");
-
-  public static final Property<Boolean> USE_PROJECT_JARS = new BooleanProperty("use-project-jars", true, "Extractor", "Use project jars on the classpath.");
-  public static final Property<Boolean> RESOLVE_MISSING_TYPES = new BooleanProperty("resolve-missing-types", false, "Extractor", "Re-attempt extraction on failed missing type extractions.");
-
-  public static final Property<Boolean> FORCE_SOURCE_REDO = new BooleanProperty("force-source-redo", false, "Extractor", "Redo completed extraction.");
-  public static final Property<Boolean> FORCE_MISSING_REDO = new BooleanProperty("force-missing-redo", false, "Extractor", "Redo completed extraction.");
+//  public static final Property<Boolean> FORCE_SOURCE_REDO = new BooleanProperty("force-source-redo", false, "Redo completed extraction.");
+//  public static final Property<Boolean> FORCE_MISSING_REDO = new BooleanProperty("force-missing-redo", false, "Redo completed extraction of projects with missing types.");
+  public static final Property<Boolean> EXTRACT_LATEST_MAVEN = new BooleanProperty("extract-latest-maven", false, "Extract only the latest maven jars.");
+  public static final Property<Boolean> EXTRACT_BINARY = new BooleanProperty("extract-binary", false, "Extract jars as binary only.");
+  public static final Property<Boolean> USE_PROJECT_JARS = new BooleanProperty("use-project-jars", true, "Use project jars on the classpath.");
+  public static final Property<Boolean> RESOLVE_MISSING_TYPES = new BooleanProperty("resolve-missing-types", false, "Re-attempt extraction on failed missing type extractions.")
+      .setRequiredProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
   
+  public static final Command EXTRACT_LIBRARIES = 
+      new Command("extract-libraries", "Extract the libraries.")
+          .setProperties(OUTPUT_REPO, 
+              IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
   
+  public static final Command EXTRACT_JARS =
+      new Command("extract-jars", "Extract the jars.")
+          .setProperties(INPUT_REPO, OUTPUT_REPO, JARS_DIR, JAR_INDEX_FILE, 
+              JAR_FILTER, EXTRACT_LATEST_MAVEN, EXTRACT_BINARY, RESOLVE_MISSING_TYPES,
+              IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
+  
+  public static final Command EXTRACT_PROJECTS = 
+      new Command("extract-projects", "Extract the projects.")
+          .setProperties(INPUT_REPO, OUTPUT_REPO, PROJECT_FILTER,
+              USE_PROJECT_JARS, RESOLVE_MISSING_TYPES,
+              IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
+  		  
   @Override
   public Object start(IApplicationContext context) throws Exception {
     String[] args = (String[]) context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
    
-    PropertyManager.registerAndVerify(EXTRACT_LIBRARIES, EXTRACT_JARS, EXTRACT_PROJECTS, EXTRACT_LATEST_MAVEN, RESOLVE_MISSING_TYPES, FORCE_SOURCE_REDO, FORCE_MISSING_REDO,
-        IMPORT_WRITER, IMPORT_FILE,
-        PROBLEM_WRITER, ProblemWriter.PROBLEM_FILE,
-        ENTITY_WRITER, CLASS_ENTITY_WRITER, ENTITY_FILE,
-        LOCAL_VARIABLE_WRITER, LOCAL_VARIABLE_FILE,
-        RELATION_WRITER, CLASS_RELATION_WRITER, RELATION_FILE,
-        COMMENT_WRITER, COMMENT_FILE,
-        FILE_WRITER, CLASS_FILE_WRITER, FILE_FILE,
-        USED_JAR_WRITER, USED_JAR_FILE,
-        MISSING_TYPE_WRITER, MISSING_TYPE_FILE);
-    
     IMPORT_WRITER.setValue(ImportWriter.class);
     PROBLEM_WRITER.setValue(ProblemWriter.class);
     ENTITY_WRITER.setValue(EntityWriter.class);

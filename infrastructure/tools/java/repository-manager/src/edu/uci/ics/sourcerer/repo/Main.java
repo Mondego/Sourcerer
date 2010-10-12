@@ -17,36 +17,23 @@
  */
 package edu.uci.ics.sourcerer.repo;
 
+import static edu.uci.ics.sourcerer.repo.base.Repository.SPLIT_SIZE;
+import static edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository.EXTRACTION_STATS_FILE;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JARS_DIR;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.PROJECT_NAMES_FILE;
-import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JARS_DIR;
 import static edu.uci.ics.sourcerer.repo.general.JarIndex.JAR_INDEX_FILE;
-import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.LINKS_FILE;
-import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.MAVEN_URL;
-import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
-import static edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository.EXTRACTION_STATS_FILE;
 import static edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.CSV_MODE;
-import static edu.uci.ics.sourcerer.repo.base.Repository.SPLIT_SIZE;
 
 import java.util.Set;
 
-import com.sun.xml.internal.ws.client.ClientSchemaValidationTube;
-
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
-import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
-import edu.uci.ics.sourcerer.repo.maven.MavenCrawlStats;
-import edu.uci.ics.sourcerer.repo.maven.MavenCrawler;
-import edu.uci.ics.sourcerer.repo.maven.MavenDownloader;
 import edu.uci.ics.sourcerer.util.io.Command;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Properties;
-import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
-import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
-import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

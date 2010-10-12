@@ -40,7 +40,6 @@ public class FileServer extends HttpServlet {
   @Override
   public void init() throws ServletException {
     PropertyManager.PROPERTIES_STREAM.setValue(getServletContext().getResourceAsStream("/WEB-INF/lib/file-server.properties"));
-    PropertyManager.REQUIRE_REGISTERED.setValue(false);
     PropertyManager.initializeProperties();
   }
   

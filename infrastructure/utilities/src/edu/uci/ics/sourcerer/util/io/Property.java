@@ -43,11 +43,15 @@ public abstract class Property <T> {
   protected String description;
   
   protected boolean optional = false;
+  protected boolean allowNull = false;
   
   protected Property(String name, T defaultValue, String description) {
     this.name = name;
     this.defaultValue = defaultValue;
     this.description = description;
+    if (defaultValue == null) {
+      allowNull = true;
+    }
   }
   
   protected void isRequiredBy(Property<?> prop) {
@@ -67,7 +71,7 @@ public abstract class Property <T> {
     return this;
   }
   
-  public Property<T> requireProperties(Property<?> ... properties) {
+  public Property<T> setRequiredProperties(Property<?> ... properties) {
     if (requiredProperties == null) {
       requiredProperties = properties;
       return this;
@@ -83,7 +87,11 @@ public abstract class Property <T> {
   public abstract String getType();
   
   protected Property<?>[] getRequiredProperties() {
-    return requiredProperties;
+    if (requiredProperties == null) {
+      return new Property<?>[0];
+    } else {
+      return requiredProperties;
+    }
   }
   
   protected String toString(T value) {
@@ -131,7 +139,7 @@ public abstract class Property <T> {
     if (!initialized) {
       initializeValue();
     }
-    if (value == null) {
+    if (value == null && !allowNull) {
       throw new IllegalStateException(name + " never specified.");
     } else {
       return value;

@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.util.io;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import edu.uci.ics.sourcerer.util.Helper;
 
@@ -58,10 +59,18 @@ public class Command {
   }
   
   protected Property<?>[] getProperties() {
-    return properties;
+    if (properties == null) {
+      return new Property<?>[0];
+    } else {
+      return properties;
+    }
   }
   
   protected Collection<Property<?>[]> getConditionalProperties() {
-    return conditionalProperties;
+    if (conditionalProperties == null) {
+      return Collections.emptyList();
+    } else {
+      return conditionalProperties;
+    }
   }
 }

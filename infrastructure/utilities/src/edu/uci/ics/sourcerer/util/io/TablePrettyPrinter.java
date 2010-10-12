@@ -48,6 +48,8 @@ public class TablePrettyPrinter {
   private int columns;
   private boolean csvMode = false;
   
+  private boolean firstTable = true;
+  
   private NumberFormat format;
   
   private TablePrettyPrinter(TableWriter writer) {
@@ -93,6 +95,16 @@ public class TablePrettyPrinter {
   }
   
   public void beginTable(int columns, int maxTableWidth) {
+    if (firstTable) {
+      firstTable = false;
+    } else {
+      try {
+        writer.endLine();
+        writer.endLine();
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Error writing table.", e);
+      }
+    }
     this.columns = columns;
     table = Helper.newArrayList();
     maxWidths = new MaxCounter[columns];
@@ -138,8 +150,6 @@ public class TablePrettyPrinter {
           writer.endLine();
         }
       }
-      writer.endLine();
-      writer.endLine();
       writer.flush();
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to write table", e);
@@ -284,8 +294,6 @@ public class TablePrettyPrinter {
           }
         }
       }
-      writer.endLine();
-      writer.endLine();
       writer.flush();
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to write table", e);
@@ -427,7 +435,7 @@ public class TablePrettyPrinter {
     return new TablePrettyPrinter(new WriterTableWriter(writer));
   }
   
-  public static TablePrettyPrinter getLoggerPrinterPrinter() {
+  public static TablePrettyPrinter getLoggerPrettyPrinter() {
     return new TablePrettyPrinter(new LoggerTableWriter());
   }
   
@@ -560,7 +568,6 @@ public class TablePrettyPrinter {
     }
     
     public void endLine() {
-      builder.append('\n');
       logger.log(Level.INFO, builder.toString());
       builder.setLength(0);
     }

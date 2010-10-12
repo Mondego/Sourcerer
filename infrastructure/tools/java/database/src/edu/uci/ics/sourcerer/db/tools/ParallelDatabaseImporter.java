@@ -41,7 +41,7 @@ import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ParallelDatabaseImporter {
-  public static Property<Integer> THREAD_COUNT = new IntegerProperty("thread-count", 4, "Database Importer", "Number of simultaneous threads");
+  public static Property<Integer> THREAD_COUNT = new IntegerProperty("thread-count", 4, "Number of simultaneous threads");
   
   public void initializeDatabase() {
     logger.info("Initializing database...");

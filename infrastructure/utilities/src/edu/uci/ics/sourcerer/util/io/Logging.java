@@ -156,15 +156,18 @@ public final class Logging {
     try {
       mainThread = Thread.currentThread().getId();
       
-      final boolean suppressFileLogging = SUPPRESS_FILE_LOGGING.getValue();
-      final boolean reportToConsole = REPORT_TO_CONSOLE.getValue();
+      boolean suppressFileLogging = SUPPRESS_FILE_LOGGING.getValue();
       
-      if (suppressFileLogging && !reportToConsole) {
+      if (suppressFileLogging && !REPORT_TO_CONSOLE.getValue()) {
         return;
       }
       
       if (!suppressFileLogging) {
-        OUTPUT.getValue().mkdirs();
+        if (OUTPUT.hasValue()) {
+          OUTPUT.getValue().mkdirs();
+        } else {
+          suppressFileLogging = true;
+        }
       }
       
       StreamHandler errorHandler = null;
@@ -188,7 +191,7 @@ public final class Logging {
               return "";
             } else {
               String msg = Logging.formatError(record);
-              if (reportToConsole && record.getLevel() == Level.SEVERE) {
+              if (REPORT_TO_CONSOLE.getValue() && record.getLevel() == Level.SEVERE) {
                 System.err.print(msg);
               }
               return msg;
@@ -201,21 +204,21 @@ public final class Logging {
       errorHandler.setLevel(Level.INFO);
       
       StreamHandler infoHandler = null;
-      if (suppressFileLogging) {
-        Formatter infoFormatter = new Formatter() {
-          @Override
-          public String format(LogRecord record) {
-            return formatInfo(record);
-          }
-        };
-        infoHandler = new StreamHandler(System.out, infoFormatter);
-      } else {
+      if (!suppressFileLogging) {
+//        Formatter infoFormatter = new Formatter() {
+//          @Override
+//          public String format(LogRecord record) {
+//            return formatInfo(record);
+//          }
+//        };
+//        infoHandler = new StreamHandler(System.out, infoFormatter);
+//      } else {
         Formatter infoFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
             if (record.getLevel() == Level.INFO && Thread.currentThread().getId() == mainThread) {
               String msg = formatInfo(record);
-              if (reportToConsole) {
+              if (REPORT_TO_CONSOLE.getValue()) {
                 System.out.print(msg);
               }
               return msg;
@@ -226,11 +229,11 @@ public final class Logging {
         };
         infoHandler = new FileHandler(getFileHandlerPattern(INFO_LOG));
         infoHandler.setFormatter(infoFormatter);
+        infoHandler.setLevel(Level.INFO);
+        logger.addHandler(infoHandler);
       }
-      infoHandler.setLevel(Level.INFO);
             
       logger.addHandler(errorHandler);
-      logger.addHandler(infoHandler);
       
       logger.removeHandler(defaultHandler);
       
