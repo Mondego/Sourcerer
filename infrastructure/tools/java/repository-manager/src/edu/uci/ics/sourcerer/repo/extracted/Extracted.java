@@ -229,4 +229,9 @@ public abstract class Extracted {
   public String getDescription() {
     return null;
   }
+  
+  @Override
+  public String toString() {
+    return getProperties().getName();
+  }
 }

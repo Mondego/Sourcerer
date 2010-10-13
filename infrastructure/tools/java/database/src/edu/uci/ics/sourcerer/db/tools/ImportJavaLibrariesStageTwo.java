@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.db.tools;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.util.Collection;
 import java.util.Collections;
 
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
@@ -39,6 +40,10 @@ public class ImportJavaLibrariesStageTwo extends ExtractedImporterThread {
   @Override
   public void doImport() {
     TimeCounter counter = new TimeCounter();
+    
+    Collection<String> libraryProjects = projectsTable.getJavaLibraryProjects();
+    libraryProjects.add(projectsTable.getPrimitiveProject());
+    classifier = new RelationClassifier(libraryProjects);
     
     buildInClause(Collections.singleton(projectsTable.getPrimitiveProject()));
     

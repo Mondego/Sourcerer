@@ -90,7 +90,7 @@ public final class Logging {
     logger.addHandler(defaultHandler);
     
     SimpleDateFormat format = new SimpleDateFormat("MMM-dd-yyyy-HH-mm-ss");
-    time = format.format(new Date());
+    time = format.format(new Date()).toLowerCase();
   }
 
   private static Set<String> getResumeSet(File resumeFile) {
