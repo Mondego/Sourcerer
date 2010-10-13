@@ -167,7 +167,7 @@ public class PropertyManager {
     Logging.REPORT_TO_CONSOLE.setValue(true);
     TablePrettyPrinter printer = TablePrettyPrinter.getLoggerPrettyPrinter();
     printer.addHeader("A single command must be chosen per execution. All commands should be prefixed by '--'. To view the list of properties for a single command, type --<command> --help. The following commands are available...");
-    printer.beginTable(2, 70);
+    printer.beginTable(2, 57);
     printer.makeColumnWrappable(1);
     printer.addDividerRow();
     for (Command command : commands) {
@@ -185,7 +185,7 @@ public class PropertyManager {
     TablePrettyPrinter printer = TablePrettyPrinter.getLoggerPrettyPrinter();
     if (!missingProperties.isEmpty()) {
       printer.addHeader("The following required properties for " + command.getName() + " were not supplied. Properties should be specified as --<name> <value>.");
-      printer.beginTable(3, 70);
+      printer.beginTable(3, 57);
       printer.makeColumnWrappable(2);
       printer.addDividerRow();
       for (Property<?> prop : missingProperties) {
@@ -200,7 +200,7 @@ public class PropertyManager {
     if (!invalidConditionals.isEmpty()) {
       for (Property<?>[] conditional : invalidConditionals) {
         printer.addHeader("Exactly one of following required properties for " + command.getName() + " must be supplied. Properties should be specified as --<name> <value>.");
-        printer.beginTable(3, 70);
+        printer.beginTable(3, 57);
         printer.makeColumnWrappable(2);
         printer.addDividerRow();
         for (Property<?> prop : conditional) {
@@ -220,7 +220,7 @@ public class PropertyManager {
     Logging.REPORT_TO_CONSOLE.setValue(true);
     TablePrettyPrinter printer = TablePrettyPrinter.getLoggerPrettyPrinter();
     printer.addHeader("The following properties are available for " + command.getName() + ". Properties should be specified as --<name> <value>.");
-    printer.beginTable(3, 70);
+    printer.beginTable(3, 57);
     printer.makeColumnWrappable(2);
     
     // Start with the command properties

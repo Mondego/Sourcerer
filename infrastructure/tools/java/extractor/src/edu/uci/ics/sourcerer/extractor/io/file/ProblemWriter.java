@@ -24,15 +24,11 @@ import edu.uci.ics.sourcerer.model.Problem;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ProblemWriter extends ExtractorWriter implements IProblemWriter {
-  public static final Property<String> PROBLEM_FILE = new StringProperty("problem-file", "problems.txt", "Extractor Output", "Filename for extracted problems.");
-  
   public ProblemWriter(File output, IFileSet input) {
     super(new File(output, Extracted.PROBLEM_FILE.getValue()), input);
   }

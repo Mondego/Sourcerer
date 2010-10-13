@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.db.tools;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.Logging.THREAD_INFO;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -40,10 +41,12 @@ import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ParallelDatabaseImporter {
+public final class ParallelDatabaseImporter {
   public static Property<Integer> THREAD_COUNT = new IntegerProperty("thread-count", 4, "Number of simultaneous threads");
   
-  public void initializeDatabase() {
+  private ParallelDatabaseImporter() {}
+  
+  public static void initializeDatabase() {
     logger.info("Initializing database...");
     logger.info("  Opening database connection...");
     DatabaseConnection connection = new DatabaseConnection();
@@ -52,7 +55,7 @@ public class ParallelDatabaseImporter {
     init.run();
   }
   
-  public void importJavaLibraries() {
+  public static void importJavaLibraries() {
     logger.info("Importing Java libraries...");
     
     TimeCounter counter = new TimeCounter();
@@ -70,15 +73,12 @@ public class ParallelDatabaseImporter {
     logger.info("  Initializing " + numThreads + " threads...");
     Collection<Thread> threads = Helper.newArrayList(numThreads);
     for (int i = 0; i < numThreads; i++) {
-      logger.info("    Opening database connection...");
       DatabaseConnection connection = new DatabaseConnection();
       connection.open();
       ImportJavaLibrariesStageOne importJavaLibraries = new ImportJavaLibrariesStageOne(connection, iterable);
-      logger.info("    Starting thread...");
       threads.add(importJavaLibraries.start());
     }
     
-    logger.info("    Waiting for termination...");
     for (Thread t : threads) {
       try {
         t.join();
@@ -99,15 +99,12 @@ public class ParallelDatabaseImporter {
     logger.info("  Initializing " + numThreads + " threads...");
     threads.clear();
     for (int i = 0; i < numThreads; i++) {
-      logger.info("    Opening database connection...");
       DatabaseConnection connection = new DatabaseConnection();
       connection.open();
       ImportJavaLibrariesStageTwo importJavaLibraries = new ImportJavaLibrariesStageTwo(connection, unknowns, iterable);
-      logger.info("    Starting thread...");
       threads.add(importJavaLibraries.start());
     }
     
-    logger.info("    Waiting for termination...");
     for (Thread t : threads) {
       try {
         t.join();
@@ -121,7 +118,7 @@ public class ParallelDatabaseImporter {
   }
   
   @SuppressWarnings("unchecked")
-  public void importJarFiles() {
+  public static void importJarFiles() {
     logger.info("Importing jar files...");
     
     TimeCounter counter = new TimeCounter();
@@ -144,15 +141,12 @@ public class ParallelDatabaseImporter {
     logger.info("  Initializing " + numThreads + " threads...");
     Collection<Thread> threads = Helper.newArrayList(numThreads);
     for (int i = 0; i < numThreads; i++) {
-      logger.info("    Opening database connection...");
       DatabaseConnection connection = new DatabaseConnection();
       connection.open();
       ImportStageOne importStageOne = new ImportStageOne(connection, iterable);
-      logger.info("    Starting thread...");
       threads.add(importStageOne.start());
     }
     
-    logger.info("    Waiting for termination...");
     for (Thread t : threads) {
       try {
         t.join();
@@ -173,15 +167,12 @@ public class ParallelDatabaseImporter {
     logger.info("  Initializing " + numThreads + " threads...");
     threads.clear();
     for (int i = 0; i < numThreads; i++) {
-      logger.info("    Opening database connection...");
       DatabaseConnection connection = new DatabaseConnection();
       connection.open();
       ImportStageTwo importStageTwo = new ImportStageTwo(connection, unknowns, iterable);
-      logger.info("    Starting thread...");
       threads.add(importStageTwo.start());
     }
     
-    logger.info("    Waiting for termination...");
     for (Thread t : threads) {
       try {
         t.join();
@@ -195,7 +186,7 @@ public class ParallelDatabaseImporter {
   }
   
   @SuppressWarnings("unchecked")
-  public void importProjects() {
+  public static void importProjects() {
     logger.info("Importing projects...");
     
     TimeCounter counter = new TimeCounter();
@@ -218,15 +209,12 @@ public class ParallelDatabaseImporter {
     logger.info("  Initializing " + numThreads + " threads...");
     Collection<Thread> threads = Helper.newArrayList(numThreads);
     for (int i = 0; i < numThreads; i++) {
-      logger.info("    Opening database connection...");
       DatabaseConnection connection = new DatabaseConnection();
       connection.open();
       ImportStageOne importStageOne = new ImportStageOne(connection, iterable);
-      logger.info("    Starting thread...");
       threads.add(importStageOne.start());
     }
     
-    logger.info("    Waiting for termination...");
     for (Thread t : threads) {
       try {
         t.join();
@@ -247,15 +235,12 @@ public class ParallelDatabaseImporter {
     logger.info("  Initializing " + numThreads + " threads...");
     threads.clear();
     for (int i = 0; i < numThreads; i++) {
-      logger.info("    Opening database connection...");
       DatabaseConnection connection = new DatabaseConnection();
       connection.open();
       ImportStageTwo importStageTwo = new ImportStageTwo(connection, unknowns, iterable);
-      logger.info("    Starting thread...");
       threads.add(importStageTwo.start());
     }
     
-    logger.info("    Waiting for termination...");
     for (Thread t : threads) {
       try {
         t.join();
@@ -268,8 +253,9 @@ public class ParallelDatabaseImporter {
     logger.info(counter.reportTotalTime(0, "Projects import completed"));
   }
   
-  private <T> Iterable<T> createSynchronizedIterable(final Iterator<T> iterator) {
+  private static <T> Iterable<T> createSynchronizedIterable(final Iterator<T> iterator) {
     return new Iterable<T>() {
+      private int count = 0;
       @Override
       public Iterator<T> iterator() {
         return new Iterator<T>() {
@@ -297,6 +283,7 @@ public class ParallelDatabaseImporter {
               if (hasNext()) {
                 T toReturn = next;
                 next = null;
+                logger.log(THREAD_INFO, "    Now processing item " + ++count + ": " + toReturn);
                 return toReturn;
               } else {
                 throw new NoSuchElementException();

@@ -76,14 +76,13 @@ import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Extractor implements IApplication {
-//  public static final Property<Boolean> FORCE_SOURCE_REDO = new BooleanProperty("force-source-redo", false, "Redo completed extraction.");
-//  public static final Property<Boolean> FORCE_MISSING_REDO = new BooleanProperty("force-missing-redo", false, "Redo completed extraction of projects with missing types.");
   public static final Property<Boolean> EXTRACT_LATEST_MAVEN = new BooleanProperty("extract-latest-maven", false, "Extract only the latest maven jars.");
   public static final Property<Boolean> EXTRACT_BINARY = new BooleanProperty("extract-binary", false, "Extract jars as binary only.");
   public static final Property<Boolean> USE_PROJECT_JARS = new BooleanProperty("use-project-jars", true, "Use project jars on the classpath.");
-  public static final Property<Boolean> RESOLVE_MISSING_TYPES = new BooleanProperty("resolve-missing-types", false, "Re-attempt extraction on failed missing type extractions.")
+  public static final Property<Boolean> RESOLVE_MISSING_TYPES = new BooleanProperty("resolve-missing-types", false, "Attempt to resolve missing types.")
       .setRequiredProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
   public static final Property<Boolean> SKIP_MISSING_TYPES = new BooleanProperty("skip-missing-types", false, "Skip extraction of projects with missing types.");
+  public static final Property<Boolean> FORCE_MISSING_REDO = new BooleanProperty("force-missing-redo", false, "Re-attempt extraction on failed missing type extractions.");
   
   public static final Command EXTRACT_LIBRARIES = 
       new Command("extract-libraries", "Extract the libraries.")
@@ -93,13 +92,13 @@ public class Extractor implements IApplication {
   public static final Command EXTRACT_JARS =
       new Command("extract-jars", "Extract the jars.")
           .setProperties(INPUT_REPO, OUTPUT_REPO, JARS_DIR, JAR_INDEX_FILE, 
-              JAR_FILTER, EXTRACT_LATEST_MAVEN, EXTRACT_BINARY, RESOLVE_MISSING_TYPES, SKIP_MISSING_TYPES,
+              JAR_FILTER, EXTRACT_LATEST_MAVEN, EXTRACT_BINARY, RESOLVE_MISSING_TYPES, SKIP_MISSING_TYPES, FORCE_MISSING_REDO,
               IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
   
   public static final Command EXTRACT_PROJECTS = 
       new Command("extract-projects", "Extract the projects.")
           .setProperties(INPUT_REPO, OUTPUT_REPO, PROJECT_FILTER,
-              USE_PROJECT_JARS, RESOLVE_MISSING_TYPES, SKIP_MISSING_TYPES,
+              USE_PROJECT_JARS, RESOLVE_MISSING_TYPES, SKIP_MISSING_TYPES, FORCE_MISSING_REDO,
               IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
   		  
   @Override

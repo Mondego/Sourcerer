@@ -50,13 +50,14 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public final class Logging {
   protected static final Property<Boolean> SUPPRESS_FILE_LOGGING = new BooleanProperty("suppress-file-logging", false, "Suppresses all logging to files.").register("Logging");
   protected static final Property<Boolean> REPORT_TO_CONSOLE = new BooleanProperty("report-to-console", false, "Prints all the logging messages to the console.").register("Logging");
-  protected static final Property<String> ERROR_LOG = new StringProperty("error-log", "error%d.log", "Filename for error log.").register("Logging");
-  protected static final Property<String> THREAD_LOG = new StringProperty("thread-log", "thread-%t%d.log", "Filename for thread log.").register("Logging");
+  protected static final Property<String> ERROR_LOG = new StringProperty("error-log", "error.log", "Filename for error log.").register("Logging");
+  protected static final Property<String> THREAD_LOG = new StringProperty("thread-log", "thread-%t.log", "Filename for thread log.").register("Logging");
   protected static final Property<String> INFO_LOG = new StringProperty("info-log", "info.log", "Filename for the info log.").register("Logging");
   protected static final Property<String> RESUME_LOG = new StringProperty("resume-log", "resume.log", "Filename for the resume log.");
   protected static final Property<Boolean> CLEAR_RESUME_LOG = new BooleanProperty("clear-resume-log", false, "Clears the resume log before beginning."); 
   
   public static final Level RESUME = new Level("RESUME", 10000) {};
+  public static final Level THREAD_INFO = new Level("TINFO", 100000) {};
   
   public static Logger logger;
   
@@ -65,6 +66,7 @@ public final class Logging {
   private static boolean loggingInitialized = false;
   private static boolean resumeLoggingInitialized = false;
   private static StreamHandler defaultHandler;
+  private static String time;
   
   private static Map<File, Handler> handlerMap = Helper.newHashMap();
   
@@ -86,6 +88,9 @@ public final class Logging {
     defaultHandler = new StreamHandler(System.err, formatter);
     defaultHandler.setLevel(Level.INFO);
     logger.addHandler(defaultHandler);
+    
+    SimpleDateFormat format = new SimpleDateFormat("MMM-dd-yyyy-HH-mm-ss");
+    time = format.format(new Date());
   }
 
   private static Set<String> getResumeSet(File resumeFile) {
@@ -106,8 +111,7 @@ public final class Logging {
   }
   
   private static String getFileHandlerPattern(Property<String> prop) {
-    SimpleDateFormat format = new SimpleDateFormat("-MMM-dd-yyyy-HH-mm-ss");
-    return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + prop.getValue().replace("%d", format.format(new Date())).replace("%t", "" + Thread.currentThread().getId());
+    return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + time + "/" + prop.getValue().replace("%t", "" + Thread.currentThread().getId());
   }
   
   public synchronized static Set<String> initializeResumeLogger() {
@@ -164,7 +168,7 @@ public final class Logging {
       
       if (!suppressFileLogging) {
         if (OUTPUT.hasValue()) {
-          OUTPUT.getValue().mkdirs();
+          new File(OUTPUT.getValue(), time).mkdirs();
         } else {
           suppressFileLogging = true;
         }
@@ -187,7 +191,7 @@ public final class Logging {
         Formatter errorFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
-            if (record.getLevel() == RESUME || Thread.currentThread().getId() != mainThread) {
+            if (record.getLevel() != THREAD_INFO && (record.getLevel() == RESUME || Thread.currentThread().getId() != mainThread)) {
               return "";
             } else {
               String msg = Logging.formatError(record);
@@ -216,7 +220,7 @@ public final class Logging {
         Formatter infoFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
-            if (record.getLevel() == Level.INFO && Thread.currentThread().getId() == mainThread) {
+            if (record.getLevel() == THREAD_INFO || (record.getLevel() == Level.INFO && Thread.currentThread().getId() == mainThread)) {
               String msg = formatInfo(record);
               if (REPORT_TO_CONSOLE.getValue()) {
                 System.out.print(msg);
@@ -260,7 +264,7 @@ public final class Logging {
         if (Thread.currentThread().getId() == id) {
           if (record.getLevel() == RESUME) {
             return "";
-          } else if (record.getLevel() == Level.INFO) {
+          } else if (record.getLevel() == Level.INFO || record.getLevel() == THREAD_INFO) {
             return Logging.formatInfo(record);
           } else {
             return Logging.formatError(record);

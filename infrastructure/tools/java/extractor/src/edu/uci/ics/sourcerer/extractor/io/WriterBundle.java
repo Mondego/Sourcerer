@@ -39,18 +39,18 @@ import edu.uci.ics.sourcerer.util.io.properties.ClassProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class WriterBundle implements IWriterBundle {
-  public static final Property<Class<?>> IMPORT_WRITER = new ClassProperty("import-writer", DummyImportWriter.class, "Extractor Output", "Import writer.");
-  public static final Property<Class<?>> PROBLEM_WRITER = new ClassProperty("problem-writer", DummyProblemWriter.class, "Extractor Output", "Problem writer.");
-  public static final Property<Class<?>> ENTITY_WRITER = new ClassProperty("entity-writer", DummyEntityWriter.class, "Extractor Output", "Entity writer.");
-  public static final Property<Class<?>> CLASS_ENTITY_WRITER = new ClassProperty("class-entity-writer", DummyClassEntityWriter.class, "Extractor Output", "Class entity writer.");
-  public static final Property<Class<?>> LOCAL_VARIABLE_WRITER = new ClassProperty("local-variable-writer", DummyLocalVariableWriter.class, "Extractor Output", "Local variable writer.");
-  public static final Property<Class<?>> RELATION_WRITER = new ClassProperty("relation-writer", DummyRelationWriter.class, "Extractor Output", "Relation writer.");
-  public static final Property<Class<?>> CLASS_RELATION_WRITER = new ClassProperty("class-relation-writer", DummyClassRelationWriter.class, "Extractor Output", "Class relation writer.");
-  public static final Property<Class<?>> COMMENT_WRITER = new ClassProperty("comment-writer", DummyCommentWriter.class, "Extractor Output", "Comment writer.");
-  public static final Property<Class<?>> FILE_WRITER = new ClassProperty("file-writer", DummyFileWriter.class, "Extractor Output", "File writer.");
-  public static final Property<Class<?>> CLASS_FILE_WRITER = new ClassProperty("class-file-writer", DummyClassFileWriter.class, "Extractor Output", "Class file writer");
-  public static final Property<Class<?>> USED_JAR_WRITER = new ClassProperty("used-jar-writer", DummyUsedJarWriter.class, "Extractor Output", "Jar file writer.");
-  public static final Property<Class<?>> MISSING_TYPE_WRITER = new ClassProperty("missing-class-writer", DummyMissingTypeWriter.class, "Extractor Output", "Missing type writer.");
+  public static final Property<Class<?>> IMPORT_WRITER = new ClassProperty("import-writer", DummyImportWriter.class, "Import writer.");
+  public static final Property<Class<?>> PROBLEM_WRITER = new ClassProperty("problem-writer", DummyProblemWriter.class, "Problem writer.");
+  public static final Property<Class<?>> ENTITY_WRITER = new ClassProperty("entity-writer", DummyEntityWriter.class, "Entity writer.");
+  public static final Property<Class<?>> CLASS_ENTITY_WRITER = new ClassProperty("class-entity-writer", DummyClassEntityWriter.class, "Class entity writer.");
+  public static final Property<Class<?>> LOCAL_VARIABLE_WRITER = new ClassProperty("local-variable-writer", DummyLocalVariableWriter.class, "Local variable writer.");
+  public static final Property<Class<?>> RELATION_WRITER = new ClassProperty("relation-writer", DummyRelationWriter.class, "Relation writer.");
+  public static final Property<Class<?>> CLASS_RELATION_WRITER = new ClassProperty("class-relation-writer", DummyClassRelationWriter.class, "Class relation writer.");
+  public static final Property<Class<?>> COMMENT_WRITER = new ClassProperty("comment-writer", DummyCommentWriter.class, "Comment writer.");
+  public static final Property<Class<?>> FILE_WRITER = new ClassProperty("file-writer", DummyFileWriter.class, "File writer.");
+  public static final Property<Class<?>> CLASS_FILE_WRITER = new ClassProperty("class-file-writer", DummyClassFileWriter.class, "Class file writer");
+  public static final Property<Class<?>> USED_JAR_WRITER = new ClassProperty("used-jar-writer", DummyUsedJarWriter.class, "Jar file writer.");
+  public static final Property<Class<?>> MISSING_TYPE_WRITER = new ClassProperty("missing-class-writer", DummyMissingTypeWriter.class, "Missing type writer.");
   
   private IImportWriter importWriter;
   private IProblemWriter problemWriter;

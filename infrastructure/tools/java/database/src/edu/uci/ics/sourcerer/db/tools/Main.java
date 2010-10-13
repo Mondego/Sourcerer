@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.db.tools;
 
+import static edu.uci.ics.sourcerer.db.tools.ParallelDatabaseImporter.THREAD_COUNT;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_PASSWORD;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_URL;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_USER;
@@ -41,15 +42,15 @@ public class Main {
   
   public static final Command ADD_JAVA_LIBRARIES = 
       new Command("add-libraries", "Adds extracted Java libraries to the database.")
-          .setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, INPUT_REPO);
+          .setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, INPUT_REPO, THREAD_COUNT);
   
   public static final Command ADD_JARS = 
       new Command("add-jars", "Adds extracted jars to the database.")
-          .setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, INPUT_REPO, JARS_DIR, JAR_INDEX_FILE, JAR_FILTER);
+          .setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, INPUT_REPO, JARS_DIR, JAR_INDEX_FILE, JAR_FILTER, THREAD_COUNT);
   
   public static final Command ADD_PROJECTS = 
       new Command("add-projects", "Adds extracted projects to the database.")
-          .setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, INPUT_REPO, PROJECT_FILTER);
+          .setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, INPUT_REPO, PROJECT_FILTER, THREAD_COUNT);
   
   public static final Command INTERACTIVE_FILE_ACCESSOR = 
       new Command("interactive-file-accessor", "Interactive test of the file accessor.")
@@ -65,17 +66,13 @@ public class Main {
     connection.open();
 
     if (command == INITIALIZE_DB) {
-      ParallelDatabaseImporter importer = new ParallelDatabaseImporter();
-      importer.initializeDatabase();
+      ParallelDatabaseImporter.initializeDatabase();
     } else if (command == ADD_JAVA_LIBRARIES) {
-      ParallelDatabaseImporter importer = new ParallelDatabaseImporter();
-      importer.importJavaLibraries();
+      ParallelDatabaseImporter.importJavaLibraries();
     } else if (command == ADD_JARS) {
-      ParallelDatabaseImporter importer = new ParallelDatabaseImporter();
-      importer.importJarFiles();
+      ParallelDatabaseImporter.importJarFiles();
     } else if (command == ADD_PROJECTS) {
-      ParallelDatabaseImporter importer = new ParallelDatabaseImporter();
-      importer.importProjects();
+      ParallelDatabaseImporter.importProjects();
     } else if (command == INTERACTIVE_FILE_ACCESSOR) {
       FileAccessor.testConsole();
     }
