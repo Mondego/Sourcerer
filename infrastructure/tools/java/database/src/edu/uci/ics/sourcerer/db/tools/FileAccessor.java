@@ -34,11 +34,11 @@ import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.db.FileDB;
 import edu.uci.ics.sourcerer.model.db.LocationDB;
 import edu.uci.ics.sourcerer.model.db.ProjectDB;
+import edu.uci.ics.sourcerer.repo.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.IndexedJar;
+import edu.uci.ics.sourcerer.repo.JarIndex;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
-import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
-import edu.uci.ics.sourcerer.repo.general.IndexedJar;
-import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.util.TimeoutManager;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 

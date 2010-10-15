@@ -15,12 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.general;
+package edu.uci.ics.sourcerer.repo;
+
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.File;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
@@ -36,7 +40,10 @@ public abstract class AbstractRepository {
   public static final Property<File> PROJECT_FILTER = new FileProperty("project-filter", "Only extract these projects.").makeOptional();
   
   public static final Property<String> JARS_DIR = new StringProperty("jars-dir", "jars", "The subdirectory containing the jar files.");
+  public static final Property<String> LIBS_DIR = new StringProperty("libs-dir", "libs", "The subdirectory containing the library files.");
 
+  public static final Property<String> JAR_INDEX_FILE = new StringProperty("jar-index", "index.txt", "The filename of the jar index.");
+  
   public static final Property<String> PROJECT_NAMES_FILE = new StringProperty("project-names-files", "project-names.txt", "File for project names.");
 
   protected final String JARS;
@@ -51,63 +58,19 @@ public abstract class AbstractRepository {
   
   protected AbstractRepository(File repoRoot) {
     JARS = JARS_DIR.getValue();
-    LIBS = "libs";
+    LIBS = LIBS_DIR.getValue();
     PROJECT_JARS = JARS + "/project";
     MAVEN_JARS = JARS + "/maven";
     
     this.repoRoot = repoRoot;
-    this.jarIndexFile = getJarsPath().getChildFile(JarIndex.JAR_INDEX_FILE.getValue());
+    this.jarIndexFile = getJarsPath().getChildFile(JAR_INDEX_FILE.getValue());
   }
   
-  protected abstract void addProject(RepoPath path);
-  
-  protected void populateRepository() {
-    if (repoRoot.exists()) { 
-      Pattern pattern = Pattern.compile("\\d*");
-      for (File batch : repoRoot.listFiles()) {
-        if (batch.isDirectory() && pattern.matcher(batch.getName()).matches()) {
-          for (File checkout : batch.listFiles()) {
-            if (pattern.matcher(checkout.getName()).matches()) {
-              addProject(RepoPath.getNewPath(checkout, batch.getName() + "/" + checkout.getName()));
-            }
-          }
-        }
-      }
-    }
-  }
-  
-  protected void populateFilteredRepository(Set<String> filter) {
-    if (repoRoot.exists()) {
-      for (String projectPath : filter) {
-        addProject(RepoPath.getNewPath(repoRoot.getPath(), projectPath));
-      }
-    }
-  }
-  
-  private void loadJarIndex() {
-    jarIndex = JarIndex.getJarIndex(this);
-  }
-  
-  public File getJarIndexFile() {
-    return jarIndexFile;
-  }
-  
-  public JarIndex getJarIndex() {
-    if (jarIndex == null && jarIndexFile.exists()) {
-      loadJarIndex();
-    }
-    return jarIndex;
-  }
-  
-  public File getBaseDir() {
-    return repoRoot;
-  }
-  
-  protected RepoPath getPath(String relativePath) {
+  private RepoPath getPath(String relativePath) {
     return RepoPath.getNewPath(new File(repoRoot, relativePath), relativePath);
   }
   
-  public RepoPath getMavenJarsPath() {
+  protected RepoPath getMavenJarsPath() {
     return getPath(MAVEN_JARS);
   }
   
@@ -119,15 +82,58 @@ public abstract class AbstractRepository {
     return getPath(JARS);
   }
   
-  public RepoPath getLibsPath() {
+  protected RepoPath getLibsPath() {
     return getPath(LIBS);
   }
   
   public RepoPath convertPath(RepoPath other) {
-    return other.getNewPath(repoRoot.getPath());
+    return other.rebasePath(repoRoot.getPath());
   }
+  
+  protected abstract void addProject(RepoPath path);
+  
+  protected void populateProjects() {
+    if (repoRoot.exists()) { 
+      if (PROJECT_FILTER.hasValue()) {
+        Set<String> filter = FileUtils.getFileAsSet(PROJECT_FILTER.getValue());
+        for (String projectPath : filter) {
+          addProject(RepoPath.getNewPath(repoRoot, projectPath));
+        }
+      } else {
+        Pattern pattern = Pattern.compile("\\d*");
+        for (File batch : repoRoot.listFiles()) {
+          if (batch.isDirectory() && pattern.matcher(batch.getName()).matches()) {
+            for (File checkout : batch.listFiles()) {
+              if (pattern.matcher(checkout.getName()).matches()) {
+                addProject(RepoPath.getNewPath(checkout, batch.getName() + "/" + checkout.getName()));
+              }
+            }
+          }
+        }
+      }
+    } else {
+      logger.log(Level.SEVERE, "No repository at: " + repoRoot.getPath());
+    }
+  }
+  
+  protected abstract void addJar(RepoPath path);
+  
+  private void populateJars() {
+    if (jarIndexFile.exists()) {
+      
+    } else {
+      logger.log(Level.SEVERE, "No jar index at: " + jarIndexFile.getPath());
+    }
+  }
+  
+  
+
   
   public String toString() {
     return repoRoot.getPath();
+  }
+  
+  protected class JarIndex {
+    
   }
 }

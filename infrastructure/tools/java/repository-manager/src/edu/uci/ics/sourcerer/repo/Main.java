@@ -17,13 +17,13 @@
  */
 package edu.uci.ics.sourcerer.repo;
 
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.JARS_DIR;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.OUTPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.PROJECT_NAMES_FILE;
+import static edu.uci.ics.sourcerer.repo.JarIndex.JAR_INDEX_FILE;
 import static edu.uci.ics.sourcerer.repo.base.Repository.SPLIT_SIZE;
 import static edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository.EXTRACTION_STATS_FILE;
-import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
-import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JARS_DIR;
-import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
-import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.PROJECT_NAMES_FILE;
-import static edu.uci.ics.sourcerer.repo.general.JarIndex.JAR_INDEX_FILE;
 import static edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.CSV_MODE;
 
 import java.util.Set;

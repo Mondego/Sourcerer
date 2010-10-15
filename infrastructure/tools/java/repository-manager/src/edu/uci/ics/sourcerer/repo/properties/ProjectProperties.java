@@ -15,46 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.general;
+package edu.uci.ics.sourcerer.repo.properties;
 
 import java.io.File;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ExtractedProjectProperties extends AbstractExtractedProperties {
-  protected static final String VERIFY = "verify";
+public class ProjectProperties extends AbstractProperties {
+  private ProjectProperties() {}
   
-  private boolean shouldVerify;
-  
-  private ExtractedProjectProperties() {}
-  
-  public static ExtractedProjectProperties load(File file) {
-    ExtractedProjectProperties props = new ExtractedProjectProperties();
+  public static ProjectProperties load(File file) {
+    ProjectProperties props = new ProjectProperties();
     props.loadProperties(file);
     return props;
-  }
-  
-  @Override
-  protected void loadProperties(File file) {
-    super.loadProperties(file);
-    
-    shouldVerify = readBooleanProperty(VERIFY);
-  }
-  
-  
-  @Override
-  public void save(File file) {
-    set(VERIFY, shouldVerify);
-    
-    super.save(file);
-  }
-  
-  public boolean shouldVerify() {
-    return shouldVerify;
-  }
-  
-  public String getDescription() {
-    return properties.getProperty("description");
   }
 }

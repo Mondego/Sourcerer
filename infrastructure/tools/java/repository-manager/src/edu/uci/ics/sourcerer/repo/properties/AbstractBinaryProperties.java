@@ -1,4 +1,4 @@
-package edu.uci.ics.sourcerer.repo.general;
+package edu.uci.ics.sourcerer.repo.properties;
 
 import java.io.File;
 
