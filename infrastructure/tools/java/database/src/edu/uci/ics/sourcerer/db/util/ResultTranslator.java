@@ -26,6 +26,10 @@ import edu.uci.ics.sourcerer.util.Pair;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class ResultTranslator <T> {
+  public String getTable() {
+    return null;
+  }
+  
   public String getSelect() {
     return null;
   }
