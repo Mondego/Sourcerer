@@ -15,13 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo;
+package edu.uci.ics.sourcerer.repo.general;
 
 import java.io.File;
 
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
-import edu.uci.ics.sourcerer.repo.properties.ExtractedJarProperties;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
@@ -61,7 +60,7 @@ public class IndexedJar {
   }
   
   public void migrateIndexedJar(String newBasePath) {
-    RepoPath newPath = path.rebasePath(newBasePath);
+    RepoPath newPath = path.getNewPath(newBasePath);
     
     FileUtils.copyFile(getJarFile(), getJarFile(newPath));
     if (sourceName != null) {
@@ -141,9 +140,9 @@ public class IndexedJar {
   
   public ExtractedJar getExtractedJar(ExtractedRepository repo) {
     if (maven) {
-      return new ExtractedJar(path.rebasePath(repo.getBaseDir().getPath()), getPropertiesFile());
+      return new ExtractedJar(path.getNewPath(repo.getBaseDir().getPath()), getPropertiesFile());
     } else {
-      return new ExtractedJar(path.rebasePath(repo.getBaseDir().getPath()).getChild(jarName), getPropertiesFile());
+      return new ExtractedJar(path.getNewPath(repo.getBaseDir().getPath()).getChild(jarName), getPropertiesFile());
     }
   }
   

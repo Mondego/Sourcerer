@@ -35,12 +35,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import edu.uci.ics.sourcerer.repo.AbstractRepository;
-import edu.uci.ics.sourcerer.repo.IndexedJar;
-import edu.uci.ics.sourcerer.repo.JarIndex;
-import edu.uci.ics.sourcerer.repo.RepoJar;
-import edu.uci.ics.sourcerer.repo.RepoPath;
-import edu.uci.ics.sourcerer.repo.properties.ProjectProperties;
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.general.IndexedJar;
+import edu.uci.ics.sourcerer.repo.general.JarIndex;
+import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
+import edu.uci.ics.sourcerer.repo.general.RepoJar;
+import edu.uci.ics.sourcerer.repo.general.RepoPath;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;

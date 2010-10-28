@@ -21,12 +21,12 @@ import static edu.uci.ics.sourcerer.db.tools.ParallelDatabaseImporter.THREAD_COU
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_PASSWORD;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_URL;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_USER;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.JARS_DIR;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.JAR_FILTER;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.OUTPUT_REPO;
-import static edu.uci.ics.sourcerer.repo.AbstractRepository.PROJECT_FILTER;
-import static edu.uci.ics.sourcerer.repo.JarIndex.JAR_INDEX_FILE;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JARS_DIR;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JAR_FILTER;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.PROJECT_FILTER;
+import static edu.uci.ics.sourcerer.repo.general.JarIndex.JAR_INDEX_FILE;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.io.Command;
 import edu.uci.ics.sourcerer.util.io.Logging;
