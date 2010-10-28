@@ -25,7 +25,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Map;
+import java.util.Deque;
+import java.util.PriorityQueue;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
@@ -41,28 +42,27 @@ public class FqnTree {
   public static Property<String> FQN_TREE = new StringProperty("fqn-tree", "fqn-tree.txt", "Clusterer", "File for storing fqn tree");
   
   private FqnFragment root;
-  private Map<Integer, Project> projects;
   
   public FqnTree() {
-    root = new FqnFragment();
-    projects = Helper.newHashMap();
+    root = FqnFragment.getRootFragment();
   }
   
-  private Project getProject(String projectID) {
-    Integer id = Integer.parseInt(projectID);
-    Project proj = projects.get(id);
-    if (proj == null) {
-      proj = new Project(id);
-      projects.put(id, proj);
-    }
-    return proj;
-  }
+//  private Project getProject(String projectID) {
+//    Integer id = Integer.parseInt(projectID);
+//    Project proj = projects.get(id);
+//    if (proj == null) {
+//      proj = new Project(id);
+//      projects.put(id, proj);
+//    }
+//    return proj;
+//  }
   
   public void addFqn(String fqn, String projectID) {
-    Project project = getProject(projectID);
+//    Project project = getProject(projectID);
+    int id = Integer.parseInt(projectID);
     FqnFragment parentFragment = root;
     for (String name : fqn.split("\\.")) {
-      parentFragment = parentFragment.addChild(name, project);
+      parentFragment = parentFragment.addChild(name, id);
     }
   }
   
@@ -93,7 +93,7 @@ public class FqnTree {
           String[] parts = line.split(" ");
           last = parent.addChild(parts[0]);
           for (int i = 1; i < parts.length; i++) {
-            last.addProject(getProject(parts[i]));
+            last.addProject(Integer.parseInt(parts[i]));
           }
         }
       }
@@ -102,5 +102,32 @@ public class FqnTree {
     } finally {
       FileUtils.close(br);
     }
+  }
+  
+  public FqnFragment[] getTopFqns(int count) {
+    PriorityQueue<FqnFragment> queue = new PriorityQueue<FqnFragment>(count + 1);
+    Deque<FqnFragment> stack = Helper.newStack();
+    stack.push(root);
+    while (!stack.isEmpty()) {
+      FqnFragment top = stack.pop();
+      if (top.isTopLevelClass()) {
+        queue.add(top);
+        if (queue.size() > count) {
+          queue.poll();
+        }
+      }
+      FqnFragment[] children = top.getChildren();
+      if (children != null) {
+        for (int i = 0; i < children.length && children[i] != null; i++) {
+          stack.push(children[i]);
+        }
+      }
+    }
+    count = Math.min(count, queue.size());
+    FqnFragment[] retval = new FqnFragment[count];
+    for (int i = count - 1; i >= 0; i--) {
+      retval[i] = queue.poll();
+    }
+    return retval;
   }
 }

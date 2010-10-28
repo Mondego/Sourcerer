@@ -221,6 +221,10 @@ public final class EntitiesTable extends DatabaseTable {
     return executor.selectStreamed("entity_type IN ('PACKAGE','CLASS','INTERFACE','ENUM','ANNOTATION')", SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
   }
   
+  public Iterable<SlightlyLessLimitedEntityDB> getCrawledEntityFqns() {
+    return executor.executeStreamed("SELECT projects.project_id,entity_id,entity_type,fqn FROM entities INNER JOIN projects ON entities.project_id=projects.project_id WHERE entity_type IN ('PACKAGE','CLASS','INTERFACE','ENUM','ANNOTATION') AND project_type='CRAWLED'", SLIGHTLY_LESS_LIMITED_ENTITY_TRANSLATOR);
+  }
+  
   public Iterable<LimitedEntityDB> getLocalVariablesByProject(String projectID) {
     return executor.executeStreamed("SELECT project_id,entity_id,entity_type FROM " + name + " WHERE entity_type IN ('LOCAL_VARIABLE','PARAMETER') AND project_id=" + projectID + " ORDER BY entity_id ASC", LIMITED_ENTITY_TRANSLATOR);
   }
