@@ -52,7 +52,6 @@ import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
-import edu.uci.ics.sourcerer.extractor.asm.AsmLibraryExtractor;
 import edu.uci.ics.sourcerer.extractor.io.file.ClassEntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.ClassFileWriter;
 import edu.uci.ics.sourcerer.extractor.io.file.ClassRelationWriter;
@@ -102,34 +101,6 @@ public class Extractor implements IApplication {
               USE_PROJECT_JARS, RESOLVE_MISSING_TYPES, SKIP_MISSING_TYPES, FORCE_MISSING_REDO,
               IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
   		  
-  public static void main(String[] args) {
-    // Only asm allowed if not an Eclipse-based start.
-    PropertyManager.initializeProperties(args);
-    Logging.initializeLogger();
-    Command command = PropertyManager.getCommand(EXTRACT_LIBRARIES, EXTRACT_JARS);
-    if (command == null) {
-      return;
-    }
-    
-    IMPORT_WRITER.setValue(ImportWriter.class);
-    PROBLEM_WRITER.setValue(ProblemWriter.class);
-    ENTITY_WRITER.setValue(EntityWriter.class);
-    CLASS_ENTITY_WRITER.setValue(ClassEntityWriter.class);
-    LOCAL_VARIABLE_WRITER.setValue(LocalVariableWriter.class);
-    RELATION_WRITER.setValue(RelationWriter.class);
-    CLASS_RELATION_WRITER.setValue(ClassRelationWriter.class);
-    COMMENT_WRITER.setValue(CommentWriter.class);
-    FILE_WRITER.setValue(FileWriter.class);
-    CLASS_FILE_WRITER.setValue(ClassFileWriter.class);
-    USED_JAR_WRITER.setValue(UsedJarWriter.class);
-    MISSING_TYPE_WRITER.setValue(MissingTypeWriter.class);
-   
-    if (command == EXTRACT_LIBRARIES) {
-      LibraryExtractor.extract();
-    } else if (command == EXTRACT_JARS){
-    }
-  }
-  
   @Override
   public Object start(IApplicationContext context) throws Exception {
     String[] args = (String[]) context.getArguments().get(IApplicationContext.APPLICATION_ARGS);

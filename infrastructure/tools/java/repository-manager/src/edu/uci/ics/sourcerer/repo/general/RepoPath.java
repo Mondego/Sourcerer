@@ -1,4 +1,4 @@
-package edu.uci.ics.sourcerer.repo;
+package edu.uci.ics.sourcerer.repo.general;
 
 import java.io.File;
 
@@ -20,7 +20,7 @@ public class RepoPath {
     return new RepoPath(new File(basePath, relativePath), relativePath);
   }
   
-  public RepoPath rebasePath(String newBase) {
+  public RepoPath getNewPath(String newBase) {
     return getNewPath(newBase, relativePath);
   }
 

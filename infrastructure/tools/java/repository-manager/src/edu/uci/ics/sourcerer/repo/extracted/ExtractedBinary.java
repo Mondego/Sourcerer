@@ -17,9 +17,9 @@
  */
 package edu.uci.ics.sourcerer.repo.extracted;
 
-import edu.uci.ics.sourcerer.repo.RepoPath;
-import edu.uci.ics.sourcerer.repo.properties.AbstractBinaryProperties;
-import edu.uci.ics.sourcerer.repo.properties.AbstractExtractedProperties;
+import edu.uci.ics.sourcerer.repo.general.AbstractBinaryProperties;
+import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
+import edu.uci.ics.sourcerer.repo.general.RepoPath;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

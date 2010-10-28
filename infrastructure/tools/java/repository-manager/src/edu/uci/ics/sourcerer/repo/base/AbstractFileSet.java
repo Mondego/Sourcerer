@@ -25,7 +25,7 @@ import java.util.Deque;
 import java.util.Map;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.repo.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
