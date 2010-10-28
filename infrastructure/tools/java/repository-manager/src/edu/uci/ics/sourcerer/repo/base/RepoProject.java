@@ -41,7 +41,7 @@ public class RepoProject {
   }
  
   public ExtractedProject getExtractedProject(ExtractedRepository repo) {
-    return new ExtractedProject(repo.convertPath(content.getParent()), properties);
+    return new ExtractedProject(repo.rebasePath(content.getParent()), properties);
   }
   
 //  public String getOutputPath(File baseDir) {

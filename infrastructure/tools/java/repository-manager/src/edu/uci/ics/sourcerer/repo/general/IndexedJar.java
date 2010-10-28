@@ -59,8 +59,8 @@ public class IndexedJar {
     this.sourceName = sourceName;
   }
   
-  public void migrateIndexedJar(String newBasePath) {
-    RepoPath newPath = path.getNewPath(newBasePath);
+  public void migrateIndexedJar(RepoPath newBase) {
+    RepoPath newPath = newBase.getChild(path.getRelativePath());
     
     FileUtils.copyFile(getJarFile(), getJarFile(newPath));
     if (sourceName != null) {
@@ -139,10 +139,11 @@ public class IndexedJar {
   }
   
   public ExtractedJar getExtractedJar(ExtractedRepository repo) {
+    RepoPath rebasedPath = repo.rebasePath(path);
     if (maven) {
-      return new ExtractedJar(path.getNewPath(repo.getBaseDir().getPath()), getPropertiesFile());
+      return new ExtractedJar(rebasedPath, getPropertiesFile());
     } else {
-      return new ExtractedJar(path.getNewPath(repo.getBaseDir().getPath()).getChild(jarName), getPropertiesFile());
+      return new ExtractedJar(rebasedPath.getChild(jarName), getPropertiesFile());
     }
   }
   

@@ -23,7 +23,7 @@ import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JARS_DIR;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.PROJECT_NAMES_FILE;
-import static edu.uci.ics.sourcerer.repo.general.JarIndex.JAR_INDEX_FILE;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JAR_INDEX_FILE;
 import static edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.CSV_MODE;
 
 import java.util.Set;
