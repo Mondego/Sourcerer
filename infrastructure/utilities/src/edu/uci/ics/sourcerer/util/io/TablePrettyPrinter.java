@@ -21,8 +21,10 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.Flushable;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.NumberFormat;
@@ -36,9 +38,9 @@ import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class TablePrettyPrinter {
-  public static final Property<Boolean> CSV_MODE = new BooleanProperty("csv-mode", false, "General", "Print tables as csv instead of prettily.");
+  public static final Property<Boolean> CSV_MODE = new BooleanProperty("csv-mode", false, "Print tables as csv instead of prettily.");
   
-  private BufferedWriter writer;
+  private TableWriter writer;
   private ArrayList<TableRow> table;
   private int maxTableWidth;
   private MaxCounter[] maxWidths;
@@ -46,9 +48,11 @@ public class TablePrettyPrinter {
   private int columns;
   private boolean csvMode = false;
   
+  private boolean firstTable = true;
+  
   private NumberFormat format;
   
-  private TablePrettyPrinter(BufferedWriter writer) {
+  private TablePrettyPrinter(TableWriter writer) {
     this.writer = writer;
   }
   
@@ -91,6 +95,16 @@ public class TablePrettyPrinter {
   }
   
   public void beginTable(int columns, int maxTableWidth) {
+    if (firstTable) {
+      firstTable = false;
+    } else {
+      try {
+        writer.endLine();
+        writer.endLine();
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Error writing table.", e);
+      }
+    }
     this.columns = columns;
     table = Helper.newArrayList();
     maxWidths = new MaxCounter[columns];
@@ -133,10 +147,9 @@ public class TablePrettyPrinter {
               }
             }
           }
-          writer.write("\n");
+          writer.endLine();
         }
       }
-      writer.write("\n\n");
       writer.flush();
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to write table", e);
@@ -207,7 +220,8 @@ public class TablePrettyPrinter {
             }
             writer.write(dashes, 0, maxWidths[j].getMax());
           }
-          writer.write("-+\n");
+          writer.write("-+");
+          writer.endLine();
         } else {
           // Write out a row
           TableCell[] cells = row.getCells();
@@ -273,13 +287,13 @@ public class TablePrettyPrinter {
               }
             }
           }
-          writer.write(" |\n");
+          writer.write(" |");
+          writer.endLine();
           if (replaceRow) {
             table.set(i--, newRow);
           }
         }
       }
-      writer.write("\n\n");
       writer.flush();
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to write table", e);
@@ -300,9 +314,10 @@ public class TablePrettyPrinter {
   
   public void addHeader(String header) {
     try {
-      writer.write(header + "\n");
+      writer.write(header);
+      writer.endLine();
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to write table header", e);
+      logger.log(Level.SEVERE, "Error in writing table header.", e);
     }
   }
   
@@ -348,6 +363,9 @@ public class TablePrettyPrinter {
   
   public void addCell(String value) {
     verifyTableBegun();
+    if (value == null) {
+      value = "";
+    }
     TableRow row = table.get(table.size() - 1);
     updateMax(row.getColumnCount(), value.length());
     row.addCell(value);
@@ -355,6 +373,9 @@ public class TablePrettyPrinter {
   
   public void addCell(String value, Alignment alignment) {
     verifyTableBegun();
+    if (value == null) {
+      value = "";
+    }
     TableRow row = table.get(table.size() - 1);
     updateMax(row.getColumnCount(), value.length());
     row.addCell(value, alignment);
@@ -400,7 +421,7 @@ public class TablePrettyPrinter {
   public static TablePrettyPrinter getTablePrettyPrinter(Property<String> prop) {
     try {
       BufferedWriter writer = new BufferedWriter(new FileWriter(new File(OUTPUT.getValue(), prop.getValue())));
-      TablePrettyPrinter retval = new TablePrettyPrinter(writer);
+      TablePrettyPrinter retval = new TablePrettyPrinter(new WriterTableWriter(writer));
       retval.setCSVMode(CSV_MODE.getValue());
       return retval;
     } catch (IOException e) {
@@ -411,7 +432,11 @@ public class TablePrettyPrinter {
   
   public static TablePrettyPrinter getCommandLinePrettyPrinter() {
     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
-    return new TablePrettyPrinter(writer);
+    return new TablePrettyPrinter(new WriterTableWriter(writer));
+  }
+  
+  public static TablePrettyPrinter getLoggerPrettyPrinter() {
+    return new TablePrettyPrinter(new LoggerTableWriter());
   }
   
   private class TableRow {
@@ -513,6 +538,76 @@ public class TablePrettyPrinter {
     
     public boolean isWrappable() {
       return wrappable;
+    }
+  }
+  
+  private static interface TableWriter extends Closeable, Flushable {
+    public void write(String s) throws IOException;
+    public void write(char[] str, int offset, int length) throws IOException;
+    public void write(char[] str) throws IOException;
+    public void endLine() throws IOException;
+  }
+  
+  private static class LoggerTableWriter implements TableWriter {
+    private StringBuilder builder;
+    
+    public LoggerTableWriter() {
+      builder = new StringBuilder();
+    }
+    
+    public void write(String s) {
+      builder.append(s);
+    }
+    
+    public void write(char[] str, int offset, int length) {
+      builder.append(str, offset, length);
+    }
+    
+    public void write(char[] str) {
+      builder.append(str);
+    }
+    
+    public void endLine() {
+      logger.log(Level.INFO, builder.toString());
+      builder.setLength(0);
+    }
+    
+    public void close() {
+      builder = null;
+    }
+    
+    public void flush() {}
+  }
+  
+  private static class WriterTableWriter implements TableWriter {
+    private BufferedWriter writer;
+    
+    public WriterTableWriter(BufferedWriter writer) {
+      this.writer = writer;
+    }
+    
+    public void write(String s) throws IOException {
+      writer.write(s);
+    }
+    
+    public void write(char[] str, int offset, int length) throws IOException {
+      writer.write(str, offset, length);
+    }
+    
+    public void write(char[] str) throws IOException {
+      writer.write(str);
+    }
+    
+    public void endLine() throws IOException {
+      writer.write('\n');
+    }
+    
+    public void close() throws IOException {
+      writer.close();
+    }
+    
+    public void flush() throws IOException {
+      writer.flush();
     }
   }
 }

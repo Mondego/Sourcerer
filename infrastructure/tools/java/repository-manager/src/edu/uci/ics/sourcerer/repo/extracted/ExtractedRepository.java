@@ -27,12 +27,13 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
-import edu.uci.ics.sourcerer.repo.general.IndexedJar;
-import edu.uci.ics.sourcerer.repo.general.JarIndex;
-import edu.uci.ics.sourcerer.repo.general.RepoPath;
-import edu.uci.ics.sourcerer.repo.general.JarIndex.MavenFilter;
-import edu.uci.ics.sourcerer.repo.general.JarIndex.ProjectFilter;
+import edu.uci.ics.sourcerer.repo.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.IndexedJar;
+import edu.uci.ics.sourcerer.repo.JarIndex;
+import edu.uci.ics.sourcerer.repo.RepoPath;
+import edu.uci.ics.sourcerer.repo.JarIndex.MavenFilter;
+import edu.uci.ics.sourcerer.repo.JarIndex.ProjectFilter;
+import edu.uci.ics.sourcerer.repo.properties.AbstractExtractedProperties;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -43,7 +44,7 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedRepository extends AbstractRepository {
-  public static final Property<String> EXTRACTION_STATS_FILE = new StringProperty("extraction-stats-file", "extraction-stats.txt", "Repository Manager", "Output file for the extraction stats.");
+  public static final Property<String> EXTRACTION_STATS_FILE = new StringProperty("extraction-stats-file", "extraction-stats.txt", "Output file for the extraction stats.");
   
   private boolean includeNotExtracted = false;
   private Collection<ExtractedLibrary> libraries;
@@ -180,7 +181,7 @@ public class ExtractedRepository extends AbstractRepository {
     } else {
       Collection<ExtractedProject> result = Helper.newArrayList();
       for (ExtractedProject project : projects) {
-        if (filter.contains(project.getProjectPath())) {
+        if (filter.contains(project.getRelativePath())) {
           result.add(project);
         }
       }
@@ -226,6 +227,26 @@ public class ExtractedRepository extends AbstractRepository {
       }
       logger.info("  " + count + " projects cloned.");
     }
+  }
+  
+  public void printProjectNames() {
+    logger.info("Loading projects...");
+    
+    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(PROJECT_NAMES_FILE);
+    printer.beginTable(3);
+    printer.addDividerRow();
+    printer.addRow("host", "project", "crawled date");
+    printer.addDividerRow();
+    for (ExtractedProject project : getProjects()) {
+      AbstractExtractedProperties props = project.getProperties();
+      printer.beginRow();
+      printer.addCell(props.getOriginRepo());
+      printer.addCell(props.getName());
+      printer.addCell(props.getCrawledDate());
+    }
+    printer.endTable();
+    printer.close();
+    logger.info("Done!");
   }
   
   public void computeExtractionStats() {

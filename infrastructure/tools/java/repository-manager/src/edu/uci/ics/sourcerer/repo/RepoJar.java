@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.general;
+package edu.uci.ics.sourcerer.repo;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.logging.Level;
+
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -48,10 +50,15 @@ public class RepoJar {
       MessageDigest digest = MessageDigest.getInstance("MD5");
       
       byte[] buff = new byte[1024];
-      InputStream is = new FileInputStream(path);
-      int size;
-      while ((size = is.read(buff)) != -1) {
-        digest.update(buff, 0, size);
+      InputStream is = null; 
+      try {
+        is = new FileInputStream(path);
+        int size;
+        while ((size = is.read(buff)) != -1) {
+          digest.update(buff, 0, size);
+        }
+      } finally {
+        FileUtils.close(is);
       }
       return new BigInteger(1, digest.digest()).toString(16);
     } catch (Exception e) {

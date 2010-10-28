@@ -23,8 +23,8 @@ import edu.uci.ics.sourcerer.util.io.Property;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ClassProperty extends Property<Class<?>> {
-  public ClassProperty(String name, Class<?> defaultValue, String category, String description) {
-    super(name, defaultValue, category, description);
+  public ClassProperty(String name, Class<?> defaultValue, String description) {
+    super(name, defaultValue, description);
   }
 
   @Override

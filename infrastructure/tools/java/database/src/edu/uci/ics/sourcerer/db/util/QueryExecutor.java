@@ -51,6 +51,14 @@ public class QueryExecutor {
       logger.log(Level.SEVERE, "Unable to close statement", e);
     }
   }
+  
+  public void closeConnection() {
+    try {
+      connection.close();
+    } catch (SQLException e) {
+      logger.log(Level.SEVERE, "Unable to close connection", e);
+    }
+  }
   public void reset() {
     close();
     try {

@@ -32,9 +32,9 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class DatabaseConnection implements Closeable {
-  public static final Property<String> DATABASE_URL = new StringProperty("database-url", "jdbc:mysql://tagus.ics.uci.edu:3306/sourcerer", "Database", "Url of the database.");
-  public static final Property<String> DATABASE_USER = new StringProperty("database-user", "Database", "Database user account to use when connecting.");
-  public static final Property<String> DATABASE_PASSWORD = new StringProperty("database-password", "", "Database", "Password for the user account.");
+  public static final Property<String> DATABASE_URL = new StringProperty("database-url", "jdbc:mysql://tagus.ics.uci.edu:3306/sourcerer", "Url of the database.");
+  public static final Property<String> DATABASE_USER = new StringProperty("database-user", "Database user account to use when connecting.");
+  public static final Property<String> DATABASE_PASSWORD = new StringProperty("database-password", null, "Password for the user account.");
   
   private Connection connection;
   

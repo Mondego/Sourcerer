@@ -119,7 +119,7 @@ public final class FeatureExtractor {
             String sourceFile = type.getPackageFragment().getElementName() + "." + type.getSourceFileName(null);
             String fqn = classFile.getType().getFullyQualifiedName() + ".java";
             if (!fqn.equals(sourceFile)) {
-              logger.log(Level.WARNING, "Source fqn mismatch: " + sourceFile + " " + fqn);
+//              logger.log(Level.WARNING, "Source fqn mismatch: " + sourceFile + " " + fqn);
               continue;
             }
           }
@@ -150,11 +150,11 @@ public final class FeatureExtractor {
                 continue;
               }
               
-              checkForMissingTypes(unit, report, missingTypeWriter);
-              if (report.hadMissingSecondOrder() && force) {
-                extractor.extractClassFile(classFile);
-                report.reportBinaryExtraction();
-              } else if (!report.hadMissingSecondOrder() && (force || !report.hadMissingType())) {
+              boolean secondOrder = checkForMissingTypes(unit, report, missingTypeWriter);
+              if (force || !report.hadMissingType()) {
+                if (secondOrder) {
+                  visitor.setBindingFreeMode(true);
+                }
                 try {
                   unit.accept(visitor);
                   report.reportSourceExtraction();
@@ -174,6 +174,7 @@ public final class FeatureExtractor {
                     report.reportBinaryExtractionException();
                   }
                 }
+                visitor.setBindingFreeMode(false);
               }
             } catch (Exception e) {
               logger.log(Level.SEVERE, "Error in extracting " + classFile.getElementName(), e);
@@ -252,8 +253,17 @@ public final class FeatureExtractor {
         continue;
       }
       
-      checkForMissingTypes(unit, report, missingTypeWriter);
+      boolean secondOrder = checkForMissingTypes(unit, report, missingTypeWriter);
       if (!report.hadMissingType() || force) {
+        if (secondOrder) {
+          logger.warning("Performing limited extraction of " + source.getName() + " because of missing second order type.");
+          for (IProblem problem : unit.getProblems()) {
+            if (problem.getID() == IProblem.IsClassPathCorrect) {
+              logger.warning("  " + problem.getArguments()[0]);
+            }
+          }
+          visitor.setBindingFreeMode(true);
+        }
         try {
           unit.accept(visitor);
           report.reportSourceExtraction();
@@ -261,23 +271,26 @@ public final class FeatureExtractor {
           logger.log(Level.SEVERE, "Error in extracting " + source.getName(), e);
           report.reportSourceExtractionException();
         }
+        visitor.setBindingFreeMode(false);
       }
     }
     return report;
   }
   
   @SuppressWarnings("unchecked")
-  private void checkForMissingTypes(CompilationUnit unit, SourceExtractionReport report, IMissingTypeWriter writer) {
+  private boolean checkForMissingTypes(CompilationUnit unit, SourceExtractionReport report, IMissingTypeWriter writer) {
     Set<String> onDemandImports = Helper.newHashSet();
     Map<String, String> singleTypeImports = Helper.newHashMap();
     Set<String> simpleNames = Helper.newHashSet();
     
+    boolean hasSecondOrder = false;
     // Check for the classpath problem
     for (IProblem problem : unit.getProblems()) {
       if (problem.isError()) {
         if (problem.getID() == IProblem.IsClassPathCorrect) {
           writer.writeMissingType(problem.getArguments()[0]);
           report.reportMissingSecondOrder();
+          hasSecondOrder = true;
         } else if (problem.getID() == IProblem.ImportNotFound) {
           String prefix = problem.getArguments()[0];
           // Go and find all the imports with this prefix
@@ -325,6 +338,7 @@ public final class FeatureExtractor {
         }
       }
     }
+    return hasSecondOrder;
   }
   
 //  @SuppressWarnings("unchecked")

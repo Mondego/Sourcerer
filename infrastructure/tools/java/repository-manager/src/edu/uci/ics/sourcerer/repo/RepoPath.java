@@ -1,4 +1,4 @@
-package edu.uci.ics.sourcerer.repo.general;
+package edu.uci.ics.sourcerer.repo;
 
 import java.io.File;
 
@@ -20,10 +20,28 @@ public class RepoPath {
     return new RepoPath(new File(basePath, relativePath), relativePath);
   }
   
-  public RepoPath getNewPath(String newBase) {
+  public RepoPath rebasePath(String newBase) {
     return getNewPath(newBase, relativePath);
   }
 
+  public boolean exists() {
+    if (content.exists()) {
+      if (content.isDirectory()) {
+        // make sure it's not empty
+        if (content.list().length == 0) {
+          content.delete();
+          return false;
+        } else {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    } else {
+      return false;
+    }
+  }
+  
   public File toFile() {
     if (!content.exists()) {
       if (content.isFile()) {

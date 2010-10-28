@@ -48,14 +48,16 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  */
 @SuppressWarnings("serial")
 public final class Logging {
-  protected static final Property<Boolean> SUPPRESS_FILE_LOGGING = new BooleanProperty("suppress-file-logging", false, "Logging", "Suppresses all logging to files.");
-  protected static final Property<Boolean> REPORT_TO_CONSOLE = new BooleanProperty("report-to-console", false, "Logging", "Prints all the logging messages to the console.");
-  protected static final Property<String> ERROR_LOG = new StringProperty("error-log", "error%d.log", "Logging", "Filename for error log.");
-  protected static final Property<String> INFO_LOG = new StringProperty("info-log", "info.log", "Logging", "Filename for the info log.");
-  protected static final Property<String> RESUME_LOG = new StringProperty("resume-log", "resume.log", "Logging", "Filename for the resume log.");
-  protected static final Property<Boolean> CLEAR_RESUME_LOG = new BooleanProperty("clear-resume-log", false, "Logging", "Clears the resume log before beginning."); 
+  protected static final Property<Boolean> SUPPRESS_FILE_LOGGING = new BooleanProperty("suppress-file-logging", false, "Suppresses all logging to files.").register("Logging");
+  protected static final Property<Boolean> REPORT_TO_CONSOLE = new BooleanProperty("report-to-console", false, "Prints all the logging messages to the console.").register("Logging");
+  protected static final Property<String> ERROR_LOG = new StringProperty("error-log", "error.log", "Filename for error log.").register("Logging");
+  protected static final Property<String> THREAD_LOG = new StringProperty("thread-log", "thread-%t.log", "Filename for thread log.").register("Logging");
+  protected static final Property<String> INFO_LOG = new StringProperty("info-log", "info.log", "Filename for the info log.").register("Logging");
+  protected static final Property<String> RESUME_LOG = new StringProperty("resume-log", "resume.log", "Filename for the resume log.");
+  protected static final Property<Boolean> CLEAR_RESUME_LOG = new BooleanProperty("clear-resume-log", false, "Clears the resume log before beginning."); 
   
   public static final Level RESUME = new Level("RESUME", 10000) {};
+  public static final Level THREAD_INFO = new Level("TINFO", 100000) {};
   
   public static Logger logger;
   
@@ -64,8 +66,12 @@ public final class Logging {
   private static boolean loggingInitialized = false;
   private static boolean resumeLoggingInitialized = false;
   private static StreamHandler defaultHandler;
+  private static String time;
   
   private static Map<File, Handler> handlerMap = Helper.newHashMap();
+  
+  private static long mainThread;
+  private static Map<Long, Handler> threadHandlerMap = Helper.newHashMap();
   
   static {
     logger = Logger.getLogger("edu.uci.ics.sourcerer.util.io");
@@ -82,8 +88,11 @@ public final class Logging {
     defaultHandler = new StreamHandler(System.err, formatter);
     defaultHandler.setLevel(Level.INFO);
     logger.addHandler(defaultHandler);
-  }
     
+    SimpleDateFormat format = new SimpleDateFormat("MMM-dd-yyyy-HH-mm-ss");
+    time = format.format(new Date()).toLowerCase();
+  }
+
   private static Set<String> getResumeSet(File resumeFile) {
     if (resumeFile.exists()) {
       Set<String> resumeSet = Helper.newHashSet();
@@ -102,16 +111,13 @@ public final class Logging {
   }
   
   private static String getFileHandlerPattern(Property<String> prop) {
-    SimpleDateFormat format = new SimpleDateFormat("-MMM-dd-yyyy-HH-mm-ss");
-    return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + prop.getValue().replace("%d", format.format(new Date()));
+    return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + time + "/" + prop.getValue().replace("%t", "" + Thread.currentThread().getId());
   }
   
   public synchronized static Set<String> initializeResumeLogger() {
     if (resumeLoggingInitialized) {
       throw new IllegalStateException("Resume logging may only be initialized once");
     }
-    PropertyManager.registerUsedProperties(OUTPUT, RESUME_LOG, CLEAR_RESUME_LOG);
-    PropertyManager.verifyUsage();
     
     File resumeFile = new File(OUTPUT.getValue(), RESUME_LOG.getValue());
     
@@ -150,20 +156,22 @@ public final class Logging {
     if (loggingInitialized) {
       throw new IllegalStateException("The logger may only be initialized once");
     }
-   
-    PropertyManager.registerUsedProperties(OUTPUT, REPORT_TO_CONSOLE, SUPPRESS_FILE_LOGGING, INFO_LOG, ERROR_LOG);
-    PropertyManager.verifyUsage();
     
     try {
-      final boolean suppressFileLogging = SUPPRESS_FILE_LOGGING.getValue();
-      final boolean reportToConsole = REPORT_TO_CONSOLE.getValue();
+      mainThread = Thread.currentThread().getId();
       
-      if (suppressFileLogging && !reportToConsole) {
+      boolean suppressFileLogging = SUPPRESS_FILE_LOGGING.getValue();
+      
+      if (suppressFileLogging && !REPORT_TO_CONSOLE.getValue()) {
         return;
       }
       
       if (!suppressFileLogging) {
-        OUTPUT.getValue().mkdirs();
+        if (OUTPUT.hasValue()) {
+          new File(OUTPUT.getValue(), time).mkdirs();
+        } else {
+          suppressFileLogging = true;
+        }
       }
       
       StreamHandler errorHandler = null;
@@ -171,7 +179,7 @@ public final class Logging {
         Formatter errorFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
-            if (record.getLevel() == RESUME) {
+            if (record.getLevel() == RESUME || Thread.currentThread().getId() != mainThread) {
               return "";
             } else {
               return Logging.formatError(record);
@@ -183,11 +191,11 @@ public final class Logging {
         Formatter errorFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
-            if (record.getLevel() == RESUME) {
+            if (record.getLevel() != THREAD_INFO && (record.getLevel() == RESUME || Thread.currentThread().getId() != mainThread)) {
               return "";
             } else {
               String msg = Logging.formatError(record);
-              if (reportToConsole && record.getLevel() == Level.SEVERE) {
+              if (REPORT_TO_CONSOLE.getValue() && record.getLevel() == Level.SEVERE) {
                 System.err.print(msg);
               }
               return msg;
@@ -200,21 +208,21 @@ public final class Logging {
       errorHandler.setLevel(Level.INFO);
       
       StreamHandler infoHandler = null;
-      if (suppressFileLogging) {
+      if (!suppressFileLogging) {
+//        Formatter infoFormatter = new Formatter() {
+//          @Override
+//          public String format(LogRecord record) {
+//            return formatInfo(record);
+//          }
+//        };
+//        infoHandler = new StreamHandler(System.out, infoFormatter);
+//      } else {
         Formatter infoFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
-            return formatInfo(record);
-          }
-        };
-        infoHandler = new StreamHandler(System.out, infoFormatter);
-      } else {
-        Formatter infoFormatter = new Formatter() {
-          @Override
-          public String format(LogRecord record) {
-            if (record.getLevel() == Level.INFO) {
+            if (record.getLevel() == THREAD_INFO || (record.getLevel() == Level.INFO && Thread.currentThread().getId() == mainThread)) {
               String msg = formatInfo(record);
-              if (reportToConsole) {
+              if (REPORT_TO_CONSOLE.getValue()) {
                 System.out.print(msg);
               }
               return msg;
@@ -225,11 +233,11 @@ public final class Logging {
         };
         infoHandler = new FileHandler(getFileHandlerPattern(INFO_LOG));
         infoHandler.setFormatter(infoFormatter);
+        infoHandler.setLevel(Level.INFO);
+        logger.addHandler(infoHandler);
       }
-      infoHandler.setLevel(Level.INFO);
             
       logger.addHandler(errorHandler);
-      logger.addHandler(infoHandler);
       
       logger.removeHandler(defaultHandler);
       
@@ -237,6 +245,58 @@ public final class Logging {
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(1);
+    }
+  }
+  
+  public synchronized static void addThreadLogger() {
+    Thread thread = Thread.currentThread();
+    if (!loggingInitialized) {
+      throw new IllegalStateException("Logging must be initialized before error logs can be added.");
+    } else if (threadHandlerMap.containsKey(thread.getId())) {
+      throw new IllegalArgumentException("Error logging may not be added to the same thread twice: " + thread.getId());
+    }
+
+    final long id = thread.getId();
+    
+    Formatter formatter = new Formatter() {
+      @Override
+      public String format(LogRecord record) {
+        if (Thread.currentThread().getId() == id) {
+          if (record.getLevel() == RESUME) {
+            return "";
+          } else if (record.getLevel() == Level.INFO || record.getLevel() == THREAD_INFO) {
+            return Logging.formatInfo(record);
+          } else {
+            return Logging.formatError(record);
+          }
+        } else {
+          return "";
+        }
+      }
+    };
+    
+    try {
+      
+      StreamHandler handler = new FileHandler(getFileHandlerPattern(THREAD_LOG));
+      handler.setFormatter(formatter);
+      handler.setLevel(Level.INFO);
+      threadHandlerMap.put(id, handler);
+      logger.addHandler(handler);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error adding file logger.", e);
+    }
+  }
+  
+  public synchronized static void removeThreadLogger() {
+    if (!loggingInitialized) {
+      throw new IllegalStateException("Logging must be initialized before error logs can be removed.");
+    }
+    Thread thread = Thread.currentThread();
+    Handler handler = threadHandlerMap.get(thread.getId());
+    if (handler != null) {
+      logger.removeHandler(handler);
+      handler.close();
+      threadHandlerMap.remove(thread.getId());
     }
   }
   

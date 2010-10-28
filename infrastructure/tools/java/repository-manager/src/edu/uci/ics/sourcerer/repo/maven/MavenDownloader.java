@@ -31,8 +31,8 @@ import java.net.URL;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.repo.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 

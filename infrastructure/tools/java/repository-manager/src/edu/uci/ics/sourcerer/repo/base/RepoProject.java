@@ -19,11 +19,12 @@ package edu.uci.ics.sourcerer.repo.base;
 
 import java.io.File;
 
+import edu.uci.ics.sourcerer.repo.RepoPath;
 import edu.uci.ics.sourcerer.repo.base.compressed.CompressedFileSet;
 import edu.uci.ics.sourcerer.repo.base.normal.FileSet;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
-import edu.uci.ics.sourcerer.repo.general.RepoPath;
+import edu.uci.ics.sourcerer.repo.properties.ProjectProperties;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -71,8 +72,12 @@ public class RepoProject {
     return content;
   }
   
-  public File getPropertiesFile() {
-    return properties;
+//  public File getPropertiesFile() {
+//    return properties;
+//  }
+  
+  public ProjectProperties getProperties() {
+    return ProjectProperties.load(properties);
   }
   
   public String toString() {

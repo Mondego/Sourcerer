@@ -269,6 +269,7 @@ public class EclipseUtils {
         return null;
       }
     } catch (CoreException e) {
+      logger.log(Level.SEVERE, "Exception in loading file", e);
       return null;
     }
   }
@@ -316,6 +317,7 @@ public class EclipseUtils {
       IPackageFragmentRoot root = javaProject.findPackageFragmentRoot(path);
       if (root == null) {
         logger.log(Level.SEVERE, "Unable to get class file listing for: " + path.toString());
+        logger.log(Level.SEVERE, "Attempt to get fragment: " + javaProject.findPackageFragment(path));
         return classFiles;
       } else {
         for (IJavaElement child : root.getChildren()) {

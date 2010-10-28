@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.general;
+package edu.uci.ics.sourcerer.repo.properties;
 
 import java.io.File;
 import java.util.Properties;
@@ -23,7 +23,7 @@ import java.util.Properties;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarProperties extends AbstractBinaryProperties {
+public class ExtractedJarProperties extends AbstractBinaryProperties {
   private static final String GROUP = "group";
   private static final String VERSION = "version";
   private static final String HASH = "hash";
@@ -33,17 +33,21 @@ public class JarProperties extends AbstractBinaryProperties {
   private String version;
   private String hash;
  
-  private JarProperties() {}
+  private ExtractedJarProperties() {}
   
-  public static JarProperties load(File file) {
-    JarProperties props = new JarProperties();
+  public static ExtractedJarProperties load(File file) {
+    ExtractedJarProperties props = new ExtractedJarProperties();
     props.loadProperties(file);
-
-    props.group = props.properties.getProperty(GROUP);
-    props.version = props.properties.getProperty(VERSION);
-    props.hash = props.properties.getProperty(HASH);
-    
     return props;
+  }
+  
+  @Override
+  protected void loadProperties(File file) {
+    super.loadProperties(file);
+    
+    group = properties.getProperty(GROUP);
+    version = properties.getProperty(VERSION);
+    hash = properties.getProperty(HASH);
   }
 
   public static void create(File file, String name, String group, String version, String hash) {

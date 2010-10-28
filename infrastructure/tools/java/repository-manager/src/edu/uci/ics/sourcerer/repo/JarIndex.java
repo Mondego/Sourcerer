@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.general;
+package edu.uci.ics.sourcerer.repo;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
@@ -44,6 +44,7 @@ import edu.uci.ics.sourcerer.repo.base.IJarFile;
 import edu.uci.ics.sourcerer.repo.base.JarNamer;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.properties.ExtractedJarProperties;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
@@ -55,8 +56,6 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarIndex {
-  public static final Property<String> JAR_INDEX_FILE = new StringProperty("jar-index", "index.txt", "Repository Manager", "The filename of the jar index.");
-  
   public enum MavenFilter {
     NONE,
     LATEST,
@@ -169,30 +168,7 @@ public class JarIndex {
       try {
         br = new BufferedReader(new FileReader(indexFile));
         for (String line = br.readLine(); line != null; line = br.readLine()) {
-          String[] parts = line.split(" ");
-          IndexedJar jar = null;
-          // It has two parts if it's a project jar
-          if (parts.length == 4) {
-            if ("PROJECT".equals(parts[1])) {
-              jar = new IndexedJar(parts[0], projectPath.getChild(parts[2]), parts[3]);
-            } else {
-              logger.log(Level.SEVERE, "Invalid index line: " + line);
-            }
-          } else if (parts.length == 7) {
-            if ("MAVEN".equals(parts[1])) {
-              jar = new IndexedJar(parts[0], parts[2], parts[3], parts[4], mavenPath.getChild(parts[5]), parts[6]);
-            } else {
-              logger.log(Level.SEVERE, "Invalid index line: " + line);
-            }
-          } else if (parts.length == 8) {
-            if ("MAVEN".equals(parts[1])) {
-              jar = new IndexedJar(parts[0], parts[2], parts[3], parts[4], mavenPath.getChild(parts[5]), parts[6], parts[7]);
-            } else {
-              logger.log(Level.SEVERE, "Invalid index line: " + line);
-            }
-          } else {
-            logger.log(Level.SEVERE, "Invalid index line: " + line);
-          }
+          
           if (index.index.containsKey(parts[0])) {
             IndexedJar oldJar = index.index.get(parts[0]);
 //            logger.log(Level.WARNING, oldJar.toString() + " duplicates " + jar.toString());
@@ -218,84 +194,84 @@ public class JarIndex {
     return index;
   }
   
-  public static void printJarStats(File dir) {
-    int projectJarCount = 0;
-    int mavenJarCount = 0;
-    int mavenVersionCount = 0;
-    int mavenProjectsWithSource = 0;
-    int mavenProjectsWithJar = 0;
-    
-    logger.info("Beginning jar stats calculation...");
-    Collection<File> projects = Helper.newHashSet();
-    for (File file : dir.listFiles()) {
-      // A file is a project jar
-      if (file.isFile()) {
-        if (file.getName().endsWith(".jar")) {
-          if (++projectJarCount % 1000 == 0) {
-            logger.info(projectJarCount + " project jars counted.");
-          }
-        }
-      } else if (file.isDirectory()) {
-        Deque<File> stack = Helper.newStack();
-        stack.push(file);
-        while (!stack.isEmpty()) {
-          File top = stack.pop();
-          for (File next : top.listFiles()) {
-            if (next.isDirectory()) {
-              stack.push(next);
-            } else {
-              if (next.getName().endsWith(".jar")) {
-                projects.add(top.getParentFile());
-                if (++mavenJarCount % 1000 == 0) {
-                  logger.info(mavenJarCount + " maven jars counted.");
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    
-    logger.info("Beginning individual project stats calculation...");
-    for (File project : projects) {
-      boolean foundJar = false;
-      boolean foundSource = false;
-      for (File version : project.listFiles()) {
-        if (version.isDirectory()) {
-          mavenVersionCount++;
-          for (File jar : version.listFiles()) {
-            if (jar.getName().endsWith(version.getName() + ".jar")) {
-              foundJar = true;
-            } else if (jar.getName().endsWith("sources.jar") || jar.getName().endsWith("source.jar")) {
-              foundSource = true;
-            }
-          }
-        }
-      }
-      if (foundJar) {
-        if (++mavenProjectsWithJar % 1000 == 0) {
-          logger.info(mavenProjectsWithJar + " projects counted.");
-        }
-      }
-      if (foundSource) {
-        mavenProjectsWithSource++;
-      }
-    }
-    
-    TablePrettyPrinter printer = TablePrettyPrinter.getCommandLinePrettyPrinter();
-    printer.beginTable(2);
-    printer.addDividerRow();
-    printer.addRow("Total jar count", "" + (projectJarCount + mavenJarCount));
-    printer.addRow("Project jar count", "" + projectJarCount);
-    printer.addRow("Maven jar count", "" + mavenJarCount);
-    printer.addDividerRow();
-    printer.addRow("Maven project count", "" + projects.size());
-    printer.addRow("Maven version count", "" + mavenVersionCount);
-    printer.addRow("Maven projects with jars", "" + mavenProjectsWithJar);
-    printer.addRow("Maven projects with source", "" + mavenProjectsWithSource);
-    printer.addDividerRow();
-    printer.endTable();
-  }
+//  protected static void printJarStats(File dir) {
+//    int projectJarCount = 0;
+//    int mavenJarCount = 0;
+//    int mavenVersionCount = 0;
+//    int mavenProjectsWithSource = 0;
+//    int mavenProjectsWithJar = 0;
+//    
+//    logger.info("Beginning jar stats calculation...");
+//    Collection<File> projects = Helper.newHashSet();
+//    for (File file : dir.listFiles()) {
+//      // A file is a project jar
+//      if (file.isFile()) {
+//        if (file.getName().endsWith(".jar")) {
+//          if (++projectJarCount % 1000 == 0) {
+//            logger.info(projectJarCount + " project jars counted.");
+//          }
+//        }
+//      } else if (file.isDirectory()) {
+//        Deque<File> stack = Helper.newStack();
+//        stack.push(file);
+//        while (!stack.isEmpty()) {
+//          File top = stack.pop();
+//          for (File next : top.listFiles()) {
+//            if (next.isDirectory()) {
+//              stack.push(next);
+//            } else {
+//              if (next.getName().endsWith(".jar")) {
+//                projects.add(top.getParentFile());
+//                if (++mavenJarCount % 1000 == 0) {
+//                  logger.info(mavenJarCount + " maven jars counted.");
+//                }
+//              }
+//            }
+//          }
+//        }
+//      }
+//    }
+//    
+//    logger.info("Beginning individual project stats calculation...");
+//    for (File project : projects) {
+//      boolean foundJar = false;
+//      boolean foundSource = false;
+//      for (File version : project.listFiles()) {
+//        if (version.isDirectory()) {
+//          mavenVersionCount++;
+//          for (File jar : version.listFiles()) {
+//            if (jar.getName().endsWith(version.getName() + ".jar")) {
+//              foundJar = true;
+//            } else if (jar.getName().endsWith("sources.jar") || jar.getName().endsWith("source.jar")) {
+//              foundSource = true;
+//            }
+//          }
+//        }
+//      }
+//      if (foundJar) {
+//        if (++mavenProjectsWithJar % 1000 == 0) {
+//          logger.info(mavenProjectsWithJar + " projects counted.");
+//        }
+//      }
+//      if (foundSource) {
+//        mavenProjectsWithSource++;
+//      }
+//    }
+//    
+//    TablePrettyPrinter printer = TablePrettyPrinter.getCommandLinePrettyPrinter();
+//    printer.beginTable(2);
+//    printer.addDividerRow();
+//    printer.addRow("Total jar count", "" + (projectJarCount + mavenJarCount));
+//    printer.addRow("Project jar count", "" + projectJarCount);
+//    printer.addRow("Maven jar count", "" + mavenJarCount);
+//    printer.addDividerRow();
+//    printer.addRow("Maven project count", "" + projects.size());
+//    printer.addRow("Maven version count", "" + mavenVersionCount);
+//    printer.addRow("Maven projects with jars", "" + mavenProjectsWithJar);
+//    printer.addRow("Maven projects with source", "" + mavenProjectsWithSource);
+//    printer.addDividerRow();
+//    printer.endTable();
+//  }
   
   public static void aggregateJars(Repository repo) {
     Set<String> completed = Logging.initializeResumeLogger();
@@ -321,7 +297,7 @@ public class JarIndex {
         try {
           currentOne = Math.max(currentOne, 1 + Integer.parseInt(one.getName()));
         } catch (NumberFormatException e) {}
-        for (File two : repoJarFolder.listFiles()) {
+        for (File two : one.listFiles()) {
           if (two.isDirectory()) {
             for (File file : two.listFiles()) {
               // A tmp file is a partially completed jar
@@ -333,12 +309,14 @@ public class JarIndex {
                   // The first line should contain the length
                   String line = br.readLine();
                   if (line == null) {
+                    logger.log(Level.SEVERE, "Incorrect info file: " + file.getPath());
                     continue;
                   }
                   long length = Long.parseLong(line);
                   // The second line should contain the hash
                   String hash = br.readLine();
                   if (hash == null) {
+                    logger.log(Level.SEVERE, "Incorrect info file: " + file.getPath());
                     continue;
                   }
                   RepoJar jar = new RepoJar(length, hash);
@@ -538,7 +516,7 @@ public class JarIndex {
                         
                   // Write out the properties file
                   File propsFile = new File(top, jar.getName() + ".properties");
-                  JarProperties.create(propsFile, artifactName, groupName, version, hash);
+                  ExtractedJarProperties.create(propsFile, artifactName, groupName, version, hash);
                   
                   logger.log(RESUME, id);
                 }
@@ -574,7 +552,7 @@ public class JarIndex {
                     name = name.substring(0, name.lastIndexOf('.'));
                     
                     File propsFile = new File(two, file.getName() + ".properties");
-                    JarProperties.create(propsFile, name, hash);
+                    ExtractedJarProperties.create(propsFile, name, hash);
                     
                     logger.log(RESUME, file.getName());
                   }

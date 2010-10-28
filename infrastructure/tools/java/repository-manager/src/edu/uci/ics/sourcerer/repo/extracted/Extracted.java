@@ -31,9 +31,9 @@ import edu.uci.ics.sourcerer.model.extracted.MissingTypeEX;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
+import edu.uci.ics.sourcerer.repo.RepoPath;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
-import edu.uci.ics.sourcerer.repo.general.AbstractProperties;
-import edu.uci.ics.sourcerer.repo.general.RepoPath;
+import edu.uci.ics.sourcerer.repo.properties.AbstractExtractedProperties;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
@@ -42,15 +42,15 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class Extracted {
-  public static final Property<String> ENTITY_FILE = new StringProperty("entity-file", "entities.txt", "Repository Manager", "Filename for the extracted entities.");
-  public static final Property<String> RELATION_FILE = new StringProperty("relation-file", "relations.txt", "Repository Manager", "Filename for the extracted relations.");
-  public static final Property<String> LOCAL_VARIABLE_FILE = new StringProperty("local-variables-file", "local-variables.txt", "Repository Manager", "Filename for the extracted local variables / parameters.");
-  public static final Property<String> COMMENT_FILE = new StringProperty("comment-file", "comments.txt", "Repository Manager", "Filename for the extracted comments.");
-  public static final Property<String> FILE_FILE = new StringProperty("file-file", "files.txt", "Repository Manager", "Filename for the extracted files.");
-  public static final Property<String> PROBLEM_FILE = new StringProperty("problem-file", "problems.txt", "Repository Manager", "Filename for the extracted problems.");
-  public static final Property<String> IMPORT_FILE = new StringProperty("import-file", "imports.txt", "Repository Manager", "Filename for the extracted imports.");
-  public static final Property<String> USED_JAR_FILE = new StringProperty("used-jar-file", "used-jars.txt", "Repository Manager", "Filename for used jar files.");
-  public static final Property<String> MISSING_TYPE_FILE = new StringProperty("missing-type-file", "missing-types.txt", "Repository Manager", "Filename for missing types.");
+  public static final Property<String> ENTITY_FILE = new StringProperty("entity-file", "entities.txt", "Filename for the extracted entities.");
+  public static final Property<String> RELATION_FILE = new StringProperty("relation-file", "relations.txt", "Filename for the extracted relations.");
+  public static final Property<String> LOCAL_VARIABLE_FILE = new StringProperty("local-variables-file", "local-variables.txt", "Filename for the extracted local variables / parameters.");
+  public static final Property<String> COMMENT_FILE = new StringProperty("comment-file", "comments.txt", "Filename for the extracted comments.");
+  public static final Property<String> FILE_FILE = new StringProperty("file-file", "files.txt", "Filename for the extracted files.");
+  public static final Property<String> PROBLEM_FILE = new StringProperty("problem-file", "problems.txt", "Filename for the extracted problems.");
+  public static final Property<String> IMPORT_FILE = new StringProperty("import-file", "imports.txt", "Filename for the extracted imports.");
+  public static final Property<String> USED_JAR_FILE = new StringProperty("used-jar-file", "used-jars.txt", "Filename for used jar files.");
+  public static final Property<String> MISSING_TYPE_FILE = new StringProperty("missing-type-file", "missing-types.txt", "Filename for missing types.");
   
   protected RepoPath content;
 
@@ -61,9 +61,6 @@ public abstract class Extracted {
   public File getOutputDir() {
     return content.toFile();
   }
-//  public RepoPath getContent() {
-//    return content;
-//  }
   
   public String getRelativePath() {
     return content.getRelativePath();
@@ -170,7 +167,7 @@ public abstract class Extracted {
     return getInputFile(USED_JAR_FILE).exists();
   }
   
-  protected abstract AbstractProperties getProperties();
+  protected abstract AbstractExtractedProperties getProperties();
   
   public String getName() {
     return getProperties().getName();
@@ -215,5 +212,26 @@ public abstract class Extracted {
   
   public int getJars() {
     return getProperties().getJars();
+  }
+  
+  public String getHash() {
+    return null;
+  }
+  
+  public String getGroup() {
+    return null;
+  }
+  
+  public String getVersion() {
+    return null;
+  }
+  
+  public String getDescription() {
+    return null;
+  }
+  
+  @Override
+  public String toString() {
+    return getProperties().getName();
   }
 }

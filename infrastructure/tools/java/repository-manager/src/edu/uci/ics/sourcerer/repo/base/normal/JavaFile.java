@@ -94,7 +94,7 @@ public class JavaFile extends AbstractJavaFile {
   
   @Override
   public String getPath() {
-    return file.getPath();
+    return file.getAbsolutePath();
   }
   
   @Override

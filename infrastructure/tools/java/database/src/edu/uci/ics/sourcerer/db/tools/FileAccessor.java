@@ -22,6 +22,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -33,12 +34,11 @@ import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.db.FileDB;
 import edu.uci.ics.sourcerer.model.db.LocationDB;
 import edu.uci.ics.sourcerer.model.db.ProjectDB;
-import edu.uci.ics.sourcerer.repo.base.IJavaFile;
+import edu.uci.ics.sourcerer.repo.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.IndexedJar;
+import edu.uci.ics.sourcerer.repo.JarIndex;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
-import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
-import edu.uci.ics.sourcerer.repo.general.IndexedJar;
-import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.util.TimeoutManager;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
@@ -59,42 +59,53 @@ public class FileAccessor {
   private static Repository repo = Repository.getRepository(AbstractRepository.INPUT_REPO.getValue());
   private static ExtractedRepository extracted = ExtractedRepository.getRepository(AbstractRepository.OUTPUT_REPO.getValue());
   
+  private static byte[] convertResult(Result result) {
+    if (result.success()) {
+      return result.getResult();
+    } else {
+      logger.log(Level.SEVERE, result.getErrorMessage());
+      return null;
+    }
+  }
   public static byte[] lookupByProjectID(String projectID) {
+    return convertResult(lookupResultByProjectID(projectID));
+  }
+  
+  public static Result lookupResultByProjectID(String projectID) {
     FileDatabaseAccessor db = accessorManager.get();
     ProjectDB project = db.getProjectByProjectID(projectID);
     if (project == null) {
-      logger.log(Level.SEVERE, "Unable to find project: " + projectID);
-      return null;
+      return new Result("Unable to find project: " + projectID);
     } else {
       if (project.getType() == Project.SYSTEM) {
-        logger.log(Level.SEVERE, project + " is a SYSTEM project");
-        return null;
+        return new Result(project + " is a SYSTEM project");
       } else if (project.getType() == Project.JAR || project.getType() == Project.MAVEN) {
         JarIndex index = repo.getJarIndex();
         IndexedJar indexed = index.getIndexedJar(project.getHash());
         if (indexed == null) {
-          logger.log(Level.SEVERE, "Unable to find " + project + " with hash " + project.getHash());
-          return null;
+          return new Result("Unable to find " + project + " with hash " + project.getHash());
         } else {
-          return FileUtils.getFileAsByteArray(indexed.getJarFile());
+          return new Result(indexed.getName(), FileUtils.getFileAsByteArray(indexed.getJarFile()));
         }
       } else if (project.getType() == Project.JAVA_LIBRARY) {
-        return FileUtils.getFileAsByteArray(extracted.getJavaLibrary(project.getPath()));
+        return new Result(project.getName(), FileUtils.getFileAsByteArray(extracted.getJavaLibrary(project.getPath())));
       } else if (project.getType() == Project.CRAWLED) {
-        logger.log(Level.SEVERE, "Crawled projects not supported: " + project);
-        return null;
+        return new Result("Crawled projects not supported: " + project);
       } else {
-        return null;
+        return new Result("Unknown project type: " + project.getType());
       }
     }
   }
   
   public static byte[] lookupByFileID(String fileID) {
+    return convertResult(lookupResultByFileID(fileID));
+  }
+  
+  public static Result lookupResultByFileID(String fileID) { 
     FileDatabaseAccessor db = accessorManager.get();
     FileDB file = db.getFileByFileID(fileID);
     if (file == null) {
-      logger.log(Level.SEVERE, "Unable to find file: " + fileID);
-      return null;
+      return new Result("Unable to find file: " + fileID);
     } else {
       ProjectDB project = db.getProjectByProjectID(file.getProjectID());
       return getFile(project, file, null);
@@ -102,16 +113,18 @@ public class FileAccessor {
   }
   
   public static byte[] lookupByEntityID(String entityID) {
+    return convertResult(lookupResultByEntityID(entityID));
+  }
+  
+  public static Result lookupResultByEntityID(String entityID) {
     FileDatabaseAccessor db = accessorManager.get();
     LocationDB loc = db.getLocationByEntityID(entityID);
     if (loc == null) {
-      logger.log(Level.SEVERE, "Entity " + entityID + " has no associated file");
-      return null;
+      return new Result("Entity " + entityID + " has no associated file");
     } else {
       FileDB file = db.getFileByFileID(loc.getFileID());
       if (file == null) {
-        logger.log(Level.SEVERE, "Unable to find file: " + loc.getFileID());
-        return null;
+        return new Result("Unable to find file: " + loc.getFileID());
       } else {
         ProjectDB project = db.getProjectByProjectID(file.getProjectID());
         return getFile(project, file, loc);
@@ -120,16 +133,18 @@ public class FileAccessor {
   }
   
   public static byte[] lookupByRelationID(String relationID) {
+    return convertResult(lookupResultByRelationID(relationID));
+  }
+  
+  public static Result lookupResultByRelationID(String relationID) {
     FileDatabaseAccessor db = accessorManager.get();
     LocationDB loc = db.getLocationByRelationID(relationID);
     if (loc == null) {
-      logger.log(Level.SEVERE, "Relation " + relationID + " has no associated file");
-      return null;
+      return new Result("Relation " + relationID + " has no associated file");
     } else {
       FileDB file = db.getFileByFileID(loc.getFileID());
       if (file == null) {
-        logger.log(Level.SEVERE, "Unable to find file: " + loc.getFileID());
-        return null;
+        return new Result("Unable to find file: " + loc.getFileID());
       } else {
         ProjectDB project = db.getProjectByProjectID(file.getProjectID());
         return getFile(project, file, loc);
@@ -138,16 +153,18 @@ public class FileAccessor {
   }
   
   public static byte[] lookupByCommentID(String commentID) {
+    return convertResult(lookupResultByCommentID(commentID));
+  }
+  
+  public static Result lookupResultByCommentID(String commentID) {
     FileDatabaseAccessor db = accessorManager.get();
     LocationDB loc = db.getLocationByCommentID(commentID);
     if (loc == null) {
-      logger.log(Level.SEVERE, "Comment " + commentID + " has no associated file");
-      return null;
+      return new Result("Comment " + commentID + " has no associated file");
     } else {
       FileDB file = db.getFileByFileID(loc.getFileID());
       if (file == null) {
-        logger.log(Level.SEVERE, "Unable to find file: " + loc.getFileID());
-        return null;
+        return new Result("Unable to find file: " + loc.getFileID());
       } else {
         ProjectDB project = db.getProjectByProjectID(file.getProjectID());
         return getFile(project, file, loc);
@@ -155,32 +172,33 @@ public class FileAccessor {
     }
   }
   
-  private static byte[] getFile(ProjectDB project, FileDB file, LocationDB location) {
+  private static Result getFile(ProjectDB project, FileDB file, LocationDB location) {
     if (file.getType() == File.JAR) {
       JarIndex index = repo.getJarIndex();
       IndexedJar indexed = index.getIndexedJar(file.getHash());
       if (indexed == null) {
-        logger.log(Level.SEVERE, "Unable to find " + file + " with hash " + file.getHash());
-        return null;
+        return new Result("Unable to find " + file + " with hash " + file.getHash());
       } else {
         if (location == null) {
-          return FileUtils.getFileAsByteArray(indexed.getJarFile());
+          return new Result(indexed.getName(), FileUtils.getFileAsByteArray(indexed.getJarFile()));
         } else {
-          logger.log(Level.SEVERE, "Cannot get a fragment of a jar file");
-          return null;
+          return new Result("Cannot get a fragment of a jar file");
         }
       }
     } else if (file.getType() == File.SOURCE) {
       if (project.getType() == Project.CRAWLED) {
-        IJavaFile javaFile = repo.getFile(file.getPath());
+        byte[] javaFile = repo.getFile(project.getPath(), file.getPath());
         if (javaFile == null) {
-          logger.log(Level.SEVERE, "Unable to find " + file.getPath() + " for " + file);
-          return null;
+          return new Result("Unable to find " + file.getPath() + " for " + file);
         } else {
           if (location == null) {
-            return FileUtils.getFileAsByteArray(javaFile.getFile());
+            return new Result(file.getName(), javaFile);
           } else {
-            return FileUtils.getFileFragmentAsByteArray(javaFile.getFile(), location.getOffset(), location.getLength());
+            String name = file.getName();
+            name = name.substring(0, name.indexOf('.')) + "-" + location.getOffset() + "-" + location.getLength() + ".java";
+            byte[] fragment = new byte[location.getLength()];
+            System.arraycopy(javaFile, location.getOffset(), fragment, 0, location.getLength());
+            return new Result(name, fragment);
           }
         }
       } else {
@@ -189,8 +207,7 @@ public class FileAccessor {
           JarIndex index = repo.getJarIndex();
           IndexedJar indexed = index.getIndexedJar(project.getHash());
           if (indexed == null) {
-            logger.log(Level.SEVERE, "Unable to find " + project + " for class " + file + " with hash " + project.getHash());
-            return null;
+            return new Result("Unable to find " + project + " for class " + file + " with hash " + project.getHash());
           } else {
             sourceFile = indexed.getSourceFile();
             if (sourceFile == null) {
@@ -205,15 +222,12 @@ public class FileAccessor {
         } else if (project.getType() == Project.JAVA_LIBRARY) {
           sourceFile = extracted.getJavaLibrarySource(project.getPath());
         } else {
-          logger.log(Level.SEVERE, project + " has improper type " + project.getType() + " for looking up source files");
-          return null;
+          return new Result(project + " has improper type " + project.getType() + " for looking up source files");
         }
         if (sourceFile == null) {
-          logger.log(Level.SEVERE, "Null source file for " + file + " in " + project);
-          return null;
+          return new Result("Null source file for " + file + " in " + project);
         } else if (!sourceFile.exists()) {
-          logger.log(Level.SEVERE, "Missing source file for " + file + " in " + project);
-          return null;
+          return new Result("Missing source file for " + file + " in " + project);
         } else {
           ZipFile zip = null;
           try {
@@ -222,26 +236,35 @@ public class FileAccessor {
             String entryName = minusClass.replace('.', '/') + ".java";
             ZipEntry entry = zip.getEntry(entryName);
             if (entry == null) {
-              logger.log(Level.SEVERE, "Unable to find entry " + entryName + " in " + sourceFile.getName() + " for " + file + " and " + project);
-              return null;
+              Enumeration<? extends ZipEntry> entries = zip.entries();
+              for (ZipEntry possibleEntry = entries.nextElement(); entries.hasMoreElements(); possibleEntry = entries.nextElement()) {
+                if (possibleEntry.getName().endsWith(entryName)) {
+                  entry = possibleEntry;
+                  break;
+                }
+              }
+            }
+            if (entry == null) {
+              return new Result("Unable to find entry " + entryName + " in " + sourceFile.getName() + " for " + file + " and " + project);
             } else {
               if (location == null) {
-                return FileUtils.getInputStreamAsByteArray(zip.getInputStream(entry), (int)entry.getSize());
+                return new Result(entry.getName(), FileUtils.getInputStreamAsByteArray(zip.getInputStream(entry), (int)entry.getSize()));
               } else {
-                return FileUtils.getInputStreamFragmentAsByteArray(zip.getInputStream(entry), location.getOffset(), location.getLength());
+                String name = entry.getName();
+                name = name.substring(0, name.lastIndexOf('.')) + "-" + location.getOffset() + "-" + location.getLength() + ".java";
+                return new Result(name, FileUtils.getInputStreamFragmentAsByteArray(zip.getInputStream(entry), location.getOffset(), location.getLength()));
               }
             }
           } catch (Exception e) {
             logger.log(Level.SEVERE, "Unable to read jar file", e);
-            return null;
+            return new Result("Unable to read jar file");
           } finally {
             FileUtils.close(zip);
           }
         }
       }
     } else {
-      logger.log(Level.SEVERE, file + " from " + project + " is a class file with no corresponding source");
-      return null;
+      return new Result(file + " from " + project + " is a class file with no corresponding source");
     }
   }
   
@@ -306,6 +329,37 @@ public class FileAccessor {
       }
     } catch (IOException e) {
       e.printStackTrace();
+    }
+  }
+  
+  public static class Result {
+    private String name;
+    private byte[] result;
+    private String errorMessage;
+    
+    private Result(String name, byte[] result) {
+      this.name = name;
+      this.result = result;
+    }
+    
+    private Result(String errorMessage) {
+      this.errorMessage = errorMessage;
+    }
+    
+    public boolean success() {
+      return errorMessage == null;
+    }
+    
+    public String getName() {
+      return name;
+    }
+    
+    public byte[] getResult() {
+      return result;
+    }
+    
+    public String getErrorMessage() {
+      return errorMessage;
     }
   }
   

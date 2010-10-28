@@ -136,6 +136,8 @@ import edu.uci.ics.sourcerer.util.Helper;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ReferenceExtractorVisitor extends ASTVisitor {
+  private static final String UNKNOWN = "(1UNKNOWN)";
+  
   private IFileWriter fileWriter;
   private IProblemWriter problemWriter;
   private IImportWriter importWriter;
@@ -150,6 +152,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private boolean inLhsAssignment = false;
   private boolean inFieldDeclaration = false;
   
+  private boolean bindingFree = false;
+  
   private FQNStack fqnStack = new FQNStack();
 
   public ReferenceExtractorVisitor(WriterBundle writers) {
@@ -162,6 +166,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     relationWriter = writers.getRelationWriter();
   }
 
+  public void setBindingFreeMode(boolean bindingFree) {
+    this.bindingFree = bindingFree;
+  }
+  
   /**
    * This method writes:
    * <ul>
@@ -229,10 +237,11 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   public boolean visit(ImportDeclaration node) {
     IBinding binding = node.resolveBinding();
     if (binding == null) {
-        // Cut things short
-        logger.severe("Import binding is null - giving up for: " + compilationUnitPath);
+      if (bindingFree) {
+        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
+      } else {
         throw new IllegalStateException("Binding resolution appears to have failed!");
-//        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
+      }
     } else {
       try {
         if (binding instanceof ITypeBinding) {
@@ -278,9 +287,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     String fqn = null;
     Entity type = null;
     ITypeBinding binding = node.resolveBinding();
-    if (binding == null) {
-      // Cut things short
-      logger.severe("Type binding is null - giving up for: " + compilationUnitPath);
+    if (binding == null && !bindingFree) {
       throw new IllegalStateException("Binding resolution appears to have failed!");
     }
     if (node.isPackageMemberTypeDeclaration()) {
@@ -294,9 +301,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       }
     } else if (node.isLocalTypeDeclaration()) {
       if (binding == null) {
-        fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), null);
+        fqn = getUnknownFqn(node.getName().getIdentifier());
       } else {
-        fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), binding.getBinaryName());
+        fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), binding);
       }
     } else {
       logger.severe("Unsure what type the declaration is!");
@@ -510,7 +517,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     } else if (node.isMemberTypeDeclaration()) {
       fqn = fqnStack.getFqn() + "$" + node.getName().getIdentifier();
     } else if (node.isLocalTypeDeclaration()) {
-      logger.log(Level.SEVERE, "Can't have local enums!");
+      logger.log(Level.WARNING, "Can't have local enums! eclipse error");
+      fqnStack.push(null, null);
+      return false;
     } else {
       logger.log(Level.SEVERE, "Unsure what type the declaration is!");
       fqn = "(ERROR)";
@@ -1476,11 +1485,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       }
     } else if (node.isLocalTypeDeclaration()) {
       ITypeBinding binding = node.resolveBinding();
-      if (binding == null) {
-        fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), null);
-      } else {
-        fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), binding.getBinaryName());
-      }
+      fqn = fqnStack.getLocalFqn(node.getName().getIdentifier(), binding);
     } else {
       logger.severe("Unsure what type the declaration is!");
       fqn = "(ERROR)" + node.getName().getIdentifier();
@@ -1964,20 +1969,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     if (declaringClass == null) {
       logger.log(Level.SEVERE, "Unresolved declaring class for method!", binding);
     } else {
-      String declaringFqn = getTypeFqn(declaringClass);
-      if (declaringFqn.equals("_ERROR_")) {
-        if (declaration) {
-          fqnBuilder.append(fqnStack.getFqn());
-        } else {
-          fqnBuilder.append("_UNRESOLVED_");
-        }
-      } else if (declaration) {
-//        if (!declaringFqn.equals(fqnStack.getFqn())) {
-//          logger.log(Level.SEVERE, "Mismatch between " + declaringFqn + " and " + fqnStack.getFqn());
-//        }
+      if (declaration) {
         fqnBuilder.append(fqnStack.getFqn());
       } else {
-        fqnBuilder.append(declaringFqn);
+        fqnBuilder.append(getTypeFqn(declaringClass));
       }
       fqnBuilder.append('.').append(binding.isConstructor() ? "<init>" : binding.getName());
     }
@@ -2002,7 +1997,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private static final String BRACKETS = "[][][][][][][][][][][][][][][][][][][][]";
  
   private String getUnknownFqn(String name) {
-    return "(1UNKNOWN)" + name;
+    return UNKNOWN + name;
   }
   
   private String getUnknownSuperFqn(String name) {
@@ -2013,7 +2008,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private String getTypeFqn(Type type) {
     if (type == null) {
       logger.log(Level.SEVERE, "Attempt to get type fqn of null type!");
-      return "_NULL_";
+      throw new NullPointerException("Attempt to get type fqn of null type!");
     }
     ITypeBinding binding = type.resolveBinding();
     if (binding == null) {
@@ -2043,8 +2038,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
           try {
             fqn.append(getTypeFqn(arg));
           } catch (NullPointerException e) {
-            logger.log(Level.FINE, "Eclipse NPE bug in parametrized type");
-            fqn.append("_ERROR_");              
+            logger.log(Level.WARNING, "Eclipse NPE bug in parametrized type", e);
+            fqn.append(UNKNOWN);              
           }
         }
         fqn.append(">");
@@ -2059,7 +2054,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         }
       } else {
         logger.log(Level.SEVERE, "Unexpected node type for unresolved type!" + type.toString());
-        return "_ERROR_";
+        return UNKNOWN;
       }
     } else {
       return getTypeFqn(binding);
@@ -2076,7 +2071,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   
   private String getTypeFqn(ITypeBinding binding) {
     if (binding == null) {
-      return "_ERROR_";
+      logger.log(Level.SEVERE, "Null type binding", new NullPointerException());
+      return UNKNOWN;
     } else if (binding.isTypeVariable()) {
       return "<" + binding.getQualifiedName() + ">";
     } else if (binding.isPrimitive()) {
@@ -2095,14 +2091,14 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     } else if (binding.isAnonymous()) {
       String fqn = binding.getBinaryName();
       if (fqn == null) {
-        return "_ERROR_";
+        return UNKNOWN;
       } else {
         return fqn;
       }
     } else if (binding.isLocal()) {
 //      String fqn = binding.getBinaryName();
 //      if (fqn == null) {
-      return fqnStack.getLocalFqn(binding.getName(), binding.getBinaryName());
+      return fqnStack.getLocalFqn(binding.getName(), binding);
 //        if (fqnStack.isMethodTop()) {
 //          // TODO check local type binary names
 //          return fqnStack.getAnonymousClassFqn() + binding.getName();
@@ -2132,8 +2128,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         try {
           fqn.append(getTypeFqn(arg));
         } catch (NullPointerException e) {
-          logger.log(Level.FINE, "Eclipse NPE bug in parametrized type");
-          fqn.append("_ERROR_");              
+          logger.log(Level.WARNING, "Eclipse NPE bug in parametrized type", e);
+          fqn.append(UNKNOWN);              
         }
       }
       fqn.append(">");
@@ -2221,18 +2217,26 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       }
     }
     
-    public String getLocalFqn(String identifier, String binaryName) {
-      if (binaryName == null) {
-        logger.log(Level.SEVERE, "Cannot have local declaration with no binary name.");
+    public String getLocalFqn(String identifier, ITypeBinding binding) {
+      if (binding == null) {
+        logger.log(Level.SEVERE, "Cannot have local declaration with no binding.");
         return getUnknownFqn(identifier);
       }
       if (stack.isEmpty()) {
         logger.log(Level.SEVERE, "Cannot have local declaration with empty stack.");
         return getUnknownFqn(identifier);
       } else {
+        String uniqueID = binding.getBinaryName();
+        if (uniqueID == null) {
+          uniqueID = binding.getDeclaringClass().getBinaryName();
+          if (binding.getDeclaringMethod() != null) {
+            uniqueID += binding.getDeclaringMethod().getName();
+          }
+          uniqueID += identifier;
+        }
         for (Enclosing fqn : stack) {
           if (fqn.isDeclaredType()) {
-            String localFqn = fqn.getLocalClassFqn(identifier, binaryName);
+            String localFqn = fqn.getLocalClassFqn(identifier, uniqueID);
             if (localFqn != null) {
               return localFqn;
             }
@@ -2240,7 +2244,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         }
         for (Enclosing fqn : stack) {
           if (fqn.isDeclaredType()) {
-            return fqn.createLocalClassFqn(identifier, binaryName);
+            return fqn.createLocalClassFqn(identifier, uniqueID);
           }
         }
         logger.log(Level.SEVERE, "Cannot have local declaration with no declared types on stack.");
@@ -2331,12 +2335,12 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       return fqn + "$anonymous-" + ++anonymousClassCount;
     }
     
-    public String createLocalClassFqn(String name, String binaryName) {
+    public String createLocalClassFqn(String name, String uniqueID) {
       if (localClassMap == null) {
         localClassMap = Helper.newHashMap();
       }
       String retval = fqn + "$local-" + (localClassMap.size() + 1) + "-" + name;
-      localClassMap.put(binaryName, retval);
+      localClassMap.put(uniqueID, retval);
       return retval;
     }
     

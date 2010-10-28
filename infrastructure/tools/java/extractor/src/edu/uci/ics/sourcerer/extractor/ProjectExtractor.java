@@ -51,11 +51,34 @@ public class ProjectExtractor {
     for (RepoProject project : projects) {
       logger.info("Extracting " + project.getProjectPath() + " (" + ++count + " of " + projects.size() + ")");
       ExtractedProject extracted = project.getExtractedProject(output);
-      if (extracted.extracted() && !(extracted.hasMissingTypes() && Extractor.FORCE_MISSING_REDO.getValue())) {
-        logger.info("  Project already extracted");
-      } else if (extracted.hasMissingTypes() && !Extractor.RESOLVE_MISSING_TYPES.getValue()) {
-        logger.info("  Project has missing types");
-      } else {
+      
+      boolean extract = false;
+      if (Extractor.RESOLVE_MISSING_TYPES.getValue()) {
+        if (Extractor.FORCE_MISSING_REDO.getValue() && extracted.hasMissingTypes()) {
+          extract = true;
+        } else if (extracted.extracted() && extracted.reallyExtracted()) {
+          logger.info("  Project already extracted");
+        } else {
+          extract = true;
+        }
+      } else if (Extractor.SKIP_MISSING_TYPES.getValue()) {
+        if (extracted.hasMissingTypes()) {
+          logger.info("  Project has missing types");
+        } else if (extracted.extracted() && extracted.reallyExtracted()) {
+          logger.info("  Project already extracted");
+        } else {
+          extract = true;
+        }
+      }
+      else {
+        if (extracted.extracted() && extracted.reallyExtracted()) {
+          logger.info("  Project already extracted");
+        } else {
+          extract = true;
+        }
+      }
+      
+      if (extract) {
         // Set up logging
         Logging.addFileLogger(extracted.getOutputDir());
         
@@ -91,7 +114,7 @@ public class ProjectExtractor {
             fileWriter.writeJarFile(jar.getName(), jar.getHash());
           }
           
-          boolean force = !Extractor.RESOLVE_MISSING_TYPES.getValue();
+          boolean force = !(Extractor.SKIP_MISSING_TYPES.getValue() || Extractor.RESOLVE_MISSING_TYPES.getValue());
           if (missingTypes) {
             logger.info("  Resolving missing types...");
             Collection<IndexedJar> newJars = resolver.resolveMissingTypes(index, extracted, bundle.getUsedJarWriter());
@@ -145,13 +168,15 @@ public class ProjectExtractor {
               missingTypes = report.hadMissingType() || report.hadMissingSecondOrder();
               logger.info("  Redoing because of missing types...");
             }
-          } else {
-            // Write the properties file
+          } else if (Extractor.SKIP_MISSING_TYPES.getValue()) {
             if (report.hadMissingType() || report.hadMissingSecondOrder()) {
               extracted.reportMissingTypeExtraction();
             } else {
               extracted.reportSuccessfulExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions(), jars.size());
             }
+            break;
+          } else {
+            extracted.reportSuccessfulExtraction(report.getExtractedFromSource(), report.getSourceExtractionExceptions(), jars.size());
             break;
           }
         }

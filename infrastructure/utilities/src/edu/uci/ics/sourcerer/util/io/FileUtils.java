@@ -41,7 +41,7 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class FileUtils {
-  protected static final Property<String> TEMP_DIR = new StringProperty("temp-dir", "temp", "General", "Name of temp directory placed into OUTPUT directory");
+  protected static final Property<String> TEMP_DIR = new StringProperty("temp-dir", "temp", "Name of temp directory placed into OUTPUT directory").register("General");
   
   private FileUtils() {}
   
@@ -63,6 +63,7 @@ public final class FileUtils {
   
   public static File getTempDir() {
     File tempDir = new File(OUTPUT.getValue(), TEMP_DIR.getValue());
+    tempDir = new File(tempDir, "thread-" + Thread.currentThread().getId());
     if (tempDir.exists() || tempDir.mkdirs()) {
       return tempDir;
     } else {

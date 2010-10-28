@@ -38,7 +38,32 @@ import edu.uci.ics.sourcerer.util.io.Logging;
  * @author Joel Ossher 
  *
  */
-public class LibraryExtractor {
+public abstract class LibraryExtractor {
+  public static LibraryExtractor createEclipseExtractor() {
+    return new LibraryExtractor() {
+      protected void extractJar(LibraryJar library) {
+        logger.info("  Getting class files...");
+        Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(library);
+        
+        logger.info("  Extracting " + classFiles.size() + " class files...");
+        
+        // Set up the writer bundle
+        WriterBundle bundle = new WriterBundle(extracted.getOutputDir());
+        
+        // Set up the feature extractor
+        FeatureExtractor extractor = new FeatureExtractor(bundle);
+        
+        // Extract
+        ClassExtractionReport report = extractor.extractClassFiles(classFiles, true);
+        
+        // Close the output files
+        extractor.close();
+      }
+    };
+  }
+  
+  protected abstract void extractJar(LibraryJar library);
+  
   public static void extract() {
     // Load the output repository
     ExtractedRepository output = ExtractedRepository.getRepository(OUTPUT_REPO.getValue());
@@ -57,23 +82,8 @@ public class LibraryExtractor {
       } else {
         // Set up logging
         Logging.addFileLogger(extracted.getOutputDir());
-
-        logger.info("  Getting class files...");
-        Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(library);
         
-        logger.info("  Extracting " + classFiles.size() + " class files...");
         
-        // Set up the writer bundle
-        WriterBundle bundle = new WriterBundle(extracted.getOutputDir());
-        
-        // Set up the feature extractor
-        FeatureExtractor extractor = new FeatureExtractor(bundle);
-        
-        // Extract
-        ClassExtractionReport report = extractor.extractClassFiles(classFiles, true);
-        
-        // Close the output files
-        extractor.close();
         
         // Copy the library jar
         extracted.copyLibraryJar(new File(library.getPath()));

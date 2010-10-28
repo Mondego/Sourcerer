@@ -41,19 +41,13 @@ public class LimitedEntityDB {
   public String getEntityID() {
     return entityID;
   }
-   
-  public Boolean isInternal(String projectID) {
-    if (type == Entity.DUPLICATE) {
-      return true;
-    } else if (type.isInternalMeaningful()) {
-      return projectID.equals(this.projectID);
-    } else {
-      return null;
-    }
-  }
   
   public boolean notDuplicate() {
     return type != Entity.DUPLICATE;
+  }
+  
+  public Entity getType() {
+    return type;
   }
   
   public String toString() {

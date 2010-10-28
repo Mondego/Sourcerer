@@ -71,26 +71,57 @@ public class JarExtractor {
     for (IndexedJar jar : toExtract) {
       logger.info("Extracting " + jar.toString() + " (" + ++count + " of " + toExtract.size() + ")");
       ExtractedJar extracted = jar.getExtractedJar(output);
-      if (Extractor.EXTRACT_BINARY.getValue() && extracted.extracted()) {
-        logger.info("  Jar already extracted");
-      } else if (Extractor.RESOLVE_MISSING_TYPES.getValue() && extracted.extracted() && !extracted.sourceSkipped() && !Extractor.FORCE_SOURCE_REDO.getValue()) {
-        logger.info("  Jar already extracted");
-      } else if (extracted.hasMissingTypes()) {
-        logger.info("  Jar has missing types");
-      } else if (extracted.extracted() && !extracted.sourceSkipped() && !Extractor.FORCE_SOURCE_REDO.getValue()) {
-        logger.info("  Jar already extracted");
+      
+      boolean extract = false;
+      if (Extractor.EXTRACT_BINARY.getValue()) {
+        if (extracted.extracted()) {
+          logger.info("  Jar already extracted");
+        } else {
+          extract = true;
+        }
+      } else if (Extractor.RESOLVE_MISSING_TYPES.getValue()) {
+        if (extracted.sourceSkipped()) {
+          extract = true;
+        } else if (Extractor.FORCE_MISSING_REDO.getValue() && extracted.hasMissingTypes()) {
+          extract = true;
+        } else if (extracted.extracted()) {
+          logger.info("  Jar already extracted");
+        } else {
+          extract = true;
+        }
+      } else if (Extractor.SKIP_MISSING_TYPES.getValue()) {
+        if (extracted.hasMissingTypes()) {
+          logger.info("  Jar has missing types");
+        } else if (extracted.sourceSkipped()) {
+          extract = true;
+        } else if (extracted.extracted()) {
+          logger.info("  Jar already extracted");
+        } else {
+          extract = true;
+        }
       } else {
+        if (extracted.sourceSkipped()) {
+          extract = true;
+        } else if (extracted.extracted()) {
+          logger.info("  Jar already extracted");
+        } else {
+          extract = true;
+        }
+      }
+      
+      if (extract) {
         // Set up logging
         Logging.addFileLogger(extracted.getOutputDir());
 
         Collection<IndexedJar> jars = Helper.newHashSet();
+        jars.add(jar);
         boolean missingTypes = false;
         int firstOrderImports = 0;
         while (true) {
           // Set up the writer bundle
           WriterBundle bundle = new WriterBundle(extracted.getOutputDir());
 
-          boolean force = !Extractor.RESOLVE_MISSING_TYPES.getValue();
+          boolean force = !(Extractor.SKIP_MISSING_TYPES.getValue() || Extractor.RESOLVE_MISSING_TYPES.getValue());
           if (missingTypes) {
             logger.info("  Resolving missing types...");
             Collection<IndexedJar> newJars = resolver.resolveMissingTypes(index, extracted, bundle.getUsedJarWriter());
@@ -139,13 +170,15 @@ public class JarExtractor {
               missingTypes = report.hadMissingType() || report.hadMissingSecondOrder();
               logger.info("  Redoing because of missing types...");
             }
-          } else {
-            // Write the properties file
+          } else if (Extractor.SKIP_MISSING_TYPES.getValue()) {
             if (report.hadMissingType() || report.hadMissingSecondOrder()) {
               extracted.reportMissingTypeExtraction();
             } else {
               extracted.reportSuccessfulExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions(), firstOrderImports, jars.size());
             }
+            break;
+          } else {
+            extracted.reportSuccessfulExtraction(report.getExtractedFromBinary(), report.getBinaryExtractionExceptions(), report.getExtractedFromSource(), report.getSourceExtractionExceptions(), firstOrderImports, jars.size());
             break;
           }
         }

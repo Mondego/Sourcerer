@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.db.schema;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Relation;
+import edu.uci.ics.sourcerer.model.RelationClass;
 import edu.uci.ics.sourcerer.model.db.LocationDB;
 
 /**
@@ -31,19 +32,19 @@ public final class RelationsTable extends DatabaseTable {
   }
   
   /*  
-   *  +---------------+-----------------+-------+--------+
-   *  | Column name   | Type            | Null? | Index? |
-   *  +---------------+-----------------+-------+--------+
-   *  | relation_id   | SERIAL          | No    | Yes    |
-   *  | relation_type | ENUM(values)    | No    | Yes    |
-   *  | lhs_eid       | BIGINT UNSIGNED | No    | Yes    |
-   *  | rhs_eid       | BIGINT UNSIGNED | No    | Yes    |
-   *  | internal      | BOOLEAN         | Yes   | Yes    |
-   *  | project_id    | BIGINT UNSIGNED | No    | Yes    |
-   *  | file_id       | BIGINT UNSIGNED | Yes   | Yes    |
-   *  | offset        | INT UNSIGNED    | Yes   | No     |
-   *  | length        | INT UNSIGNED    | Yes   | No     |
-   *  +---------------+-----------------+-------+--------+
+   *  +----------------+-----------------+-------+--------+
+   *  | Column name    | Type            | Null? | Index? |
+   *  +----------------+-----------------+-------+--------+
+   *  | relation_id    | SERIAL          | No    | Yes    |
+   *  | relation_type  | ENUM(values)    | No    | Yes    |
+   *  | relation_class | ENUM            | No    | No     |
+   *  | lhs_eid        | BIGINT UNSIGNED | No    | Yes    |
+   *  | rhs_eid        | BIGINT UNSIGNED | No    | Yes    |
+   *  | project_id     | BIGINT UNSIGNED | No    | Yes    |
+   *  | file_id        | BIGINT UNSIGNED | Yes   | Yes    |
+   *  | offset         | INT UNSIGNED    | Yes   | No     |
+   *  | length         | INT UNSIGNED    | Yes   | No     |
+   *  +----------------+-----------------+-------+--------+
    */
   
   // ---- CREATE ----
@@ -51,9 +52,9 @@ public final class RelationsTable extends DatabaseTable {
     executor.createTable(name,
         "relation_id SERIAL",
         "relation_type " + getEnumCreate(Relation.values()) + " NOT NULL",
+        "relation_class " + getEnumCreate(RelationClass.values()) + " NOT NULL",
         "lhs_eid BIGINT UNSIGNED NOT NULL",
         "rhs_eid BIGINT UNSIGNED NOT NULL",
-        "internal BOOLEAN",
         "project_id BIGINT UNSIGNED NOT NULL",
         "file_id BIGINT UNSIGNED",
         "offset INT UNSIGNED",
@@ -66,24 +67,24 @@ public final class RelationsTable extends DatabaseTable {
   }
   
   // ---- INSERT ----
-  private String getInsertValue(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID, String fileID, String offset, String length) {
+  private String getInsertValue(Relation type, RelationClass klass, String lhsEid, String rhsEid, String projectID, String fileID, String offset, String length) {
     return buildSerialInsertValue(
         convertNotNullVarchar(type.name()),
+        convertNotNullVarchar(klass.name()),
         convertNotNullNumber(lhsEid),
         convertNotNullNumber(rhsEid),
-        convertBoolean(internal),
         convertNotNullNumber(projectID), 
         convertNumber(fileID),
         convertOffset(offset), 
         convertLength(length));
   }
   
-  public void insert(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID) {
-    inserter.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, null, null, null));
+  public void insert(Relation type, RelationClass klass, String lhsEid, String rhsEid, String projectID) {
+    inserter.addValue(getInsertValue(type, klass, lhsEid, rhsEid, projectID, null, null, null));
   }
   
-  public void insert(Relation type, String lhsEid, String rhsEid, Boolean internal, String projectID, String fileID, String offset, String length) {
-    inserter.addValue(getInsertValue(type, lhsEid, rhsEid, internal, projectID, fileID, offset, length));
+  public void insert(Relation type, RelationClass klass, String lhsEid, String rhsEid, String projectID, String fileID, String offset, String length) {
+    inserter.addValue(getInsertValue(type, klass, lhsEid, rhsEid, projectID, fileID, offset, length));
   }
   
   // ---- DELETE ----

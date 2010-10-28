@@ -23,8 +23,8 @@ import edu.uci.ics.sourcerer.util.io.Property;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class BooleanProperty extends Property<Boolean> {
-  public BooleanProperty(String name, Boolean defaultValue, String category, String description) {
-    super(name, defaultValue, category, description);
+  public BooleanProperty(String name, Boolean defaultValue, String description) {
+    super(name, defaultValue, description);
   }
 
   @Override

@@ -88,7 +88,7 @@ public class CompressedJavaFile extends AbstractJavaFile {
     if (getFile() == null) {
       return null;
     } else {
-      return file.getPath();
+      return file.getAbsolutePath();
     }
   }
   

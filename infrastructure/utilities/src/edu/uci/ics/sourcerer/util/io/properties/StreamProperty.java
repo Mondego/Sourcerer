@@ -25,8 +25,8 @@ import edu.uci.ics.sourcerer.util.io.Property;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class StreamProperty extends Property<InputStream> {
-  public StreamProperty(String name, String category, String description) {
-    super(name, category, description);
+  public StreamProperty(String name, String description) {
+    super(name, null, description);
   }
   
   @Override
@@ -36,6 +36,6 @@ public class StreamProperty extends Property<InputStream> {
   
   @Override
   protected InputStream parseString(String value) {
-    return null;
+    throw new UnsupportedOperationException("A stream property may not come from a string");
   }
 }

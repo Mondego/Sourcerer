@@ -25,7 +25,7 @@ import java.util.Deque;
 import java.util.Map;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
@@ -208,7 +208,7 @@ public abstract class AbstractFileSet implements IFileSet {
   
   @Override
   public String convertToRelativePath(File file, File base) {
-    return convertToRelativePath(file.getPath(), base.getPath());
+    return convertToRelativePath(file.getAbsolutePath(), base.getAbsolutePath());
   }
   
   @Override
@@ -221,7 +221,7 @@ public abstract class AbstractFileSet implements IFileSet {
       if (path.startsWith(base)) {
         return path.substring(base.length()).replace(' ', '*');
       } else {
-        logger.severe("Unable to convert " + path + " to relative path (" + base + "");
+        logger.severe("Unable to convert " + path + " to relative path (" + base + ")");
         return path.replace(' ', '*');
       }
     }

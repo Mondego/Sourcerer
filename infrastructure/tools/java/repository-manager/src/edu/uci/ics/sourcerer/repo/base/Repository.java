@@ -32,26 +32,28 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import edu.uci.ics.sourcerer.repo.base.normal.JavaFile;
-import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
-import edu.uci.ics.sourcerer.repo.general.IndexedJar;
-import edu.uci.ics.sourcerer.repo.general.JarIndex;
-import edu.uci.ics.sourcerer.repo.general.RepoJar;
-import edu.uci.ics.sourcerer.repo.general.RepoPath;
+import edu.uci.ics.sourcerer.repo.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.IndexedJar;
+import edu.uci.ics.sourcerer.repo.JarIndex;
+import edu.uci.ics.sourcerer.repo.RepoJar;
+import edu.uci.ics.sourcerer.repo.RepoPath;
+import edu.uci.ics.sourcerer.repo.properties.ProjectProperties;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Repository extends AbstractRepository {
-  public static final Property<Integer> SPLIT_SIZE = new IntegerProperty("split-size", 1000, "Repository Manager", "Number of projects per split fragment");
+  public static final Property<Integer> SPLIT_SIZE = new IntegerProperty("split-size", 1000, "Number of projects per split fragment.");
   
   private File tempDir;
   private Map<String, RepoProject> projects;
@@ -64,10 +66,10 @@ public class Repository extends AbstractRepository {
   @Override
   protected void addProject(RepoPath path) {
     RepoPath content = path.getChild("content");
-    if (!content.toFile().exists()) {
+    if (!content.exists()) {
       content = path.getChild("content.zip");
     }
-    if (content.toFile().exists()) {
+    if (content.exists()) {
       File properties = path.getChildFile("project.properties");
       RepoProject project = new RepoProject(this, content, properties);
       projects.put(project.getProjectPath(), project);
@@ -88,6 +90,26 @@ public class Repository extends AbstractRepository {
   
   public void printJarStats() {
     JarIndex.printJarStats(getJarsPath().toFile());
+  }
+  
+  public void printProjectNames() {
+    logger.info("Loading projects...");
+    
+    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(PROJECT_NAMES_FILE);
+    printer.beginTable(3);
+    printer.addDividerRow();
+    printer.addRow("host", "project", "crawled date");
+    printer.addDividerRow();
+    for (RepoProject project : getProjects()) {
+      ProjectProperties props = project.getProperties();
+      printer.beginRow();
+      printer.addCell(props.getOriginRepo());
+      printer.addCell(props.getName());
+      printer.addCell(props.getCrawledDate());
+    }
+    printer.endTable();
+    printer.close();
+    logger.info("Done!");
   }
   
   public void aggregateJarFiles() {
@@ -198,24 +220,6 @@ public class Repository extends AbstractRepository {
       }
     }
   }
-  
-  public static void deleteCompressedRepository(File repoRoot) {
-    logger.info("--- Deleting compressed repository at: " + repoRoot.getPath() + " ---");
-    
-    logger.info("Initializing repository...");
-    Repository repo = getRepository(repoRoot, null);
-    
-    logger.info("Deleting compressed content from " + repo.projects.size() + " projects...");
-    for (RepoProject project : repo.getProjects()) {
-      File content = project.getContent().toFile();
-      if (content.isFile()) {
-        logger.info("Deleting compressed content for: " + project);
-        content.delete();
-      }
-    }
-    
-    logger.info("--- Done! ---");
-  }
 
   private static boolean zipContent(File input, File output) {
     ZipOutputStream zos = null;
@@ -285,20 +289,29 @@ public class Repository extends AbstractRepository {
   }
   
   public Collection<RepoProject> getProjects(Set<String> filter) {
-    if (projects == null) {
-      projects = Helper.newHashMap();
-      populateRepository();
-    }
     if (filter == null) {
+      if (projects == null) {
+        projects = Helper.newHashMap();
+        populateRepository();
+      }
       return projects.values();
     } else {
       if (filter.isEmpty()) {
         logger.log(Level.SEVERE, "Empty project filter!");
       }
       Collection<RepoProject> result = Helper.newArrayList();
-      for (RepoProject project : projects.values()) {
-        if (filter.contains(project.getProjectPath())) {
+      if (projects == null) {
+        projects = Helper.newHashMap();
+        populateFilteredRepository(filter);
+        for (RepoProject project : projects.values()) {
           result.add(project);
+        }
+        projects = null;
+      } else {
+        for (RepoProject project : projects.values()) {
+          if (filter.contains(project.getProjectPath())) {
+            result.add(project);
+          }
         }
       }
       return result;
@@ -313,13 +326,35 @@ public class Repository extends AbstractRepository {
     return projects.get(projectPath);
   }
   
-  public IJavaFile getFile(String path) {
-    // TODO: modify to work on compressed projects
-    File file = new File(repoRoot, path.replace('*', ' '));
-    if (file.exists()) {
-      return new JavaFile(path, file);
+  public byte[] getFile(String projectPath, String path) {
+    path = path.replace('*', ' ');
+    
+    RepoProject project = getProject(projectPath);
+    File content = project.getContent().toFile();
+    if (content.isDirectory()) {
+      File file = new File(repoRoot, path);
+      if (file.exists()) {
+        return FileUtils.getFileAsByteArray(file);
+      } else {
+        return null;
+      }
     } else {
-      return null;
+      ZipFile zip = null;
+      try {
+        zip = new ZipFile(content);
+        path = path.substring(1);
+        ZipEntry entry = zip.getEntry(path);
+        if (entry != null) {
+          return FileUtils.getInputStreamAsByteArray(zip.getInputStream(entry), (int)entry.getSize());
+        } else {
+          return null;
+        }
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to read zip file", e);
+        return null;
+      } finally {
+        FileUtils.close(zip);
+      }
     }
   }
   

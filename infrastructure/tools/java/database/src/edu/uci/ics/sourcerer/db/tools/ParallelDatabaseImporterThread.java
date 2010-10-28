@@ -15,23 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.general;
+package edu.uci.ics.sourcerer.db.tools;
 
-import java.io.File;
+import edu.uci.ics.sourcerer.db.schema.DatabaseAccessor;
+import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 
-/**
- * @author Joel Ossher (jossher@uci.edu)
- */
-public class ProjectProperties extends AbstractProperties {
-  private ProjectProperties() {}
-  
-  public static ProjectProperties load(File file) {
-    ProjectProperties props = new ProjectProperties();
-    props.loadProperties(file);
-    return props;
+public abstract class ParallelDatabaseImporterThread extends DatabaseAccessor implements Runnable {
+  private Thread t;
+  protected ParallelDatabaseImporterThread(DatabaseConnection connection) {
+    super(connection);
   }
   
-  public String getDescription() {
-    return properties.getProperty("description");
+  public Thread start() {
+    t = new Thread(this);
+    t.start();
+    return t;
+  }
+  
+  @Override
+  public void close() {
+    super.close();
   }
 }

@@ -44,8 +44,8 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class MavenCrawler {
-  public static final Property<String> MAVEN_URL = new StringProperty("maven-url", "Maven Tools", "URL of the maven repository");
-  public static final Property<String> LINKS_FILE = new StringProperty("links-file", "links.txt", "Maven Tools", "File containing links crawled from maven.");
+  public static final Property<String> MAVEN_URL = new StringProperty("maven-url", "URL of the maven repository");
+  public static final Property<String> LINKS_FILE = new StringProperty("links-file", "links.txt", "File containing links crawled from maven.");
   
   public static void getDownloadLinks() {
     Pattern linkPattern = Pattern.compile("<a\\shref=\"(.*?)\">");

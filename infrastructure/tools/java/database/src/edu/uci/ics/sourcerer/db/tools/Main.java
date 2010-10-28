@@ -17,58 +17,64 @@
  */
 package edu.uci.ics.sourcerer.db.tools;
 
+import static edu.uci.ics.sourcerer.db.tools.ParallelDatabaseImporter.THREAD_COUNT;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_PASSWORD;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_URL;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_USER;
-import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
-import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.INPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.JARS_DIR;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.JAR_FILTER;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.OUTPUT_REPO;
+import static edu.uci.ics.sourcerer.repo.AbstractRepository.PROJECT_FILTER;
+import static edu.uci.ics.sourcerer.repo.JarIndex.JAR_INDEX_FILE;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
+import edu.uci.ics.sourcerer.util.io.Command;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
-import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
-  public static final Property<Boolean> INITIALIZE_DB = new BooleanProperty("initialize-db", false, "Database", "Clean and initialize the database.");
-  public static final Property<Boolean> ADD_JAVA_LIBRARIES = new BooleanProperty("add-libraries", false, "Database", "Adds extracted Java libraries to the database.");
-  public static final Property<Boolean> ADD_JARS = new BooleanProperty("add-jars", false, "Database", "Adds extracted jars to the database.");
-  public static final Property<Boolean> ADD_PROJECTS = new BooleanProperty("add-projects", false, "Database", "Adds extracted projects to the database.");
-  public static final Property<Boolean> INTERACTIVE_FILE_ACCESSOR = new BooleanProperty("interactive-file-accessor", false, "Database", "Interactive test of the file accessor."); 
+  public static final Command INITIALIZE_DB =
+      new Command("initialize-db", "Clean and initialize the database.")
+          .setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+  
+  public static final Command ADD_JAVA_LIBRARIES = 
+      new Command("add-libraries", "Adds extracted Java libraries to the database.")
+          .setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, INPUT_REPO, THREAD_COUNT);
+  
+  public static final Command ADD_JARS = 
+      new Command("add-jars", "Adds extracted jars to the database.")
+          .setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, INPUT_REPO, JARS_DIR, JAR_INDEX_FILE, JAR_FILTER, THREAD_COUNT);
+  
+  public static final Command ADD_PROJECTS = 
+      new Command("add-projects", "Adds extracted projects to the database.")
+          .setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, INPUT_REPO, PROJECT_FILTER, THREAD_COUNT);
+  
+  public static final Command INTERACTIVE_FILE_ACCESSOR = 
+      new Command("interactive-file-accessor", "Interactive test of the file accessor.")
+          .setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, INPUT_REPO, OUTPUT_REPO); 
   
   public static void main(String[] args) {
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
 
-    PropertyManager.registerAndVerify(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+    Command command = PropertyManager.getCommand(INITIALIZE_DB, ADD_JAVA_LIBRARIES, ADD_JARS, ADD_PROJECTS, INTERACTIVE_FILE_ACCESSOR);
+    
     DatabaseConnection connection = new DatabaseConnection();
     connection.open();
 
-    if (INITIALIZE_DB.getValue()) {
-      DatabaseImporter importer = new DatabaseImporter(connection);
-      importer.initializeDatabase();
-    } else if (ADD_JAVA_LIBRARIES.getValue()) {
-      PropertyManager.registerAndVerify(ADD_JAVA_LIBRARIES, INPUT_REPO);
-      DatabaseImporter importer = new DatabaseImporter(connection);
-      importer.importJavaLibraries();
-    } else if (ADD_JARS.getValue()) {
-      PropertyManager.registerAndVerify(ADD_JARS, INPUT_REPO);
-      DatabaseImporter importer = new DatabaseImporter(connection);
-      importer.importJarFiles();
-    } else if (ADD_PROJECTS.getValue()) {
-      PropertyManager.registerAndVerify(ADD_PROJECTS, INPUT_REPO);
-      DatabaseImporter importer = new DatabaseImporter(connection);
-      importer.importProjects();
-    } if (INTERACTIVE_FILE_ACCESSOR.getValue()) {
-      PropertyManager.registerAndVerify(INTERACTIVE_FILE_ACCESSOR, INPUT_REPO, OUTPUT_REPO);
+    if (command == INITIALIZE_DB) {
+      ParallelDatabaseImporter.initializeDatabase();
+    } else if (command == ADD_JAVA_LIBRARIES) {
+      ParallelDatabaseImporter.importJavaLibraries();
+    } else if (command == ADD_JARS) {
+      ParallelDatabaseImporter.importJarFiles();
+    } else if (command == ADD_PROJECTS) {
+      ParallelDatabaseImporter.importProjects();
+    } else if (command == INTERACTIVE_FILE_ACCESSOR) {
       FileAccessor.testConsole();
-    } else {
-      logger.info("No action selected");
-      PropertyManager.registerUsedProperties(INITIALIZE_DB, ADD_JARS, ADD_PROJECTS);
-      PropertyManager.printUsage();
     }
 
     connection.close();

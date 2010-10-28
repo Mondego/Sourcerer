@@ -27,6 +27,7 @@ import edu.uci.ics.sourcerer.db.util.TableLocker;
 import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.db.LimitedProjectDB;
 import edu.uci.ics.sourcerer.model.db.ProjectDB;
+import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
@@ -110,55 +111,55 @@ public final class ProjectsTable extends DatabaseTable {
             false));
   }
   
-  public String insert(ExtractedLibrary library) {
-    return executor.insertSingleWithKey(name, 
-        getInsertValue(Project.JAVA_LIBRARY,
-            library.getName(),
-            null, // no description
-            null, // no version
-            null, // no group
-            library.getRelativePath(),
-            null, // no hash
-            library.hasSource()));
-  }
-  
-  public String insert(ExtractedJar jar) {
-    if (jar.getGroup() == null) {
+  public String insert(Extracted item) {
+    if (item instanceof ExtractedLibrary) {
       return executor.insertSingleWithKey(name, 
-          getInsertValue(
-              Project.JAR, 
-              jar.getName(),
+          getInsertValue(Project.JAVA_LIBRARY,
+              item.getName(),
               null, // no description
               null, // no version
-              null, // no group 
-              "INVALID", // no path 
-              jar.getHash(), 
-              jar.hasSource()));
-    } else {
-      return executor.insertSingleWithKey(name,
+              null, // no group
+              item.getRelativePath(),
+              null, // no hash
+              item.hasSource()));
+    } else if (item instanceof ExtractedJar) {
+      if (item.getGroup() == null) {
+        return executor.insertSingleWithKey(name, 
+            getInsertValue(
+                Project.JAR, 
+                item.getName(),
+                null, // no description
+                null, // no version
+                null, // no group 
+                "INVALID", // no path 
+                item.getHash(), 
+                item.hasSource()));
+      } else {
+        return executor.insertSingleWithKey(name,
+            getInsertValue(
+                Project.MAVEN,
+                item.getName(),
+                null, // no description
+                item.getVersion(),
+                item.getGroup(), 
+                "INVALID", // no path
+                item.getHash(),
+                item.hasSource()));
+      }
+    } else if (item instanceof ExtractedProject) {
+      return executor.insertSingleWithKey(name, 
           getInsertValue(
-              Project.MAVEN,
-              jar.getName(),
-              null, // no description
-              jar.getVersion(),
-              jar.getGroup(), 
-              "INVALID", // no path
-              jar.getHash(),
-              jar.hasSource()));
+              Project.CRAWLED,
+              item.getName(),
+              item.getDescription(),
+              null, // no version
+              null, // no group
+              item.getRelativePath(),
+              "INVALID", // no hash
+              true));
+    } else {
+      return null;
     }
-  }
-  
-  public String insert(ExtractedProject project) {
-    return executor.insertSingleWithKey(name, 
-        getInsertValue(
-            Project.CRAWLED,
-            project.getName(),
-            project.getDescription(),
-            null, // no version
-            null, // no group
-            project.getRelativePath(),
-            "INVALID", // no hash
-            true));
   }
   
   public void endFirstStageCrawledProjectInsert(String projectID) {
@@ -235,8 +236,8 @@ public final class ProjectsTable extends DatabaseTable {
     return executor.selectSingle(name, "project_id", "path='" + path + "'");
   }
   
-  public String getProjectIDByName(String name) {
-    return executor.selectSingle(name, "project_id", "name='" + name + "'");
+  public String getProjectIDByName(String project) {
+    return executor.selectSingle(name, "project_id", "name='" + project + "'");
   }
   
   public String getHashByProjectID(String projectID) {
