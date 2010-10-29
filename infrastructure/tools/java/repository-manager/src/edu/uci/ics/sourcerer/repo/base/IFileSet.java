@@ -23,6 +23,8 @@ import java.io.File;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface IFileSet {
+  public IDirectory getRootDirectory();
+  
   public int getJarFileCount();
   
   public Iterable<IJarFile> getJarFiles();
@@ -34,8 +36,6 @@ public interface IFileSet {
   public int getBestDuplicateJavaFileCount();
   
   public Iterable<IJavaFile> getBestDuplicateJavaFiles();
-
-//  public String getBasePath();
   
   public String convertToRelativePath(String path);
   

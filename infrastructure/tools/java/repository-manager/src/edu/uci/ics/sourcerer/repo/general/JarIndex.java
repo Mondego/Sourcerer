@@ -47,16 +47,12 @@ import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarIndex {
-  public static final Property<String> JAR_INDEX_FILE = new StringProperty("jar-index", "index.txt", "The filename of the jar index.");
-  
   public enum MavenFilter {
     NONE,
     LATEST,
@@ -160,14 +156,14 @@ public class JarIndex {
   }
   
   protected static JarIndex getJarIndex(AbstractRepository repo) {
-    File indexFile = repo.getJarIndexFile();
+    RepoPath indexFile = repo.getJarIndexFile();
     JarIndex index = new JarIndex();
     if (indexFile.exists()) {
       RepoPath projectPath = repo.getProjectJarsPath();
       RepoPath mavenPath = repo.getMavenJarsPath();
       BufferedReader br = null;
       try {
-        br = new BufferedReader(new FileReader(indexFile));
+        br = new BufferedReader(new FileReader(indexFile.toFile()));
         for (String line = br.readLine(); line != null; line = br.readLine()) {
           String[] parts = line.split(" ");
           IndexedJar jar = null;
@@ -464,7 +460,7 @@ public class JarIndex {
   public static void createJarIndexFile(Repository repo) {
     Set<String> completed = Logging.initializeResumeLogger();
     
-    File indexFile = repo.getJarIndexFile();
+    File indexFile = repo.getJarIndexFile().toFile();
     
     if (completed.isEmpty() && indexFile.exists()) {
       indexFile.delete();

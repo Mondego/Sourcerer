@@ -70,11 +70,10 @@ public class ExtractedRepository extends AbstractRepository {
   
   private void populateLibraries() {
     libraries = Helper.newLinkedList();
-    File libsDir = getLibsPath().toFile();
-    if (libsDir.exists()) {
-      for (File lib : libsDir.listFiles()) {
+    if (libsRoot.exists()) {
+      for (File lib : libsRoot.toFile().listFiles()) {
         if (lib.isDirectory()) {
-          ExtractedLibrary extracted = new ExtractedLibrary(RepoPath.getNewPath(lib, LIBS + "/" + lib.getName()));
+          ExtractedLibrary extracted = new ExtractedLibrary(libsRoot.getChild(lib.getName()));
           if (includeNotExtracted || extracted.extracted()) {
             libraries.add(extracted);
           }

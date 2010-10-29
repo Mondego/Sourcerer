@@ -36,27 +36,27 @@ public abstract class AbstractRepository {
   public static final Property<File> PROJECT_FILTER = new FileProperty("project-filter", "Only extract these projects.").makeOptional();
   
   public static final Property<String> JARS_DIR = new StringProperty("jars-dir", "jars", "The subdirectory containing the jar files.");
+  public static final Property<String> JAR_INDEX_FILE = new StringProperty("jar-index", "index.txt", "The filename of the jar index.");
 
   public static final Property<String> PROJECT_NAMES_FILE = new StringProperty("project-names-files", "project-names.txt", "File for project names.");
 
-  protected final String JARS;
-  protected final String LIBS;
-  protected final String PROJECT_JARS;
-  protected final String MAVEN_JARS;
+  protected RepoPath repoRoot;
+  protected RepoPath libsRoot;
+  protected RepoPath jarsRoot;
+  protected RepoPath projectJarsRoot;
+  protected RepoPath mavenJarsRoot;
   
-  protected File repoRoot;
   
-  protected File jarIndexFile;
+  protected RepoPath jarIndexFile;
   protected JarIndex jarIndex;
   
   protected AbstractRepository(File repoRoot) {
-    JARS = JARS_DIR.getValue();
-    LIBS = "libs";
-    PROJECT_JARS = JARS + "/project";
-    MAVEN_JARS = JARS + "/maven";
-    
-    this.repoRoot = repoRoot;
-    this.jarIndexFile = getJarsPath().getChildFile(JarIndex.JAR_INDEX_FILE.getValue());
+    this.repoRoot = RepoPath.make(repoRoot);
+    libsRoot = this.repoRoot.getChild("libs");
+    jarsRoot = this.repoRoot.getChild(JARS_DIR.getValue());
+    jarIndexFile = jarsRoot.getChild(JAR_INDEX_FILE.getValue());
+    projectJarsRoot = jarsRoot.getChild("project");
+    mavenJarsRoot = jarsRoot.getChild("maven");
   }
   
   protected abstract void addProject(RepoPath path);
@@ -64,11 +64,11 @@ public abstract class AbstractRepository {
   protected void populateRepository() {
     if (repoRoot.exists()) { 
       Pattern pattern = Pattern.compile("\\d*");
-      for (File batch : repoRoot.listFiles()) {
+      for (File batch : repoRoot.toFile().listFiles()) {
         if (batch.isDirectory() && pattern.matcher(batch.getName()).matches()) {
           for (File checkout : batch.listFiles()) {
             if (pattern.matcher(checkout.getName()).matches()) {
-              addProject(RepoPath.getNewPath(checkout, batch.getName() + "/" + checkout.getName()));
+              addProject(repoRoot.getChild(batch.getName() + "/" + checkout.getName()));
             }
           }
         }
@@ -79,7 +79,7 @@ public abstract class AbstractRepository {
   protected void populateFilteredRepository(Set<String> filter) {
     if (repoRoot.exists()) {
       for (String projectPath : filter) {
-        addProject(RepoPath.getNewPath(repoRoot.getPath(), projectPath));
+        addProject(repoRoot.getChild(projectPath));
       }
     }
   }
@@ -88,8 +88,16 @@ public abstract class AbstractRepository {
     jarIndex = JarIndex.getJarIndex(this);
   }
   
-  public File getJarIndexFile() {
+  protected RepoPath getJarIndexFile() {
     return jarIndexFile;
+  }
+  
+  protected RepoPath getProjectJarsPath() {
+    return projectJarsRoot;
+  }
+  
+  protected RepoPath getMavenJarsPath() {
+    return mavenJarsRoot;
   }
   
   public JarIndex getJarIndex() {
@@ -99,35 +107,11 @@ public abstract class AbstractRepository {
     return jarIndex;
   }
   
-  public File getBaseDir() {
-    return repoRoot;
-  }
-  
-  protected RepoPath getPath(String relativePath) {
-    return RepoPath.getNewPath(new File(repoRoot, relativePath), relativePath);
-  }
-  
-  public RepoPath getMavenJarsPath() {
-    return getPath(MAVEN_JARS);
-  }
-  
-  protected RepoPath getProjectJarsPath() {
-    return getPath(PROJECT_JARS);
-  }
-  
-  protected RepoPath getJarsPath() {
-    return getPath(JARS);
-  }
-  
-  public RepoPath getLibsPath() {
-    return getPath(LIBS);
-  }
-  
-  public RepoPath convertPath(RepoPath other) {
-    return other.getNewPath(repoRoot.getPath());
+  public RepoPath rebasePath(RepoPath other) {
+    return repoRoot.getChild(other.getRelativePath());
   }
   
   public String toString() {
-    return repoRoot.getPath();
+    return repoRoot.toString();
   }
 }

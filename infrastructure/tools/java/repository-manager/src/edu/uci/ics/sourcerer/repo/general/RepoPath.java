@@ -9,19 +9,10 @@ public class RepoPath {
   private RepoPath(File content, String relativePath) {
     this.content = content;
     this.relativePath = relativePath;
-    
   }
   
-  public static RepoPath getNewPath(File content, String relativePath) {
-    return new RepoPath(content, relativePath);
-  }
-  
-  public static RepoPath getNewPath(String basePath, String relativePath) {
-    return new RepoPath(new File(basePath, relativePath), relativePath);
-  }
-  
-  public RepoPath getNewPath(String newBase) {
-    return getNewPath(newBase, relativePath);
+  public static RepoPath make(File root) {
+    return new RepoPath(root, "");
   }
 
   public boolean exists() {
@@ -66,7 +57,11 @@ public class RepoPath {
   }
   
   public RepoPath getChild(String child) {
-    return new RepoPath(new File(content, child), relativePath + "/" + child);
+    if (content.isFile()) {
+      throw new IllegalStateException("Cannot get a child of a file: " + content.getPath() + " " + child);
+    } else {
+      return new RepoPath(new File(content, child), relativePath + "/" + child);
+    }
   }
   
   public RepoPath getParent() {

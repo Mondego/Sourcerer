@@ -73,7 +73,7 @@ public abstract class Extracted {
   protected void clonePropertiesFile(ExtractedRepository target) {
     File properties = getPropertiesFile();
     if (properties.exists()) {
-      File newProperties = target.convertPath(content).getChildFile("extracted.properties");
+      File newProperties = target.rebasePath(content).getChildFile("extracted.properties");
       FileUtils.copyFile(properties, newProperties);
     }
   }
