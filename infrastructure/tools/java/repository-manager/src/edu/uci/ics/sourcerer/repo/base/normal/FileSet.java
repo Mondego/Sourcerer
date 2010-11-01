@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.Deque;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
+import edu.uci.ics.sourcerer.repo.base.JarFile;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.repo.general.RepoJar;
@@ -31,13 +32,14 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FileSet extends AbstractFileSet {
+  RepoFile content;
   public FileSet(RepoFile content, AbstractRepository repo) {
     super(repo);
-    this.repo = repo;
-    populateFileSet(content);
+    this.content = content;
+    populateFileSet();
   }
   
-  private void populateFileSet(RepoFile content) {
+  private void populateFileSet() {
     Deque<File> fileStack = Helper.newStack();
     fileStack.add(content.toFile());
     String basePath = content.toFile().getPath();
@@ -48,7 +50,7 @@ public class FileSet extends AbstractFileSet {
           if (file.isDirectory() && !file.getName().startsWith(".")) {
             fileStack.push(file);
           } else if (file.getName().endsWith(".jar")) {
-            addJarFile(new JarFile(file, RepoJar.getHash(file)));
+            addJarFile(new JarFile(RepoJar.getHash(file), content.getChild(FileUtils.convertToRelativePath(basePath, file.getPath()))));
           } else if (file.getName().endsWith(".java")) {
             addJavaFile(new JavaFile(content.getChild(FileUtils.convertToRelativePath(basePath, file.getPath()))));
           }
@@ -59,8 +61,6 @@ public class FileSet extends AbstractFileSet {
   
   @Override
   public String convertToRelativePath(String path) {
-    String base = repo.
-    path = path.replace('\\', '/');
-    
+    return FileUtils.convertToRelativePath(content.toFile().getAbsolutePath(), path);
   }
 }

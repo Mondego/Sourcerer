@@ -35,9 +35,9 @@ public class RepoJar {
   private long length;
   private String md5;
   
-  public RepoJar(File path) {
-    length = path.length();
-    md5 = getHash(path);
+  public RepoJar(RepoFile file) {
+    length = file.toFile().length();
+    md5 = getHash(file.toFile());
   }
   
   public RepoJar(long length, String hash) {

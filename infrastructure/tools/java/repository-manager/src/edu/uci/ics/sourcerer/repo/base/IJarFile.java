@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.repo.base;
 
-import java.io.File;
+import edu.uci.ics.sourcerer.repo.general.RepoFile;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -25,9 +25,5 @@ import java.io.File;
 public interface IJarFile {
   public String getHash();
   
-  public String getName();
-  
-  public String getPath();
-  
-  public File getFile();
-  }
+  public RepoFile getFile();
+}

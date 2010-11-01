@@ -398,7 +398,7 @@ public class JarIndex {
               FileWriter infoWriter = null;
               try {
                 infoWriter = new FileWriter(info, true);
-                infoWriter.write(jar.getName() + "\n");
+                infoWriter.write(jar + "\n");
               } catch (IOException e) {
                 logger.log(Level.SEVERE, "Unable to write info file.", e);
               } finally {
@@ -411,7 +411,7 @@ public class JarIndex {
                 File two = new File(one, "" + currentTwo);
                 File tmpFile = new File(two, currentThree + ".tmp");
                 File infoFile = new File(two, currentThree + ".tmp.info");
-                FileUtils.copyFile(jar.getFile(), tmpFile);
+                FileUtils.copyFile(jar.getFile().toFile(), tmpFile);
                 namer = new JarNamer(tmpFile);
                 nameIndex.put(newJar, namer);
                 FileWriter writer = null;
@@ -432,7 +432,7 @@ public class JarIndex {
                   }
                 }
               }
-              namer.addName(jar.getName());
+              namer.addName(jar.getFile().getName());
             }
             totalFiles++;
           }

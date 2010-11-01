@@ -31,8 +31,6 @@ import edu.uci.ics.sourcerer.util.Helper;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractFileSet implements IFileSet {
-  protected AbstractRepository repo;
-  
   private Collection<IJarFile> jarFiles;
   
   private Collection<IDirectory> roots;
@@ -42,7 +40,6 @@ public abstract class AbstractFileSet implements IFileSet {
   private Collection<IJavaFile> bestDuplicateFiles = null; 
   
   protected AbstractFileSet(AbstractRepository repo) {
-    this.repo = repo;
     jarFiles = Helper.newLinkedList();
     roots = Helper.newLinkedList();
     repoMap = Helper.newHashMap();

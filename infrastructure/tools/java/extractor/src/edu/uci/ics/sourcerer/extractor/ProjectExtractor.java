@@ -87,7 +87,7 @@ public class ProjectExtractor {
               indexed = index.getIndexedJar(jar.getHash());
             }
             if (indexed == null) {
-              logger.log(Level.SEVERE, "Unable to locate " + jar.getName() + "(" + jar.getHash() + ") in index");
+              logger.log(Level.SEVERE, "Unable to locate " + jar + "(" + jar.getHash() + ") in index");
             } else { 
               projectJars.add(indexed);
             }

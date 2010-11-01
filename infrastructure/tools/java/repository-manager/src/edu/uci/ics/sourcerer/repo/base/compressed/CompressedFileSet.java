@@ -29,6 +29,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
+import edu.uci.ics.sourcerer.repo.base.JarFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
@@ -67,7 +68,7 @@ public class CompressedFileSet extends AbstractFileSet {
         ZipEntry entry = en.nextElement();
         String path = entry.getName();
         if (path.endsWith(".jar")) {
-          addJarFile(new CompressedJarFile(path, entry.getComment(), this));
+          addJarFile(new JarFile(entry.getComment(), new CompressedRepoFile(path)));
         } else if (path.endsWith(".java")) {
           addJavaFile(new CompressedJavaFile(new CompressedRepoFile(path), zip.getInputStream(entry)));
         }
@@ -133,6 +134,10 @@ public class CompressedFileSet extends AbstractFileSet {
         return file;
       }
     }
-
+  }
+  
+  @Override
+  public String convertToRelativePath(String path) {
+    return FileUtils.convertToRelativePath(base.toFile().getAbsolutePath(), path);
   }
 }

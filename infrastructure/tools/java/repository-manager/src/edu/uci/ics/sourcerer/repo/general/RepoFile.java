@@ -96,6 +96,7 @@ public class RepoFile {
     return file.getName();
   }
   
+  @Override
   public String toString() {
     return relativePath;
   }
