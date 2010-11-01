@@ -156,11 +156,11 @@ public class JarIndex {
   }
   
   protected static JarIndex getJarIndex(AbstractRepository repo) {
-    RepoPath indexFile = repo.getJarIndexFile();
+    RepoFile indexFile = repo.getJarIndexFile();
     JarIndex index = new JarIndex();
     if (indexFile.exists()) {
-      RepoPath projectPath = repo.getProjectJarsPath();
-      RepoPath mavenPath = repo.getMavenJarsPath();
+      RepoFile projectPath = repo.getProjectJarsPath();
+      RepoFile mavenPath = repo.getMavenJarsPath();
       BufferedReader br = null;
       try {
         br = new BufferedReader(new FileReader(indexFile.toFile()));
@@ -366,7 +366,7 @@ public class JarIndex {
     
     JarIndex index = repo.getJarIndex();
     
-    Collection<RepoProject> projects = repo.getFilteredProjects();
+    Collection<RepoProject> projects = repo.getProjects();
     
     logger.info("Extracting jars from " + projects.size() + " projects...");
     int projectCount = 0;
@@ -375,10 +375,10 @@ public class JarIndex {
     int currentThree = 0;
     for (RepoProject project : projects) {
       projectCount++;
-      if (completed.contains(project.getProjectPath())) {
-        logger.info("Already completed: " + project.getProjectPath());
+      if (completed.contains(project.getProjectRoot().getRelativePath())) {
+        logger.info("Already completed: " + project);
       } else {
-        logger.info("Getting file set for: " + project.getProjectPath());
+        logger.info("Getting file set for: " + project);
         try {
           IFileSet fileSet = project.getFileSet();
           if (fileSet == null) {
@@ -436,10 +436,10 @@ public class JarIndex {
             }
             totalFiles++;
           }
-          logger.log(RESUME, project.getProjectPath());
+          logger.log(RESUME, project.getProjectRoot().getRelativePath());
           FileUtils.resetTempDir();
         } catch (Exception e) {
-          logger.log(Level.SEVERE, "Unable to extract project: " + project.getProjectPath(), e);
+          logger.log(Level.SEVERE, "Unable to extract project: " + project, e);
         }
       }
     }

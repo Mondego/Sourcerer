@@ -41,36 +41,36 @@ import edu.uci.ics.sourcerer.util.io.Logging;
  */
 public class MavenDownloader {
   public static void downloadLinks() {
-    try {
-      Set<String> resume = Logging.initializeResumeLogger();
-      File input = new File(INPUT.getValue(), LINKS_FILE.getValue());
-     
-      Repository repo = Repository.getRepository(AbstractRepository.INPUT_REPO.getValue());
-      File outputDir = repo.getMavenJarsPath().toFile();
-      String baseUrl = MAVEN_URL.getValue();
-      if (baseUrl.endsWith("/")) {
-        baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-      }
-      outputDir.mkdirs();
-      BufferedReader br = new BufferedReader(new FileReader(input));
-      for (String line = br.readLine(); line != null; line = br.readLine()) {
-        if (line.endsWith(".jar") && !resume.contains(line)) {
-          URL url = new URL(baseUrl + line);
-          File file = new File(outputDir + line);
-          file.getParentFile().mkdirs();
-          logger.info("Writing " + line + " to file");
-          try {
-            if (FileUtils.writeStreamToFile(url.openStream(), file)) {
-              logger.log(RESUME, line);
-            }
-          } catch (IOException e) {
-            logger.log(Level.SEVERE, "Unable to write " + line, e);
-          }
-          Thread.sleep(10000);
-        }
-      }
-    } catch (Exception e) {
-      logger.log(Level.SEVERE, "Unable to download", e);
-    }
+//    try {
+//      Set<String> resume = Logging.initializeResumeLogger();
+//      File input = new File(INPUT.getValue(), LINKS_FILE.getValue());
+//     
+//      Repository repo = Repository.getRepository(AbstractRepository.INPUT_REPO.getValue());
+//      File outputDir = repo.getMavenJarsPath().toFile();
+//      String baseUrl = MAVEN_URL.getValue();
+//      if (baseUrl.endsWith("/")) {
+//        baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+//      }
+//      outputDir.mkdirs();
+//      BufferedReader br = new BufferedReader(new FileReader(input));
+//      for (String line = br.readLine(); line != null; line = br.readLine()) {
+//        if (line.endsWith(".jar") && !resume.contains(line)) {
+//          URL url = new URL(baseUrl + line);
+//          File file = new File(outputDir + line);
+//          file.getParentFile().mkdirs();
+//          logger.info("Writing " + line + " to file");
+//          try {
+//            if (FileUtils.writeStreamToFile(url.openStream(), file)) {
+//              logger.log(RESUME, line);
+//            }
+//          } catch (IOException e) {
+//            logger.log(Level.SEVERE, "Unable to write " + line, e);
+//          }
+//          Thread.sleep(10000);
+//        }
+//      }
+//    } catch (Exception e) {
+//      logger.log(Level.SEVERE, "Unable to download", e);
+//    }
   }
 }

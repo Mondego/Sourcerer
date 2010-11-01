@@ -18,32 +18,29 @@
 package edu.uci.ics.sourcerer.repo.base.normal;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.Deque;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
-import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.repo.general.RepoJar;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FileSet extends AbstractFileSet {
-  public FileSet(File content, AbstractRepository repo) {
+  public FileSet(RepoFile content, AbstractRepository repo) {
     super(repo);
     this.repo = repo;
     populateFileSet(content);
   }
   
-//  public String getBasePath() {
-//    return repo.getBaseDir().getPath();
-//  }
-  
-  private void populateFileSet(File content) {
+  private void populateFileSet(RepoFile content) {
     Deque<File> fileStack = Helper.newStack();
-    fileStack.add(content);
+    fileStack.add(content.toFile());
+    String basePath = content.toFile().getPath();
     while (!fileStack.isEmpty()) {
       File next = fileStack.pop();
       if (next.exists()) {
@@ -53,15 +50,17 @@ public class FileSet extends AbstractFileSet {
           } else if (file.getName().endsWith(".jar")) {
             addJarFile(new JarFile(file, RepoJar.getHash(file)));
           } else if (file.getName().endsWith(".java")) {
-            addJavaFile(new JavaFile(convertToRelativePath(file, content), file));
+            addJavaFile(new JavaFile(content.getChild(FileUtils.convertToRelativePath(basePath, file.getPath()))));
           }
         }
       }
     }
   }
   
-  @SuppressWarnings("unchecked")
-  public Iterable<IJavaFile> convertJavaToConcrete(Collection<JavaFile> files) {
-    return (Iterable<IJavaFile>)(Object)files;
+  @Override
+  public String convertToRelativePath(String path) {
+    String base = repo.
+    path = path.replace('\\', '/');
+    
   }
 }

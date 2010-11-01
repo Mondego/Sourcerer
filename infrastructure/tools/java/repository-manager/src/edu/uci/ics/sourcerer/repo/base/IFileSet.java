@@ -17,13 +17,12 @@
  */
 package edu.uci.ics.sourcerer.repo.base;
 
-import java.io.File;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface IFileSet {
-  public IDirectory getRootDirectory();
+  public Iterable<IDirectory> getRootDirectories();
   
   public int getJarFileCount();
   
@@ -38,8 +37,4 @@ public interface IFileSet {
   public Iterable<IJavaFile> getBestDuplicateJavaFiles();
   
   public String convertToRelativePath(String path);
-  
-  public String convertToRelativePath(File file, File base);
-  
-  public String convertToRelativePath(String path, String base);
 }

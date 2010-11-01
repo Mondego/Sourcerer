@@ -30,6 +30,7 @@ import java.util.zip.ZipFile;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
+import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
@@ -37,16 +38,12 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
  */
 public class CompressedFileSet extends AbstractFileSet {
   private RepoProject project;
-  private String basePath;
+  private RepoFile base;
+  
   private CompressedFileSet(RepoProject project) {
     super(project.getRepository());
     this.project = project;
-    try {
-      basePath = project.getRepository().getTempDir().getCanonicalPath().replace('\\', '/');
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error getting canonical path", e);
-      basePath = project.getRepository().getTempDir().getAbsolutePath().replace('\\', '/').replace("./", "");
-    }
+    base = RepoFile.make(project.getRepository().getTempDir());
   }
   
   public static CompressedFileSet getFileSet(RepoProject project) {
@@ -56,10 +53,6 @@ public class CompressedFileSet extends AbstractFileSet {
     } else {
       return null;
     }
-  }
-  
-  public String getBasePath() {
-    return project.getRepository().getTempDir().getPath();
   }
   
   private boolean populateFileSet() {
@@ -76,7 +69,7 @@ public class CompressedFileSet extends AbstractFileSet {
         if (path.endsWith(".jar")) {
           addJarFile(new CompressedJarFile(path, entry.getComment(), this));
         } else if (path.endsWith(".java")) {
-          addJavaFile(new CompressedJavaFile(path, zip.getInputStream(entry), this));
+          addJavaFile(new CompressedJavaFile(new CompressedRepoFile(path), zip.getInputStream(entry)));
         }
       }
       return true;
@@ -98,31 +91,48 @@ public class CompressedFileSet extends AbstractFileSet {
       parentFile.mkdirs();
     }
     
-    ZipFile zip = null;
-    FileOutputStream fos = null;
-    try {
-      zip = new ZipFile(project.getContent().toFile());
-      ZipEntry entry = zip.getEntry(relativePath);
-      if (entry != null) {
-        InputStream is = zip.getInputStream(entry);
-        fos = new FileOutputStream(tmp);
-        byte[] buff = new byte[2048];
-        for (int read = is.read(buff); read != -1; read = is.read(buff)) {
-          fos.write(buff, 0, read);
-        }
-      }
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to write temp file: " + tmp.getPath(), e);
-      return null;
-    } finally {
-      FileUtils.close(zip);
-      FileUtils.close(fos);
-    }
+    
     return tmp;
   }
-  
-  @Override
-  public String convertToRelativePath(String path) {
-    return convertToRelativePath(path, basePath);
+    
+  private class CompressedRepoFile extends RepoFile {
+    private boolean tempExtracted;
+    
+    public CompressedRepoFile(String path) {
+      super(base, path);
+      tempExtracted = false;
+    }
+
+    @Override
+    public File toFile() {
+      if (tempExtracted) {
+        return super.toFile();
+      } else {
+        File file = super.toFile();
+        ZipFile zip = null;
+        FileOutputStream fos = null;
+        try {
+          zip = new ZipFile(project.getContent().toFile());
+          ZipEntry entry = zip.getEntry(getRelativePath());
+          if (entry != null) {
+            InputStream is = zip.getInputStream(entry);
+            fos = new FileOutputStream(file);
+            byte[] buff = new byte[2048];
+            for (int read = is.read(buff); read != -1; read = is.read(buff)) {
+              fos.write(buff, 0, read);
+            }
+          }
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Unable to write temp file: " + file.getPath(), e);
+          return null;
+        } finally {
+          FileUtils.close(zip);
+          FileUtils.close(fos);
+        }
+        tempExtracted = true;
+        return file;
+      }
+    }
+
   }
 }

@@ -33,7 +33,7 @@ import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
-import edu.uci.ics.sourcerer.repo.general.RepoPath;
+import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
@@ -52,9 +52,9 @@ public abstract class Extracted {
   public static final Property<String> USED_JAR_FILE = new StringProperty("used-jar-file", "used-jars.txt", "Filename for used jar files.");
   public static final Property<String> MISSING_TYPE_FILE = new StringProperty("missing-type-file", "missing-types.txt", "Filename for missing types.");
   
-  protected RepoPath content;
+  protected RepoFile content;
 
-  public Extracted(RepoPath content) {
+  public Extracted(RepoFile content) {
     this.content = content;
   }
 

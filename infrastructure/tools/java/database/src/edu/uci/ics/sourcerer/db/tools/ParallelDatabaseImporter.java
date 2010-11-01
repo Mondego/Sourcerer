@@ -17,8 +17,9 @@
  */
 package edu.uci.ics.sourcerer.db.tools;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Logging.THREAD_INFO;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -31,10 +32,8 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
-import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.TimeCounter;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
 
@@ -61,7 +60,7 @@ public final class ParallelDatabaseImporter {
     TimeCounter counter = new TimeCounter();
     
     logger.info("Loading extracted repository...");
-    ExtractedRepository extracted = ExtractedRepository.getRepository();
+    ExtractedRepository extracted = ExtractedRepository.getRepository(INPUT_REPO.getValue());
     
     logger.info("Loading extracted Java libraries...");
     Collection<ExtractedLibrary> libraries = extracted.getLibraries();
@@ -124,15 +123,10 @@ public final class ParallelDatabaseImporter {
     TimeCounter counter = new TimeCounter();
     
     logger.info("Loading extracted repository...");
-    ExtractedRepository extracted = ExtractedRepository.getRepository();
+    ExtractedRepository extracted = ExtractedRepository.getRepository(INPUT_REPO.getValue());
     
     logger.info("Loading extracted jar files...");
-    Collection<ExtractedJar> jars = null;
-    if (AbstractRepository.JAR_FILTER.hasValue()) {
-      jars = extracted.getJars(FileUtils.getFileAsSet(AbstractRepository.JAR_FILTER.getValue()));
-    } else { 
-      jars = extracted.getJars();
-    }
+    Collection<ExtractedJar> jars = extracted.getJars();
 
     int numThreads = THREAD_COUNT.getValue();
     
@@ -192,15 +186,10 @@ public final class ParallelDatabaseImporter {
     TimeCounter counter = new TimeCounter();
     
     logger.info("Loading extracted repository...");
-    ExtractedRepository extracted = ExtractedRepository.getRepository();
+    ExtractedRepository extracted = ExtractedRepository.getRepository(INPUT_REPO.getValue());
     
     logger.info("Loading extracted projects...");
-    Collection<ExtractedProject> projects = null;
-    if (AbstractRepository.PROJECT_FILTER.hasValue()) {
-      projects = extracted.getProjects(FileUtils.getFileAsSet(AbstractRepository.PROJECT_FILTER.getValue()));
-    } else { 
-      projects = extracted.getProjects();
-    }
+    Collection<ExtractedProject> projects = extracted.getProjects();
 
     int numThreads = THREAD_COUNT.getValue();
     

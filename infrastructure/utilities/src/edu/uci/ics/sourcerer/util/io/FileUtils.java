@@ -255,4 +255,19 @@ public final class FileUtils {
        return false;
     }
   }
+  
+  public static String convertToRelativePath(String base, String path) {
+    path = path.replace('\\', '/');
+    base = base.replace('\\', '/');
+    if (base == null) {
+      return path.replace(' ', '*');
+    } else {
+      if (path.startsWith(base)) {
+        return path.substring(base.length()).replace(' ', '*');
+      } else {
+        logger.severe("Unable to convert " + path + " to relative path (" + base + ")");
+        return path.replace(' ', '*');
+      }
+    }
+  }
 }

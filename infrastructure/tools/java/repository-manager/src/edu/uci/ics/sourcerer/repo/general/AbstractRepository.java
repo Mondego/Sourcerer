@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
@@ -40,18 +41,18 @@ public abstract class AbstractRepository {
 
   public static final Property<String> PROJECT_NAMES_FILE = new StringProperty("project-names-files", "project-names.txt", "File for project names.");
 
-  protected RepoPath repoRoot;
-  protected RepoPath libsRoot;
-  protected RepoPath jarsRoot;
-  protected RepoPath projectJarsRoot;
-  protected RepoPath mavenJarsRoot;
+  protected RepoFile repoRoot;
+  protected RepoFile libsRoot;
+  protected RepoFile jarsRoot;
+  protected RepoFile projectJarsRoot;
+  protected RepoFile mavenJarsRoot;
   
   
-  protected RepoPath jarIndexFile;
+  protected RepoFile jarIndexFile;
   protected JarIndex jarIndex;
   
   protected AbstractRepository(File repoRoot) {
-    this.repoRoot = RepoPath.make(repoRoot);
+    this.repoRoot = RepoFile.make(repoRoot);
     libsRoot = this.repoRoot.getChild("libs");
     jarsRoot = this.repoRoot.getChild(JARS_DIR.getValue());
     jarIndexFile = jarsRoot.getChild(JAR_INDEX_FILE.getValue());
@@ -59,7 +60,9 @@ public abstract class AbstractRepository {
     mavenJarsRoot = jarsRoot.getChild("maven");
   }
   
-  protected abstract void addProject(RepoPath path);
+  protected abstract void addProject(RepoFile path);
+  
+  protected abstract void addLibrary(RepoFile path);
   
   protected void populateRepository() {
     if (repoRoot.exists()) { 
@@ -84,31 +87,49 @@ public abstract class AbstractRepository {
     }
   }
   
+  protected void populateLibraries() {
+    if (libsRoot.exists()) {
+      for (File lib : libsRoot.toFile().listFiles()) {
+        if (lib.isDirectory()) {
+          addLibrary(libsRoot.getChild(lib.getName()));
+        }
+      }
+    }
+  }
+  
   private void loadJarIndex() {
     jarIndex = JarIndex.getJarIndex(this);
   }
   
-  protected RepoPath getJarIndexFile() {
+  protected RepoFile getJarIndexFile() {
     return jarIndexFile;
   }
   
-  protected RepoPath getProjectJarsPath() {
+  protected RepoFile getJarsPath() {
+    return jarsRoot;
+  }
+  
+  protected RepoFile getProjectJarsPath() {
     return projectJarsRoot;
   }
   
-  protected RepoPath getMavenJarsPath() {
+  protected RepoFile getMavenJarsPath() {
     return mavenJarsRoot;
   }
   
-  public JarIndex getJarIndex() {
+  protected JarIndex getJarIndex() {
     if (jarIndex == null && jarIndexFile.exists()) {
       loadJarIndex();
     }
     return jarIndex;
   }
   
-  public RepoPath rebasePath(RepoPath other) {
-    return repoRoot.getChild(other.getRelativePath());
+  protected void copyJarIndex(AbstractRepository copyFrom) {
+    FileUtils.copyFile(copyFrom.jarIndexFile.toFile(), jarIndexFile.toFile());
+  }
+  
+  public RepoFile rebasePath(RepoFile toRebase) {
+    return repoRoot.rebaseFile(toRebase);
   }
   
   public String toString() {

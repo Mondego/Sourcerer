@@ -31,11 +31,12 @@ import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
-import edu.uci.ics.sourcerer.repo.general.RepoPath;
+import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.repo.general.JarIndex.MavenFilter;
 import edu.uci.ics.sourcerer.repo.general.JarIndex.ProjectFilter;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
@@ -55,34 +56,40 @@ public class ExtractedRepository extends AbstractRepository {
     super(repoRoot);
   }
   
+  public static ExtractedRepository getRepository(File repoRoot) {
+    return new ExtractedRepository(repoRoot);
+  }
+  
+  public static ExtractedRepository makeJarRepository(File repoRoot, AbstractRepository repo) {
+    ExtractedRepository extracted = new ExtractedRepository(repoRoot);
+    extracted.copyJarIndex(repo);
+    return extracted;
+  }
+  
   @Override
-  protected void addProject(RepoPath path) {
-    ExtractedProject extracted = new ExtractedProject(path);
+  protected void addProject(RepoFile file) {
+    ExtractedProject extracted = new ExtractedProject(file);
     if (includeNotExtracted || extracted.extracted()) {
       projects.add(extracted);
     } else {
-      extracted = new ExtractedProject(path.getChild("content"));
+      // I think that was introduced because of an error, can be safely removed
+      extracted = new ExtractedProject(file.getChild("content"));
       if (includeNotExtracted || extracted.extracted()) {
         projects.add(extracted);
       }
     }
   }
   
-  private void populateLibraries() {
-    libraries = Helper.newLinkedList();
-    if (libsRoot.exists()) {
-      for (File lib : libsRoot.toFile().listFiles()) {
-        if (lib.isDirectory()) {
-          ExtractedLibrary extracted = new ExtractedLibrary(libsRoot.getChild(lib.getName()));
-          if (includeNotExtracted || extracted.extracted()) {
-            libraries.add(extracted);
-          }
-        }
-      }
+  @Override
+  protected void addLibrary(RepoFile file) {
+    ExtractedLibrary extracted = new ExtractedLibrary(file);
+    if (includeNotExtracted || extracted.extracted()) {
+      libraries.add(extracted);
     }
   }
-
-  private void populateJars(final Set<String> filter) {
+  
+  private void populateJars() {
+    final Set<String> filter = JAR_FILTER.hasValue() ? FileUtils.getFileAsSet(JAR_FILTER.getValue()) : null;
     final JarIndex index = getJarIndex();
     if (index == null) {
       jars = Collections.emptyList();
@@ -90,7 +97,11 @@ public class ExtractedRepository extends AbstractRepository {
       jars = new AbstractCollection<ExtractedJar>() {
         @Override
         public int size() {
-          return index.getIndexSize();
+          if (filter == null) {
+            return index.getIndexSize();
+          } else {
+            return filter.size();
+          }
         }
         
         @Override
@@ -116,33 +127,21 @@ public class ExtractedRepository extends AbstractRepository {
         }
       };
     }    
-    // This is too slow, use the jar index
-//    File jarsDir = getJarsDir();
-//    if (jarsDir.exists()) {
-//      Deque<File> stack = Helper.newStack();
-//      stack.push(jarsDir);
-//      while (!stack.isEmpty()) {
-//        File top = stack.pop();
-//        for (File dir : top.listFiles()) {
-//          if (dir.isDirectory()) {
-//            stack.push(dir);
-//          } else if (dir.isFile() && dir.getName().endsWith(".properties")) {
-//            ExtractedJar extracted = new ExtractedJar(top);
-//            if (extracted.getPropertiesFile().exists()) {
-//              jars.add(extracted);
-//            }
-//          }
-//        }
-//      }
-//    }
-  }
- 
-  public static ExtractedRepository getRepository() {
-    return getRepository(INPUT_REPO.getValue());
   }
   
-  public static ExtractedRepository getRepository(File repoRoot) {
-    return new ExtractedRepository(repoRoot);
+  private void loadProjects() {
+    if (projects == null) {
+      projects = Helper.newLinkedList();
+      if (PROJECT_FILTER.hasValue()) {
+        Set<String> filter = FileUtils.getFileAsSet(PROJECT_FILTER.getValue());
+        if (filter.isEmpty()) {
+          logger.log(Level.SEVERE, "Empty project filter!");
+        }
+        populateFilteredRepository(filter);
+      } else {
+        populateRepository();
+      }
+    }
   }
   
   public Collection<ExtractedLibrary> getLibraries() {
@@ -152,48 +151,44 @@ public class ExtractedRepository extends AbstractRepository {
     return libraries;
   }
   
+  /**
+   * This method loads the jar listing, if necessary. The
+   * jar listing is loaded only once. The JAR_FILTER property
+   * dictates which jars are loaded.
+   * 
+   * @see AbstractRepository#JAR_FILTER
+   */
   public Collection<ExtractedJar> getJars() {
-    populateJars(null);
+    if (jars == null) {
+      populateJars();
+    }
     return jars;
   }
   
-  public Collection<ExtractedJar> getJars(Set<String> filter) {
-    populateJars(filter);
-    return jars;
-  }
-  
+  /**
+   * This method loads the project listing, if necessary. The project
+   * listing is loaded only once. The PROJECT_FILTER property 
+   * dictates which projects are loaded.
+   * 
+   * @see AbstractRepository#PROJECT_FILTER
+   */
   public Collection<ExtractedProject> getProjects() {
     if (projects == null) {
-      projects = Helper.newLinkedList();
-      populateRepository();
+      loadProjects();
     }
     return projects;
   }
   
-  public Collection<ExtractedProject> getProjects(Set<String> filter) {
-    if (projects == null) {
-      projects = Helper.newLinkedList();
-      populateRepository();
-    }
-    if (filter == null) {
-      return projects;
-    } else {
-      Collection<ExtractedProject> result = Helper.newArrayList();
-      for (ExtractedProject project : projects) {
-        if (filter.contains(project.getRelativePath())) {
-          result.add(project);
-        }
-      }
-      return result;
-    }
+  public ExtractedLibrary getExtractedLibrary(String name) {
+    return new ExtractedLibrary(libsRoot.getChild(name));
   }
   
   public File getJavaLibrary(String path) {
-    return new File(repoRoot, path + "/lib.jar");
+    return new File(repoRoot.toFile(), path + "/lib.jar");
   }
     
   public File getJavaLibrarySource(String path) {
-    return new File(repoRoot, path + "/source.jar"); 
+    return new File(repoRoot.toFile(), path + "/source.jar"); 
   }
   
   public void cloneProperties(ExtractedRepository target) {
@@ -345,7 +340,7 @@ public class ExtractedRepository extends AbstractRepository {
     
     if (jars == null) {
       logger.info("Loading jars...");
-      populateJars(null);
+      populateJars();
     }
     
     logger.info("Computing stats for " + jars.size() + " jars.");

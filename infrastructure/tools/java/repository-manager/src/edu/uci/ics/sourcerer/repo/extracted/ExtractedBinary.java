@@ -19,13 +19,13 @@ package edu.uci.ics.sourcerer.repo.extracted;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractBinaryProperties;
 import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
-import edu.uci.ics.sourcerer.repo.general.RepoPath;
+import edu.uci.ics.sourcerer.repo.general.RepoFile;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class ExtractedBinary extends Extracted {
-  public ExtractedBinary(RepoPath content) {
+  public ExtractedBinary(RepoFile content) {
     super(content);
   }
   

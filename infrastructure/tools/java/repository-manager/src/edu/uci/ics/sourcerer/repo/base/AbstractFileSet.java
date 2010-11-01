@@ -19,7 +19,6 @@ package edu.uci.ics.sourcerer.repo.base;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Map;
@@ -36,7 +35,7 @@ public abstract class AbstractFileSet implements IFileSet {
   
   private Collection<IJarFile> jarFiles;
   
-  private Collection<RepoDir> roots;
+  private Collection<IDirectory> roots;
   private Map<String, RepoDir> repoMap;
   
   private Collection<IJavaFile> uniqueFiles = null;
@@ -54,7 +53,7 @@ public abstract class AbstractFileSet implements IFileSet {
   }
   
   protected final void addJavaFile(IJavaFile file) {
-    String dir = file.getProjectRelativePath();
+    String dir = file.getFile().getRelativePath();
     RepoDir repoDir = repoMap.get(dir);
     if (repoDir == null) {
       Deque<String> dirStack = Helper.newStack();
@@ -91,10 +90,10 @@ public abstract class AbstractFileSet implements IFileSet {
     uniqueFiles = Helper.newLinkedList();
     bestDuplicateFiles = Helper.newLinkedList();
     
-    Deque<RepoDir> start = Helper.newStack();
+    Deque<IDirectory> start = Helper.newStack();
     
     // See if trunk is a root
-    for (RepoDir root : roots) {
+    for (IDirectory root : roots) {
       if (root.getName().equals("trunk")) {
         start.push(root);
         break;
@@ -104,12 +103,12 @@ public abstract class AbstractFileSet implements IFileSet {
     // If no trunk
     if (start.isEmpty()) {
       // Check two levels lower
-      for (RepoDir root : roots) {
-        for (RepoDir subRoot : root.getSubdirs()) {
+      for (IDirectory root : roots) {
+        for (IDirectory subRoot : root.getSubdirectories()) {
           if (subRoot.getName().equals("trunk")) {
             start.push(subRoot);
           } else {
-            for (RepoDir subSubRoot : subRoot.getSubdirs()) {
+            for (IDirectory subSubRoot : subRoot.getSubdirectories()) {
               if (subSubRoot.getName().equals("trunk")) {
                 start.push(subSubRoot);
               }
@@ -126,7 +125,7 @@ public abstract class AbstractFileSet implements IFileSet {
     Map<String, Collection<IJavaFile>> javaFiles = Helper.newHashMap();
     
     while (!start.isEmpty()) {
-      RepoDir next = start.pop();
+      IDirectory next = start.pop();
       for (IJavaFile java : next.getJavaFiles()) {
         Collection<IJavaFile> files = javaFiles.get(java.getKey());
         if (files == null) {
@@ -135,7 +134,9 @@ public abstract class AbstractFileSet implements IFileSet {
         }
         files.add(java);
       }
-      start.addAll(next.getSubdirs());
+      for (IDirectory subDir : next.getSubdirectories()) {
+        start.add(subDir);
+      }
     }
   
     for (Collection<IJavaFile> files : javaFiles.values()) {
@@ -159,6 +160,10 @@ public abstract class AbstractFileSet implements IFileSet {
         }
       }
     }
+  }
+  
+  public final Iterable<IDirectory> getRootDirectories() {
+    return roots;
   }
   
   public final int getUniqueJavaFileCount() {
@@ -192,82 +197,13 @@ public abstract class AbstractFileSet implements IFileSet {
   }
   
   private int getValue(IJavaFile file) {
-    RepoDir repoDir = repoMap.get(file.getProjectRelativePath());
+    RepoDir repoDir = repoMap.get(file.getFile().getRelativePath());
     int count = 0;
     while (repoDir != null) {
       count += repoDir.getCount();
       repoDir = repoDir.getParent();
     }
     return count;
-  }
-
-  @Override
-  public String convertToRelativePath(String path) {
-    return convertToRelativePath(path, repo.getBaseDir().getPath());
-  }
-  
-  @Override
-  public String convertToRelativePath(File file, File base) {
-    return convertToRelativePath(file.getAbsolutePath(), base.getAbsolutePath());
-  }
-  
-  @Override
-  public String convertToRelativePath(String path, String base) {
-    path = path.replace('\\', '/');
-    base = base.replace('\\', '/');
-    if (base == null) {
-      return path.replace(' ', '*');
-    } else {
-      if (path.startsWith(base)) {
-        return path.substring(base.length()).replace(' ', '*');
-      } else {
-        logger.severe("Unable to convert " + path + " to relative path (" + base + ")");
-        return path.replace(' ', '*');
-      }
-    }
-  }
-  
-  private class RepoDir {
-    private String name;
-    private RepoDir parent;
-    private Collection<RepoDir> subDirs;
-    private Collection<IJavaFile> javaFiles;
-    
-    public RepoDir(String name) {
-      this.name = name;
-      subDirs = Helper.newLinkedList();
-      javaFiles = Helper.newLinkedList();
-    }
-    
-    public RepoDir(String name, RepoDir parent) {
-      this(name);
-      this.parent = parent;
-      parent.subDirs.add(this);
-    }
-    
-    public String getName() {
-      return name;
-    }
-    
-    public Collection<RepoDir> getSubdirs() {
-      return subDirs;
-    }
-    
-    public void addJavaFile(IJavaFile file) {
-      javaFiles.add(file);
-    }
-    
-    public Collection<IJavaFile> getJavaFiles() {
-      return javaFiles;
-    }
-    
-    public int getCount() {
-      return javaFiles.size();
-    }
-    
-    public RepoDir getParent() {
-      return parent;
-    }
   }
 }
 

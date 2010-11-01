@@ -37,6 +37,6 @@ public class LibraryJar {
   }
   
   public ExtractedLibrary getExtractedLibrary(ExtractedRepository repo) {
-   return new ExtractedLibrary(repo.getLibsPath().getChild(entry.getPath().lastSegment()));
+   return repo.getExtractedLibrary(entry.getPath().lastSegment());
   }
 }

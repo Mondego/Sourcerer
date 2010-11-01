@@ -21,7 +21,6 @@ import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
-import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.util.Helper;
@@ -40,16 +39,11 @@ public class ProjectExtractor {
     logger.info("Getting the jar index...");
     JarIndex index = input.getJarIndex();
     logger.info("Getting the project listing...");
-    Collection<RepoProject> projects = null;
-    if (AbstractRepository.PROJECT_FILTER.hasValue()) {
-      projects = input.getProjects(FileUtils.getFileAsSet(AbstractRepository.PROJECT_FILTER.getValue()));
-    } else {
-      projects = input.getProjects();  
-    }
+    Collection<RepoProject> projects = input.getProjects();  
     logger.info("--- Extracting " + projects.size() + " projects ---");
     int count = 0;
     for (RepoProject project : projects) {
-      logger.info("Extracting " + project.getProjectPath() + " (" + ++count + " of " + projects.size() + ")");
+      logger.info("Extracting " + project + " (" + ++count + " of " + projects.size() + ")");
       ExtractedProject extracted = project.getExtractedProject(output);
       
       boolean extract = false;

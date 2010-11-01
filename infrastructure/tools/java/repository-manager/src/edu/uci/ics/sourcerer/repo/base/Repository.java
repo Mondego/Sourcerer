@@ -40,7 +40,7 @@ import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
 import edu.uci.ics.sourcerer.repo.general.RepoJar;
-import edu.uci.ics.sourcerer.repo.general.RepoPath;
+import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
@@ -63,19 +63,6 @@ public class Repository extends AbstractRepository {
     this.tempDir = tempDir;
   }
   
-  @Override
-  protected void addProject(RepoPath path) {
-    RepoPath content = path.getChild("content");
-    if (!content.exists()) {
-      content = path.getChild("content.zip");
-    }
-    if (content.exists()) {
-      File properties = path.getChildFile("project.properties");
-      RepoProject project = new RepoProject(this, content, properties);
-      projects.put(project.getProjectPath(), project);
-    }
-  }
- 
   public static Repository getRepository(File repoRoot) {
     return new Repository(repoRoot, null);
   }
@@ -84,6 +71,21 @@ public class Repository extends AbstractRepository {
     return new Repository(repoRoot, tempDir);
   }
   
+  @Override
+  protected void addProject(RepoFile path) {
+    RepoFile content = path.getChild("content");
+    if (!content.exists()) {
+      content = path.getChild("content.zip");
+    }
+    if (content.exists()) {
+      RepoProject project = new RepoProject(this, path, content);
+      projects.put(project.getProjectRoot().getRelativePath(), project);
+    }
+  }
+  
+  @Override
+  protected void addLibrary(RepoFile path) {}
+ 
   public void createJarIndex() {
     JarIndex.createJarIndexFile(this);
   }
@@ -101,7 +103,7 @@ public class Repository extends AbstractRepository {
     printer.addRow("host", "project", "crawled date");
     printer.addDividerRow();
     for (RepoProject project : getProjects()) {
-      ProjectProperties props = project.getProperties();
+      ProjectProperties props = project.loadProperties();
       printer.beginRow();
       printer.addCell(props.getOriginRepo());
       printer.addCell(props.getName());
@@ -126,7 +128,7 @@ public class Repository extends AbstractRepository {
       bw = new BufferedWriter(new FileWriter(new File(outputDir, "project-filter-" + filterNumber++ + ".txt")));
       int count = 0;
       for (RepoProject project : getProjects()) {
-        bw.write(project.getProjectPath() + "\n");
+        bw.write(project.getProjectRoot() + "\n");
         if (++count == SPLIT_SIZE.getValue()) {
           logger.info("  " + count + " projects written");
           bw.close();
@@ -142,9 +144,16 @@ public class Repository extends AbstractRepository {
     }
   }
   
+  /**
+   * This method loads the project listing, if necessary. The project
+   * listing is loaded only once. The PROJECT_FILTER property 
+   * dictates which projects are loaded.
+   * 
+   * @see AbstractRepository#PROJECT_FILTER
+   */
   public void generateJarFilterList(Set<String> completed) {
     logger.info("Looking through project jars...");
-    for (RepoProject project : getProjects(FileUtils.getFileAsSet(PROJECT_FILTER.getValue()))) {
+    for (RepoProject project : getProjects()) {
       IFileSet fileSet = project.getFileSet();
       for (IJarFile jar : fileSet.getJarFiles()) {
         if (!completed.contains(jar.getHash())) {
@@ -175,30 +184,28 @@ public class Repository extends AbstractRepository {
     }
     for (IndexedJar jar : repo.getJarIndex().getJars()) {
       if (!completed.contains(jar.toString())) {
-        jar.migrateIndexedJar(targetRepo.getBaseDir().getPath());
+        jar.migrateIndexedJar(targetRepo.getRoot());
         logger.log(RESUME, jar.toString());
       }
     }
     if (repo.jarIndexFile.exists()) {
-      if (!(targetRepo.jarIndexFile.exists() && completed.contains(targetRepo.jarIndexFile.getName()))) {
-        FileUtils.copyFile(repo.jarIndexFile, targetRepo.jarIndexFile);
+      if (!(targetRepo.jarIndexFile.exists() && completed.contains(targetRepo.jarIndexFile.toFile().getName()))) {
+        FileUtils.copyFile(repo.jarIndexFile.toFile(), targetRepo.jarIndexFile.toFile());
         logger.log(RESUME, targetRepo.jarIndexFile.getName());
       }
     }
     
     logger.info("Migrating " + repo.projects.size() + " projects.");
     for (RepoProject project : repo.getProjects()) {
-      File targetProject = new File(target, project.getProjectPath());
+      RepoFile targetProject = targetRepo.repoRoot.getChild(project.getProjectRoot().getRelativePath());
+
       File content = project.getContent().toFile();
-      File contentTarget = new File(targetProject, "content.zip");
-      if (contentTarget.exists() && completed.contains(project.getProjectPath())) {
-        logger.info(project.getProjectPath() + " already migrated.");
+      File contentTarget = targetProject.getChildFile("content.zip");
+      if (contentTarget.exists() && completed.contains(project.getProjectRoot().getRelativePath())) {
+        logger.info(project + " already migrated.");
       } else {
-        logger.info("Migrating " + project.getProjectPath());
+        logger.info("Migrating " + project);
         
-        if (!targetProject.exists()) {
-          targetProject.mkdirs();
-        }
         boolean success = false;
         if (content.isFile()) {
           success = FileUtils.copyFile(content, contentTarget);
@@ -206,15 +213,15 @@ public class Repository extends AbstractRepository {
           success = zipContent(content, contentTarget);
         }
         if (success) {
-          File properties = new File(content.getParentFile(), "project.properties");
+          RepoFile properties = project.getProperties();
           if (properties.exists()) {
-            File targetProperties = new File(targetProject, "project.properties");
-            success = FileUtils.copyFile(properties, targetProperties);
+            RepoFile targetProperties = targetProject.rebaseFile(properties);
+            success = FileUtils.copyFile(properties.toFile(), targetProperties.toFile());
           } else {
-            logger.warning("No properties file for: " + project.getProjectPath());
+            logger.warning("No properties file for: " + project);
           }
           if (success) {
-            logger.log(RESUME, project.getProjectPath());
+            logger.log(RESUME, project.getProjectRoot().getRelativePath());
           }
         }
       }
@@ -275,64 +282,68 @@ public class Repository extends AbstractRepository {
       }
     }
   }
-    
-  public Collection<RepoProject> getProjects() {
-    return getProjects(null);
-  }
   
-  public Collection<RepoProject> getFilteredProjects() {
-    if (PROJECT_FILTER.hasValue()) {
-      return getProjects(FileUtils.getFileAsSet(PROJECT_FILTER.getValue()));
-    } else {
-      return getProjects(null);
-    }
-  }
-  
-  public Collection<RepoProject> getProjects(Set<String> filter) {
-    if (filter == null) {
-      if (projects == null) {
-        projects = Helper.newHashMap();
-        populateRepository();
-      }
-      return projects.values();
-    } else {
-      if (filter.isEmpty()) {
-        logger.log(Level.SEVERE, "Empty project filter!");
-      }
-      Collection<RepoProject> result = Helper.newArrayList();
-      if (projects == null) {
-        projects = Helper.newHashMap();
-        populateFilteredRepository(filter);
-        for (RepoProject project : projects.values()) {
-          result.add(project);
-        }
-        projects = null;
-      } else {
-        for (RepoProject project : projects.values()) {
-          if (filter.contains(project.getProjectPath())) {
-            result.add(project);
-          }
-        }
-      }
-      return result;
-    }
-  }
-  
-  public RepoProject getProject(String projectPath) {
+  private void loadProjects() {
     if (projects == null) {
       projects = Helper.newHashMap();
-      populateRepository();
+      if (PROJECT_FILTER.hasValue()) {
+        Set<String> filter = FileUtils.getFileAsSet(PROJECT_FILTER.getValue());
+        if (filter.isEmpty()) {
+          logger.log(Level.SEVERE, "Empty project filter!");
+        }
+        populateFilteredRepository(filter);
+      } else {
+        populateRepository();
+      }
+    }
+  }
+  
+  /**
+   * This method loads the project listing, if necessary. The project
+   * listing is loaded only once. The PROJECT_FILTER property 
+   * dictates which projects are loaded.
+   * 
+   * @see AbstractRepository#PROJECT_FILTER
+   */
+  public Collection<RepoProject> getProjects() {
+    if (projects == null) {
+      loadProjects();
+    }
+    return projects.values();
+  }
+  
+  /**
+   * This method loads the project listing, if necessary. The project
+   * listing is loaded only once. The PROJECT_FILTER property 
+   * dictates which projects are loaded.
+   * 
+   * @see AbstractRepository#PROJECT_FILTER
+   */
+  public RepoProject getProject(String projectPath) {
+    if (projects == null) {
+      loadProjects();
     }
     return projects.get(projectPath);
   }
   
+  public JarIndex getJarIndex() {
+    return jarIndex;
+  }
+  
+  /**
+   * This method loads the project listing, if necessary. The project
+   * listing is loaded only once. The PROJECT_FILTER property 
+   * dictates which projects are loaded.
+   * 
+   * @see AbstractRepository#PROJECT_FILTER
+   */
   public byte[] getFile(String projectPath, String path) {
     path = path.replace('*', ' ');
     
     RepoProject project = getProject(projectPath);
-    File content = project.getContent().toFile();
+    RepoFile content = project.getContent();
     if (content.isDirectory()) {
-      File file = new File(repoRoot, path);
+      File file = content.getChildFile(path);
       if (file.exists()) {
         return FileUtils.getFileAsByteArray(file);
       } else {
@@ -341,7 +352,7 @@ public class Repository extends AbstractRepository {
     } else {
       ZipFile zip = null;
       try {
-        zip = new ZipFile(content);
+        zip = new ZipFile(content.toFile());
         path = path.substring(1);
         ZipEntry entry = zip.getEntry(path);
         if (entry != null) {
@@ -358,7 +369,7 @@ public class Repository extends AbstractRepository {
     }
   }
   
-  public File getRoot() {
+  protected RepoFile getRoot() {
     return repoRoot;
   }
   

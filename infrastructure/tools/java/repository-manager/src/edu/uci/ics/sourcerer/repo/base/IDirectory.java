@@ -17,19 +17,13 @@
  */
 package edu.uci.ics.sourcerer.repo.base;
 
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
-
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IJavaFile {
-  public String getPackage();
+public interface IDirectory {
+  public String getName();
   
-  /**
-   * The RepoFile returned by this method is relative to the
-   * containing project, not the base repository.
-   */
-  public RepoFile getFile();
+  public Iterable<IDirectory> getSubdirectories();
   
-  public String getKey();
+  public Iterable<IJavaFile> getJavaFiles();
 }

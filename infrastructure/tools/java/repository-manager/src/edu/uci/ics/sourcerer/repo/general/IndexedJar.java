@@ -32,23 +32,23 @@ public class IndexedJar {
   private String groupName;
   private String version;
   private String artifactName;
-  private RepoPath path;
+  private RepoFile path;
   private String jarName;
   private String sourceName;
   
-  protected IndexedJar(String hash, RepoPath path, String jarName) {
+  protected IndexedJar(String hash, RepoFile path, String jarName) {
     this(false, hash, null, null, null, path, jarName, null);
   }
   
-  protected IndexedJar(String hash, String groupName, String version, String artifactName, RepoPath path, String jarName) {
+  protected IndexedJar(String hash, String groupName, String version, String artifactName, RepoFile path, String jarName) {
     this(true, hash, groupName, version, artifactName, path, jarName, null);
   }
   
-  protected IndexedJar(String hash, String groupName, String version, String artifactName, RepoPath path, String jarName, String sourceName) {
+  protected IndexedJar(String hash, String groupName, String version, String artifactName, RepoFile path, String jarName, String sourceName) {
     this(true, hash, groupName, version, artifactName, path, jarName, sourceName);
   }
   
-  private IndexedJar(boolean maven, String hash, String groupName, String version, String artifactName, RepoPath path, String jarName, String sourceName) {
+  private IndexedJar(boolean maven, String hash, String groupName, String version, String artifactName, RepoFile path, String jarName, String sourceName) {
     this.maven = maven;
     this.hash = hash;
     this.groupName = groupName;
@@ -59,8 +59,8 @@ public class IndexedJar {
     this.sourceName = sourceName;
   }
   
-  public void migrateIndexedJar(RepoPath newBase) {
-    RepoPath newPath = newBase.getChild(path.getRelativePath());
+  public void migrateIndexedJar(RepoFile newBase) {
+    RepoFile newPath = newBase.getChild(path.getRelativePath());
     
     FileUtils.copyFile(getJarFile(), getJarFile(newPath));
     if (sourceName != null) {
@@ -70,7 +70,7 @@ public class IndexedJar {
     FileUtils.copyFile(getInfoFile(), getInfoFile(newPath));
   }
     
-  private File getInfoFile(RepoPath path) {
+  private File getInfoFile(RepoFile path) {
     return path.getChildFile(jarName + ".info");
   }
   
@@ -78,7 +78,7 @@ public class IndexedJar {
     return getInfoFile(path);
   }
   
-  private File getJarFile(RepoPath path) {
+  private File getJarFile(RepoFile path) {
     return path.getChildFile(jarName);
   }
   
@@ -86,7 +86,7 @@ public class IndexedJar {
     return getJarFile(path);
   }
   
-  private File getSourceFile(RepoPath path) {
+  private File getSourceFile(RepoFile path) {
     return path.getChildFile(sourceName);
   }
   
@@ -110,7 +110,7 @@ public class IndexedJar {
     return jarName;
   }
   
-  private File getPropertiesFile(RepoPath path) {
+  private File getPropertiesFile(RepoFile path) {
     return path.getChildFile(jarName + ".properties");
   }
   
@@ -139,7 +139,7 @@ public class IndexedJar {
   }
   
   public ExtractedJar getExtractedJar(ExtractedRepository repo) {
-    RepoPath rebasedPath = repo.rebasePath(path);
+    RepoFile rebasedPath = repo.rebasePath(path);
     if (maven) {
       return new ExtractedJar(rebasedPath, getPropertiesFile());
     } else {

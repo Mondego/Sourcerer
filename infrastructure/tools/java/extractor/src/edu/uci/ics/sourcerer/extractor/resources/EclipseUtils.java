@@ -252,7 +252,7 @@ public class EclipseUtils {
         }
         set.add(iFile);
       } else {
-        logger.log(Level.SEVERE, "Unable to load: " + file.getPath());
+        logger.log(Level.SEVERE, "Unable to load: " + file);
       }
     }
     logger.info("    " + fileCount + " files loaded.");
@@ -263,7 +263,7 @@ public class EclipseUtils {
     try {
       IFile newFile = getIFileFromFile(file);
       if (newFile != null) {
-        newFile.createLink(new Path(file.getPath()), replace ? IFile.REPLACE : IFile.NONE, null);
+        newFile.createLink(new Path(file.getFile().toFile().getPath()), replace ? IFile.REPLACE : IFile.NONE, null);
         return newFile;
       } else {
         return null;
@@ -279,7 +279,7 @@ public class EclipseUtils {
     if (folder == null) {
       return null;
     } else {
-      return folder.getFile(file.getName());
+      return folder.getFile(file.getFile().getName());
     }
   }
   

@@ -20,35 +20,29 @@ package edu.uci.ics.sourcerer.repo.base.normal;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractJavaFile;
+import edu.uci.ics.sourcerer.repo.general.RepoFile;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JavaFile extends AbstractJavaFile {
-  private String relativePath;
-  private File file;
   private String pkg;
+  private RepoFile file;
   private boolean packageComputed = false;
   
-  public JavaFile(File file) {
-    this.file = file;
-  }
-  
-  public JavaFile(String relativePath, File file) {
-    this.relativePath = relativePath;
+  public JavaFile(RepoFile file) {
     this.file = file;
   }
   
   private void computePackage() {
     if (!packageComputed) {
       try {
-        BufferedReader br = new BufferedReader(new FileReader(file));
+        BufferedReader br = new BufferedReader(new FileReader(file.toFile()));
         String line = null;
         while ((line = br.readLine()) != null) {
           line = line.trim();
@@ -83,22 +77,7 @@ public class JavaFile extends AbstractJavaFile {
   }
   
   @Override
-  public String getName() {
-    return file.getName();
-  }
-  
-  @Override
-  public String getProjectRelativePath() {
-    return relativePath;
-  }
-  
-  @Override
-  public String getPath() {
-    return file.getAbsolutePath();
-  }
-  
-  @Override
-  public File getFile() {
+  public RepoFile getFile() {
     return file;
   }
 }

@@ -17,7 +17,6 @@
  */
 package edu.uci.ics.sourcerer.repo.general;
 
-import java.io.File;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -25,9 +24,9 @@ import java.io.File;
 public class ProjectProperties extends AbstractProperties {
   private ProjectProperties() {}
   
-  public static ProjectProperties load(File file) {
+  public static ProjectProperties load(RepoFile file) {
     ProjectProperties props = new ProjectProperties();
-    props.loadProperties(file);
+    props.loadProperties(file.toFile());
     return props;
   }
 }

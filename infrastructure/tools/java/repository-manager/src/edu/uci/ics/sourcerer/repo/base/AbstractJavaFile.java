@@ -23,6 +23,6 @@ package edu.uci.ics.sourcerer.repo.base;
 public abstract class AbstractJavaFile implements IJavaFile {
   @Override
   public final String getKey() {
-    return getPackage() + getName();
+    return getPackage() + getFile().getName();
   }
 }

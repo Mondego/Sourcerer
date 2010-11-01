@@ -20,33 +20,23 @@ package edu.uci.ics.sourcerer.repo.base.compressed;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractJavaFile;
+import edu.uci.ics.sourcerer.repo.general.RepoFile;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class CompressedJavaFile extends AbstractJavaFile {
   private String pkg;
-  private String name;
-  private String relativePath;
+  private RepoFile file;
   
-  private CompressedFileSet fileSet;
-  
-  private File file;
-  private boolean fileRetrieved;
-  
-  protected CompressedJavaFile(String relativePath, InputStream is, CompressedFileSet fileSet) {
+  protected CompressedJavaFile(RepoFile file, InputStream is) {
     file = null;
-    this.fileSet = fileSet;
-    fileRetrieved = false;
-    this.relativePath = relativePath;
-    name = relativePath.substring(relativePath.lastIndexOf('/') + 1);
     
     try {
       BufferedReader br = new BufferedReader(new InputStreamReader(is));
@@ -74,30 +64,7 @@ public class CompressedJavaFile extends AbstractJavaFile {
   }
   
   @Override
-  public String getName() {
-    return name;
-  }
-  
-  @Override
-  public String getProjectRelativePath() {
-    return relativePath;
-  }
-  
-  @Override
-  public String getPath() {
-    if (getFile() == null) {
-      return null;
-    } else {
-      return file.getAbsolutePath();
-    }
-  }
-  
-  @Override
-  public File getFile() {
-    if (!fileRetrieved) {
-      file = fileSet.extractFileToTemp(relativePath);
-      fileRetrieved = true;
-    }
+  public RepoFile getFile() {
     return file;
   }
 }

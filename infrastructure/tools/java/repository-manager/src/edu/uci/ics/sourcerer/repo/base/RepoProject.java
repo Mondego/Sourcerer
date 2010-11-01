@@ -17,45 +17,36 @@
  */
 package edu.uci.ics.sourcerer.repo.base;
 
-import java.io.File;
-
 import edu.uci.ics.sourcerer.repo.base.compressed.CompressedFileSet;
 import edu.uci.ics.sourcerer.repo.base.normal.FileSet;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
-import edu.uci.ics.sourcerer.repo.general.RepoPath;
+import edu.uci.ics.sourcerer.repo.general.RepoFile;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class RepoProject {
   private Repository repo;
-  private RepoPath content;
-  private File properties;
+  private RepoFile projectRoot;
+  private RepoFile content;
+  private RepoFile properties;
   
-  public RepoProject(Repository repo, RepoPath content, File properties) {
+  public RepoProject(Repository repo, RepoFile projectRoot, RepoFile content) {
     this.repo = repo;
+    this.projectRoot = projectRoot;
     this.content = content;
-    this.properties = properties;
+    properties = projectRoot.getChild("project.properties");
   }
  
   public ExtractedProject getExtractedProject(ExtractedRepository repo) {
-    return new ExtractedProject(repo.rebasePath(content.getParent()), properties);
-  }
-  
-//  public String getOutputPath(File baseDir) {
-//    return baseDir.getPath() + File.separatorChar + getProjectPath();
-//  }
-//  
-  public String getProjectPath() {
-    return content.getParent().getRelativePath();
+    return new ExtractedProject(repo.rebasePath(properties));
   }
   
   public IFileSet getFileSet() {
-    File contentFile = content.toFile();
-    if (contentFile.isDirectory()) {
-      return new FileSet(contentFile, repo);
+    if (content.isDirectory()) {
+      return new FileSet(content, repo);
     } else {
       if (repo.getTempDir() == null) {
         throw new IllegalStateException("Compressed file sets may only be used if a temp dir is specified.");
@@ -68,19 +59,23 @@ public class RepoProject {
     return repo;
   }
   
-  public RepoPath getContent() {
+  public RepoFile getProjectRoot() {
+    return projectRoot;
+  }
+  
+  public RepoFile getContent() {
     return content;
   }
   
-//  public File getPropertiesFile() {
-//    return properties;
-//  }
+  public RepoFile getProperties() {
+    return projectRoot;
+  }
   
-  public ProjectProperties getProperties() {
+  public ProjectProperties loadProperties() {
     return ProjectProperties.load(properties);
   }
   
   public String toString() {
-    return getProjectPath();
+    return projectRoot.toString();
   }
 }

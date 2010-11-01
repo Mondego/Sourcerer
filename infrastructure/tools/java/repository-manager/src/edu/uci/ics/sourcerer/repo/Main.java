@@ -130,7 +130,7 @@ public class Main {
 //      PropertyManager.registerAndVerify(MAVEN_STATS, INPUT, LINKS_FILE, MAVEN_URL);
 //      MavenCrawlStats.crawlStats();
     } else if (command == EXTRACTION_STATS) {
-      ExtractedRepository.getRepository().computeExtractionStats();
+      ExtractedRepository.getRepository(INPUT_REPO.getValue()).computeExtractionStats();
 //    } else if (CLONE_EXTRACTED_REPOSITORY.getValue()) {
 //      PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);
 //      ExtractedRepository.getRepository().cloneProperties(

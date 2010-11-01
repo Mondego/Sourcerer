@@ -52,7 +52,7 @@ public class JarExtractor {
     Repository input = Repository.getRepository(INPUT_REPO.getValue());
     
     // Load the output repository
-    ExtractedRepository output = ExtractedRepository.getRepository(OUTPUT_REPO.getValue());
+    ExtractedRepository output = ExtractedRepository.makeJarRepository(OUTPUT_REPO.getValue(), input);
     
     logger.info("Getting the jar index...");
     JarIndex index = input.getJarIndex();
@@ -187,9 +187,6 @@ public class JarExtractor {
         Logging.removeFileLogger(extracted.getOutputDir());
       }
     }
-    
-    logger.info("Copying jar index file...");
-    FileUtils.copyFile(input.getJarIndexFile(), output.getJarIndexFile());
     
     logger.info("Done!");
   }

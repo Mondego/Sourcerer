@@ -43,7 +43,7 @@ import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JARS_DIR;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JAR_FILTER;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.PROJECT_FILTER;
-import static edu.uci.ics.sourcerer.repo.general.JarIndex.JAR_INDEX_FILE;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JAR_INDEX_FILE;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_URL;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_USER;
 import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_PASSWORD;
