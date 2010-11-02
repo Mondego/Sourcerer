@@ -68,7 +68,7 @@ public class RepoProject {
   }
   
   public RepoFile getProperties() {
-    return projectRoot;
+    return properties;
   }
   
   public ProjectProperties loadProperties() {

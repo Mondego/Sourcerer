@@ -270,4 +270,13 @@ public final class FileUtils {
       }
     }
   }
+  
+  public static String stripFileName(String path) {
+    int index = path.lastIndexOf('/');
+    if (index == -1) {
+      return "";
+    } else {
+      return path.substring(0, index);
+    }
+  }
 }

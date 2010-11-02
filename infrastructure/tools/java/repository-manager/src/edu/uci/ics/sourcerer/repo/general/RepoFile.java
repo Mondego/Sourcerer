@@ -22,10 +22,10 @@ public class RepoFile {
   public static RepoFile make(File root) {
     return new RepoFile(root);
   }
-
-  public RepoFile makeRoot() {
-    return make(file);
-  }
+//
+//  public RepoFile makeRoot() {
+//    return make(file);
+//  }
   
   public boolean isDirectory() {
     return file.isDirectory();
@@ -76,7 +76,11 @@ public class RepoFile {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
     } else {
-      return new RepoFile(root, relativePath + "/" + child);
+      if (child.charAt(0) == '/') {
+        return new RepoFile(root, relativePath + child);
+      } else {
+        return new RepoFile(root, relativePath + "/" + child);
+      }
     }
   }
   

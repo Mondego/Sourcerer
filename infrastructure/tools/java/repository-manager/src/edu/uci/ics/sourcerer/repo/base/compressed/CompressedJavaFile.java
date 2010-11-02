@@ -36,7 +36,7 @@ public class CompressedJavaFile extends AbstractJavaFile {
   private RepoFile file;
   
   protected CompressedJavaFile(RepoFile file, InputStream is) {
-    file = null;
+    this.file = file;
     
     try {
       BufferedReader br = new BufferedReader(new InputStreamReader(is));

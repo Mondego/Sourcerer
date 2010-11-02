@@ -35,6 +35,7 @@
   <property name="dist" location="dist" />
 
   <property name="utilities" location="../infrastructure/utilities/src" />
+	<property name="component-clusterer" location="../infrastructure/tools/java/component-clusterer/src" />
   <property name="repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
   <property name="model" location="../infrastructure/tools/java/model/src" />
   <property name="database" location="../infrastructure/tools/java/database/src" />
@@ -74,6 +75,7 @@
       <src path="${model}" />
       <src path="${database}" />
       <src path="${file-server}" />
+    	<src path="${component-clusterer}" />
     </javac>
 
     <!-- Copy the source -->
@@ -92,6 +94,9 @@
     <copy todir="${build-java-tools-core}">
       <fileset dir="${file-server}" includes="**/*.java" />
     </copy>
+  	<copy todir="${component-clusterer}">
+  	  <fileset dir="${component-clusterer}" includes="**/*.java" />
+  	</copy>
     <unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-java-tools-core}" />
   </target>
 
@@ -124,6 +129,14 @@
       <classes dir="${build-java-tools-core}" />
     </war>
   </target>
+	
+	<target name="component-clusterer" depends="compile-java-tools-core">
+		<jar destfile="${dist}/component-clusterer.jar" basedir="${build-java-tools-core}">
+		  <manifest>
+		  	 <attribute name ="Main-Class" value="edu.uci.ics.sourcerer.clusterer.Main" />
+			</manifest>
+		</jar>
+	</target>
 
   <!-- Talk to sushil about how this works -->
   <target name="similarity-server" depends="compile-machine-learning">
