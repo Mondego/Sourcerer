@@ -21,6 +21,7 @@
 package edu.uci.ics.sourcerer.clusterer.dir;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -125,6 +126,45 @@ public class Directory {
           file.increment30();
         }
       }
+    }
+  }
+  
+  public Collection<String> matches(Directory other, Set<String> ignore, double threshold) {
+    if (!project.equals(other.project)) {
+      Collection<String> matching = Helper.newLinkedList();
+      int i = 0, j = 0;
+      while (i < files.length && j < other.files.length) {
+        if (ignore.contains(files[i])) {
+          i++;
+          continue;
+        }
+        if (ignore.contains(other.files[j])) {
+          j++;
+          continue;
+        }
+        int comp = files[i].compareTo(other.files[j]);
+        if (comp == 0) {
+          matching.add(files[i]);
+          i++;
+          j++;
+        } else if (comp < 0) {
+          i++;
+        } else {
+          j++;
+        }
+      }
+      if (matching.size() < DirectoryClusterer.MINIMUM_DIR_SIZE.getValue()) {
+        return Collections.emptyList();
+      }
+      
+      double percent = ((double) matching.size()) / ((double) Math.min(files.length, other.files.length));
+      if (percent >= threshold) {
+        return matching;
+      } else {
+        return Collections.emptyList();
+      }
+    } else {
+      return Collections.emptyList();
     }
   }
   

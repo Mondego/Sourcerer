@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -112,6 +113,26 @@ public class DirectoryClusterer {
         System.arraycopy(parts, 2, files, 0, parts.length - 2);
         Arrays.sort(files);
         dirs.add(new Directory(parts[0], parts[1], files));
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error loading directory listing", e);
+    } finally {
+      FileUtils.close(br);
+    }
+    return dirs;
+  }
+  
+  private static Map<String, Directory> loadDirectoryMap() {
+    Map<String, Directory> dirs = Helper.newHashMap();
+    BufferedReader br = null;
+    try {
+      br = new BufferedReader(new FileReader(new File(INPUT.getValue(), DIRECTORY_LISTING.getValue())));
+      for (String line = br.readLine(); line != null; line = br.readLine()) {
+        String[] parts = line.split(" ");
+        String[] files = new String[parts.length - 2];
+        System.arraycopy(parts, 2, files, 0, parts.length - 2);
+        Arrays.sort(files);
+        dirs.put(parts[1], new Directory(parts[0], parts[1], files));
       }
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error loading directory listing", e);
@@ -244,6 +265,61 @@ public class DirectoryClusterer {
     logger.info("Files that matches 30% of at least one other file: " + matching30);
     logger.info("Files that matches 50% of at least one other file: " + matching50);
     logger.info("Files that matches 80% of at least one other file: " + matching80);
+  }
+  
+  public static void interactiveResultsViewer() {
+    System.out.println("Loading directory map...");
+    Map<String, Directory> dirs = loadDirectoryMap();
+    System.out.println("Calculating name popularity...");
+    Collection<Counter<String>> names = computeNamePopularity(dirs.values());
+    // Build the set of filenames to ignore
+    Set<String> ignore = Helper.newHashSet();
+    for (Counter<String> name : names) {
+      if (name.getCount() >= POPULAR_DISCARD.getValue()) {
+        ignore.add(name.getObject());
+      } else {
+        break;
+      }
+    }
+    names.clear();
     
+    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    try {
+      while (true) {
+        System.out.print("Please enter the directory path: ");
+        String path = br.readLine();
+        Directory dir = dirs.get(path);
+        if (dir == null) {
+          System.out.println("Unable to find: " + path + "\n");
+        } else {
+          System.out.println("What threshold would you like to view?");
+          double threshold = 0;
+          while (true) {
+            try {
+              threshold = Double.parseDouble(br.readLine());
+              if (threshold >= 0 && threshold <= 1) {
+                break;
+              } else {
+                System.out.println("Pick something between 0 and 1");  
+              }
+            } catch (NumberFormatException e) {
+              System.out.println("Invalid value, try again!");
+            }
+          }
+          System.out.println("Calculating matches...");
+          for (Directory other : dirs.values()) {
+            Collection<String> matches = dir.matches(other, ignore, threshold);
+            if (!matches.isEmpty()) {
+              System.out.println("  " + other.getPath());
+              for (String match : matches) {
+                System.out.println("    " + match);
+              }
+            }
+          }
+        }
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }

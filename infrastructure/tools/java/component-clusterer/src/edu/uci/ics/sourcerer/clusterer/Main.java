@@ -32,22 +32,28 @@ import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 public class Main {
   public static final Command GENERATE_DIRECTORY_LISTING =
       new Command("generate-dir-listing", "Generates the directory listing file.")
-        .setProperties(Properties.OUTPUT, AbstractRepository.INPUT_REPO, DirectoryClusterer.DIRECTORY_LISTING);
+        .setProperties(AbstractRepository.INPUT_REPO, DirectoryClusterer.DIRECTORY_LISTING);
   
   public static final Command PERFORM_COMPARISON =
     new Command("perform-comparison", "Performs basic directory comparison.")
-      .setProperties(Properties.INPUT, Properties.OUTPUT, DirectoryClusterer.DIRECTORY_LISTING, TablePrettyPrinter.CSV_MODE);
+      .setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD, TablePrettyPrinter.CSV_MODE);
+  
+  public static final Command INTERACTIVE_RESULTS =
+    new Command("interactive-results", "Interactive results viewer.")
+      .setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD);
   
   public static void main(String[] args) {
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
     
-    Command command = PropertyManager.getCommand(GENERATE_DIRECTORY_LISTING, PERFORM_COMPARISON);
+    Command command = PropertyManager.getCommand(GENERATE_DIRECTORY_LISTING, PERFORM_COMPARISON, INTERACTIVE_RESULTS);
     
     if (command == GENERATE_DIRECTORY_LISTING) {
       DirectoryClusterer.generateDirectoryListing();
     } else if (command == PERFORM_COMPARISON) {
       DirectoryClusterer.performComparison();
+    } else if (command == INTERACTIVE_RESULTS) {
+      DirectoryClusterer.interactiveResultsViewer();
     }
   }
 }
