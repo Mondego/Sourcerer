@@ -61,7 +61,7 @@ public class Directory {
         }
       }
       double percent = ((double) matchingCount) / ((double) Math.min(files.length, other.files.length));
-      if (percent >= .3) {
+      if (percent >= .8) {
         matches30++;
         matches50++;
         matches80++;
@@ -69,13 +69,13 @@ public class Directory {
         other.matches50++;
         other.matches80++;
       } else if (percent >= .5) {
+        matches30++;
         matches50++;
-        matches80++;
+        other.matches30++;
         other.matches50++;
-        other.matches80++;
-      } else if (percent >= .8) {
-        matches80++;
-        other.matches80++;
+      } else if (percent >= .3) {
+        matches30++;
+        other.matches30++;
       }
     }
   }
