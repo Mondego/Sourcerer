@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.util;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -27,6 +28,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Level;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -83,6 +85,7 @@ public class Helper {
 	    try {
         value = (V) klass.newInstance();
       } catch (Exception e) {
+        logger.log(Level.SEVERE, "Exception!", e);
         return null;
       }
 	    map.put(key, value);

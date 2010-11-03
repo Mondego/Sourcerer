@@ -20,7 +20,11 @@
  */
 package edu.uci.ics.sourcerer.clusterer.dir;
 
-import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
+import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -44,14 +48,42 @@ public class Directory {
     return project;
   }
   
-  public void compare(Directory other) {
+  public String getPath() {
+    return path;
+  }
+  
+  public String[] getFiles() {
+    return files;
+  }
+  
+  public int get30() {
+    return matches30;
+  }
+  
+  public int get50() {
+    return matches50;
+  }
+  
+  public int get80() {
+    return matches80;
+  }
+  
+  public void compare(Directory other, Set<String> ignore, Map<String, CopiedFile> copiedFiles) {
     if (!project.equals(other.project)) {
-      int matchingCount = 0;
+      Collection<String> matching = Helper.newLinkedList();
       int i = 0, j = 0;
       while (i < files.length && j < other.files.length) {
+        if (ignore.contains(files[i])) {
+          i++;
+          continue;
+        }
+        if (ignore.contains(other.files[j])) {
+          j++;
+          continue;
+        }
         int comp = files[i].compareTo(other.files[j]);
         if (comp == 0) {
-          matchingCount++;
+          matching.add(files[i]);
           i++;
           j++;
         } else if (comp < 0) {
@@ -60,7 +92,11 @@ public class Directory {
           j++;
         }
       }
-      double percent = ((double) matchingCount) / ((double) Math.min(files.length, other.files.length));
+      if (matching.size() < DirectoryClusterer.MINIMUM_DIR_SIZE.getValue()) {
+        return;
+      }
+      
+      double percent = ((double) matching.size()) / ((double) Math.min(files.length, other.files.length));
       if (percent >= .8) {
         matches30++;
         matches50++;
@@ -68,14 +104,26 @@ public class Directory {
         other.matches30++;
         other.matches50++;
         other.matches80++;
+        for (String name : matching) {
+          CopiedFile file = Helper.getFromMap(copiedFiles, name, CopiedFile.class);
+          file.increment80();
+        }
       } else if (percent >= .5) {
         matches30++;
         matches50++;
         other.matches30++;
         other.matches50++;
+        for (String name : matching) {
+          CopiedFile file = Helper.getFromMap(copiedFiles, name, CopiedFile.class);
+          file.increment50();
+        }
       } else if (percent >= .3) {
         matches30++;
         other.matches30++;
+        for (String name : matching) {
+          CopiedFile file = Helper.getFromMap(copiedFiles, name, CopiedFile.class);
+          file.increment30();
+        }
       }
     }
   }
@@ -90,16 +138,6 @@ public class Directory {
   
   public boolean matches80() {
     return matches80 > 0;
-  }
-
-  public void writeRow(TablePrettyPrinter printer) {
-    printer.beginRow();
-    printer.addCell(project);
-    printer.addCell(path);
-    printer.addCell(files.length);
-    printer.addCell(matches30);
-    printer.addCell(matches50);
-    printer.addCell(matches80);
   }
   
   @Override

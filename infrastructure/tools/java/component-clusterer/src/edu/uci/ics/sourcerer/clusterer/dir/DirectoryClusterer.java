@@ -32,16 +32,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.IDirectory;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.util.Counter;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
+import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
@@ -51,6 +56,8 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 public class DirectoryClusterer {
   public static final Property<String> DIRECTORY_LISTING = new StringProperty("directory-listing", "dir-listing.txt", "List of all the directories in the repository.");
   public static final Property<String> COMPARISON_FILE = new StringProperty("comparison-file", "comp-file.txt", "File containing results of comparison.");
+  public static final Property<Integer> MINIMUM_DIR_SIZE = new IntegerProperty("minimum-dir-size", 5, "Minimum number of files that must match per directory.");
+  public static final Property<Integer> POPULAR_DISCARD = new IntegerProperty("popular-discard", 500, "Discard the filenames that occur too often.");
   
   public static void generateDirectoryListing() {
     logger.info("Loading repository...");
@@ -114,23 +121,71 @@ public class DirectoryClusterer {
     return dirs;
   }
   
+  private static Collection<Counter<String>> computeNamePopularity(Iterable<Directory> dirs) {
+    Map<String, Counter<String>> names = Helper.newHashMap();
+    for (Directory dir : dirs) {
+      for (String name : dir.getFiles()) {
+        Counter<String> counter = names.get(name);
+        if (counter == null) {
+          counter = new Counter<String>(name);
+          names.put(name, counter);
+        }
+        counter.increment();
+      }
+    }
+    TreeSet<Counter<String>> retval = Helper.newTreeSet(Counter.<String>getReverseComparator()); 
+    retval.addAll(names.values());
+    return retval;
+  }
+  
   public static void performComparison() {
     logger.info("Loading directory listing...");
     ArrayList<Directory> dirs = loadDirectoryListing();
 
+    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(COMPARISON_FILE);
+    
+    logger.info("Calculating name popularity");
+    Collection<Counter<String>> names = computeNamePopularity(dirs);
+    printer.addHeader("Filenames sorted by popularity");
+    printer.beginTable(2);
+    printer.addDividerRow();
+    printer.addRow("Filename", "Count");
+    printer.addDividerRow();
+    for (Counter<String> name : names) {
+      printer.beginRow();
+      printer.addCell(name.getObject());
+      printer.addCell(name.getCount());
+    }
+    printer.addDividerRow();
+    printer.endTable();
+    
+    // Build the set of filenames to ignore
+    Set<String> ignore = Helper.newHashSet();
+    for (Counter<String> name : names) {
+      if (name.getCount() >= POPULAR_DISCARD.getValue()) {
+        ignore.add(name.getObject());
+      } else {
+        break;
+      }
+    }
+    names.clear();
+    
+    Map<String, CopiedFile> copiedFiles = Helper.newHashMap();
+    
     logger.info("Performing pairwise comparison...");
     for (int i = 0; i < dirs.size(); i++) {
       Directory dir = dirs.get(i);
       logger.info("  Comparing dir from project " + dir + " (" + (i + 1) + " of " + dirs.size() + ")");
       for (int j = i + 1; j < dirs.size(); j++) {
-        dir.compare(dirs.get(j));
+        dir.compare(dirs.get(j), ignore, copiedFiles);
       }
     }
     
     int matching30 = 0;
     int matching50 = 0;
     int matching80 = 0;
-    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(COMPARISON_FILE);
+    
+    printer.addHeader("Directory Copying Statistics");
     printer.beginTable(6);
     printer.addDividerRow();
     printer.addRow("Project", "Path", "Files", "Count 30%", "Count 50%", "Count 80%");
@@ -145,13 +200,50 @@ public class DirectoryClusterer {
       if (dir.matches80()) {
         matching80++;
       }
-      dir.writeRow(printer);
+      printer.beginRow();
+      printer.addCell(dir.getProject());
+      printer.addCell(dir.getPath());
+      printer.addCell(dir.getFiles().length);
+      printer.addCell(dir.get30());
+      printer.addCell(dir.get50());
+      printer.addCell(dir.get80());
     }
     printer.addDividerRow();
-    printer.close();
+    printer.endTable();
     logger.info("Directories that matches 30% of at least one other directory: " + matching30);
     logger.info("Directories that matches 50% of at least one other directory: " + matching50);
     logger.info("Directories that matches 80% of at least one other directory: " + matching80);
+    
+    matching30 = 0;
+    matching50 = 0;
+    matching80 = 0;
+    printer.addHeader("File Copying Statistics");
+    printer.beginTable(4);
+    printer.addDividerRow();
+    printer.addRow("Filename", "Count 30%", "Count 50%", "Count 80%");
+    printer.addDividerRow();
+    for (CopiedFile file : copiedFiles.values()) {
+      if (file.matches30()) {
+        matching30++;
+      }
+      if (file.matches50()) {
+        matching50++;
+      }
+      if (file.matches80()) {
+        matching80++;
+      }
+      printer.beginRow();
+      printer.addCell(file.get30());
+      printer.addCell(file.get50());
+      printer.addCell(file.get80());
+    }
+    printer.addDividerRow();
+    printer.endTable();
+    
+    printer.close();
+    logger.info("Files that matches 30% of at least one other file: " + matching30);
+    logger.info("Files that matches 50% of at least one other file: " + matching50);
+    logger.info("Files that matches 80% of at least one other file: " + matching80);
     
   }
 }
