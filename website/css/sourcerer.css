@@ -1,0 +1,35 @@
+.topBox{
+	  font-size: 14px;
+	  align: center;
+	  
+	 /*
+	  margin-top: 1px;
+	  margin-left: 8px;
+	  margin-bottom: 1px;
+	  */
+	  padding: 4px;
+	  
+	  
+	  text-align: center;
+	  background: #efefee;
+	  border-left: 1px solid silver;
+	  border-right: 1px solid silver;
+	  border-bottom: 1px solid silver;
+	}
+	
+	.copyrightText{
+	 
+	  padding: 4px;
+	  font-size: 10px;
+	  line-height: 10px;
+	  text-align: center;
+	  
+	}
+
+    .figure{
+
+       padding: 4px;
+       margin: 4px;
+       align: center;
+    }
+<
