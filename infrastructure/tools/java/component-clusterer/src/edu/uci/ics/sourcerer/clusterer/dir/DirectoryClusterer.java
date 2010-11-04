@@ -243,7 +243,8 @@ public class DirectoryClusterer {
     printer.addDividerRow();
     printer.addRow("Filename", "Count 30%", "Count 50%", "Count 80%");
     printer.addDividerRow();
-    for (CopiedFile file : copiedFiles.values()) {
+    for (Map.Entry<String, CopiedFile> entry : copiedFiles.entrySet()) {
+      CopiedFile file = entry.getValue();
       if (file.matches30()) {
         matching30++;
       }
@@ -254,6 +255,7 @@ public class DirectoryClusterer {
         matching80++;
       }
       printer.beginRow();
+      printer.addCell(entry.getKey());
       printer.addCell(file.get30());
       printer.addCell(file.get50());
       printer.addCell(file.get80());
