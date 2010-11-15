@@ -26,6 +26,7 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -50,7 +51,7 @@ public abstract class AbstractFileSet implements IFileSet {
   }
   
   protected final void addJavaFile(IJavaFile file) {
-    String dir = file.getFile().getRelativePath();
+    String dir = FileUtils.stripFileName(file.getFile().getRelativePath());
     RepoDir repoDir = repoMap.get(dir);
     if (repoDir == null) {
       Deque<String> dirStack = Helper.newStack();

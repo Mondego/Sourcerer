@@ -65,4 +65,13 @@ public class RepoDir implements IDirectory {
   public RepoDir getParent() {
     return parent;
   }
+  
+  @Override
+  public String toString() {
+    if (parent == null) {
+      return name;
+    } else {
+      return parent.toString() + "/" + name;
+    }
+  }
 }
