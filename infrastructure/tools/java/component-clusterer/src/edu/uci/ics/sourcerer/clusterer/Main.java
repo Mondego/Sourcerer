@@ -34,9 +34,13 @@ public class Main {
       new Command("generate-dir-listing", "Generates the directory listing file.")
         .setProperties(AbstractRepository.INPUT_REPO, DirectoryClusterer.DIRECTORY_LISTING);
   
-  public static final Command PERFORM_COMPARISON =
-    new Command("perform-comparison", "Performs basic directory comparison.")
-      .setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD, TablePrettyPrinter.CSV_MODE);
+  public static final Command GENERATE_COMPARISON_FILES =
+    new Command("generate-comparison-files", "Performs basic directory comparison.")
+      .setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD, DirectoryClusterer.MATCHED_DIRECTORIES, DirectoryClusterer.MATCHED_FILES, DirectoryClusterer.POPULAR_NAMES, TablePrettyPrinter.CSV_MODE);
+  
+  public static final Command COMPILE_STATISTICS =
+    new Command("compile-stats", "Compile statistics from directory comparison.")
+      .setProperties(Properties.INPUT, DirectoryClusterer.MATCHED_DIRECTORIES, DirectoryClusterer.MATCHED_FILES);
   
   public static final Command INTERACTIVE_RESULTS =
     new Command("interactive-results", "Interactive results viewer.")
@@ -46,12 +50,14 @@ public class Main {
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
     
-    Command command = PropertyManager.getCommand(GENERATE_DIRECTORY_LISTING, PERFORM_COMPARISON, INTERACTIVE_RESULTS);
+    Command command = PropertyManager.getCommand(GENERATE_DIRECTORY_LISTING, GENERATE_COMPARISON_FILES, COMPILE_STATISTICS, INTERACTIVE_RESULTS);
     
     if (command == GENERATE_DIRECTORY_LISTING) {
       DirectoryClusterer.generateDirectoryListing();
-    } else if (command == PERFORM_COMPARISON) {
-      DirectoryClusterer.performComparison();
+    } else if (command == GENERATE_COMPARISON_FILES) {
+      DirectoryClusterer.generateComparisonFiles();
+    } else if (command == COMPILE_STATISTICS) {
+      DirectoryClusterer.compileStatistics();
     } else if (command == INTERACTIVE_RESULTS) {
       DirectoryClusterer.interactiveResultsViewer();
     }

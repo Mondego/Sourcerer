@@ -20,12 +20,21 @@
  */
 package edu.uci.ics.sourcerer.clusterer.dir;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -33,16 +42,24 @@ import edu.uci.ics.sourcerer.util.Helper;
 public class Directory {
   private String project;
   private String path;
-  private String[] files;
+  private MatchedFile[] files;
   
-  private int matches30 = 0;
-  private int matches50 = 0;
-  private int matches80 = 0;
+  private int matched30 = 0;
+  private int matched50 = 0;
+  private int matched80 = 0;
   
-  protected Directory(String project, String path, String[] files) {
+  protected Directory(String project, String path, MatchedFile[] files) {
     this.project = project;
     this.path = path;
     this.files = files;
+  }
+  
+  private Directory(String project, String path, int matches30, int matches50, int matches80) {
+    this.project = project;
+    this.path = path;
+    this.matched30 = matches30;
+    this.matched50 = matches50;
+    this.matched80 = matches80;
   }
   
   public String getProject() {
@@ -53,25 +70,96 @@ public class Directory {
     return path;
   }
   
-  public String[] getFiles() {
+  public MatchedFile[] getFiles() {
     return files;
   }
   
   public int get30() {
-    return matches30;
+    return matched30;
   }
   
   public int get50() {
-    return matches50;
+    return matched50;
   }
   
   public int get80() {
-    return matches80;
+    return matched80;
   }
   
-  public void compare(Directory other, Set<String> ignore, Map<String, CopiedFile> copiedFiles) {
+  public String toMatchedDirLine() {
+    return project + " " + path + " " + matched30 + " " + matched50 + " " + matched80;
+  }
+  
+  public static Iterable<Directory> loadMatchedDirectories(final File file) {
+    return new Iterable<Directory>() {
+      
+      @Override
+      public Iterator<Directory> iterator() {
+        try {
+          final BufferedReader br = new BufferedReader(new FileReader(file));
+          return new Iterator<Directory>() {
+            String nextLine = null;
+            
+            @Override
+            public void remove() {
+              throw new UnsupportedOperationException();
+            }
+            
+            @Override
+            public Directory next() {
+              if (hasNext()) {
+                String[] parts = nextLine.split(" ");
+                String oldLine = nextLine;
+                nextLine = null;
+                try {
+                  if (parts.length == 5) {
+                    return new Directory(parts[0], parts[1], Integer.parseInt(parts[2]), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]));
+                  } else {
+                    logger.log(Level.SEVERE, "Unable to parse line: " + oldLine);
+                    return next();
+                  }
+                } catch (NumberFormatException e) {
+                  logger.log(Level.SEVERE, "Unable to parse line: " + oldLine, e);
+                  return next();
+                }
+              } else {
+                throw new NoSuchElementException();
+              }
+            }
+            
+            @Override
+            public boolean hasNext() {
+              if (nextLine == null) {
+                try {
+                  nextLine = br.readLine();
+                } catch (IOException e) {
+                  logger.log(Level.SEVERE,  "Error reading matched directories file: " + file.getPath(), e);
+                  FileUtils.close(br);
+                  return false;
+                }
+                if (nextLine == null) {
+                  FileUtils.close(br);
+                  return false;
+                } else {
+                  return true;
+                }
+              } else {
+                return true;
+              }
+            }
+          };
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Error reading matched directories file: " + file.getPath(), e);
+          return Collections.<Directory>emptySet().iterator();
+        }
+      }
+    };
+  }
+  
+  public void compare(Directory other, Set<String> ignore) {
     if (!project.equals(other.project)) {
-      Collection<String> matching = Helper.newLinkedList();
+      Collection<MatchedFile> myMatches = Helper.newLinkedList();
+      Collection<MatchedFile> otherMatches = Helper.newLinkedList();
       int i = 0, j = 0;
       while (i < files.length && j < other.files.length) {
         if (ignore.contains(files[i])) {
@@ -82,9 +170,10 @@ public class Directory {
           j++;
           continue;
         }
-        int comp = files[i].compareTo(other.files[j]);
+        int comp = files[i].getName().compareTo(other.files[j].getName());
         if (comp == 0) {
-          matching.add(files[i]);
+          myMatches.add(files[i]);
+          otherMatches.add(other.files[j]);
           i++;
           j++;
         } else if (comp < 0) {
@@ -93,36 +182,48 @@ public class Directory {
           j++;
         }
       }
-      if (matching.size() < DirectoryClusterer.MINIMUM_DIR_SIZE.getValue()) {
+      if (myMatches.size() < DirectoryClusterer.MINIMUM_DIR_SIZE.getValue()) {
         return;
       }
       
-      double percent = ((double) matching.size()) / ((double) Math.min(files.length, other.files.length));
+      double percent = ((double) myMatches.size()) / ((double) Math.min(files.length, other.files.length));
       if (percent >= .8) {
-        matches30++;
-        matches50++;
-        matches80++;
-        other.matches30++;
-        other.matches50++;
-        other.matches80++;
-        for (String name : matching) {
-          CopiedFile file = Helper.getFromMap(copiedFiles, name, CopiedFile.class);
+        matched30++;
+        matched50++;
+        matched80++;
+        other.matched30++;
+        other.matched50++;
+        other.matched80++;
+        for (MatchedFile file : myMatches) {
           file.increment80();
+          file.increment50();
+          file.increment30();
+        }
+        for (MatchedFile file : otherMatches) {
+          file.increment80();
+          file.increment50();
+          file.increment30();
         }
       } else if (percent >= .5) {
-        matches30++;
-        matches50++;
-        other.matches30++;
-        other.matches50++;
-        for (String name : matching) {
-          CopiedFile file = Helper.getFromMap(copiedFiles, name, CopiedFile.class);
+        matched30++;
+        matched50++;
+        other.matched30++;
+        other.matched50++;
+        for (MatchedFile file : myMatches) {
           file.increment50();
+          file.increment30();
+        }
+        for (MatchedFile file : otherMatches) {
+          file.increment50();
+          file.increment30();
         }
       } else if (percent >= .3) {
-        matches30++;
-        other.matches30++;
-        for (String name : matching) {
-          CopiedFile file = Helper.getFromMap(copiedFiles, name, CopiedFile.class);
+        matched30++;
+        other.matched30++;
+        for (MatchedFile file : myMatches) {
+          file.increment30();
+        }
+        for (MatchedFile file : otherMatches) {
           file.increment30();
         }
       }
@@ -142,9 +243,9 @@ public class Directory {
           j++;
           continue;
         }
-        int comp = files[i].compareTo(other.files[j]);
+        int comp = files[i].getName().compareTo(other.files[j].getName());
         if (comp == 0) {
-          matching.add(files[i]);
+          matching.add(files[i].getName());
           i++;
           j++;
         } else if (comp < 0) {
@@ -168,20 +269,20 @@ public class Directory {
     }
   }
   
-  public boolean matches30() {
-    return matches30 > 0;
+  public boolean matched30() {
+    return matched30 > 0;
   }
   
-  public boolean matches50() {
-    return matches50 > 0;
+  public boolean matched50() {
+    return matched50 > 0;
   }
   
-  public boolean matches80() {
-    return matches80 > 0;
+  public boolean matched80() {
+    return matched80 > 0;
   }
   
   @Override
   public String toString() {
-    return project;
+    return path;
   }
 }
