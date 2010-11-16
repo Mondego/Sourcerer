@@ -327,7 +327,7 @@ public class Repository extends AbstractRepository {
   }
   
   public JarIndex getJarIndex() {
-    return jarIndex;
+    return super.getJarIndex();
   }
   
   /**

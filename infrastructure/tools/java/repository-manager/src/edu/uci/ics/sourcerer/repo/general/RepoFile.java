@@ -22,10 +22,10 @@ public class RepoFile {
   public static RepoFile make(File root) {
     return new RepoFile(root);
   }
-//
-//  public RepoFile makeRoot() {
-//    return make(file);
-//  }
+
+  public RepoFile makeRoot() {
+    return make(file);
+  }
   
   public boolean isDirectory() {
     return file.isDirectory();

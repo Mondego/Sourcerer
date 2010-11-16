@@ -32,6 +32,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +53,6 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
- *
  */
 public class DirectoryClusterer {
   public static final Property<String> DIRECTORY_LISTING = new StringProperty("directory-listing", "dir-listing.txt", "List of all the directories in the repository.");
@@ -61,6 +61,7 @@ public class DirectoryClusterer {
   public static final Property<String> POPULAR_NAMES = new StringProperty("popular-names", "popular-names.txt", "Filenames sorted by popularity.");
   public static final Property<Integer> MINIMUM_DIR_SIZE = new IntegerProperty("minimum-dir-size", 5, "Minimum number of files that must match per directory.");
   public static final Property<Integer> POPULAR_DISCARD = new IntegerProperty("popular-discard", 500, "Discard the filenames that occur too often.");
+  public static final Property<String> RANKED_DIRECTORIES = new StringProperty("ranked-directories", "ranked-dirs.txt", "The matched directories, ranked by popularity.");
   
   public static void generateDirectoryListing() {
     logger.info("Loading repository...");
@@ -231,40 +232,95 @@ public class DirectoryClusterer {
     // Find the proportion of directories that are copied
     {
       int dirCount = 0;
-      int matched30 = 0;
-      int matched50 = 0;
-      int matched80 = 0;
-      Directory best30 = null;
-      Directory best50 = null;
-      Directory best80 = null;
+      
+      Set<Directory> rankedBy30 = Helper.newTreeSet(new Comparator<Directory>() {
+        @Override
+        public int compare(Directory o1, Directory o2) {
+          if (o2.get30() == o1.get30()) {
+            return o1.getPath().compareTo(o2.getPath());
+          } else {
+            return o2.get30() - o1.get30();
+          }
+        }});
+      Set<Directory> rankedBy50 = Helper.newTreeSet(new Comparator<Directory>() {
+        @Override
+        public int compare(Directory o1, Directory o2) {
+          if (o2.get50() == o1.get50()) {
+            return o1.getPath().compareTo(o2.getPath());
+          } else {
+            return o2.get50() - o1.get50();
+          }
+        }});
+      Set<Directory> rankedBy80 = Helper.newTreeSet(new Comparator<Directory>() {
+        @Override
+        public int compare(Directory o1, Directory o2) {
+          if (o2.get80() == o1.get80()) {
+            return o1.getPath().compareTo(o2.getPath());
+          } else {
+            return o2.get80() - o1.get80();
+          }
+        }});
+      
       for (Directory dir : Directory.loadMatchedDirectories(new File(INPUT.getValue(), MATCHED_DIRECTORIES.getValue()))) {
         dirCount++;
         if (dir.matched30()) {
-          matched30++;
-          if (best30 == null || dir.get30() > best30.get30()) {
-            best30 = dir;
-          }
+          rankedBy30.add(dir);
         }
         if (dir.matched50()) {
-          matched50++;
-          if (best50 == null || dir.get50() > best50.get50()) {
-            best50 = dir;
-          }
+          rankedBy50.add(dir);
         }
         if (dir.matched80()) {
-          matched80++;
-          if (best80 == null || dir.get80() > best80.get80()) {
-            best80 = dir;
-          }
+          rankedBy80.add(dir);
         }
       }
-      logger.info(matched30 + " of " + dirCount + " directories matched at 30%");
-      logger.info(best30 + " matched " + best30.get30() + " directories at 30%");
-      logger.info(matched50 + " of " + dirCount + " directories matched at 50%");
-      logger.info(best50 + " matched " + best50.get50() + " directories at 50%");
-      logger.info(matched80 + " of " + dirCount + " directories matched at 80%");
-      logger.info(best80 + " matched " + best80.get80() + " directories at 80%");
+      logger.info(rankedBy30.size() + " of " + dirCount + " directories matched at 30%");
+      logger.info(rankedBy50.size() + " of " + dirCount + " directories matched at 50%");
+      logger.info(rankedBy80.size() + " of " + dirCount + " directories matched at 80%");
+
+      TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(RANKED_DIRECTORIES);
+      printer.beginTable(3);
+      printer.addHeader("Directories matched at 30%");
+      printer.addDividerRow();
+      printer.addRow("Project", "Path", "Count");
+      printer.addDividerRow();
+      for (Directory dir : rankedBy30) {
+        printer.beginRow();
+        printer.addCell(dir.getProject());
+        printer.addCell(dir.getPath());
+        printer.addCell(dir.get30());
+      }
+      printer.addDividerRow();
+      printer.endTable();
       
+      printer.beginTable(3);
+      printer.addHeader("Directories matched at 50%");
+      printer.addDividerRow();
+      printer.addRow("Project", "Path", "Count");
+      printer.addDividerRow();
+      for (Directory dir : rankedBy50) {
+        printer.beginRow();
+        printer.addCell(dir.getProject());
+        printer.addCell(dir.getPath());
+        printer.addCell(dir.get50());
+      }
+      printer.addDividerRow();
+      printer.endTable();
+      
+      printer.beginTable(3);
+      printer.addHeader("Directories matched at 80%");
+      printer.addDividerRow();
+      printer.addRow("Project", "Path", "Count");
+      printer.addDividerRow();
+      for (Directory dir : rankedBy80) {
+        printer.beginRow();
+        printer.addCell(dir.getProject());
+        printer.addCell(dir.getPath());
+        printer.addCell(dir.get80());
+      }
+      printer.addDividerRow();
+      printer.endTable();
+      
+      printer.close();
     }
     
     // Find the proportion of files that are copied
