@@ -49,21 +49,31 @@ public class RepoFile {
     }
   }
   
+  /**
+   * Creates the parent directories, if needed.
+   */
   public File toFile() {
     if (!file.exists()) {
-      if (file.isFile()) {
-        File parent = file.getParentFile();
-        if (!parent.exists()) {
-          parent.mkdirs();
-        }
-      } else {
-        file.mkdirs();
+      File parent = file.getParentFile();
+      if (!parent.exists()) {
+        parent.mkdirs();
       }
     }
   
     return file;
   }
   
+  /**
+   * Creates the directory, if needed.
+   */
+  public File toDir() {
+    if (!file.exists()) {
+      file.mkdirs();
+    }
+    
+    return file;
+  }
+    
   public File getChildFile(String child) {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);

@@ -91,7 +91,7 @@ public class Repository extends AbstractRepository {
   }
   
   public void printJarStats() {
-    JarIndex.printJarStats(getJarsPath().toFile());
+    JarIndex.printJarStats(getJarsPath().toDir());
   }
   
   public void printProjectNames() {
@@ -178,10 +178,6 @@ public class Repository extends AbstractRepository {
     Repository targetRepo = new Repository(target, null);
     
     logger.info("Migrating " + repo.jarIndex.getIndexSize() + " jar files...");
-    File jars = targetRepo.getJarsPath().toFile();
-    if (!jars.exists()) {
-      jars.mkdir();
-    }
     for (IndexedJar jar : repo.getJarIndex().getJars()) {
       if (!completed.contains(jar.toString())) {
         jar.migrateIndexedJar(targetRepo.getRoot());

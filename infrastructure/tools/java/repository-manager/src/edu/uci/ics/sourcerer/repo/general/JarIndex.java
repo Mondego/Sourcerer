@@ -299,10 +299,7 @@ public class JarIndex {
     logger.info("--- Aggregating jar files for: " + repo.toString() + " ---");
     
     // Create the jar folder
-    File repoJarFolder = repo.getProjectJarsPath().toFile();
-    if (!repoJarFolder.exists()) {
-      repoJarFolder.mkdirs();
-    }
+    File repoJarFolder = repo.getProjectJarsPath().toDir();
     
     int currentOne = 0;
     int currentTwo = 0;

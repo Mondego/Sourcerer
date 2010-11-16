@@ -59,7 +59,7 @@ public abstract class Extracted {
   }
 
   public File getOutputDir() {
-    return content.toFile();
+    return content.toDir();
   }
   
   public String getRelativePath() {
