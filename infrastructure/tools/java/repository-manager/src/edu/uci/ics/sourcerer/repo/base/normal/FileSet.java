@@ -35,7 +35,7 @@ public class FileSet extends AbstractFileSet {
   RepoFile content;
   public FileSet(RepoFile content, AbstractRepository repo) {
     super(repo);
-    this.content = content;
+    this.content = content.makeRoot();
     populateFileSet();
   }
   
