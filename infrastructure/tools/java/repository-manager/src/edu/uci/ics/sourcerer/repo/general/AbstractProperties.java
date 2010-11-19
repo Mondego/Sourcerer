@@ -106,6 +106,10 @@ public abstract class AbstractProperties {
   
   protected static void write(File file, Properties properties) {
     try {
+      File parent = file.getParentFile();
+      if (!parent.exists()) {
+        parent.mkdirs();
+      }
       OutputStream os = new FileOutputStream(file);
       properties.store(os, null);
       os.close();

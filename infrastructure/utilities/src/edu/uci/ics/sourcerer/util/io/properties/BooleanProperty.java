@@ -17,6 +17,10 @@
  */
 package edu.uci.ics.sourcerer.util.io.properties;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.logging.Level;
+
 import edu.uci.ics.sourcerer.util.io.Property;
 
 /**
@@ -39,6 +43,7 @@ public class BooleanProperty extends Property<Boolean> {
     } else if ("false".equals(value)) {
       return false;
     } else {
+      logger.log(Level.SEVERE, value + " is not a valid boolean value for " + name);
       return null;
     }
   }

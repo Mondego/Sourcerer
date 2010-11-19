@@ -24,6 +24,7 @@ import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -108,6 +109,7 @@ public class ExtractedRepository extends AbstractRepository {
         public Iterator<ExtractedJar> iterator() {
           return new Iterator<ExtractedJar>() {
             private Iterator<IndexedJar> iter = (filter == null ? index.getJars() : index.getJars(MavenFilter.ALL, ProjectFilter.ALL, filter)).iterator();
+            private ExtractedJar next = null;
             
             @Override
             public void remove() {
@@ -116,11 +118,26 @@ public class ExtractedRepository extends AbstractRepository {
             
             @Override
             public ExtractedJar next() {
-              return iter.next().getExtractedJar();
+              if (hasNext()) {
+                ExtractedJar retval = next;
+                next = null;
+                return retval;
+              } else {
+                throw new NoSuchElementException();
+              }
             }
             
             @Override
             public boolean hasNext() {
+              if (next == null) {
+                while (iter.hasNext() && next == null) {
+                  next = iter.next().getExtractedJar();
+                  if (!next.extracted()) {
+                    next = null;
+                  }
+                }
+                return next != null;
+              }
               return iter.hasNext();
             }
           };
