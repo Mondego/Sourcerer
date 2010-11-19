@@ -4,7 +4,7 @@ html {
 
 /* Body */
 body {
-	background-color: #ffd073;
+	background-color: #fff0d1;
 	margin-bottom: 0px;
 }
 
@@ -21,16 +21,19 @@ body {
 	top: 0px;
 	left: 0px;
 	right: 0px;
-	background-color: #ffbf40;
-	color: #a66f00;
+	background-color: #ffebc2;
+	color: #3e2d72;
 	font-weight: bold;
-	height:40px;
+	height:35px;
 	font-size: 40px;
 	vertical-align: center;
-	padding-left: 150px;
-	padding-top: 50px;
-	padding-bottom: 10px;
-	border-bottom: 5px solid #a66f00;
+	padding-left: 170px;
+	padding-top: 45px;
+	padding-bottom: 15px;
+	border-bottom: 5px solid #a6843f;
+	border-top: 5px solid #a6843f;
+	border-left: 2px solid #a6843f;
+	border-right: 2px solid #a6843f;
 }
 
 .header .a1 {
@@ -40,7 +43,7 @@ body {
 	left: 10px;
 	width: 130px;
 	height: 30px;
-	background-color: #bf8f30;
+	background-color: #938aaf;
 }
 
 .header .a2 {
@@ -50,7 +53,7 @@ body {
 	left: 160px;
 	width: 130px;
 	height: 30px;
-	background-color: #a66f00;
+	background-color: #3e2d72;
 }
 
 .header .a3 {
@@ -60,7 +63,7 @@ body {
 	left: 310px;
 	width: 130px;
 	height: 30px;
-	background-color: #ffaa00;
+	background-color: #938aaf;
 }
 
 .header .a4 {
@@ -70,7 +73,7 @@ body {
 	left: 460px;
 	width: 130px;
 	height: 30px;
-	background-color: #ffd073;
+	background-color: #bdb5d7;
 }
 
 .header .a5 {
@@ -80,7 +83,7 @@ body {
 	left: 600px;
 	right: 0px;
 	height: 30px;
-	background-color: #bf8f30;
+	background-color: #746f83;
 }
 
 /* Navbar */
@@ -93,7 +96,7 @@ body {
 	width: 170px;
 	margin: 0px;
 	padding: 0px;
-	background-color: #a64b00;
+	background-color: #3e2d72;
 }
 
 .navbar a:link, .navbar a:visited {
@@ -107,15 +110,15 @@ body {
 }
 
 .navbar a.sel:link, .navbar a.sel:visited {
-	background-color: #bf7130;
+	background-color: #746f83;
 }
 
 .navbar a:hover, .navbar a:active {
-	background-color: #ff7400;
+	background-color: #938aaf;
 }
 
 .navbar a.sel:hover, .navbar a.sel:active {
-	background-color: #ff7400;
+	background-color: #938aaf;
 }
 
 /* Content */
@@ -132,6 +135,7 @@ body {
 	padding-bottom: 5px;
 	color: black;
 	border-right: 2px solid #a64b00;
+	background-color: #ffebc2;
 }
 
 .main a:link, .main a:visited {
@@ -149,7 +153,7 @@ h1 {
 	padding: 0px;
 	font-weight: bold;
 	font-size: 22px;
-	color: #a64b00;
+	color: #3e2d72;
 }
 
 h2 {
