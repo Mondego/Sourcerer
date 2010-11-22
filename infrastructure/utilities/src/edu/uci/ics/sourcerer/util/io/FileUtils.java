@@ -29,6 +29,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.Collections;
 import java.util.Set;
 import java.util.logging.Level;
@@ -277,6 +279,28 @@ public final class FileUtils {
       return "";
     } else {
       return path.substring(0, index);
+    }
+  }
+  
+  public static String computeHash(File file) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("MD5");
+      
+      byte[] buff = new byte[1024];
+      InputStream is = null; 
+      try {
+        is = new FileInputStream(file);
+        int size;
+        while ((size = is.read(buff)) != -1) {
+          digest.update(buff, 0, size);
+        }
+      } finally {
+        FileUtils.close(is);
+      }
+      return new BigInteger(1, digest.digest()).toString(16);
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, "Error getting md5 for " + file.getPath(), e);
+      return null;
     }
   }
 }

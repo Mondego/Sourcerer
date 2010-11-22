@@ -17,15 +17,6 @@
  */
 package edu.uci.ics.sourcerer.repo.general;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.util.logging.Level;
-
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
@@ -37,36 +28,14 @@ public class RepoJar {
   
   public RepoJar(RepoFile file) {
     length = file.toFile().length();
-    md5 = getHash(file.toFile());
+    md5 = FileUtils.computeHash(file.toFile());
   }
   
   public RepoJar(long length, String hash) {
     this.length = length;
     this.md5 = hash;
   }
-  
-  public static String getHash(File path) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance("MD5");
-      
-      byte[] buff = new byte[1024];
-      InputStream is = null; 
-      try {
-        is = new FileInputStream(path);
-        int size;
-        while ((size = is.read(buff)) != -1) {
-          digest.update(buff, 0, size);
-        }
-      } finally {
-        FileUtils.close(is);
-      }
-      return new BigInteger(1, digest.digest()).toString(16);
-    } catch (Exception e) {
-      logger.log(Level.SEVERE, "Error getting md5 for " + path.getPath(), e);
-      return null;
-    }
-  }
-  
+    
   public String getHash() {
     return md5;
   }

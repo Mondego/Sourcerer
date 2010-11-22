@@ -24,7 +24,6 @@ import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
 import edu.uci.ics.sourcerer.repo.base.JarFile;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.RepoFile;
-import edu.uci.ics.sourcerer.repo.general.RepoJar;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
@@ -50,7 +49,7 @@ public class FileSet extends AbstractFileSet {
           if (file.isDirectory() && !file.getName().startsWith(".")) {
             fileStack.push(file);
           } else if (file.getName().endsWith(".jar")) {
-            addJarFile(new JarFile(RepoJar.getHash(file), content.getChild(FileUtils.convertToRelativePath(basePath, file.getPath()))));
+            addJarFile(new JarFile(FileUtils.computeHash(file), content.getChild(FileUtils.convertToRelativePath(basePath, file.getPath()))));
           } else if (file.getName().endsWith(".java")) {
             addJavaFile(new JavaFile(content.getChild(FileUtils.convertToRelativePath(basePath, file.getPath()))));
           }

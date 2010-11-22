@@ -39,7 +39,6 @@ import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
-import edu.uci.ics.sourcerer.repo.general.RepoJar;
 import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
@@ -243,7 +242,7 @@ public class Repository extends AbstractRepository {
               try {
                 String hash = null;
                 if (file.getName().endsWith(".jar")) {
-                  hash = RepoJar.getHash(file);
+                  hash = FileUtils.computeHash(file);
                 }
                 FileInputStream fis = new FileInputStream(file);
                 try {

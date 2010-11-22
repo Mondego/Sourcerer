@@ -515,7 +515,7 @@ public class JarIndex {
                 String id = getRelativePath(mavenBaseDir, jar.getPath());
                 if (!completed.contains(id)) {
                   // Find out the hash
-                  String hash = RepoJar.getHash(jar);
+                  String hash = FileUtils.computeHash(jar);
                   
                   String groupPath = top.getParentFile().getParentFile().getPath().replace('\\', '/');
                   groupPath = getRelativePath(mavenBaseDir, groupPath);
@@ -558,7 +558,7 @@ public class JarIndex {
                 if (file.isFile() && file.getName().endsWith(".jar")) {
                   if (!completed.contains(file.getName())) {
                     // Find the hash
-                    String hash = RepoJar.getHash(file);
+                    String hash = FileUtils.computeHash(file);
                     
                     // Write out the entry
                     writer.write(hash + " PROJECT " + one.getName() + "/" + two.getName() + " " + file.getName() + "\n");

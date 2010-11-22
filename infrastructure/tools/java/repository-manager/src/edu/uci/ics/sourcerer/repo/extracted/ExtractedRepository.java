@@ -163,6 +163,7 @@ public class ExtractedRepository extends AbstractRepository {
   
   public Collection<ExtractedLibrary> getLibraries() {
     if (libraries == null) {
+      libraries = Helper.newLinkedList();
       populateLibraries();
     }
     return libraries;
