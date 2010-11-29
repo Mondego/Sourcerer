@@ -1,3 +1,4 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 
 <head>
@@ -6,26 +7,203 @@
 </head>
 
 <body>
-<div class="subbody">
-<div class="header">
-<div class="a1"></div>
-<div class="a2"></div>
-<div class="a3"></div>
-<div class="a4"></div>
-<div class="a5"></div>
+<div id="container">
+<div id="header">
+<div id="a1"></div>
+<div id="a2"></div>
+<div id="a3"></div>
+<div id="a4"></div>
+<div id="a5"></div>
 The Sourcerer Project
 </div>
-<div class="navbar">
-  <div><a href="index.html">Overview</a></div>
-  <div><a href="http://sourcerer.ics.uci.edu/sourcerer/search/index.jsp">Code Search Engine</a></div>
-  <div><a href="sourcerer-db.html">Sourcerer-DB</a></div>
-  <div><a class="sel" href="services.html">Services</a></div>
-  <div><a href="people.html">People</a></div>
-  <div><a href="publications.html">Publications</a></div>
+<div id="content">
+<div id="main">
+<h1>Sourcerer Web-Services</h1>
+<p>All the artifacts managed and stored in Sourcerer are 
+accessible through a set of Web-services. Currently three 
+services are open to public.</p>
+
+<div class="sub">
+<h3>Code Search</h3>
+<p>This service implements a query processing facility. Client
+applications (such as CodeGenie) can send queries as combination of
+terms and fields and the service returns a result set with detailed
+information on the entities that matched the queries. The query language
+is based on Lucene's implementation and our extended query parser
+supports different query forms that allow the clients to express more
+structural information in the queries.</p>
+<h3>Repository Access</h3>
+<p>This service provides access to the code stored in the Managed
+Repository in Sourcerer. Every entity that is stored in the Sourcerer
+repository has a unique identifier and this service provides access to
+the source of the entity given the unique id.</p>
+<h3>Dependency Slicing</h3>
+<p>This service provide access to extract dependency slices of
+entities stored in the repository. Clients can request the slice by
+specifying an entry point in the program. For example, if the entry
+point is a method, request for a dependency slice for that method will
+return a zip file. The zip contains newly fabricated compilation units
+with much unnecessary code stripped off, as well as include some
+meta-data detailing any unresolved external references.</p>
 </div>
 
-<div class="main">
-<h1>Services</h1>
+<p>These Web-Services have simple REST style
+APIs. Given a reuest (via a valid URL) the client will get a response
+back of appropriate format. All requests should be sent via a HTTP GET request with
+parameters encoded in urls.</p>
+
+<p> 
+Given below are the instructions for how to construct valid requests
+to the three Sourcerer Web-Services.
+</p> 
+
+<h2>Code Search API Description</h2>
+<div class="sub">
+
+<p>Search requests can be made by sending a valid URL to the Sourcerer
+server. Such requests send back XML data that represents the results
+for the requested query. Search requests have the following form:</p> 
+ 
+<p><code> 
+http://sourcerer.ics.uci.edu/sourcerer/ws-search/search?qry=[VALID_QUERY]&epp=[INT_VALUE]&pid=[INT_VALUE]&client=[CLIENTID]
+</code></p> 
+ 
+<p>The text inside the brackets above indicate parameters that need to
+be filled in. The list below summarizes the parameters in the above URL</p>
+
+<ul>
+	<li><span class="emph">qry:</span> A valid lucene query
+	experssion. (Refer to a list below to see available fields). By default
+	a conjunction (logical and) of all terms is considered.</li>
+	<li><span class="emph">epp:</span> Number of entries to display
+	(results) per page.</li>
+	<li><span class="emph">pid:</span> Page index of the search result.</li>
+	<li><span class="emph">client:</span> Client type. For example:
+	"codegenie" or "webapp". This is for tracking purposes only, and does
+	not affect search result.</li>
+</ul>
+<br>
+<p>Here is how a valid url looks like:<code> 
+http://sourcerer.ics.uci.edu/sourcerer/ws-search/search?qry=sort&epp=10&pid=1&client=webclient
+</code></p> 
+ 
+<h3>Search Results</h3> 
+ 
+<p>You can copy and paste the above url in a browser to see the result
+returned by the search sevice. The XML represenation of the search
+results returned by the service follows the following schema as shown
+below.</p> 
+ 
+<img src="images/search-results.png"> 
+ 
+<h3>Index Fields</h3> 
+ 
+<p> 
+Please refer to these available index fields to see what index field names
+you can use while constructing a query. Please refer this <a
+	href="http://lucene.apache.org/java/2_3_2/queryparsersyntax.html">link</a> to
+learn how to construct a valid lucene query.</p> 
+ 
+<img src="img/indexfields.png"/> 
+ 
+<h2>Dependency (Program) Slicing API Description</h2> 
+<p> 
+The URL request for dependency slicing has the following form:
+</p> 
+ 
+<p><code> 
+http://sourcerer.ics.uci.edu/sourcerer/slicer/slice?eid=[ENTITY_ID]&client=[CLIENT_ID]
+</code></p> 
+ 
+<p> 
+Values in the brackets above indicates required parameters.
+Here is how a valid url looks like: 
+</p> 
+ 
+<p><code>http://sourcerer.ics.uci.edu/sourcerer/slicer/slice?eid=3148295&client=webapp</code></p> 
+ 
+<p>This service works well after retrieving search results from the
+code query service. Each result entry has a field that provides the
+entity id of the entity that the entry represents. Using that value in
+the slice request sends back a zip with sliced dependencies for that
+entity.</p> 
+ 
+<h2>File Server API Description</h2> 
+<p> 
+The File Server or the repository access service provides access to
+all the source code in the Sourcerer repository. The URL has the
+following form:
+</p> 
+ 
+<p><code> 
+http://sourcerer.ics.uci.edu/sourcerer/repodata/resource?rp=[RELATVE_RESOURCE_PATH]&client=[CLIENT_ID]
+</code></p> 
+ 
+<p> 
+The parameter 'rp' denotes the relative path of the resource in the
+Sourcerer repository. For any entity this information is available in
+the search result entry. Parameter 'client' has the same purpose and
+as described in previous services. Here is how a valid url looks like: 
+</p> 
+ 
+<p><code> 
+http://sourcerer.ics.uci.edu/sourcerer/repodata/resource?rp=8/454/src/delivery/java/org/stringtree/util/sort/Sorter.java&client=webapp
+</code></p> 
+ 
+ 
+<h2>Java Library</h2> 
+ 
+<p> 
+We have implemented a Java library that makes it easy to program the
+Sourcerer search service. Using this library will take away the
+overhead of unmarshalling the XML data returned by the search service.
+Here is how you could import it in an IDE (Eclipse) and start
+programming with the sourcerer search service.
+</p> 
+ 
+<img src="./img/msjar.png"/> 
+ 
+<p>Please <a href="#contact">email the contact</a> below if you want
+to obtain this library.</p> 
+ 
+<h3>Programming</h3> 
+ 
+<p>It is quite simple to program the search service using the library
+mentioned above. You open a HTTP input stream with a valid URL, and, give it to the
+<i>SearchResultUnMarshaller</i> class; that will give you a
+<i>SearchResult</i> instance holding <i>SearchResultEntry</i> 
+	instances. This is how it could look like:</p> 
+ 
+<img src="./img/code.png"/>	
+ 
+<p>Make sure you have all the HTTP parameters correct while creating
+the URL if you do not get the results you expect.</p> 
+ 
+ 
+<h2><a name="contact">Contact</a></h2> 
+ 
+<p> 
+Please contact Sushil Bajracharya
+(<script>document.write(String.fromCharCode(60, 97, 32, 104, 114, 101,
+	102, 61, 39, 109, 97, 105, 108, 116, 111, 58, 115, 98, 97,
+	106, 114, 97, 99, 104, 64, 117, 99, 105, 46, 101, 100, 117,
+	39, 62, 115, 98, 97, 106, 114, 97, 99, 104, 64, 117, 99, 105,
+	46, 101, 100, 117, 60, 47, 97, 62))</script>) if you
+intend to use Sourcerer Web-Services. Thank You!
+</p>
+</div> 
+</div>
+</div>
+<div id="navbar">
+  <div><a href="index.html">Overview</a></div>
+  <div><a href="infrastructure.html">Core Infrastructure</a></div>
+  <div><a href="repository.html">Repository</a></div>
+  <div><a href="sourcerer-db.html">Sourcerer DB</a></div>
+  <div><a class="sel" href="services.html">Services</a></div>
+  <div><a href="code-search-engine.html">Code Search Engine</a></div>
+  <div><a href="code-genie.html">CodeGenie</a></div>
+  <div><a href="people.html">People</a></div>
+  <div><a href="publications.html">Publications</a></div>
 </div>
 </div>
 </body>

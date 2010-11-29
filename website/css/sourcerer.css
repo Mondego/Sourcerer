@@ -1,32 +1,38 @@
 html {
 	font-family: sans-serif;
+	margin: 0px;
+	padding: 0px;
+	height: 100%;
+	overflow-y: scroll;
 }
 
 /* Body */
 body {
-	background-color: #fff0d1;
-	margin-bottom: 0px;
+	background: #fff0d1;
+	margin: 0px;
+	padding: 0px;
+	height: 100%;
 }
 
-.subbody {
-	max-width: 1000px;
-	height: 100%;
-	margin: auto;
-	position: relative;
+#container {
+	width: 800px;
+	min-height: 100%;
+	margin: 0 auto;
+	background-image: url(../images/background.png);
+	background-repeat: repeat-y;
+	overflow: hidden;
 }
+
 /* Header */
-.header {
-	display: block;
-	position: absolute;
-	top: 0px;
-	left: 0px;
-	right: 0px;
+#header {
+	position: relative;
 	background-color: #ffebc2;
-	color: #3e2d72;
+	color: #2C1964;
 	font-weight: bold;
-	height:35px;
+	height: 35px;
 	font-size: 40px;
 	vertical-align: center;
+	/*margin-top: 10px;*/
 	padding-left: 170px;
 	padding-top: 45px;
 	padding-bottom: 15px;
@@ -36,70 +42,73 @@ body {
 	border-right: 2px solid #a6843f;
 }
 
-.header .a1 {
+#header #a1 {
 	display: block;
 	position: absolute;
 	top: 10px;
 	left: 10px;
 	width: 130px;
 	height: 30px;
-	background-color: #938aaf;
+	background-color: #614D9A;
 }
 
-.header .a2 {
+#header #a2 {
 	display: block;
 	position: absolute;
 	top: 10px;
 	left: 160px;
 	width: 130px;
 	height: 30px;
-	background-color: #3e2d72;
+	background-color: #2C1964;
 }
 
-.header .a3 {
+#header #a3 {
 	display: block;
 	position: absolute;
 	top: 10px;
 	left: 310px;
 	width: 130px;
 	height: 30px;
-	background-color: #938aaf;
+	background-color: #614D9A;
 }
 
-.header .a4 {
+#header #a4 {
 	display: block;
 	position: absolute;
 	top: 10px;
 	left: 460px;
 	width: 130px;
 	height: 30px;
-	background-color: #bdb5d7;
+	background-color: #534874;
 }
 
-.header .a5 {
+#header #a5 {
 	display: block;
 	position: absolute;
 	top: 10px;
 	left: 600px;
 	right: 0px;
 	height: 30px;
-	background-color: #746f83;
+	background-color: #9380CD;
 }
 
 /* Navbar */
-.navbar {
+#navbar {
+	/*
 	display: block;
 	position: absolute;
-	top: 105px;
+	top: 115px;
 	left: 0px;
-	bottom: 0px;
+	min-height:100%;
+	height: auto;*/
+	float: left;
 	width: 170px;
 	margin: 0px;
 	padding: 0px;
-	background-color: #3e2d72;
+	background-color: #2C1964;
 }
 
-.navbar a:link, .navbar a:visited {
+#navbar a:link, #navbar a:visited {
 	display: block;
 	font-weight: bold;
 	font-size: 14px;
@@ -109,67 +118,167 @@ body {
 	text-decoration: none;
 }
 
-.navbar a.sel:link, .navbar a.sel:visited {
-	background-color: #746f83;
+#navbar a.sel:link, #navbar a.sel:visited {
+	background-color: #9380CD;
 }
 
-.navbar a:hover, .navbar a:active {
-	background-color: #938aaf;
+#navbar a:hover, #navbar a:active {
+	background-color: #A394CD;
 }
 
-.navbar a.sel:hover, .navbar a.sel:active {
-	background-color: #938aaf;
+#navbar a.sel:hover, #navbar a.sel:active {
+	background-color: #A394CD;
 }
 
 /* Content */
-.main {
-	display: block;
-	position: absolute;
-	left: 170px;
-	top: 105px;
-	right: 0px;
-	bottom: 0px;
-	padding-left: 10px;
-	padding-right: 10px;
-	padding-top: 5px;
-	padding-bottom: 5px;
-	color: black;
-	border-right: 2px solid #a64b00;
-	background-color: #ffebc2;
+#foot {
+	clear:both;
 }
 
-.main a:link, .main a:visited {
+#content {
+	float: right;
+	margin: 0 0 0 -170px;
+	width: 100%;
+}
+
+#main {
+	margin-left: 180px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	padding-left: 10px;
+	padding-right: 10px;
+	color: black;
+	border-right: 2px solid #a6843f;
+	background-color: #ffebc2;
+	font-size: 14px;
+	
+}
+
+#main a:link, #main a:visited {
 	font-weight: bold;
-	color: #a64b00;
+	color: #2C1964;
 	text-decoration: none;
 }
 
-.main a:hover {
-	color: #ff7400;
+#main a:hover {
+	color: #A6843F;
 }
 
 h1 {
 	margin: 0px;
 	padding: 0px;
+	padding-bottom: 10px;
 	font-weight: bold;
 	font-size: 22px;
-	color: #3e2d72;
+	color: #2C1964;
 }
 
 h2 {
 	margin: 0px;
 	padding: 0px;
+	padding-bottom: 10px;
 	font-weight: bold;
 	font-size: 16px;
-	color: #a66f00;
+	color: #135558;
 }
 
-.pubs a:link, .pubs a:visited {
+h3 {
+	margin: 0px;
+	padding: 0px;
+	padding-bottom: 5px;
+	font-weight: bold;
+	font-size: 14px;
+	color: #534874;
+}
+
+h4 {
+	margin: 0px;
+	padding: 0px;
+	padding-bottom: 5px;
+	font-weight: normal;
+	font-size: 14px;
+	color: #2C1964;
+}
+
+#main h3 a:link, #main h3 a:visited {
+	color: #534874;
+}
+
+#main h3 a:hover {
+	color: #A6843F;
+}
+
+p {
+	margin: 0px;
+	padding: 0px;
+	padding-bottom: 10px;
+}
+
+ul {
+	margin: 0px;
+}
+
+.emph {
+	font-weight: bold;
+	color: #135558;
+	
+}
+
+.sub p {
+	padding-left: 20px;
+}
+
+/* People Page */
+.member {
+	float: left;
+	position: relative;
+	width: 150px;
+	height: 200px;
+	margin-right: 10px;
+}
+
+.member img {
+	position: absolute;
+	clip: rect(0px,150px,150px,0px);
+	width: 150px;
+	height: auto;
+}
+
+.member .description {
+	position: absolute;
+	display: block;
+	top: 150px;
+	width: 150px;
+	text-align: center;
+}
+
+.member .name {
+	display: block;
+	font-weight: bold;
+}
+
+.member .title {
+	display: block;
+	font-weight: normal;
+	font-size: 12px;
+	font-style: italic;
+	color: #534874;
+}
+
+.member .institution {
+	display: block;
+	font-weight: bold;
+	font-size: 12px;
+	color: #534874;
+}
+
+/* Publications Page */
+#main .pubs a:link, #main .pubs a:visited {
 	font-weight: normal;
 	color: black;
 	text-decoration: none;
 }
 
-.pubs a:hover {
-	color: #a64b00;
+#main .pubs a:hover {
+	color: #135558;
 }
