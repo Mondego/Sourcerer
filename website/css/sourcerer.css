@@ -228,6 +228,30 @@ ul {
 	padding-left: 20px;
 }
 
+/* Table Format */
+
+th {
+	border-bottom: 2px solid #2C1964;
+	margin: 0px;
+	padding: 2px;
+	color: #135558;
+}
+
+table#id th.desc {
+	background-color: green;
+	width: 10px;
+}
+
+td {
+	margin: 0px;
+	padding: 2px 4px;
+	border-right: 1px solid #2C1964;
+}
+
+/* Core Infrastructure Page */
+
+
+
 /* People Page */
 .member {
 	float: left;
