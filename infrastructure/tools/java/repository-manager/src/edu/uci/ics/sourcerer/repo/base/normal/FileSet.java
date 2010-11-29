@@ -31,7 +31,8 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FileSet extends AbstractFileSet {
-  RepoFile content;
+  private RepoFile content;
+  
   public FileSet(RepoFile content, AbstractRepository repo) {
     super(repo);
     this.content = content.makeRoot();

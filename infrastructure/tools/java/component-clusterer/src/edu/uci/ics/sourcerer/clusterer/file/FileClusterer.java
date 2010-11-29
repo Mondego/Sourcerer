@@ -60,13 +60,17 @@ public class FileClusterer {
         for (IDirectory dir : project.getFileSet().getRootDirectories()) {
           stack.add(dir);
         }
+        int fileCount = 0;
+        
         while (!stack.isEmpty()) {
           IDirectory dir = stack.pop();
           for (IDirectory subDir : dir.getSubdirectories()) {
             stack.add(subDir);
           }
-          
           for (IJavaFile file : dir.getJavaFiles()) {
+            if (++fileCount % 1000 == 0) {
+              logger.info("  " + fileCount + " files processed...");
+            }
             // Calculate the hash
             String hash = FileUtils.computeHash(file.getFile().toFile());
             

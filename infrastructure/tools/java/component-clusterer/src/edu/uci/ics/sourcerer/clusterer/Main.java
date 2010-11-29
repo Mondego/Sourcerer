@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.clusterer;
 
 import edu.uci.ics.sourcerer.clusterer.dir.DirectoryClusterer;
+import edu.uci.ics.sourcerer.clusterer.file.FileClusterer;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.io.Command;
 import edu.uci.ics.sourcerer.util.io.Logging;
@@ -46,11 +47,15 @@ public class Main {
     new Command("interactive-results", "Interactive results viewer.")
       .setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD);
   
+  public static final Command GENERATE_FILE_LISTING =
+      new Command("generate-file-listing", "Generates the file listing file.").
+        setProperties(AbstractRepository.INPUT_REPO, FileClusterer.FILE_LISTING);
+  
   public static void main(String[] args) {
     PropertyManager.initializeProperties(args);
     Logging.initializeLogger();
     
-    Command command = PropertyManager.getCommand(GENERATE_DIRECTORY_LISTING, GENERATE_COMPARISON_FILES, COMPILE_STATISTICS, INTERACTIVE_RESULTS);
+    Command command = PropertyManager.getCommand(GENERATE_DIRECTORY_LISTING, GENERATE_COMPARISON_FILES, COMPILE_STATISTICS, INTERACTIVE_RESULTS, GENERATE_FILE_LISTING);
     
     if (command == GENERATE_DIRECTORY_LISTING) {
       DirectoryClusterer.generateDirectoryListing();
@@ -60,6 +65,8 @@ public class Main {
       DirectoryClusterer.compileStatistics();
     } else if (command == INTERACTIVE_RESULTS) {
       DirectoryClusterer.interactiveResultsViewer();
+    } else if (command == GENERATE_FILE_LISTING) {
+      FileClusterer.generateFileListing();
     }
   }
 }

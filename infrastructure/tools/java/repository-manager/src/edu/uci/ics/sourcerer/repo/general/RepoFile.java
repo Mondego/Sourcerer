@@ -16,7 +16,7 @@ public class RepoFile {
   protected RepoFile(RepoFile root, String relativePath) {
     this.root = root;
     this.relativePath = relativePath;
-    this.file = new File(root.file, relativePath);
+    this.file = new File(root.file, relativePath.replace('*', ' '));
   }
   
   public static RepoFile make(File root) {
