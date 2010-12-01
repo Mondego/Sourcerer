@@ -68,9 +68,9 @@ public class CompressedFileSet extends AbstractFileSet {
         ZipEntry entry = en.nextElement();
         String path = entry.getName();
         if (path.endsWith(".jar")) {
-          addJarFile(new JarFile(entry.getComment(), new CompressedRepoFile(path)));
+          addJarFile(new JarFile(entry.getComment(), new CompressedRepoFile(path.replace(' ', '*'))));
         } else if (path.endsWith(".java")) {
-          addJavaFile(new CompressedJavaFile(new CompressedRepoFile(path), zip.getInputStream(entry)));
+          addJavaFile(new CompressedJavaFile(new CompressedRepoFile(path.replace(' ', '*')), zip.getInputStream(entry)));
         }
       }
       return true;

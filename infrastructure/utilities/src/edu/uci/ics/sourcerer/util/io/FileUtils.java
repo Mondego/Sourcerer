@@ -37,6 +37,7 @@ import java.util.logging.Level;
 import java.util.zip.ZipFile;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
@@ -282,9 +283,10 @@ public final class FileUtils {
     }
   }
   
-  public static String computeHash(File file) {
+  public static Pair<String, String> computeHashes(File file) {
     try {
-      MessageDigest digest = MessageDigest.getInstance("MD5");
+      MessageDigest md5 = MessageDigest.getInstance("MD5");
+      MessageDigest sha = MessageDigest.getInstance("SHA");
       
       byte[] buff = new byte[1024];
       InputStream is = null; 
@@ -292,12 +294,13 @@ public final class FileUtils {
         is = new FileInputStream(file);
         int size;
         while ((size = is.read(buff)) != -1) {
-          digest.update(buff, 0, size);
+          md5.update(buff, 0, size);
+          sha.update(buff, 0, size);
         }
       } finally {
         FileUtils.close(is);
       }
-      return new BigInteger(1, digest.digest()).toString(16);
+      return new Pair<String, String>(new BigInteger(1, md5.digest()).toString(16), new BigInteger(1, md5.digest()).toString(16));
     } catch (Exception e) {
       logger.log(Level.SEVERE, "Error getting md5 for " + file.getPath(), e);
       return null;
