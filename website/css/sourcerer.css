@@ -230,22 +230,47 @@ ul {
 
 /* Table Format */
 
+table {
+	width: 100%;
+	border-bottom: 3px solid #2C1964;
+}
+
 th {
-	border-bottom: 2px solid #2C1964;
+	border-bottom: 3px solid #2C1964;
 	margin: 0px;
 	padding: 2px;
 	color: #135558;
 }
 
-table#id th.desc {
-	background-color: green;
-	width: 10px;
-}
-
 td {
 	margin: 0px;
 	padding: 2px 4px;
-	border-right: 1px solid #2C1964;
+	vertical-align: top;
+	font-size: 12px;
+}
+
+
+.bga {
+	background-color: #c2cce5;
+}
+
+.bgb {
+	background-color: #ccc3e6;
+}
+
+.name {
+	width: 100px;
+}
+
+.path {
+	width: 150px;
+}
+
+.desc {
+}
+
+.cent {
+	text-align: center;
 }
 
 /* Core Infrastructure Page */

@@ -27,16 +27,29 @@ It is available on <a href="http://github.com/sourcerer/Sourcerer/">Github</a> u
 page. Each project contains a number of tools</p>
 <table id="inf" cellspacing="0">
 <tr>
-	<th>Project name</th>
-	<th>Project path</th>
+	<th class="name">Project name</th>
+	<th class="path">Project path</th>
 	<th class="desc">Description</th>
-	<th>Tools</th>
 </tr>
-<tr>
+<tr class="bga">
 	<td>bin</td>
-	<td><code>$checkout$/bin</code></td>
+	<td><code>$checkout$/<br>&nbsp;&nbsp;bin</code></td>
 	<td>Contains ANT build apparatus for all Sourcerer tools.</td>
-	<td>N/A</td>
+</tr>
+<tr class="bgb">
+	<td>lib</td>
+	<td><code>$checkout$/<br>&nbsp;&nbsp;lib</code></td>
+	<td>Contains the libraries (jar files) used by the Sourcerer tools.</td>
+</tr>
+<tr class="bga">
+	<td>repository-manager</td>
+	<td><code>$checkout$/<br>&nbsp;&nbsp;infrastructure/<br>&nbsp;&nbsp;&nbsp;&nbsp;tools/<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;java/<br>repository-manager</code></td>
+	<td>Tools for managing a Sourcerer Java repository. Includes the tools for aggregating project jar files, creating the jar index, and gathering repository statistics.</td>
+</tr>
+<tr class="bgb">
+	<td>model</td>
+	<td><code>$checkout$/<br>&nbsp;&nbsp;infrastructure/<br>&nbsp;&nbsp;&nbsp;&nbsp;tools/<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;java/<br>model</code></td>
+	<td></td>
 </tr>
 </table>
 </div>
