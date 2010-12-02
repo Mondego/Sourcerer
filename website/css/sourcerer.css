@@ -142,7 +142,7 @@ body {
 }
 
 #main {
-	margin-left: 180px;
+	margin-left: 170px;
 	padding-top: 5px;
 	padding-bottom: 5px;
 	padding-left: 10px;
@@ -250,27 +250,52 @@ td {
 }
 
 
-.bga {
+.bga td {
 	background-color: #c2cce5;
 }
 
-.bgb {
+.bgb td {
 	background-color: #ccc3e6;
 }
 
-.name {
-	width: 100px;
+.sub {
 }
 
-.path {
+.sub td {
+	color: #135558;
+	font-weight: bold;
+	text-align: center;
+  background-color: #cce9eb;
+}
+	
+.project {
 	width: 150px;
 }
 
 .desc {
 }
 
+td.path {
+	font-weight: bold;
+	color: #135558;
+	vertical-align: middle;
+	background-color: #cce9eb;
+}
+
+.fixed {
+	font-family: monospace;
+}
+	
 .cent {
 	text-align: center;
+}
+
+td.bot {
+	border-bottom: 2px solid #2C1964;
+}
+
+td.top {
+  border-top: 2px solid #2C1964;
 }
 
 /* Core Infrastructure Page */
