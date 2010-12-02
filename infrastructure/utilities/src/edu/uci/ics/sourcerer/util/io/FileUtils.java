@@ -282,6 +282,28 @@ public final class FileUtils {
       return path.substring(0, index);
     }
   }
+
+  public static String computeHash(File file) {
+    try {
+      MessageDigest md5 = MessageDigest.getInstance("MD5");
+      
+      byte[] buff = new byte[1024];
+      InputStream is = null; 
+      try {
+        is = new FileInputStream(file);
+        int size;
+        while ((size = is.read(buff)) != -1) {
+          md5.update(buff, 0, size);
+        }
+      } finally {
+        FileUtils.close(is);
+      }
+      return new BigInteger(1, md5.digest()).toString(16);
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, "Error getting md5 for " + file.getPath(), e);
+      return null;
+    }
+  }
   
   public static Pair<String, String> computeHashes(File file) {
     try {
@@ -300,7 +322,7 @@ public final class FileUtils {
       } finally {
         FileUtils.close(is);
       }
-      return new Pair<String, String>(new BigInteger(1, md5.digest()).toString(16), new BigInteger(1, md5.digest()).toString(16));
+      return new Pair<String, String>(new BigInteger(1, md5.digest()).toString(16), new BigInteger(1, sha.digest()).toString(16));
     } catch (Exception e) {
       logger.log(Level.SEVERE, "Error getting md5 for " + file.getPath(), e);
       return null;

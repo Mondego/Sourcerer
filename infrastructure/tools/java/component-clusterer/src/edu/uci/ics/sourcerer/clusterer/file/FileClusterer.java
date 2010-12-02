@@ -80,15 +80,18 @@ public class FileClusterer {
             File f = file.getFile().toFile();
             Pair<String, String> hashes = FileUtils.computeHashes(f);
             
-            StringBuilder builder = new StringBuilder();
-            builder.append(project.getProjectRoot().getRelativePath());
-            builder.append(" ").append(file.getFile().getRelativePath());
-            builder.append(" ").append(hashes.getFirst());
-            builder.append(" ").append(hashes.getSecond());
-            builder.append(" ").append(f.length()).append("\n");
-            bw.write(builder.toString());
+            if (hashes != null) {
+              StringBuilder builder = new StringBuilder();
+              builder.append(project.getProjectRoot().getRelativePath());
+              builder.append(" ").append(file.getFile().getRelativePath());
+              builder.append(" ").append(hashes.getFirst());
+              builder.append(" ").append(hashes.getSecond());
+              builder.append(" ").append(f.length()).append("\n");
+              bw.write(builder.toString());
+            }
           }
         }
+        FileUtils.resetTempDir();
       }
       logger.info("Done!");
     } catch (IOException e) {

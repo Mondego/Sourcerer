@@ -81,20 +81,6 @@ public class CompressedFileSet extends AbstractFileSet {
       FileUtils.close(zip);
     }
   }
-  
-  protected File extractFileToTemp(String relativePath) {
-    File tmp = new File(project.getRepository().getTempDir(), relativePath);
-    File parentFile = tmp.getParentFile();
-    if (parentFile == null) {
-      logger.severe("Unable to get parent file: " + tmp.getPath());
-      return null;
-    } else {
-      parentFile.mkdirs();
-    }
-    
-    
-    return tmp;
-  }
     
   private class CompressedRepoFile extends RepoFile {
     private boolean tempExtracted;
@@ -114,7 +100,8 @@ public class CompressedFileSet extends AbstractFileSet {
         FileOutputStream fos = null;
         try {
           zip = new ZipFile(project.getContent().toFile());
-          ZipEntry entry = zip.getEntry(getRelativePath());
+          String entryName = getRelativePath().replace('*', ' ');
+          ZipEntry entry = zip.getEntry(entryName);
           if (entry != null) {
             InputStream is = zip.getInputStream(entry);
             fos = new FileOutputStream(file);
@@ -122,6 +109,9 @@ public class CompressedFileSet extends AbstractFileSet {
             for (int read = is.read(buff); read != -1; read = is.read(buff)) {
               fos.write(buff, 0, read);
             }
+          } else {
+            logger.log(Level.SEVERE, "Unable to find entry: " + entryName);
+            return null;
           }
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Unable to write temp file: " + file.getPath(), e);

@@ -1,0 +1,36 @@
+Four methods for determining cloning:
+
+1) Directory method
+2) Hashing method
+3) FQN method
+4) Name fingerprint method
+
+--General Stats--
+
+**Want rates of file copying for each method (% of files that occur in more than one project)
+
+Two projects, each with 100 files. 50 files are common between the two projects.
+
+Method A (unique) - number copied / total
+50 / 150 = 33%
+
+Method B (all) - number copied / total
+100 / 200 = 50%
+
+
+**List (and classify) the most commonly copied (occurs in the highest number of projects) files according to all methods.
+
+**List (and classify) the most copied projects (projects that have the highest percentage of copied files) according to all methods.
+See if projects are true duplicates, or related in some manner
+
+**Graph project size (# of files) vs percent of files that were copied
+Look for projects that are completely copied (and possibly discount?)
+
+**Analysis of the files that are commonly considered copies between methods.
+
+Is (3) a strict superset of (2)? Is (4) a strict superset of (2)? How do (3) and (4) relate? How does (1) fit in?
+
+**Correlate project forge origin (sourcerforge vs google code vs apache) and rates of copying
+
+**Possibly look at copying rates across forges (lots of people copy apache? but not vice versa)
+
