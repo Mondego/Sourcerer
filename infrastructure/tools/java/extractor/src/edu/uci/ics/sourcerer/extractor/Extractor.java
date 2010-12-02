@@ -84,65 +84,73 @@ public class Extractor implements IApplication {
   public static final Property<Boolean> SKIP_MISSING_TYPES = new BooleanProperty("skip-missing-types", false, "Skip extraction of projects with missing types.");
   public static final Property<Boolean> FORCE_MISSING_REDO = new BooleanProperty("force-missing-redo", false, "Re-attempt extraction on failed missing type extractions.");
   
-  public static final Command EXTRACT_LIBRARIES = 
-      new Command("extract-libraries", "Extract the libraries.")
-          .setProperties(OUTPUT_REPO, 
-              IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
+  private static abstract class ExtractorCommand extends Command {
+    protected DatabaseConnection connection = null;
+    protected MissingTypeResolver resolver = null;
+    
+    public ExtractorCommand(String name, String description) {
+      super(name, description);
+    }
+    
+    @Override
+    protected void execute() {
+      Logging.initializeLogger(this);
+      
+      IMPORT_WRITER.setValue(ImportWriter.class);
+      PROBLEM_WRITER.setValue(ProblemWriter.class);
+      ENTITY_WRITER.setValue(EntityWriter.class);
+      CLASS_ENTITY_WRITER.setValue(ClassEntityWriter.class);
+      LOCAL_VARIABLE_WRITER.setValue(LocalVariableWriter.class);
+      RELATION_WRITER.setValue(RelationWriter.class);
+      CLASS_RELATION_WRITER.setValue(ClassRelationWriter.class);
+      COMMENT_WRITER.setValue(CommentWriter.class);
+      FILE_WRITER.setValue(FileWriter.class);
+      CLASS_FILE_WRITER.setValue(ClassFileWriter.class);
+      USED_JAR_WRITER.setValue(UsedJarWriter.class);
+      MISSING_TYPE_WRITER.setValue(MissingTypeWriter.class);
+
+      if (RESOLVE_MISSING_TYPES.getValue()) {
+        connection = new DatabaseConnection();
+        connection.open();
+        resolver = new MissingTypeResolver(connection);
+      }
+      
+      action();
+      
+      FileUtils.close(connection);
+    }
+  }
+  
+  public static final Command EXTRACT_LIBRARIES =
+    new ExtractorCommand("extract-libraries", "Extract the libraries.") {
+      protected void action() {
+        LibraryExtractor.extract();
+      }
+    }.setProperties(OUTPUT_REPO, 
+            IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
   
   public static final Command EXTRACT_JARS =
-      new Command("extract-jars", "Extract the jars.")
-          .setProperties(INPUT_REPO, OUTPUT_REPO, JARS_DIR, JAR_INDEX_FILE, 
-              JAR_FILTER, EXTRACT_LATEST_MAVEN, EXTRACT_BINARY, RESOLVE_MISSING_TYPES, SKIP_MISSING_TYPES, FORCE_MISSING_REDO,
-              IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
+    new ExtractorCommand("extract-jars", "Extract the jars.") {
+      protected void action() {
+        JarExtractor.extract(resolver);
+      }
+    }.setProperties(INPUT_REPO, OUTPUT_REPO, JARS_DIR, JAR_INDEX_FILE, 
+            JAR_FILTER, EXTRACT_LATEST_MAVEN, EXTRACT_BINARY, RESOLVE_MISSING_TYPES, SKIP_MISSING_TYPES, FORCE_MISSING_REDO,
+            IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
   
   public static final Command EXTRACT_PROJECTS = 
-      new Command("extract-projects", "Extract the projects.")
-          .setProperties(INPUT_REPO, OUTPUT_REPO, PROJECT_FILTER,
-              USE_PROJECT_JARS, RESOLVE_MISSING_TYPES, SKIP_MISSING_TYPES, FORCE_MISSING_REDO,
-              IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
+    new ExtractorCommand("extract-projects", "Extract the projects.") {
+      protected void action() {
+        ProjectExtractor.extract(resolver);
+      }
+    }.setProperties(INPUT_REPO, OUTPUT_REPO, PROJECT_FILTER,
+            USE_PROJECT_JARS, RESOLVE_MISSING_TYPES, SKIP_MISSING_TYPES, FORCE_MISSING_REDO,
+            IMPORT_FILE, PROBLEM_FILE, ENTITY_FILE, LOCAL_VARIABLE_FILE, RELATION_FILE, COMMENT_FILE, FILE_FILE, USED_JAR_FILE, MISSING_TYPE_FILE);
   		  
   @Override
   public Object start(IApplicationContext context) throws Exception {
     String[] args = (String[]) context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
-    PropertyManager.initializeProperties(args);
-    Logging.initializeLogger();
-   
-    Command command = PropertyManager.getCommand(EXTRACT_LIBRARIES, EXTRACT_JARS, EXTRACT_PROJECTS);
-    if (command == null) {
-      return EXIT_OK;
-    }
-      
-    IMPORT_WRITER.setValue(ImportWriter.class);
-    PROBLEM_WRITER.setValue(ProblemWriter.class);
-    ENTITY_WRITER.setValue(EntityWriter.class);
-    CLASS_ENTITY_WRITER.setValue(ClassEntityWriter.class);
-    LOCAL_VARIABLE_WRITER.setValue(LocalVariableWriter.class);
-    RELATION_WRITER.setValue(RelationWriter.class);
-    CLASS_RELATION_WRITER.setValue(ClassRelationWriter.class);
-    COMMENT_WRITER.setValue(CommentWriter.class);
-    FILE_WRITER.setValue(FileWriter.class);
-    CLASS_FILE_WRITER.setValue(ClassFileWriter.class);
-    USED_JAR_WRITER.setValue(UsedJarWriter.class);
-    MISSING_TYPE_WRITER.setValue(MissingTypeWriter.class);
-    
-    DatabaseConnection connection = null;
-    MissingTypeResolver resolver = null;
-    if (RESOLVE_MISSING_TYPES.getValue()) {
-      connection = new DatabaseConnection();
-      connection.open();
-      resolver = new MissingTypeResolver(connection);
-    }
-    
-    if (command == EXTRACT_LIBRARIES) {
-      LibraryExtractor.extract();
-    } else if (command == EXTRACT_JARS){
-      JarExtractor.extract(resolver);
-    } else if (command == EXTRACT_PROJECTS) {
-      ProjectExtractor.extract(resolver);
-    }
-    
-    FileUtils.close(connection);
-
+    PropertyManager.executeCommand(args, Extractor.class);
     return EXIT_OK;
   }
 

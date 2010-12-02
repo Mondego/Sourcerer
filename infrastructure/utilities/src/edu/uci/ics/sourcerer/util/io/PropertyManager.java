@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
@@ -63,10 +64,23 @@ public class PropertyManager {
     return propertyMap.get(name);
   }
   
-  public synchronized static Command getCommand(Command ... commands) {
+  public synchronized static void executeCommand(String[] args, Class<?> klass) {
+    initializeProperties(args);
     PropertyManager properties = getProperties();
-    LinkedList<Command> activeCommands = Helper.newLinkedList();
     
+    // Populate the command list reflectively
+    LinkedList<Command> commands = Helper.newLinkedList();
+    for (Field field : klass.getFields()) {
+      if (Command.class.isAssignableFrom(field.getType()) && field.getAnnotation(Command.Disable.class) == null) {
+        try {
+          commands.add((Command) field.get(klass));
+        } catch (IllegalAccessException e) {
+          logger.log(Level.SEVERE, "Unable to access " + field.getName() + " from " + klass.getName(), e);
+        }
+      }
+    }
+    
+    LinkedList<Command> activeCommands = Helper.newLinkedList();
     for (Command command : commands) {
       if (properties.getValue(command.getName()) != null) {
         activeCommands.add(command);
@@ -79,7 +93,7 @@ public class PropertyManager {
     if (activeCommands.size() == 0) {
       logger.log(Level.SEVERE, "No command selected.");
       printCommands(commands);
-      return null;
+      return;
     } else if (activeCommands.size() > 1) {
       StringBuilder mult = new StringBuilder();
       for (Command c : activeCommands) {
@@ -88,7 +102,7 @@ public class PropertyManager {
       mult.setCharAt(mult.length() - 1, '.');
       logger.log(Level.SEVERE, "Multiple commands selected:" + mult.toString());
       printCommands(commands);
-      return null;
+      return;
     } else {
       command = activeCommands.getFirst();
     }
@@ -147,12 +161,10 @@ public class PropertyManager {
     
     if (HELP.getValue()) {
       printHelp(command);
-      return null;
     } else if (missingProperties.isEmpty() && invalidConditionals.isEmpty()) {
-      return command;
+      command.execute();
     } else {
       printCommand(command, missingProperties, invalidConditionals);
-      return null;
     }
   }
   
@@ -163,7 +175,7 @@ public class PropertyManager {
     Helper.getFromMap(registeredProperties, category, HashSet.class).add(property);
   }
   
-  private static void printCommands(Command[] commands) {
+  private static void printCommands(Collection<Command> commands) {
     Logging.REPORT_TO_CONSOLE.setValue(true);
     TablePrettyPrinter printer = TablePrettyPrinter.getLoggerPrettyPrinter();
     printer.addHeader("A single command must be chosen per execution. All commands should be prefixed by '--'. To view the list of properties for a single command, type --<command> --help. The following commands are available...");

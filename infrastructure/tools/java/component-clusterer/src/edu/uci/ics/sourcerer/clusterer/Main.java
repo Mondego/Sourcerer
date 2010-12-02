@@ -21,7 +21,6 @@ import edu.uci.ics.sourcerer.clusterer.dir.DirectoryClusterer;
 import edu.uci.ics.sourcerer.clusterer.file.FileClusterer;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.io.Command;
-import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
@@ -32,47 +31,48 @@ import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
  */
 public class Main {
   public static final Command GENERATE_DIRECTORY_LISTING =
-      new Command("generate-dir-listing", "Generates the directory listing file.")
-        .setProperties(AbstractRepository.INPUT_REPO, DirectoryClusterer.DIRECTORY_LISTING);
+    new Command("generate-dir-listing", "Generates the directory listing file.") {
+      protected void action() {
+        DirectoryClusterer.generateDirectoryListing();
+      }
+    }.setProperties(AbstractRepository.INPUT_REPO, DirectoryClusterer.DIRECTORY_LISTING);
   
   public static final Command GENERATE_COMPARISON_FILES =
-    new Command("generate-comparison-files", "Performs basic directory comparison.")
-      .setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD, DirectoryClusterer.MATCHED_DIRECTORIES, DirectoryClusterer.MATCHED_FILES, DirectoryClusterer.POPULAR_NAMES, TablePrettyPrinter.CSV_MODE);
+    new Command("generate-comparison-files", "Performs basic directory comparison.") {
+      protected void action() {
+        DirectoryClusterer.generateComparisonFiles();
+      }
+    }.setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD, DirectoryClusterer.MATCHED_DIRECTORIES, DirectoryClusterer.MATCHED_FILES, DirectoryClusterer.POPULAR_NAMES, TablePrettyPrinter.CSV_MODE);
   
   public static final Command COMPILE_DIR_STATISTICS =
-    new Command("compile-dir-stats", "Compile statistics from directory comparison.")
-      .setProperties(Properties.INPUT, DirectoryClusterer.MATCHED_DIRECTORIES, DirectoryClusterer.MATCHED_FILES);
+    new Command("compile-dir-stats", "Compile statistics from directory comparison.") {
+      protected void action() {
+        DirectoryClusterer.compileStatistics();
+      }
+    }.setProperties(Properties.INPUT, DirectoryClusterer.MATCHED_DIRECTORIES, DirectoryClusterer.MATCHED_FILES);
   
   public static final Command INTERACTIVE_RESULTS =
-    new Command("interactive-results", "Interactive results viewer.")
-      .setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD);
+    new Command("interactive-results", "Interactive results viewer.") {
+      protected void action() {
+        DirectoryClusterer.interactiveResultsViewer();
+      }
+    }.setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD);
   
   public static final Command GENERATE_FILE_LISTING =
-      new Command("generate-file-listing", "Generates the file listing file.").
-        setProperties(AbstractRepository.INPUT_REPO, FileClusterer.FILE_LISTING);
+    new Command("generate-file-listing", "Generates the file listing file.") {
+      protected void action() {
+        FileClusterer.generateFileListing();
+      }
+    }.setProperties(AbstractRepository.INPUT_REPO, FileClusterer.FILE_LISTING);
   
   public static final Command COMPILE_FILE_STATISTICS =
-    new Command("compile-file-stats", "Compile statistics from file hashing.")
-      .setProperties(Properties.INPUT, FileClusterer.FILE_LISTING);
+    new Command("compile-file-stats", "Compile statistics from file hashing.") {
+      protected void action() {
+        FileClusterer.compileStatistics();
+      }
+    }.setProperties(Properties.INPUT, FileClusterer.FILE_LISTING);
   
   public static void main(String[] args) {
-    PropertyManager.initializeProperties(args);
-    Logging.initializeLogger();
-    
-    Command command = PropertyManager.getCommand(GENERATE_DIRECTORY_LISTING, GENERATE_COMPARISON_FILES, COMPILE_DIR_STATISTICS, INTERACTIVE_RESULTS, GENERATE_FILE_LISTING, COMPILE_FILE_STATISTICS);
-    
-    if (command == GENERATE_DIRECTORY_LISTING) {
-      DirectoryClusterer.generateDirectoryListing();
-    } else if (command == GENERATE_COMPARISON_FILES) {
-      DirectoryClusterer.generateComparisonFiles();
-    } else if (command == COMPILE_DIR_STATISTICS) {
-      DirectoryClusterer.compileStatistics();
-    } else if (command == INTERACTIVE_RESULTS) {
-      DirectoryClusterer.interactiveResultsViewer();
-    } else if (command == GENERATE_FILE_LISTING) {
-      FileClusterer.generateFileListing();
-    } else if (command == COMPILE_FILE_STATISTICS) {
-      FileClusterer.compileStatistics();
-    }
+    PropertyManager.executeCommand(args, Main.class);
   }
 }

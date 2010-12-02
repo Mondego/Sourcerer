@@ -66,12 +66,14 @@ public final class Logging {
   private static boolean loggingInitialized = false;
   private static boolean resumeLoggingInitialized = false;
   private static StreamHandler defaultHandler;
+  private static String day;
   private static String time;
   
   private static Map<File, Handler> handlerMap = Helper.newHashMap();
   
   private static long mainThread;
   private static Map<Long, Handler> threadHandlerMap = Helper.newHashMap();
+  private static Command command;
   
   static {
     logger = Logger.getLogger("edu.uci.ics.sourcerer.util.io");
@@ -89,7 +91,9 @@ public final class Logging {
     defaultHandler.setLevel(Level.INFO);
     logger.addHandler(defaultHandler);
     
-    SimpleDateFormat format = new SimpleDateFormat("MMM-dd-yyyy-HH-mm-ss");
+    SimpleDateFormat format = new SimpleDateFormat("MMM-dd-yyyy");
+    day = format.format(new Date()).toLowerCase();
+    format = new SimpleDateFormat("HH-mm-ss");
     time = format.format(new Date()).toLowerCase();
   }
 
@@ -110,16 +114,18 @@ public final class Logging {
     }
   }
   
-  private static String getFileHandlerPattern(Property<String> prop) {
-    return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + time + "/" + prop.getValue().replace("%t", "" + Thread.currentThread().getId());
+  private static String getFileHandlerPattern(Command command, Property<String> prop) {
+    return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + command.getName() + "/" + day + "/" + time + "/" + prop.getValue().replace("%t", "" + Thread.currentThread().getId());
   }
   
   public synchronized static Set<String> initializeResumeLogger() {
     if (resumeLoggingInitialized) {
       throw new IllegalStateException("Resume logging may only be initialized once");
+    } else if (!loggingInitialized) {
+      throw new IllegalStateException("Logging must be initialized before resume logging");
     }
     
-    File resumeFile = new File(OUTPUT.getValue(), RESUME_LOG.getValue());
+    File resumeFile = new File(OUTPUT.getValue(), command.getName() + "/" + RESUME_LOG.getValue());
     
     if (CLEAR_RESUME_LOG.getValue()) {
       if (resumeFile.exists()) {
@@ -128,10 +134,6 @@ public final class Logging {
     }
     
     Set<String> resumeSet = getResumeSet(resumeFile);
-    
-    if (!loggingInitialized) {
-      initializeLogger();
-    }
     
     try {
       FileHandler resumeHandler = new FileHandler(resumeFile.getPath(), true);
@@ -152,7 +154,8 @@ public final class Logging {
     return resumeSet;
   }
  
-  public synchronized static void initializeLogger() {
+  public synchronized static void initializeLogger(Command command) {
+    Logging.command = command;
     if (loggingInitialized) {
       throw new IllegalStateException("The logger may only be initialized once");
     }
@@ -202,7 +205,7 @@ public final class Logging {
             }
           }
         };
-        errorHandler = new FileHandler(getFileHandlerPattern(ERROR_LOG));
+        errorHandler = new FileHandler(getFileHandlerPattern(command, ERROR_LOG));
         errorHandler.setFormatter(errorFormatter);
       }
       errorHandler.setLevel(Level.INFO);
@@ -231,7 +234,7 @@ public final class Logging {
             }
           }
         };
-        infoHandler = new FileHandler(getFileHandlerPattern(INFO_LOG));
+        infoHandler = new FileHandler(getFileHandlerPattern(command, INFO_LOG));
         infoHandler.setFormatter(infoFormatter);
         infoHandler.setLevel(Level.INFO);
         logger.addHandler(infoHandler);
@@ -277,7 +280,7 @@ public final class Logging {
     
     try {
       
-      StreamHandler handler = new FileHandler(getFileHandlerPattern(THREAD_LOG));
+      StreamHandler handler = new FileHandler(getFileHandlerPattern(command, THREAD_LOG));
       handler.setFormatter(formatter);
       handler.setLevel(Level.INFO);
       threadHandlerMap.put(id, handler);

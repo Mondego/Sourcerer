@@ -26,7 +26,7 @@ import edu.uci.ics.sourcerer.util.Helper;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class Command {
+public abstract class Command {
   private String name;
   private String description;
   private Property<?>[] properties;
@@ -73,4 +73,13 @@ public class Command {
       return conditionalProperties;
     }
   }
+
+  protected void execute() {
+    Logging.initializeLogger(this);
+    action();
+  }
+  
+  protected abstract void action();
+  
+  public @interface Disable {}
 }
