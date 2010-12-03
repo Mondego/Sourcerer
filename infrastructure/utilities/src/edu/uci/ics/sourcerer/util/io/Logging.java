@@ -114,8 +114,12 @@ public final class Logging {
     }
   }
   
+  private static String getOutputDir(Command command) {
+    return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + command.getName() + "/" + day + "/" + time;
+  }
+  
   private static String getFileHandlerPattern(Command command, Property<String> prop) {
-    return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + command.getName() + "/" + day + "/" + time + "/" + prop.getValue().replace("%t", "" + Thread.currentThread().getId());
+    return getOutputDir(command) + "/" + prop.getValue().replace("%t", "" + Thread.currentThread().getId());
   }
   
   public synchronized static Set<String> initializeResumeLogger() {
@@ -171,7 +175,7 @@ public final class Logging {
       
       if (!suppressFileLogging) {
         if (OUTPUT.hasValue()) {
-          new File(OUTPUT.getValue(), time).mkdirs();
+          new File(getOutputDir(command)).mkdirs();
         } else {
           suppressFileLogging = true;
         }

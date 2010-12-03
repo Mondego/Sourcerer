@@ -30,7 +30,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.IDirectory;
@@ -101,26 +103,99 @@ public class FileClusterer {
     }
   }
   
-  public static void compileStatistics() {
+  public static Iterable<String> loadFileListing() {
+    return new Iterable<String>() {
+      @Override
+      public Iterator<String> iterator() {
+        return new Iterator<String>() {
+          private BufferedReader br = null;
+          private String next = null;
+          
+          {
+            try {
+              br = new BufferedReader(new FileReader(new File(INPUT.getValue(), FILE_LISTING.getValue())));
+            } catch (IOException e) {
+              logger.log(Level.SEVERE, "Error in reading file listing.", e);
+            }
+          }
+          
+          @Override
+          public boolean hasNext() {
+            if (next == null) {
+              if (br == null) {
+                return false;
+              } else {
+                while (next == null && br != null) {
+                  String line = null;
+                  try {
+                    line = br.readLine();
+                  } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Error in reading file listing.", e);
+                  }
+                  if (line == null) {
+                    FileUtils.close(br);
+                    br = null;
+                  } else {
+                    String[] parts = line.split(" ");
+                    if (parts.length == 5) {
+                      next = parts[0] + parts[1];
+                    } else {
+                      logger.log(Level.SEVERE, "Invalid file line: " + line);
+                    }
+                  }
+                }
+                return next != null;
+              }
+            } else {
+              return true;
+            }
+          }
+          
+          @Override
+          public String next() {
+            if (hasNext()) {
+              return next;
+            } else {
+              throw new NoSuchElementException();
+            }
+          }
+          
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
+      }
+    };
+  }
+  
+  public static void match() {
     logger.info("Processing file listing...");
     
     BufferedReader br = null;
     try {
       br = new BufferedReader(new FileReader(new File(INPUT.getValue(), FILE_LISTING.getValue())));
       
-      Map<String, Collection<String>> files = Helper.newHashMap();
+      Map<HashingMatcher, Collection<String>> files = Helper.newHashMap();
+      HashingMatcher matcher = new HashingMatcher();
       int count = 0;
       for (String line = br.readLine(); line != null; line = br.readLine()) {
         String[] parts = line.split(" ");
         if (++count % 1000 == 0) {
           logger.info("Processed " + count + " lines...");
         }
-        Collection<String> projects = files.get(parts[parts.length - 1]);
-        if (projects == null) {
-          projects = Helper.newLinkedList();
-          files.put(parts[parts.length - 1], projects);
+        if (parts.length == 5) {
+          matcher.setValues(parts[2], parts[3], Long.parseLong(parts[4]));
+          
+          Collection<String> projects = files.get(parts[parts.length - 1]);
+          if (projects == null) {
+            projects = Helper.newLinkedList();
+            files.put(parts[parts.length - 1], projects);
+          }
+          projects.add(parts[0]);
+        } else {
+          logger.log(Level.SEVERE, "Invalid line: " + line);
         }
-        projects.add(parts[0]);
       }
       logger.info("Finished processing " + count + " lines.");
       

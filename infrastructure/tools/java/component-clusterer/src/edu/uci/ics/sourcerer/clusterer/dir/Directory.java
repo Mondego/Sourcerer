@@ -42,13 +42,13 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 public class Directory {
   private String project;
   private String path;
-  private MatchedFile[] files;
+  private DirectoryMatchedFile[] files;
   
   private int matched30 = 0;
   private int matched50 = 0;
   private int matched80 = 0;
   
-  protected Directory(String project, String path, MatchedFile[] files) {
+  protected Directory(String project, String path, DirectoryMatchedFile[] files) {
     this.project = project;
     this.path = path;
     this.files = files;
@@ -70,7 +70,7 @@ public class Directory {
     return path;
   }
   
-  public MatchedFile[] getFiles() {
+  public DirectoryMatchedFile[] getFiles() {
     return files;
   }
   
@@ -158,8 +158,8 @@ public class Directory {
   
   public void compare(Directory other, Set<String> ignore) {
     if (!project.equals(other.project)) {
-      Collection<MatchedFile> myMatches = Helper.newLinkedList();
-      Collection<MatchedFile> otherMatches = Helper.newLinkedList();
+      Collection<DirectoryMatchedFile> myMatches = Helper.newLinkedList();
+      Collection<DirectoryMatchedFile> otherMatches = Helper.newLinkedList();
       int i = 0, j = 0;
       while (i < files.length && j < other.files.length) {
         if (ignore.contains(files[i])) {
@@ -194,12 +194,12 @@ public class Directory {
         other.matched30++;
         other.matched50++;
         other.matched80++;
-        for (MatchedFile file : myMatches) {
+        for (DirectoryMatchedFile file : myMatches) {
           file.increment80();
           file.increment50();
           file.increment30();
         }
-        for (MatchedFile file : otherMatches) {
+        for (DirectoryMatchedFile file : otherMatches) {
           file.increment80();
           file.increment50();
           file.increment30();
@@ -209,21 +209,21 @@ public class Directory {
         matched50++;
         other.matched30++;
         other.matched50++;
-        for (MatchedFile file : myMatches) {
+        for (DirectoryMatchedFile file : myMatches) {
           file.increment50();
           file.increment30();
         }
-        for (MatchedFile file : otherMatches) {
+        for (DirectoryMatchedFile file : otherMatches) {
           file.increment50();
           file.increment30();
         }
       } else if (percent >= .3) {
         matched30++;
         other.matched30++;
-        for (MatchedFile file : myMatches) {
+        for (DirectoryMatchedFile file : myMatches) {
           file.increment30();
         }
-        for (MatchedFile file : otherMatches) {
+        for (DirectoryMatchedFile file : otherMatches) {
           file.increment30();
         }
       }

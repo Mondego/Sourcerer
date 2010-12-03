@@ -34,7 +34,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -105,6 +107,76 @@ public class DirectoryClusterer {
     }
   }
   
+  public static Iterable<String> loadFileListing() {
+    return new Iterable<String>() {
+      @Override
+      public Iterator<String> iterator() {
+        return new Iterator<String>() {
+          private BufferedReader br = null;
+          private Deque<String> next = Helper.newStack();
+          
+          {
+            try {
+              br = new BufferedReader(new FileReader(new File(INPUT.getValue(), DIRECTORY_LISTING.getValue())));
+            } catch (IOException e) {
+              logger.log(Level.SEVERE, "Error loading directory listing", e);
+            }
+          }
+          
+          @Override
+          public boolean hasNext() {
+            if (next.isEmpty()) {
+              if (br == null) {
+                return false;
+              } else {
+                while (next.isEmpty() && br != null) {
+                  String line = null;
+                  try {
+                    line = br.readLine();
+                  } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Error reading directory listing", e);
+                  }
+                  
+                  if (line == null) {
+                    FileUtils.close(br);
+                    br = null;
+                  } else {
+                    String[] parts = line.split(" ");
+                    if (parts.length < 2) {
+                      logger.log(Level.SEVERE, "Invalid directory line: " + line);
+                    } else {
+                      String basePath = parts[0] + parts[1] + "/";
+                      for (int i = 2; i < parts.length; i++) {
+                        next.add(basePath + parts[i]);
+                      }
+                    }
+                  }
+                }
+                return !next.isEmpty();
+              }
+            } else {
+              return true;
+            }
+          }
+          
+          @Override
+          public String next() {
+            if (hasNext()) {
+              return next.pop();
+            } else {
+              throw new NoSuchElementException();
+            }
+          }
+          
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
+      }
+    };
+  }
+  
   private static ArrayList<Directory> loadDirectoryListing() {
     ArrayList<Directory> dirs = Helper.newArrayList();
     BufferedReader br = null;
@@ -113,9 +185,9 @@ public class DirectoryClusterer {
       for (String line = br.readLine(); line != null; line = br.readLine()) {
         String[] parts = line.split(" ");
         Arrays.sort(parts, 2, parts.length);
-        MatchedFile[] files = new MatchedFile[parts.length - 2];
+        DirectoryMatchedFile[] files = new DirectoryMatchedFile[parts.length - 2];
         for (int i = 2; i < parts.length; i++) {
-          files[i - 2] = new MatchedFile(parts[i]);
+          files[i - 2] = new DirectoryMatchedFile(parts[i]);
         }
         dirs.add(new Directory(parts[0], parts[1], files));
       }
@@ -135,9 +207,9 @@ public class DirectoryClusterer {
       for (String line = br.readLine(); line != null; line = br.readLine()) {
         String[] parts = line.split(" ");
         Arrays.sort(parts, 2, parts.length);
-        MatchedFile[] files = new MatchedFile[parts.length - 2];
+        DirectoryMatchedFile[] files = new DirectoryMatchedFile[parts.length - 2];
         for (int i = 2; i < parts.length; i++) {
-          files[i - 2] = new MatchedFile(parts[i]);
+          files[i - 2] = new DirectoryMatchedFile(parts[i]);
         }
         dirs.put(parts[1], new Directory(parts[0], parts[1], files));
       }
@@ -152,7 +224,7 @@ public class DirectoryClusterer {
   private static Collection<Counter<String>> computeNamePopularity(Iterable<Directory> dirs) {
     Map<String, Counter<String>> names = Helper.newHashMap();
     for (Directory dir : dirs) {
-      for (MatchedFile file : dir.getFiles()) {
+      for (DirectoryMatchedFile file : dir.getFiles()) {
         Counter<String> counter = names.get(file.getName());
         if (counter == null) {
           counter = new Counter<String>(file.getName());
@@ -214,7 +286,7 @@ public class DirectoryClusterer {
         matchedDirs.write(dir.toMatchedDirLine());
         matchedDirs.write("\n");
         // write out the file
-        for (MatchedFile file : dir.getFiles()) {
+        for (DirectoryMatchedFile file : dir.getFiles()) {
           matchedFiles.write(dir.getProject() + " " + dir.getPath() + " " + file.toCopiedFileLine() + "\n");
         }
       }
@@ -329,7 +401,7 @@ public class DirectoryClusterer {
       int matched30 = 0;
       int matched50 = 0;
       int matched80 = 0;
-      for (MatchedFile file : MatchedFile.loadMatchedFiles(new File(INPUT.getValue(), MATCHED_FILES.getValue()))) {
+      for (DirectoryMatchedFile file : DirectoryMatchedFile.loadMatchedFiles(new File(INPUT.getValue(), MATCHED_FILES.getValue()))) {
         fileCount++;
         if (file.matched30()) {
           matched30++;
