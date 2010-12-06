@@ -1,4 +1,3 @@
-package edu.uci.ics.sourcerer.clusterer.fqn;
 ///* 
 // * Sourcerer: an infrastructure for large-scale source code analysis.
 // * Copyright (C) by contributors. See CONTRIBUTORS.txt for full list.
@@ -16,7 +15,7 @@ package edu.uci.ics.sourcerer.clusterer.fqn;
 // * You should have received a copy of the GNU General Public License
 // * along with this program. If not, see <http://www.gnu.org/licenses/>.
 // */
-//package edu.uci.ics.sourcerer.clusterer.stats;
+//package edu.uci.ics.sourcerer.clusterer.fqn;
 //
 //import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 //

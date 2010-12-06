@@ -89,7 +89,7 @@ public class DirectoryClusterer {
           
           StringBuilder builder = new StringBuilder();
           for (IJavaFile file : dir.getJavaFiles()) {
-            builder.append(" " + file.getFile().getName());
+            builder.append(" " + file.getFile().getName().replace(' ', '*'));
           }
           
           if (builder.length() > 0) {
@@ -145,7 +145,10 @@ public class DirectoryClusterer {
                     if (parts.length < 2) {
                       logger.log(Level.SEVERE, "Invalid directory line: " + line);
                     } else {
-                      String basePath = parts[0] + parts[1] + "/";
+                      String basePath = parts[0] + "/";
+                      if (parts[1].length() > 0) {
+                        basePath += parts[1] + "/";
+                      }
                       for (int i = 2; i < parts.length; i++) {
                         next.add(basePath + parts[i]);
                       }

@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.clusterer.dir.DirectoryClusterer;
-import edu.uci.ics.sourcerer.clusterer.file.FileClusterer;
+import edu.uci.ics.sourcerer.clusterer.hash.HashingClusterer;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
@@ -56,11 +56,11 @@ public class Verifier {
     logger.info("Loading hashing file listing...");
     Integer newMethod = HASH_METHOD;
     combined = DIR_METHOD | HASH_METHOD;
-    for (String file : FileClusterer.loadFileListing()) {
+    for (String file : HashingClusterer.loadFileListing()) {
       Integer val = files.get(file);
       if (val == null) {
         files.put(file, newMethod);
-      } else if ((val.intValue() & HASH_METHOD) == 1){
+      } else if ((val.intValue() & HASH_METHOD) == HASH_METHOD){
         logger.log(Level.SEVERE, "Duplicated file: " + file);
       } else {
         files.put(file, combined);
@@ -73,11 +73,11 @@ public class Verifier {
     int sharedCount = 0;
     int uniqueDirCount = 0;
     int uniqueHashCount = 0;
-    for (int val : files.values()) {
-      switch (val) {
+    for (Map.Entry<String, Integer> entry : files.entrySet()) {
+      switch (entry.getValue()) {
         case shared: sharedCount++; break;
-        case DIR_METHOD: uniqueDirCount++; break;
-        case HASH_METHOD: uniqueHashCount++; break;
+        case DIR_METHOD: uniqueDirCount++; logger.log(Level.SEVERE, "Dir unique: " + entry.getKey()); break;
+        case HASH_METHOD: uniqueHashCount++; logger.log(Level.SEVERE, "Hash unique: " + entry.getKey()); break;
       }
     }
     logger.info(files.size() + " total files.");

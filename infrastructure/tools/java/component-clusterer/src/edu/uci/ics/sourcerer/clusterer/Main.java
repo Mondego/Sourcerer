@@ -18,7 +18,8 @@
 package edu.uci.ics.sourcerer.clusterer;
 
 import edu.uci.ics.sourcerer.clusterer.dir.DirectoryClusterer;
-import edu.uci.ics.sourcerer.clusterer.file.FileClusterer;
+import edu.uci.ics.sourcerer.clusterer.hash.HashingClusterer;
+import edu.uci.ics.sourcerer.clusterer.stats.Verifier;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.io.Command;
 import edu.uci.ics.sourcerer.util.io.Properties;
@@ -58,20 +59,27 @@ public class Main {
       }
     }.setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD);
   
-  public static final Command GENERATE_FILE_LISTING =
-    new Command("generate-file-listing", "Generates the file listing file.") {
+  public static final Command GENERATE_HASH_FILE_LISTING =
+    new Command("generate-hash-file-listing", "Generates the file listing file.") {
       protected void action() {
-        FileClusterer.generateFileListing();
+        HashingClusterer.generateFileListing();
       }
-    }.setProperties(AbstractRepository.INPUT_REPO, FileClusterer.FILE_LISTING);
+    }.setProperties(AbstractRepository.INPUT_REPO, HashingClusterer.HASH_FILE_LISTING);
   
   public static final Command COMPILE_FILE_STATISTICS =
     new Command("compile-file-stats", "Compile statistics from file hashing.") {
       protected void action() {
-        FileClusterer.compileStatistics();
+        HashingClusterer.compileMatchingStatistics();
       }
-    }.setProperties(Properties.INPUT, FileClusterer.FILE_LISTING);
+    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING);
   
+  public static final Command COMPARE_FILE_LISTINGS =
+    new Command("compare-file-listings", "Compares the file listings from the different methods.") {
+      protected void action() {
+        Verifier.compareFileListings();
+      }
+    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, DirectoryClusterer.DIRECTORY_LISTING);
+    
   public static void main(String[] args) {
     PropertyManager.executeCommand(args, Main.class);
   }
