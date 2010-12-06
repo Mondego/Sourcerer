@@ -195,7 +195,7 @@ public abstract class AbstractFileSet implements IFileSet {
   }
   
   private int getValue(IJavaFile file) {
-    RepoDir repoDir = repoMap.get(file.getFile().getRelativePath());
+    RepoDir repoDir = repoMap.get(FileUtils.stripFileName(file.getFile().getRelativePath()));
     int count = 0;
     while (repoDir != null) {
       count += repoDir.getCount();

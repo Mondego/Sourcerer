@@ -41,7 +41,7 @@ public class RepoProject {
   }
  
   public ExtractedProject getExtractedProject(ExtractedRepository repo) {
-    return new ExtractedProject(repo.rebasePath(properties));
+    return new ExtractedProject(repo.rebasePath(projectRoot));
   }
   
   public IFileSet getFileSet() {

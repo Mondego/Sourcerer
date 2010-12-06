@@ -40,11 +40,18 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 public class CompressedFileSet extends AbstractFileSet {
   private RepoProject project;
   private RepoFile base;
+  private String baseCanonical;
   
   private CompressedFileSet(RepoProject project) {
     super(project.getRepository());
     this.project = project;
     base = RepoFile.make(project.getRepository().getTempDir());
+    try {
+      baseCanonical = base.toFile().getCanonicalPath();
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error getting canonical path");
+      baseCanonical = base.toFile().getAbsolutePath();
+    }
   }
   
   public static CompressedFileSet getFileSet(RepoProject project) {
@@ -128,6 +135,6 @@ public class CompressedFileSet extends AbstractFileSet {
   
   @Override
   public String convertToRelativePath(String path) {
-    return FileUtils.convertToRelativePath(base.toFile().getAbsolutePath(), path);
+    return FileUtils.convertToRelativePath(baseCanonical, path);
   }
 }

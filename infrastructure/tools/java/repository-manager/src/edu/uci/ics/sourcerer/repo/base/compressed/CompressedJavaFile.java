@@ -67,4 +67,9 @@ public class CompressedJavaFile extends AbstractJavaFile {
   public RepoFile getFile() {
     return file;
   }
+  
+  @Override
+  public String toString() {
+    return file.toString();
+  }
 }

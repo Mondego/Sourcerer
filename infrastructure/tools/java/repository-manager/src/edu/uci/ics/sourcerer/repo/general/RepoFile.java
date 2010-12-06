@@ -15,7 +15,11 @@ public class RepoFile {
   
   protected RepoFile(RepoFile root, String relativePath) {
     this.root = root;
-    this.relativePath = relativePath;
+    if (relativePath.charAt(0) == '/') {
+      this.relativePath = relativePath.substring(1);
+    } else {
+      this.relativePath = relativePath;
+    }
     this.file = new File(root.file, relativePath.replace('*', ' '));
   }
   
@@ -86,10 +90,18 @@ public class RepoFile {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
     } else {
-      if (child.charAt(0) == '/') {
-        return new RepoFile(root, relativePath + child);
+      if (relativePath.equals("")) {
+        if (child.charAt(0) == '/') {
+          return new RepoFile(root, child.substring(1));
+        } else {
+          return new RepoFile(root, child);
+        }
       } else {
-        return new RepoFile(root, relativePath + "/" + child);
+        if (child.charAt(0) == '/') {
+          return new RepoFile(root, relativePath + child);
+        } else {
+          return new RepoFile(root, relativePath + "/" + child);
+        }
       }
     }
   }
