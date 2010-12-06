@@ -64,107 +64,110 @@ public class PropertyManager {
     return propertyMap.get(name);
   }
   
-  public synchronized static void executeCommand(String[] args, Class<?> klass) {
-    initializeProperties(args);
-    PropertyManager properties = getProperties();
-    
-    // Populate the command list reflectively
-    LinkedList<Command> commands = Helper.newLinkedList();
-    for (Field field : klass.getFields()) {
-      if (Command.class.isAssignableFrom(field.getType()) && field.getAnnotation(Command.Disable.class) == null) {
-        try {
-          commands.add((Command) field.get(klass));
-        } catch (IllegalAccessException e) {
-          logger.log(Level.SEVERE, "Unable to access " + field.getName() + " from " + klass.getName(), e);
-        }
-      }
-    }
-    
-    LinkedList<Command> activeCommands = Helper.newLinkedList();
-    for (Command command : commands) {
-      if (properties.getValue(command.getName()) != null) {
-        activeCommands.add(command);
-      }
-    }
-    
-    Command command = null;
-    
-    // Make sure only one command was selected
-    if (activeCommands.size() == 0) {
-      logger.log(Level.SEVERE, "No command selected.");
-      printCommands(commands);
-      return;
-    } else if (activeCommands.size() > 1) {
-      StringBuilder mult = new StringBuilder();
-      for (Command c : activeCommands) {
-        mult.append(" ").append(c.getName()).append(",");
-      }
-      mult.setCharAt(mult.length() - 1, '.');
-      logger.log(Level.SEVERE, "Multiple commands selected:" + mult.toString());
-      printCommands(commands);
-      return;
-    } else {
-      command = activeCommands.getFirst();
-    }
-       
-    // Add all the command properties
-    Deque<Property<?>> stack = Helper.newStack();
-    stack.addAll(Arrays.asList(command.getProperties()));
-    for (Property<?>[] conditionals : command.getConditionalProperties()) {
-      for (Property<?> prop : conditionals) {
-        stack.add(prop.makeOptional());
-      }
-    }
-    Collection<Property<?>> commandProps = Helper.getFromMap(registeredProperties, command.getName(), LinkedHashSet.class);
-    while (!stack.isEmpty()) {
-      Property<?> prop = stack.pop();
-      commandProps.add(prop);
-      for (Property<?> required : prop.getRequiredProperties()) {
-        if (!Boolean.TRUE.equals(prop.getValue())) {
-          required.makeOptional();
-        }
-        required.isRequiredBy(prop);
-        stack.add(required);
-      }
-    }
-    
-    // Verify that the required properties are present
+  public static void executeCommand(String[] args, Class<?> klass) {
+    Command activeCommand = null;
     Collection<Property<?>> missingProperties = Helper.newLinkedList();
     Collection<Property<?>[]> invalidConditionals = Helper.newLinkedList();
     
-    // Check the conditional properties
-    for (Property<?>[] conditionals : command.getConditionalProperties()) {
-      boolean foundOne = false;
-      for (Property<?> prop : conditionals) {
-        if (prop.hasValue()) {
-          if (foundOne) {
-            invalidConditionals.add(conditionals);
-            break;
-          } else {
-            foundOne = true;
+    synchronized(PropertyManager.class) {
+      initializeProperties(args);
+      PropertyManager properties = getProperties();
+      
+      // Populate the command list reflectively
+      LinkedList<Command> commands = Helper.newLinkedList();
+      for (Field field : klass.getFields()) {
+        if (Command.class.isAssignableFrom(field.getType()) && field.getAnnotation(Command.Disable.class) == null) {
+          try {
+            commands.add((Command) field.get(klass));
+          } catch (IllegalAccessException e) {
+            logger.log(Level.SEVERE, "Unable to access " + field.getName() + " from " + klass.getName(), e);
           }
         }
       }
-      if (!foundOne) {
-        invalidConditionals.add(conditionals);
+      
+      LinkedList<Command> activeCommands = Helper.newLinkedList();
+      for (Command command : commands) {
+        if (properties.getValue(command.getName()) != null) {
+          activeCommands.add(command);
+        }
       }
-    }
-    
-    // Check all of the registered properties
-    for (Collection<Property<?>> props :  registeredProperties.values()) {
-      for (Property<?> prop : props) {
-        if (prop.isNotOptional() && !prop.hasValue()) {
-          missingProperties.add(prop);
+           
+      // Make sure only one command was selected
+      if (activeCommands.size() == 0) {
+        logger.log(Level.SEVERE, "No command selected.");
+        printCommands(commands);
+        return;
+      } else if (activeCommands.size() > 1) {
+        StringBuilder mult = new StringBuilder();
+        for (Command c : activeCommands) {
+          mult.append(" ").append(c.getName()).append(",");
+        }
+        mult.setCharAt(mult.length() - 1, '.');
+        logger.log(Level.SEVERE, "Multiple commands selected:" + mult.toString());
+        printCommands(commands);
+        return;
+      } else {
+        activeCommand = activeCommands.getFirst();
+      }
+         
+      // Add all the command properties
+      Deque<Property<?>> stack = Helper.newStack();
+      stack.addAll(Arrays.asList(activeCommand.getProperties()));
+      for (Property<?>[] conditionals : activeCommand.getConditionalProperties()) {
+        for (Property<?> prop : conditionals) {
+          stack.add(prop.makeOptional());
+        }
+      }
+      Collection<Property<?>> commandProps = Helper.getFromMap(registeredProperties, activeCommand.getName(), LinkedHashSet.class);
+      while (!stack.isEmpty()) {
+        Property<?> prop = stack.pop();
+        commandProps.add(prop);
+        for (Property<?> required : prop.getRequiredProperties()) {
+          if (!Boolean.TRUE.equals(prop.getValue())) {
+            required.makeOptional();
+          }
+          required.isRequiredBy(prop);
+          stack.add(required);
+        }
+      }
+      
+      // Verify that the required properties are present
+
+      
+      // Check the conditional properties
+      for (Property<?>[] conditionals : activeCommand.getConditionalProperties()) {
+        boolean foundOne = false;
+        for (Property<?> prop : conditionals) {
+          if (prop.hasValue()) {
+            if (foundOne) {
+              invalidConditionals.add(conditionals);
+              break;
+            } else {
+              foundOne = true;
+            }
+          }
+        }
+        if (!foundOne) {
+          invalidConditionals.add(conditionals);
+        }
+      }
+      
+      // Check all of the registered properties
+      for (Collection<Property<?>> props :  registeredProperties.values()) {
+        for (Property<?> prop : props) {
+          if (prop.isNotOptional() && !prop.hasValue()) {
+            missingProperties.add(prop);
+          }
         }
       }
     }
     
     if (HELP.getValue()) {
-      printHelp(command);
+      printHelp(activeCommand);
     } else if (missingProperties.isEmpty() && invalidConditionals.isEmpty()) {
-      command.execute();
+      activeCommand.execute();
     } else {
-      printCommand(command, missingProperties, invalidConditionals);
+      printCommand(activeCommand, missingProperties, invalidConditionals);
     }
   }
   

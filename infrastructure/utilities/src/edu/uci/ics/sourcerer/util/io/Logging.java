@@ -248,6 +248,7 @@ public final class Logging {
       
       logger.removeHandler(defaultHandler);
       
+      logger.info(Logging.command.getName());
       loggingInitialized = true;
     } catch (IOException e) {
       e.printStackTrace();
@@ -283,14 +284,14 @@ public final class Logging {
     };
     
     try {
-      
-      StreamHandler handler = new FileHandler(getFileHandlerPattern(command, THREAD_LOG));
+      String handlerPath = getFileHandlerPattern(command, THREAD_LOG);
+      StreamHandler handler = new FileHandler(handlerPath);
       handler.setFormatter(formatter);
       handler.setLevel(Level.INFO);
       threadHandlerMap.put(id, handler);
       logger.addHandler(handler);
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error adding file logger.", e);
+      logger.log(THREAD_INFO, "Error adding file logger.", e);
     }
   }
   
