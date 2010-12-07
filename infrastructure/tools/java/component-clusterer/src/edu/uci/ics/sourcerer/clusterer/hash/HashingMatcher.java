@@ -17,6 +17,10 @@
  */
 package edu.uci.ics.sourcerer.clusterer.hash;
 
+import java.util.Collection;
+
+import edu.uci.ics.sourcerer.util.Helper;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
@@ -24,8 +28,14 @@ public class HashingMatcher {
   private String md5;
   private String sha;
   private long length;
+
+  private Collection<String> projects;
+  private Collection<String> paths;
   
-  protected HashingMatcher() {}
+  protected HashingMatcher() {
+    projects = Helper.newHashSet();
+    paths = Helper.newLinkedList();
+  }
   
   protected void setValues(String md5, String sha, long length) {
     this.md5 = md5;
@@ -37,6 +47,23 @@ public class HashingMatcher {
     HashingMatcher retval = new HashingMatcher();
     retval.setValues(md5, sha, length);
     return retval;
+  }
+  
+  public String getMD5() {
+    return md5;
+  }
+  
+  public long getLength() {
+    return length;
+  }
+  
+  public int getProjectCount() {
+    return projects.size();
+  }
+  
+  public void add(String project, String path) {
+    projects.add(project);
+    paths.add(path);
   }
   
   public int hashCode() {
@@ -52,5 +79,14 @@ public class HashingMatcher {
     } else {
       return false;
     }
+  }
+  
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(projects.size());
+    for (String path : paths) {
+      builder.append(" ").append(path);
+    }
+    return builder.toString();
   }
 }

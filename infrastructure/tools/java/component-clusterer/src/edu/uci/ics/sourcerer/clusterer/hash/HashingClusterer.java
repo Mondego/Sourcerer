@@ -17,10 +17,10 @@
  */
 package edu.uci.ics.sourcerer.clusterer.hash;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
-import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
+import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -29,10 +29,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.IDirectory;
@@ -182,8 +184,8 @@ public class HashingClusterer {
     try {
       br = new BufferedReader(new FileReader(new File(INPUT.getValue(), HASH_FILE_LISTING.getValue())));
       
-      Map<HashingMatcher, Collection<String>> files = Helper.newHashMap();
-      HashingMatcher matcher = new HashingMatcher();
+      final Map<HashingMatcher, HashingMatcher> files = Helper.newHashMap();
+      HashingMatcher nextItem = new HashingMatcher();
       int count = 0;
       for (String line = br.readLine(); line != null; line = br.readLine()) {
         String[] parts = line.split(" ");
@@ -191,27 +193,55 @@ public class HashingClusterer {
           if (++count % 1000 == 0) {
             logger.info("Processed " + count + " lines...");
           }
-          matcher.setValues(parts[2], parts[3], Long.parseLong(parts[4]));
+          nextItem.setValues(parts[2], parts[3], Long.parseLong(parts[4]));
           
-          Collection<String> projects = files.get(matcher);
-          if (projects == null) {
-            projects = Helper.newLinkedList();
-            files.put(matcher.copy(), projects);
+          if (nextItem.getLength() > 0) {
+            HashingMatcher matcher = files.get(nextItem);
+            if (matcher == null) {
+              matcher = nextItem.copy();
+              files.put(matcher, matcher);
+            }
+            matcher.add(parts[0], parts[1]);
           }
-          projects.add(parts[0]);
+          
         } else {
           logger.log(Level.SEVERE, "Invalid line: " + line);
         }
       }
       logger.info("Finished processing " + count + " lines.");
       
+      int totalNoProjectDups = 0; 
       int copiedCount = 0;
-      for (Collection<String> projects : files.values()) {
-        if (projects.size() > 1) {
+      for (HashingMatcher matcher : files.values()) {
+        if (matcher.getProjectCount() > 1) {
           copiedCount++;
         }
+        totalNoProjectDups += matcher.getProjectCount();
       }
+      
+      Set<HashingMatcher> orderedSet = Helper.newTreeSet(new Comparator<HashingMatcher>() {
+        @Override
+        public int compare(HashingMatcher o1, HashingMatcher o2) {
+          int a = files.get(o1).getProjectCount();
+          int b = files.get(o2).getProjectCount();
+          if (a == b) {
+            return o1.getMD5().compareTo(o2.getMD5());
+          } else {
+            return b - a;
+          }
+        }});
+      
+      orderedSet.addAll(files.values());
+      
+      for (HashingMatcher matcher : orderedSet) {
+        if (matcher.getProjectCount() <= 1) {
+          break;
+        }
+        logger.info(matcher.toString());
+      }
+      
       logger.info(count + " total files.");
+      logger.info(totalNoProjectDups + " total files (eliminating within-project duplicates).");
       logger.info(files.size() + " unique files.");
       logger.info(copiedCount + " duplicated files.");
       
