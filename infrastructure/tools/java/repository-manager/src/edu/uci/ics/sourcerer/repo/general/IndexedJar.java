@@ -119,7 +119,7 @@ public class IndexedJar {
   }
   
   public ExtractedJarProperties getProperties() {
-    return ExtractedJarProperties.load(getPropertiesFile());
+    return ExtractedJarProperties.loadProperties(getPropertiesFile());
   }
   
   public String getHash() {

@@ -12,8 +12,8 @@ public abstract class AbstractBinaryProperties extends AbstractExtractedProperti
   protected int fromBinary;
   protected int binaryExceptions;
   
-  protected void loadProperties(File file) {
-    super.loadProperties(file);
+  protected void load(File file) {
+    super.load(file);
   
     sourceSkipped = readBooleanProperty(SOURCE_SKIPPED);
     fromBinary = readIntProperty(FROM_BINARY);

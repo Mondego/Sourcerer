@@ -26,9 +26,9 @@ import java.util.Properties;
 public class ExtractedLibraryProperties extends AbstractBinaryProperties {
   private ExtractedLibraryProperties() {}
   
-  public static ExtractedLibraryProperties load(File file) {
+  public static ExtractedLibraryProperties loadProperties(File file) {
     ExtractedLibraryProperties props = new ExtractedLibraryProperties();
-    props.loadProperties(file);
+    props.load(file);
     return props;
   }
   

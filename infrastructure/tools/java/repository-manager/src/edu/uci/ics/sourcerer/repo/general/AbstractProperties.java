@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -45,24 +46,45 @@ public abstract class AbstractProperties {
   protected String originRepo;
   protected String crawledDate; 
   
-  protected void loadProperties(File file) {
-    properties = new Properties();
-    if (file.exists()) {
-      InputStream is = null;
-      try {
-        is = new FileInputStream(file);
-        properties.load(is);
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Unable to load properties file: " + file.getPath(), e);
-      } finally {
-        FileUtils.close(is);
+  protected void load(File file) {
+    if (properties == null) {
+      properties = new Properties();
+      if (file.exists()) {
+        InputStream is = null;
+        try {
+          is = new FileInputStream(file);
+          properties.load(is);
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Unable to load properties file: " + file.getPath(), e);
+        } finally {
+          FileUtils.close(is);
+        }
       }
-      name = properties.getProperty(NAME);
-      originRepo = properties.getProperty(ORIGIN_REPO);
-      crawledDate = properties.getProperty(CRAWLED_DATE);
+    } else {
+      Properties merge = new Properties();
+      if (file.exists()) {
+        InputStream is = null;
+        try {
+          is = new FileInputStream(file);
+          merge.load(is);
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Unable to load properties file: " + file.getPath(), e);
+        } finally {
+          FileUtils.close(is);
+        }
+        
+        for (Map.Entry<Object, Object> entry : merge.entrySet()) {
+          if (!properties.containsKey(entry.getKey())) {
+            properties.put(entry.getKey(), entry.getValue());
+          }
+        }
+      }
     }
+    name = properties.getProperty(NAME);
+    originRepo = properties.getProperty(ORIGIN_REPO);
+    crawledDate = properties.getProperty(CRAWLED_DATE);
   }
-  
+      
   protected boolean readBooleanProperty(String name) {
     return "true".equals(properties.get(name));
   }

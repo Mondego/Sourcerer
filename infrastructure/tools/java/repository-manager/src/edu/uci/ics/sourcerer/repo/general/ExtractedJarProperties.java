@@ -35,15 +35,15 @@ public class ExtractedJarProperties extends AbstractBinaryProperties {
  
   private ExtractedJarProperties() {}
   
-  public static ExtractedJarProperties load(File file) {
+  public static ExtractedJarProperties loadProperties(File file) {
     ExtractedJarProperties props = new ExtractedJarProperties();
-    props.loadProperties(file);
+    props.load(file);
     return props;
   }
   
   @Override
-  protected void loadProperties(File file) {
-    super.loadProperties(file);
+  public void load(File file) {
+    super.load(file);
     
     group = properties.getProperty(GROUP);
     version = properties.getProperty(VERSION);

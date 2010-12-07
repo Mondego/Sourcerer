@@ -24,9 +24,9 @@ package edu.uci.ics.sourcerer.repo.general;
 public class ProjectProperties extends AbstractProperties {
   private ProjectProperties() {}
   
-  public static ProjectProperties load(RepoFile file) {
+  public static ProjectProperties loadProperties(RepoFile file) {
     ProjectProperties props = new ProjectProperties();
-    props.loadProperties(file.toFile());
+    props.load(file.toFile());
     return props;
   }
 }

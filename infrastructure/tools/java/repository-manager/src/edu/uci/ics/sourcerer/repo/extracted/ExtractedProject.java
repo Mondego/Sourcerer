@@ -35,16 +35,16 @@ public class ExtractedProject extends Extracted {
    
   public ExtractedProject(RepoFile content) {
     super(content);
-    properties = ExtractedProjectProperties.load(getPropertiesFile());
+    properties = ExtractedProjectProperties.loadProperties(getPropertiesFile());
   }
   
   public ExtractedProject(RepoFile content, File propFile) {
     super(content);
+    properties = ExtractedProjectProperties.loadProperties(propFile);
     File exPropFile = getPropertiesFile();
     if (exPropFile.exists()) {
-      properties = ExtractedProjectProperties.load(exPropFile);
-    } else {
-      properties = ExtractedProjectProperties.load(propFile);
+      properties.load(exPropFile);
+      properties.save(exPropFile);
     }
   }
   

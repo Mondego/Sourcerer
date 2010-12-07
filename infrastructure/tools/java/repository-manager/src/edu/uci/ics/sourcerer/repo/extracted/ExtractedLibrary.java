@@ -32,7 +32,7 @@ public class ExtractedLibrary extends ExtractedBinary {
   
   public ExtractedLibrary(RepoFile content) {
     super(content);
-    properties = ExtractedLibraryProperties.load(getPropertiesFile());
+    properties = ExtractedLibraryProperties.loadProperties(getPropertiesFile());
   }
     
   public void createPropertiesFile(String name, int fromBinary, int binaryExceptions, int fromSource, int sourceExceptions) {

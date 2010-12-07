@@ -19,8 +19,8 @@ public abstract class AbstractExtractedProperties extends AbstractProperties {
   protected int firstOrderJars;
   protected int jars;
   
-  protected void loadProperties(File file) {
-    super.loadProperties(file);
+  protected void load(File file) {
+    super.load(file);
       
     extracted = readBooleanProperty(EXTRACTED);
     missingTypes = readBooleanProperty(MISSING_TYPES);

@@ -29,15 +29,15 @@ public class ExtractedProjectProperties extends AbstractExtractedProperties {
   
   private ExtractedProjectProperties() {}
   
-  public static ExtractedProjectProperties load(File file) {
+  public static ExtractedProjectProperties loadProperties(File file) {
     ExtractedProjectProperties props = new ExtractedProjectProperties();
-    props.loadProperties(file);
+    props.load(file);
     return props;
   }
   
   @Override
-  protected void loadProperties(File file) {
-    super.loadProperties(file);
+  public void load(File file) {
+    super.load(file);
     
     shouldVerify = readBooleanProperty(VERIFY);
   }

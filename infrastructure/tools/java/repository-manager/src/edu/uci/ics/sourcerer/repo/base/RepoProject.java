@@ -41,7 +41,7 @@ public class RepoProject {
   }
  
   public ExtractedProject getExtractedProject(ExtractedRepository repo) {
-    return new ExtractedProject(repo.rebasePath(projectRoot));
+    return new ExtractedProject(repo.rebasePath(projectRoot), properties.toFile());
   }
   
   public IFileSet getFileSet() {
@@ -72,7 +72,7 @@ public class RepoProject {
   }
   
   public ProjectProperties loadProperties() {
-    return ProjectProperties.load(properties);
+    return ProjectProperties.loadProperties(properties);
   }
   
   public String toString() {

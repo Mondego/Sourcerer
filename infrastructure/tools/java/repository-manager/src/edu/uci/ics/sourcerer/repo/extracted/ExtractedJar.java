@@ -31,16 +31,15 @@ public class ExtractedJar extends ExtractedBinary {
   
   public ExtractedJar(RepoFile content) {
     super(content);
-    properties = ExtractedJarProperties.load(getPropertiesFile());
+    properties = ExtractedJarProperties.loadProperties(getPropertiesFile());
   }
   
   public ExtractedJar(RepoFile content, File propFile) {
     super(content);
+    properties = ExtractedJarProperties.loadProperties(propFile);
     File exPropFile = getPropertiesFile();
     if (exPropFile.exists()) {
-      properties = ExtractedJarProperties.load(exPropFile);
-    } else {
-      properties = ExtractedJarProperties.load(propFile);
+      properties.load(exPropFile);
       properties.save(exPropFile);
     }
   }
