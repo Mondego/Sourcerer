@@ -22,35 +22,20 @@ import edu.uci.ics.sourcerer.model.Project;
 /**
  * @author Joel Ossher (josshed@uci.edu)
  */
-public class ProjectDB {
-  private String projectID;
-  private Project type;
+public final class LargeProjectDB extends SmallProjectDB {
   private String name;
   private String description;
   private String version;
   private String group;
-  private String path;
-  private String hash;
   private boolean hasSource;
   
-  public ProjectDB(String projectID, Project type, String name, String description, String version, String group, String path, String hash, boolean hasSource) {
-    this.projectID = projectID;
-    this.type = type;
+  public LargeProjectDB(Integer projectID, Project type, String name, String description, String version, String group, String path, String hash, boolean hasSource) {
+    super(projectID, type, path, hash);
     this.name = name;
     this.description = description;
     this.version = version;
     this.group = group;
-    this.path = path;
-    this.hash = hash;
     this.hasSource = hasSource;
-  }
-
-  public String getProjectID() {
-    return projectID;
-  }
-
-  public Project getType() {
-    return type;
   }
 
   public String getName() {
@@ -69,19 +54,11 @@ public class ProjectDB {
     return group;
   }
 
-  public String getPath() {
-    return path;
-  }
-
-  public String getHash() {
-    return hash;
-  }
-
   public boolean hasSource() {
     return hasSource;
   }
   
   public String toString() {
-    return "project " + name + "(" + projectID + ")";
+    return "project " + name + "(" + getProjectID() + ")";
   }
 }

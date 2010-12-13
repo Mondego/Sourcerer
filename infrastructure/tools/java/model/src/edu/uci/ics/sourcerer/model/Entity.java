@@ -111,6 +111,10 @@ public enum Entity {
       return this != PRIMITIVE && this != UNKNOWN;
     }
     
+    public boolean isDuplicate() {
+      return this == DUPLICATE;
+    }
+    
     public static Entity parse(String name) {
       if (name == null) {
         return null;

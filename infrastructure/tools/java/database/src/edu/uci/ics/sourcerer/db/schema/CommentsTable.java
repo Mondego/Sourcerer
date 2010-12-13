@@ -19,15 +19,19 @@ package edu.uci.ics.sourcerer.db.schema;
 
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
+import edu.uci.ics.sourcerer.db.util.columns.Column;
+import edu.uci.ics.sourcerer.db.util.columns.EnumColumn;
+import edu.uci.ics.sourcerer.db.util.columns.IntColumn;
 import edu.uci.ics.sourcerer.model.Comment;
-import edu.uci.ics.sourcerer.model.db.LocationDB;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class CommentsTable extends DatabaseTable {
-  protected CommentsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "comments");
+  public static final String TABLE = "comments";
+  
+  public CommentsTable(QueryExecutor executor, TableLocker locker) {
+    super(executor, locker, TABLE);
   }
 
   /*  
@@ -45,54 +49,59 @@ public final class CommentsTable extends DatabaseTable {
    *  +----------------+-----------------+-------+--------+
    */
  
+  public static final Column<Integer> COMMENT_ID = IntColumn.getSerial("comment_id", TABLE);
+  public static final Column<Comment> COMMENT_TYPE = new EnumColumn<Comment>("comment_type", TABLE, Comment.getValues(), false) {
+    @Override
+    public Comment convertFromDB(String value) {
+      return Comment.valueOf(value);
+    }
+  };
+  public static final Column<Integer> CONTAINING_EID = IntColumn.getOptionalID("containing_eid", TABLE).addIndex();
+  public static final Column<Integer> FOLLOWING_EID = IntColumn.getOptionalID("following_eid", TABLE).addIndex();
+  public static final Column<Integer> PROJECT_ID = IntColumn.getID("project_id", TABLE).addIndex();
+  public static final Column<Integer> FILE_ID = IntColumn.getID("file_id", TABLE).addIndex();
+  public static final Column<Integer> OFFSET = IntColumn.getUnsignedIntNotNull("offset", TABLE);
+  public static final Column<Integer> LENGTH = IntColumn.getUnsignedIntNotNull("length", TABLE);
+  
   // ---- CREATE ----
   public void createTable() {
-    executor.createTable(name, 
-        "comment_id SERIAL",
-        "comment_type " + getEnumCreate(Comment.getValues()),
-        "containing_eid BIGINT UNSIGNED",
-        "following_eid BIGINT UNSIGNED",
-        "project_id BIGINT UNSIGNED NOT NULL",
-        "file_id BIGINT UNSIGNED NOT NULL",
-        "offset INT UNSIGNED NOT NULL",
-        "length INT UNSIGNED NOT NULL",
-        "INDEX(containing_eid)",
-        "INDEX(following_eid)",
-        "INDEX(project_id)",
-        "INDEX(file_id)");
+    executor.createTable(table, 
+        COMMENT_ID,
+        COMMENT_TYPE,
+        CONTAINING_EID,
+        FOLLOWING_EID,
+        PROJECT_ID,
+        FILE_ID,
+        OFFSET,
+        LENGTH);
   }
 
   // ---- INSERT ----
-  private String getInsertValue(Comment type, String containing, String following, String projectID, String fileID, String offset, String length) {
+  private String getInsertValue(Comment type, Integer containing, Integer following, Integer projectID, Integer fileID, Integer offset, Integer length) {
     return buildSerialInsertValue(
-        convertNotNullVarchar(type.name()),
-        convertNumber(containing),
-        convertNumber(following),
-        convertNotNullNumber(projectID),
-        convertNotNullNumber(fileID),
-        convertNotNullNumber(offset),
-        convertNotNullNumber(length));
+        COMMENT_TYPE.convertToDB(type),
+        CONTAINING_EID.convertToDB(containing),
+        FOLLOWING_EID.convertToDB(following),
+        PROJECT_ID.convertToDB(projectID),
+        FILE_ID.convertToDB(fileID),
+        OFFSET.convertToDB(offset),
+        LENGTH.convertToDB(length));
    }
   
-  public void insertJavadoc(String eid, String projectID, String fileID, String offset, String length) {
+  public void insertJavadoc(Integer eid, Integer projectID, Integer fileID, Integer offset, Integer length) {
     inserter.addValue(getInsertValue(Comment.JAVADOC, null, eid, projectID, fileID, offset, length));
   }
   
-  public void insertUnassociatedJavadoc(String projectID, String fileID, String offset, String length) {
+  public void insertUnassociatedJavadoc(Integer projectID, Integer fileID, Integer offset, Integer length) {
     inserter.addValue(getInsertValue(Comment.JAVADOC, null, null, projectID, fileID, offset, length));
   }
   
-  public void insertComment(Comment type, String projectID, String fileID, String offset, String length) {
+  public void insertComment(Comment type, Integer projectID, Integer fileID, Integer offset, Integer length) {
     inserter.addValue(getInsertValue(type, null, null, projectID, fileID, offset, length));
   }
   
   // ---- DELETE ----
-  public void deleteByProjectID(String projectID) {
-    executor.delete(name, "project_id=" + projectID);
-  }
-  
-  // ---- SELECT ----
-  public LocationDB getLocationByCommentID(String commentID) {
-    return executor.selectSingle(name, EntitiesTable.LOCATION_RESULT_TRANSLATOR.getSelect(), "comment_id=" + commentID, EntitiesTable.LOCATION_RESULT_TRANSLATOR); 
+  public void deleteByProjectID(Integer projectID) {
+    executor.delete(table, PROJECT_ID.getEquals(projectID));
   }
 }

@@ -21,19 +21,19 @@ import java.util.Collection;
 
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.RelationClass;
-import edu.uci.ics.sourcerer.model.db.LimitedEntityDB;
+import edu.uci.ics.sourcerer.model.db.SmallEntityDB;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class RelationClassifier {
-  private Collection<String> libraryProjects;
+  private Collection<Integer> libraryProjects;
   
-  public RelationClassifier(Collection<String> libraryProjects) {
+  public RelationClassifier(Collection<Integer> libraryProjects) {
     this.libraryProjects = libraryProjects;
   }
   
-  public RelationClass getRelationClass(LimitedEntityDB lhs, LimitedEntityDB rhs) {
+  public RelationClass getRelationClass(SmallEntityDB lhs, SmallEntityDB rhs) {
     if (lhs.getProjectID().equals(rhs.getProjectID())) {
       return RelationClass.INTERNAL;
     } else if (libraryProjects.contains(rhs.getProjectID())) {

@@ -19,16 +19,20 @@ package edu.uci.ics.sourcerer.db.schema;
 
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
+import edu.uci.ics.sourcerer.db.util.columns.Column;
+import edu.uci.ics.sourcerer.db.util.columns.EnumColumn;
+import edu.uci.ics.sourcerer.db.util.columns.IntColumn;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.RelationClass;
-import edu.uci.ics.sourcerer.model.db.LocationDB;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class RelationsTable extends DatabaseTable {
-  protected RelationsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "relations");
+  public static final String TABLE = "relations";
+  
+  public RelationsTable(QueryExecutor executor, TableLocker locker) {
+    super(executor, locker, TABLE);
   }
   
   /*  
@@ -37,7 +41,7 @@ public final class RelationsTable extends DatabaseTable {
    *  +----------------+-----------------+-------+--------+
    *  | relation_id    | SERIAL          | No    | Yes    |
    *  | relation_type  | ENUM(values)    | No    | Yes    |
-   *  | relation_class | ENUM            | No    | No     |
+   *  | relation_class | ENUM(values)    | No    | No     |
    *  | lhs_eid        | BIGINT UNSIGNED | No    | Yes    |
    *  | rhs_eid        | BIGINT UNSIGNED | No    | Yes    |
    *  | project_id     | BIGINT UNSIGNED | No    | Yes    |
@@ -47,53 +51,63 @@ public final class RelationsTable extends DatabaseTable {
    *  +----------------+-----------------+-------+--------+
    */
   
+  public static final Column<Integer> RELATION_ID = IntColumn.getSerial("relation_id", TABLE);
+  public static final Column<Relation> RELATION_TYPE = new EnumColumn<Relation>("relation_type", TABLE, Relation.values(), false) {
+    @Override
+    public Relation convertFromDB(String value) {
+      return Relation.valueOf(value);
+    }
+  }.addIndex();
+  public static final Column<RelationClass> RELATION_CLASS = new EnumColumn<RelationClass>("relation_class", TABLE, RelationClass.values(), false) {
+    @Override
+    public RelationClass convertFromDB(String value) {
+      return RelationClass.valueOf(value);
+    }
+  };
+  public static final Column<Integer> LHS_EID = IntColumn.getID("lhs_eid", TABLE).addIndex();
+  public static final Column<Integer> RHS_EID = IntColumn.getID("rhs_eid", TABLE).addIndex();
+  public static final Column<Integer> PROJECT_ID = IntColumn.getID("project_id", TABLE).addIndex();
+  public static final Column<Integer> FILE_ID = IntColumn.getOptionalID("file_id", TABLE).addIndex();
+  public static final Column<Integer> OFFSET = IntColumn.getUnsignedInt("offset", TABLE);
+  public static final Column<Integer> LENGTH = IntColumn.getUnsignedInt("length", TABLE);
+  
   // ---- CREATE ----
   public void createTable() {
-    executor.createTable(name,
-        "relation_id SERIAL",
-        "relation_type " + getEnumCreate(Relation.values()) + " NOT NULL",
-        "relation_class " + getEnumCreate(RelationClass.values()) + " NOT NULL",
-        "lhs_eid BIGINT UNSIGNED NOT NULL",
-        "rhs_eid BIGINT UNSIGNED NOT NULL",
-        "project_id BIGINT UNSIGNED NOT NULL",
-        "file_id BIGINT UNSIGNED",
-        "offset INT UNSIGNED",
-        "length INT UNSIGNED",
-        "INDEX(relation_type)",
-        "INDEX(lhs_eid)",
-        "INDEX(rhs_eid)",
-        "INDEX(project_id)",
-        "INDEX(file_id)");
+    executor.createTable(table,
+        RELATION_ID,
+        RELATION_TYPE,
+        RELATION_CLASS,
+        LHS_EID,
+        RHS_EID,
+        PROJECT_ID,
+        FILE_ID,
+        OFFSET,
+        LENGTH);
   }
   
   // ---- INSERT ----
-  private String getInsertValue(Relation type, RelationClass klass, String lhsEid, String rhsEid, String projectID, String fileID, String offset, String length) {
+  private String getInsertValue(Relation type, RelationClass klass, Integer lhsEid, Integer rhsEid, Integer projectID, Integer fileID, Integer offset, Integer length) {
     return buildSerialInsertValue(
-        convertNotNullVarchar(type.name()),
-        convertNotNullVarchar(klass.name()),
-        convertNotNullNumber(lhsEid),
-        convertNotNullNumber(rhsEid),
-        convertNotNullNumber(projectID), 
-        convertNumber(fileID),
-        convertOffset(offset), 
-        convertLength(length));
+        RELATION_TYPE.convertToDB(type),
+        RELATION_CLASS.convertToDB(klass),
+        LHS_EID.convertToDB(lhsEid),
+        RHS_EID.convertToDB(rhsEid),
+        PROJECT_ID.convertToDB(projectID),
+        FILE_ID.convertToDB(fileID),
+        OFFSET.convertToDB(offset),
+        LENGTH.convertToDB(length));
   }
   
-  public void insert(Relation type, RelationClass klass, String lhsEid, String rhsEid, String projectID) {
+  public void insert(Relation type, RelationClass klass, Integer lhsEid, Integer rhsEid, Integer projectID) {
     inserter.addValue(getInsertValue(type, klass, lhsEid, rhsEid, projectID, null, null, null));
   }
   
-  public void insert(Relation type, RelationClass klass, String lhsEid, String rhsEid, String projectID, String fileID, String offset, String length) {
+  public void insert(Relation type, RelationClass klass, Integer lhsEid, Integer rhsEid, Integer projectID, Integer fileID, Integer offset, Integer length) {
     inserter.addValue(getInsertValue(type, klass, lhsEid, rhsEid, projectID, fileID, offset, length));
   }
   
   // ---- DELETE ----
-  public void deleteByProjectID(String projectID) {
-    executor.delete(name, "project_id=" + projectID);
-  }
-  
-  // ---- SELECT ----
-  public LocationDB getLocationByRelationID(String relationID) {
-    return executor.selectSingle(name, EntitiesTable.LOCATION_RESULT_TRANSLATOR.getSelect(), "relation_id=" + relationID, EntitiesTable.LOCATION_RESULT_TRANSLATOR); 
+  public void deleteByProjectID(Integer projectID) {
+    executor.delete(table, PROJECT_ID.getEquals(projectID));
   }
 }

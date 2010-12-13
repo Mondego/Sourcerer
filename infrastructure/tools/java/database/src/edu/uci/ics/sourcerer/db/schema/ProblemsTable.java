@@ -19,6 +19,10 @@ package edu.uci.ics.sourcerer.db.schema;
 
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
+import edu.uci.ics.sourcerer.db.util.columns.Column;
+import edu.uci.ics.sourcerer.db.util.columns.EnumColumn;
+import edu.uci.ics.sourcerer.db.util.columns.IntColumn;
+import edu.uci.ics.sourcerer.db.util.columns.StringColumn;
 import edu.uci.ics.sourcerer.model.Problem;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 
@@ -26,8 +30,9 @@ import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class ProblemsTable extends DatabaseTable {
-  protected ProblemsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "problems");
+  public static final String TABLE = "problems";
+  public ProblemsTable(QueryExecutor executor, TableLocker locker) {
+    super(executor, locker, TABLE);
   }
   
   /*  
@@ -42,40 +47,47 @@ public final class ProblemsTable extends DatabaseTable {
    *  +--------------+-----------------+-------+--------+
    */
   
+  public static final Column<Problem> PROBLEM_TYPE = new EnumColumn<Problem>("problem_type", TABLE, Problem.values(), false) {
+    @Override
+    public Problem convertFromDB(String value) {
+      return Problem.valueOf(value);
+    }
+  }.addIndex();
+  public static final Column<Integer> ERROR_CODE = IntColumn.getUnsignedInt("error_code", TABLE).addIndex();
+  public static final Column<String> MESSAGE = StringColumn.getVarchar1024NotNull("message", TABLE);
+  public static final Column<Integer> PROJECT_ID = IntColumn.getID("project_id", TABLE).addIndex();
+  public static final Column<Integer> FILE_ID = IntColumn.getID("file_id", TABLE).addIndex();
+  
   // ---- CREATE ----
   public void createTable() {
-    executor.createTable(name, 
-        "problem_type " + getEnumCreate(Problem.values()) + " NOT NULL",
-        "error_code INT UNSIGNED NOT NULL",
-        "message VARCHAR(1024) BINARY NOT NULL",
-        "project_id BIGINT UNSIGNED NOT NULL",
-        "file_id BIGINT UNSIGNED NOT NULL",
-        "INDEX(problem_type)",
-        "INDEX(error_code)",
-        "INDEX(project_id)",
-        "INDEX(file_id)");
+    executor.createTable(table, 
+        PROBLEM_TYPE,
+        ERROR_CODE,
+        MESSAGE,
+        PROJECT_ID,
+        FILE_ID);
   }
   
   // ---- INSERT ----
-  private String getInsertValue(Problem type, String errorCode, String message, String projectID, String fileID) {
+  private String getInsertValue(Problem type, Integer errorCode, String message, Integer projectID, Integer fileID) {
     return buildInsertValue(
-        convertNotNullVarchar(type.name()),
-        convertNotNullNumber(errorCode),
-        convertNotNullVarchar(message),
-        convertNotNullNumber(projectID),
-        convertNotNullNumber(fileID));
+        PROBLEM_TYPE.convertToDB(type),
+        ERROR_CODE.convertToDB(errorCode),
+        MESSAGE.convertToDB(message),
+        PROJECT_ID.convertToDB(projectID),
+        FILE_ID.convertToDB(fileID));
   }
   
-  private String getInsertValue(ProblemEX problem, String projectID, String fileID) {
+  private String getInsertValue(ProblemEX problem, Integer projectID, Integer fileID) {
     return getInsertValue(problem.getType(), problem.getErrorCode(), problem.getMessage(), projectID, fileID);
   }
   
-  public void insert(ProblemEX problem, String projectID, String fileID) {
+  public void insert(ProblemEX problem, Integer projectID, Integer fileID) {
     inserter.addValue(getInsertValue(problem, projectID, fileID));
   }
   
   // ---- DELETE ----
-  public void deleteByProjectID(String projectID) {
-    executor.delete(name, "project_id=" + projectID);
+  public void deleteByProjectID(Integer projectID) {
+    executor.delete(table, PROJECT_ID.getEquals(projectID));
   }
 }

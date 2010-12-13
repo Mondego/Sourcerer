@@ -29,10 +29,10 @@ public class ImportEX implements ModelEX {
   private boolean isStatic;
   private boolean onDemand;
   private String path;
-  private String offset;
-  private String length;
+  private Integer offset;
+  private Integer length;
 
-  private ImportEX(String imported, boolean isStatic, boolean onDemand, String file, String offset, String length) {
+  private ImportEX(String imported, boolean isStatic, boolean onDemand, String file, Integer offset, Integer length) {
     this.imported = imported;
     this.isStatic = isStatic;
     this.onDemand = onDemand;
@@ -57,11 +57,11 @@ public class ImportEX implements ModelEX {
     return path;
   }
   
-  public String getOffset() {
+  public Integer getOffset() {
     return offset;
   }
   
-  public String getLength() {
+  public Integer getLength() {
     return length;
   }
   
@@ -75,7 +75,12 @@ public class ImportEX implements ModelEX {
     public ImportEX parseLine(String line) {
       String[] parts = line.split(" ");
       if (parts.length == 6) {
-        return new ImportEX(parts[0], parts[1].equals("STATIC"), parts[2].equals("ON_DEMAND"), parts[3], parts[4], parts[5]);
+        try {
+          return new ImportEX(parts[0], parts[1].equals("STATIC"), parts[2].equals("ON_DEMAND"), parts[3], Integer.valueOf(parts[4]), Integer.valueOf(parts[5]));
+        } catch (IllegalArgumentException e) {
+          logger.log(Level.SEVERE, "Unable to parse import: " + line);
+          return null;
+        }
       } else {
         logger.log(Level.SEVERE, "Unable to parse import: " + line);
         return null;

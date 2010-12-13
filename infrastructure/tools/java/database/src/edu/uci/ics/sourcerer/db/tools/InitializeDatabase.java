@@ -55,7 +55,7 @@ public class InitializeDatabase extends ParallelDatabaseImporterThread {
     locker.addWrites(projectsTable, entitiesTable);
     locker.lock();
     
-    String projectID = projectsTable.insertPrimitivesProject();
+    Integer projectID = projectsTable.insertPrimitivesProject();
     entitiesTable.forceInsert(Entity.PRIMITIVE, "boolean", projectID);
     entitiesTable.forceInsert(Entity.PRIMITIVE, "char", projectID);
     entitiesTable.forceInsert(Entity.PRIMITIVE, "byte", projectID);

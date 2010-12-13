@@ -31,10 +31,10 @@ import edu.uci.ics.sourcerer.model.Problem;
 public class ProblemEX implements ModelEX {
   private Problem type;
   private String relativePath;
-  private String errorCode;
+  private Integer errorCode;
   private String message;
   
-  protected ProblemEX(Problem type, String relativePath, String errorCode, String message) {
+  protected ProblemEX(Problem type, String relativePath, Integer errorCode, String message) {
     this.type = type;
     this.relativePath = relativePath;
     this.errorCode = errorCode;
@@ -49,7 +49,7 @@ public class ProblemEX implements ModelEX {
     return relativePath;
   }
 
-  public String getErrorCode() {
+  public Integer getErrorCode() {
     return errorCode;
   }
 
@@ -68,7 +68,7 @@ public class ProblemEX implements ModelEX {
     public ProblemEX parseLine(String line) {
       Matcher matcher = pattern.matcher(line);
       if (matcher.matches()) {
-        return new ProblemEX(Problem.valueOf(matcher.group(1)), matcher.group(3), matcher.group(2), matcher.group(4));
+        return new ProblemEX(Problem.valueOf(matcher.group(1)), matcher.group(3), Integer.valueOf(matcher.group(2)), matcher.group(4));
       } else {
         logger.log(Level.SEVERE, "Unable to parse problem: " + line);
         return null;

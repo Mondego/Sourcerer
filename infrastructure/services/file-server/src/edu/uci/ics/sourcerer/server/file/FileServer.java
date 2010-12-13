@@ -48,6 +48,19 @@ public class FileServer extends HttpServlet {
     logger.log(Level.INFO, "Destroying");
   }
   
+  private Integer getIntValue(HttpServletRequest request, String name) {
+    String val = request.getParameter(name);
+    if (val == null) {
+      return null;
+    } else {
+      try {
+        return Integer.valueOf(val);
+      } catch (NumberFormatException e) {
+        logger.log(Level.SEVERE, val + " is not an int");
+        return null;
+      }
+    }
+  }
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     // Should the files download or be shown in browser?
@@ -56,22 +69,22 @@ public class FileServer extends HttpServlet {
     Result result = null;
     
     // Lookup by projectID
-    String projectID = request.getParameter("projectID");
+    Integer projectID = getIntValue(request, "projectID");
     if (projectID != null) {
       result = FileAccessor.lookupResultByProjectID(projectID);
     } else {
       // Lookup by fileID
-      String fileID = request.getParameter("fileID");
+      Integer fileID = getIntValue(request, "fileID");
       if (fileID != null) {
         result = FileAccessor.lookupResultByFileID(fileID);
       } else {
         // Lookup by entityID
-        String entityID = request.getParameter("entityID");
+        Integer entityID = getIntValue(request, "entityID");
         if (entityID != null) {
           result = FileAccessor.lookupResultByEntityID(entityID);
         } else {
           // Lookup by relationID
-          String relationID = request.getParameter("relationID");
+          Integer relationID = getIntValue(request, "relationID");
           if (relationID != null) {
             result = FileAccessor.lookupResultByRelationID(relationID);
           } else {

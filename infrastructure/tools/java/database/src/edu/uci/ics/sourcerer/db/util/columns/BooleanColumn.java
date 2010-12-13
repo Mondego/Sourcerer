@@ -15,37 +15,40 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model.db;
+package edu.uci.ics.sourcerer.db.util.columns;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ImportDB {
-  private String fileID;
-  private boolean isStatic;
-  private boolean onDemand;
-  private TypedEntityID target;
+public class BooleanColumn extends Column<Boolean> {
+  private BooleanColumn(String name, String table, String type, boolean nullable) {
+    super(name, table, type, nullable);
+  }
+
+  public static Column<Boolean> getBoolean(String name, String table) {
+    return new BooleanColumn(name, table, "BOOLEAN", true);
+  }
   
-  public ImportDB(String fileID, boolean isStatic, boolean dotall, TypedEntityID target) {
-    this.fileID = fileID;
-    this.isStatic = isStatic;
-    this.onDemand = dotall;
-    this.target = target;
+  public static Column<Boolean> getBooleanNotNull(String name, String table) {
+    return new BooleanColumn(name, table, "BOOLEAN NOT NULL", false);
+  }
+  
+  @Override
+  public Boolean convertFromDB(String value) {
+    if (value == null) {
+      return null; 
+    } else {
+      return Boolean.valueOf(value);
+    }
   }
 
-  public String getFileID() {
-    return fileID;
+  @Override
+  protected String convertHelper(Boolean value) {
+    return value.toString();
   }
-
-  public boolean isStatic() {
-    return isStatic;
-  }
-
-  public boolean isOnDemand() {
-    return onDemand;
-  }
-
-  public TypedEntityID getTarget() {
-    return target;
+  
+  @Override
+  protected String equalsHelper(Boolean value) {
+    return value.toString();
   }
 }

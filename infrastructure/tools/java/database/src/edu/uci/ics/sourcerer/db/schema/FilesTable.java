@@ -17,24 +17,23 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Map;
-
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.QueryResult;
-import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
+import edu.uci.ics.sourcerer.db.util.columns.Column;
+import edu.uci.ics.sourcerer.db.util.columns.EnumColumn;
+import edu.uci.ics.sourcerer.db.util.columns.IntColumn;
+import edu.uci.ics.sourcerer.db.util.columns.StringColumn;
 import edu.uci.ics.sourcerer.model.File;
-import edu.uci.ics.sourcerer.model.db.FileDB;
 import edu.uci.ics.sourcerer.model.extracted.FileEX;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class FilesTable extends DatabaseTable {
-  protected FilesTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "files");
+  public static final String TABLE = "files";
+  
+  public FilesTable(QueryExecutor executor, TableLocker locker) {
+    super(executor, locker, TABLE);
   }
   /*  
    *  +-------------+-----------------+-------+--------+
@@ -49,32 +48,40 @@ public final class FilesTable extends DatabaseTable {
    *  +-------------+-----------------+-------+--------+
    */
   
+  public static final Column<Integer> FILE_ID = IntColumn.getSerial("file_id", TABLE);
+  public static final Column<File> FILE_TYPE = new EnumColumn<File>("file_type", TABLE, File.values(), false) {
+    @Override
+    public File convertFromDB(String value) {
+      return File.valueOf(value);
+    }
+  }.addIndex();
+  public static final Column<String> NAME = StringColumn.getVarchar1024NotNull("name", TABLE).addIndex(48);
+  public static final Column<String> PATH = StringColumn.getVarchar1024("path", TABLE);
+  public static final Column<String> HASH = StringColumn.getVarchar32("hash", TABLE).addIndex();
+  public static final Column<Integer> PROJECT_ID = IntColumn.getID("project_id", TABLE).addIndex();
+  
   // ---- CREATE ----
   public void createTable() {
-    executor.createTable(name,
-        "file_id SERIAL",
-        "file_type " + getEnumCreate(File.values()) + " NOT NULL",
-        "name VARCHAR(1024) BINARY NOT NULL",
-        "path VARCHAR(1024) BINARY",
-        "hash VARCHAR(32) BINARY",
-        "project_id BIGINT UNSIGNED NOT NULL",
-        "INDEX(file_type)",
-        "INDEX(name(48))",
-        "INDEX(hash)",
-        "INDEX(project_id)");
+    executor.createTable(table,
+        FILE_ID,
+        FILE_TYPE,
+        NAME,
+        PATH,
+        HASH,
+        PROJECT_ID);
   }
   
   // ---- INSERT ----
-  private String getInsertValue(File type, String name, String relativePath, String hash, String projectID) {
+  private String getInsertValue(File type, String name, String relativePath, String hash, Integer projectID) {
     return buildSerialInsertValue(
-        convertNotNullVarchar(type.name()),
-        convertNotNullVarchar(name),
-    		convertVarchar(relativePath),
-    		convertVarchar(hash),
-    		convertNotNullNumber(projectID));
+        FILE_TYPE.convertToDB(type),
+        NAME.convertToDB(name),
+        PATH.convertToDB(relativePath),
+        HASH.convertToDB(hash),
+        PROJECT_ID.convertToDB(projectID));
   }
   
-  private String getInsertValue(FileEX file, String projectID) {
+  private String getInsertValue(FileEX file, Integer projectID) {
     if (file.getType() == File.JAR) {
       return
           getInsertValue(
@@ -94,36 +101,12 @@ public final class FilesTable extends DatabaseTable {
     }
   }
   
-  public void insert(FileEX file, String projectID) {
+  public void insert(FileEX file, Integer projectID) {
     inserter.addValue(getInsertValue(file, projectID));
   }
   
   // ---- DELETE ----
-  public void deleteByProjectID(String projectID) {
-    executor.delete(name, "project_id=" + projectID);
-  }
-  
-  // ---- SELECT ----
-  private ResultTranslator<FileDB> FILE_TRANSLATOR = new ResultTranslator<FileDB>() {
-    @Override
-    public FileDB translate(ResultSet result) throws SQLException {
-      return new FileDB(result.getString(1), File.valueOf(result.getString(2)), result.getString(3), result.getString(4), result.getString(5), result.getString(6));
-    }
-
-    @Override
-    public String getSelect() {
-      return "file_id,file_type,name,path,hash,project_id";
-    }
-  };
-  
-  public FileDB getFileByFileID(String fileID) {
-    return executor.selectSingle(name, FILE_TRANSLATOR.getSelect(), "file_id=" + fileID, FILE_TRANSLATOR);
-  }
-  
-  public void populateFileMap(Map<String, String> fileMap, String projectID) {
-    QueryResult result = executor.execute("SELECT file_id,path FROM " + name + " WHERE file_type <> 'JAR' AND project_id=" + projectID);
-    while (result.next()) {
-      fileMap.put(result.getString(2), result.getString(1));
-    }
+  public void deleteByProjectID(Integer projectID) {
+    executor.delete(table, PROJECT_ID.getEquals(projectID));
   }
 }

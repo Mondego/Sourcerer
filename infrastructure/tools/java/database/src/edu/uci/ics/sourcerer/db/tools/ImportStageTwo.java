@@ -22,7 +22,8 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.util.Collection;
 
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
-import edu.uci.ics.sourcerer.model.db.LimitedProjectDB;
+import edu.uci.ics.sourcerer.model.Project;
+import edu.uci.ics.sourcerer.model.db.SmallProjectDB;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.TimeCounter;
@@ -42,8 +43,8 @@ public class ImportStageTwo extends ExtractedImporterThread {
   public void doImport() {
     TimeCounter counter = new TimeCounter();
     
-    Collection<String> libraryProjects = projectsTable.getJavaLibraryProjects();
-    libraryProjects.add(projectsTable.getPrimitiveProject());
+    Collection<Integer> libraryProjects = projectQueries.getProjectIDsByType(Project.JAVA_LIBRARY);
+    libraryProjects.add(projectQueries.getPrimitiveProjectID());
     classifier = new RelationClassifier(libraryProjects);
     
     for (Extracted item : extracted) {
@@ -55,11 +56,11 @@ public class ImportStageTwo extends ExtractedImporterThread {
         logger.info("      Extraction empty... skipping");
         continue;
       }
-      LimitedProjectDB project;
+      SmallProjectDB project;
       if (item.getHash() != null) {
-        project = projectsTable.getLimitedProjectByHash(item.getHash());
+        project = projectQueries.getSmallByHash(item.getHash());
       } else {
-        project = projectsTable.getLimitedProjectByPath(item.getRelativePath());
+        project = projectQueries.getSmallByPath(item.getRelativePath());
       }
       if (project != null) {
         if (project.completed()) {
@@ -70,7 +71,7 @@ public class ImportStageTwo extends ExtractedImporterThread {
       logger.info("Stage two import of " + item.getName() + "(" + item.getRelativePath() + ")");
       
       buildInClause(Helper.newHashSet(libraryProjects), item);
-      String projectID = project.getProjectID();
+      Integer projectID = project.getProjectID();
       
       loadEntityMap(projectID);
       loadFileMap(projectID);

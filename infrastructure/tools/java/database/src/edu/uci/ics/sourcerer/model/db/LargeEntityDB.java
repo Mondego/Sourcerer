@@ -17,53 +17,44 @@
  */
 package edu.uci.ics.sourcerer.model.db;
 
-import edu.uci.ics.sourcerer.model.File;
+import edu.uci.ics.sourcerer.model.Entity;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FileDB {
-  private String fileID;
-  private File type;
-  private String name;
-  private String path;
-  private String hash;
-  private String projectID;
+public class LargeEntityDB extends MediumEntityDB {
+  private Integer modifiers;
+  private Integer multi;
+  private Integer fileID;
+  private Integer offset;
+  private Integer length;
   
-  public FileDB(String fileID, File type, String name, String path, String hash, String projectID) {
+  public LargeEntityDB(Integer entityID, Entity type, String fqn, Integer modifiers, Integer multi, Integer projectID, Integer fileID, Integer offset, Integer length) {
+    super(entityID, type, fqn, projectID);
+    this.modifiers = modifiers;
+    this.multi = multi;
     this.fileID = fileID;
-    this.type = type;
-    this.name = name;
-    this.path = path;
-    this.hash = hash;
-    this.projectID = projectID;
+    this.offset = offset;
+    this.length = length;
   }
 
-  public String getFileID() {
+  public Integer getModifiers() {
+    return modifiers;
+  }
+
+  public Integer getMulti() {
+    return multi;
+  }
+
+  public Integer getFileID() {
     return fileID;
   }
 
-  public File getType() {
-    return type;
+  public Integer getOffset() {
+    return offset;
   }
 
-  public String getName() {
-    return name;
-  }
-
-  public String getPath() {
-    return path;
-  }
-
-  public String getHash() {
-    return hash;
-  }
-
-  public String getProjectID() {
-    return projectID;
-  }
-  
-  public String toString() {
-    return "file " + name + " (" + fileID + ")";
+  public Integer getLength() {
+    return length;
   }
 }

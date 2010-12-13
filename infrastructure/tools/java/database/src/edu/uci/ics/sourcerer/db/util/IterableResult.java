@@ -30,14 +30,14 @@ import java.util.logging.Level;
  */
 public class IterableResult <T> implements Iterable<T> {
   private ResultSet result;
-  private ResultTranslator<T> translator;
+  private BasicResultTranslator<T> translator;
  
-  private IterableResult(ResultSet result, ResultTranslator<T> translator) {
+  private IterableResult(ResultSet result, BasicResultTranslator<T> translator) {
     this.result = result;
     this.translator = translator;
   }
   
-  public static <T> IterableResult<T> getResultIterable(ResultSet result, ResultTranslator<T> translator) {
+  public static <T> IterableResult<T> getResultIterable(ResultSet result, BasicResultTranslator<T> translator) {
     return new IterableResult<T>(result, translator);
   }
 

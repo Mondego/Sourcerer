@@ -27,13 +27,13 @@ import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import edu.uci.ics.sourcerer.db.schema.DatabaseAccessor;
+import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.File;
 import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.db.FileDB;
 import edu.uci.ics.sourcerer.model.db.LocationDB;
-import edu.uci.ics.sourcerer.model.db.ProjectDB;
+import edu.uci.ics.sourcerer.model.db.LargeProjectDB;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
@@ -67,13 +67,13 @@ public class FileAccessor {
       return null;
     }
   }
-  public static byte[] lookupByProjectID(String projectID) {
+  public static byte[] lookupByProjectID(Integer projectID) {
     return convertResult(lookupResultByProjectID(projectID));
   }
   
-  public static Result lookupResultByProjectID(String projectID) {
+  public static Result lookupResultByProjectID(Integer projectID) {
     FileDatabaseAccessor db = accessorManager.get();
-    ProjectDB project = db.getProjectByProjectID(projectID);
+    LargeProjectDB project = db.getProjectByProjectID(projectID);
     if (project == null) {
       return new Result("Unable to find project: " + projectID);
     } else {
@@ -97,26 +97,26 @@ public class FileAccessor {
     }
   }
   
-  public static byte[] lookupByFileID(String fileID) {
+  public static byte[] lookupByFileID(Integer fileID) {
     return convertResult(lookupResultByFileID(fileID));
   }
   
-  public static Result lookupResultByFileID(String fileID) { 
+  public static Result lookupResultByFileID(Integer fileID) { 
     FileDatabaseAccessor db = accessorManager.get();
     FileDB file = db.getFileByFileID(fileID);
     if (file == null) {
       return new Result("Unable to find file: " + fileID);
     } else {
-      ProjectDB project = db.getProjectByProjectID(file.getProjectID());
+      LargeProjectDB project = db.getProjectByProjectID(file.getProjectID());
       return getFile(project, file, null);
     }
   }
   
-  public static byte[] lookupByEntityID(String entityID) {
+  public static byte[] lookupByEntityID(Integer entityID) {
     return convertResult(lookupResultByEntityID(entityID));
   }
   
-  public static Result lookupResultByEntityID(String entityID) {
+  public static Result lookupResultByEntityID(Integer entityID) {
     FileDatabaseAccessor db = accessorManager.get();
     LocationDB loc = db.getLocationByEntityID(entityID);
     if (loc == null) {
@@ -126,17 +126,17 @@ public class FileAccessor {
       if (file == null) {
         return new Result("Unable to find file: " + loc.getFileID());
       } else {
-        ProjectDB project = db.getProjectByProjectID(file.getProjectID());
+        LargeProjectDB project = db.getProjectByProjectID(file.getProjectID());
         return getFile(project, file, loc);
       }
     }
   }
   
-  public static byte[] lookupByRelationID(String relationID) {
+  public static byte[] lookupByRelationID(Integer relationID) {
     return convertResult(lookupResultByRelationID(relationID));
   }
   
-  public static Result lookupResultByRelationID(String relationID) {
+  public static Result lookupResultByRelationID(Integer relationID) {
     FileDatabaseAccessor db = accessorManager.get();
     LocationDB loc = db.getLocationByRelationID(relationID);
     if (loc == null) {
@@ -146,17 +146,17 @@ public class FileAccessor {
       if (file == null) {
         return new Result("Unable to find file: " + loc.getFileID());
       } else {
-        ProjectDB project = db.getProjectByProjectID(file.getProjectID());
+        LargeProjectDB project = db.getProjectByProjectID(file.getProjectID());
         return getFile(project, file, loc);
       }
     }
   }
   
-  public static byte[] lookupByCommentID(String commentID) {
+  public static byte[] lookupByCommentID(Integer commentID) {
     return convertResult(lookupResultByCommentID(commentID));
   }
   
-  public static Result lookupResultByCommentID(String commentID) {
+  public static Result lookupResultByCommentID(Integer commentID) {
     FileDatabaseAccessor db = accessorManager.get();
     LocationDB loc = db.getLocationByCommentID(commentID);
     if (loc == null) {
@@ -166,13 +166,13 @@ public class FileAccessor {
       if (file == null) {
         return new Result("Unable to find file: " + loc.getFileID());
       } else {
-        ProjectDB project = db.getProjectByProjectID(file.getProjectID());
+        LargeProjectDB project = db.getProjectByProjectID(file.getProjectID());
         return getFile(project, file, loc);
       }
     }
   }
   
-  private static Result getFile(ProjectDB project, FileDB file, LocationDB location) {
+  private static Result getFile(LargeProjectDB project, FileDB file, LocationDB location) {
     if (file.getType() == File.JAR) {
       JarIndex index = repo.getJarIndex();
       IndexedJar indexed = index.getIndexedJar(file.getHash());
@@ -284,7 +284,15 @@ public class FileAccessor {
         if (input.equals("p") || input.equals("f") || input.equals("e") || input.equals("r") || input.equals("c")) {
           System.out.println("Please enter the id number");
           System.out.print(":>");
-          String id = reader.readLine();
+          Integer id = null;
+          while (id == null) {
+            try {
+              id = Integer.valueOf(reader.readLine());
+            } catch (NumberFormatException e) {
+              System.out.println("Please enter the id number");
+              System.out.print(":>");
+            }
+          }
           if (input.equals("p")) {
             byte[] result = lookupByProjectID(id);
             if (result == null) {
@@ -368,24 +376,24 @@ public class FileAccessor {
       super(connection);
     }
     
-    public synchronized LocationDB getLocationByEntityID(String entityID) {
-      return entitiesTable.getLocationByEntityID(entityID);
+    public synchronized LocationDB getLocationByEntityID(Integer entityID) {
+      return entityQueries.getLocationByEntityID(entityID);
     }
     
-    public synchronized LocationDB getLocationByRelationID(String relationID) {
-      return relationsTable.getLocationByRelationID(relationID);
+    public synchronized LocationDB getLocationByRelationID(Integer relationID) {
+      return relationQueries.getLocationByRelationID(relationID);
     }
     
-    public synchronized LocationDB getLocationByCommentID(String commentID) {
-      return commentsTable.getLocationByCommentID(commentID);
+    public synchronized LocationDB getLocationByCommentID(Integer commentID) {
+      return commentQueries.getLocationByCommentID(commentID);
     }
     
-    public synchronized FileDB getFileByFileID(String fileID) {
-      return filesTable.getFileByFileID(fileID);
+    public synchronized FileDB getFileByFileID(Integer fileID) {
+      return fileQueries.getByFileID(fileID);
     }
     
-    public synchronized ProjectDB getProjectByProjectID(String projectID) {
-      return projectsTable.getProjectByProjectID(projectID);
+    public synchronized LargeProjectDB getProjectByProjectID(Integer projectID) {
+      return projectQueries.getLargeByProjectID(projectID);
     }
   }
 }

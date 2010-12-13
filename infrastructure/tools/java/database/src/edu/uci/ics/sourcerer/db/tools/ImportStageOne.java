@@ -19,7 +19,7 @@ package edu.uci.ics.sourcerer.db.tools;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
-import edu.uci.ics.sourcerer.model.db.LimitedProjectDB;
+import edu.uci.ics.sourcerer.model.db.SmallProjectDB;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.util.TimeCounter;
 
@@ -49,11 +49,11 @@ public class ImportStageOne extends ExtractedImporterThread {
         logger.info("    Extraction empty... skipping");
         continue;
       }
-      LimitedProjectDB project;
+      SmallProjectDB project;
       if (item.getHash() != null) {
-        project = projectsTable.getLimitedProjectByHash(item.getHash());
+        project = projectQueries.getSmallByHash(item.getHash());
       } else {
-        project = projectsTable.getLimitedProjectByPath(item.getRelativePath());
+        project = projectQueries.getSmallByPath(item.getRelativePath());
       }
       if (project != null) {
         if (project.firstStageCompleted()) {
@@ -66,7 +66,7 @@ public class ImportStageOne extends ExtractedImporterThread {
       }
       
       logger.info("  Inserting project...");
-      String projectID = projectsTable.insert(item);
+      Integer projectID = projectsTable.insert(item);
 
       insertFiles(item, projectID);
       loadFileMap(projectID);

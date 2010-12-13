@@ -14,8 +14,8 @@ import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.File;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.RelationClass;
-import edu.uci.ics.sourcerer.model.db.LimitedEntityDB;
-import edu.uci.ics.sourcerer.model.db.SlightlyLessLimitedEntityDB;
+import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
+import edu.uci.ics.sourcerer.model.db.SmallEntityDB;
 import edu.uci.ics.sourcerer.model.extracted.CommentEX;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.FileEX;
@@ -34,7 +34,7 @@ import edu.uci.ics.sourcerer.util.io.Logging;
 
 public abstract class ExtractedImporterThread extends ParallelDatabaseImporterThread {
   private java.io.File tempDir;
-  private Map<String, String> fileMap;
+  private Map<String, Integer> fileMap;
   private Map<String, Ent> entityMap;
   private Set<String> pendingEntities;
   private Collection<RelationEX> newTypeRelations;
@@ -77,7 +77,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     entityMap.clear();
   }
   
-  protected void insertFiles(Extracted extracted, String projectID) {
+  protected void insertFiles(Extracted extracted, Integer projectID) {
     logger.info("  Inserting files...");
     
     TimeCounter counter = new TimeCounter();
@@ -98,28 +98,28 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info(counter.reportTimeAndCount(4, "files processed and inserted"));
   }
   
-  protected void loadFileMap(String projectID) {
+  protected void loadFileMap(Integer projectID) {
     logger.info("  Populating file map...");
 
     TimeCounter counter = new TimeCounter();
     
     locker.addRead(filesTable);
     locker.lock();
-    filesTable.populateFileMap(fileMap, projectID);
+    fileQueries.populateFileMap(fileMap, projectID);
     locker.unlock();
     
     counter.setCount(fileMap.size());
     logger.info(counter.reportTimeAndCount(4, "files loaded"));
   }
   
-  protected void insertProblems(Extracted extracted, String projectID) {
+  protected void insertProblems(Extracted extracted, Integer projectID) {
     logger.info("  Inserting problems...");
 
     TimeCounter counter = new TimeCounter();
     
     problemsTable.initializeInserter(tempDir);
     for (ProblemEX problem : extracted.getProblemReader()) {
-      String fileID = fileMap.get(problem.getRelativePath());
+      Integer fileID = fileMap.get(problem.getRelativePath());
       if (fileID == null) {
         logger.log(Level.SEVERE, "Unknown file: " + problem.getRelativePath() + " for " + problem);
       } else {
@@ -139,7 +139,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info(counter.reportTimeAndCount(4, "problems processed and inserted"));
   }
   
-  protected void insertEntities(Extracted extracted, String projectID) {
+  protected void insertEntities(Extracted extracted, Integer projectID) {
     logger.info("  Inserting entities....");
 
     TimeCounter counter = new TimeCounter();
@@ -149,7 +149,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info("    Processing from entities file...");
     for (EntityEX entity : extracted.getEntityReader()) {
       // Get the file
-      String fileID = getFileID(entity.getPath(), entity);
+      Integer fileID = getFileID(entity.getPath(), entity);
       
       // Add the entity
       entitiesTable.insert(entity, projectID, fileID);
@@ -170,14 +170,14 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info(counter.reportTotalTimeAndCount(4, "entities processed and inserted"));
   }
   
-  public void loadEntityMap(String projectID) {
+  public void loadEntityMap(Integer projectID) {
     logger.info("  Populating entity map...");
     
     TimeCounter counter = new TimeCounter();
   
     locker.addRead(entitiesTable);
     locker.lock();
-    for (SlightlyLessLimitedEntityDB entity : entitiesTable.getEntityMapByProject(projectID)) {
+    for (MediumEntityDB entity : entityQueries.getMediumExternalByProjectID(projectID)) {
       Ent ent = entityMap.get(entity.getFqn());
       if (ent == null) {
         ent = new Ent(entity.getFqn());
@@ -192,7 +192,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info(counter.reportTimeAndCount(4, "entities loaded"));
   }
   
-  protected void insertRemainingEntities(Extracted extracted, String projectID) {
+  protected void insertRemainingEntities(Extracted extracted, Integer projectID) {
     logger.info("  Inserting type entities....");
 
     TimeCounter counter = new TimeCounter();
@@ -206,7 +206,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info("    Processing from local variables / parameters file...");
     for (LocalVariableEX local : extracted.getLocalVariableReader()) {
       // Get the file
-      String fileID = getFileID(local.getPath(), local);
+      Integer fileID = getFileID(local.getPath(), local);
       
       // Add the entity
       entitiesTable.insertLocalVariable(local, projectID, fileID);
@@ -247,7 +247,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info(counter.reportTotalTimeAndCount(4, "entities processed and inserted"));
   }
   
-  private void resolveEid(TimeCounter counter, String fqn, String projectID, String inClause) {
+  private void resolveEid(TimeCounter counter, String fqn, Integer projectID, String inClause) {
     if (pendingEntities.contains(fqn)) {
       return;
     }
@@ -334,10 +334,10 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     }
 
     // Some external reference?
-    Collection<LimitedEntityDB> entities = entitiesTable.getLimitedEntitiesByFqn(fqn, inClause);
+    Collection<SmallEntityDB> entities = entityQueries.getSmallByFqn(fqn, inClause);
     if (!entities.isEmpty()) {
       Ent result = new Ent(fqn);
-      for (LimitedEntityDB entity : entities) {
+      for (SmallEntityDB entity : entities) {
         result.addPair(entity);
       }
       result.resolveDuplicates(projectID);
@@ -356,7 +356,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     pendingEntities.add(fqn);
   }
   
-  protected void loadRemainingEntityMap(String projectID) {
+  protected void loadRemainingEntityMap(Integer projectID) {
     logger.info("  Updating entity map...");
     
     TimeCounter counter = new TimeCounter();
@@ -365,8 +365,8 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     relationsTable.initializeInserter(tempDir);
     
     logger.info("    Loading project entities...");
-    for (SlightlyLessLimitedEntityDB entity : entitiesTable.getSyntheticEntitiesByProject(projectID)) {
-      if (entity.notDuplicate()) {
+    for (MediumEntityDB entity : entityQueries.getMediumSyntheticByProjectID(projectID)) {
+      if (!entity.getType().isDuplicate()) {
         Ent ent = entityMap.get(entity.getFqn());
         if (ent == null) {
           ent = new Ent(entity.getFqn());
@@ -404,7 +404,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info(counter.reportTotalTime(4, "Entity map updated"));
   }
   
-  protected void insertRelations(Extracted extracted, String projectID) {
+  protected void insertRelations(Extracted extracted, Integer projectID) {
     logger.info("  Inserting relations...");
     
     TimeCounter counter = new TimeCounter();
@@ -412,8 +412,8 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     
     logger.info("    Processing type relations...");
     for (RelationEX relation : newTypeRelations) {
-      LimitedEntityDB lhs = getEid(relation.getLhs(), projectID);
-      LimitedEntityDB rhs = getEid(relation.getRhs(), projectID);
+      SmallEntityDB lhs = getEid(relation.getLhs(), projectID);
+      SmallEntityDB rhs = getEid(relation.getRhs(), projectID);
       
       if (lhs != null && rhs != null) {
         relationsTable.insert(relation.getType(), classifier.getRelationClass(lhs, rhs), lhs.getEntityID(), rhs.getEntityID(), projectID);
@@ -427,10 +427,10 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
       
     logger.info("      Processing relations file...");
     for (RelationEX relation : extracted.getRelationReader()) {
-      String fileID = getFileID(relation.getPath(), relation);
+      Integer fileID = getFileID(relation.getPath(), relation);
       
-      LimitedEntityDB lhs = getEid(relation.getLhs(), projectID);
-      LimitedEntityDB rhs = getEid(relation.getRhs(), projectID);
+      SmallEntityDB lhs = getEid(relation.getLhs(), projectID);
+      SmallEntityDB rhs = getEid(relation.getRhs(), projectID);
       
       if (lhs != null && rhs != null) {
         if (fileID == null) {
@@ -447,14 +447,14 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     locker.addRead(entitiesTable);
     locker.lock();
     Iterator<LocalVariableEX> iter = extracted.getLocalVariableReader().iterator();
-    for (LimitedEntityDB entity : entitiesTable.getLocalVariablesByProject(projectID)) {
+    for (SmallEntityDB entity : entityQueries.getMediumLocalByProjectID(projectID)) {
       if (iter.hasNext()) {
         LocalVariableEX local = iter.next();
         
-        String fileID = getFileID(local.getPath(), local);
+        Integer fileID = getFileID(local.getPath(), local);
         
         // Add the holds relation
-        LimitedEntityDB type = getEid(local.getTypeFqn(), projectID);
+        SmallEntityDB type = getEid(local.getTypeFqn(), projectID);
         if (type != null) {
           if (fileID == null) {
             relationsTable.insert(Relation.HOLDS, classifier.getRelationClass(entity, type), entity.getEntityID(), type.getEntityID(), projectID);
@@ -465,7 +465,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
         }
         
         // Add the inside relation
-        LimitedEntityDB parent = getEid(local.getParent(), projectID);
+        SmallEntityDB parent = getEid(local.getParent(), projectID);
         if (parent != null) {
           relationsTable.insert(Relation.INSIDE, classifier.getRelationClass(entity, parent), entity.getEntityID(), parent.getEntityID(), projectID, fileID, null, null);
         }
@@ -486,7 +486,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info(counter.reportTimeAndTotalCount(6, "relations inserted"));
   }
   
-  protected void insertImports(Extracted extracted, String projectID) {
+  protected void insertImports(Extracted extracted, Integer projectID) {
     logger.info("  Inserting imports...");
     
     TimeCounter counter = new TimeCounter();
@@ -494,11 +494,11 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     
     logger.info("    Processing imports file...");
     for (ImportEX imp : extracted.getImportReader()) {
-      String fileID = getFileID(imp.getPath(), imp);
+      Integer fileID = getFileID(imp.getPath(), imp);
       
       if (fileID != null) {
         // Look up the imported entity
-        LimitedEntityDB imported = getEid(imp.getImported(), projectID);
+        SmallEntityDB imported = getEid(imp.getImported(), projectID);
         
         // Add the import
         if (imported != null) {
@@ -519,7 +519,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info(counter.reportTimeAndTotalCount(6, "imports inserted"));
   }
   
-  protected void insertComments(Extracted extracted, String projectID) {
+  protected void insertComments(Extracted extracted, Integer projectID) {
     logger.info("  Inserting comments...");
     
     TimeCounter counter = new TimeCounter();
@@ -527,12 +527,12 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     
     logger.info("    Processing comments file...");
     for (CommentEX comment : extracted.getCommentReader()) {
-      String fileID = getFileID(comment.getPath(), comment);
+      Integer fileID = getFileID(comment.getPath(), comment);
       
       if (fileID != null) {
         if (comment.getType() == Comment.JAVADOC) {
           // Look up the entity
-          LimitedEntityDB commented = getEid(comment.getFqn(), projectID);
+          SmallEntityDB commented = getEid(comment.getFqn(), projectID);
           
           // Add the comment
           if (commented != null) {
@@ -560,11 +560,11 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info(counter.reportTimeAndTotalCount(6, "comments inserted"));
   }
   
-  private String getFileID(String path, ModelEX model) {
+  private Integer getFileID(String path, ModelEX model) {
     if (path == null) {
       return null;
     } else {
-      String fileID = fileMap.get(path);
+      Integer fileID = fileMap.get(path);
       if (fileID == null) {
         logger.log(Level.SEVERE, "Unknown file: " + path + " for " + model);
       }
@@ -572,10 +572,10 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     }
   }
   
-  public LimitedEntityDB getEid(String fqn, String projectID) {
+  public SmallEntityDB getEid(String fqn, Integer projectID) {
     Ent ent = entityMap.get(fqn);
     if (ent == null) {
-      LimitedEntityDB entity = unknowns.getUnknown(fqn);
+      SmallEntityDB entity = unknowns.getUnknown(fqn);
       if (entity == null) {
         logger.severe("Unknown entity: " + fqn);
         return null;
@@ -587,21 +587,21 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     }
   }
   
-  protected void buildInClause(Collection<String> projectIDs, Extracted extracted) {
+  protected void buildInClause(Collection<Integer> projectIDs, Extracted extracted) {
     for (UsedJarEX usedJar : extracted.getUsedJarReader()) {
-      projectIDs.add(projectsTable.getProjectIDByHash(usedJar.getHash()));
+      projectIDs.add(projectQueries.getProjectIDByHash(usedJar.getHash()));
     }
     for (FileEX file : extracted.getFileReader()) {
       if (file.getType() == File.JAR) {
-        projectIDs.add(projectsTable.getProjectIDByHash(file.getHash()));
+        projectIDs.add(projectQueries.getProjectIDByHash(file.getHash()));
       }
     }
     buildInClause(projectIDs);
   }
   
-  protected void buildInClause(Collection<String> projectIDs) {
+  protected void buildInClause(Collection<Integer> projectIDs) {
     StringBuilder builder = new StringBuilder("(");
-    for (String projectID : projectIDs) {
+    for (Integer projectID : projectIDs) {
       builder.append(projectID).append(',');
     }
     builder.setCharAt(builder.length() - 1, ')');
@@ -611,14 +611,14 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
   private class Ent {
     private String fqn;
     
-    private LimitedEntityDB main = null;
-    private Map<String, LimitedEntityDB> entities = null;
+    private SmallEntityDB main = null;
+    private Map<Integer, SmallEntityDB> entities = null;
 
     public Ent(String fqn) {
       this.fqn = fqn;
     }
     
-    public void addPair(LimitedEntityDB entity) {
+    public void addPair(SmallEntityDB entity) {
       if (entities == null && main == null) {
         main = entity;
       } else {
@@ -630,7 +630,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
       }
     }
     
-    public boolean resolveDuplicates(String projectID) {
+    public boolean resolveDuplicates(Integer projectID) {
       if (entities != null && !entities.containsKey(projectID)) {
         entitiesTable.insert(Entity.DUPLICATE, fqn, projectID);
         return true;
@@ -639,16 +639,16 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
       }
     }
     
-    public void updateDuplicate(String eid, String projectID) {
-      for (LimitedEntityDB entity : entities.values()) {
-        if (entity.notDuplicate()) {
+    public void updateDuplicate(Integer eid, Integer projectID) {
+      for (SmallEntityDB entity : entities.values()) {
+        if (!entity.getType().isDuplicate()) {
           relationsTable.insert(Relation.MATCHES, RelationClass.NOT_APPLICABLE, eid, entity.getEntityID(), projectID);
         }
       }
-      entities.put(projectID, new LimitedEntityDB(projectID, eid, Entity.DUPLICATE));
+      entities.put(projectID, new SmallEntityDB(eid, Entity.DUPLICATE, projectID));
     }
     
-    public LimitedEntityDB getEntity(String projectID) {
+    public SmallEntityDB getEntity(Integer projectID) {
       if (entities == null) {
         return main;
       } else {

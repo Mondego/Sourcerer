@@ -17,35 +17,30 @@
  */
 package edu.uci.ics.sourcerer.db.util;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import edu.uci.ics.sourcerer.util.Pair;
+import edu.uci.ics.sourcerer.db.util.columns.Column;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class ResultTranslator <T> {
-  public String getTable() {
-    return null;
+public abstract class ResultTranslator<T> extends BasicResultTranslator<T> {
+  private final String table;
+  private final String select;
+  
+  public ResultTranslator(String table, Column<?> ... columns) {
+    this.table = table;
+    StringBuilder builder = new StringBuilder();
+    for (Column<?> column : columns) {
+      builder.append(column.getName()).append(',');
+    }
+    builder.deleteCharAt(builder.length() - 1);
+    select = builder.toString();
   }
   
-  public String getSelect() {
-    return null;
+  public final String getTable() {
+    return table;
   }
   
-  public abstract T translate(ResultSet result) throws SQLException;
-  
-  public static final ResultTranslator<String> SIMPLE_RESULT_TRANSLATOR = new ResultTranslator<String>() {
-    public String translate(ResultSet result) throws SQLException {
-      return result.getString(1);
-    }
-  };
-  
-  public static final ResultTranslator<Pair<String, String>> PAIR_RESULT_TRANSLATOR = new ResultTranslator<Pair<String, String>>() {
-    public Pair<String, String> translate(ResultSet result) throws SQLException {
-      return new Pair<String, String>(result.getString(1), result.getString(2));
-    }
-  };  
+  public final String getSelect() {
+    return select;
+  }
 }
-

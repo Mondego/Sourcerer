@@ -29,17 +29,17 @@ import edu.uci.ics.sourcerer.model.LocalVariable;
 public class LocalVariableEX implements ModelEX {
   private LocalVariable type;
   private String name;
-  private String modifiers;
+  private Integer modifiers;
   private String typeFqn;
-  private String typeStartPos;
-  private String typeLength;
+  private Integer typeStartPos;
+  private Integer typeLength;
   private String parent;
-  private String position;
+  private Integer position;
   private String path;
-  private String startPos;
-  private String length;
+  private Integer startPos;
+  private Integer length;
   
-  private LocalVariableEX(LocalVariable type, String name, String modifiers, String typeFqn, String typeStartPos, String typeLength, String parent, String position, String path, String startPos, String length) {
+  private LocalVariableEX(LocalVariable type, String name, Integer modifiers, String typeFqn, Integer typeStartPos, Integer typeLength, String parent, Integer position, String path, Integer startPos, Integer length) {
     this.type = type;
     this.name = name;
     this.modifiers = modifiers;
@@ -61,7 +61,7 @@ public class LocalVariableEX implements ModelEX {
     return name;
   }
 
-  public String getModifiers() {
+  public Integer getModifiers() {
     return modifiers;
   }
 
@@ -69,11 +69,11 @@ public class LocalVariableEX implements ModelEX {
     return typeFqn;
   }
 
-  public String getTypeStartPos() {
+  public Integer getTypeStartPos() {
     return typeStartPos;
   }
 
-  public String getTypeLength() {
+  public Integer getTypeLength() {
     return typeLength;
   }
 
@@ -81,7 +81,7 @@ public class LocalVariableEX implements ModelEX {
     return parent;
   }
   
-  public String getPosition() {
+  public Integer getPosition() {
     return position;
   }
 
@@ -89,11 +89,11 @@ public class LocalVariableEX implements ModelEX {
     return path;
   }
 
-  public String getStartPos() {
+  public Integer getStartPos() {
     return startPos;
   }
 
-  public String getLength() {
+  public Integer getLength() {
     return length;
   }
   
@@ -126,15 +126,15 @@ public class LocalVariableEX implements ModelEX {
         LocalVariable type = LocalVariable.valueOf(parts[0]);
         if (type == LocalVariable.PARAM) {
           if (parts.length == 6) {
-            return new LocalVariableEX(type, parts[1], null, parts[2], null, null, parts[3], parts[4], parts[5], null, null);
+            return new LocalVariableEX(type, parts[1], null, parts[2], null, null, parts[3], Integer.valueOf(parts[4]), parts[5], null, null);
           } else if (parts.length == 11) {
-            return new LocalVariableEX(type, parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8], parts[9], parts[10]);
+            return new LocalVariableEX(type, parts[1], Integer.valueOf(parts[2]), parts[3], Integer.valueOf(parts[4]), Integer.valueOf(parts[5]), parts[6], Integer.valueOf(parts[7]), parts[8], Integer.valueOf(parts[9]), Integer.valueOf(parts[10]));
           } else {
             logger.log(Level.SEVERE, "Unable to parse local variable: " + line);
             return null;
           }
         } else if (type == LocalVariable.LOCAL) {
-          return new LocalVariableEX(type, parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], null, parts[7], parts[8], parts[9]);
+          return new LocalVariableEX(type, parts[1], Integer.valueOf(parts[2]), parts[3], Integer.valueOf(parts[4]), Integer.valueOf(parts[5]), parts[6], null, parts[7], Integer.valueOf(parts[8]), Integer.valueOf(parts[9]));
         } else {
           logger.log(Level.SEVERE, "Unable to parse local variable: " + line);
           return null;

@@ -17,40 +17,48 @@
  */
 package edu.uci.ics.sourcerer.model.db;
 
-import edu.uci.ics.sourcerer.model.Entity;
-
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class LimitedEntityDB {
-  private String projectID;
-  private String entityID;
-  private Entity type;
+public class FileFqn {
+  private String fqn;
+  private Integer entityID;
+  private String path;
+  private Integer fileID;
+  private String project;
+  private Integer projectID;
   
   
-  public LimitedEntityDB(String projectID, String entityID, Entity type) {
-    this.projectID = projectID;
+  public FileFqn(String fqn, Integer entityID, String path, Integer fileID, String project, Integer projectID) {
+    this.fqn = fqn;
     this.entityID = entityID;
-    this.type = type;
+    this.path = path;
+    this.fileID = fileID;
+    this.project = project;
+    this.projectID = projectID;
+  }
+
+  public String getFqn() {
+    return fqn;
   }
   
-  public String getProjectID() {
-    return projectID;
-  }
-  
-  public String getEntityID() {
+  public Integer getEntityID() {
     return entityID;
   }
-  
-  public boolean notDuplicate() {
-    return type != Entity.DUPLICATE;
+
+  public String getProject() {
+    return project;
   }
   
-  public Entity getType() {
-    return type;
+  public Integer getProjectID() {
+    return projectID;
+  }
+
+  public String getPath() {
+    return path;
   }
   
-  public String toString() {
-    return type.toString() + "(" + entityID + ")";
+  public Integer getFileID() {
+    return fileID;
   }
 }

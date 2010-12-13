@@ -30,14 +30,14 @@ public class CommentEX implements ModelEX {
   private Comment type;
   private String fqn;
   private String path;
-  private String offset;
-  private String length;
+  private Integer offset;
+  private Integer length;
   
-  private CommentEX(Comment type, String path, String offset, String length) {
+  private CommentEX(Comment type, String path, Integer offset, Integer length) {
    this(type, null, path, offset, length);
   }
   
-  private CommentEX(Comment type, String fqn, String path, String offset, String length) {
+  private CommentEX(Comment type, String fqn, String path, Integer offset, Integer length) {
     this.type = type;
     this.fqn = fqn;
     this.path = path;
@@ -57,11 +57,11 @@ public class CommentEX implements ModelEX {
     return path;
   }
 
-  public String getOffset() {
+  public Integer getOffset() {
     return offset;
   }
 
-  public String getLength() {
+  public Integer getLength() {
     return length;
   }
   
@@ -76,9 +76,9 @@ public class CommentEX implements ModelEX {
       try {
         String parts[] = line.split(" ");
         if (parts.length == 4) {
-          return new CommentEX(Comment.valueOf(parts[0]), parts[1], parts[2], parts[3]);
+          return new CommentEX(Comment.valueOf(parts[0]), parts[1], Integer.valueOf(parts[2]), Integer.valueOf(parts[3]));
         } else if (parts.length == 5) {
-          return new CommentEX(Comment.valueOf(parts[0]), parts[1], parts[2], parts[3], parts[4]);
+          return new CommentEX(Comment.valueOf(parts[0]), parts[1], parts[2], Integer.valueOf(parts[3]), Integer.valueOf(parts[4]));
         } else {
           logger.log(Level.SEVERE, "Unable to parse entity: " + line);
           return null;

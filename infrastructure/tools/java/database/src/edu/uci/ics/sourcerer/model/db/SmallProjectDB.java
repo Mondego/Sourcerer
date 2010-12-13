@@ -22,13 +22,13 @@ import edu.uci.ics.sourcerer.model.Project;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class LimitedProjectDB {
-  private String projectID;
+public class SmallProjectDB {
+  private Integer projectID;
   private Project type;
   private String path;
   private String hash;
 
-  public LimitedProjectDB(String projectID, Project type, String path, String hash) {
+  public SmallProjectDB(Integer projectID, Project type, String path, String hash) {
     this.projectID = projectID;
     this.type = type;
     this.path = path;
@@ -51,7 +51,23 @@ public class LimitedProjectDB {
     }
   }
   
-  public String getProjectID() {
+  public Integer getProjectID() {
     return projectID;
+  }
+  
+  public Project getType() {
+    return type;
+  }
+  
+  public String getPath() {
+    return path;
+  }
+  
+  public String getHash() {
+    return hash;
+  }
+  
+  public String toString() {
+    return projectID.toString();
   }
 }

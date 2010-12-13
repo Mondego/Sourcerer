@@ -31,20 +31,20 @@ import edu.uci.ics.sourcerer.util.Helper;
 public final class EntityEX implements ModelEX {
   private Entity type;
   private String fqn;
-  private String mods;
+  private Integer mods;
   private String path;
-  private String startPos;
-  private String length;
+  private Integer startPos;
+  private Integer length;
   
   private EntityEX(Entity type, String fqn) {
     this(type, fqn, null, null, null, null);
   }
   
-  private EntityEX(Entity type, String fqn, String mods, String path) {
+  private EntityEX(Entity type, String fqn, Integer mods, String path) {
     this(type, fqn, mods, path, null, null);
   }
   
-  private EntityEX(Entity type, String fqn, String mods, String path, String offset, String length) {
+  private EntityEX(Entity type, String fqn, Integer mods, String path, Integer offset, Integer length) {
     this.type = type;
     this.fqn = fqn;
     this.mods = mods;
@@ -61,7 +61,7 @@ public final class EntityEX implements ModelEX {
     return fqn;
   }
 
-  public String getMods() {
+  public Integer getMods() {
     return mods;
   }
 
@@ -69,11 +69,11 @@ public final class EntityEX implements ModelEX {
     return path;
   }
 
-  public String getStartPosition() {
+  public Integer getStartPosition() {
     return startPos;
   }
 
-  public String getLength() {
+  public Integer getLength() {
     return length;
   }
   
@@ -105,9 +105,9 @@ public final class EntityEX implements ModelEX {
               return null;
             }
           } else if (parts.length == 4) {
-            return new EntityEX(Entity.valueOf(parts[0]), parts[1], parts[2], parts[3]);
+            return new EntityEX(Entity.valueOf(parts[0]), parts[1], Integer.valueOf(parts[2]), parts[3]);
           } else if (parts.length == 6) {
-            return new EntityEX(Entity.valueOf(parts[0]), parts[1], parts[2], parts[3], parts[4], parts[5]);
+            return new EntityEX(Entity.valueOf(parts[0]), parts[1], Integer.valueOf(parts[2]), parts[3], Integer.valueOf(parts[4]), Integer.valueOf(parts[5]));
           } else {
             logger.log(Level.SEVERE, "Unable to parse entity: " + line);
             return null;

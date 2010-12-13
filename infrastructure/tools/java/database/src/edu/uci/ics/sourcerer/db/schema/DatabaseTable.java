@@ -31,30 +31,30 @@ import edu.uci.ics.sourcerer.db.util.TableLocker;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DatabaseTable {
+public abstract class DatabaseTable {
   protected final QueryExecutor executor;
   protected final TableLocker locker;
-  protected final String name;
+  protected final String table;
   
   protected InFileInserter inserter;
   
-  protected DatabaseTable(QueryExecutor executor, TableLocker locker, String name) {
+  protected DatabaseTable(QueryExecutor executor, TableLocker locker, String table) {
     this.executor = executor;
     this.locker = locker;
-    this.name = name;
+    this.table = table;
   }
   
   public String getName() {
-    return name;
+    return table;
   }
   
   // ---- INSERT ----
   public <T> KeyInsertBatcher<T> getKeyInsertBatcher(KeyInsertBatcher.KeyProcessor<T> processor) {
-    return executor.getKeyInsertBatcher(name, processor);
+    return executor.getKeyInsertBatcher(table, processor);
   }
   
   public void initializeInserter(File tempDir) {
-    inserter = executor.getInFileInserter(tempDir, name);
+    inserter = executor.getInFileInserter(tempDir, table);
   }
   
   public void flushInserts() {
@@ -67,16 +67,6 @@ public class DatabaseTable {
   }
 
   // ---- STATIC UTILITIES ----
-  protected static <T extends Enum<T>> String getEnumCreate(Enum<T>[] values) {
-    StringBuilder builder = new StringBuilder();
-    builder.append("ENUM(");
-    for (Enum<T> value : values) {
-      builder.append("'").append(value.name()).append("'").append(",");
-    }
-    builder.setCharAt(builder.length() - 1, ')');
-    return builder.toString();
-  }
-  
   protected static String buildSerialInsertValue(String ... args) {
     StringBuilder builder = new StringBuilder("(NULL,");
     for (String arg : args) {

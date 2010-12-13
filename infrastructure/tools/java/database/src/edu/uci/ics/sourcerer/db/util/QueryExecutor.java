@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.db.schema.DatabaseTable;
+import edu.uci.ics.sourcerer.db.util.columns.Column;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
@@ -84,6 +85,10 @@ public class QueryExecutor {
     return InFileInserter.getInFileInserter(tempDir, this, table);
   }
   
+  public void executeUpdate(String table, String set, String where) {
+    executeUpdate("UPDATE " + table + " SET " + set + " WHERE " + where + ";");
+  }
+  
   public void executeUpdate(String sql) {
     try {
       statement.executeUpdate(sql);
@@ -132,15 +137,28 @@ public class QueryExecutor {
     return executeSingle("SELECT " + column + " FROM " + table + " WHERE " + where + ";");
   }
   
-  public <T> T selectSingle(String table, String column, String where, ResultTranslator<T> translator) {
+  public Integer selectSingleInt(String table, String column, String where) {
+    String val = executeSingle("SELECT " + column + " FROM " + table + " WHERE " + where + ";");
+    if (val == null) {
+      return null;
+    } else {
+      try {
+        return Integer.valueOf(val);
+      } catch (NumberFormatException e) {
+        throw new IllegalArgumentException("Result of \"" + "SELECT " + column + " FROM " + table + " WHERE " + where + ";" + "\" was not an int: " + val);
+      }
+    }
+  }
+  
+  public <T> T selectSingle(String table, String column, String where, BasicResultTranslator<T> translator) {
     return executeSingle("SELECT " + column + " FROM " + table + " WHERE " + where + ";", translator);
   }
   
-  public Collection<String> select(String table, String columns, String where) {
-    return select(table, columns, where, ResultTranslator.SIMPLE_RESULT_TRANSLATOR);
+  public <T> T selectSingle(String where, ResultTranslator<T> translator) {
+    return executeSingle("SELECT " + translator.getSelect()+ " FROM " + translator.getTable() + " WHERE " + where + ";", translator);
   }
   
-  public <T> Collection<T> select(String table, String columns, String where, ResultTranslator<T> translator) {
+  public <T> Collection<T> select(String table, String columns, String where, BasicResultTranslator<T> translator) {
     return execute("SELECT " + columns + " FROM " + table + " WHERE " + where + ";", translator);
   }
   
@@ -151,13 +169,27 @@ public class QueryExecutor {
   public <T> Iterable<T> selectStreamed(String where, ResultTranslator<T> translator) {
     return executeStreamed("SELECT " + translator.getSelect() + " FROM " + translator.getTable() + (where == null ? "" : (" WHERE " + where)) + ";", translator);
   }
+  
+  public <T> Iterable<T> selectStreamed(String table, String columns, String where, BasicResultTranslator<T> translator) {
+    return executeStreamed("SELECT " + columns + " FROM " + table + (where == null ? "" : (" WHERE " + where)) + ";", translator);
+  }
     
   public void insertSingle(String table, String value) {
     executeUpdate("INSERT INTO " + table + " VALUES " + value + ";");
   }
   
-  public String insertSingleWithKey(String table, String value) {
-    return executeUpdateWithKey("INSERT INTO " + table + " VALUES " + value + ";");
+  public Integer insertSingleWithKey(String table, String value) {
+    String val = executeUpdateWithKey("INSERT INTO " + table + " VALUES " + value + ";");
+    if (val == null) {
+      return null;
+    } else {
+      try {
+        return Integer.valueOf(val);
+      } catch (NumberFormatException e) {
+        logger.log(Level.SEVERE, "Unable to understand key value " + val + " for " + value);
+        return null;
+      }
+    }
   }
   
   public void dropTables(DatabaseTable... tables) {
@@ -169,24 +201,29 @@ public class QueryExecutor {
     executeUpdate(sql.toString());
   }
   
-  public void createTable(String table, String... args) {
+  public void createTable(String table, Column<?>... columns) {
     StringBuilder sql = new StringBuilder("CREATE TABLE ");
     sql.append(table).append(" (");
-    for (String arg : args) {
-      sql.append(arg).append(',');
+    for (Column<?> column : columns) {
+      sql.append(column.getName()).append(" ").append(column.getType()).append(',');
+    }
+    for (Column<?> column : columns) {
+      if (column.isIndexed()) {
+        sql.append(column.getIndex()).append(',');
+      }
     }
     sql.setCharAt(sql.length() - 1, ')');
     executeUpdate(sql.toString());
   }
   
-  public <T> IterableResult<T> executeStreamed(String sql, ResultTranslator<T> translator) {
+  public <T> IterableResult<T> executeStreamed(String sql, BasicResultTranslator<T> translator) {
     try {
       Statement streamingStatement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
       streamingStatement.setFetchSize(Integer.MIN_VALUE);
       streamingStatement.execute(sql);
       return IterableResult.getResultIterable(streamingStatement.getResultSet(), translator);
     } catch (SQLException e) {
-      logger.log(Level.SEVERE, "Error in execute", e);
+      logger.log(Level.SEVERE, "Error in execute of " + sql, e);
       throw new RuntimeException(e);
     } 
   }
@@ -201,7 +238,7 @@ public class QueryExecutor {
     } 
   }
   
-  public <T> Collection<T> execute(String sql, ResultTranslator<T> translator) {
+  public <T> Collection<T> execute(String sql, BasicResultTranslator<T> translator) {
     try {
       statement.execute(sql);
       ResultSet result = statement.getResultSet();
@@ -236,7 +273,7 @@ public class QueryExecutor {
     } 
   }
   
-  public <T> T executeSingle(String sql, ResultTranslator<T> translator) {
+  public <T> T executeSingle(String sql, BasicResultTranslator<T> translator) {
     try {
       statement.execute(sql);
       ResultSet result = statement.getResultSet();

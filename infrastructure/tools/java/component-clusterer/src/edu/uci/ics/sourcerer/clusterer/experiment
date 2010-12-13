@@ -17,6 +17,11 @@ Method A (unique) - number copied / total
 Method B (all) - number copied / total
 100 / 200 = 50%
 
+**Average number of times a duplicated file appears
+Number of duplicate files over unique duplicate files
+
+**Average % of duplication at the project level
+For each project, compute duplication %, then do unweighted average.
 
 **List (and classify) the most commonly copied (occurs in the highest number of projects) files according to all methods.
 

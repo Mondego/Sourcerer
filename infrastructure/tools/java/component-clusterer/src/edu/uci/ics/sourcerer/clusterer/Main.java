@@ -18,8 +18,12 @@
 package edu.uci.ics.sourcerer.clusterer;
 
 import edu.uci.ics.sourcerer.clusterer.dir.DirectoryClusterer;
+import edu.uci.ics.sourcerer.clusterer.fingerprint.FingerprintClusterer;
+import edu.uci.ics.sourcerer.clusterer.fqn.FqnClusterer;
 import edu.uci.ics.sourcerer.clusterer.hash.HashingClusterer;
+import edu.uci.ics.sourcerer.clusterer.stats.Aggregator;
 import edu.uci.ics.sourcerer.clusterer.stats.Verifier;
+import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.io.Command;
 import edu.uci.ics.sourcerer.util.io.Properties;
@@ -43,21 +47,35 @@ public class Main {
       protected void action() {
         DirectoryClusterer.generateComparisonFiles();
       }
-    }.setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD, DirectoryClusterer.MATCHED_DIRECTORIES, DirectoryClusterer.MATCHED_FILES, DirectoryClusterer.POPULAR_NAMES, TablePrettyPrinter.CSV_MODE);
-  
-  public static final Command COMPILE_DIR_STATISTICS =
-    new Command("compile-dir-stats", "Compile statistics from directory comparison.") {
+    }.setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_MATCH_SIZE, DirectoryClusterer.POPULAR_DISCARD, DirectoryClusterer.MATCHED_DIRECTORIES, DirectoryClusterer.MATCHED_FILES, DirectoryClusterer.POPULAR_NAMES, TablePrettyPrinter.CSV_MODE);
+    
+  public static final Command GENERATE_FQN_FILE_LISTING =
+    new Command("generate-fqn-file-listing", "Generates the fqn file listing file.") {
       protected void action() {
-        DirectoryClusterer.compileStatistics();
+        FqnClusterer.generateFileListing();
       }
-    }.setProperties(Properties.INPUT, DirectoryClusterer.MATCHED_DIRECTORIES, DirectoryClusterer.MATCHED_FILES);
+    }.setProperties(FqnClusterer.FQN_FILE_LISTING, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
+    
+    public static final Command GENERATE_FINGERPRINT_FILE_LISTING =
+      new Command("generate-fingerprint-file-listing", "Generates the fingerprint file listing file.") {
+        protected void action() {
+          FingerprintClusterer.generateFileListing();
+        }
+      }.setProperties(FingerprintClusterer.FINGERPRINT_FILE_LISTING, FqnClusterer.FQN_FILE_LISTING, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
   
-  public static final Command INTERACTIVE_RESULTS =
-    new Command("interactive-results", "Interactive results viewer.") {
-      protected void action() {
-        DirectoryClusterer.interactiveResultsViewer();
-      }
-    }.setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD);
+//  public static final Command COMPILE_DIR_STATISTICS =
+//    new Command("compile-dir-stats", "Compile statistics from directory comparison.") {
+//      protected void action() {
+//        DirectoryClusterer.compileStatistics();
+//      }
+//    }.setProperties(Properties.INPUT, DirectoryClusterer.MATCHED_DIRECTORIES, DirectoryClusterer.MATCHED_FILES);
+  
+//  public static final Command INTERACTIVE_RESULTS =
+//    new Command("interactive-results", "Interactive results viewer.") {
+//      protected void action() {
+//        DirectoryClusterer.interactiveResultsViewer();
+//      }
+//    }.setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD);
   
   public static final Command GENERATE_HASH_FILE_LISTING =
     new Command("generate-hash-file-listing", "Generates the file listing file.") {
@@ -66,10 +84,10 @@ public class Main {
       }
     }.setProperties(AbstractRepository.INPUT_REPO, HashingClusterer.HASH_FILE_LISTING);
   
-  public static final Command COMPILE_FILE_STATISTICS =
-    new Command("compile-file-stats", "Compile statistics from file hashing.") {
+  public static final Command COMPUTE_GENERAL_STATISTICS =
+    new Command("compute-general-stats", "Compute general statistics.") {
       protected void action() {
-        HashingClusterer.compileMatchingStatistics();
+        Aggregator.computeGeneralStats();
       }
     }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING);
   

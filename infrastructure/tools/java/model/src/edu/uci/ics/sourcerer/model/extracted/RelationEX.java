@@ -31,9 +31,9 @@ public class RelationEX implements ModelEX {
   private String lhs;
   private String rhs;
   private String path;
-  private String startPos;
-  private String length;
-  private String paramPos;
+  private Integer startPos;
+  private Integer length;
+  private Integer paramPos;
   private String paramName;
   
   private RelationEX(Relation type, String lhs, String rhs) {
@@ -44,7 +44,7 @@ public class RelationEX implements ModelEX {
     this(type, lhs, rhs, path, null, null);
   }
   
-  private RelationEX(Relation type, String lhs, String rhs, String path, String startPos, String length) {
+  private RelationEX(Relation type, String lhs, String rhs, String path, Integer startPos, Integer length) {
     this.type = type;
     this.lhs = lhs;
     this.rhs = rhs;
@@ -53,7 +53,7 @@ public class RelationEX implements ModelEX {
     this.length = length;
   }
   
-  private RelationEX(Relation type, String lhs, String rhs, String paramPos, String path, String startPos, String length) {
+  private RelationEX(Relation type, String lhs, String rhs, Integer paramPos, String path, Integer startPos, Integer length) {
     this.type = type;
     this.lhs = lhs;
     this.rhs = rhs;
@@ -88,15 +88,15 @@ public class RelationEX implements ModelEX {
     return path;
   }
   
-  public String getStartPosition() {
+  public Integer getStartPosition() {
     return startPos;
   }
   
-  public String getLength() {
+  public Integer getLength() {
     return length;
   }
   
-  public String getParamPos() {
+  public Integer getParamPos() {
     return paramPos;
   }
   
@@ -139,15 +139,15 @@ public class RelationEX implements ModelEX {
           return new RelationEX(type, parts[1], parts[2], parts[3]);
         } else if (type == Relation.PARAMETRIZED_BY) {
           if (parts.length == 5) {
-            return new RelationEX(type, parts[1], parts[2], parts[3], parts[4], null, null);
+            return new RelationEX(type, parts[1], parts[2], Integer.valueOf(parts[3]), parts[4], null, null);
           } else {
-            return new RelationEX(type, parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]);
+            return new RelationEX(type, parts[1], parts[2], Integer.valueOf(parts[3]), parts[4], Integer.valueOf(parts[5]), Integer.valueOf(parts[6]));
           }
         } else {
           if (parts.length == 4) {
             return new RelationEX(type, parts[1], parts[2], parts[3]);
           } else {
-            return new RelationEX(type, parts[1], parts[2], null, parts[3], parts[4], parts[5]);
+            return new RelationEX(type, parts[1], parts[2], null, parts[3], Integer.valueOf(parts[4]), Integer.valueOf(parts[5]));
           }
         }
       } catch (ArrayIndexOutOfBoundsException e) {

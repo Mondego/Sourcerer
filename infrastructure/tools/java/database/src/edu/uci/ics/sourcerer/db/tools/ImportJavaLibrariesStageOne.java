@@ -41,7 +41,7 @@ public class ImportJavaLibrariesStageOne extends ExtractedImporterThread {
       logger.info("Stage one import of " + library.getName() + "(" + library.getRelativePath() + ")");
       
       logger.info("  Inserting project...");
-      String projectID = projectsTable.insert(library);
+      Integer projectID = projectsTable.insert(library);
       
       insertFiles(library, projectID);
       loadFileMap(projectID);

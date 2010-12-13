@@ -15,31 +15,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model.db;
+package edu.uci.ics.sourcerer.clusterer.stats;
+
+import java.util.Collection;
+
+import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class LocationDB {
-  private String fileID;
-  private int offset;
-  private int length;
+public class FileCluster {
+  private Collection<String> projects;
+  private Collection<String> paths;
   
-  public LocationDB(String fileID, int offset, int length) {
-    this.fileID = fileID;
-    this.offset = offset;
-    this.length = length;
+  public FileCluster() {
+    projects = Helper.newHashSet();
+    paths = Helper.newLinkedList();
   }
-
-  public String getFileID() {
-    return fileID;
+  
+  public void addFile(String project, String path) {
+    projects.add(project);
+    paths.add(project + ":" + path);
   }
-
-  public int getOffset() {
-    return offset;
+  
+  public int getProjectCount() {
+    return projects.size();
   }
-
-  public int getLength() {
-    return length;
+  
+  public Collection<String> getProjects() {
+    return projects;
+  }
+  
+  public Collection<String> getPaths() {
+    return paths;
+  }
+  
+  public int getFileCount() {
+    return paths.size();
   }
 }

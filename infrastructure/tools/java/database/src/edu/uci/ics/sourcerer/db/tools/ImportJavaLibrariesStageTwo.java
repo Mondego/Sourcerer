@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
+import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.util.TimeCounter;
 
@@ -41,16 +42,17 @@ public class ImportJavaLibrariesStageTwo extends ExtractedImporterThread {
   public void doImport() {
     TimeCounter counter = new TimeCounter();
     
-    Collection<String> libraryProjects = projectsTable.getJavaLibraryProjects();
-    libraryProjects.add(projectsTable.getPrimitiveProject());
+    Collection<Integer> libraryProjects = projectQueries.getProjectIDsByType(Project.JAVA_LIBRARY);
+    Integer primitiveProject = projectQueries.getPrimitiveProjectID(); 
+    libraryProjects.add(primitiveProject);
     classifier = new RelationClassifier(libraryProjects);
     
-    buildInClause(Collections.singleton(projectsTable.getPrimitiveProject()));
+    buildInClause(Collections.singleton(primitiveProject));
     
     for (ExtractedLibrary library : libraries) {
       logger.info("Stage two import of " + library.getName() + "(" + library.getRelativePath() + ")");
       
-      String projectID = projectsTable.getProjectIDByName(library.getName());
+      Integer projectID = projectQueries.getProjectIDByName(library.getName());
       
       loadEntityMap(projectID);
       loadFileMap(projectID);

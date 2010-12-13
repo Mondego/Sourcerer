@@ -17,16 +17,18 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collection;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
+import edu.uci.ics.sourcerer.db.util.columns.BooleanColumn;
+import edu.uci.ics.sourcerer.db.util.columns.Column;
+import edu.uci.ics.sourcerer.db.util.columns.EnumColumn;
+import edu.uci.ics.sourcerer.db.util.columns.IntColumn;
+import edu.uci.ics.sourcerer.db.util.columns.StringColumn;
 import edu.uci.ics.sourcerer.model.Project;
-import edu.uci.ics.sourcerer.model.db.LimitedProjectDB;
-import edu.uci.ics.sourcerer.model.db.ProjectDB;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
@@ -36,16 +38,21 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class ProjectsTable extends DatabaseTable {
-  protected ProjectsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "projects");
+  public static final String TABLE = "projects";
+  public static final String PRIMITIVES_PROJECT = "primitives";
+  public static final String UNKNOWNS_PROJECT = "unknowns";
+  
+  public ProjectsTable(QueryExecutor executor, TableLocker locker) {
+    super(executor, locker, TABLE);
   }
+  
   /*  
    *  +--------------+---------------+-------+--------+
    *  | Column name  | Type          | Null? | Index? |
    *  +--------------+---------------+-------+--------+
-   *  | project_id   | SERIAL        | No    | Yes    |
-   *  | project_type | ENUM(values)  | No    | Yes    |
-   *  | name         | VARCHAR(1024) | No    | Yes    |
+   *  | project_id   | SERIAL        | No    | Yes    | 
+   *  | project_type | ENUM(values)  | No    | Yes    | 
+   *  | name         | VARCHAR(1024) | No    | Yes    | 
    *  | description  | VARCHAR(4096) | Yes   | No     |
    *  | version      | VARCHAR(1024) | Yes   | No     |
    *  | groop        | VARCHAR(1024) | Yes   | Yes    |
@@ -55,42 +62,52 @@ public final class ProjectsTable extends DatabaseTable {
    *  +--------------+---------------+-------+--------+
    */
   
+  public static final Column<Integer> PROJECT_ID = IntColumn.getSerial("project_id", TABLE);
+  public static final Column<Project> PROJECT_TYPE = new EnumColumn<Project>("project_type", TABLE, Project.values(), false) {
+    @Override
+    public Project convertFromDB(String value) {
+      return Project.valueOf(value);
+    }
+  }.addIndex();
+  public static final Column<String> NAME = StringColumn.getVarchar1024NotNull("name", TABLE).addIndex(48);
+  public static final Column<String> DESCRIPTION = StringColumn.getVarchar4096("description", TABLE);
+  public static final Column<String> VERSION = StringColumn.getVarchar1024("version", TABLE);
+  public static final Column<String> GROUP = StringColumn.getVarchar1024("groop", TABLE).addIndex(48);
+  public static final Column<String> PATH = StringColumn.getVarchar1024("path", TABLE);
+  public static final Column<String> HASH = StringColumn.getVarchar32("hash", TABLE).addIndex();
+  public static final Column<Boolean> HAS_SOURCE = BooleanColumn.getBooleanNotNull("has_source", TABLE).addIndex();
+  
   // ---- CREATE ----
   public void createTable() {
-    executor.createTable(name,
-        "project_id SERIAL",
-        "project_type " + getEnumCreate(Project.values()) + " NOT NULL",
-        "name VARCHAR(1024) BINARY NOT NULL",
-        "description VARCHAR(4096) BINARY",
-        "version VARCHAR(1024) BINARY",
-        "groop VARCHAR(1024) BINARY",
-        "path VARCHAR(1024) BINARY",
-        "hash VARCHAR(32) BINARY",
-        "has_source BOOLEAN NOT NULL",
-        "INDEX(project_type)",
-        "INDEX(name(48))",
-        "INDEX(groop(48))",
-        "INDEX(hash)",
-        "INDEX(has_source)");
+    executor.createTable(table, 
+        PROJECT_ID,
+        PROJECT_TYPE,
+        NAME,
+        DESCRIPTION,
+        VERSION,
+        GROUP,
+        PATH,
+        HASH,
+        HAS_SOURCE);
   }
   
   // ---- INSERT ----
   private String getInsertValue(Project type, String name, String description, String version, String group, String path, String hash, boolean hasSource) {
     return buildSerialInsertValue(
-        convertNotNullVarchar(type.name()),
-        convertNotNullVarchar(name),
-        convertVarchar(description),
-        convertVarchar(version),
-        convertVarchar(group),
-        convertVarchar(path),
-        convertVarchar(hash),
-        convertNotNullBoolean(hasSource));
+        PROJECT_TYPE.convertToDB(type),
+        NAME.convertToDB(name),
+        DESCRIPTION.convertToDB(description),
+        VERSION.convertToDB(version),
+        GROUP.convertToDB(group),
+        PATH.convertToDB(path),
+        HASH.convertToDB(hash),
+        HAS_SOURCE.convertToDB(hasSource));
   }
   
-  public String insertPrimitivesProject() {
-    return executor.insertSingleWithKey(name,
+  public Integer insertPrimitivesProject() {
+    return executor.insertSingleWithKey(table,
         getInsertValue(Project.SYSTEM, 
-            "primitives",
+            PRIMITIVES_PROJECT,
             "Primitive types",
             null, // no version 
             null, // no group 
@@ -99,10 +116,10 @@ public final class ProjectsTable extends DatabaseTable {
             false));
   }
   
-  public String insertUnknownsProject() {
-    return executor.insertSingleWithKey(name,
+  public Integer insertUnknownsProject() {
+    return executor.insertSingleWithKey(table,
         getInsertValue(Project.SYSTEM,
-            "unknowns",
+            UNKNOWNS_PROJECT,
             "Project for unknown entities",
             null, // no version
             null, // no group
@@ -111,9 +128,9 @@ public final class ProjectsTable extends DatabaseTable {
             false));
   }
   
-  public String insert(Extracted item) {
+  public Integer insert(Extracted item) {
     if (item instanceof ExtractedLibrary) {
-      return executor.insertSingleWithKey(name, 
+      return executor.insertSingleWithKey(table, 
           getInsertValue(Project.JAVA_LIBRARY,
               item.getName(),
               null, // no description
@@ -124,7 +141,7 @@ public final class ProjectsTable extends DatabaseTable {
               item.hasSource()));
     } else if (item instanceof ExtractedJar) {
       if (item.getGroup() == null) {
-        return executor.insertSingleWithKey(name, 
+        return executor.insertSingleWithKey(table, 
             getInsertValue(
                 Project.JAR, 
                 item.getName(),
@@ -135,7 +152,7 @@ public final class ProjectsTable extends DatabaseTable {
                 item.getHash(), 
                 item.hasSource()));
       } else {
-        return executor.insertSingleWithKey(name,
+        return executor.insertSingleWithKey(table,
             getInsertValue(
                 Project.MAVEN,
                 item.getName(),
@@ -147,7 +164,7 @@ public final class ProjectsTable extends DatabaseTable {
                 item.hasSource()));
       }
     } else if (item instanceof ExtractedProject) {
-      return executor.insertSingleWithKey(name, 
+      return executor.insertSingleWithKey(table, 
           getInsertValue(
               Project.CRAWLED,
               item.getName(),
@@ -158,105 +175,82 @@ public final class ProjectsTable extends DatabaseTable {
               "INVALID", // no hash
               true));
     } else {
+      logger.log(Level.SEVERE, "Import failed: " + item);
       return null;
     }
   }
   
-  public void endFirstStageCrawledProjectInsert(String projectID) {
-    executor.executeUpdate("UPDATE " + name + " SET hash = 'END_FIRST' where project_id=" + projectID);
+  public void endFirstStageCrawledProjectInsert(Integer projectID) {
+    executor.executeUpdate(table, HASH.getEquals("END_FIRST"), PROJECT_ID.getEquals(projectID));
   }
   
-  public void endFirstStageJarProjectInsert(String projectID) {
-    executor.executeUpdate("UPDATE " + name + " SET path = 'END_FIRST' where project_id=" + projectID); 
+  public void endFirstStageJarProjectInsert(Integer projectID) {
+    executor.executeUpdate(table, PATH.getEquals("END_FIRST"), PROJECT_ID.getEquals(projectID)); 
   }
   
-  public void beginSecondStageCrawledProjectInsert(String projectID) {
-    executor.executeUpdate("UPDATE " + name + " SET hash = 'BEGIN_SECOND' where project_id=" + projectID);
+  public void beginSecondStageCrawledProjectInsert(Integer projectID) {
+    executor.executeUpdate(table, HASH.getEquals("BEGIN_SECOND"), PROJECT_ID.getEquals(projectID));
   }
   
-  public void beginSecondStageJarProjectInsert(String projectID) {
-    executor.executeUpdate("UPDATE " + name + " SET path = 'BEGIN_SECOND' where project_id=" + projectID); 
+  public void beginSecondStageJarProjectInsert(Integer projectID) {
+    executor.executeUpdate(table, PATH.getEquals("BEGIN_SECOND"), PROJECT_ID.getEquals(projectID)); 
   }
   
-  public void completeCrawledProjectInsert(String projectID) {
-    executor.executeUpdate("UPDATE " + name + " SET hash = NULL where project_id=" + projectID);
+  public void completeCrawledProjectInsert(Integer projectID) {
+    executor.executeUpdate(table, HASH.setNull(), PROJECT_ID.getEquals(projectID));
   }
   
-  public void completeJarProjectInsert(String projectID) {
-    executor.executeUpdate("UPDATE " + name + " SET path = NULL where project_id=" + projectID); 
+  public void completeJarProjectInsert(Integer projectID) {
+    executor.executeUpdate(table, PATH.setNull(), PROJECT_ID.getEquals(projectID)); 
   }
   
   // ---- DELETE ----
-  public void deleteProject(String projectID) {
-    executor.delete(name, "project_id=" + projectID);
+  public void deleteProject(Integer projectID) {
+    executor.delete(table, PROJECT_ID.getEquals(projectID));
   }
   
   // ---- SELECT ----
-  private ResultTranslator<LimitedProjectDB> LIMITED_PROJECT_TRANSLATOR = new ResultTranslator<LimitedProjectDB>() {
-    @Override
-    public LimitedProjectDB translate(ResultSet result) throws SQLException {
-      return new LimitedProjectDB(result.getString(1), Project.valueOf(result.getString(2)), result.getString(3), result.getString(4));
-    }
-    
-    @Override
-    public String getSelect() {
-      return "project_id,project_type,path,hash";
-    }
-  };
-  
-  private ResultTranslator<ProjectDB> PROJECT_TRANSLATOR = new ResultTranslator<ProjectDB>() {
-    @Override
-    public ProjectDB translate(ResultSet result) throws SQLException {
-      return new ProjectDB(result.getString(1), Project.valueOf(result.getString(2)), result.getString(3), result.getString(4), result.getString(5), result.getString(6), result.getString(7), result.getString(8), result.getBoolean(9));
-    }
-    
-    @Override
-    public String getSelect() {
-      return "project_id,project_type,name,description,version,groop,path,hash,has_source";
-    }
-  };
-  
-  public String getProjectCount() {
-    return executor.getRowCount(name);
-  }
-  
-  public LimitedProjectDB getLimitedProjectByPath(String path) {
-    return executor.selectSingle(name, LIMITED_PROJECT_TRANSLATOR.getSelect(), "path='" + path + "'", LIMITED_PROJECT_TRANSLATOR);
-  }
-  
-  public LimitedProjectDB getLimitedProjectByHash(String hash) {
-    return executor.selectSingle(name, LIMITED_PROJECT_TRANSLATOR.getSelect(), "hash='" + hash + "'", LIMITED_PROJECT_TRANSLATOR);
-  }
-  
-  public ProjectDB getProjectByProjectID(String projectID) {
-    return executor.selectSingle(name, PROJECT_TRANSLATOR.getSelect(), "project_id=" + projectID, PROJECT_TRANSLATOR);
-  }
-  
-  public String getProjectIDByPath(String path) {
-    return executor.selectSingle(name, "project_id", "path='" + path + "'");
-  }
-  
-  public String getProjectIDByName(String project) {
-    return executor.selectSingle(name, "project_id", "name='" + project + "'");
-  }
-  
-  public String getHashByProjectID(String projectID) {
-    return executor.selectSingle(name, "hash", "project_id=" + projectID);
-  }
-  
-  public String getProjectIDByHash(String hash) {
-    return executor.selectSingle(name, "project_id", "hash='" + hash + "'");
-  }
-  
-  public String getUnknownsProject() {
-    return executor.selectSingle(name, "project_id", "name='unknowns'");
-  }
-  
-  public String getPrimitiveProject() {
-    return executor.selectSingle(name, "project_id", "name='primitives'");
-  }
-  
-  public Collection<String> getJavaLibraryProjects() {
-    return executor.select(name, "project_id", "project_type='" + Project.JAVA_LIBRARY + "'");
-  }
+//  public String getProjectCount() {
+//    return executor.getRowCount(name);
+//  }
+//  
+//  public SmallProjectDB getLimitedProjectByPath(String path) {
+//    return executor.selectSingle(name, LIMITED_PROJECT_TRANSLATOR.getSelect(), "path='" + path + "'", LIMITED_PROJECT_TRANSLATOR);
+//  }
+//  
+//  public SmallProjectDB getLimitedProjectByHash(String hash) {
+//    return executor.selectSingle(name, LIMITED_PROJECT_TRANSLATOR.getSelect(), "hash='" + hash + "'", LIMITED_PROJECT_TRANSLATOR);
+//  }
+//  
+//  public LargeProjectDB getProjectByProjectID(String projectID) {
+//    return executor.selectSingle(name, PROJECT_TRANSLATOR.getSelect(), "project_id=" + projectID, PROJECT_TRANSLATOR);
+//  }
+//  
+//  public String getProjectIDByPath(String path) {
+//    return executor.selectSingle(name, "project_id", "path='" + path + "'");
+//  }
+//  
+//  public String getProjectIDByName(String project) {
+//    return executor.selectSingle(name, "project_id", "name='" + project + "'");
+//  }
+//  
+//  public String getHashByProjectID(String projectID) {
+//    return executor.selectSingle(name, "hash", "project_id=" + projectID);
+//  }
+//  
+//  public String getProjectIDByHash(String hash) {
+//    return executor.selectSingle(name, "project_id", "hash='" + hash + "'");
+//  }
+//  
+//  public String getUnknownsProject() {
+//    return executor.selectSingle(name, "project_id", "name='unknowns'");
+//  }
+//  
+//  public String getPrimitiveProject() {
+//    return executor.selectSingle(name, "project_id", "name='primitives'");
+//  }
+//  
+//  public Collection<String> getJavaLibraryProjects() {
+//    return executor.select(name, "project_id", "project_type='" + Project.JAVA_LIBRARY + "'");
+//  }
 }

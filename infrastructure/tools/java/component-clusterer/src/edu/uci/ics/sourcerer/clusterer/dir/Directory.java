@@ -15,51 +15,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- *
- */
 package edu.uci.ics.sourcerer.clusterer.dir;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Directory {
+  private static final int minMatchSize = DirectoryClusterer.MINIMUM_MATCH_SIZE.getValue();
   private String project;
   private String path;
-  private DirectoryMatchedFile[] files;
+  private JavaFile[] files;
   
-  private int matched30 = 0;
-  private int matched50 = 0;
-  private int matched80 = 0;
+  private Collection<String> matches80;
+  private Collection<String> matches50;
+  private Collection<String> matches30;
   
-  protected Directory(String project, String path, DirectoryMatchedFile[] files) {
+  protected Directory(String project, String path, JavaFile[] files) {
     this.project = project;
     this.path = path;
     this.files = files;
   }
   
-  private Directory(String project, String path, int matches30, int matches50, int matches80) {
-    this.project = project;
-    this.path = path;
-    this.matched30 = matches30;
-    this.matched50 = matches50;
-    this.matched80 = matches80;
+  public JavaFile[] getFiles() {
+    return files;
   }
   
   public String getProject() {
@@ -70,182 +54,70 @@ public class Directory {
     return path;
   }
   
-  public DirectoryMatchedFile[] getFiles() {
-    return files;
+  public Collection<String> getMatches80() {
+    if (matches80 == null) {
+      return Collections.emptyList();
+    }  else {
+      return matches80;
+    }
   }
   
-  public int get30() {
-    return matched30;
+  public Collection<String> getMatches50() {
+    if (matches50 == null) {
+      return Collections.emptyList();
+    } else {
+      return matches50;
+    }
   }
   
-  public int get50() {
-    return matched50;
-  }
-  
-  public int get80() {
-    return matched80;
-  }
-  
-  public String toMatchedDirLine() {
-    return project + " " + path + " " + matched30 + " " + matched50 + " " + matched80;
-  }
-  
-  public static Iterable<Directory> loadMatchedDirectories(final File file) {
-    return new Iterable<Directory>() {
-      
-      @Override
-      public Iterator<Directory> iterator() {
-        try {
-          final BufferedReader br = new BufferedReader(new FileReader(file));
-          return new Iterator<Directory>() {
-            String nextLine = null;
-            
-            @Override
-            public void remove() {
-              throw new UnsupportedOperationException();
-            }
-            
-            @Override
-            public Directory next() {
-              if (hasNext()) {
-                String[] parts = nextLine.split(" ");
-                String oldLine = nextLine;
-                nextLine = null;
-                try {
-                  if (parts.length == 5) {
-                    return new Directory(parts[0], parts[1], Integer.parseInt(parts[2]), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]));
-                  } else {
-                    logger.log(Level.SEVERE, "Unable to parse line: " + oldLine);
-                    return next();
-                  }
-                } catch (NumberFormatException e) {
-                  logger.log(Level.SEVERE, "Unable to parse line: " + oldLine, e);
-                  return next();
-                }
-              } else {
-                throw new NoSuchElementException();
-              }
-            }
-            
-            @Override
-            public boolean hasNext() {
-              if (nextLine == null) {
-                try {
-                  nextLine = br.readLine();
-                } catch (IOException e) {
-                  logger.log(Level.SEVERE,  "Error reading matched directories file: " + file.getPath(), e);
-                  FileUtils.close(br);
-                  return false;
-                }
-                if (nextLine == null) {
-                  FileUtils.close(br);
-                  return false;
-                } else {
-                  return true;
-                }
-              } else {
-                return true;
-              }
-            }
-          };
-        } catch (IOException e) {
-          logger.log(Level.SEVERE, "Error reading matched directories file: " + file.getPath(), e);
-          return Collections.<Directory>emptySet().iterator();
-        }
-      }
-    };
+  public Collection<String> getMatches30() {
+    if (matches30 == null) {
+      return Collections.emptyList();
+    } else {
+      return matches30;
+    }
   }
   
   public void compare(Directory other, Set<String> ignore) {
     if (!project.equals(other.project)) {
-      Collection<DirectoryMatchedFile> myMatches = Helper.newLinkedList();
-      Collection<DirectoryMatchedFile> otherMatches = Helper.newLinkedList();
+      int matchCount = 0;
       int i = 0, j = 0;
       while (i < files.length && j < other.files.length) {
-        if (ignore.contains(files[i])) {
+        if (ignore.contains(files[i].getName())) {
           i++;
-          continue;
-        }
-        if (ignore.contains(other.files[j])) {
+        } else if (ignore.contains(other.files[j].getName())) {
           j++;
-          continue;
-        }
-        int comp = files[i].getName().compareTo(other.files[j].getName());
-        if (comp == 0) {
-          myMatches.add(files[i]);
-          otherMatches.add(other.files[j]);
-          i++;
-          j++;
-        } else if (comp < 0) {
-          i++;
         } else {
-          j++;
+          int comp = files[i].getName().compareTo(other.files[j].getName());
+          if (comp == 0) {
+            matchCount++;
+            i++;
+            j++;
+          } else if (comp < 0) {
+            i++;
+          } else {
+            j++;
+          }
         }
       }
-      if (myMatches.size() < DirectoryClusterer.MINIMUM_DIR_SIZE.getValue()) {
+      
+      if (matchCount < minMatchSize) {
         return;
       }
       
-      double percent = ((double) myMatches.size()) / ((double) Math.min(files.length, other.files.length));
-      if (percent >= .8) {
-        matched30++;
-        matched50++;
-        matched80++;
-        other.matched30++;
-        other.matched50++;
-        other.matched80++;
-        for (DirectoryMatchedFile file : myMatches) {
-          file.increment80();
-          file.increment50();
-          file.increment30();
-        }
-        for (DirectoryMatchedFile file : otherMatches) {
-          file.increment80();
-          file.increment50();
-          file.increment30();
-        }
-      } else if (percent >= .5) {
-        matched30++;
-        matched50++;
-        other.matched30++;
-        other.matched50++;
-        for (DirectoryMatchedFile file : myMatches) {
-          file.increment50();
-          file.increment30();
-        }
-        for (DirectoryMatchedFile file : otherMatches) {
-          file.increment50();
-          file.increment30();
-        }
-      } else if (percent >= .3) {
-        matched30++;
-        other.matched30++;
-        for (DirectoryMatchedFile file : myMatches) {
-          file.increment30();
-        }
-        for (DirectoryMatchedFile file : otherMatches) {
-          file.increment30();
-        }
+      double percent = (double) matchCount / Math.min(files.length, other.files.length);
+      if (percent < .3) {
+        return;
       }
-    }
-  }
-  
-  public Collection<String> matches(Directory other, Set<String> ignore, double threshold) {
-    if (!project.equals(other.project)) {
-      Collection<String> matching = Helper.newLinkedList();
-      int i = 0, j = 0;
+      i = 0;
+      j = 0;
+      String matchingPath = other.project + ":" + other.path;
+      String currentPath = project + ":" + path;
       while (i < files.length && j < other.files.length) {
-        if (ignore.contains(files[i])) {
-          i++;
-          continue;
-        }
-        if (ignore.contains(other.files[j])) {
-          j++;
-          continue;
-        }
         int comp = files[i].getName().compareTo(other.files[j].getName());
         if (comp == 0) {
-          matching.add(files[i].getName());
+          files[i].addMatch(percent, matchingPath);
+          other.files[j].addMatch(percent, currentPath);
           i++;
           j++;
         } else if (comp < 0) {
@@ -254,35 +126,22 @@ public class Directory {
           j++;
         }
       }
-      if (matching.size() < DirectoryClusterer.MINIMUM_DIR_SIZE.getValue()) {
-        return Collections.emptyList();
-      }
-      
-      double percent = ((double) matching.size()) / ((double) Math.min(files.length, other.files.length));
-      if (percent >= threshold) {
-        return matching;
+      if (percent >= .8) {
+        if (matches80 == null) {
+          matches80 = Helper.newLinkedList();
+        }
+        matches80.add(matchingPath);
+      } else if (percent >= .5) {
+        if (matches50 == null) {
+          matches50 = Helper.newLinkedList();
+        }
+        matches50.add(matchingPath);
       } else {
-        return Collections.emptyList();
+        if (matches30 == null) {
+          matches30 = Helper.newLinkedList();
+        }
+        matches30.add(matchingPath);
       }
-    } else {
-      return Collections.emptyList();
     }
-  }
-  
-  public boolean matched30() {
-    return matched30 > 0;
-  }
-  
-  public boolean matched50() {
-    return matched50 > 0;
-  }
-  
-  public boolean matched80() {
-    return matched80 > 0;
-  }
-  
-  @Override
-  public String toString() {
-    return path;
   }
 }

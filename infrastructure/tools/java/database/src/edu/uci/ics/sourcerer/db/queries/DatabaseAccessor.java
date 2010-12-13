@@ -15,10 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.db.schema;
+package edu.uci.ics.sourcerer.db.queries;
 
 import java.io.Closeable;
 
+import edu.uci.ics.sourcerer.db.schema.CommentsTable;
+import edu.uci.ics.sourcerer.db.schema.EntitiesTable;
+import edu.uci.ics.sourcerer.db.schema.FilesTable;
+import edu.uci.ics.sourcerer.db.schema.ImportsTable;
+import edu.uci.ics.sourcerer.db.schema.ProblemsTable;
+import edu.uci.ics.sourcerer.db.schema.ProjectsTable;
+import edu.uci.ics.sourcerer.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
@@ -37,6 +44,14 @@ public abstract class DatabaseAccessor implements Closeable {
   protected final CommentsTable commentsTable;
   protected final EntitiesTable entitiesTable;
   protected final RelationsTable relationsTable;
+
+  protected final ProjectQueries projectQueries;
+  protected final FileQueries fileQueries;
+  protected final CommentQueries commentQueries;
+  protected final EntityQueries entityQueries;
+  protected final RelationQueries relationQueries;
+  
+  protected final JoinQueries joinQueries;
   
   protected DatabaseAccessor(DatabaseConnection connection) {
     executor = new QueryExecutor(connection.getConnection());
@@ -49,6 +64,14 @@ public abstract class DatabaseAccessor implements Closeable {
     commentsTable = new CommentsTable(executor, locker);
     entitiesTable = new EntitiesTable(executor, locker);
     relationsTable = new RelationsTable(executor, locker);
+    
+    projectQueries = new ProjectQueries(executor);
+    fileQueries = new FileQueries(executor);
+    commentQueries = new CommentQueries(executor);
+    entityQueries = new EntityQueries(executor);
+    relationQueries = new RelationQueries(executor);
+    
+    joinQueries = new JoinQueries(executor);
   }
   
   public void close() {
@@ -67,7 +90,7 @@ public abstract class DatabaseAccessor implements Closeable {
     locker.unlock();
   }
   
-  protected void deleteByProject(String projectID) {
+  protected void deleteByProject(Integer projectID) {
     // Delete the files
     filesTable.deleteByProjectID(projectID);
     

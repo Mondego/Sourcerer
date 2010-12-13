@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.db.schema.DatabaseAccessor;
+import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.extractor.io.IUsedJarWriter;
 import edu.uci.ics.sourcerer.model.extracted.MissingTypeEX;
@@ -22,22 +22,22 @@ public class MissingTypeResolver extends DatabaseAccessor {
 
   public Collection<IndexedJar> resolveMissingTypes(JarIndex index, Extracted extracted, IUsedJarWriter writer) {
     // Keep track of all the jars
-    Map<String, JarTypeCollection> jars = Helper.newHashMap();
+    Map<Integer, JarTypeCollection> jars = Helper.newHashMap();
     
     // Go through every missing type and find the jars that contain it
     Collection<String> types = Helper.newHashSet();
     for (MissingTypeEX type : extracted.getMissingTypeReader()) {
       if (!types.contains(type.getFqn())) {
         types.add(type.getFqn());
-        Collection<String> results = entitiesTable.getJarProjectIDsByFqn(type.getFqn());
+        Collection<Integer> results = joinQueries.getJarProjectIDsByFqn(type.getFqn());
         // Try it as a package
         if (results.size() == 0) {
-          results = entitiesTable.getJarProjectIDsByPackage(type.getFqn());
+          results = joinQueries.getJarProjectIDsByPackage(type.getFqn());
         }
         if (results.size() == 0) {
 //          logger.severe("  Unable to find missing type: " + type.getFqn());
         } else {
-          for (String jarID : results ) {
+          for (Integer jarID : results) {
             JarTypeCollection collection = jars.get(jarID);
             if (collection == null) {
               collection = new JarTypeCollection(jarID);
@@ -78,7 +78,7 @@ public class MissingTypeResolver extends DatabaseAccessor {
         for (JarTypeCollection jar : jars.values()) {
           jar.remove(bestJar.getTypes());
         }
-        String hash = projectsTable.getHashByProjectID(bestJar.getJarID());
+        String hash = projectQueries.getHashByProjectID(bestJar.getJarID());
         if (hash == null) {
           logger.log(Level.SEVERE, "Unable to find jar hash: " + bestJar.getJarID());
         } else {
@@ -98,15 +98,15 @@ public class MissingTypeResolver extends DatabaseAccessor {
   }
   
   private static class JarTypeCollection {
-    private String jarID;
+    private Integer jarID;
     private Collection<String> types;
     
-    public JarTypeCollection(String jarID) {
+    public JarTypeCollection(Integer jarID) {
       this.jarID = jarID;
       types = Helper.newHashSet();
     }
     
-    public String getJarID() {
+    public Integer getJarID() {
       return jarID;
     }
     

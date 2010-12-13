@@ -75,7 +75,7 @@
       <src path="${model}" />
       <src path="${database}" />
       <src path="${file-server}" />
-    	<src path="${component-clusterer}" />
+      <src path="${component-clusterer}" />
     </javac>
 
     <!-- Copy the source -->

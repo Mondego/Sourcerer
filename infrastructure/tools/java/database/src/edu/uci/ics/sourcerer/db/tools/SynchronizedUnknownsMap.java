@@ -22,28 +22,28 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.util.Map;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.db.schema.DatabaseAccessor;
+import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.Entity;
-import edu.uci.ics.sourcerer.model.db.LimitedEntityDB;
-import edu.uci.ics.sourcerer.model.db.SlightlyLessLimitedEntityDB;
+import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
+import edu.uci.ics.sourcerer.model.db.SmallEntityDB;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class SynchronizedUnknownsMap extends DatabaseAccessor {
-  private String unknownsProject;
-  private volatile Map<String, String> unknowns;
+  private Integer unknownsProject;
+  private volatile Map<String, Integer> unknowns;
   
   public SynchronizedUnknownsMap(DatabaseConnection connection) {
     super(connection);
     
-    unknownsProject = projectsTable.getUnknownsProject();
+    unknownsProject = projectQueries.getUnknownsProjectID();
     
     unknowns = Helper.newHashMap();
-    for (SlightlyLessLimitedEntityDB entity : entitiesTable.getUnknownEntities(unknownsProject)) {
+    for (MediumEntityDB entity : entityQueries.getMediumByProjectID(unknownsProject, Entity.UNKNOWN)) {
       unknowns.put(entity.getFqn(), entity.getEntityID());
     }
     close();
@@ -52,7 +52,7 @@ public class SynchronizedUnknownsMap extends DatabaseAccessor {
   
   protected synchronized void add(EntitiesTable entitiesTable, String fqn) {
     if (!contains(fqn)) {
-      String eid = entitiesTable.forceInsertUnknown(fqn, unknownsProject);
+      Integer eid = entitiesTable.forceInsertUnknown(fqn, unknownsProject);
       if (eid == null) {
         logger.log(Level.SEVERE, "Missing eid for unknown: " + fqn);
       } else {
@@ -65,12 +65,12 @@ public class SynchronizedUnknownsMap extends DatabaseAccessor {
     return unknowns.containsKey(fqn);
   }
   
-  protected synchronized LimitedEntityDB getUnknown(String fqn) {
-    String eid = unknowns.get(fqn);
+  protected synchronized SmallEntityDB getUnknown(String fqn) {
+    Integer eid = unknowns.get(fqn);
     if (eid == null) {
       return null;
     } else {
-      return new LimitedEntityDB(unknownsProject, unknowns.get(fqn), Entity.UNKNOWN);
+      return new SmallEntityDB(unknowns.get(fqn), Entity.UNKNOWN, unknownsProject);
     }
   }
 }

@@ -15,27 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.model.db;
+package edu.uci.ics.sourcerer.util;
 
-public class JarClassFileDB {
-  private String jarID;
-  private String hash;
-  private String path;
+/**
+ * @author Joel Ossher (jossher@uci.edu)
+ */
+public class Triplet <A,B,C> {
+  private A a;
+  private B b;
+  private C c;
   
-  public JarClassFileDB(String jarID, String hash, String path) {
-    this.jarID = jarID;
-    this.hash = hash;
-    this.path = path;
+  public Triplet(A a, B b, C c) {
+    this.a = a;
+    this.b = b;
+    this.c = c;
   }
-
-  public String getJarID() {
-    return jarID;
+  
+  public A getA() {
+    return a;
   }
-
-  public String getHash() {
-    return hash;
+  
+  public B getB() {
+    return b;
   }
-
-  public String getPath() {
-    return path;
-  }}
+  
+  public C getC() {
+    return c;
+  }
+}

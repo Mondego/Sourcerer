@@ -19,13 +19,17 @@ package edu.uci.ics.sourcerer.db.schema;
 
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.TableLocker;
+import edu.uci.ics.sourcerer.db.util.columns.BooleanColumn;
+import edu.uci.ics.sourcerer.db.util.columns.Column;
+import edu.uci.ics.sourcerer.db.util.columns.IntColumn;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class ImportsTable extends DatabaseTable {
-  protected ImportsTable(QueryExecutor executor, TableLocker locker) {
-    super(executor, locker, "imports");
+  public static final String TABLE = "imports";
+  public ImportsTable(QueryExecutor executor, TableLocker locker) {
+    super(executor, locker, TABLE);
   }
   /*  
    *  +-------------+-------------------+-------+--------+
@@ -41,39 +45,44 @@ public final class ImportsTable extends DatabaseTable {
    *  +-------------+-------------------+-------+--------+
    */
   
+  public static final Column<Boolean> STATIC = BooleanColumn.getBooleanNotNull("static", TABLE);
+  public static final Column<Boolean> ON_DEMAND = BooleanColumn.getBooleanNotNull("on_demand", TABLE);
+  public static final Column<Integer> EID = IntColumn.getID("eid", TABLE).addIndex();
+  public static final Column<Integer> PROJECT_ID = IntColumn.getID("project_id", TABLE).addIndex();
+  public static final Column<Integer> FILE_ID = IntColumn.getID("file_id", TABLE).addIndex();
+  public static final Column<Integer> OFFSET = IntColumn.getUnsignedIntNotNull("offset", TABLE);
+  public static final Column<Integer> LENGTH = IntColumn.getUnsignedIntNotNull("length", TABLE);
+  
   // ---- CREATE ----
   public void createTable() {
-    executor.createTable(name, 
-        "static BOOLEAN NOT NULL",
-        "on_demand BOOLEAN NOT NULL",
-        "eid BIGINT UNSIGNED NOT NULL",
-        "project_id BIGINT UNSIGNED NOT NULL",
-        "file_id BIGINT UNSIGNED NOT NULL",
-        "offset INT UNSIGNED NOT NULL",
-        "length INT UNSIGNED NOT NULL",
-        "INDEX(eid)",
-        "INDEX(project_id)",
-        "INDEX(file_id)");
+    executor.createTable(table, 
+        STATIC,
+        ON_DEMAND,
+        EID,
+        PROJECT_ID,
+        FILE_ID,
+        OFFSET,
+        LENGTH);
   }
   
   // ---- INSERT ----
-  private String getInsertValue(boolean isStatic, boolean onDemand, String eid, String projectID, String fileID, String offset, String length) {
+  private String getInsertValue(boolean isStatic, boolean onDemand, Integer eid, Integer projectID, Integer fileID, Integer offset, Integer length) {
     return buildInsertValue(
-        convertNotNullBoolean(isStatic),
-        convertNotNullBoolean(onDemand),
-        convertNotNullNumber(eid),
-        convertNotNullNumber(projectID),
-        convertNotNullNumber(fileID),
-        convertOffset(offset),
-        convertLength(length));
+        STATIC.convertToDB(isStatic),
+        ON_DEMAND.convertToDB(onDemand),
+        EID.convertToDB(eid),
+        PROJECT_ID.convertToDB(projectID),
+        FILE_ID.convertToDB(fileID),
+        OFFSET.convertToDB(offset),
+        LENGTH.convertToDB(length));
   }
   
-  public void insert(boolean isStatic, boolean onDemand, String eid, String projectID, String fileID, String offset, String length) {
+  public void insert(boolean isStatic, boolean onDemand, Integer eid, Integer projectID, Integer fileID, Integer offset, Integer length) {
     inserter.addValue(getInsertValue(isStatic, onDemand, eid, projectID, fileID, offset, length));
   }
   
   // ---- DELETE ----
-  public void deleteByProjectID(String projectID) {
-    executor.delete(name, "project_id=" + projectID);
+  public void deleteByProjectID(Integer projectID) {
+    executor.delete(table, PROJECT_ID.getEquals(projectID));
   }
 }
