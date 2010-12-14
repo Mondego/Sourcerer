@@ -194,7 +194,7 @@ public class HashingClusterer {
             if (cluster == null) {
               cluster = new FileCluster();
               files.put(nextItem.copy(), cluster);
-              matching.addFiles(cluster);
+              matching.addCluster(cluster);
             }
             cluster.addFile(parts[0], parts[1]);
           }

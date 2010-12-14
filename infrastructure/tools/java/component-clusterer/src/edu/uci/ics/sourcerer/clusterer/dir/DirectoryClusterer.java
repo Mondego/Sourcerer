@@ -357,14 +357,14 @@ public class DirectoryClusterer {
           } else {
             FileCluster cluster = new FileCluster();
             cluster.addFile(parts[0], parts[1] + name);
-            matching.addFiles(cluster);
+            matching.addCluster(cluster);
           }
         }
       }
       
       
       for (FileCluster cluster : files.values()) {
-        matching.addFiles(cluster);
+        matching.addCluster(cluster);
       }
       return matching;
     } catch (IOException e) {

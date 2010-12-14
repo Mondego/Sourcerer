@@ -99,7 +99,7 @@ public class FqnClusterer {
           if (cluster == null) {
             cluster = new FileCluster();
             files.put(parts[4], cluster);
-            matching.addFiles(cluster);
+            matching.addCluster(cluster);
           }
           cluster.addFile(parts[0], parts[2]);
         } else {

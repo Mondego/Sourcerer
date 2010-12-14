@@ -32,7 +32,7 @@ public class Matching {
     files = Helper.newHashSet();
   }
   
-  public void addFiles(FileCluster cluster) {
+  public void addCluster(FileCluster cluster) {
     files.add(cluster);
   }
   

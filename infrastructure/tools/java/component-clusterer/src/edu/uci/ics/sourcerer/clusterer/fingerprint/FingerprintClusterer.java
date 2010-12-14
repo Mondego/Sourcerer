@@ -25,12 +25,17 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.clusterer.fqn.FqnClusterer;
+import edu.uci.ics.sourcerer.clusterer.stats.FileCluster;
+import edu.uci.ics.sourcerer.clusterer.stats.Matching;
 import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
+import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -92,6 +97,50 @@ public class FingerprintClusterer {
         FileUtils.close(br);
         FileUtils.close(bw);
       }
+    }
+  }
+  
+  public static Matching getMatching() {
+    logger.info("Processing fingerprint file listing...");
+    
+    BufferedReader br = null;
+    try {
+      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FINGERPRINT_FILE_LISTING.getValue())));
+      
+      Matching matching = new Matching();
+      Map<FingerprintMatcher, FileCluster> files = Helper.newHashMap();
+      for (String line = br.readLine(); line != null; line = br.readLine()) {
+        try {
+          String[] parts = line.split(" ");
+          if (parts.length >= 6) {
+            String[] names = new String[parts.length - 5];
+            int startIdx = parts[4].lastIndexOf('.') + 1; 
+            names[0] = parts[4].substring(startIdx);
+            for (int i = 6; i < parts.length; i++) {
+              names[i - 5] = parts[i].substring(startIdx);
+            }
+            Arrays.sort(names, 1, names.length);
+            FingerprintMatcher matcher = new FingerprintMatcher(names);
+            FileCluster cluster = files.get(matcher);
+            if (cluster == null) {
+              cluster = new FileCluster();
+              files.put(matcher, cluster);
+              matching.addCluster(cluster);
+            }
+            cluster.addFile(parts[0], parts[2]);
+          } else {
+            logger.log(Level.SEVERE, "Invalid line: " + line);
+          }
+        } catch (IndexOutOfBoundsException e) {
+          logger.log(Level.SEVERE, "Invalid line (substring problem): " + line, e);
+        }
+      }
+      return matching;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error in reading file listing.", e);
+      return null;
+    } finally {
+      FileUtils.close(br);
     }
   }
 }
