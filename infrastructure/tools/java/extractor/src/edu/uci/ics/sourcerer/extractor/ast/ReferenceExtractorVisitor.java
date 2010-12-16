@@ -351,7 +351,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         for (IMethodBinding method : binding.getDeclaredMethods()) {
           if (method.isDefaultConstructor()) {
             // Write the entity
-            String constructorFqn = getMethodFqn(method, false);
+            String constructorFqn = getMethodFqn(method, true);
             entityWriter.writeConstructor(constructorFqn, method.getModifiers(), getUnknownLocaiton());
 
             // Write the inside relation
@@ -542,7 +542,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       for (IMethodBinding method : binding.getDeclaredMethods()) {
         if (method.isDefaultConstructor()) {
           // Write the entity
-          String constructorFqn = getMethodFqn(method, false);
+          String constructorFqn = getMethodFqn(method, true);
           entityWriter.writeConstructor(constructorFqn, method.getModifiers(), getUnknownLocaiton());
 
           // Write the inside relation
@@ -1961,8 +1961,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     getMethodArgs(fqnBuilder, binding);
     return fqnBuilder.toString();
   }
-  
   private String getMethodFqn(IMethodBinding binding, boolean declaration) {
+  
     binding = binding.getMethodDeclaration();
     StringBuilder fqnBuilder = new StringBuilder();
     ITypeBinding declaringClass = binding.getDeclaringClass();

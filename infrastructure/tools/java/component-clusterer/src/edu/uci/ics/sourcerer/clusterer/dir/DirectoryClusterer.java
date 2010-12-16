@@ -39,7 +39,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.clusterer.stats.EasyFilter;
 import edu.uci.ics.sourcerer.clusterer.stats.FileCluster;
+import edu.uci.ics.sourcerer.clusterer.stats.Filter;
 import edu.uci.ics.sourcerer.clusterer.stats.Matching;
 import edu.uci.ics.sourcerer.repo.base.IDirectory;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
@@ -147,7 +149,7 @@ public class DirectoryClusterer {
                     if (parts.length < 2) {
                       logger.log(Level.SEVERE, "Invalid directory line: " + line);
                     } else {
-                      String basePath = parts[0] + "/";
+                      String basePath = parts[0] + ":";
                       if (parts[1].length() > 0) {
                         basePath += parts[1] + "/";
                       }
@@ -306,6 +308,10 @@ public class DirectoryClusterer {
   }
   
   public static Matching getMatching80() {
+    return getFilteredMatching80(new EasyFilter());
+  }
+  
+  public static Matching getFilteredMatching80(Filter filter) {
     logger.info("Processing dir file listing...");
     
     BufferedReader br = null;
@@ -321,43 +327,194 @@ public class DirectoryClusterer {
         } else {
           int count = Integer.parseInt(parts[3]);
           String name = "/" + parts[2];
-          if (count > 0) {
-            String key = parts[0] + ":" + parts[1] + name;
-            
-            FileCluster cluster = files.get(key);
-            for (int i = 6; cluster == null && i < 6 + count; i++) {
-              cluster = files.get(parts[i] + name);
-            }
-            if (cluster == null) {
-              cluster = new FileCluster();
-            }
-            
-            if (!files.containsKey(key)) {
-              files.put(key, cluster);
-              cluster.addFile(parts[0], parts[1] + name);
-            }
-            
-            for (int i = 6; i < 6 + count; i++) {
-              key = parts[i] + name;
-              FileCluster otherCluster = files.get(key);
-              if (otherCluster == null) {
+          if (filter.pass(parts[0], parts[1] + name)) {
+            if (count > 0) {
+              String key = parts[0] + ":" + parts[1] + name;
+              FileCluster cluster = files.get(key);
+              for (int i = 6; cluster == null && i < 6 + count; i++) {
+                cluster = files.get(parts[i] + name);
+              }
+              if (cluster == null) {
+                cluster = new FileCluster();
+              }
+              
+              if (!files.containsKey(key)) {
                 files.put(key, cluster);
-                int colon = key.indexOf(':');
-                cluster.addFile(key.substring(0, colon), key.substring(colon + 1));
-              } else if (cluster != otherCluster) {
-                // Merge the two clusters
-                // Update the values
-                for (String path : otherCluster.getPaths()) {
-                  files.put(path, cluster);
-                  int colon = path.indexOf(':');
-                  cluster.addFile(path.substring(0, colon), path.substring(colon + 1));
+                cluster.addFile(parts[0], parts[1] + name);
+              }
+              
+              for (int i = 6; i < 6 + count; i++) {
+                key = parts[i] + name;
+                FileCluster otherCluster = files.get(key);
+                if (otherCluster == null) {
+                  files.put(key, cluster);
+                  int colon = key.indexOf(':');
+                  cluster.addFile(key.substring(0, colon), key.substring(colon + 1));
+                } else if (cluster != otherCluster) {
+                  // Merge the two clusters
+                  // Update the values
+                  for (String path : otherCluster.getPaths()) {
+                    files.put(path, cluster);
+                    int colon = path.indexOf(':');
+                    cluster.addFile(path.substring(0, colon), path.substring(colon + 1));
+                  }
                 }
               }
+            } else {
+              FileCluster cluster = new FileCluster();
+              cluster.addFile(parts[0], parts[1] + name);
+              matching.addCluster(cluster);
             }
-          } else {
-            FileCluster cluster = new FileCluster();
-            cluster.addFile(parts[0], parts[1] + name);
-            matching.addCluster(cluster);
+          }
+        }
+      }
+      
+      
+      for (FileCluster cluster : files.values()) {
+        matching.addCluster(cluster);
+      }
+      return matching;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error in reading file listing.", e);
+      return null;
+    } finally {
+      FileUtils.close(br);
+    }
+  }
+  
+  public static Matching getMatching50() {
+    return getFilteredMatching50(new EasyFilter());
+  }
+  
+  public static Matching getFilteredMatching50(Filter filter) {
+    logger.info("Processing dir file listing...");
+    
+    BufferedReader br = null;
+    try {
+      br = new BufferedReader(new FileReader(new File(INPUT.getValue(), MATCHED_FILES.getValue())));
+      
+      Matching matching = new Matching();
+      Map<String, FileCluster> files = Helper.newHashMap();
+      for (String line = br.readLine(); line != null; line = br.readLine()) {
+        String[] parts = line.split(" ");
+        if (parts.length < 6) {
+          logger.log(Level.SEVERE, "Invalid line: " + line);
+        } else {
+          int count = Integer.parseInt(parts[3]) + Integer.parseInt(parts[4]);
+          String name = "/" + parts[2];
+          if (filter.pass(parts[0], parts[1] + name)) {
+            if (count > 0) {
+              String key = parts[0] + ":" + parts[1] + name;
+              FileCluster cluster = files.get(key);
+              for (int i = 6; cluster == null && i < 6 + count; i++) {
+                cluster = files.get(parts[i] + name);
+              }
+              if (cluster == null) {
+                cluster = new FileCluster();
+              }
+              
+              if (!files.containsKey(key)) {
+                files.put(key, cluster);
+                cluster.addFile(parts[0], parts[1] + name);
+              }
+              
+              for (int i = 6; i < 6 + count; i++) {
+                key = parts[i] + name;
+                FileCluster otherCluster = files.get(key);
+                if (otherCluster == null) {
+                  files.put(key, cluster);
+                  int colon = key.indexOf(':');
+                  cluster.addFile(key.substring(0, colon), key.substring(colon + 1));
+                } else if (cluster != otherCluster) {
+                  // Merge the two clusters
+                  // Update the values
+                  for (String path : otherCluster.getPaths()) {
+                    files.put(path, cluster);
+                    int colon = path.indexOf(':');
+                    cluster.addFile(path.substring(0, colon), path.substring(colon + 1));
+                  }
+                }
+              }
+            } else {
+              FileCluster cluster = new FileCluster();
+              cluster.addFile(parts[0], parts[1] + name);
+              matching.addCluster(cluster);
+            }
+          }
+        }
+      }
+      
+      
+      for (FileCluster cluster : files.values()) {
+        matching.addCluster(cluster);
+      }
+      return matching;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error in reading file listing.", e);
+      return null;
+    } finally {
+      FileUtils.close(br);
+    }
+  }
+  
+  public static Matching getMatching30() {
+    return getFilteredMatching30(new EasyFilter());
+  }
+  
+  public static Matching getFilteredMatching30(Filter filter) {
+    logger.info("Processing dir file listing...");
+    
+    BufferedReader br = null;
+    try {
+      br = new BufferedReader(new FileReader(new File(INPUT.getValue(), MATCHED_FILES.getValue())));
+      
+      Matching matching = new Matching();
+      Map<String, FileCluster> files = Helper.newHashMap();
+      for (String line = br.readLine(); line != null; line = br.readLine()) {
+        String[] parts = line.split(" ");
+        if (parts.length < 6) {
+          logger.log(Level.SEVERE, "Invalid line: " + line);
+        } else {
+          int count = Integer.parseInt(parts[3]) + Integer.parseInt(parts[4]) + Integer.parseInt(parts[5]);
+          String name = "/" + parts[2];
+          if (filter.pass(parts[0], parts[1] + name)) {
+            if (count > 0) {
+              String key = parts[0] + ":" + parts[1] + name;
+              FileCluster cluster = files.get(key);
+              for (int i = 6; cluster == null && i < 6 + count; i++) {
+                cluster = files.get(parts[i] + name);
+              }
+              if (cluster == null) {
+                cluster = new FileCluster();
+              }
+              
+              if (!files.containsKey(key)) {
+                files.put(key, cluster);
+                cluster.addFile(parts[0], parts[1] + name);
+              }
+              
+              for (int i = 6; i < 6 + count; i++) {
+                key = parts[i] + name;
+                FileCluster otherCluster = files.get(key);
+                if (otherCluster == null) {
+                  files.put(key, cluster);
+                  int colon = key.indexOf(':');
+                  cluster.addFile(key.substring(0, colon), key.substring(colon + 1));
+                } else if (cluster != otherCluster) {
+                  // Merge the two clusters
+                  // Update the values
+                  for (String path : otherCluster.getPaths()) {
+                    files.put(path, cluster);
+                    int colon = path.indexOf(':');
+                    cluster.addFile(path.substring(0, colon), path.substring(colon + 1));
+                  }
+                }
+              }
+            } else {
+              FileCluster cluster = new FileCluster();
+              cluster.addFile(parts[0], parts[1] + name);
+              matching.addCluster(cluster);
+            }
           }
         }
       }

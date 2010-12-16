@@ -35,7 +35,9 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.clusterer.stats.EasyFilter;
 import edu.uci.ics.sourcerer.clusterer.stats.FileCluster;
+import edu.uci.ics.sourcerer.clusterer.stats.Filter;
 import edu.uci.ics.sourcerer.clusterer.stats.Matching;
 import edu.uci.ics.sourcerer.repo.base.IDirectory;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
@@ -140,7 +142,7 @@ public class HashingClusterer {
                   } else {
                     String[] parts = line.split(" ");
                     if (parts.length == 5) {
-                      next = parts[0] + "/" + parts[1];
+                      next = parts[0] + ":" + parts[1];
                     } else {
                       logger.log(Level.SEVERE, "Invalid file line: " + line);
                     }
@@ -174,6 +176,10 @@ public class HashingClusterer {
   }
     
   public static Matching getMatching() {
+    return getFilteredMatching(new EasyFilter());
+  }
+  
+  public static Matching getFilteredMatching(Filter filter) {
     logger.info("Processing hash file listing...");
     
     BufferedReader br = null;
@@ -187,16 +193,18 @@ public class HashingClusterer {
       for (String line = br.readLine(); line != null; line = br.readLine()) {
         String[] parts = line.split(" ");
         if (parts.length == 5) {
-          nextItem.setValues(parts[2], parts[3], Long.parseLong(parts[4]));
-          
-          if (nextItem.getLength() > 0) {
-            FileCluster cluster = files.get(nextItem);
-            if (cluster == null) {
-              cluster = new FileCluster();
-              files.put(nextItem.copy(), cluster);
-              matching.addCluster(cluster);
+          if (filter.pass(parts[0], parts[1])) {
+            nextItem.setValues(parts[2], parts[3], Long.parseLong(parts[4]));
+            
+            if (nextItem.getLength() > 0) {
+              FileCluster cluster = files.get(nextItem);
+              if (cluster == null) {
+                cluster = new FileCluster();
+                files.put(nextItem.copy(), cluster);
+                matching.addCluster(cluster);
+              }
+              cluster.addFile(parts[0], parts[1]);
             }
-            cluster.addFile(parts[0], parts[1]);
           }
         } else {
           logger.log(Level.SEVERE, "Invalid line: " + line);

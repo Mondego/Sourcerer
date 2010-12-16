@@ -89,7 +89,21 @@ public class Main {
       protected void action() {
         Aggregator.computeGeneralStats();
       }
-    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING);
+    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, Aggregator.GENERAL_STATISTICS);
+    
+  public static final Command COMPUTE_FILTERED_STATISTICS =
+      new Command("compute-filtered-stats", "Compute filtered general statistics.") {
+        protected void action() {
+          Aggregator.computeFilteredStats();
+        }
+      }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, Aggregator.FILTERED_STATISTICS);
+      
+  public static final Command GENERATE_MATCHING_COMPARISON  =
+    new Command("generate-matching-comparison", "Generate pairwise matching comparison.") {
+      protected void action() {
+        Aggregator.generateMatchingComparison();
+      }
+    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, Aggregator.MATCHING_COMPARISON, Aggregator.COMPARISON_STATISTICS);      
   
   public static final Command COMPARE_FILE_LISTINGS =
     new Command("compare-file-listings", "Compares the file listings from the different methods.") {

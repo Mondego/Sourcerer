@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.clusterer.stats;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 import edu.uci.ics.sourcerer.util.Helper;
@@ -25,7 +26,7 @@ import edu.uci.ics.sourcerer.util.Helper;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class Matching {
+public class Matching implements Iterable<FileCluster> {
   private Collection<FileCluster> files;
   
   public Matching() {
@@ -83,5 +84,10 @@ public class Matching {
       runningDupRate += (double) (counter.totalCount - counter.uniqueCount) / counter.totalCount;
     }
     return new MatchingStatistics(totalFiles, projects.size(), projectUniqueFiles, singletonFiles, globalUniqueFiles, uniqueDuplicateFiles, totalDuplicateFiles, runningDupRate / projects.size());
+  }
+
+  @Override
+  public Iterator<FileCluster> iterator() {
+    return files.iterator();
   }
 }

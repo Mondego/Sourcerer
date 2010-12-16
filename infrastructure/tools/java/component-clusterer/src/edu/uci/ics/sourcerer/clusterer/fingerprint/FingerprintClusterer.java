@@ -114,10 +114,15 @@ public class FingerprintClusterer {
           String[] parts = line.split(" ");
           if (parts.length >= 6) {
             String[] names = new String[parts.length - 5];
-            int startIdx = parts[4].lastIndexOf('.') + 1; 
+            int startIdx = parts[4].lastIndexOf('.') + 1;
+            String prefix = parts[4].substring(0, startIdx);
             names[0] = parts[4].substring(startIdx);
             for (int i = 6; i < parts.length; i++) {
-              names[i - 5] = parts[i].substring(startIdx);
+              if (parts[i].startsWith(prefix)) {
+                names[i - 5] = parts[i].substring(startIdx);
+              } else {
+                names[i - 5] = parts[i];
+              }
             }
             Arrays.sort(names, 1, names.length);
             FingerprintMatcher matcher = new FingerprintMatcher(names);
@@ -127,7 +132,7 @@ public class FingerprintClusterer {
               files.put(matcher, cluster);
               matching.addCluster(cluster);
             }
-            cluster.addFile(parts[0], parts[2]);
+            cluster.addProjectUniqueFile(parts[0], parts[2]);
           } else {
             logger.log(Level.SEVERE, "Invalid line: " + line);
           }

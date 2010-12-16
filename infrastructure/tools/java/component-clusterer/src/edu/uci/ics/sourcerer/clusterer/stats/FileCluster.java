@@ -17,7 +17,10 @@
  */
 package edu.uci.ics.sourcerer.clusterer.stats;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.util.Collection;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
 
@@ -35,7 +38,30 @@ public class FileCluster {
   
   public void addFile(String project, String path) {
     projects.add(project);
-    paths.add(project + ":" + path);
+    if (path.startsWith("/")) {
+      paths.add(project + ":" + path);
+    } else {
+      paths.add(project + ":/" + path);
+    }
+  }
+  
+  public void addProjectUniqueFile(String project, String path) {
+    if (projects.contains(project)) {
+//      logger.log(Level.SEVERE, "Duplicate for " + project + ": " + path);
+      projects.add(project);
+      if (path.startsWith("/")) {
+        paths.add(project + ":" + path);
+      } else {
+        paths.add(project + ":/" + path);
+      }
+    } else {
+      projects.add(project);
+      if (path.startsWith("/")) {
+        paths.add(project + ":" + path);
+      } else {
+        paths.add(project + ":/" + path);
+      }
+    }
   }
   
   public int getProjectCount() {
