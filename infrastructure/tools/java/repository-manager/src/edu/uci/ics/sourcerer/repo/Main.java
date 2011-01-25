@@ -24,6 +24,7 @@ import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JARS_DIR;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.PROJECT_NAMES_FILE;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JAR_INDEX_FILE;
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.FILTERED_FILES_FILE;
 import static edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.CSV_MODE;
 
 import java.util.Set;
@@ -63,6 +64,29 @@ public class Main {
         }
       }.setProperties(INPUT_REPO, JARS_DIR, JAR_INDEX_FILE);      
 
+  public static final Command PRINT_PROJECT_SIZES =
+      new Command("print-project-sizes", "Prints size statistics on the projects in the repository.") {
+        protected void action() {
+          Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
+          repo.printProjectSizes();
+        }
+    }.setProperties(INPUT_REPO);
+    
+  public static final Command CREATE_FILTERED_FILE_LISTING =
+      new Command("create-filtered-file-listing", "Creates a list of all the filtered files in the repository.") {
+        protected void action() {
+          Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
+          repo.createFilteredFileListing();
+        }
+    }.setProperties(INPUT_REPO, FILTERED_FILES_FILE);
+    
+  public static final Command PROCESS_PROJECT_SIZES =
+      new Command("process-project-sizes", "Process size statistics.") {
+        protected void action() {
+          
+        }
+    }.setProperties();
+    
   public static final Command PRINT_PROJECT_NAMES =
       new Command("print-project-names", "Prints the names of all the projects in the repository.") {
         protected void action() {

@@ -17,7 +17,9 @@
  */
 package edu.uci.ics.sourcerer.clusterer.stats;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -86,6 +88,16 @@ public class Matching implements Iterable<FileCluster> {
     return new MatchingStatistics(totalFiles, projects.size(), projectUniqueFiles, singletonFiles, globalUniqueFiles, uniqueDuplicateFiles, totalDuplicateFiles, runningDupRate / projects.size());
   }
 
+  public Iterable<FileCluster> getRankedClusters() {
+    FileCluster[] array = files.toArray(new FileCluster[files.size()]);
+    Arrays.sort(array, new Comparator<FileCluster>() {
+      @Override
+      public int compare(FileCluster o1, FileCluster o2) {
+        return o2.getProjectCount() - o1.getProjectCount();
+      }});
+    return Arrays.asList(array);
+  }
+  
   @Override
   public Iterator<FileCluster> iterator() {
     return files.iterator();

@@ -113,6 +113,58 @@ public class Repository extends AbstractRepository {
     logger.info("Done!");
   }
   
+  public void printProjectSizes() {
+    logger.info("Loading projects...");
+    
+    BufferedWriter bw = null;
+    try {
+      bw = FileUtils.getBufferedWriter(PROJECT_SIZES_FILE);
+      
+      for (RepoProject project : getProjects()) {
+        IFileSet files = project.getFileSet();
+        // Format of the file: project scm-source raw-size unique-count duplicate-count discarded-count
+        StringBuilder builder = new StringBuilder();
+        builder.append(project.toString()).append(" ");
+        builder.append(project.loadProperties().getOriginRepo()).append(" ");
+        builder.append(files.getTotalFileCount()).append(" ");
+        builder.append(files.getUniqueJavaFileCount()).append(" ");
+        builder.append(files.getBestDuplicateJavaFileCount()).append(" ");
+        builder.append(files.getDiscardedDuplicateFileCount()).append("\n");
+        bw.write(builder.toString());
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error writing project sizes file.");
+    } finally {
+      FileUtils.close(bw);
+    }
+    logger.info("Done!");
+  }
+  
+  public void createFilteredFileListing() {
+    logger.info("Loading projects...");
+    
+    BufferedWriter bw = null;
+    try {
+      bw = FileUtils.getBufferedWriter(FILTERED_FILES_FILE);
+      
+      int count = 0;
+      for (RepoProject project : getProjects()) {
+        logger.info("Processing project " + ++count + ": " + project.toString());
+        IFileSet files = project.getFileSet();
+        for (IJavaFile file : files.getUniqueJavaFiles()) {
+          bw.write(project.toString() + " " + file.getFile().getRelativePath() + "\n");
+        }
+        for (IJavaFile file : files.getBestDuplicateJavaFiles()) {
+          bw.write(project.toString() + " " + file.getFile().getRelativePath() + "\n");
+        }
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error writing file listing.");
+    } finally {
+      FileUtils.close(bw);
+    }
+  }
+    
   public void aggregateJarFiles() {
     JarIndex.aggregateJars(this);
   }

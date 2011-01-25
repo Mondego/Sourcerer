@@ -32,6 +32,7 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.clusterer.fqn.FqnClusterer;
 import edu.uci.ics.sourcerer.clusterer.stats.FileCluster;
+import edu.uci.ics.sourcerer.clusterer.stats.Filter;
 import edu.uci.ics.sourcerer.clusterer.stats.Matching;
 import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
@@ -133,6 +134,57 @@ public class FingerprintClusterer {
               matching.addCluster(cluster);
             }
             cluster.addProjectUniqueFile(parts[0], parts[2]);
+          } else {
+            logger.log(Level.SEVERE, "Invalid line: " + line);
+          }
+        } catch (IndexOutOfBoundsException e) {
+          logger.log(Level.SEVERE, "Invalid line (substring problem): " + line, e);
+        }
+      }
+      return matching;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error in reading file listing.", e);
+      return null;
+    } finally {
+      FileUtils.close(br);
+    }
+  }
+  
+  public static Matching getFilteredMatching(Filter filter) {
+    logger.info("Processing fingerprint file listing...");
+    
+    BufferedReader br = null;
+    try {
+      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FINGERPRINT_FILE_LISTING.getValue())));
+      
+      Matching matching = new Matching();
+      Map<FingerprintMatcher, FileCluster> files = Helper.newHashMap();
+      for (String line = br.readLine(); line != null; line = br.readLine()) {
+        try {
+          String[] parts = line.split(" ");
+          if (parts.length >= 6) {
+            if (filter.pass(parts[0], parts[2])) {
+              String[] names = new String[parts.length - 5];
+              int startIdx = parts[4].lastIndexOf('.') + 1;
+              String prefix = parts[4].substring(0, startIdx);
+              names[0] = parts[4].substring(startIdx);
+              for (int i = 6; i < parts.length; i++) {
+                if (parts[i].startsWith(prefix)) {
+                  names[i - 5] = parts[i].substring(startIdx);
+                } else {
+                  names[i - 5] = parts[i];
+                }
+              }
+              Arrays.sort(names, 1, names.length);
+              FingerprintMatcher matcher = new FingerprintMatcher(names);
+              FileCluster cluster = files.get(matcher);
+              if (cluster == null) {
+                cluster = new FileCluster();
+                files.put(matcher, cluster);
+                matching.addCluster(cluster);
+              }
+              cluster.addProjectUniqueFile(parts[0], parts[2]);
+            }
           } else {
             logger.log(Level.SEVERE, "Invalid line: " + line);
           }

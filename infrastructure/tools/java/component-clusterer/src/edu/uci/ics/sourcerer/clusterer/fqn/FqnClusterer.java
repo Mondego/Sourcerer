@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.clusterer.stats.FileCluster;
-import edu.uci.ics.sourcerer.clusterer.stats.FileFilter;
+import edu.uci.ics.sourcerer.clusterer.stats.Filter;
 import edu.uci.ics.sourcerer.clusterer.stats.Matching;
 import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
@@ -83,30 +83,6 @@ public class FqnClusterer {
     }
   }
   
-  public static FileFilter loadFilter() {
-    BufferedReader br = null;
-    try {
-      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FQN_FILE_LISTING.getValue()))); 
-      
-      FileFilter filter = new FileFilter();
-      
-      for(String line = br.readLine(); line != null; line = br.readLine()) {
-        String[] parts = line.split(" ");
-        if (parts.length == 6) {
-          filter.addFile(parts[0], parts[2]);
-        } else {
-          logger.log(Level.SEVERE, "Invalid line: " + line);
-        }
-      }
-      return filter;
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to read file listing.", e);
-      return null;
-    } finally {
-      FileUtils.close(br);
-    }
-  }
-  
   public static Matching getMatching() {
     logger.info("Processing fqn file listing...");
     
@@ -127,6 +103,42 @@ public class FqnClusterer {
             matching.addCluster(cluster);
           }
           cluster.addProjectUniqueFile(parts[0], parts[2]);
+        } else {
+          logger.log(Level.SEVERE, "Invalid line: " + line);
+        }
+      }
+      
+      return matching;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error in reading file listing.", e);
+      return null;
+    } finally {
+      FileUtils.close(br);
+    }
+  }
+  
+  public static Matching getFilteredMatching(Filter filter) {
+    logger.info("Processing fqn file listing...");
+    
+    BufferedReader br = null;
+    try {
+      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FQN_FILE_LISTING.getValue())));
+      
+      Matching matching = new Matching();
+      
+      Map<String, FileCluster> files = Helper.newHashMap();
+      for (String line = br.readLine(); line != null; line = br.readLine()) {
+        String[] parts = line.split(" ");
+        if (parts.length == 6) {
+          if (filter.pass(parts[0], parts[2])) {
+            FileCluster cluster = files.get(parts[4]);
+            if (cluster == null) {
+              cluster = new FileCluster();
+              files.put(parts[4], cluster);
+              matching.addCluster(cluster);
+            }
+            cluster.addProjectUniqueFile(parts[0], parts[2]);
+          }
         } else {
           logger.log(Level.SEVERE, "Invalid line: " + line);
         }

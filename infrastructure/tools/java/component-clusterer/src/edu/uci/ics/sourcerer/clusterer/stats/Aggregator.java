@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.clusterer.dir.DirectoryClusterer;
@@ -170,126 +169,114 @@ public class Aggregator {
     logger.info("Done!");
   }
   
-  public static void computeFilteredStats() {
-    FileFilter filter = FqnClusterer.loadFilter();
-    MatchingStatistics dir80stats = DirectoryClusterer.getFilteredMatching80(filter).getStatistics();
-    MatchingStatistics dir50stats = DirectoryClusterer.getFilteredMatching50(filter).getStatistics();
-    MatchingStatistics dir30stats = DirectoryClusterer.getFilteredMatching30(filter).getStatistics();
-    MatchingStatistics hashingStats = HashingClusterer.getFilteredMatching(filter).getStatistics();
-    MatchingStatistics fqnStats = FqnClusterer.getMatching().getStatistics();
-    MatchingStatistics fingerprintStats = FingerprintClusterer.getMatching().getStatistics();
-    
-    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(FILTERED_STATISTICS);
-    printer.beginTable(7);
-    printer.addDividerRow();
-    printer.addRow("", "Dir 80", "Dir 50", "Dir 30", "Hashing", "FQN", "Fingerprint");
-    printer.addDividerRow();
-    
+  private static void processMatching(Matching matching, BufferedWriter bw) throws IOException {
+    MatchingStatistics stats = matching.getStatistics();
     // Total number of files
-    printer.beginRow();
-    printer.addCell("Total Files");
-    printer.addCell(dir80stats.getTotalFiles());
-    printer.addCell(dir50stats.getTotalFiles());
-    printer.addCell(dir30stats.getTotalFiles());
-    printer.addCell(hashingStats.getTotalFiles());
-    printer.addCell(fqnStats.getTotalFiles());
-    printer.addCell(fingerprintStats.getTotalFiles());
+    bw.write("Total Files: " + stats.getTotalFiles() + "\n");
     
     // Total number of projects
-    printer.beginRow();
-    printer.addCell("Total Projects");
-    printer.addCell(dir80stats.getTotalProjects());
-    printer.addCell(dir50stats.getTotalProjects());
-    printer.addCell(dir30stats.getTotalProjects());
-    printer.addCell(hashingStats.getTotalProjects());
-    printer.addCell(fqnStats.getTotalProjects());
-    printer.addCell(fingerprintStats.getTotalProjects());
+    bw.write("Total Projects: " + stats.getTotalProjects() + "\n");
     
     // Eliminate exact duplicates within projects
-    printer.beginRow();
-    printer.addCell("Project Unique Files");
-    printer.addCell(dir80stats.getProjectUniqueFiles());
-    printer.addCell(dir50stats.getProjectUniqueFiles());
-    printer.addCell(dir30stats.getProjectUniqueFiles());
-    printer.addCell(hashingStats.getProjectUniqueFiles());
-    printer.addCell(fqnStats.getProjectUniqueFiles());
-    printer.addCell(fingerprintStats.getProjectUniqueFiles());
+    bw.write("Project Unique Files: " + stats.getProjectUniqueFiles() + "\n");
     
     // Eliminate exact duplicates globally
-    printer.beginRow();
-    printer.addCell("Global Unique Files");
-    printer.addCell(dir80stats.getGlobalUniqueFiles());
-    printer.addCell(dir50stats.getGlobalUniqueFiles());
-    printer.addCell(dir30stats.getGlobalUniqueFiles());
-    printer.addCell(hashingStats.getGlobalUniqueFiles());
-    printer.addCell(fqnStats.getGlobalUniqueFiles());
-    printer.addCell(fingerprintStats.getGlobalUniqueFiles());
+    bw.write("Global Unique Files: " + stats.getGlobalUniqueFiles() + "\n");
     
     // Files that only occur in one place
-    printer.beginRow();
-    printer.addCell("Singleton Files");
-    printer.addCell(dir80stats.getSingletonFiles());
-    printer.addCell(dir50stats.getSingletonFiles());
-    printer.addCell(dir30stats.getSingletonFiles());
-    printer.addCell(hashingStats.getSingletonFiles());
-    printer.addCell(fqnStats.getSingletonFiles());
-    printer.addCell(fingerprintStats.getSingletonFiles());
+    bw.write("Singleton Files: " + stats.getSingletonFiles() + "\n");
     
     // Unique files that occur in more than one project
-    printer.beginRow();
-    printer.addCell("Unique Duplicate Files");
-    printer.addCell(dir80stats.getUniqueDuplicateFiles());
-    printer.addCell(dir50stats.getUniqueDuplicateFiles());
-    printer.addCell(dir30stats.getUniqueDuplicateFiles());
-    printer.addCell(hashingStats.getUniqueDuplicateFiles());
-    printer.addCell(fqnStats.getUniqueDuplicateFiles());
-    printer.addCell(fingerprintStats.getUniqueDuplicateFiles());
+    bw.write("Unique Duplicate Files: " + stats.getUniqueDuplicateFiles() + "\n");
     
     // Total count of files that occur in more than one project
-    printer.beginRow();
-    printer.addCell("Total Duplicate Files");
-    printer.addCell(dir80stats.getTotalDuplicateFiles());
-    printer.addCell(dir50stats.getTotalDuplicateFiles());
-    printer.addCell(dir30stats.getTotalDuplicateFiles());
-    printer.addCell(hashingStats.getTotalDuplicateFiles());
-    printer.addCell(fqnStats.getTotalDuplicateFiles());
-    printer.addCell(fingerprintStats.getTotalDuplicateFiles());
+    bw.write("Total Duplicate Files: " + stats.getTotalDuplicateFiles() + "\n");
     
     // Percent of files that occur in more than one project
     // Total Duplicate Files / Project Unique Files
-    printer.beginRow();
-    printer.addCell("Duplication Rate");
-    printer.addCell(dir80stats.getDupRate());
-    printer.addCell(dir50stats.getDupRate());
-    printer.addCell(dir30stats.getDupRate());
-    printer.addCell(hashingStats.getDupRate());
-    printer.addCell(fqnStats.getDupRate());
-    printer.addCell(fingerprintStats.getDupRate());
+    bw.write("Duplication Rate: " + stats.getDupRate() + "\n");
     
     // Average number of times a duplicate file appears
-    printer.beginRow();
-    printer.addCell("Occurance Rate");
-    printer.addCell(dir80stats.getDupOccuranceRate());
-    printer.addCell(dir50stats.getDupOccuranceRate());
-    printer.addCell(dir30stats.getDupOccuranceRate());
-    printer.addCell(hashingStats.getDupOccuranceRate());
-    printer.addCell(fqnStats.getDupOccuranceRate());
-    printer.addCell(fingerprintStats.getDupOccuranceRate());
+    bw.write("Occurance Rate: " + stats.getDupOccuranceRate() + "\n");
     
     // Average percent of duplication at a project level
-    printer.beginRow();
-    printer.addCell("Project Duplication Rate");
-    printer.addCell(dir80stats.getProjectDupRate());
-    printer.addCell(dir50stats.getProjectDupRate());
-    printer.addCell(dir30stats.getProjectDupRate());
-    printer.addCell(hashingStats.getProjectDupRate());
-    printer.addCell(fqnStats.getDupOccuranceRate());
-    printer.addCell(fingerprintStats.getDupOccuranceRate());
+    bw.write("Project Duplication Rate: " + stats.getProjectDupRate() + "\n");
+    bw.write("\nRanked clusters\n");
+    for (FileCluster cluster : matching.getRankedClusters()) {
+      StringBuilder builder = new StringBuilder();
+      builder.append(cluster.getProjectCount());
+      for (String path : cluster.getPaths()) {
+        builder.append(" ").append(path);
+        break;
+      }
+      builder.append("\n");
+      bw.write(builder.toString());
+    }
+  }
+  
+  public static void computeFilteredStats() {
+    FileFilter filter = FileFilter.loadFilter();
     
-    printer.addDividerRow();
-    printer.endTable();
-    printer.close();
+    BufferedWriter bw = null;
+    try {
+      logger.info("Processing dir80");
+      bw = FileUtils.getBufferedWriter("stats-dir80.txt");
+      processMatching(DirectoryClusterer.getFilteredMatching80(filter), bw);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error in dir80 stats");
+    } finally {
+      FileUtils.close(bw);
+    }
     
+//    try {
+//      logger.info("Processing dir50");
+//      bw = FileUtils.getBufferedWriter("stats-dir50.txt");
+//      processMatching(DirectoryClusterer.getFilteredMatching50(filter), bw);
+//    } catch (IOException e) {
+//      logger.log(Level.SEVERE, "Error in dir50 stats");
+//    } finally {
+//      FileUtils.close(bw);
+//    }
+//    
+//    try {
+//      logger.info("Processing dir30");
+//      bw = FileUtils.getBufferedWriter("stats-dir30.txt");
+//      processMatching(DirectoryClusterer.getFilteredMatching30(filter), bw);
+//    } catch (IOException e) {
+//      logger.log(Level.SEVERE, "Error in dir30 stats");
+//    } finally {
+//      FileUtils.close(bw);
+//    }
+    
+    try {
+      logger.info("Processing hashing");
+      bw = FileUtils.getBufferedWriter("stats-hashing.txt");
+      processMatching(HashingClusterer.getFilteredMatching(filter), bw);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error in hashing stats");
+    } finally {
+      FileUtils.close(bw);
+    }
+    
+    try {
+      logger.info("Processing fqn");
+      bw = FileUtils.getBufferedWriter("stats-fqn.txt");
+      processMatching(FqnClusterer.getFilteredMatching(filter), bw);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error in fqn stats");
+    } finally {
+      FileUtils.close(bw);
+    }
+    
+    try {
+      logger.info("Processing fingerprint");
+      bw = FileUtils.getBufferedWriter("stats-fingerprint.txt");
+      processMatching(FingerprintClusterer.getFilteredMatching(filter), bw);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error in fingerprint stats");
+    } finally {
+      FileUtils.close(bw);
+    }
     logger.info("Done!");
   }
 
@@ -302,7 +289,7 @@ public class Aggregator {
   
   public static void generateMatchingComparison() {
     Map<String, Integer> matches = Helper.newHashMap();
-    FileFilter filter = FqnClusterer.loadFilter();
+    FileFilter filter = FileFilter.loadFilter();
     
     Integer newValue = DIR_80_METHOD;
     for (FileCluster cluster : DirectoryClusterer.getFilteredMatching80(filter)) {

@@ -17,9 +17,16 @@
  */
 package edu.uci.ics.sourcerer.clusterer.stats;
 
-import java.util.Set;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Set;
+import java.util.logging.Level;
+
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -45,6 +52,30 @@ public class FileFilter implements Filter {
       return files.contains(project + ":" + path);
     } else {
       return files.contains(project + ":/" + path);
+    }
+  }
+  
+  public static FileFilter loadFilter() {
+    BufferedReader br = null;
+    try {
+      br = FileUtils.getBufferedReader(AbstractRepository.FILTERED_FILES_FILE);
+      
+      FileFilter filter = new FileFilter();
+      
+      for(String line = br.readLine(); line != null; line = br.readLine()) {
+        String[] parts = line.split(" ");
+        if (parts.length == 2) {
+          filter.addFile(parts[0], parts[1]);
+        } else {
+          logger.log(Level.SEVERE, "Invalid line: " + line);
+        }
+      }
+      return filter;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to read file listing.", e);
+      return null;
+    } finally {
+      FileUtils.close(br);
     }
   }
 }

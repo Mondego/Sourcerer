@@ -39,6 +39,8 @@ public abstract class AbstractFileSet implements IFileSet {
   
   private Collection<IJavaFile> uniqueFiles = null;
   private Collection<IJavaFile> bestDuplicateFiles = null; 
+  private int fileCount = 0;
+  private int discardedDuplicateCount = 0;
   
   protected AbstractFileSet(AbstractRepository repo) {
     jarFiles = Helper.newLinkedList();
@@ -51,6 +53,7 @@ public abstract class AbstractFileSet implements IFileSet {
   }
   
   protected final void addJavaFile(IJavaFile file) {
+    fileCount++;
     String dir = FileUtils.stripFileName(file.getFile().getRelativePath());
     RepoDir repoDir = repoMap.get(dir);
     if (repoDir == null) {
@@ -153,6 +156,7 @@ public abstract class AbstractFileSet implements IFileSet {
         }
         if (best != null) {
           bestDuplicateFiles.add(best);
+          discardedDuplicateCount += files.size() - 1;
         } else {
           logger.log(Level.SEVERE, "There should always be a best!");
         }
@@ -162,6 +166,10 @@ public abstract class AbstractFileSet implements IFileSet {
   
   public final Iterable<IDirectory> getRootDirectories() {
     return roots;
+  }
+  
+  public final int getTotalFileCount() {
+    return fileCount;
   }
   
   public final int getUniqueJavaFileCount() {
@@ -193,6 +201,11 @@ public abstract class AbstractFileSet implements IFileSet {
     }
     return bestDuplicateFiles;
   }
+  
+  public final int getDiscardedDuplicateFileCount() {
+    return discardedDuplicateCount;
+  }
+  
   
   private int getValue(IJavaFile file) {
     RepoDir repoDir = repoMap.get(FileUtils.stripFileName(file.getFile().getRelativePath()));

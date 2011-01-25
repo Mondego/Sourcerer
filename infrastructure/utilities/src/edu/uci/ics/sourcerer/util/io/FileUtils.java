@@ -19,14 +19,17 @@ package edu.uci.ics.sourcerer.util.io;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
+import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -327,5 +330,17 @@ public final class FileUtils {
       logger.log(Level.SEVERE, "Error getting md5 for " + file.getPath(), e);
       return null;
     }
+  }
+  
+  public static BufferedWriter getBufferedWriter(String name) throws IOException {
+    return new BufferedWriter(new FileWriter(new File(OUTPUT.getValue(), name)));
+  }
+  
+  public static BufferedWriter getBufferedWriter(Property<String> property) throws IOException {
+    return new BufferedWriter(new FileWriter(new File(OUTPUT.getValue(), property.getValue())));
+  }
+  
+  public static BufferedReader getBufferedReader(Property<String> property) throws IOException {
+    return new BufferedReader(new FileReader(new File(INPUT.getValue(), property.getValue())));
   }
 }

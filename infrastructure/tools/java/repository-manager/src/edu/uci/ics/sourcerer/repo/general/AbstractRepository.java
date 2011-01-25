@@ -39,7 +39,9 @@ public abstract class AbstractRepository {
   public static final Property<String> JARS_DIR = new StringProperty("jars-dir", "jars", "The subdirectory containing the jar files.");
   public static final Property<String> JAR_INDEX_FILE = new StringProperty("jar-index", "index.txt", "The filename of the jar index.");
 
-  public static final Property<String> PROJECT_NAMES_FILE = new StringProperty("project-names-files", "project-names.txt", "File for project names.");
+  public static final Property<String> PROJECT_NAMES_FILE = new StringProperty("project-names-file", "project-names.txt", "File for project names.");
+  public static final Property<String> PROJECT_SIZES_FILE = new StringProperty("project-sizes-file", "project-sizes.txt", "File for project sizes.");
+  public static final Property<String> FILTERED_FILES_FILE = new StringProperty("filtered-files-file", "filtered-files.txt", "File for filtered file listing.");
 
   protected RepoFile repoRoot;
   protected RepoFile libsRoot;

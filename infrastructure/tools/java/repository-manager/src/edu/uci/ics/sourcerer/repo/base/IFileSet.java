@@ -28,6 +28,8 @@ public interface IFileSet {
   
   public Iterable<IJarFile> getJarFiles();
 
+  public int getTotalFileCount();
+  
   public int getUniqueJavaFileCount();
   
   public Iterable<IJavaFile> getUniqueJavaFiles();
@@ -35,6 +37,8 @@ public interface IFileSet {
   public int getBestDuplicateJavaFileCount();
   
   public Iterable<IJavaFile> getBestDuplicateJavaFiles();
+  
+  public int getDiscardedDuplicateFileCount();
   
   public String convertToRelativePath(String path);
 }
