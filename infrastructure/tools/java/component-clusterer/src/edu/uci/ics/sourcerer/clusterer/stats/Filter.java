@@ -23,4 +23,5 @@ package edu.uci.ics.sourcerer.clusterer.stats;
  */
 public interface Filter {
   public boolean pass(String project, String path);
+  public boolean singlePass(String project, String path);
 }

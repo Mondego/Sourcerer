@@ -48,7 +48,8 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FingerprintClusterer {
-  public static final Property<String> FINGERPRINT_FILE_LISTING = new StringProperty("fingerprint-file-listing.", "fingerprint-file-list.sh", "List of all the files (and the types inside the files) in the repository.");
+  public static final Property<String> FINGERPRINT_FILE_LISTING = new StringProperty("fingerprint-file-listing", "fingerprint-file-list.txt", "List of all the files (and the types inside the files) in the repository.");
+  public static final Property<String> FILTERED_FINGERPRINT_FILE_LISTING = new StringProperty("filtered-fingerprint-file-listing", "filtered-fingerprint-file-list.txt", "List of all the files (and the types inside the files) in the repository.");
   
   private static class FingerprintDatabaseAccessor extends DatabaseAccessor {
     public FingerprintDatabaseAccessor(DatabaseConnection connection) {
@@ -171,12 +172,45 @@ public class FingerprintClusterer {
     };
   }
   
+  public static void generateFilteredList(Filter filter) {
+    BufferedReader br = null;
+    BufferedWriter bw = null;
+    try {
+       br = FileUtils.getBufferedReader(FINGERPRINT_FILE_LISTING);
+       bw = FileUtils.getBufferedWriter(FILTERED_FINGERPRINT_FILE_LISTING);
+       
+       for (String line = br.readLine(); line != null; line = br.readLine()) {
+         String[] parts = line.split(" ");
+         if (parts.length >= 6) {
+           if (filter.singlePass(parts[0], parts[2])) {
+             bw.write(line + "\n");
+           }
+         } else {
+           logger.log(Level.SEVERE, "Invalid line: " + line);
+         }
+       }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error generating filtered list.", e);
+    } finally {
+      FileUtils.close(br);
+      FileUtils.close(bw);
+    }
+  }
+  
   public static Matching getMatching() {
+    return getMatching(FINGERPRINT_FILE_LISTING);
+  }
+  
+  public static Matching getFilteredMatching() {
+    return getMatching(FILTERED_FINGERPRINT_FILE_LISTING);
+  }
+  
+  private static Matching getMatching(Property<String> property) {
     logger.info("Processing fingerprint file listing...");
     
     BufferedReader br = null;
     try {
-      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FINGERPRINT_FILE_LISTING.getValue())));
+      br = FileUtils.getBufferedReader(property);
       
       Matching matching = new Matching();
       Map<FingerprintMatcher, FileCluster> files = Helper.newHashMap();
@@ -220,54 +254,54 @@ public class FingerprintClusterer {
     }
   }
   
-  public static Matching getFilteredMatching(Filter filter) {
-    logger.info("Processing fingerprint file listing...");
-    
-    BufferedReader br = null;
-    try {
-      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FINGERPRINT_FILE_LISTING.getValue())));
-      
-      Matching matching = new Matching();
-      Map<FingerprintMatcher, FileCluster> files = Helper.newHashMap();
-      for (String line = br.readLine(); line != null; line = br.readLine()) {
-        try {
-          String[] parts = line.split(" ");
-          if (parts.length >= 6) {
-            if (filter.pass(parts[0], parts[2])) {
-              String[] names = new String[parts.length - 5];
-              int startIdx = parts[4].lastIndexOf('.') + 1;
-              String prefix = parts[4].substring(0, startIdx);
-              names[0] = parts[4].substring(startIdx);
-              for (int i = 6; i < parts.length; i++) {
-                if (parts[i].startsWith(prefix)) {
-                  names[i - 5] = parts[i].substring(startIdx);
-                } else {
-                  names[i - 5] = parts[i];
-                }
-              }
-              Arrays.sort(names, 1, names.length);
-              FingerprintMatcher matcher = new FingerprintMatcher(names);
-              FileCluster cluster = files.get(matcher);
-              if (cluster == null) {
-                cluster = new FileCluster();
-                files.put(matcher, cluster);
-                matching.addCluster(cluster);
-              }
-              cluster.addProjectUniqueFile(parts[0], parts[2]);
-            }
-          } else {
-            logger.log(Level.SEVERE, "Invalid line: " + line);
-          }
-        } catch (IndexOutOfBoundsException e) {
-          logger.log(Level.SEVERE, "Invalid line (substring problem): " + line, e);
-        }
-      }
-      return matching;
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error in reading file listing.", e);
-      return null;
-    } finally {
-      FileUtils.close(br);
-    }
-  }
+//  public static Matching getFilteredMatching(Filter filter) {
+//    logger.info("Processing fingerprint file listing...");
+//    
+//    BufferedReader br = null;
+//    try {
+//      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FINGERPRINT_FILE_LISTING.getValue())));
+//      
+//      Matching matching = new Matching();
+//      Map<FingerprintMatcher, FileCluster> files = Helper.newHashMap();
+//      for (String line = br.readLine(); line != null; line = br.readLine()) {
+//        try {
+//          String[] parts = line.split(" ");
+//          if (parts.length >= 6) {
+//            if (filter.pass(parts[0], parts[2])) {
+//              String[] names = new String[parts.length - 5];
+//              int startIdx = parts[4].lastIndexOf('.') + 1;
+//              String prefix = parts[4].substring(0, startIdx);
+//              names[0] = parts[4].substring(startIdx);
+//              for (int i = 6; i < parts.length; i++) {
+//                if (parts[i].startsWith(prefix)) {
+//                  names[i - 5] = parts[i].substring(startIdx);
+//                } else {
+//                  names[i - 5] = parts[i];
+//                }
+//              }
+//              Arrays.sort(names, 1, names.length);
+//              FingerprintMatcher matcher = new FingerprintMatcher(names);
+//              FileCluster cluster = files.get(matcher);
+//              if (cluster == null) {
+//                cluster = new FileCluster();
+//                files.put(matcher, cluster);
+//                matching.addCluster(cluster);
+//              }
+//              cluster.addProjectUniqueFile(parts[0], parts[2]);
+//            }
+//          } else {
+//            logger.log(Level.SEVERE, "Invalid line: " + line);
+//          }
+//        } catch (IndexOutOfBoundsException e) {
+//          logger.log(Level.SEVERE, "Invalid line (substring problem): " + line, e);
+//        }
+//      }
+//      return matching;
+//    } catch (IOException e) {
+//      logger.log(Level.SEVERE, "Error in reading file listing.", e);
+//      return null;
+//    } finally {
+//      FileUtils.close(br);
+//    }
+//  }
 }

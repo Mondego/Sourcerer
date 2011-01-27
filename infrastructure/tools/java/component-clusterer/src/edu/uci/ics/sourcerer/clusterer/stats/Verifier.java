@@ -154,4 +154,15 @@ public class Verifier {
       FileUtils.close(bw);
     }
   }
+  
+  public static void generateFilteredList() {
+    Filter filter = FileFilter.loadFilter(INTERSECTION_FILE_LISTING);
+    DirectoryClusterer.generateFilteredListing(filter);
+    filter = FileFilter.loadFilter(INTERSECTION_FILE_LISTING);
+    HashingClusterer.generateFilteredList(filter);
+    filter = FileFilter.loadFilter(INTERSECTION_FILE_LISTING);
+    FqnClusterer.generateFilteredList(filter);
+    filter = FileFilter.loadFilter(INTERSECTION_FILE_LISTING);
+    FingerprintClusterer.generateFilteredList(filter);
+  }
 }

@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.clusterer.stats.EasyFilter;
 import edu.uci.ics.sourcerer.clusterer.stats.FileCluster;
 import edu.uci.ics.sourcerer.clusterer.stats.Filter;
 import edu.uci.ics.sourcerer.clusterer.stats.Matching;
@@ -54,6 +53,7 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  */
 public class HashingClusterer {
   public static final Property<String> HASH_FILE_LISTING = new StringProperty("hash-file-listing", "hash-file-listing.txt", "List of all the files (and their hashes) in the repository.");
+  public static final Property<String> FILTERED_HASH_FILE_LISTING = new StringProperty("filtered-hash-file-listing", "filtered-hash-file-listing.txt", "");
   
   public static void generateFileListing() {
     logger.info("Loading repository...");
@@ -174,17 +174,47 @@ public class HashingClusterer {
       }
     };
   }
+  
+  public static void generateFilteredList(Filter filter) {
+    BufferedReader br = null;
+    BufferedWriter bw = null;
+    
+    try {
+      br = FileUtils.getBufferedReader(HASH_FILE_LISTING);
+      bw = FileUtils.getBufferedWriter(FILTERED_HASH_FILE_LISTING);
+      
+      for (String line = br.readLine(); line != null; line = br.readLine()) {
+        String[] parts = line.split(" ");
+        if (parts.length == 5) {
+          if (filter.singlePass(parts[0], parts[1])) {
+            bw.write(line + "\n");
+          }
+        } else {
+          logger.log(Level.SEVERE, "Invalid line: " + line);
+        }
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error generating filtered list.", e);
+    } finally {
+      FileUtils.close(br);
+      FileUtils.close(bw);
+    }
+  }
     
   public static Matching getMatching() {
-    return getFilteredMatching(new EasyFilter());
+    return getMatching(HASH_FILE_LISTING);
   }
   
-  public static Matching getFilteredMatching(Filter filter) {
+  public static Matching getFilteredMatching() {
+    return getMatching(FILTERED_HASH_FILE_LISTING);
+  }
+  
+  private static Matching getMatching(Property<String> property) {
     logger.info("Processing hash file listing...");
     
     BufferedReader br = null;
     try {
-      br = new BufferedReader(new FileReader(new File(INPUT.getValue(), HASH_FILE_LISTING.getValue())));
+      br = FileUtils.getBufferedReader(property);
       
       Matching matching = new Matching();
       
@@ -193,18 +223,16 @@ public class HashingClusterer {
       for (String line = br.readLine(); line != null; line = br.readLine()) {
         String[] parts = line.split(" ");
         if (parts.length == 5) {
-          if (filter.pass(parts[0], parts[1])) {
-            nextItem.setValues(parts[2], parts[3], Long.parseLong(parts[4]));
-            
-            if (nextItem.getLength() > 0) {
-              FileCluster cluster = files.get(nextItem);
-              if (cluster == null) {
-                cluster = new FileCluster();
-                files.put(nextItem.copy(), cluster);
-                matching.addCluster(cluster);
-              }
-              cluster.addFile(parts[0], parts[1]);
+          nextItem.setValues(parts[2], parts[3], Long.parseLong(parts[4]));
+          
+          if (nextItem.getLength() > 0) {
+            FileCluster cluster = files.get(nextItem);
+            if (cluster == null) {
+              cluster = new FileCluster();
+              files.put(nextItem.copy(), cluster);
+              matching.addCluster(cluster);
             }
+            cluster.addFile(parts[0], parts[1]);
           }
         } else {
           logger.log(Level.SEVERE, "Invalid line: " + line);

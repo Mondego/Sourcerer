@@ -25,4 +25,9 @@ public class EasyFilter implements Filter {
   public boolean pass(String project, String path) {
     return true;
   }
+  
+  @Override
+  public boolean singlePass(String project, String path) {
+    return true;
+  }
 }

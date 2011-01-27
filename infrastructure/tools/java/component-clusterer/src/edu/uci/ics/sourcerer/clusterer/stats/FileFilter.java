@@ -24,9 +24,9 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.Property;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -38,12 +38,16 @@ public class FileFilter implements Filter {
     files = Helper.newHashSet();
   }
   
-  public void addFile(String project, String path) {
+  private void addFile(String project, String path) {
     if (path.startsWith("/")) {
       files.add(project + ":" + path);
     } else {
       files.add(project + ":/" + path);
     }
+  }
+  
+  private void addFile(String file) {
+    files.add(file);
   }
   
   @Override
@@ -55,16 +59,34 @@ public class FileFilter implements Filter {
     }
   }
   
-  public static FileFilter loadFilter() {
+  @Override
+  public boolean singlePass(String project, String path) {
+    String file = null;
+    if (path.startsWith("/")) {
+      file = project + ":" + path;
+    } else {
+      file = project + ":/" + path;
+    }
+    if (files.contains(file)) {
+      files.remove(file);
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  public static FileFilter loadFilter(Property<String> property) {
     BufferedReader br = null;
     try {
-      br = FileUtils.getBufferedReader(AbstractRepository.FILTERED_FILES_FILE);
+      br = FileUtils.getBufferedReader(property);
       
       FileFilter filter = new FileFilter();
       
       for(String line = br.readLine(); line != null; line = br.readLine()) {
-        String[] parts = line.split(" ");
-        if (parts.length == 2) {
+        String[] parts = line.trim().split(" ");
+        if (parts.length == 1) {
+          filter.addFile(parts[0]);
+        } else if (parts.length == 2) {
           filter.addFile(parts[0], parts[1]);
         } else {
           logger.log(Level.SEVERE, "Invalid line: " + line);

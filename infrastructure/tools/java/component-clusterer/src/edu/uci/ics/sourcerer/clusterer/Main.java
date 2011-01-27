@@ -112,6 +112,13 @@ public class Main {
       }
     }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, DirectoryClusterer.DIRECTORY_LISTING, FqnClusterer.FQN_FILE_LISTING, FingerprintClusterer.FINGERPRINT_FILE_LISTING, Verifier.INTERSECTION_FILE_LISTING);
     
+  public static final Command GENERATE_FILTERED_LIST =
+    new Command("generate-filtered-list", "Blah blah.") {
+      protected void action() {
+        Verifier.generateFilteredList();
+      }
+    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, DirectoryClusterer.MATCHED_FILES, DirectoryClusterer.FILTERED_MATCHED_FILES, FqnClusterer.FQN_FILE_LISTING, FingerprintClusterer.FINGERPRINT_FILE_LISTING, Verifier.INTERSECTION_FILE_LISTING);
+    
   public static void main(String[] args) {
     PropertyManager.executeCommand(args, Main.class);
   }

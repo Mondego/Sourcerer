@@ -169,7 +169,8 @@ public class Aggregator {
     logger.info("Done!");
   }
   
-  private static void processMatching(Matching matching, BufferedWriter bw) throws IOException {
+  private static void processMatching(Matching matching, BufferedWriter bw, String byProject) throws IOException {
+    matching.printCloningByProject(byProject);
     MatchingStatistics stats = matching.getStatistics();
     // Total number of files
     bw.write("Total Files: " + stats.getTotalFiles() + "\n");
@@ -215,13 +216,11 @@ public class Aggregator {
   }
   
   public static void computeFilteredStats() {
-    FileFilter filter = FileFilter.loadFilter();
-    
     BufferedWriter bw = null;
     try {
       logger.info("Processing dir80");
       bw = FileUtils.getBufferedWriter("stats-dir80.txt");
-      processMatching(DirectoryClusterer.getFilteredMatching80(filter), bw);
+      processMatching(DirectoryClusterer.getFilteredMatching80(), bw, "clones-dir80.txt");
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error in dir80 stats");
     } finally {
@@ -251,7 +250,7 @@ public class Aggregator {
     try {
       logger.info("Processing hashing");
       bw = FileUtils.getBufferedWriter("stats-hashing.txt");
-      processMatching(HashingClusterer.getFilteredMatching(filter), bw);
+      processMatching(HashingClusterer.getFilteredMatching(), bw, "clones-hashing.txt");
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error in hashing stats");
     } finally {
@@ -261,7 +260,7 @@ public class Aggregator {
     try {
       logger.info("Processing fqn");
       bw = FileUtils.getBufferedWriter("stats-fqn.txt");
-      processMatching(FqnClusterer.getFilteredMatching(filter), bw);
+      processMatching(FqnClusterer.getFilteredMatching(), bw, "clones-fqn.txt");
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error in fqn stats");
     } finally {
@@ -271,7 +270,7 @@ public class Aggregator {
     try {
       logger.info("Processing fingerprint");
       bw = FileUtils.getBufferedWriter("stats-fingerprint.txt");
-      processMatching(FingerprintClusterer.getFilteredMatching(filter), bw);
+      processMatching(FingerprintClusterer.getFilteredMatching(), bw, "clones-fingerprint.txt");
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error in fingerprint stats");
     } finally {
@@ -289,10 +288,9 @@ public class Aggregator {
   
   public static void generateMatchingComparison() {
     Map<String, Integer> matches = Helper.newHashMap();
-    FileFilter filter = FileFilter.loadFilter();
     
     Integer newValue = DIR_80_METHOD;
-    for (FileCluster cluster : DirectoryClusterer.getFilteredMatching80(filter)) {
+    for (FileCluster cluster : DirectoryClusterer.getFilteredMatching80()) {
       for (String a : cluster.getPaths()) {
         for (String b : cluster.getPaths()) {
           if (a.compareTo(b) < 0) {
@@ -336,7 +334,7 @@ public class Aggregator {
 //    }
     
     newValue = HASH_METHOD;
-    for (FileCluster cluster : HashingClusterer.getFilteredMatching(filter)) {
+    for (FileCluster cluster : HashingClusterer.getFilteredMatching()) {
       for (String a : cluster.getPaths()) {
         for (String b : cluster.getPaths()) {
           if (a.compareTo(b) < 0) {
@@ -352,7 +350,7 @@ public class Aggregator {
     }
     
     newValue = FQN_METHOD;
-    for (FileCluster cluster : FqnClusterer.getMatching()) {
+    for (FileCluster cluster : FqnClusterer.getFilteredMatching()) {
       for (String a : cluster.getPaths()) {
         for (String b : cluster.getPaths()) {
           if (a.compareTo(b) < 0) {
@@ -368,7 +366,7 @@ public class Aggregator {
     }
     
     newValue = FINGERPRINT_METHOD;
-    for (FileCluster cluster : FingerprintClusterer.getMatching()) {
+    for (FileCluster cluster : FingerprintClusterer.getFilteredMatching()) {
       for (String a : cluster.getPaths()) {
         for (String b : cluster.getPaths()) {
           if (a.compareTo(b) < 0) {

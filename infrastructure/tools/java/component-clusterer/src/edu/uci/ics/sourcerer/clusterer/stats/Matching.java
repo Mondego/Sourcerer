@@ -17,13 +17,19 @@
  */
 package edu.uci.ics.sourcerer.clusterer.stats;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -88,6 +94,47 @@ public class Matching implements Iterable<FileCluster> {
     return new MatchingStatistics(totalFiles, projects.size(), projectUniqueFiles, singletonFiles, globalUniqueFiles, uniqueDuplicateFiles, totalDuplicateFiles, runningDupRate / projects.size());
   }
 
+  public void printCloningByProject(String file) {
+    class FileCounter {
+      int uniqueFiles = 0;
+      int duplicateFiles = 0;
+    }
+    Map<String, FileCounter> map = Helper.newHashMap();
+    for (FileCluster cluster : files) {
+      if (cluster.getProjectCount() == 1) {
+        for (String project : cluster.getProjects()) {
+          FileCounter counter = map.get(project);
+          if (counter == null) {
+            counter = new FileCounter();
+            map.put(project, counter);
+          }
+          counter.uniqueFiles++;
+        }
+      } else {
+        for (String project : cluster.getProjects()) {
+          FileCounter counter = map.get(project);
+          if (counter == null) {
+            counter = new FileCounter();
+            map.put(project, counter);
+          }
+          counter.duplicateFiles++;
+        }
+      }
+    }
+    
+    BufferedWriter bw = null;
+    try {
+      bw = FileUtils.getBufferedWriter(file);
+      for (Map.Entry<String, FileCounter> entry : map.entrySet()) {
+        bw.write(entry.getKey() + " " + entry.getValue().uniqueFiles + " " + entry.getValue().duplicateFiles + "\n");
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error printing cloning.", e);
+    } finally {
+      FileUtils.close(bw);
+    }
+  }
+  
   public Iterable<FileCluster> getRankedClusters() {
     FileCluster[] array = files.toArray(new FileCluster[files.size()]);
     Arrays.sort(array, new Comparator<FileCluster>() {

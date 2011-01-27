@@ -316,6 +316,59 @@ public class DirectoryClusterer {
     try {
       br = FileUtils.getBufferedReader(MATCHED_FILES);
       bw = FileUtils.getBufferedWriter(FILTERED_MATCHED_FILES);
+      
+      Set<String> dupDetector = Helper.newHashSet();
+      for (String line = br.readLine(); line != null; line = br.readLine()) {
+        String[] parts = line.split(" ");
+        if (parts.length < 6) {
+          logger.log(Level.SEVERE, "Invalid line: " + line);
+        } else {
+          
+          int count80 = Integer.parseInt(parts[3]);
+          int count50 = Integer.parseInt(parts[4]);
+          int count30 = Integer.parseInt(parts[5]);
+          String name = "/" + parts[2];
+          if (filter.pass(parts[0], parts[1] + name) && !dupDetector.contains(parts[0] + parts[1] + name)) {
+            dupDetector.add(parts[0] + parts[1] + name);
+            StringBuilder first = new StringBuilder();
+            first.append(parts[0]).append(" ").append(parts[1]).append(" ").append(parts[2]);
+            
+            StringBuilder second = new StringBuilder();
+            int newCount80 = 0;
+            for (int i = 6; i < 6 + count80; i++) {
+              int colon = parts[i].indexOf(':');
+              String project = parts[i].substring(0, colon);
+              String path = parts[i].substring(colon + 1) + name;
+              if (filter.pass(project, path)) {
+                newCount80++;
+                second.append(" ").append(parts[i]);
+              }
+            }
+            int newCount50 = 0;
+            for (int i = 6 + count80; i < 6 + count80 + count50; i++) {
+              int colon = parts[i].indexOf(':');
+              String project = parts[i].substring(0, colon);
+              String path = parts[i].substring(colon + 1) + name;
+              if (filter.pass(project, path)) {
+                newCount50++;
+                second.append(" ").append(parts[i]);
+              }
+            }
+            int newCount30 = 0;
+            for (int i = 6 + count80 + count50; i < 6 + count80 + count50 + count30; i++) {
+              int colon = parts[i].indexOf(':');
+              String project = parts[i].substring(0, colon);
+              String path = parts[i].substring(colon + 1) + name;
+              if (filter.pass(project, path)) {
+                newCount30++;
+                second.append(" ").append(parts[i]);
+              }
+            }
+            first.append(" ").append(newCount80).append(" ").append(newCount50).append(" ").append(newCount30).append(second).append("\n");
+            bw.write(first.toString());
+          }
+        }
+      }
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to generate filtered listing.", e);
     } finally {
@@ -325,15 +378,19 @@ public class DirectoryClusterer {
   }
   
   public static Matching getMatching80() {
-    return getFilteredMatching80(new EasyFilter());
+    return getMatching80(MATCHED_FILES);
   }
   
-  public static Matching getFilteredMatching80(Filter filter) {
+  public static Matching getFilteredMatching80() {
+    return getMatching80(FILTERED_MATCHED_FILES);
+  }
+  
+  private static Matching getMatching80(Property<String> property) {
     logger.info("Processing dir file listing...");
     
     BufferedReader br = null;
     try {
-      br = new BufferedReader(new FileReader(new File(INPUT.getValue(), MATCHED_FILES.getValue())));
+      br = FileUtils.getBufferedReader(property);
       
       Matching matching = new Matching();
       Map<String, FileCluster> files = Helper.newHashMap();
@@ -344,48 +401,44 @@ public class DirectoryClusterer {
         } else {
           int count = Integer.parseInt(parts[3]);
           String name = "/" + parts[2];
-          if (filter.pass(parts[0], parts[1] + name)) {
-            if (count > 0) {
-              String key = parts[0] + ":" + parts[1] + name;
-              FileCluster cluster = files.get(key);
-              for (int i = 6; cluster == null && i < 6 + count; i++) {
-                cluster = files.get(parts[i] + name);
-              }
-              if (cluster == null) {
-                cluster = new FileCluster();
-              }
+          if (count > 0) {
+            String key = parts[0] + ":" + parts[1] + name;
+            FileCluster cluster = files.get(key);
+            for (int i = 6; cluster == null && i < 6 + count; i++) {
+              cluster = files.get(parts[i] + name);
+            }
+            if (cluster == null) {
+              cluster = new FileCluster();
+            }
               
-              if (!files.containsKey(key)) {
+            if (!files.containsKey(key)) {
+              files.put(key, cluster);
+              cluster.addFile(parts[0], parts[1] + name);
+            }
+              
+            for (int i = 6; i < 6 + count; i++) {
+              int colon = parts[i].indexOf(':');
+              String project = parts[i].substring(0, colon);
+              String path = parts[i].substring(colon + 1) + name;
+              key = project + ":" + path;
+              FileCluster otherCluster = files.get(key);
+              if (otherCluster == null) {
                 files.put(key, cluster);
-                cluster.addFile(parts[0], parts[1] + name);
-              }
-              
-              for (int i = 6; i < 6 + count; i++) {
-                int colon = parts[i].indexOf(':');
-                String project = parts[i].substring(0, colon);
-                String path = parts[i].substring(colon + 1) + name;
-                if (filter.pass(project, name)) {
-                  key = project + ":" + path;
-                  FileCluster otherCluster = files.get(key);
-                  if (otherCluster == null) {
-                    files.put(key, cluster);
-                    cluster.addFile(project, path);
-                  } else if (cluster != otherCluster) {
-                    // Merge the two clusters
-                    // Update the values
-                    for (String otherPath: otherCluster.getPaths()) {
-                      files.put(otherPath, cluster);
-                      colon = path.indexOf(':');
-                      cluster.addFile(otherPath.substring(0, colon), otherPath.substring(colon + 1));
-                    }
-                  }
+                cluster.addFile(project, path);
+              } else if (cluster != otherCluster) {
+                // Merge the two clusters
+                // Update the values
+                for (String otherPath : otherCluster.getPaths()) {
+                  files.put(otherPath, cluster);
+                  colon = otherPath.indexOf(':');
+                  cluster.addFile(otherPath.substring(0, colon), otherPath.substring(colon + 1));
                 }
               }
-            } else {
-              FileCluster cluster = new FileCluster();
-              cluster.addFile(parts[0], parts[1] + name);
-              matching.addCluster(cluster);
             }
+          } else {
+            FileCluster cluster = new FileCluster();
+            cluster.addFile(parts[0], parts[1] + name);
+            matching.addCluster(cluster);
           }
         }
       }
