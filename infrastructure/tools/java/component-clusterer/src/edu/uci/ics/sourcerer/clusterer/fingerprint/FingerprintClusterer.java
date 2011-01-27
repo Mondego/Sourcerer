@@ -27,7 +27,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.clusterer.fqn.FqnClusterer;
@@ -99,6 +101,74 @@ public class FingerprintClusterer {
         FileUtils.close(bw);
       }
     }
+  }
+  
+  public static Iterable<String> loadFileListing() {
+    return new Iterable<String>() {
+      @Override
+      public Iterator<String> iterator() {
+        return new Iterator<String>() {
+          private BufferedReader br = null;
+          private String next = null;
+          
+          {
+            try {
+              br = FileUtils.getBufferedReader(FINGERPRINT_FILE_LISTING);
+            } catch (IOException e) {
+              logger.log(Level.SEVERE, "Error in reading file listing.", e);
+            }
+          }
+          
+          @Override
+          public boolean hasNext() {
+            if (next == null) {
+              if (br == null) {
+                return false;
+              } else {
+                while (next == null && br != null) {
+                  String line = null;
+                  try {
+                    line = br.readLine();
+                  } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Error in reading file listing.", e);
+                  }
+                  if (line == null) {
+                    FileUtils.close(br);
+                    br = null;
+                  } else {
+                    String[] parts = line.split(" ");
+                    if (parts.length >= 6) {
+                      next = parts[0] + ":" + parts[2];
+                    } else {
+                      logger.log(Level.SEVERE, "Invalid file line: " + line);
+                    }
+                  }
+                }
+                return next != null;
+              }
+            } else {
+              return true;
+            }
+          }
+          
+          @Override
+          public String next() {
+            if (hasNext()) {
+              String retval = next;
+              next = null;
+              return retval;
+            } else {
+              throw new NoSuchElementException();
+            }
+          }
+          
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
+      }
+    };
   }
   
   public static Matching getMatching() {

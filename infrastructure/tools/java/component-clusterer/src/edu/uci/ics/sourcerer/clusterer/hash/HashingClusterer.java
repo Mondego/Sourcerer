@@ -142,7 +142,7 @@ public class HashingClusterer {
                   } else {
                     String[] parts = line.split(" ");
                     if (parts.length == 5) {
-                      next = parts[0] + ":" + parts[1];
+                      next = parts[0] + ":/" + parts[1];
                     } else {
                       logger.log(Level.SEVERE, "Invalid file line: " + line);
                     }

@@ -105,12 +105,12 @@ public class Main {
       }
     }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, Aggregator.MATCHING_COMPARISON, Aggregator.COMPARISON_STATISTICS);      
   
-  public static final Command COMPARE_FILE_LISTINGS =
-    new Command("compare-file-listings", "Compares the file listings from the different methods.") {
+  public static final Command GENERATE_INTERSECTION_FILE =
+    new Command("generate-intersection-file", "Compares the file listings from the different methods.") {
       protected void action() {
-        Verifier.compareFileListings();
+        Verifier.generateIntersectionFile();
       }
-    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, DirectoryClusterer.DIRECTORY_LISTING);
+    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, DirectoryClusterer.DIRECTORY_LISTING, FqnClusterer.FQN_FILE_LISTING, FingerprintClusterer.FINGERPRINT_FILE_LISTING, Verifier.INTERSECTION_FILE_LISTING);
     
   public static void main(String[] args) {
     PropertyManager.executeCommand(args, Main.class);

@@ -37,6 +37,15 @@ public class FileCluster {
   }
   
   public void addFile(String project, String path) {
+    if (projects.contains(project)) {
+      logger.info("Within project duplicate: ");
+      StringBuilder builder = new StringBuilder();
+      builder.append(project).append(":").append(path);
+      for (String other : paths) {
+        builder.append(" ").append(other);
+      }
+      logger.info(builder.toString());
+    }
     projects.add(project);
     if (path.startsWith("/")) {
       paths.add(project + ":" + path);
@@ -44,7 +53,7 @@ public class FileCluster {
       paths.add(project + ":/" + path);
     }
   }
-  
+    
   public void addProjectUniqueFile(String project, String path) {
     if (projects.contains(project)) {
 //      logger.log(Level.SEVERE, "Duplicate for " + project + ": " + path);

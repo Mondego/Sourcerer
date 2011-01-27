@@ -63,6 +63,7 @@ public class DirectoryClusterer {
 
   public static final Property<String> MATCHED_DIRECTORIES = new StringProperty("dir-matched-dirs", "dir-matched-dirs.txt", "The results of matching the directories.");
   public static final Property<String> MATCHED_FILES = new StringProperty("dir-matched-files", "dir-matched-files.txt", "The results of matching the files.");
+  public static final Property<String> FILTERED_MATCHED_FILES = new StringProperty("filtered-dir-matched-files", "filtered-dir-matched-files.txt", "The matched files filtered by the intersection list.");
   
   public static final Property<Integer> MINIMUM_MATCH_SIZE = new IntegerProperty("minimum-match-size", 5, "Minimum number of files that must match per directory.");
   
@@ -121,7 +122,7 @@ public class DirectoryClusterer {
           
           {
             try {
-              br = new BufferedReader(new FileReader(new File(INPUT.getValue(), DIRECTORY_LISTING.getValue())));
+              br = FileUtils.getBufferedReader(DIRECTORY_LISTING);
             } catch (IOException e) {
               logger.log(Level.SEVERE, "Error loading directory listing", e);
             }
@@ -151,7 +152,7 @@ public class DirectoryClusterer {
                     } else {
                       String basePath = parts[0] + ":";
                       if (parts[1].length() > 0) {
-                        basePath += parts[1] + "/";
+                        basePath += "/" + parts[1] + "/";
                       }
                       for (int i = 2; i < parts.length; i++) {
                         next.add(basePath + parts[i]);
@@ -307,6 +308,22 @@ public class DirectoryClusterer {
     }
   }
   
+  public static void generateFilteredListing(Filter filter) {
+    logger.info("Processing dir file listing...");
+    
+    BufferedReader br = null;
+    BufferedWriter bw = null;
+    try {
+      br = FileUtils.getBufferedReader(MATCHED_FILES);
+      bw = FileUtils.getBufferedWriter(FILTERED_MATCHED_FILES);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to generate filtered listing.", e);
+    } finally {
+      FileUtils.close(br);
+      FileUtils.close(bw);
+    }
+  }
+  
   public static Matching getMatching80() {
     return getFilteredMatching80(new EasyFilter());
   }
@@ -344,19 +361,23 @@ public class DirectoryClusterer {
               }
               
               for (int i = 6; i < 6 + count; i++) {
-                key = parts[i] + name;
-                FileCluster otherCluster = files.get(key);
-                if (otherCluster == null) {
-                  files.put(key, cluster);
-                  int colon = key.indexOf(':');
-                  cluster.addFile(key.substring(0, colon), key.substring(colon + 1));
-                } else if (cluster != otherCluster) {
-                  // Merge the two clusters
-                  // Update the values
-                  for (String path : otherCluster.getPaths()) {
-                    files.put(path, cluster);
-                    int colon = path.indexOf(':');
-                    cluster.addFile(path.substring(0, colon), path.substring(colon + 1));
+                int colon = parts[i].indexOf(':');
+                String project = parts[i].substring(0, colon);
+                String path = parts[i].substring(colon + 1) + name;
+                if (filter.pass(project, name)) {
+                  key = project + ":" + path;
+                  FileCluster otherCluster = files.get(key);
+                  if (otherCluster == null) {
+                    files.put(key, cluster);
+                    cluster.addFile(project, path);
+                  } else if (cluster != otherCluster) {
+                    // Merge the two clusters
+                    // Update the values
+                    for (String otherPath: otherCluster.getPaths()) {
+                      files.put(otherPath, cluster);
+                      colon = path.indexOf(':');
+                      cluster.addFile(otherPath.substring(0, colon), otherPath.substring(colon + 1));
+                    }
                   }
                 }
               }
@@ -368,7 +389,6 @@ public class DirectoryClusterer {
           }
         }
       }
-      
       
       for (FileCluster cluster : files.values()) {
         matching.addCluster(cluster);
