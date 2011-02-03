@@ -27,7 +27,7 @@ It is available on <a href="http://github.com/sourcerer/Sourcerer/">Github</a> u
 repository.</p>
 <table id="inf" cellspacing="0">
 <tr>
-  <th/>
+  <th>Path</th>
 	<th class="project">Project</th>
 	<th class="desc">Description</th>
 </tr>
@@ -50,7 +50,7 @@ repository.</p>
 </tr>
 <tr class="bgb">
   <td class="fixed">core-repository-manager</td>
-  <td>Tools for transforming the output of the crawler into a Sourcerer repository.
+  <td>The tools for transforming the output of the crawler into a Sourcerer repository.
       For more information on Sourcerer's repository structure, see <a href="repository.html">here</a>.</td>
 </tr>
 <tr class="bga">
@@ -72,15 +72,17 @@ repository.</p>
 </tr>
 <tr class="bga">
   <td class="fixed">database</td>
-  <td></td>
+  <td>The tools related to creating and accessing SourcererDB. Includes the database importer that builds SourcererDB from the
+      extraction results. Also includes a metamodel-aware library for wrapping JDBC access to SourcererDB. For more
+      information on SourcererDB, see <a href="sourcerer-db.html">here</a>.</td>
 </tr>
 <tr class="bgb">
   <td class="fixed">component-clusterer</td>
-  <td></td>
+  <td>Tools for assessing file-level cloning in a Sourcerer repository.</td>
 </tr>
 <tr class="bga">
 	<td class="fixed bot">model</td>
-	<td class="bot"></td>
+	<td class="bot">Java classes representing both those metamodel elements output by the extractor and those in SourcererDB.</td>
 </tr>
 <tr class="sub">
   <td colspan="3">Services</td>
@@ -88,7 +90,7 @@ repository.</p>
 <tr class="bga">
   <td class="fixed path" rowspan="6">$root$/<br>&nbsp;&nbsp;infrastructure/<br>&nbsp;&nbsp;&nbsp;&nbsp;services/</td>
   <td class="fixed top">file-server</td>
-  <td class="top"></td>
+  <td class="top">Java servlet for accessing files in a Sourcerer repository.</td>
 </tr>
 <tr class="bgb">
   <td class="fixed">java-slicer</td>
@@ -104,11 +106,11 @@ repository.</p>
 </tr>
 <tr class="bga">
   <td class="fixed">solr-1.3-patched</td>
-  <td></td>
+  <td>Not sure why this is a project instead of a lib.</td>
 </tr>
 <tr class="bgb">
   <td class="fixed bot">solr-config</td>
-  <td class="bot"></td>
+  <td class="bot">Something to do with configuring Solr.</td>
 </tr>
 <tr class="sub">
   <td colspan="3">Applications</td>
@@ -116,11 +118,11 @@ repository.</p>
 <tr class="bga">
   <td class="fixed path" rowspan="2">$root$/<br>&nbsp;&nbsp;infrastructure/<br>&nbsp;&nbsp;&nbsp;&nbsp;apps/</td>
   <td class="fixed top">codegenie</td>
-  <td class="top"></td>
+  <td class="top">The CodeGenie Eclupse plugin for test-driven code search.</td>
 </tr>
 <tr class="bgb">
   <td class="fixed bot">codesearch</td>
-  <td class="bot"></td>
+  <td class="bot">The Soucerer Code Search Engine application.</td>
 </tr>
 <tr class="sub">
   <td colspan="3">Utilities</td>
@@ -128,7 +130,7 @@ repository.</p>
 <tr class="bga">
   <td class="fixed path" rowspan="1">$root$/<br>&nbsp;&nbsp;infrastructure/</td>
   <td class="fixed top">utilities</td>
-  <td class="top"></td>
+  <td class="top">General utilities, such as command line parameter handling, used by various projects.</td>
 </tr>
 </table>
 </div>
