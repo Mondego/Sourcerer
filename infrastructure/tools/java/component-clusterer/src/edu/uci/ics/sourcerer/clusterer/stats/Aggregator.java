@@ -203,7 +203,12 @@ public class Aggregator {
     // Average percent of duplication at a project level
     bw.write("Project Duplication Rate: " + stats.getProjectDupRate() + "\n");
     bw.write("\nRanked clusters\n");
+    int[] rankingHisto = null;
     for (FileCluster cluster : matching.getRankedClusters()) {
+      if (rankingHisto == null) {
+        rankingHisto = new int[cluster.getProjectCount() + 1];
+      }
+      rankingHisto[cluster.getProjectCount()]++;
       StringBuilder builder = new StringBuilder();
       builder.append(cluster.getProjectCount());
       for (String path : cluster.getPaths()) {
@@ -211,6 +216,10 @@ public class Aggregator {
       }
       builder.append("\n");
       bw.write(builder.toString());
+    }
+    bw.write("\n");
+    for (int i = 0; i < rankingHisto.length; i++) {
+      bw.write(i + " " + rankingHisto[i] + "\n");
     }
   }
   
