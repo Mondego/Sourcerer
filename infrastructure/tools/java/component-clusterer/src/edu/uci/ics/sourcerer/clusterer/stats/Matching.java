@@ -53,45 +53,19 @@ public class Matching implements Iterable<FileCluster> {
     int singletonFiles = 0;
     int uniqueDuplicateFiles = 0;
     int totalDuplicateFiles = 0;
-    class FileCounter {
-      int uniqueCount = 0;
-      int totalCount = 0;
-    }
-    Map<String, FileCounter> projects = Helper.newHashMap();
-    
+
     for (FileCluster cluster : files) {
       totalFiles += cluster.getFileCount();
       projectUniqueFiles += cluster.getProjectCount();
-      if (cluster.getProjectCount() == 1) {
+      if (cluster.getFileCount() == 1) {
         singletonFiles++;
-        for (String project : cluster.getProjects()) {
-          FileCounter counter = projects.get(project);
-          if (counter == null) {
-            counter = new FileCounter();
-            projects.put(project, counter);
-          }
-          counter.uniqueCount++;
-          counter.totalCount++;
-        }
       } else {
         uniqueDuplicateFiles++;
-        totalDuplicateFiles += cluster.getProjectCount();
-        for (String project : cluster.getProjects()) {
-          FileCounter counter = projects.get(project);
-          if (counter == null) {
-            counter = new FileCounter();
-            projects.put(project, counter);
-          }
-          counter.totalCount++;
-        }
+        totalDuplicateFiles += cluster.getFileCount();
       }
     }
     
-    double runningDupRate = 0;
-    for (FileCounter counter : projects.values()) {
-      runningDupRate += (double) (counter.totalCount - counter.uniqueCount) / counter.totalCount;
-    }
-    return new MatchingStatistics(totalFiles, projects.size(), projectUniqueFiles, singletonFiles, globalUniqueFiles, uniqueDuplicateFiles, totalDuplicateFiles, runningDupRate / projects.size());
+    return new MatchingStatistics(totalFiles, 0, projectUniqueFiles, singletonFiles, globalUniqueFiles, uniqueDuplicateFiles, totalDuplicateFiles, 0);
   }
 
   public void printCloningByProject(String file) {

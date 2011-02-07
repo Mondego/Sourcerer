@@ -20,6 +20,8 @@ package edu.uci.ics.sourcerer.clusterer.stats;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
@@ -33,19 +35,19 @@ public class FileCluster {
   
   public FileCluster() {
     projects = Helper.newHashSet();
-    paths = Helper.newLinkedList();
+    paths = Helper.newHashSet();
   }
   
   public void addFile(String project, String path) {
-    if (projects.contains(project)) {
-      logger.info("Within project duplicate: ");
-      StringBuilder builder = new StringBuilder();
-      builder.append(project).append(":").append(path);
-      for (String other : paths) {
-        builder.append(" ").append(other);
-      }
-      logger.info(builder.toString());
-    }
+//    if (projects.contains(project)) {
+//      logger.info("Within project duplicate: ");
+//      StringBuilder builder = new StringBuilder();
+//      builder.append(project).append(":").append(path);
+//      for (String other : paths) {
+//        builder.append(" ").append(other);
+//      }
+//      logger.info(builder.toString());
+//    }
     projects.add(project);
     if (path.startsWith("/")) {
       paths.add(project + ":" + path);
@@ -87,5 +89,15 @@ public class FileCluster {
   
   public int getFileCount() {
     return paths.size();
+  }
+  
+  public void validatePaths(Set<String> validPaths) {
+    Iterator<String> iter = paths.iterator();
+    for (String path = iter.next(); iter.hasNext(); path = iter.next()) {
+      if (!validPaths.contains(path)) {
+        logger.log(Level.SEVERE, "Invalid path: " + path);
+        iter.remove();
+      }
+    }
   }
 }

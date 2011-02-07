@@ -208,7 +208,6 @@ public class Aggregator {
       builder.append(cluster.getProjectCount());
       for (String path : cluster.getPaths()) {
         builder.append(" ").append(path);
-        break;
       }
       builder.append("\n");
       bw.write(builder.toString());
@@ -230,7 +229,7 @@ public class Aggregator {
 //    try {
 //      logger.info("Processing dir50");
 //      bw = FileUtils.getBufferedWriter("stats-dir50.txt");
-//      processMatching(DirectoryClusterer.getFilteredMatching50(filter), bw);
+//      processMatching(DirectoryClusterer.getFilteredMatching50(), bw);
 //    } catch (IOException e) {
 //      logger.log(Level.SEVERE, "Error in dir50 stats");
 //    } finally {
@@ -240,7 +239,7 @@ public class Aggregator {
 //    try {
 //      logger.info("Processing dir30");
 //      bw = FileUtils.getBufferedWriter("stats-dir30.txt");
-//      processMatching(DirectoryClusterer.getFilteredMatching30(filter), bw);
+//      processMatching(DirectoryClusterer.getFilteredMatching30(), bw);
 //    } catch (IOException e) {
 //      logger.log(Level.SEVERE, "Error in dir30 stats");
 //    } finally {
