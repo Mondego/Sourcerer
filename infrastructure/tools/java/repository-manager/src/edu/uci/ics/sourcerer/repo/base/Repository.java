@@ -20,11 +20,9 @@ package edu.uci.ics.sourcerer.repo.base;
 import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Deque;
@@ -38,22 +36,14 @@ import java.util.zip.ZipOutputStream;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
-import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
 import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Properties;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
-import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Repository extends AbstractRepository {
-  public static final Property<Integer> SPLIT_SIZE = new IntegerProperty("split-size", 1000, "Number of projects per split fragment.");
-  
   private File tempDir;
   private Map<String, RepoProject> projects;
   
@@ -88,131 +78,9 @@ public class Repository extends AbstractRepository {
   public void createJarIndex() {
     JarIndex.createJarIndexFile(this);
   }
-  
-  public void printJarStats() {
-    JarIndex.printJarStats(getJarsPath().toDir());
-  }
-  
-  public void printProjectNames() {
-    logger.info("Loading projects...");
-    
-    TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(PROJECT_NAMES_FILE);
-    printer.beginTable(3);
-    printer.addDividerRow();
-    printer.addRow("host", "project", "crawled date");
-    printer.addDividerRow();
-    for (RepoProject project : getProjects()) {
-      ProjectProperties props = project.loadProperties();
-      printer.beginRow();
-      printer.addCell(props.getOriginRepo());
-      printer.addCell(props.getName());
-      printer.addCell(props.getCrawledDate());
-    }
-    printer.endTable();
-    printer.close();
-    logger.info("Done!");
-  }
-  
-  public void printProjectSizes() {
-    logger.info("Loading projects...");
-    
-    BufferedWriter bw = null;
-    try {
-      bw = FileUtils.getBufferedWriter(PROJECT_SIZES_FILE);
-      
-      for (RepoProject project : getProjects()) {
-        IFileSet files = project.getFileSet();
-        // Format of the file: project scm-source raw-size unique-count duplicate-count discarded-count
-        StringBuilder builder = new StringBuilder();
-        builder.append(project.toString()).append(" ");
-        builder.append(project.loadProperties().getOriginRepo()).append(" ");
-        builder.append(files.getTotalFileCount()).append(" ");
-        builder.append(files.getUniqueJavaFileCount()).append(" ");
-        builder.append(files.getBestDuplicateJavaFileCount()).append(" ");
-        builder.append(files.getDiscardedDuplicateFileCount()).append("\n");
-        bw.write(builder.toString());
-      }
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error writing project sizes file.");
-    } finally {
-      FileUtils.close(bw);
-    }
-    logger.info("Done!");
-  }
-  
-  public void createFilteredFileListing() {
-    logger.info("Loading projects...");
-    
-    BufferedWriter bw = null;
-    try {
-      bw = FileUtils.getBufferedWriter(FILTERED_FILES_FILE);
-      
-      int count = 0;
-      for (RepoProject project : getProjects()) {
-        logger.info("Processing project " + ++count + ": " + project.toString());
-        IFileSet files = project.getFileSet();
-        for (IJavaFile file : files.getUniqueJavaFiles()) {
-          bw.write(project.toString() + " " + file.getFile().getRelativePath() + "\n");
-        }
-        for (IJavaFile file : files.getBestDuplicateJavaFiles()) {
-          bw.write(project.toString() + " " + file.getFile().getRelativePath() + "\n");
-        }
-      }
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error writing file listing.");
-    } finally {
-      FileUtils.close(bw);
-    }
-  }
-    
+   
   public void aggregateJarFiles() {
     JarIndex.aggregateJars(this);
-  }
-  
-  public void splitProjectsForFilterList() {
-    logger.info("Loading projects...");
-    File outputDir = Properties.OUTPUT.getValue();
-    
-    BufferedWriter bw = null;
-    try {
-      int filterNumber = 1;
-      bw = new BufferedWriter(new FileWriter(new File(outputDir, "project-filter-" + filterNumber++ + ".txt")));
-      int count = 0;
-      for (RepoProject project : getProjects()) {
-        bw.write(project.getProjectRoot() + "\n");
-        if (++count == SPLIT_SIZE.getValue()) {
-          logger.info("  " + count + " projects written");
-          bw.close();
-          bw = new BufferedWriter(new FileWriter(new File(outputDir, "project-filter-" + filterNumber++ + ".txt")));
-          count = 0;
-        }
-      }
-      logger.info("Done!");
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error writing filter list", e);
-    } finally {
-      FileUtils.close(bw);
-    }
-  }
-  
-  /**
-   * This method loads the project listing, if necessary. The project
-   * listing is loaded only once. The PROJECT_FILTER property 
-   * dictates which projects are loaded.
-   * 
-   * @see AbstractRepository#PROJECT_FILTER
-   */
-  public void generateJarFilterList(Set<String> completed) {
-    logger.info("Looking through project jars...");
-    for (RepoProject project : getProjects()) {
-      IFileSet fileSet = project.getFileSet();
-      for (IJarFile jar : fileSet.getJarFiles()) {
-        if (!completed.contains(jar.getHash())) {
-          logger.log(Logging.RESUME, jar.getHash());
-        }
-      }
-    }
-    logger.info("Done!");
   }
 
   public static void migrateRepository(File source, File target, Set<String> completed) {
@@ -357,6 +225,10 @@ public class Repository extends AbstractRepository {
       loadProjects();
     }
     return projects.values();
+  }
+  
+  public int getProjectCount() {
+    return getProjects().size();
   }
   
   /**
