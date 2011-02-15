@@ -218,6 +218,11 @@ ul {
 	margin: 0px;
 }
 
+img {
+	margin-bottom: 10px;
+	border: 2px solid #135558;
+}
+
 .emph {
 	font-weight: bold;
 	color: #135558;
@@ -233,6 +238,7 @@ ul {
 table {
 	width: 100%;
 	border-bottom: 3px solid #2C1964;
+	margin-bottom: 10px;
 }
 
 th {
@@ -285,9 +291,17 @@ td.path {
 .fixed {
 	font-family: monospace;
 }
-	
+
+.bold {
+	font-weight: bold;
+}
+
 .cent {
 	text-align: center;
+}
+
+.right {
+	text-align: right;
 }
 
 td.bot {

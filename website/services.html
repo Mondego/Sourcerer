@@ -64,16 +64,16 @@ to the three Sourcerer Web-Services.
 server. Such requests send back XML data that represents the results
 for the requested query. Search requests have the following form:</p> 
  
-<p><code> 
-http://sourcerer.ics.uci.edu/sourcerer/ws-search/search?qry=[VALID_QUERY]&epp=[INT_VALUE]&pid=[INT_VALUE]&client=[CLIENTID]
-</code></p> 
+<p><span class="fixed">
+http://sourcerer.ics.uci.edu/sourcerer/ws-search/search?qry=[VALID_QUERY]&amp;epp=[INT_VALUE]&amp;pid=[INT_VALUE]&amp;client=[CLIENTID]
+</span></p> 
  
 <p>The text inside the brackets above indicate parameters that need to
 be filled in. The list below summarizes the parameters in the above URL</p>
 
 <ul>
 	<li><span class="emph">qry:</span> A valid lucene query
-	experssion. (Refer to a list below to see available fields). By default
+	expression. (Refer to a list below to see available fields). By default
 	a conjunction (logical and) of all terms is considered.</li>
 	<li><span class="emph">epp:</span> Number of entries to display
 	(results) per page.</li>
@@ -83,9 +83,9 @@ be filled in. The list below summarizes the parameters in the above URL</p>
 	not affect search result.</li>
 </ul>
 <br>
-<p>Here is how a valid url looks like:<code> 
-http://sourcerer.ics.uci.edu/sourcerer/ws-search/search?qry=sort&epp=10&pid=1&client=webclient
-</code></p> 
+<p>Here is how a valid url looks like:<span class="fixed"> 
+http://sourcerer.ics.uci.edu/sourcerer/ws-search/search?qry=sort&amp;epp=10&amp;pid=1&amp;client=webclient
+</span></p> 
  
 <h3>Search Results</h3> 
  
@@ -94,7 +94,7 @@ returned by the search sevice. The XML represenation of the search
 results returned by the service follows the following schema as shown
 below.</p> 
  
-<img src="images/search-results.png"> 
+<img style="width: 100%" src="images/services/search-results.png"> 
  
 <h3>Index Fields</h3> 
  
@@ -104,23 +104,23 @@ you can use while constructing a query. Please refer this <a
 	href="http://lucene.apache.org/java/2_3_2/queryparsersyntax.html">link</a> to
 learn how to construct a valid lucene query.</p> 
  
-<img src="img/indexfields.png"/> 
+<img style="width: 100%" src="images/services/indexfields.png"/> 
  
 <h2>Dependency (Program) Slicing API Description</h2> 
 <p> 
 The URL request for dependency slicing has the following form:
 </p> 
  
-<p><code> 
-http://sourcerer.ics.uci.edu/sourcerer/slicer/slice?eid=[ENTITY_ID]&client=[CLIENT_ID]
-</code></p> 
+<p><span class="fixed"> 
+http://sourcerer.ics.uci.edu/sourcerer/slicer/slice?eid=[ENTITY_ID]&amp;client=[CLIENT_ID]
+</span></p> 
  
 <p> 
 Values in the brackets above indicates required parameters.
 Here is how a valid url looks like: 
 </p> 
  
-<p><code>http://sourcerer.ics.uci.edu/sourcerer/slicer/slice?eid=3148295&client=webapp</code></p> 
+<p><span class="fixed">http://sourcerer.ics.uci.edu/sourcerer/slicer/slice?eid=3148295&amp;client=webapp</span></p> 
  
 <p>This service works well after retrieving search results from the
 code query service. Each result entry has a field that provides the
@@ -135,9 +135,9 @@ all the source code in the Sourcerer repository. The URL has the
 following form:
 </p> 
  
-<p><code> 
-http://sourcerer.ics.uci.edu/sourcerer/repodata/resource?rp=[RELATVE_RESOURCE_PATH]&client=[CLIENT_ID]
-</code></p> 
+<p><span class="fixed"> 
+http://sourcerer.ics.uci.edu/sourcerer/repodata/resource?rp=[RELATVE_RESOURCE_PATH]&amp;client=[CLIENT_ID]
+</span></p> 
  
 <p> 
 The parameter 'rp' denotes the relative path of the resource in the
@@ -146,9 +146,9 @@ the search result entry. Parameter 'client' has the same purpose and
 as described in previous services. Here is how a valid url looks like: 
 </p> 
  
-<p><code> 
-http://sourcerer.ics.uci.edu/sourcerer/repodata/resource?rp=8/454/src/delivery/java/org/stringtree/util/sort/Sorter.java&client=webapp
-</code></p> 
+<p><span class="fixed"> 
+http://sourcerer.ics.uci.edu/sourcerer/repodata/resource?rp=8/454/src/delivery/java/org/stringtree/util/sort/Sorter.java&amp;client=webapp
+</span></p> 
  
  
 <h2>Java Library</h2> 
@@ -158,10 +158,10 @@ We have implemented a Java library that makes it easy to program the
 Sourcerer search service. Using this library will take away the
 overhead of unmarshalling the XML data returned by the search service.
 Here is how you could import it in an IDE (Eclipse) and start
-programming with the sourcerer search service.
+programming with the Sourcerer search service.
 </p> 
  
-<img src="./img/msjar.png"/> 
+<img style="width: 100%" src="./images/services/msjar.png"/> 
  
 <p>Please <a href="#contact">email the contact</a> below if you want
 to obtain this library.</p> 
@@ -174,7 +174,7 @@ mentioned above. You open a HTTP input stream with a valid URL, and, give it to 
 <i>SearchResult</i> instance holding <i>SearchResultEntry</i> 
 	instances. This is how it could look like:</p> 
  
-<img src="./img/code.png"/>	
+<img style="width: 100%" src="./images/services/code.png"/>	
  
 <p>Make sure you have all the HTTP parameters correct while creating
 the URL if you do not get the results you expect.</p> 
@@ -183,12 +183,11 @@ the URL if you do not get the results you expect.</p>
 <h2><a name="contact">Contact</a></h2> 
  
 <p> 
-Please contact Sushil Bajracharya
+Please contact Joel Ossher
 (<script>document.write(String.fromCharCode(60, 97, 32, 104, 114, 101,
 	102, 61, 39, 109, 97, 105, 108, 116, 111, 58, 115, 98, 97,
 	106, 114, 97, 99, 104, 64, 117, 99, 105, 46, 101, 100, 117,
-	39, 62, 115, 98, 97, 106, 114, 97, 99, 104, 64, 117, 99, 105,
-	46, 101, 100, 117, 60, 47, 97, 62))</script>) if you
+	39, 62, 106, 111, 115, 115, 104, 101, 114, 64, 117, 99, 105, 46, 101, 100, 117, 60, 47, 97, 62))</script>) if you
 intend to use Sourcerer Web-Services. Thank You!
 </p>
 </div> 
@@ -198,10 +197,10 @@ intend to use Sourcerer Web-Services. Thank You!
   <div><a href="index.html">Overview</a></div>
   <div><a href="infrastructure.html">Core Infrastructure</a></div>
   <div><a href="repository.html">Repository</a></div>
-  <div><a href="sourcerer-db.html">Sourcerer DB</a></div>
+  <div><a href="sourcerer-db.html">SourcererDB</a></div>
   <div><a class="sel" href="services.html">Services</a></div>
   <div><a href="code-search-engine.html">Code Search Engine</a></div>
-  <div><a href="code-genie.html">CodeGenie</a></div>
+  <!--<div><a href="code-genie.html">CodeGenie</a></div> -->
   <div><a href="people.html">People</a></div>
   <div><a href="publications.html">Publications</a></div>
 </div>

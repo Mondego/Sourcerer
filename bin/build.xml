@@ -50,6 +50,7 @@
   <property name="lib" location="../lib" />
   <property name="extractor-bin" location="../infrastructure/tools/java/extractor/bin" />
   <property name="machine-learning" location="../infrastructure/tools/core/machine-learning/src" />
+	<property name="website" location="../website" />
 
   <target name="init">
     <mkdir dir="${build}" />
@@ -507,4 +508,7 @@
     </delete>
   </target>
 
+	<target name="package-website">
+		<zip destfile="${dist}/website.zip" basedir="${website}" />
+  </target>
 </project>
