@@ -18,8 +18,8 @@
 package edu.uci.ics.sourcerer.util.io;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
+import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -32,12 +32,16 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
@@ -64,6 +68,35 @@ public final class FileUtils {
       try {
         zipFile.close();
       } catch (IOException e) {}
+    }
+  }
+  
+  public static void zipFile(File in, Property<String> out) {
+    zipFile(in, new File(OUTPUT.getValue(), out.getValue()));
+  }
+  
+  public static void zipFile(File in, File out) {
+    ZipOutputStream zos = null;
+    try {
+      zos = new ZipOutputStream(new FileOutputStream(out));
+      Deque<File> stack = Helper.newStack();
+      stack.push(in);
+      String base = in.getPath();
+      while (!stack.isEmpty()) {
+        for (File file : stack.pop().listFiles()) {
+          if (file.isFile()) {
+            ZipEntry entry = new ZipEntry(convertToRelativePath(base, file.getPath()));
+            zos.putNextEntry(entry);
+            writeFileToStream(file, zos);
+          } else {
+            stack.push(file);
+          }
+        }
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error in zipping file: " + in.getPath(), e);
+    } finally {
+      close(zos);
     }
   }
   
@@ -230,35 +263,37 @@ public final class FileUtils {
     }
   }
   
-  public static boolean writeStreamToFile(InputStream stream, File file) {
-    FileOutputStream os = null;
+  public static void writeFileToStream(File source, OutputStream out) throws IOException {
+    FileInputStream in = null;
     try {
-      File parent = file.getParentFile();
-      if (!parent.exists()) {
-        parent.mkdirs();
-      }
-      os = new FileOutputStream(file);
-      byte[] buff = new byte[1024];
-      for (int read = stream.read(buff); read > 0; read = stream.read(buff)) {
-        os.write(buff, 0, read);
-      }
-      return true;
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to write stream to " + file.getPath(), e);
-      return false;
+      in = new FileInputStream(source);
+      writeStreamToStream(in, out);
     } finally {
-      close(os);
-      close(stream);      
+      FileUtils.close(in);
+    }
+  }
+  public static void writeStreamToStream(InputStream in, OutputStream out) throws IOException {
+    byte[] buff = new byte[1024];
+    for (int read = in.read(buff); read > 0; read = in.read(buff)) {
+      out.write(buff, 0, read);
     }
   }
   
   public static boolean copyFile(File source, File destination) {
+    FileInputStream in = null;
+    FileOutputStream out = null;
     try {
-      FileInputStream in = new FileInputStream(source);
-      return writeStreamToFile(in, destination);
+      in = new FileInputStream(source);
+      destination.getParentFile().mkdirs();
+      out = new FileOutputStream(destination);
+      writeStreamToStream(in, out);
+      return true;
     } catch (IOException e) {
        logger.log(Level.SEVERE, "Unable to copy file from " + source.getPath() + " to " + destination.getPath(), e);
        return false;
+    } finally {
+      close(in);
+      close(out);
     }
   }
   

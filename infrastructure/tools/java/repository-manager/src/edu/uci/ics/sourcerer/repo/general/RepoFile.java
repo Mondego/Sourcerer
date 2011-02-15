@@ -82,7 +82,7 @@ public class RepoFile {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
     } else {
-      return new File(toFile(), child);
+      return new File(toDir(), child);
     }
   }
   

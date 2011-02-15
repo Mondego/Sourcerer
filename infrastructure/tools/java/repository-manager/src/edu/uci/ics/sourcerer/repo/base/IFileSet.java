@@ -30,6 +30,8 @@ public interface IFileSet {
 
   public int getTotalFileCount();
   
+  public Iterable<IJavaFile> getJavaFiles();
+  
   public int getUniqueJavaFileCount();
   
   public Iterable<IJavaFile> getUniqueJavaFiles();

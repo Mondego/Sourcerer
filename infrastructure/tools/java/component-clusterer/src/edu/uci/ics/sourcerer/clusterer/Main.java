@@ -112,6 +112,14 @@ public class Main {
       }
     }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, DirectoryClusterer.DIRECTORY_LISTING, FqnClusterer.FQN_FILE_LISTING, FingerprintClusterer.FINGERPRINT_FILE_LISTING, Verifier.INTERSECTION_FILE_LISTING);
     
+  public static final Command COMPUTE_INTERSECTION_PROJECT_SIZES =
+    new Command("compute-intersection-project-sizes", "") {
+      @Override
+      protected void action() {
+        Verifier.computeIntersectionProjectSizes();
+      }
+    }.setProperties(Properties.INPUT, Verifier.INTERSECTION_FILE_LISTING, Verifier.INTERSECTION_PROJECT_SIZES);
+    
   public static final Command GENERATE_FILTERED_LIST =
     new Command("generate-filtered-list", "Blah blah.") {
       protected void action() {

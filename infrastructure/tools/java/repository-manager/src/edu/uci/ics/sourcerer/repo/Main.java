@@ -17,20 +17,25 @@
  */
 package edu.uci.ics.sourcerer.repo;
 
-import static edu.uci.ics.sourcerer.repo.base.Repository.SPLIT_SIZE;
 import static edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository.EXTRACTION_STATS_FILE;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JARS_DIR;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
-import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.PROJECT_NAMES_FILE;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JAR_INDEX_FILE;
-import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.FILTERED_FILES_FILE;
+import static edu.uci.ics.sourcerer.repo.stats.RepositoryStatistics.JAR_STATS_FILE;
+import static edu.uci.ics.sourcerer.repo.stats.RepositoryStatistics.PROJECT_SIZES_FILE;
+import static edu.uci.ics.sourcerer.repo.stats.DiskUsageCalculator.REPO_DISK_USAGE_FILE;
+import static edu.uci.ics.sourcerer.repo.stats.RepositoryStatistics.PROJECT_NAMES_FILE;
+import static edu.uci.ics.sourcerer.repo.tools.RepositoryCompressor.COMPRESSED_FILTERED_REPO_FILE;
 import static edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.CSV_MODE;
 
 import java.util.Set;
 
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
+import edu.uci.ics.sourcerer.repo.stats.DiskUsageCalculator;
+import edu.uci.ics.sourcerer.repo.stats.RepositoryStatistics;
+import edu.uci.ics.sourcerer.repo.tools.RepositoryCompressor;
 import edu.uci.ics.sourcerer.util.io.Command;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
@@ -41,130 +46,100 @@ import edu.uci.ics.sourcerer.util.io.PropertyManager;
  */
 public class Main {
   public static final Command AGGREGATE_JAR_FILES =
-      new Command("aggregate-jar-files", "Collects all the project jar files into the jars directory.") {
-         protected void action() {
-           Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
-           repo.aggregateJarFiles();
-         }
-      }.setProperties(INPUT_REPO, JARS_DIR);
+    new Command("aggregate-jar-files", "Collects all the project jar files into the jars directory.") {
+      protected void action() {
+        Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
+        repo.aggregateJarFiles();
+      }
+    }.setProperties(INPUT_REPO, JARS_DIR);
 
   public static final Command CREATE_JAR_INDEX =
-      new Command("create-jar-index", "Creates a jar index for all the jars in the jars directory.") {
-        protected void action() {
-          Repository repo = Repository.getRepository(INPUT_REPO.getValue());
-          repo.createJarIndex();
-        }
-      }.setProperties(INPUT_REPO, JARS_DIR, JAR_INDEX_FILE);
+    new Command("create-jar-index", "Creates a jar index for all the jars in the jars directory.") {
+      protected void action() {
+        Repository repo = Repository.getRepository(INPUT_REPO.getValue());
+        repo.createJarIndex();
+      }
+    }.setProperties(INPUT_REPO, JARS_DIR, JAR_INDEX_FILE);
 
   public static final Command PRINT_JAR_STATS =
-      new Command("print-jar-stats", "Prints statistics regarding the jars in the repository.") {
-        protected void action() {
-          Repository repo = Repository.getRepository(INPUT_REPO.getValue());
-          repo.printJarStats();
-        }
-      }.setProperties(INPUT_REPO, JARS_DIR, JAR_INDEX_FILE);      
+    new Command("print-jar-stats", "Prints statistics regarding the jars in the repository.") {
+      protected void action() {
+        Repository repo = Repository.getRepository(INPUT_REPO.getValue());
+        RepositoryStatistics.printJarStatistics(repo);
+      }
+    }.setProperties(INPUT_REPO, JARS_DIR, JAR_INDEX_FILE, JAR_STATS_FILE);      
 
   public static final Command PRINT_PROJECT_SIZES =
-      new Command("print-project-sizes", "Prints size statistics on the projects in the repository.") {
-        protected void action() {
-          Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
-          repo.printProjectSizes();
-        }
-    }.setProperties(INPUT_REPO);
+    new Command("print-project-sizes", "Prints size statistics on the projects in the repository.") {
+      protected void action() {
+        Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
+        RepositoryStatistics.printProjectSizes(repo);
+      }
+    }.setProperties(INPUT_REPO, PROJECT_SIZES_FILE);
     
-  public static final Command CREATE_FILTERED_FILE_LISTING =
-      new Command("create-filtered-file-listing", "Creates a list of all the filtered files in the repository.") {
-        protected void action() {
-          Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
-          repo.createFilteredFileListing();
-        }
-    }.setProperties(INPUT_REPO, FILTERED_FILES_FILE);
     
-  public static final Command PROCESS_PROJECT_SIZES =
-      new Command("process-project-sizes", "Process size statistics.") {
-        protected void action() {
-          
-        }
-    }.setProperties();
+  public static final Command PRINT_REPO_DISK_USAGE =
+    new Command("print-repo-disk-usage", "Prints statistics on the repository's disk usage.") {
+      protected void action() {
+        Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
+        DiskUsageCalculator.printRepositoryDiskUsage(repo);
+      }
+    }.setProperties(INPUT_REPO, REPO_DISK_USAGE_FILE, CSV_MODE);
+    
+  public static final Command COMPRESS_FILTERED_REPOSITORY =
+    new Command("compress-filtered-repo", "Creates a compressed repository containing only the filtered files.") {
+      protected void action() {
+        Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
+        RepositoryCompressor.compressFilteredRepository(repo);
+      }
+    }.setProperties(INPUT_REPO, COMPRESSED_FILTERED_REPO_FILE);
     
   public static final Command PRINT_PROJECT_NAMES =
-      new Command("print-project-names", "Prints the names of all the projects in the repository.") {
-        protected void action() {
-          if (INPUT_REPO.hasValue()) {
-            Repository repo = Repository.getRepository(INPUT_REPO.getValue());
-            repo.printProjectNames();
-          } else if (OUTPUT_REPO.hasValue()) {
-            ExtractedRepository repo = ExtractedRepository.getRepository(OUTPUT_REPO.getValue());
-            repo.printProjectNames();
-          } else {
-            throw new IllegalStateException("This should have been caught by the property manager");
-          }
+    new Command("print-project-names", "Prints the names of all the projects in the repository.") {
+      protected void action() {
+        if (INPUT_REPO.hasValue()) {
+          Repository repo = Repository.getRepository(INPUT_REPO.getValue());
+          RepositoryStatistics.printProjectNames(repo);
+        } else if (OUTPUT_REPO.hasValue()) {
+          ExtractedRepository repo = ExtractedRepository.getRepository(OUTPUT_REPO.getValue());
+          RepositoryStatistics.printProjectNames(repo);
+        } else {
+          throw new IllegalStateException("This should have been caught by the property manager");
         }
-      }.setProperties(PROJECT_NAMES_FILE, CSV_MODE)
-       .setConditionalProperties(INPUT_REPO, OUTPUT_REPO);
+      }
+    }.setProperties(PROJECT_NAMES_FILE, CSV_MODE)
+     .setConditionalProperties(INPUT_REPO, OUTPUT_REPO);
   
   public static final Command MIGRATE_REPOSITORY =
-      new Command("migrate-repository", "Migrates (while compressing) the input repository to the target repository.") {
-        protected void action() {
-          Set<String> completed = Logging.initializeResumeLogger();
-          Repository.migrateRepository(INPUT_REPO.getValue(), OUTPUT_REPO.getValue(), completed);
-        }
-      }.setProperties(INPUT_REPO, OUTPUT_REPO, JARS_DIR, JAR_INDEX_FILE);
+    new Command("migrate-repository", "Migrates (while compressing) the input repository to the target repository.") {
+      protected void action() {
+        Set<String> completed = Logging.initializeResumeLogger();
+        Repository.migrateRepository(INPUT_REPO.getValue(), OUTPUT_REPO.getValue(), completed);
+      }
+    }.setProperties(INPUT_REPO, OUTPUT_REPO, JARS_DIR, JAR_INDEX_FILE);
 
   public static final Command CLEAN_JAR_MANIFESTS = 
-      new Command("clean-jar-manifests", "Removes Class-Path entries from manifest files.") {
-        protected void action() {
-          Repository.getRepository(INPUT_REPO.getValue()).getJarIndex().cleanManifestFiles();
-        }
-      }.setProperties(INPUT_REPO, JARS_DIR, JAR_INDEX_FILE);
+    new Command("clean-jar-manifests", "Removes Class-Path entries from manifest files.") {
+      protected void action() {
+        Repository.getRepository(INPUT_REPO.getValue()).getJarIndex().cleanManifestFiles();
+      }
+    }.setProperties(INPUT_REPO, JARS_DIR, JAR_INDEX_FILE);
   
-//  private static final Property<Boolean> CRAWL_MAVEN = new BooleanProperty("crawl-maven", false,
-//      "Repository Manager", "Crawls the target maven repository.");
-//  private static final Property<Boolean> DOWNLOAD_MAVEN = new BooleanProperty("download-maven",
-//      false, "Repository Manager", "Downloads the jar file links retreived from a maven crawl.");
-//  private static final Property<Boolean> MAVEN_STATS = new BooleanProperty("maven-stats", false,
-//      "Repository Manager", "Gets some statistics on the links retreived from a maven crawl.");
   public static final Command EXTRACTION_STATS = 
-      new Command("extraction-stats", "Get extraction stats.") {
-        protected void action() {
-          ExtractedRepository.getRepository(INPUT_REPO.getValue()).computeExtractionStats();
-        }
-      }.setProperties(INPUT_REPO, EXTRACTION_STATS_FILE);
-//  private static final Property<Boolean> CLONE_EXTRACTED_REPOSITORY = new BooleanProperty(
-//      "clone-extracted", false, "Repository Manager",
-//      "Copies the property files into a new repository.");
-//  private static final Property<Boolean> GENERATE_JAR_FILTER = new BooleanProperty(
-//      "generate-jar-filter", false, "Repository Manager",
-//      "Generate a jar filter list from a project filter list");
-  public static final Command SPLIT_PROJECTS = 
-      new Command("split-projects", "Split the projects into filter lists for easy parallelization.") {
-        protected void action() {
-          Repository.getRepository(INPUT_REPO.getValue()).splitProjectsForFilterList();
-        }
-      }.setProperties(INPUT_REPO, SPLIT_SIZE);
+    new Command("extraction-stats", "Get extraction stats.") {
+      protected void action() {
+        ExtractedRepository.getRepository(INPUT_REPO.getValue()).computeExtractionStats();
+      }
+    }.setProperties(INPUT_REPO, EXTRACTION_STATS_FILE);
+
+//  public static final Command SPLIT_PROJECTS = 
+//      new Command("split-projects", "Split the projects into filter lists for easy parallelization.") {
+//        protected void action() {
+//          Repository.getRepository(INPUT_REPO.getValue()).splitProjectsForFilterList();
+//        }
+//      }.setProperties(INPUT_REPO, SPLIT_SIZE);
 
   public static void main(String[] args) {
     PropertyManager.executeCommand(args, Main.class);
-      
-//    } else if (CRAWL_MAVEN.getValue()) {
-//      PropertyManager.registerAndVerify(CRAWL_MAVEN, MAVEN_URL, LINKS_FILE);
-//      MavenCrawler.getDownloadLinks();
-//    } else if (DOWNLOAD_MAVEN.getValue()) {
-//      PropertyManager.registerAndVerify(DOWNLOAD_MAVEN, INPUT, INPUT_REPO, LINKS_FILE, MAVEN_URL);
-//      MavenDownloader.downloadLinks();
-//    } else if (MAVEN_STATS.getValue()) {
-//      PropertyManager.registerAndVerify(MAVEN_STATS, INPUT, LINKS_FILE, MAVEN_URL);
-//      MavenCrawlStats.crawlStats();
-//    } else if (CLONE_EXTRACTED_REPOSITORY.getValue()) {
-//      PropertyManager.registerAndVerify(INPUT_REPO, OUTPUT_REPO);
-//      ExtractedRepository.getRepository().cloneProperties(
-//          ExtractedRepository.getRepository(OUTPUT_REPO.getValue()));
-//    } else if (GENERATE_JAR_FILTER.getValue()) {
-//      PropertyManager.registerResumeLoggingProperties();
-//      PropertyManager.registerAndVerify(INPUT_REPO, AbstractRepository.PROJECT_FILTER);
-//      Set<String> completed = Logging.initializeResumeLogger();
-//      Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir())
-//          .generateJarFilterList(completed);
-//    }
   }
 }

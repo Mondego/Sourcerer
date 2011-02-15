@@ -26,6 +26,7 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.Iterators;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
@@ -164,14 +165,25 @@ public abstract class AbstractFileSet implements IFileSet {
     }
   }
   
+  @Override
   public final Iterable<IDirectory> getRootDirectories() {
     return roots;
   }
   
+  @Override
   public final int getTotalFileCount() {
     return fileCount;
   }
   
+  @Override
+  public final Iterable<IJavaFile> getJavaFiles() {
+    if (uniqueFiles == null || bestDuplicateFiles == null) {
+      computeFiles();
+    }
+    return Iterators.conact(uniqueFiles, bestDuplicateFiles);
+  }
+  
+  @Override
   public final int getUniqueJavaFileCount() {
     if (uniqueFiles == null) {
       computeFiles();
@@ -187,6 +199,7 @@ public abstract class AbstractFileSet implements IFileSet {
     return uniqueFiles;
   }
   
+  @Override
   public final int getBestDuplicateJavaFileCount() {
     if (bestDuplicateFiles == null) {
       computeFiles();

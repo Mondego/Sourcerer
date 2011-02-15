@@ -33,15 +33,11 @@ public abstract class AbstractRepository {
   public static final Property<File> INPUT_REPO = new FileProperty("input-repo", "The root directory of the input repository.");
   public static final Property<File> OUTPUT_REPO = new FileProperty("output-repo", "The root directory of the output repository.");
   
-  public static final Property<File> JAR_FILTER = new FileProperty("jar-filter", "Only extract these jars.").makeOptional();
-  public static final Property<File> PROJECT_FILTER = new FileProperty("project-filter", "Only extract these projects.").makeOptional();
+  public static final Property<File> JAR_FILTER = new FileProperty("jar-filter", "Only load these jars.").makeOptional();
+  public static final Property<File> PROJECT_FILTER = new FileProperty("project-filter", "Only load these projects.").makeOptional();
   
   public static final Property<String> JARS_DIR = new StringProperty("jars-dir", "jars", "The subdirectory containing the jar files.");
   public static final Property<String> JAR_INDEX_FILE = new StringProperty("jar-index", "index.txt", "The filename of the jar index.");
-
-  public static final Property<String> PROJECT_NAMES_FILE = new StringProperty("project-names-file", "project-names.txt", "File for project names.");
-  public static final Property<String> PROJECT_SIZES_FILE = new StringProperty("project-sizes-file", "project-sizes.txt", "File for project sizes.");
-  public static final Property<String> FILTERED_FILES_FILE = new StringProperty("filtered-files-file", "filtered-files.txt", "File for filtered file listing.");
 
   protected RepoFile repoRoot;
   protected RepoFile libsRoot;
