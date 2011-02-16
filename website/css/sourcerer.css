@@ -195,9 +195,9 @@ h4 {
 	margin: 0px;
 	padding: 0px;
 	padding-bottom: 5px;
-	font-weight: normal;
+	font-weight: bold;
 	font-size: 14px;
-	color: #2C1964;
+	color: #135558;
 }
 
 #main h3 a:link, #main h3 a:visited {
@@ -216,6 +216,7 @@ p {
 
 ul {
 	margin: 0px;
+	padding-bottom: 10px;
 }
 
 img {
@@ -231,6 +232,14 @@ img {
 
 .sub p {
 	padding-left: 20px;
+}
+
+.list h4 {
+	padding-left: 20px;
+}
+
+.list p {
+	padding-left: 40px;
 }
 
 /* Table Format */
