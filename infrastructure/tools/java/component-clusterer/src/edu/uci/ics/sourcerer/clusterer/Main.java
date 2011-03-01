@@ -17,12 +17,14 @@
  */
 package edu.uci.ics.sourcerer.clusterer;
 
-import edu.uci.ics.sourcerer.clusterer.dir.DirectoryClusterer;
-import edu.uci.ics.sourcerer.clusterer.fingerprint.FingerprintClusterer;
-import edu.uci.ics.sourcerer.clusterer.fqn.FqnClusterer;
-import edu.uci.ics.sourcerer.clusterer.hash.HashingClusterer;
-import edu.uci.ics.sourcerer.clusterer.stats.Aggregator;
-import edu.uci.ics.sourcerer.clusterer.stats.Verifier;
+import edu.uci.ics.sourcerer.clusterer.cloning.method.dir.DirectoryClusterer;
+import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintClusterer;
+import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnClusterer;
+import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
+import edu.uci.ics.sourcerer.clusterer.cloning.stats.Aggregator;
+import edu.uci.ics.sourcerer.clusterer.cloning.stats.Verifier;
+import edu.uci.ics.sourcerer.clusterer.usage.FqnTree;
+import edu.uci.ics.sourcerer.clusterer.usage.UsageGenerator;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.io.Command;
@@ -126,7 +128,32 @@ public class Main {
         Verifier.generateFilteredList();
       }
     }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, DirectoryClusterer.MATCHED_FILES, DirectoryClusterer.FILTERED_MATCHED_FILES, FqnClusterer.FQN_FILE_LISTING, FingerprintClusterer.FINGERPRINT_FILE_LISTING, Verifier.INTERSECTION_FILE_LISTING);
-    
+
+  // FQN USAGE COMMANDS
+  public static final Command GENERATE_FQN_USAGE_LISTING =
+    new Command("generate-fqn-usage-listing", "Generate a fqn usage listing file.") {
+      @Override
+      protected void action() {
+        UsageGenerator.generateFqnUsageListing();
+      }
+    }.setProperties(UsageGenerator.FQN_USAGE_LISTING, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
+      
+  public static final Command CREATE_USAGE_TREE =
+    new Command("create-usage-tree", "Creates the fqn usage tree.") {
+      @Override
+      protected void action() {
+        UsageGenerator.createFqnUsageTree();
+      }
+    }.setProperties(Properties.INPUT, UsageGenerator.FQN_USAGE_LISTING, FqnTree.FQN_TREE);
+  
+  public static final Command COMPUTE_TOP_REFERENCED_FRAGMENTS =
+    new Command("compute-top-referenced-fragments", "Compute top referenced fragments.") {
+      @Override
+      protected void action() {
+        UsageGenerator.printTopReferencedFragments();
+      }
+    }.setProperties(Properties.INPUT, UsageGenerator.TOP_COUNT, UsageGenerator.TOP_REFERENCED_FRAGMENTS_FILE, FqnTree.FQN_TREE);
+  
   public static void main(String[] args) {
     PropertyManager.executeCommand(args, Main.class);
   }

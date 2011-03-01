@@ -280,6 +280,27 @@ public final class FileUtils {
   }
   
   public static boolean copyFile(File source, File destination) {
+    if (source.isDirectory()) {
+      boolean result = true;
+      Deque<Pair<File, File>> stack = Helper.newStack();
+      stack.push(new Pair<File, File>(source, destination));
+      while (!stack.isEmpty()) {
+        Pair<File, File> pair = stack.pop();
+        for (File file : pair.getFirst().listFiles()) {
+          if (file.isDirectory()) {
+            stack.push(new Pair<File, File>(file, new File(pair.getSecond(), file.getName())));
+          } else {
+            result &= copyFileHelper(file, new File(pair.getSecond(), file.getName()));
+          }
+        }
+      }
+      return result;
+    } else {
+      return copyFileHelper(source, destination);
+    }
+  }
+  
+  private static boolean copyFileHelper(File source, File destination) {
     FileInputStream in = null;
     FileOutputStream out = null;
     try {

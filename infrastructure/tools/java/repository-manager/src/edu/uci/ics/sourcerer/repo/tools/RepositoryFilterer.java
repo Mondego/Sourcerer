@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -31,34 +32,43 @@ import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.DoubleProperty;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class RepositoryCompressor {
+public class RepositoryFilterer {
   public static final Property<String> COMPRESSED_FILTERED_REPO_FILE = new StringProperty("compressed-filtered-repo-file", "filtered-repo.zip", "The compressed file containing the filtered repository.");
+  public static final Property<Double> REPO_SUBSET_RATE = new DoubleProperty("repo-subset-rate", .1, "Percentage of repository to include.");
+  
   /**
    * Creates a compressed version of the repository. Each
    * project is individually compressed and then the entire
    * repository is zipped together.
    */
-  public static void compressFilteredRepository(Repository repo) {
+  public static void compressFilteredRepository(Repository repo, boolean filter) {
     // Get a temporary root for the compressed repository
     RepoFile newRoot = RepoFile.make(new File(FileUtils.getTempDir(), "newRoot"));
     
     logger.info("Beginning filtered repository compression...");
     int count = 0;
     int total = repo.getProjectCount();
+    Random random = null;
+    double max = REPO_SUBSET_RATE.getValue();
+    if (filter) {
+      random = new Random();
+    }
     // Go through every project and compress it
     for (RepoProject project : repo.getProjects()) {
-      logger.info("Processing project " + ++count + " of " + total);
       // Make sure the project has at least one file
       IFileSet files = project.getFileSet();
-      if (files.getTotalFileCount() > 0) {
+      if (files.getTotalFileCount() > 0 && (!filter || (random.nextDouble() < max))) {
+        logger.info("Processing project " + ++count + " of " + total);
         ZipOutputStream zos = null;
         try {
           zos = new ZipOutputStream(new FileOutputStream(newRoot.rebaseFile(project.getProjectRoot()).getChildFile("project.zip")));
@@ -102,12 +112,51 @@ public class RepositoryCompressor {
         } finally {
           FileUtils.close(zos);
         }
+      } else {
+        logger.info("Skipping project " + ++count + " of " + total);
       }
     }
     
     // Compress the repository
     FileUtils.zipFile(newRoot.toFile(), COMPRESSED_FILTERED_REPO_FILE);
     
+    // Clean temp files
+    FileUtils.cleanTempDir();
+  }
+  
+  public static void createRepositorySubset(Repository repo) {
+    // Get the new root for the subset repo
+    RepoFile newRoot = RepoFile.make(AbstractRepository.OUTPUT_REPO.getValue());
+    
+    Random random = new Random();
+    double max = REPO_SUBSET_RATE.getValue();
+    
+    logger.info("Beginning random selection of projects...");
+    int count = 0;
+    int total = repo.getProjectCount();
+    int included = 0;
+    for (RepoProject project : repo.getProjects()) {
+      // Make sure the project has at least one file
+      IFileSet files = project.getFileSet();
+      if (files.getTotalFileCount() > 0) {
+          if (random.nextDouble() < max) {
+            included++;
+            logger.info("Including project " + ++count + " of " + total);
+            
+            // Copy the project into the new repository
+            RepoFile newProject = newRoot.rebaseFile(project.getProjectRoot());
+            if (!FileUtils.copyFile(project.getProjectRoot().toFile(), newProject.toFile())) {
+              logger.info("  Error in copying project.");
+            }
+          } else {
+            logger.info("Skipping project " + ++count + " of " + total);
+          } 
+      } else {
+        logger.info("Skipping project " + ++count + " of " + total);
+      }
+    }
+    
+    logger.info(included + " projects included in new repository.");
     // Clean temp files
     FileUtils.cleanTempDir();
   }

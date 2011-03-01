@@ -31,7 +31,9 @@ import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.Relation;
+import edu.uci.ics.sourcerer.model.RelationClass;
 import edu.uci.ics.sourcerer.model.db.FileFqn;
+import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -89,5 +91,26 @@ public final class JoinQueries extends Queries {
         EntitiesTable.FQN.getQualifiedName(), 
         and(RelationsTable.RHS_EID.getEquals(entityID), RelationsTable.RELATION_TYPE.getEquals(Relation.INSIDE)), 
         ResultTranslator.SIMPLE_STRING_TRANSLATOR);
+  }
+  
+  /**
+   * Get all of the used FQNs
+   */
+  public Iterable<MediumEntityDB> getUsedExternalFQNs() {
+    return executor.selectStreamed(
+        join(RelationsTable.TABLE, EntitiesTable.TABLE) +
+        on(RelationsTable.RHS_EID.getEquals(EntitiesTable.ENTITY_ID)),
+        comma(EntitiesTable.FQN.getQualifiedName(), EntitiesTable.ENTITY_ID.getQualifiedName(), EntitiesTable.ENTITY_TYPE.getQualifiedName(), EntitiesTable.PROJECT_ID.getQualifiedName()),
+        and(RelationsTable.RELATION_CLASS.getIn(RelationClass.EXTERNAL, RelationClass.JAVA_LIBRARY, RelationClass.UNKNOWN), RelationsTable.RELATION_TYPE.getIn(Relation.CALLS, Relation.INSTANTIATES)),
+        new BasicResultTranslator<MediumEntityDB>() {
+          @Override
+          public MediumEntityDB translate(ResultSet result) throws SQLException {
+            return new MediumEntityDB(
+                EntitiesTable.ENTITY_ID.convertFromDB(result.getString(2)), 
+                EntitiesTable.ENTITY_TYPE.convertFromDB(result.getString(3)),
+                EntitiesTable.FQN.convertFromDB(result.getString(1)),
+                EntitiesTable.PROJECT_ID.convertFromDB(result.getString(4)));
+          }
+        });
   }
 }

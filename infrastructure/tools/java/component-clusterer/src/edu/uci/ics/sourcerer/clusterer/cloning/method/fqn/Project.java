@@ -1,3 +1,4 @@
+package edu.uci.ics.sourcerer.clusterer.cloning.method.fqn;
 ///* 
 // * Sourcerer: an infrastructure for large-scale source code analysis.
 // * Copyright (C) by contributors. See CONTRIBUTORS.txt for full list.
@@ -15,26 +16,29 @@
 // * You should have received a copy of the GNU General Public License
 // * along with this program. If not, see <http://www.gnu.org/licenses/>.
 // */
-//package edu.uci.ics.sourcerer.clusterer.db;
+//package edu.uci.ics.sourcerer.clusterer.stats;
 //
-//import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
-//import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
-//import edu.uci.ics.sourcerer.model.db.SlightlyLessLimitedEntityDB;
+//import java.util.Set;
+//
+//import edu.uci.ics.sourcerer.util.Helper;
 //
 ///**
 // * @author Joel Ossher (jossher@uci.edu)
 // */
-//public class ClustererDatabaseAccessor extends DatabaseAccessor {
-//
-//  public ClustererDatabaseAccessor(DatabaseConnection connection) {
-//    super(connection);
+//public class Project {
+//  private int id;
+//  private Set<FqnFragment> fqns;
+//  
+//  public Project(int id) {
+//    this.id = id;
+//    fqns = Helper.newHashSet();
 //  }
 //  
-//  public Iterable<SlightlyLessLimitedEntityDB> getEntityFqns() {
-//    return entitiesTable.getEntityFqns();
+//  public void addFqn(FqnFragment fqn) {
+//    fqns.add(fqn);
 //  }
 //  
-//  public Iterable<SlightlyLessLimitedEntityDB> getCrawledEntityFqns() {
-//    return entitiesTable.getCrawledEntityFqns();
+//  public int getID() {
+//    return id;
 //  }
 //}

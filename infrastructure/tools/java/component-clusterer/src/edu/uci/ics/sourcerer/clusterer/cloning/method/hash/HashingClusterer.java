@@ -15,73 +15,95 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.fqn;
+package edu.uci.ics.sourcerer.clusterer.cloning.method.hash;
 
+import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
+import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.clusterer.stats.FileCluster;
-import edu.uci.ics.sourcerer.clusterer.stats.Filter;
-import edu.uci.ics.sourcerer.clusterer.stats.Matching;
-import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
-import edu.uci.ics.sourcerer.model.db.FileFqn;
+import edu.uci.ics.sourcerer.clusterer.cloning.stats.FileCluster;
+import edu.uci.ics.sourcerer.clusterer.cloning.stats.Filter;
+import edu.uci.ics.sourcerer.clusterer.cloning.stats.Matching;
+import edu.uci.ics.sourcerer.repo.base.IDirectory;
+import edu.uci.ics.sourcerer.repo.base.IJavaFile;
+import edu.uci.ics.sourcerer.repo.base.RepoProject;
+import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FqnClusterer {
-  public static final Property<String> FQN_FILE_LISTING = new StringProperty("fqn-file-listing", "fqn-file-listing.txt", "List of all the files (and their FQNs) in the repository.");
-  public static final Property<String> FILTERED_FQN_FILE_LISTING = new StringProperty("filtered-fqn-file-listing", "filtered-fqn-file-listing.txt", "List of all the files (and their FQNs) in the repository.");
-  
-  private static class FqnDatabaseAccessor extends DatabaseAccessor {
-    public FqnDatabaseAccessor(DatabaseConnection connection) {
-      super(connection);
-    }
-    
-    
-    public Iterable<FileFqn> getFileFqns() {
-      return joinQueries.getFileFqns();
-    }
-  }
+public class HashingClusterer {
+  public static final Property<String> HASH_FILE_LISTING = new StringProperty("hash-file-listing", "hash-file-listing.txt", "List of all the files (and their hashes) in the repository.");
+  public static final Property<String> FILTERED_HASH_FILE_LISTING = new StringProperty("filtered-hash-file-listing", "filtered-hash-file-listing.txt", "");
   
   public static void generateFileListing() {
-    DatabaseConnection conn = new DatabaseConnection();
-    if (conn.open()) {
-      FqnDatabaseAccessor accessor = null;
-      BufferedWriter bw = null;
-      try {
-        accessor = new FqnDatabaseAccessor(conn);
-        bw = new BufferedWriter(new FileWriter(new File(Properties.OUTPUT.getValue(), FQN_FILE_LISTING.getValue())));
-        logger.info("Issuing database query...");
-        int count = 0;
-        for (FileFqn file : accessor.getFileFqns()) {
-          if (++count % 10000 == 0) {
-            logger.info(count + " rows written");
-          }
-          bw.write(file.getProject() + " " + file.getProjectID() + " " + file.getPath() + " " + file.getFileID() + " " + file.getFqn() + " " + file.getEntityID() + "\n");
+    logger.info("Loading repository...");
+    Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
+    
+    BufferedWriter bw = null;
+    try {
+      bw = new BufferedWriter(new FileWriter(new File(OUTPUT.getValue(), HASH_FILE_LISTING.getValue())));
+      
+      Collection<RepoProject> projects = repo.getProjects();
+      int count = 0;
+      for (RepoProject project : projects) {
+        logger.info("Processing " + project + " (" + ++count + " of " + projects.size() + ")");
+        Deque<IDirectory> stack = Helper.newStack();
+        for (IDirectory dir : project.getFileSet().getRootDirectories()) {
+          stack.add(dir);
         }
-        logger.info("Done!");
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Error writing to file", e);
-      } finally {
-        FileUtils.close(accessor);
-        FileUtils.close(bw);
+        int fileCount = 0;
+        
+        while (!stack.isEmpty()) {
+          IDirectory dir = stack.pop();
+          for (IDirectory subDir : dir.getSubdirectories()) {
+            stack.add(subDir);
+          }
+          for (IJavaFile file : dir.getJavaFiles()) {
+            if (++fileCount % 1000 == 0) {
+              logger.info("  " + fileCount + " files processed...");
+            }
+            // Calculate the hash
+            File f = file.getFile().toFile();
+            Pair<String, String> hashes = FileUtils.computeHashes(f);
+            
+            if (hashes != null) {
+              StringBuilder builder = new StringBuilder();
+              builder.append(project.getProjectRoot().getRelativePath());
+              builder.append(" ").append(file.getFile().getRelativePath());
+              builder.append(" ").append(hashes.getFirst());
+              builder.append(" ").append(hashes.getSecond());
+              builder.append(" ").append(f.length()).append("\n");
+              bw.write(builder.toString());
+            }
+          }
+        }
+        FileUtils.resetTempDir();
       }
+      logger.info("Done!");
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error in writing file listing.", e);
+    } finally {
+      FileUtils.close(bw);
     }
   }
   
@@ -95,7 +117,7 @@ public class FqnClusterer {
           
           {
             try {
-              br = FileUtils.getBufferedReader(FQN_FILE_LISTING);
+              br = new BufferedReader(new FileReader(new File(INPUT.getValue(), HASH_FILE_LISTING.getValue())));
             } catch (IOException e) {
               logger.log(Level.SEVERE, "Error in reading file listing.", e);
             }
@@ -119,8 +141,8 @@ public class FqnClusterer {
                     br = null;
                   } else {
                     String[] parts = line.split(" ");
-                    if (parts.length == 6) {
-                      next = parts[0] + ":" + parts[2];
+                    if (parts.length == 5) {
+                      next = parts[0] + ":/" + parts[1];
                     } else {
                       logger.log(Level.SEVERE, "Invalid file line: " + line);
                     }
@@ -156,14 +178,15 @@ public class FqnClusterer {
   public static void generateFilteredList(Filter filter) {
     BufferedReader br = null;
     BufferedWriter bw = null;
+    
     try {
-      br = FileUtils.getBufferedReader(FQN_FILE_LISTING);
-      bw = FileUtils.getBufferedWriter(FILTERED_FQN_FILE_LISTING);
+      br = FileUtils.getBufferedReader(HASH_FILE_LISTING);
+      bw = FileUtils.getBufferedWriter(FILTERED_HASH_FILE_LISTING);
       
       for (String line = br.readLine(); line != null; line = br.readLine()) {
         String[] parts = line.split(" ");
-        if (parts.length == 6) {
-          if (filter.singlePass(parts[0], parts[2])) {
+        if (parts.length == 5) {
+          if (filter.singlePass(parts[0], parts[1])) {
             bw.write(line + "\n");
           }
         } else {
@@ -177,17 +200,17 @@ public class FqnClusterer {
       FileUtils.close(bw);
     }
   }
-  
+    
   public static Matching getMatching() {
-    return getMatching(FQN_FILE_LISTING);
+    return getMatching(HASH_FILE_LISTING);
   }
   
   public static Matching getFilteredMatching() {
-    return getMatching(FILTERED_FQN_FILE_LISTING);
+    return getMatching(FILTERED_HASH_FILE_LISTING);
   }
   
   private static Matching getMatching(Property<String> property) {
-    logger.info("Processing fqn file listing...");
+    logger.info("Processing hash file listing...");
     
     BufferedReader br = null;
     try {
@@ -195,17 +218,22 @@ public class FqnClusterer {
       
       Matching matching = new Matching();
       
-      Map<String, FileCluster> files = Helper.newHashMap();
+      HashingMatcher nextItem = new HashingMatcher();
+      Map<HashingMatcher, FileCluster> files = Helper.newHashMap();
       for (String line = br.readLine(); line != null; line = br.readLine()) {
         String[] parts = line.split(" ");
-        if (parts.length == 6) {
-          FileCluster cluster = files.get(parts[4]);
-          if (cluster == null) {
-            cluster = new FileCluster();
-            files.put(parts[4], cluster);
-            matching.addCluster(cluster);
+        if (parts.length == 5) {
+          nextItem.setValues(parts[2], parts[3], Long.parseLong(parts[4]));
+          
+          if (nextItem.getLength() > 0) {
+            FileCluster cluster = files.get(nextItem);
+            if (cluster == null) {
+              cluster = new FileCluster();
+              files.put(nextItem.copy(), cluster);
+              matching.addCluster(cluster);
+            }
+            cluster.addFile(parts[0], parts[1]);
           }
-          cluster.addProjectUniqueFile(parts[0], parts[2]);
         } else {
           logger.log(Level.SEVERE, "Invalid line: " + line);
         }
@@ -219,41 +247,4 @@ public class FqnClusterer {
       FileUtils.close(br);
     }
   }
-  
-//  public static Matching getFilteredMatching(Filter filter) {
-//    logger.info("Processing fqn file listing...");
-//    
-//    BufferedReader br = null;
-//    try {
-//      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FQN_FILE_LISTING.getValue())));
-//      
-//      Matching matching = new Matching();
-//      
-//      Map<String, FileCluster> files = Helper.newHashMap();
-//      for (String line = br.readLine(); line != null; line = br.readLine()) {
-//        String[] parts = line.split(" ");
-//        if (parts.length == 6) {
-//          if (filter.pass(parts[0], parts[2])) {
-//            FileCluster cluster = files.get(parts[4]);
-//            if (cluster == null) {
-//              cluster = new FileCluster();
-//              files.put(parts[4], cluster);
-//              matching.addCluster(cluster);
-//            }
-//            cluster.addProjectUniqueFile(parts[0], parts[2]);
-//          }
-//        } else {
-//          logger.log(Level.SEVERE, "Invalid line: " + line);
-//        }
-//      }
-//      
-//      return matching;
-//    } catch (IOException e) {
-//      logger.log(Level.SEVERE, "Error in reading file listing.", e);
-//      return null;
-//    } finally {
-//      FileUtils.close(br);
-//    }
-//  }
 }
- 

@@ -26,7 +26,8 @@ import static edu.uci.ics.sourcerer.repo.stats.RepositoryStatistics.JAR_STATS_FI
 import static edu.uci.ics.sourcerer.repo.stats.RepositoryStatistics.PROJECT_SIZES_FILE;
 import static edu.uci.ics.sourcerer.repo.stats.DiskUsageCalculator.REPO_DISK_USAGE_FILE;
 import static edu.uci.ics.sourcerer.repo.stats.RepositoryStatistics.PROJECT_NAMES_FILE;
-import static edu.uci.ics.sourcerer.repo.tools.RepositoryCompressor.COMPRESSED_FILTERED_REPO_FILE;
+import static edu.uci.ics.sourcerer.repo.tools.RepositoryFilterer.COMPRESSED_FILTERED_REPO_FILE;
+import static edu.uci.ics.sourcerer.repo.tools.RepositoryFilterer.REPO_SUBSET_RATE;
 import static edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.CSV_MODE;
 
 import java.util.Set;
@@ -35,7 +36,7 @@ import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.stats.DiskUsageCalculator;
 import edu.uci.ics.sourcerer.repo.stats.RepositoryStatistics;
-import edu.uci.ics.sourcerer.repo.tools.RepositoryCompressor;
+import edu.uci.ics.sourcerer.repo.tools.RepositoryFilterer;
 import edu.uci.ics.sourcerer.util.io.Command;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
@@ -90,9 +91,25 @@ public class Main {
     new Command("compress-filtered-repo", "Creates a compressed repository containing only the filtered files.") {
       protected void action() {
         Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
-        RepositoryCompressor.compressFilteredRepository(repo);
+        RepositoryFilterer.compressFilteredRepository(repo, false);
       }
     }.setProperties(INPUT_REPO, COMPRESSED_FILTERED_REPO_FILE);
+    
+  public static final Command COMPRESS_FILTERED_REPOSITORY_SUBSET =
+    new Command("compress-filtered-repo-subset", "Creates a compressed repository containing only the filtered files.") {
+      protected void action() {
+        Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
+        RepositoryFilterer.compressFilteredRepository(repo, true);
+      }
+    }.setProperties(INPUT_REPO, COMPRESSED_FILTERED_REPO_FILE, REPO_SUBSET_RATE);
+    
+  public static final Command CREATE_REPOSITORY_SUBSET =
+    new Command("create-repo-subset", "Creates a subset of the main repository.") {
+      protected void action() {
+        Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
+        RepositoryFilterer.createRepositorySubset(repo);
+      }
+    }.setProperties(INPUT_REPO, OUTPUT_REPO, REPO_SUBSET_RATE);
     
   public static final Command PRINT_PROJECT_NAMES =
     new Command("print-project-names", "Prints the names of all the projects in the repository.") {

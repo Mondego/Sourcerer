@@ -1,4 +1,4 @@
-package edu.uci.ics.sourcerer.clusterer.fqn;
+package edu.uci.ics.sourcerer.clusterer.cloning.method.fqn;
 //package edu.uci.ics.sourcerer.clusterer.stats;
 //
 //import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_PASSWORD;

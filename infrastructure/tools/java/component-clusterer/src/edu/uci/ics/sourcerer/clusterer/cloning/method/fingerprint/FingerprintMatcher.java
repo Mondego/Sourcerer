@@ -15,48 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.hash;
+package edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint;
+
+import java.util.Arrays;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class HashingMatcher {
-  private String md5;
-  private String sha;
-  private long length;
+public class FingerprintMatcher {
+  private String[] names;
+  private int hashCode = 0;
 
-  protected HashingMatcher() {}
-  
-  protected void setValues(String md5, String sha, long length) {
-    this.md5 = md5;
-    this.sha = sha;
-    this.length = length;
-  }
-  
-  public HashingMatcher copy() {
-    HashingMatcher retval = new HashingMatcher();
-    retval.setValues(md5, sha, length);
-    return retval;
-  }
-  
-  public String getMD5() {
-    return md5;
-  }
-  
-  public long getLength() {
-    return length;
+  protected FingerprintMatcher(String[] names) {
+    this.names = names;
   }
   
   public int hashCode() {
-    return md5.hashCode();
+    if (hashCode == 0) {
+      hashCode = Arrays.hashCode(names);
+    }
+    return hashCode;
   }
   
   public boolean equals(Object o) {
     if (this == o) {
       return true;
-    } else if (o instanceof HashingMatcher) {
-      HashingMatcher other = (HashingMatcher) o;
-      return md5.equals(other.md5) && sha.equals(other.sha) && length == other.length;
+    } else if (o instanceof FingerprintMatcher) {
+      FingerprintMatcher other = (FingerprintMatcher) o;
+      return Arrays.equals(names, other.names);
     } else {
       return false;
     }

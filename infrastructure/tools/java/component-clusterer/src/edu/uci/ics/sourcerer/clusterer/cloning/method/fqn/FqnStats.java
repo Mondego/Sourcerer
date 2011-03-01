@@ -1,4 +1,4 @@
-package edu.uci.ics.sourcerer.clusterer.fqn;
+package edu.uci.ics.sourcerer.clusterer.cloning.method.fqn;
 ///* 
 // * Sourcerer: an infrastructure for large-scale source code analysis.
 // * Copyright (C) by contributors. See CONTRIBUTORS.txt for full list.

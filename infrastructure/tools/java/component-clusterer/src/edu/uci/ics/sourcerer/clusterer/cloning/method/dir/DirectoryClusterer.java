@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.dir;
+package edu.uci.ics.sourcerer.clusterer.cloning.method.dir;
 
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
@@ -39,10 +39,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.clusterer.stats.EasyFilter;
-import edu.uci.ics.sourcerer.clusterer.stats.FileCluster;
-import edu.uci.ics.sourcerer.clusterer.stats.Filter;
-import edu.uci.ics.sourcerer.clusterer.stats.Matching;
+import edu.uci.ics.sourcerer.clusterer.cloning.stats.EasyFilter;
+import edu.uci.ics.sourcerer.clusterer.cloning.stats.FileCluster;
+import edu.uci.ics.sourcerer.clusterer.cloning.stats.Filter;
+import edu.uci.ics.sourcerer.clusterer.cloning.stats.Matching;
 import edu.uci.ics.sourcerer.repo.base.IDirectory;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;

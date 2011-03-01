@@ -15,13 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.stats;
+package edu.uci.ics.sourcerer.util.io.properties;
 
+import edu.uci.ics.sourcerer.util.io.Property;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface Filter {
-  public boolean pass(String project, String path);
-  public boolean singlePass(String project, String path);
+public class DoubleProperty extends Property<Double> {
+  public DoubleProperty(String name, Double defaultValue, String description) {
+    super(name, defaultValue, description);
+  }
+  
+  @Override
+  public String getType() {
+    return "double";
+  }
+  
+  @Override
+  protected Double parseString(String value) {
+    return Double.parseDouble(value);
+  }
 }

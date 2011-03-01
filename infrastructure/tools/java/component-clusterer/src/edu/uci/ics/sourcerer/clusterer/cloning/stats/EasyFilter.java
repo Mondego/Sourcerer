@@ -15,35 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.db.util.columns;
-
-
+package edu.uci.ics.sourcerer.clusterer.cloning.stats;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class EnumColumn<T extends Enum<T>> extends Column<T> {
-  public EnumColumn(String name, String table, Enum<T>[] values, boolean nullable) {
-    super(name, table, getEnumCreate(values), nullable);
-  }
-  
-  private static <T extends Enum<T>> String getEnumCreate(Enum<T>[] values) {
-    StringBuilder builder = new StringBuilder();
-    builder.append("ENUM(");
-    for (Enum<T> value : values) {
-      builder.append("'").append(value.name()).append("'").append(",");
-    }
-    builder.setCharAt(builder.length() - 1, ')');
-    return builder.toString();
-  }
-
+public class EasyFilter implements Filter {
   @Override
-  protected String convertHelper(T value) {
-    return "'" + value.name() + "'";
+  public boolean pass(String project, String path) {
+    return true;
   }
   
   @Override
-  protected String equalsHelper(T value) {
-    return "'" + value.name() + "'";
+  public boolean singlePass(String project, String path) {
+    return true;
   }
 }

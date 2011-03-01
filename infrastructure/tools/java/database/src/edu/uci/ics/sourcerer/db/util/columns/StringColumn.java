@@ -81,7 +81,7 @@ public class StringColumn extends Column<String> {
 
   @Override
   public String convertHelper(String value) {
-    return value;
+    return "'" + value + "'";
   }
   
   @Override

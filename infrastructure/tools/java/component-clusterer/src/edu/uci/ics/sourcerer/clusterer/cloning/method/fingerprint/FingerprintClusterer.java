@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.fingerprint;
+package edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
@@ -32,10 +32,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.clusterer.fqn.FqnClusterer;
-import edu.uci.ics.sourcerer.clusterer.stats.FileCluster;
-import edu.uci.ics.sourcerer.clusterer.stats.Filter;
-import edu.uci.ics.sourcerer.clusterer.stats.Matching;
+import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnClusterer;
+import edu.uci.ics.sourcerer.clusterer.cloning.stats.FileCluster;
+import edu.uci.ics.sourcerer.clusterer.cloning.stats.Filter;
+import edu.uci.ics.sourcerer.clusterer.cloning.stats.Matching;
 import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.Helper;
