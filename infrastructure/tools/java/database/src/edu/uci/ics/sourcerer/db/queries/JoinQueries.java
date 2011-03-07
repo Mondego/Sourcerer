@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import edu.uci.ics.sourcerer.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.db.schema.FilesTable;
+import edu.uci.ics.sourcerer.db.schema.ImportsTable;
 import edu.uci.ics.sourcerer.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.db.util.BasicResultTranslator;
@@ -33,6 +34,7 @@ import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.RelationClass;
 import edu.uci.ics.sourcerer.model.db.FileFqn;
+import edu.uci.ics.sourcerer.model.db.ImportFqn;
 import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
 
 /**
@@ -110,6 +112,24 @@ public final class JoinQueries extends Queries {
                 EntitiesTable.ENTITY_TYPE.convertFromDB(result.getString(3)),
                 EntitiesTable.FQN.convertFromDB(result.getString(1)),
                 EntitiesTable.PROJECT_ID.convertFromDB(result.getString(4)));
+          }
+        });
+  }
+  
+  public Iterable<ImportFqn> getImportFqns() {
+    return executor.selectStreamed(
+        join(ImportsTable.TABLE, EntitiesTable.TABLE) +
+        on(ImportsTable.EID.getEquals(EntitiesTable.ENTITY_ID)),
+        comma(ImportsTable.ON_DEMAND.getQualifiedName(), EntitiesTable.FQN.getQualifiedName(), ImportsTable.PROJECT_ID.getQualifiedName(), ImportsTable.FILE_ID.getQualifiedName()),
+        null,
+        new BasicResultTranslator<ImportFqn>() {
+          @Override
+          public ImportFqn translate(ResultSet result) throws SQLException {
+            return new ImportFqn(
+                ImportsTable.ON_DEMAND.convertFromDB(result.getString(1)),
+                EntitiesTable.FQN.convertFromDB(result.getString(2)),
+                ImportsTable.PROJECT_ID.convertFromDB(result.getString(3)),
+                ImportsTable.FILE_ID.convertFromDB(result.getString(4)));
           }
         });
   }

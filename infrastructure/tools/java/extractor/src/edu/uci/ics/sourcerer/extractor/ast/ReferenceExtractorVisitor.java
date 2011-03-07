@@ -1898,7 +1898,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   @SuppressWarnings("unchecked")
   private String getFuzzyMethodFqn(MethodInvocation invocation) {
     StringBuilder fqnBuilder = new StringBuilder();
-    fqnBuilder.append("(1UKNOWN).").append(invocation.getName().getFullyQualifiedName());
+    fqnBuilder.append(UNKNOWN).append(".").append(invocation.getName().getFullyQualifiedName());
     getFuzzyMethodArgs(fqnBuilder, invocation.arguments());
     return fqnBuilder.toString();
   }
@@ -1928,7 +1928,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         argBuilder.append(',');
       }
       if (binding == null) {
-        argBuilder.append("(1UKNOWN)");
+        argBuilder.append(UNKNOWN);
       } else {
         argBuilder.append(getTypeFqn(binding));
       }

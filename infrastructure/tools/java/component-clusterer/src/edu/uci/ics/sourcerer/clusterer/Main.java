@@ -24,6 +24,7 @@ import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.stats.Aggregator;
 import edu.uci.ics.sourcerer.clusterer.cloning.stats.Verifier;
 import edu.uci.ics.sourcerer.clusterer.usage.FqnTree;
+import edu.uci.ics.sourcerer.clusterer.usage.ImportUsageGenerator;
 import edu.uci.ics.sourcerer.clusterer.usage.UsageGenerator;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
@@ -153,6 +154,14 @@ public class Main {
         UsageGenerator.printTopReferencedFragments();
       }
     }.setProperties(Properties.INPUT, UsageGenerator.TOP_COUNT, UsageGenerator.TOP_REFERENCED_FRAGMENTS_FILE, FqnTree.FQN_TREE);
+  
+  public static final Command GENERATE_IMPORT_USAGE_LISTING =
+    new Command("generate-import-usage-listing", "Generate an import usage listing file.") {
+      @Override
+      protected void action() {
+        ImportUsageGenerator.generateImportUsageListing();
+      }
+    }.setProperties(ImportUsageGenerator.IMPORT_USAGE_LISTING, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
   
   public static void main(String[] args) {
     PropertyManager.executeCommand(args, Main.class);

@@ -47,6 +47,7 @@ public abstract class DatabaseAccessor implements Closeable {
 
   protected final ProjectQueries projectQueries;
   protected final FileQueries fileQueries;
+  protected final ImportQueries importQueries;
   protected final CommentQueries commentQueries;
   protected final EntityQueries entityQueries;
   protected final RelationQueries relationQueries;
@@ -67,6 +68,7 @@ public abstract class DatabaseAccessor implements Closeable {
     
     projectQueries = new ProjectQueries(executor);
     fileQueries = new FileQueries(executor);
+    importQueries = new ImportQueries(executor);
     commentQueries = new CommentQueries(executor);
     entityQueries = new EntityQueries(executor);
     relationQueries = new RelationQueries(executor);

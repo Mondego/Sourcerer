@@ -70,7 +70,7 @@ public class UsageGenerator {
           bw.write(entity.getFqn() + " " + entity.getEntityID() + " " + entity.getType() + "\n");
         }
       } catch (IOException e) {
-        logger.log(Level.SEVERE, "Error writing to fine.", e);
+        logger.log(Level.SEVERE, "Error writing to file.", e);
       } finally {
         FileUtils.close(accessor);
         FileUtils.close(bw);
