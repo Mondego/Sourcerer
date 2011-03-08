@@ -18,11 +18,12 @@
 package edu.uci.ics.sourcerer.repo.base;
 
 import edu.uci.ics.sourcerer.repo.general.RepoFile;
+import edu.uci.ics.sourcerer.util.io.LineWriteable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IJavaFile {
+public interface IJavaFile extends LineWriteable {
   public String getPackage();
   
   /**

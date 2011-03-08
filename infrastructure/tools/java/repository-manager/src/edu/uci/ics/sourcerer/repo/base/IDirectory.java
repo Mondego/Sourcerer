@@ -17,10 +17,12 @@
  */
 package edu.uci.ics.sourcerer.repo.base;
 
+import edu.uci.ics.sourcerer.util.io.LineWriteable;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IDirectory {
+public interface IDirectory extends LineWriteable {
   public String getName();
   
   public Iterable<IDirectory> getSubdirectories();

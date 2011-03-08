@@ -15,16 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.base;
+package edu.uci.ics.sourcerer.util.io;
 
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
-import edu.uci.ics.sourcerer.util.io.LineWriteable;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IJarFile extends LineWriteable {
-  public String getHash();
-  
-  public RepoFile getFile();
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface LWField {
 }

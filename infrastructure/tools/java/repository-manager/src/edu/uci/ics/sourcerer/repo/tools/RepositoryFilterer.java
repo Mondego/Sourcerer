@@ -67,7 +67,7 @@ public class RepositoryFilterer {
     for (RepoProject project : repo.getProjects()) {
       // Make sure the project has at least one file
       IFileSet files = project.getFileSet();
-      if (files.getTotalFileCount() > 0 && (!filter || (random.nextDouble() < max))) {
+      if (files.getJavaFileCount() > 0 && (!filter || (random.nextDouble() < max))) {
         logger.info("Processing project " + ++count + " of " + total);
         ZipOutputStream zos = null;
         try {
@@ -90,7 +90,7 @@ public class RepositoryFilterer {
               FileUtils.close(fis);
             }
             // Add the individual files
-            for (IJavaFile file : files.getJavaFiles()) {
+            for (IJavaFile file : files.getFilteredJavaFiles()) {
               RepoFile rFile = file.getFile();
               try {
                 fis = new FileInputStream(rFile.toFile());
@@ -138,7 +138,7 @@ public class RepositoryFilterer {
     for (RepoProject project : repo.getProjects()) {
       // Make sure the project has at least one file
       IFileSet files = project.getFileSet();
-      if (files.getTotalFileCount() > 0) {
+      if (files.getJavaFileCount() > 0) {
           if (random.nextDouble() < max) {
             included++;
             logger.info("Including project " + ++count + " of " + total);

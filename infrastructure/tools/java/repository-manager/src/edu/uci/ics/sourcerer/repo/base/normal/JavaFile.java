@@ -26,14 +26,20 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractJavaFile;
 import edu.uci.ics.sourcerer.repo.general.RepoFile;
+import edu.uci.ics.sourcerer.util.io.LWField;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JavaFile extends AbstractJavaFile {
+  @LWField
   private String pkg;
+  @LWField
   private RepoFile file;
+  @LWField
   private boolean packageComputed = false;
+  
+  protected JavaFile() {}
   
   public JavaFile(RepoFile file) {
     this.file = file;

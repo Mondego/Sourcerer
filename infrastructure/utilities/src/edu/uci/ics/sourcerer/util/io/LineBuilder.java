@@ -30,7 +30,7 @@ public final class LineBuilder {
       builder = new StringBuilder();
     } else {
       builder.append(lastItem).append(" ");
-      item = lastItem;
+      lastItem = item;
     }
   }
   
@@ -38,7 +38,10 @@ public final class LineBuilder {
     if (lastItem == null) {
       return "";
     } else {
-      return builder.append(lastItem).toString();
+      String ret = builder.append(lastItem).toString();
+      builder = new StringBuilder();
+      lastItem = null;
+      return ret;
     }
   }
   

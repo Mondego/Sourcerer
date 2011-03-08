@@ -19,20 +19,29 @@ package edu.uci.ics.sourcerer.repo.base;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Map;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Iterators;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.LineFileReader;
+import edu.uci.ics.sourcerer.util.io.LineFileWriter;
+import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractFileSet implements IFileSet {
+  private Property<String> FILE_CACHE = new StringProperty("file-cache-file", "file-cache.txt", "Cache of the file set's files.");
+  
+  private File cache;
+  
   private Collection<IJarFile> jarFiles;
   
   private Collection<IDirectory> roots;
@@ -43,11 +52,42 @@ public abstract class AbstractFileSet implements IFileSet {
   private int fileCount = 0;
   private int discardedDuplicateCount = 0;
   
-  protected AbstractFileSet(AbstractRepository repo) {
+  protected AbstractFileSet(RepoProject project) {
+    cache = project.getProjectRoot().getChildFile(FILE_CACHE.getValue()); 
+  }
+  
+  protected final void populateFileSet() {
+    if (cache.exists()) {
+      LineFileReader reader = null;
+      try {
+        reader = FileUtils.getLineFileReader(cache);
+        jarFiles = reader.readNextToCollection(IJarFile.class);
+        uniqueFiles = reader.readNextToCollection(IJavaFile.class);
+        bestDuplicateFiles = reader.readNextToCollection(IJavaFile.class);
+        fileCount = reader.readNextToInt();
+        discardedDuplicateCount = reader.readNextToInt();
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to load file cache", e);
+        jarFiles.clear();
+        uniqueFiles = null;
+        bestDuplicateFiles = null;
+        buildRepoMap();
+      } finally {
+        FileUtils.close(reader);
+      }
+    } else {
+      buildRepoMap();
+    }
+  }
+  
+  protected void buildRepoMap() {
     jarFiles = Helper.newLinkedList();
     roots = Helper.newLinkedList();
     repoMap = Helper.newHashMap();
+    buildRepoMapHelper();
   }
+  
+  protected abstract void buildRepoMapHelper();
   
   protected final void addJarFile(IJarFile file) {
     jarFiles.add(file);
@@ -163,20 +203,44 @@ public abstract class AbstractFileSet implements IFileSet {
         }
       }
     }
+    
+    // Store in the cache
+    LineFileWriter writer = null;
+    try {
+      writer = FileUtils.getLineFileWriter(cache);
+      writer.write(jarFiles);
+      writer.write(uniqueFiles);
+      writer.write(bestDuplicateFiles);
+      writer.write(fileCount);
+      writer.write(discardedDuplicateCount);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to write cache.", e);
+    } finally {
+      FileUtils.close(writer);
+    }
   }
   
   @Override
   public final Iterable<IDirectory> getRootDirectories() {
+    if (roots == null) {
+      buildRepoMap();
+    }
     return roots;
   }
   
   @Override
-  public final int getTotalFileCount() {
+  public final int getJavaFileCount() {
     return fileCount;
   }
   
   @Override
-  public final Iterable<IJavaFile> getJavaFiles() {
+  public final int getFilteredJavaFileCount() {
+    return uniqueFiles.size() + bestDuplicateFiles.size();
+  }
+  
+  @Override
+  @SuppressWarnings("unchecked")
+  public final Iterable<IJavaFile> getFilteredJavaFiles() {
     if (uniqueFiles == null || bestDuplicateFiles == null) {
       computeFiles();
     }

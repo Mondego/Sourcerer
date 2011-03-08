@@ -46,12 +46,12 @@ public class RepoProject {
   
   public IFileSet getFileSet() {
     if (content.isDirectory()) {
-      return new FileSet(content, repo);
+      return new FileSet(this);
     } else {
       if (repo.getTempDir() == null) {
         throw new IllegalStateException("Compressed file sets may only be used if a temp dir is specified.");
       }
-      return CompressedFileSet.getFileSet(this);
+      return new CompressedFileSet(this);
     }
   }
   

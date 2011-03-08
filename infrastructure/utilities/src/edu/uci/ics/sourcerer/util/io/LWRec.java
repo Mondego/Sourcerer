@@ -15,16 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.base;
-
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
-import edu.uci.ics.sourcerer.util.io.LineWriteable;
+package edu.uci.ics.sourcerer.util.io;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IJarFile extends LineWriteable {
-  public String getHash();
-  
-  public RepoFile getFile();
+public interface LWRec extends LineWriteable {
+  public String writeToString();
 }

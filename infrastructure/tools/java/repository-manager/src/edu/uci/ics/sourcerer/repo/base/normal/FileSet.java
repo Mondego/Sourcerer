@@ -22,9 +22,10 @@ import java.util.Deque;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
 import edu.uci.ics.sourcerer.repo.base.JarFile;
-import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.FieldConverter;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
@@ -33,13 +34,23 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 public class FileSet extends AbstractFileSet {
   private RepoFile content;
   
-  public FileSet(RepoFile content, AbstractRepository repo) {
-    super(repo);
-    this.content = content.makeRoot();
+  static {
+    FieldConverter.registerConverterHelper(RepoFile.class, new FieldConverter.FieldConverterHelper() {
+      @Override
+      protected Object makeFromString(String value) throws IllegalAccessException {
+        return RepoFile.makeFromString(value);
+      }
+    });
+  }
+  
+  public FileSet(RepoProject project) {
+    super(project);
+    this.content = project.getContent().makeRoot();
     populateFileSet();
   }
   
-  private void populateFileSet() {
+  @Override
+  protected void buildRepoMapHelper() {
     Deque<File> fileStack = Helper.newStack();
     fileStack.add(content.toFile());
     String basePath = content.toFile().getPath();

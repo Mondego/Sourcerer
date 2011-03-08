@@ -1,0 +1,43 @@
+Methodological Problems
+
+Need better way to evaluate the effectiveness of each method
+  * The hashing method is obviously "correct"
+  * The reviewer wanted a sense of the correctness for the other methods.
+    I had hoped to avoid this by simply defining a clone as something detected
+    by a method (an operational definition). This clearly didnt't work.
+    * Do we need to go over a statistically significant sample of the reported
+      clones and "verify" by hand that they are clones?
+    * How does one decide what a statistically significant sample is?
+    * Should we alter the methods to automatically remove detectable spurious clones?
+  * Possibly need a method that takes into account method bodies
+    
+General Issues
+  * What results are non-obvious? Need to "learn" something about cloning.
+  * Need to go further in depth into the cloning cases we've seen, to
+    find out "what is going on".
+    * Are they simply copying the library for laziness so they can look over the source?
+    * Are there changes to some of the files themselves?
+    * Is only part of the library represented?
+    * What other questions would make this more interesting?
+  * Should we look into how many "things" a project clones?
+    * For example, if a project is 80% clones, how many different projects
+      were copied to make that 80%? Is it one library or five?
+    * Would need to cluster clones files together if they appear related
+  * More detailed comparison to Mockus results
+  * Discuss threats to validity in a single place
+  
+  * One reviewer wants finer grained clone detection.
+  
+Specific Issues
+  * Fix the large number of projects that were excluded
+  
+
+Action Items
+  * Compute project-project cloning rates
+    * Start with the hashing method
+    * For each pair of projects, collect the set of files that are identical
+    * Then use the other methods to expand this collection
+    
+    * Find some way to cluster these pairings together?
+    
+      

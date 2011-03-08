@@ -18,14 +18,19 @@
 package edu.uci.ics.sourcerer.repo.base;
 
 import edu.uci.ics.sourcerer.repo.general.RepoFile;
+import edu.uci.ics.sourcerer.util.io.LWField;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarFile implements IJarFile {
+  @LWField
   private String hash;
+  @LWField
   private RepoFile file;
 
+  protected JarFile() {}
+  
   public JarFile(String hash, RepoFile file) {
     this.hash = hash;
     this.file = file;

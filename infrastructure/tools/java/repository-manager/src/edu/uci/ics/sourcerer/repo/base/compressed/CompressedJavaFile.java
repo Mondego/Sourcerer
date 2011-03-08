@@ -26,16 +26,22 @@ import java.io.InputStreamReader;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractJavaFile;
+import edu.uci.ics.sourcerer.repo.base.compressed.CompressedFileSet.CompressedRepoFile;
 import edu.uci.ics.sourcerer.repo.general.RepoFile;
+import edu.uci.ics.sourcerer.util.io.LWField;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class CompressedJavaFile extends AbstractJavaFile {
+  @LWField
   private String pkg;
-  private RepoFile file;
+  @LWField
+  private CompressedRepoFile file;
   
-  protected CompressedJavaFile(RepoFile file, InputStream is) {
+  protected CompressedJavaFile() {}
+  
+  protected CompressedJavaFile(CompressedRepoFile file, InputStream is) {
     this.file = file;
     
     try {

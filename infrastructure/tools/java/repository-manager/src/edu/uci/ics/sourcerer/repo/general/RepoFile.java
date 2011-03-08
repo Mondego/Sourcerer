@@ -1,12 +1,19 @@
 package edu.uci.ics.sourcerer.repo.general;
 
-import java.io.File;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-public class RepoFile {
+import java.io.File;
+import java.util.Map;
+import java.util.logging.Level;
+
+import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.LWRec;
+
+public class RepoFile implements LWRec {
   private final RepoFile root;
   private final String relativePath;
   private final File file;
-  
+
   protected RepoFile(File file) {
     root = this;
     relativePath = "";
@@ -23,8 +30,14 @@ public class RepoFile {
     this.file = new File(root.file, relativePath.replace('*', ' '));
   }
   
+  private static Map<File, RepoFile> rootMap = Helper.newHashMap();
   public static RepoFile make(File root) {
-    return new RepoFile(root);
+    RepoFile file = rootMap.get(root);
+    if (file == null) {
+      file = new RepoFile(root);
+      rootMap.put(root, file);
+    }
+    return file;
   }
 
   public RepoFile makeRoot() {
@@ -125,5 +138,23 @@ public class RepoFile {
   @Override
   public String toString() {
     return relativePath;
+  }
+  
+  public static RepoFile makeFromString(String value) {
+    int colon = value.indexOf(';');
+    if (colon == -1) {
+      logger.log(Level.SEVERE, "Invalid value: " + value);
+      return null;
+    } else {
+      File rootFile = new File(value.substring(0, colon).replace('*', ' '));
+      RepoFile root = make(rootFile);
+      String relativePath = value.substring(colon + 1);
+      return new RepoFile(root, relativePath);
+    }
+  }
+  
+  @Override
+  public String writeToString() {
+    return root.toFile().getPath().replace(' ', '*') + ";" + relativePath;
   }
 }

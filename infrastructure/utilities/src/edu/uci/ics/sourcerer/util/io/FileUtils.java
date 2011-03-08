@@ -33,13 +33,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
@@ -407,123 +404,33 @@ public final class FileUtils {
    * Uses reflection. This will break if a heterogeneous collection is used.
    */
   public static <T extends LineWriteable> void writeLineFile(Iterable<T> iterable, Property<String> property) throws IOException {
-    BufferedWriter bw = null;
+    LineFileWriter writer = null;
     try {
-      bw = getBufferedWriter(property);
-      
-      Field[] fields = null;
-      for (T write : iterable) {
-        if (fields == null) {
-          Class<? extends LineWriteable> klass = write.getClass();
-          
-          // Write the class name
-          bw.write(klass.getName());
-          bw.newLine();
-          
-          // Write the fields
-          fields = klass.getFields();
-          LineBuilder builder = new LineBuilder();
-          for (Field field : fields) {
-            builder.addItem(field.getName());
-          }
-          bw.write(builder.toLine());
-          bw.newLine();
-        }
-        LineBuilder builder = new LineBuilder();
-        for (Field field : fields) {
-          builder.addItem(field.get(write).toString());
-        }
-        bw.write(builder.toLine());
-        bw.newLine();
-      }
-    } catch (IllegalAccessException e) {
-      logger.log(Level.SEVERE, "JVM does not have sufficient security access.", e);
+      writer = new LineFileWriter(getBufferedWriter(property));
+      writer.write(iterable);
     } finally {
-      close(bw);
+      close(writer);
     }
   }
   
-  public static <T extends LineWriteable> Iterable<T> readLineFile(final Class<T> klass, Property<String> property) throws IOException {
-    final BufferedReader br = getBufferedReader(property);
-
-    // Verify that the class name matches
-    String className = br.readLine();
-    if (!klass.getName().equals(className)) {
-      throw new IllegalArgumentException("Specified type does not match file: " + klass.getName() + " vs " + className);
-    }
-    
-    // Read in the fields
-    String[] fieldNames = LineBuilder.splitLine(br.readLine());
-    final FieldConverter[] fields = new FieldConverter[fieldNames.length];
-    try {
-      for (int i = 0; i < fieldNames.length; i++) {
-          fields[i] = FieldConverter.getFieldConverter(klass.getField(fieldNames[i]));
-      }
-      
-      return new Iterable<T>() {
-        @Override
-        public Iterator<T> iterator() {
-          return new Iterator<T>() {
-            private boolean open = true;
-            private T next = null;
-            
-            @Override
-            public boolean hasNext() {
-              try {
-                while (next == null && open) {
-                  String line = br.readLine();
-                  if (line == null) {
-                    open = false;
-                    close(br);
-                  } else {
-                    String[] values = LineBuilder.splitLine(line);
-                    if (values.length == fields.length) {
-                      try {
-                        T obj = klass.newInstance();
-                        for (int i = 0; i < values.length; i++) {
-                          fields[i].set(obj, values[i]);
-                        }
-                      } catch (InstantiationException e) {
-                        logger.log(Level.SEVERE, "Unable to create object instance", e);
-                      } catch (IllegalAccessException e) {
-                        logger.log(Level.SEVERE, "Unable to create object instance / set field values", e);
-                      }
-                    } else {
-                      logger.log(Level.SEVERE, "Line has incorrect number of entries: " + line);
-                    }
-                  }
-                }
-              } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error reading line", e);
-                open = false;
-                close(br);
-              }
-              return false;
-            }
+  public static LineFileWriter getLineFileWriter(Property<String> property) throws IOException {
+    return new LineFileWriter(getBufferedWriter(property));
+  }
   
-            @Override
-            public T next() {
-              if (hasNext()) {
-                T ret = next;
-                next = null;
-                return ret;
-              } else {
-                throw new NoSuchElementException();
-              }
-            }
+  public static LineFileWriter getLineFileWriter(File file) throws IOException {
+    return new LineFileWriter(new BufferedWriter(new FileWriter(file)));
+  }
   
-            @Override
-            public void remove() {
-              throw new UnsupportedOperationException();
-            }
-          };
-        }
-      };
-    } catch (SecurityException e) {
-      logger.log(Level.SEVERE, "A security manager is in place that prohibits use of this method.", e);
-    } catch (NoSuchFieldException e) {
-      logger.log(Level.SEVERE, "The current fields of this class (" + klass.getName() + ") does not match the file.", e);
-    }
-    return Collections.emptyList();
+  public static <T extends LineWriteable> Iterable<T> readLineFile(Class<T> klass, Property<String> property) throws IOException {
+    LineFileReader reader = new LineFileReader(getBufferedReader(property));
+    return reader.readNextToIterable(klass, true);
+  }
+  
+  public static LineFileReader getLineFileReader(Property<String> property) throws IOException {
+    return new LineFileReader(getBufferedReader(property));
+  }
+  
+  public static LineFileReader getLineFileReader(File file) throws IOException {
+    return new LineFileReader(new BufferedReader(new FileReader(file)));
   }
 }

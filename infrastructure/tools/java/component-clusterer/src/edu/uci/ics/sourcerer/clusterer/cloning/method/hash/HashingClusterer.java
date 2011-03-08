@@ -20,31 +20,27 @@ package edu.uci.ics.sourcerer.clusterer.cloning.method.hash;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
-import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.clusterer.cloning.stats.FileCluster;
-import edu.uci.ics.sourcerer.clusterer.cloning.stats.Filter;
 import edu.uci.ics.sourcerer.clusterer.cloning.stats.Matching;
-import edu.uci.ics.sourcerer.repo.base.IDirectory;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.LineBuilder;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
@@ -53,7 +49,6 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  */
 public class HashingClusterer {
   public static final Property<String> HASH_FILE_LISTING = new StringProperty("hash-file-listing", "hash-file-listing.txt", "List of all the files (and their hashes) in the repository.");
-  public static final Property<String> FILTERED_HASH_FILE_LISTING = new StringProperty("filtered-hash-file-listing", "filtered-hash-file-listing.txt", "");
   
   public static void generateFileListing() {
     logger.info("Loading repository...");
@@ -61,40 +56,25 @@ public class HashingClusterer {
     
     BufferedWriter bw = null;
     try {
-      bw = new BufferedWriter(new FileWriter(new File(OUTPUT.getValue(), HASH_FILE_LISTING.getValue())));
+      bw = FileUtils.getBufferedWriter(HASH_FILE_LISTING);
       
       Collection<RepoProject> projects = repo.getProjects();
       int count = 0;
       for (RepoProject project : projects) {
         logger.info("Processing " + project + " (" + ++count + " of " + projects.size() + ")");
-        Deque<IDirectory> stack = Helper.newStack();
-        for (IDirectory dir : project.getFileSet().getRootDirectories()) {
-          stack.add(dir);
-        }
-        int fileCount = 0;
+        LineBuilder builder = new LineBuilder();
+        for (IJavaFile file : project.getFileSet().getFilteredJavaFiles()) {
+          File f = file.getFile().toFile();
+          Pair<String, String> hashes = FileUtils.computeHashes(f);
         
-        while (!stack.isEmpty()) {
-          IDirectory dir = stack.pop();
-          for (IDirectory subDir : dir.getSubdirectories()) {
-            stack.add(subDir);
-          }
-          for (IJavaFile file : dir.getJavaFiles()) {
-            if (++fileCount % 1000 == 0) {
-              logger.info("  " + fileCount + " files processed...");
-            }
-            // Calculate the hash
-            File f = file.getFile().toFile();
-            Pair<String, String> hashes = FileUtils.computeHashes(f);
-            
-            if (hashes != null) {
-              StringBuilder builder = new StringBuilder();
-              builder.append(project.getProjectRoot().getRelativePath());
-              builder.append(" ").append(file.getFile().getRelativePath());
-              builder.append(" ").append(hashes.getFirst());
-              builder.append(" ").append(hashes.getSecond());
-              builder.append(" ").append(f.length()).append("\n");
-              bw.write(builder.toString());
-            }
+          if (hashes != null) {
+            builder.addItem(project.getProjectRoot().getRelativePath());
+            builder.addItem(file.getFile().getRelativePath());
+            builder.addItem(hashes.getFirst());
+            builder.addItem(hashes.getSecond());
+            builder.addItem(Long.toString(f.length()));
+            bw.write(builder.toLine());
+            bw.newLine();
           }
         }
         FileUtils.resetTempDir();
@@ -175,46 +155,12 @@ public class HashingClusterer {
     };
   }
   
-  public static void generateFilteredList(Filter filter) {
-    BufferedReader br = null;
-    BufferedWriter bw = null;
-    
-    try {
-      br = FileUtils.getBufferedReader(HASH_FILE_LISTING);
-      bw = FileUtils.getBufferedWriter(FILTERED_HASH_FILE_LISTING);
-      
-      for (String line = br.readLine(); line != null; line = br.readLine()) {
-        String[] parts = line.split(" ");
-        if (parts.length == 5) {
-          if (filter.singlePass(parts[0], parts[1])) {
-            bw.write(line + "\n");
-          }
-        } else {
-          logger.log(Level.SEVERE, "Invalid line: " + line);
-        }
-      }
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error generating filtered list.", e);
-    } finally {
-      FileUtils.close(br);
-      FileUtils.close(bw);
-    }
-  }
-    
   public static Matching getMatching() {
-    return getMatching(HASH_FILE_LISTING);
-  }
-  
-  public static Matching getFilteredMatching() {
-    return getMatching(FILTERED_HASH_FILE_LISTING);
-  }
-  
-  private static Matching getMatching(Property<String> property) {
     logger.info("Processing hash file listing...");
     
     BufferedReader br = null;
     try {
-      br = FileUtils.getBufferedReader(property);
+      br = FileUtils.getBufferedReader(HASH_FILE_LISTING);
       
       Matching matching = new Matching();
       

@@ -27,10 +27,12 @@ public interface IFileSet {
   public int getJarFileCount();
   
   public Iterable<IJarFile> getJarFiles();
-
-  public int getTotalFileCount();
   
-  public Iterable<IJavaFile> getJavaFiles();
+  public int getJavaFileCount();
+
+  public int getFilteredJavaFileCount();
+  
+  public Iterable<IJavaFile> getFilteredJavaFiles();
   
   public int getUniqueJavaFileCount();
   
