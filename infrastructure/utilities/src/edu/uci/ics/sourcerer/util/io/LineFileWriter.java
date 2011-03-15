@@ -24,6 +24,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
@@ -40,7 +41,33 @@ public class LineFileWriter implements Closeable {
   }
   
   public static boolean isFinished(String line) {
-    return DIVIDER.equals(line);
+    return DIVIDER.equals(line) || line == null;
+  }
+  
+  private <T extends LineWriteable> Collection<FieldConverter> prepareStream(Class<T> klass) throws IOException {
+    // Write the class name
+    bw.write(klass.getName());
+    bw.newLine();
+    
+    // Check if it's a LWRec
+    Collection<FieldConverter> fields = null;
+    if (LWRec.class.isAssignableFrom(klass)) {
+      fields = Collections.singleton(FieldConverter.getLWRecConverter());
+    } else {
+      // Write the fields
+      LineBuilder builder = new LineBuilder();
+      Field[] allFields = klass.getDeclaredFields();
+      fields = Helper.newArrayList(allFields.length);
+      for (Field field : allFields) {
+        if (field.getAnnotation(LWField.class) != null) {
+          builder.addItem(field.getName());
+          fields.add(FieldConverter.getFieldConverter(field));
+        }
+      }
+      bw.write(builder.toLine());
+      bw.newLine();
+    }
+    return fields;
   }
   
   public <T extends LineWriteable> void write(Iterable<T> iterable) throws IOException {
@@ -49,23 +76,7 @@ public class LineFileWriter implements Closeable {
       LineBuilder builder = new LineBuilder();
       for (T write : iterable) {
         if (fields == null) {
-          Class<? extends LineWriteable> klass = write.getClass();
-          
-          // Write the class name
-          bw.write(klass.getName());
-          bw.newLine();
-          
-          // Write the fields
-          Field[] allFields = klass.getDeclaredFields();
-          fields = Helper.newArrayList(allFields.length);
-          for (Field field : allFields) {
-            if (field.getAnnotation(LWField.class) != null) {
-              builder.addItem(field.getName());
-              fields.add(FieldConverter.getFieldConverter(field));
-            }
-          }
-          bw.write(builder.toLine());
-          bw.newLine();
+          fields = prepareStream(write.getClass());
         }
         for (FieldConverter field : fields) {
           builder.addItem(field.get(write));
@@ -77,6 +88,35 @@ public class LineFileWriter implements Closeable {
       bw.newLine();
     } catch (IllegalAccessException e) {
       logger.log(Level.SEVERE, "JVM does not have sufficient security access.", e);
+    }
+  }
+  
+  public <T extends LineWriteable> EntryWriter<T> getEntryWriter(Class<T> klass) throws IOException {
+    return new EntryWriter<T>(prepareStream(klass));
+  }
+  
+  public class EntryWriter <T extends LineWriteable> implements Closeable {
+    private Collection<FieldConverter> fields = null;
+    private LineBuilder builder = new LineBuilder();
+    private EntryWriter(Collection<FieldConverter> fields) {
+      this.fields = fields;
+    }
+    
+    public void write(T write) throws IOException {
+      try {
+      for (FieldConverter field : fields) {
+          builder.addItem(field.get(write));
+      }
+      bw.write(builder.toLine());
+      bw.newLine();
+      } catch (IllegalAccessException e) {
+        logger.log(Level.SEVERE, "JVM does not have sufficient security access.", e);
+      }
+    }
+    
+    public void close() throws IOException {
+      bw.write(DIVIDER);
+      bw.newLine();
     }
   }
   

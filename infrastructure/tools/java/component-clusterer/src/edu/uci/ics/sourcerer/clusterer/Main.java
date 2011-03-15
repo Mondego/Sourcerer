@@ -17,9 +17,13 @@
  */
 package edu.uci.ics.sourcerer.clusterer;
 
+import edu.uci.ics.sourcerer.clusterer.cloning.CloningStatistics;
+import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
+import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.io.Command;
+import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 
 /**
@@ -70,12 +74,33 @@ public class Main {
 ////    }.setProperties(Properties.INPUT, DirectoryClusterer.DIRECTORY_LISTING, DirectoryClusterer.MINIMUM_DIR_SIZE, DirectoryClusterer.POPULAR_DISCARD);
 //  
   public static final Command GENERATE_HASH_FILE_LISTING =
-    new Command("generate-hash-file-listing", "Generates the file listing file.") {
+    new Command("generate-hash-file-listing", "Generates the hash file listing file.") {
       protected void action() {
         HashingClusterer.generateFileListing();
       }
     }.setProperties(AbstractRepository.INPUT_REPO, HashingClusterer.HASH_FILE_LISTING);
-//  
+    
+  public static final Command GENERATE_FQN_FILE_LISTING =
+    new Command("generate-fqn-file-listing", "Generates the fqn file listing file.") {
+      protected void action() {
+        FqnClusterer.generateFileListing();
+      }
+    }.setProperties(AbstractRepository.INPUT_REPO, FqnClusterer.FQN_FILE_LISTING, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
+
+//  public static final Command PRINT_HASH_PROJECT_MATCHING_RATES =
+//    new Command("print-hash-project-matching-rates", "Prints the project-project matching rates using the hashing method.") {
+//      protected void action() {
+//        HashingClusterer.printProjectMatchingRates();
+//      }
+//    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING);
+    
+  public static final Command PERFORM_CLONING_ANALYSIS =
+    new Command ("perform-cloning-analysis", "Analyzes the cloning results.") {
+      protected void action() {
+        CloningStatistics.performAnalysis();
+      }
+    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, FqnClusterer.FQN_FILE_LISTING, CloningStatistics.COMPARE_FILE_SETS, CloningStatistics.COMPUTE_CLONING_STATS);
+
 //  public static final Command COMPUTE_GENERAL_STATISTICS =
 //    new Command("compute-general-stats", "Compute general statistics.") {
 //      protected void action() {

@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 
 import edu.uci.ics.sourcerer.db.schema.ProjectsTable;
+import edu.uci.ics.sourcerer.db.util.BasicResultTranslator;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.model.Project;
@@ -65,6 +66,10 @@ public class ProjectQueries extends Queries {
     super(executor);
   }
   
+  public Integer getProjectIDByPath(String path) {
+    return executor.selectSingleInt(ProjectsTable.TABLE, PROJECT_ID.getName(), PATH.getEquals(path));
+  }
+  
   public Integer getProjectIDByHash(String hash) {
     return executor.selectSingleInt(ProjectsTable.TABLE, PROJECT_ID.getName(), HASH.getEquals(hash));
   }
@@ -81,8 +86,12 @@ public class ProjectQueries extends Queries {
     return executor.selectSingleInt(ProjectsTable.TABLE, PROJECT_ID.getName(), NAME.getEquals(UNKNOWNS_PROJECT));
   }
     
+  public Collection<SmallProjectDB> getSmallByType(Project type) {
+    return executor.select(PROJECT_TYPE.getEquals(type), SMALL_PROJECT_TRANSLATOR);
+  }
+  
   public Collection<Integer> getProjectIDsByType(Project type) {
-    return executor.select(ProjectsTable.TABLE, PROJECT_ID.getName(), PROJECT_TYPE.getEquals(type), ResultTranslator.SIMPLE_INT_TRANSLATOR);
+    return executor.select(ProjectsTable.TABLE, PROJECT_ID.getName(), PROJECT_TYPE.getEquals(type), BasicResultTranslator.SIMPLE_INT_TRANSLATOR);
   }
   
   public SmallProjectDB getSmallByHash(String hash) {

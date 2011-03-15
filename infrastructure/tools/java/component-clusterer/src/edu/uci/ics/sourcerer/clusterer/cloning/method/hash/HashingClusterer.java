@@ -19,28 +19,19 @@ package edu.uci.ics.sourcerer.clusterer.cloning.method.hash;
 
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.clusterer.cloning.stats.FileCluster;
-import edu.uci.ics.sourcerer.clusterer.cloning.stats.Matching;
+import edu.uci.ics.sourcerer.clusterer.cloning.File;
+import edu.uci.ics.sourcerer.clusterer.cloning.ProjectMap;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.LineBuilder;
+import edu.uci.ics.sourcerer.util.io.LineFileWriter;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
@@ -54,27 +45,29 @@ public class HashingClusterer {
     logger.info("Loading repository...");
     Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
     
-    BufferedWriter bw = null;
+    LineFileWriter writer = null;
+    LineFileWriter.EntryWriter<HashedFile> ew = null;
     try {
-      bw = FileUtils.getBufferedWriter(HASH_FILE_LISTING);
+      writer = FileUtils.getLineFileWriter(HASH_FILE_LISTING);
+      ew = writer.getEntryWriter(HashedFile.class);
       
       Collection<RepoProject> projects = repo.getProjects();
       int count = 0;
+      HashedFile hashedFile = new HashedFile();
       for (RepoProject project : projects) {
         logger.info("Processing " + project + " (" + ++count + " of " + projects.size() + ")");
-        LineBuilder builder = new LineBuilder();
         for (IJavaFile file : project.getFileSet().getFilteredJavaFiles()) {
-          File f = file.getFile().toFile();
+          java.io.File f = file.getFile().toFile();
           Pair<String, String> hashes = FileUtils.computeHashes(f);
         
           if (hashes != null) {
-            builder.addItem(project.getProjectRoot().getRelativePath());
-            builder.addItem(file.getFile().getRelativePath());
-            builder.addItem(hashes.getFirst());
-            builder.addItem(hashes.getSecond());
-            builder.addItem(Long.toString(f.length()));
-            bw.write(builder.toLine());
-            bw.newLine();
+            hashedFile.set(
+                project.getProjectRoot().getRelativePath(), 
+                file.getFile().getRelativePath(),
+                hashes.getFirst(),
+                hashes.getSecond(),
+                f.length());
+            ew.write(hashedFile);
           }
         }
         FileUtils.resetTempDir();
@@ -83,114 +76,89 @@ public class HashingClusterer {
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error in writing file listing.", e);
     } finally {
-      FileUtils.close(bw);
+      FileUtils.close(ew);
+      FileUtils.close(writer);
     }
   }
   
-  public static Iterable<String> loadFileListing() {
-    return new Iterable<String>() {
-      @Override
-      public Iterator<String> iterator() {
-        return new Iterator<String>() {
-          private BufferedReader br = null;
-          private String next = null;
-          
-          {
-            try {
-              br = new BufferedReader(new FileReader(new File(INPUT.getValue(), HASH_FILE_LISTING.getValue())));
-            } catch (IOException e) {
-              logger.log(Level.SEVERE, "Error in reading file listing.", e);
-            }
-          }
-          
-          @Override
-          public boolean hasNext() {
-            if (next == null) {
-              if (br == null) {
-                return false;
-              } else {
-                while (next == null && br != null) {
-                  String line = null;
-                  try {
-                    line = br.readLine();
-                  } catch (IOException e) {
-                    logger.log(Level.SEVERE, "Error in reading file listing.", e);
-                  }
-                  if (line == null) {
-                    FileUtils.close(br);
-                    br = null;
-                  } else {
-                    String[] parts = line.split(" ");
-                    if (parts.length == 5) {
-                      next = parts[0] + ":/" + parts[1];
-                    } else {
-                      logger.log(Level.SEVERE, "Invalid file line: " + line);
-                    }
-                  }
-                }
-                return next != null;
-              }
-            } else {
-              return true;
-            }
-          }
-          
-          @Override
-          public String next() {
-            if (hasNext()) {
-              String retval = next;
-              next = null;
-              return retval;
-            } else {
-              throw new NoSuchElementException();
-            }
-          }
-          
-          @Override
-          public void remove() {
-            throw new UnsupportedOperationException();
-          }
-        };
-      }
-    };
-  }
-  
-  public static Matching getMatching() {
-    logger.info("Processing hash file listing...");
-    
-    BufferedReader br = null;
+  public static void loadFileListing(ProjectMap projects) {
     try {
-      br = FileUtils.getBufferedReader(HASH_FILE_LISTING);
-      
-      Matching matching = new Matching();
-      
-      HashingMatcher nextItem = new HashingMatcher();
-      Map<HashingMatcher, FileCluster> files = Helper.newHashMap();
-      for (String line = br.readLine(); line != null; line = br.readLine()) {
-        String[] parts = line.split(" ");
-        if (parts.length == 5) {
-          nextItem.setValues(parts[2], parts[3], Long.parseLong(parts[4]));
-          
-          if (nextItem.getLength() > 0) {
-            FileCluster cluster = files.get(nextItem);
-            if (cluster == null) {
-              cluster = new FileCluster();
-              files.put(nextItem.copy(), cluster);
-              matching.addCluster(cluster);
-            }
-            cluster.addFile(parts[0], parts[1]);
-          }
-        } else {
-          logger.log(Level.SEVERE, "Invalid line: " + line);
+      logger.info("Loading hash file listing...");
+      int count = 0;
+      for (HashedFile hashedFile : FileUtils.readLineFile(HashedFile.class, HASH_FILE_LISTING, "project", "path", "md5", "length")) {
+        if (hashedFile.getLength() > 0) {
+          count++;
+          File file = projects.getFile(hashedFile.getProject(), hashedFile.getPath());
+          file.setHashKey(HashKey.getHashKey(hashedFile.getMd5()));
         }
       }
-      
-      return matching;
+      logger.info("  " + count + " files loaded");
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error in reading file listing.", e);
-      return null;
-    } finally {
-      FileUtils.close(br);
+      logger.log(Level.SEVERE, "Error in reading hash file listing.", e);
     }
   }
+  
+//  public static void printProjectMatchingRates() {
+//    logger.info("Loading file listing...");
+//    ProjectMap projects = new ProjectMap();
+//    loadFileListing(projects);
+//    CounterSet<Project> counters = new CounterSet<Project>();
+//    for (Project project : projects.getProjects()) {
+//      // For each project, collect all the projects that it matches
+//      for (File file : project.getFiles()) {
+//        for (File otherFile : file.getHashKey().getFiles()) {
+//          if (otherFile.getProject() != project) {
+//            counters.increment(otherFile.getProject());
+//          }
+//        }
+//      }
+//      if (counters.getCounters().size() > 0) {
+//        logger.info("Project " + project + " matches the follow projects: ");
+//        for (Counter<Project> counter : counters.getCounters()) {
+//          logger.info("  " + counter.getObject() + " " + counter.getCount());
+//        }
+//        counters.clear();
+//      }
+//    }
+//    logger.info("Done!");
+//  }
+  
+//  public static Matching getMatching() {
+//    logger.info("Processing hash file listing...");
+//    
+//    BufferedReader br = null;
+//    try {
+//      br = FileUtils.getBufferedReader(HASH_FILE_LISTING);
+//      
+//      Matching matching = new Matching();
+//      
+//      HashingMatcher nextItem = new HashingMatcher();
+//      Map<HashingMatcher, FileCluster> files = Helper.newHashMap();
+//      for (String line = br.readLine(); line != null; line = br.readLine()) {
+//        String[] parts = line.split(" ");
+//        if (parts.length == 5) {
+//          nextItem.setValues(parts[2], parts[3], Long.parseLong(parts[4]));
+//          
+//          if (nextItem.getLength() > 0) {
+//            FileCluster cluster = files.get(nextItem);
+//            if (cluster == null) {
+//              cluster = new FileCluster();
+//              files.put(nextItem.copy(), cluster);
+//              matching.addCluster(cluster);
+//            }
+//            cluster.addFile(parts[0], parts[1]);
+//          }
+//        } else {
+//          logger.log(Level.SEVERE, "Invalid line: " + line);
+//        }
+//      }
+//      
+//      return matching;
+//    } catch (IOException e) {
+//      logger.log(Level.SEVERE, "Error in reading file listing.", e);
+//      return null;
+//    } finally {
+//      FileUtils.close(br);
+//    }
+//  }
 }

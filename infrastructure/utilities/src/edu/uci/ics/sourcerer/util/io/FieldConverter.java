@@ -32,6 +32,8 @@ public class FieldConverter {
   private Field field;
   private FieldConverterHelper helper;
   
+  private FieldConverter() {}
+  
   private FieldConverter(Field field, FieldConverterHelper helper) {
     this.field = field;
     this.helper = helper;
@@ -56,12 +58,20 @@ public class FieldConverter {
   }
   
   protected static FieldConverter getFieldConverter(Field field) {
-    FieldConverterHelper helper = helperMap.get(field.getType());
-    if (helper == null) {
-      throw new IllegalArgumentException("Unsupported type: " + field.getType().getName());
+    if (field == null) {
+      return NULL_CONVERTER;
     } else {
-      return new FieldConverter(field, helper); 
+      FieldConverterHelper helper = helperMap.get(field.getType());
+      if (helper == null) {
+        throw new IllegalArgumentException("Unsupported type: " + field.getType().getName());
+      } else {
+        return new FieldConverter(field, helper); 
+      }
     }
+  }
+  
+  protected static FieldConverter getLWRecConverter() {
+    return LWREC_CONVERTER;
   }
   
   public abstract static class FieldConverterHelper {
@@ -90,6 +100,14 @@ public class FieldConverter {
     }
   };
   
+  private static final FieldConverterHelper LONG_HELPER = new FieldConverterHelper() {
+    @Override
+    protected Object makeFromString(String value) {
+      return Long.parseLong(value);
+    }
+  };
+  
+  
   private static final FieldConverterHelper BOOLEAN_HELPER = new FieldConverterHelper() {
     @Override
     protected Object makeFromString(String value) {
@@ -104,9 +122,31 @@ public class FieldConverter {
     }
   };
   
+  private static final FieldConverter NULL_CONVERTER = new FieldConverter() {
+    @Override
+    public void set(Object obj, String value) throws IllegalAccessException {}
+
+    @Override
+    public String get(Object obj) throws IllegalAccessException {
+      return null;
+    }
+  };
+  
+  private static final FieldConverter LWREC_CONVERTER = new FieldConverter() {
+    @Override
+    public void set(Object obj, String value) throws IllegalAccessException {}
+
+    @Override
+    public String get(Object obj) throws IllegalAccessException {
+      return ((LWRec)obj).writeToString();
+    }    
+  };
+  
   static {
     helperMap.put(Integer.class, INT_HELPER);
     helperMap.put(Integer.TYPE, INT_HELPER);
+    helperMap.put(Long.class, LONG_HELPER);
+    helperMap.put(Long.TYPE, LONG_HELPER);
     helperMap.put(Boolean.class, BOOLEAN_HELPER);
     helperMap.put(Boolean.TYPE, BOOLEAN_HELPER);
     helperMap.put(String.class, STRING_HELPER);

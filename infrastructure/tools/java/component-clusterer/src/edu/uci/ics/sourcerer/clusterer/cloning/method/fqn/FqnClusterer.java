@@ -19,25 +19,19 @@ package edu.uci.ics.sourcerer.clusterer.cloning.method.fqn;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.Collection;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.clusterer.cloning.stats.FileCluster;
-import edu.uci.ics.sourcerer.clusterer.cloning.stats.Filter;
-import edu.uci.ics.sourcerer.clusterer.cloning.stats.Matching;
+import edu.uci.ics.sourcerer.clusterer.cloning.File;
+import edu.uci.ics.sourcerer.clusterer.cloning.ProjectMap;
 import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
-import edu.uci.ics.sourcerer.model.db.FileFqn;
-import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.model.db.FileDB;
+import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
+import edu.uci.ics.sourcerer.model.db.SmallProjectDB;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Properties;
+import edu.uci.ics.sourcerer.util.io.LineFileWriter;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
@@ -46,186 +40,231 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  */
 public class FqnClusterer {
   public static final Property<String> FQN_FILE_LISTING = new StringProperty("fqn-file-listing", "fqn-file-listing.txt", "List of all the files (and their FQNs) in the repository.");
-  public static final Property<String> FILTERED_FQN_FILE_LISTING = new StringProperty("filtered-fqn-file-listing", "filtered-fqn-file-listing.txt", "List of all the files (and their FQNs) in the repository.");
-  
+
   private static class FqnDatabaseAccessor extends DatabaseAccessor {
     public FqnDatabaseAccessor(DatabaseConnection connection) {
       super(connection);
     }
     
+    public Collection<SmallProjectDB> getProjectIDs() {
+      return projectQueries.getSmallByType(edu.uci.ics.sourcerer.model.Project.CRAWLED);
+    }
     
-    public Iterable<FileFqn> getFileFqns() {
-      return joinQueries.getFileFqns();
+    public Collection<FileDB> getFilesByByProjectID(Integer projectID) {
+      return fileQueries.getFilesByProjectID(projectID);
+    }
+    
+    public Collection<MediumEntityDB> getMediumTopLevelByFileID(Integer fileID) {
+      return entityQueries.getMediumTopLevelByFileID(fileID);
     }
   }
   
   public static void generateFileListing() {
     DatabaseConnection conn = new DatabaseConnection();
     if (conn.open()) {
+      LineFileWriter writer = null;
+      LineFileWriter.EntryWriter<FqnFile> ew = null;
       FqnDatabaseAccessor accessor = null;
-      BufferedWriter bw = null;
       try {
+        writer = FileUtils.getLineFileWriter(FQN_FILE_LISTING);
+        ew = writer.getEntryWriter(FqnFile.class);
         accessor = new FqnDatabaseAccessor(conn);
-        bw = new BufferedWriter(new FileWriter(new File(Properties.OUTPUT.getValue(), FQN_FILE_LISTING.getValue())));
-        logger.info("Issuing database query...");
+        
+        Collection<SmallProjectDB> projects = accessor.getProjectIDs();
         int count = 0;
-        for (FileFqn file : accessor.getFileFqns()) {
-          if (++count % 10000 == 0) {
-            logger.info(count + " rows written");
-          }
-          bw.write(file.getProject() + " " + file.getProjectID() + " " + file.getPath() + " " + file.getFileID() + " " + file.getFqn() + " " + file.getEntityID() + "\n");
-        }
-        logger.info("Done!");
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Error writing to file", e);
-      } finally {
-        FileUtils.close(accessor);
-        FileUtils.close(bw);
-      }
-    }
-  }
-  
-  public static Iterable<String> loadFileListing() {
-    return new Iterable<String>() {
-      @Override
-      public Iterator<String> iterator() {
-        return new Iterator<String>() {
-          private BufferedReader br = null;
-          private String next = null;
+        FqnFile fqnFile = new FqnFile();
+        for (SmallProjectDB project : projects) {
+          logger.info("Processing " + project + " (" + ++count + " of " + projects.size() + ")");
           
-          {
-            try {
-              br = FileUtils.getBufferedReader(FQN_FILE_LISTING);
-            } catch (IOException e) {
-              logger.log(Level.SEVERE, "Error in reading file listing.", e);
-            }
-          }
-          
-          @Override
-          public boolean hasNext() {
-            if (next == null) {
-              if (br == null) {
-                return false;
-              } else {
-                while (next == null && br != null) {
-                  String line = null;
-                  try {
-                    line = br.readLine();
-                  } catch (IOException e) {
-                    logger.log(Level.SEVERE, "Error in reading file listing.", e);
-                  }
-                  if (line == null) {
-                    FileUtils.close(br);
-                    br = null;
-                  } else {
-                    String[] parts = line.split(" ");
-                    if (parts.length == 6) {
-                      next = parts[0] + ":" + parts[2];
-                    } else {
-                      logger.log(Level.SEVERE, "Invalid file line: " + line);
-                    }
+          for (FileDB file : accessor.getFilesByByProjectID(project.getProjectID())) {
+            if (file.getType() == edu.uci.ics.sourcerer.model.File.SOURCE) {
+              MediumEntityDB shortest = null;
+              for (MediumEntityDB entity : accessor.getMediumTopLevelByFileID(file.getFileID())) {
+                if (shortest == null) {
+                  shortest = entity;
+                } else {
+                  if (entity.getFqn().length() < shortest.getFqn().length() ) {
+                    shortest = entity;
                   }
                 }
-                return next != null;
               }
-            } else {
-              return true;
+              if (shortest == null) {
+                logger.log(Level.SEVERE, "Unable to find entities for file: " + file);
+              } else {
+                fqnFile.set(project.getPath(), file.getPath(), shortest.getFqn());
+                ew.write(fqnFile);
+              }
             }
           }
-          
-          @Override
-          public String next() {
-            if (hasNext()) {
-              String retval = next;
-              next = null;
-              return retval;
-            } else {
-              throw new NoSuchElementException();
-            }
-          }
-          
-          @Override
-          public void remove() {
-            throw new UnsupportedOperationException();
-          }
-        };
-      }
-    };
-  }
-  
-  public static void generateFilteredList(Filter filter) {
-    BufferedReader br = null;
-    BufferedWriter bw = null;
-    try {
-      br = FileUtils.getBufferedReader(FQN_FILE_LISTING);
-      bw = FileUtils.getBufferedWriter(FILTERED_FQN_FILE_LISTING);
-      
-      for (String line = br.readLine(); line != null; line = br.readLine()) {
-        String[] parts = line.split(" ");
-        if (parts.length == 6) {
-          if (filter.singlePass(parts[0], parts[2])) {
-            bw.write(line + "\n");
-          }
-        } else {
-          logger.log(Level.SEVERE, "Invalid line: " + line);
         }
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Error in writing file listing.", e);
+      } finally {
+        FileUtils.close(writer);
+        FileUtils.close(ew);
+        FileUtils.close(accessor);
       }
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error generating filtered list.", e);
-    } finally {
-      FileUtils.close(br);
-      FileUtils.close(bw);
     }
   }
   
-  public static Matching getMatching() {
-    return getMatching(FQN_FILE_LISTING);
-  }
-  
-  public static Matching getFilteredMatching() {
-    return getMatching(FILTERED_FQN_FILE_LISTING);
-  }
-  
-  private static Matching getMatching(Property<String> property) {
-    logger.info("Processing fqn file listing...");
-    
-    BufferedReader br = null;
+  public static void loadFileListing(ProjectMap projects) {
     try {
-      br = FileUtils.getBufferedReader(property);
-      
-      Matching matching = new Matching();
-      
-      Map<String, FileCluster> files = Helper.newHashMap();
-      for (String line = br.readLine(); line != null; line = br.readLine()) {
-        String[] parts = line.split(" ");
-        if (parts.length == 6) {
-          FileCluster cluster = files.get(parts[4]);
-          if (cluster == null) {
-            cluster = new FileCluster();
-            files.put(parts[4], cluster);
-            matching.addCluster(cluster);
-          }
-          cluster.addProjectUniqueFile(parts[0], parts[2]);
-        } else {
-          logger.log(Level.SEVERE, "Invalid line: " + line);
-        }
+      logger.info("Loading fqn file listing...");
+      int count = 0;
+      for (FqnFile fqnFile : FileUtils.readLineFile(FqnFile.class, FQN_FILE_LISTING)) {
+        count++;
+        File file = projects.getFile(fqnFile.getProject(), fqnFile.getPath());
+        file.setFqnKey(FqnKey.getFqnKey(fqnFile.getFqn()));
       }
-      
-      return matching;
+      logger.info("  " + count + " files loaded");
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error in reading file listing.", e);
-      return null;
-    } finally {
-      FileUtils.close(br);
+      logger.log(Level.SEVERE, "Error in reading fqn file listing.", e);
     }
   }
-  
-//  public static Matching getFilteredMatching(Filter filter) {
+//  private static class FqnDatabaseAccessor extends DatabaseAccessor {
+//    public FqnDatabaseAccessor(DatabaseConnection connection) {
+//      super(connection);
+//    }
+//    
+//    
+//    public Iterable<FileFqn> getFileFqns() {
+//      return joinQueries.getFileFqns();
+//    }
+//  }
+//  
+//  public static void generateFileListing() {
+//    DatabaseConnection conn = new DatabaseConnection();
+//    if (conn.open()) {
+//      FqnDatabaseAccessor accessor = null;
+//      BufferedWriter bw = null;
+//      try {
+//        accessor = new FqnDatabaseAccessor(conn);
+//        bw = new BufferedWriter(new FileWriter(new File(Properties.OUTPUT.getValue(), FQN_FILE_LISTING.getValue())));
+//        logger.info("Issuing database query...");
+//        int count = 0;
+//        for (FileFqn file : accessor.getFileFqns()) {
+//          if (++count % 10000 == 0) {
+//            logger.info(count + " rows written");
+//          }
+//          bw.write(file.getProject() + " " + file.getProjectID() + " " + file.getPath() + " " + file.getFileID() + " " + file.getFqn() + " " + file.getEntityID() + "\n");
+//        }
+//        logger.info("Done!");
+//      } catch (IOException e) {
+//        logger.log(Level.SEVERE, "Error writing to file", e);
+//      } finally {
+//        FileUtils.close(accessor);
+//        FileUtils.close(bw);
+//      }
+//    }
+//  }
+//  
+//  public static Iterable<String> loadFileListing() {
+//    return new Iterable<String>() {
+//      @Override
+//      public Iterator<String> iterator() {
+//        return new Iterator<String>() {
+//          private BufferedReader br = null;
+//          private String next = null;
+//          
+//          {
+//            try {
+//              br = FileUtils.getBufferedReader(FQN_FILE_LISTING);
+//            } catch (IOException e) {
+//              logger.log(Level.SEVERE, "Error in reading file listing.", e);
+//            }
+//          }
+//          
+//          @Override
+//          public boolean hasNext() {
+//            if (next == null) {
+//              if (br == null) {
+//                return false;
+//              } else {
+//                while (next == null && br != null) {
+//                  String line = null;
+//                  try {
+//                    line = br.readLine();
+//                  } catch (IOException e) {
+//                    logger.log(Level.SEVERE, "Error in reading file listing.", e);
+//                  }
+//                  if (line == null) {
+//                    FileUtils.close(br);
+//                    br = null;
+//                  } else {
+//                    String[] parts = line.split(" ");
+//                    if (parts.length == 6) {
+//                      next = parts[0] + ":" + parts[2];
+//                    } else {
+//                      logger.log(Level.SEVERE, "Invalid file line: " + line);
+//                    }
+//                  }
+//                }
+//                return next != null;
+//              }
+//            } else {
+//              return true;
+//            }
+//          }
+//          
+//          @Override
+//          public String next() {
+//            if (hasNext()) {
+//              String retval = next;
+//              next = null;
+//              return retval;
+//            } else {
+//              throw new NoSuchElementException();
+//            }
+//          }
+//          
+//          @Override
+//          public void remove() {
+//            throw new UnsupportedOperationException();
+//          }
+//        };
+//      }
+//    };
+//  }
+//  
+//  public static void generateFilteredList(Filter filter) {
+//    BufferedReader br = null;
+//    BufferedWriter bw = null;
+//    try {
+//      br = FileUtils.getBufferedReader(FQN_FILE_LISTING);
+//      bw = FileUtils.getBufferedWriter(FILTERED_FQN_FILE_LISTING);
+//      
+//      for (String line = br.readLine(); line != null; line = br.readLine()) {
+//        String[] parts = line.split(" ");
+//        if (parts.length == 6) {
+//          if (filter.singlePass(parts[0], parts[2])) {
+//            bw.write(line + "\n");
+//          }
+//        } else {
+//          logger.log(Level.SEVERE, "Invalid line: " + line);
+//        }
+//      }
+//    } catch (IOException e) {
+//      logger.log(Level.SEVERE, "Error generating filtered list.", e);
+//    } finally {
+//      FileUtils.close(br);
+//      FileUtils.close(bw);
+//    }
+//  }
+//  
+//  public static Matching getMatching() {
+//    return getMatching(FQN_FILE_LISTING);
+//  }
+//  
+//  public static Matching getFilteredMatching() {
+//    return getMatching(FILTERED_FQN_FILE_LISTING);
+//  }
+//  
+//  private static Matching getMatching(Property<String> property) {
 //    logger.info("Processing fqn file listing...");
 //    
 //    BufferedReader br = null;
 //    try {
-//      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FQN_FILE_LISTING.getValue())));
+//      br = FileUtils.getBufferedReader(property);
 //      
 //      Matching matching = new Matching();
 //      
@@ -233,15 +272,13 @@ public class FqnClusterer {
 //      for (String line = br.readLine(); line != null; line = br.readLine()) {
 //        String[] parts = line.split(" ");
 //        if (parts.length == 6) {
-//          if (filter.pass(parts[0], parts[2])) {
-//            FileCluster cluster = files.get(parts[4]);
-//            if (cluster == null) {
-//              cluster = new FileCluster();
-//              files.put(parts[4], cluster);
-//              matching.addCluster(cluster);
-//            }
-//            cluster.addProjectUniqueFile(parts[0], parts[2]);
+//          FileCluster cluster = files.get(parts[4]);
+//          if (cluster == null) {
+//            cluster = new FileCluster();
+//            files.put(parts[4], cluster);
+//            matching.addCluster(cluster);
 //          }
+//          cluster.addProjectUniqueFile(parts[0], parts[2]);
 //        } else {
 //          logger.log(Level.SEVERE, "Invalid line: " + line);
 //        }
@@ -255,5 +292,41 @@ public class FqnClusterer {
 //      FileUtils.close(br);
 //    }
 //  }
+//  
+////  public static Matching getFilteredMatching(Filter filter) {
+////    logger.info("Processing fqn file listing...");
+////    
+////    BufferedReader br = null;
+////    try {
+////      br = new BufferedReader(new FileReader(new File(Properties.INPUT.getValue(), FQN_FILE_LISTING.getValue())));
+////      
+////      Matching matching = new Matching();
+////      
+////      Map<String, FileCluster> files = Helper.newHashMap();
+////      for (String line = br.readLine(); line != null; line = br.readLine()) {
+////        String[] parts = line.split(" ");
+////        if (parts.length == 6) {
+////          if (filter.pass(parts[0], parts[2])) {
+////            FileCluster cluster = files.get(parts[4]);
+////            if (cluster == null) {
+////              cluster = new FileCluster();
+////              files.put(parts[4], cluster);
+////              matching.addCluster(cluster);
+////            }
+////            cluster.addProjectUniqueFile(parts[0], parts[2]);
+////          }
+////        } else {
+////          logger.log(Level.SEVERE, "Invalid line: " + line);
+////        }
+////      }
+////      
+////      return matching;
+////    } catch (IOException e) {
+////      logger.log(Level.SEVERE, "Error in reading file listing.", e);
+////      return null;
+////    } finally {
+////      FileUtils.close(br);
+////    }
+////  }
 }
  

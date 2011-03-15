@@ -421,9 +421,9 @@ public final class FileUtils {
     return new LineFileWriter(new BufferedWriter(new FileWriter(file)));
   }
   
-  public static <T extends LineWriteable> Iterable<T> readLineFile(Class<T> klass, Property<String> property) throws IOException {
+  public static <T extends LineWriteable> Iterable<T> readLineFile(Class<T> klass, Property<String> property, String ... fields) throws IOException {
     LineFileReader reader = new LineFileReader(getBufferedReader(property));
-    return reader.readNextToIterable(klass, true);
+    return reader.readNextToIterable(klass, true, fields);
   }
   
   public static LineFileReader getLineFileReader(Property<String> property) throws IOException {

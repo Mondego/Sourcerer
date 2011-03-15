@@ -85,6 +85,10 @@ public class EntityQueries extends Queries {
     return executor.selectStreamed(and(PROJECT_ID.getEquals(projectID), ENTITY_TYPE.getIn(Entity.ARRAY, Entity.WILDCARD, Entity.TYPE_VARIABLE, Entity.PARAMETERIZED_TYPE, Entity.DUPLICATE)), MEDIUM_ENTITY_TRANSLATOR);
   }
   
+  public Collection<MediumEntityDB> getMediumTopLevelByFileID(Integer fileID) {
+    return executor.select(and(FILE_ID.getEquals(fileID), ENTITY_TYPE.getIn(Entity.CLASS, Entity.INTERFACE, Entity.ANNOTATION, Entity.ENUM)), MEDIUM_ENTITY_TRANSLATOR);
+  }
+  
   public Iterable<MediumEntityDB> getMediumByProjectID(Integer projectID, Entity type) {
     return executor.selectStreamed(and(PROJECT_ID.getEquals(projectID), ENTITY_TYPE.getEquals(type)), MEDIUM_ENTITY_TRANSLATOR);
   }

@@ -22,7 +22,7 @@ import java.util.Comparator;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class Counter <T extends Comparable<T>> {
+public class Counter <T> {
   private int counter = 0;
   private T object = null;
   

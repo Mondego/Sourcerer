@@ -24,9 +24,11 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
@@ -37,14 +39,14 @@ import edu.uci.ics.sourcerer.util.Helper;
  */
 public final class LineFileReader implements Closeable {
   private BufferedReader br;
-  private FieldConverter[] fields;
+  private FieldConverter[] converters;
   
   protected LineFileReader(BufferedReader br) {
     this.br = br;
   }
   
   @SuppressWarnings("unchecked")
-  private <T extends LineWriteable> Constructor<? extends T> positionForNext(Class<T> klass) throws IOException {
+  private <T extends LineWriteable> Constructor<? extends T> positionForNext(Class<T> klass, String ... fields) throws IOException {
     if (br == null) {
       logger.log(Level.SEVERE, "File already empty, unable to read " + klass.getName() + ".");
       return null;
@@ -62,19 +64,48 @@ public final class LineFileReader implements Closeable {
           close();
           return null;
         }
+        
+        // LWRecs don't need fields
+        if (LWRec.class.isAssignableFrom(loadedClass)) {
+          // TODO: make this work
+          return null;
+        }
 
         // Read in the fields
         line = br.readLine();
         if (LineFileWriter.isFinished(line)) {
+          logger.log(Level.SEVERE, "Unable to read in fields");
           return null;
         }
         String[] fieldNames = LineBuilder.splitLine(line);
-        if (fields != null) {
+        if (converters != null) {
           throw new IllegalStateException("Attempt to read next before previous finished.");
         }
-        fields = new FieldConverter[fieldNames.length];
+        // Make sure all the fields appear
+        if (fields != null && fields.length > 0) {
+          List<String> nameList = Helper.newArrayList(Arrays.asList(fields));
+          for (int i = 0; i < fieldNames.length; i++) {
+            if (!nameList.remove(fieldNames[i])) {
+              fieldNames[i] = null;
+            }
+          }
+          if (!nameList.isEmpty()) {
+            LineBuilder builder = new LineBuilder();
+            for (String name : nameList) {
+              builder.addItem(name);
+            }
+            logger.log(Level.SEVERE, "Unable to find fields " + builder.toLine() + "in " + klass.getName() + ".");
+            close();
+            return null;
+          }
+        }
+        converters = new FieldConverter[fieldNames.length];
         for (int i = 0; i < fieldNames.length; i++) {
-          fields[i] = FieldConverter.getFieldConverter(loadedClass.getDeclaredField(fieldNames[i]));
+          if (fieldNames[i] == null) {
+            converters[i] = FieldConverter.getFieldConverter(null);
+          } else {
+            converters[i] = FieldConverter.getFieldConverter(loadedClass.getDeclaredField(fieldNames[i]));
+          }
         }
         Constructor<? extends T> constructor = (Constructor<? extends T>) loadedClass.getDeclaredConstructor();
         constructor.setAccessible(true);
@@ -95,12 +126,12 @@ public final class LineFileReader implements Closeable {
     }
   }
   
-  public <T extends LineWriteable> Iterable<T> readNextToIterable(final Class<T> klass) throws IOException {
-    return readNextToIterable(klass, false);
+  public <T extends LineWriteable> Iterable<T> readNextToIterable(final Class<T> klass, String ... fields) throws IOException {
+    return readNextToIterable(klass, false, fields);
   }
     
-  public <T extends LineWriteable> Iterable<T> readNextToIterable(Class<T> klass, final boolean closeOnCompletion) throws IOException {
-    final Constructor<? extends T> constructor = positionForNext(klass);
+  public <T extends LineWriteable> Iterable<T> readNextToIterable(Class<T> klass, final boolean closeOnCompletion, String ... fields) throws IOException {
+    final Constructor<? extends T> constructor = positionForNext(klass, fields);
     if (constructor == null) {
       return Collections.emptyList();
     }
@@ -121,11 +152,11 @@ public final class LineFileReader implements Closeable {
                   open = false;
                 } else {
                   String[] values = LineBuilder.splitLine(line);
-                  if (values.length == fields.length) {
+                  if (values.length == converters.length) {
                     try {
                       T obj = constructor.newInstance();
                       for (int i = 0; i < values.length; i++) {
-                        fields[i].set(obj, values[i]);
+                        converters[i].set(obj, values[i]);
                       }
                       next = obj;
                     } catch (InstantiationException e) {
@@ -135,6 +166,8 @@ public final class LineFileReader implements Closeable {
                     } catch (InvocationTargetException e) {
                       logger.log(Level.SEVERE, "Unable to create object instance", e);
                     }
+                  } else {
+                    logger.log(Level.SEVERE, "Invalid line: " + line);
                   }
                 }
               }
@@ -144,7 +177,7 @@ public final class LineFileReader implements Closeable {
               close();
             }
             if (next == null) {
-              fields = null;
+              converters = null;
               if (closeOnCompletion) {
                 close();
               }
@@ -174,21 +207,17 @@ public final class LineFileReader implements Closeable {
     };
   }
   
-  public <T extends LineWriteable> Collection<T> readNextToCollection(final Class<T> klass) throws IOException {
-    Constructor<? extends T> constructor = positionForNext(klass);
+  public <T extends LineWriteable> Collection<T> readNextToCollection(Class<T> klass, String ... fields) throws IOException {
+    Constructor<? extends T> constructor = positionForNext(klass, fields);
     if (constructor != null) {
       Collection<T> coll = Helper.newLinkedList();
       for (String line = br.readLine(); !LineFileWriter.isFinished(line); line = br.readLine()) {
-        if (line == null) {
-          close();
-          break;
-        }
         String[] values = LineBuilder.splitLine(line);
-        if (values.length == fields.length) {
+        if (values.length == converters.length) {
           try {
             T obj = constructor.newInstance();
             for (int i = 0; i < values.length; i++) {
-              fields[i].set(obj, values[i]);
+              converters[i].set(obj, values[i]);
             }
             coll.add(obj);
           } catch (InstantiationException e) {
@@ -202,7 +231,7 @@ public final class LineFileReader implements Closeable {
           logger.log(Level.SEVERE, "Line has incorrect number of entries: " + line);
         }
       }
-      fields = null;
+      converters = null;
       return coll;
     } else {
       return Collections.emptyList();

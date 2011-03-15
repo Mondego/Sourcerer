@@ -17,10 +17,17 @@
  */
 package edu.uci.ics.sourcerer.db.queries;
 
-import static edu.uci.ics.sourcerer.db.schema.FilesTable.*;
+import static edu.uci.ics.sourcerer.db.schema.FilesTable.FILE_ID;
+import static edu.uci.ics.sourcerer.db.schema.FilesTable.FILE_TYPE;
+import static edu.uci.ics.sourcerer.db.schema.FilesTable.HASH;
+import static edu.uci.ics.sourcerer.db.schema.FilesTable.NAME;
+import static edu.uci.ics.sourcerer.db.schema.FilesTable.PATH;
+import static edu.uci.ics.sourcerer.db.schema.FilesTable.PROJECT_ID;
+import static edu.uci.ics.sourcerer.db.schema.FilesTable.TABLE;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Map;
 
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
@@ -50,6 +57,10 @@ public class FileQueries extends Queries {
     super(executor);
   }
 
+  public Collection<FileDB> getFilesByProjectID(Integer projectID) {
+    return executor.select(PROJECT_ID.getEquals(projectID), FILE_TRANSLATOR);
+  }
+  
   public FileDB getByFileID(Integer fileID) {
     return executor.selectSingle(FILE_ID.getEquals(fileID), FILE_TRANSLATOR);
   }
