@@ -26,10 +26,13 @@ import edu.uci.ics.sourcerer.util.Helper;
  */
 public abstract class Key {
   private Collection<File> files;
+  private boolean questionable;
   
   protected Key() {
     files = Helper.newArrayList();
+    questionable = false;
   }
+  
   protected void addFile(File file) {
     files.add(file);
   }
@@ -40,5 +43,13 @@ public abstract class Key {
   
   public boolean isUnique() {
     return files.size() == 1;
+  }
+  
+  public void makeQuestionable() {
+    questionable = true;
+  }
+  
+  public boolean isQuestionable() {
+    return questionable;
   }
 }

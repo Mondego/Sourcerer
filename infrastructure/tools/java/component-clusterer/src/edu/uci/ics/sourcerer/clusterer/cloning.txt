@@ -6,7 +6,7 @@ Need better way to evaluate the effectiveness of each method
     I had hoped to avoid this by simply defining a clone as something detected
     by a method (an operational definition). This clearly didnt't work.
     * Do we need to go over a statistically significant sample of the reported
-      clones and "verify" by hand that they are clones?
+      clones and "verify" by hand that they are clones? 
     * How does one decide what a statistically significant sample is?
     * Should we alter the methods to automatically remove detectable spurious clones?
   * Possibly need a method that takes into account method bodies
@@ -39,5 +39,15 @@ Action Items
     * Then use the other methods to expand this collection
     
     * Find some way to cluster these pairings together?
+
     
-      
+Things Done
+  * Redid computation of hash and fqn clones
+    * Fixed exclusion problem
+    
+More things to do
+  * Look through excluded files - determine valid / invalid exclusion
+    * Need to look through 357 randomly selected excluded files to have 95% confidence of x% +- 5%
+  * Come up with threshold rule for fqn cluster
+    * If the project-project matching contained no hash matches, 5 files must have identical FQNs
+    * If the project contained some hash matches, any 

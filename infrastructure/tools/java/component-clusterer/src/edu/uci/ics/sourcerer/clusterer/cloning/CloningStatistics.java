@@ -29,6 +29,7 @@ import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
@@ -37,8 +38,14 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  */
 public class CloningStatistics {
   public static Property<Boolean> COMPARE_FILE_SETS = new BooleanProperty("compare-file-sets", false, "Compare the sets of files analyzed by each clustering method.");
+  public static Property<String> FILE_SET_COMPARISON_FILE = new StringProperty("file-set-comparison-file", "file-set-comparison.txt", "");
+  
   public static Property<Boolean> COMPUTE_CLONING_STATS = new BooleanProperty("compute-cloning-stats", true, "Computes the clong rates for each method.");
+  public static Property<String> CLONING_STATS_FILE = new StringProperty("cloning-stats-file", "cloning-stats.txt", "");
+  
   public static Property<Boolean> COMPUTE_PROJECT_MATCHING = new BooleanProperty("compute-project-matching", true, "Computes the project-project matching rates.");
+  public static Property<String> PROJECT_MATCHING_FILE = new StringProperty("project-matching-file", "project-matching.txt", "");
+  public static Property<String> AUGMENTED_MATCHING_FILE = new StringProperty("augmented-matching-file", "augmented-matching.txt", "");
   public static Property<String> LONELY_FQNS_FILE = new StringProperty("lonely-fqns-file", "lonely-fqns.txt", "");
   
   private static void compareFileSets(ProjectMap projects) {
@@ -46,21 +53,34 @@ public class CloningStatistics {
       int missingHash = 0;
       int missingFqn = 0;
       logger.info("Comparing file sets...");
-      for (Project project : projects.getProjects()) {
-        for (File file : project.getFiles()) {
-          if (!file.hasHashKey()) {
-            missingHash++;
-            logger.info("  Missing hash: " + file);
-          }
-          if (!file.hasFqnKey()) {
-            missingFqn++;
-            logger.info("  Missing fqn: " + file);
+      BufferedWriter bw = null;
+      try {
+        bw = FileUtils.getBufferedWriter(FILE_SET_COMPARISON_FILE);
+      
+        for (Project project : projects.getProjects()) {
+          for (File file : project.getFiles()) {
+            if (!file.hasHashKey()) {
+              missingHash++;
+              bw.write("Missing hash: " + file);
+              bw.newLine();
+            }
+            if (!file.hasFqnKey()) {
+              missingFqn++;
+              bw.write("Missing fqn: " + file);
+              bw.newLine();
+            }
           }
         }
+      
+        bw.write(missingHash + " files had no hash.");
+        bw.newLine();
+        bw.write(missingFqn + " files had no fqn.");
+        bw.newLine();
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Error writing file.", e);
+      } finally {
+        FileUtils.close(bw);
       }
-      logger.info(missingHash + " files had no hash.");
-      logger.info(missingFqn + " files has no fqn.");
-      logger.info("---");
     }
   }
   
@@ -84,15 +104,30 @@ public class CloningStatistics {
           }
         }
       }
-      logger.info("  Non-empty files: " + totalFiles);
-      logger.info("    Unique hash files: " + uniqueHashFiles);
-      logger.info("    Duplicated hash files: " + (totalFiles - uniqueHashFiles));
-      logger.info("    Hash cloning rate: " + ((double)(totalFiles - uniqueHashFiles) / totalFiles));
-      logger.info("  ---");
-      logger.info("    Unique fqn files: " + uniqueFqnFiles);
-      logger.info("    Duplicated fqn files: " + (totalFiles - uniqueFqnFiles));
-      logger.info("    Fqn cloning rate: " + ((double)(totalFiles - uniqueFqnFiles) / totalFiles));
-      logger.info("---");
+      TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(CLONING_STATS_FILE);
+      printer.beginTable(3);
+      printer.addDividerRow();
+      printer.addRow("", "Hash", "FQN");
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("Total Files");
+      printer.addCell(totalFiles);
+      printer.addCell(totalFiles);
+      printer.beginRow();
+      printer.addCell("Unique Files");
+      printer.addCell(uniqueHashFiles);
+      printer.addCell(uniqueFqnFiles);
+      printer.beginRow();
+      printer.addCell("Duplicated Files");
+      printer.addCell(totalFiles - uniqueHashFiles);
+      printer.addCell(totalFiles - uniqueFqnFiles);
+      printer.beginRow();
+      printer.addCell("Cloning Rate");
+      printer.addCell(((double)(totalFiles - uniqueHashFiles) / totalFiles));
+      printer.addCell(((double)(totalFiles - uniqueFqnFiles) / totalFiles));
+      printer.addDividerRow();
+      printer.endTable();
+      printer.close();
     }
   }
   
@@ -100,7 +135,10 @@ public class CloningStatistics {
     if (COMPUTE_PROJECT_MATCHING.getValue()) {
       
       try {
-        final BufferedWriter bw = FileUtils.getBufferedWriter(LONELY_FQNS_FILE);
+        final BufferedWriter matchWriter = FileUtils.getBufferedWriter(PROJECT_MATCHING_FILE);
+        final BufferedWriter augmentedWriter = FileUtils.getBufferedWriter(AUGMENTED_MATCHING_FILE);
+        final BufferedWriter lonelyWriter = FileUtils.getBufferedWriter(LONELY_FQNS_FILE);
+        
         try {
           class ProjectMap {
             class FileStatusMap {
@@ -128,7 +166,7 @@ public class CloningStatistics {
                 getStatus(file).fqn = true;
               }
               
-              public String print() {
+              public void print(Project a, Project b) throws IOException {
                 int sharedCount = 0;
                 int hash = 0;
                 int fqn = 0;
@@ -146,16 +184,27 @@ public class CloningStatistics {
                 if (sharedCount == 0 && fqn == 1) {
                   for (Map.Entry<File, MatchStatus> entry : map.entrySet()) {
                     if (entry.getValue().fqn) {
-                      try {
-                        bw.write(entry.getKey().toString());
-                        bw.newLine();
-                      } catch (IOException e) {
-                        logger.log(Level.SEVERE, "Error writing to lonely fqns file.", e);
-                      }
+                      lonelyWriter.write(entry.getKey().toString());
+                      lonelyWriter.newLine();
                     }
                   }
                 }
-                return sharedCount + " " + hash + " " + fqn;
+                if (sharedCount > 0 && fqn > sharedCount) {
+                  augmentedWriter.write("Augmented between " + a + " and " + b);
+                  augmentedWriter.newLine();
+                  for (Map.Entry<File, MatchStatus> entry : map.entrySet()) {
+                    if (entry.getValue().hash) {
+                      augmentedWriter.write("    " + entry.getKey());
+                    } else {
+                      augmentedWriter.write("  + " + entry.getKey());
+                    }
+                    augmentedWriter.newLine();
+                  }
+                }
+                if (sharedCount > 1 || fqn > 5) {
+                  matchWriter.write("  " + b + " " + sharedCount + " " + hash + " " + fqn);
+                  matchWriter.newLine();
+                }
               }
             }
       
@@ -178,11 +227,12 @@ public class CloningStatistics {
               getFileStatusMap(file.getProject()).addFqnFile(file);
             }
             
-            public void print(Project project) {
+            public void print(Project project) throws IOException {
               if (map.size() > 0) {
-                logger.info("  Project " + project + " matches the following projects:");
+                matchWriter.write("Project " + project + " matches the following projects:");
+                matchWriter.newLine();
                 for (Map.Entry<Project, FileStatusMap> entry : map.entrySet()) {
-                  logger.info("    " + entry.getKey() + " " + entry.getValue().print());
+                  entry.getValue().print(project, entry.getKey());
                 }
                 map.clear();
               }
@@ -206,17 +256,17 @@ public class CloningStatistics {
                     map.addFqnFile(otherFile);
                   }
                 }
-                map.print(project);
               }
             }
+            map.print(project);
           }
         } finally {
-          FileUtils.close(bw);
+          FileUtils.close(matchWriter);
+          FileUtils.close(lonelyWriter);
         }
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Error opening lonely fqns file.", e);
       }
-      logger.info("---");
     }
   }
 
