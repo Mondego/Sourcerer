@@ -43,7 +43,7 @@ public class NameFingerprintIndex implements FingerprintIndex<NameFingerprintKey
   
   @Override
   public void add(NameFingerprintKey fingerprint) {
-    if (fingerprint.getSize() > FingerprintClusterer.MINIMUM_FINGERPRINT_SIZE.getValue()) {
+    if (fingerprint.getSize() >= FingerprintClusterer.MINIMUM_FINGERPRINT_SIZE.getValue()) {
       fieldIndex.addFingerprint(fingerprint, fingerprint.getFields());
       methodIndex.addFingerprint(fingerprint, fingerprint.getMethods());
       fileCount++;
@@ -52,7 +52,7 @@ public class NameFingerprintIndex implements FingerprintIndex<NameFingerprintKey
   
   @Override
   public Collection<JaccardIndex> getJaccardIndices(NameFingerprintKey fingerprint) {
-    if (fingerprint.getSize() > FingerprintClusterer.MINIMUM_FINGERPRINT_SIZE.getValue()) {
+    if (fingerprint.getSize() >= FingerprintClusterer.MINIMUM_FINGERPRINT_SIZE.getValue()) {
       Map<NameFingerprintKey, Counter<NameFingerprintKey>> result = Helper.newHashMap();
       fieldIndex.collectFingerprints(result, fingerprint.getFields());
       methodIndex.collectFingerprints(result, fingerprint.getMethods());

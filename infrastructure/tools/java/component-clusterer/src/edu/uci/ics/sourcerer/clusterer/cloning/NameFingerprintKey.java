@@ -43,15 +43,95 @@ public class NameFingerprintKey extends FingerprintKey {
     index.add(this);
   }
 
+  private double computeJaccardIndex(NameFingerprintKey other) {
+    if (FingerprintClusterer.REQUIRE_FINGERPRINT_NAME_MATCH.getValue()) {
+      double intersectionCount = 0;
+      double unionCount = 0;
+      for (int i = 0, j = 0; i < fields.length && j < other.fields.length;) {
+        int comp = fields[i].compareTo(other.fields[j]);
+        if (comp == 0) {
+          intersectionCount++;
+          unionCount++;
+          i++;
+          j++;
+        } else if (comp < 0) {
+          unionCount++;
+          i++;
+        } else {
+          unionCount++;
+          j++;
+        }
+      }
+      for (int i = 0, j = 0; i < methods.length && j < other.methods.length;) {
+        int comp = methods[i].compareTo(other.methods[j]);
+        if (comp == 0) {
+          intersectionCount++;
+          unionCount++;
+          i++;
+          j++;
+        } else if (comp < 0) {
+          unionCount++;
+          i++;
+        } else {
+          unionCount++;
+          j++;
+        }
+      }
+      return intersectionCount / unionCount;
+    } else {
+      double intersectionCount = 0;
+      double unionCount = 0;
+      if (name.equals(other.name)) {
+        intersectionCount = 1;
+        unionCount = 1;
+      } else {
+        unionCount = 2;
+      }
+      for (int i = 0, j = 0; i < fields.length && j < other.fields.length;) {
+        int comp = fields[i].compareTo(other.fields[j]);
+        if (comp == 0) {
+          intersectionCount++;
+          unionCount++;
+          i++;
+          j++;
+        } else if (comp < 0) {
+          unionCount++;
+          i++;
+        } else {
+          unionCount++;
+          j++;
+        }
+      }
+      for (int i = 0, j = 0; i < methods.length && j < other.methods.length;) {
+        int comp = methods[i].compareTo(other.methods[j]);
+        if (comp == 0) {
+          intersectionCount++;
+          unionCount++;
+          i++;
+          j++;
+        } else if (comp < 0) {
+          unionCount++;
+          i++;
+        } else {
+          unionCount++;
+          j++;
+        }
+      }
+      return intersectionCount / unionCount;
+    }
+  }
+  
   @Override
   public Collection<KeyMatch> getMatches() {
     if (matches == null) {
       matches = Helper.newArrayList();
       for (JaccardIndex jaccard : index.getJaccardIndices(this)) {
         if (jaccard.getIndex() >= FingerprintClusterer.MINIMUM_JACCARD_INDEX.getValue()) {
-          matches.add(new KeyMatch(jaccard.getFingerprintKey().getFile(), Confidence.HIGH));
-        } if (2 * jaccard.getIndex() >= FingerprintClusterer.MINIMUM_JACCARD_INDEX.getValue()) {
-          matches.add(new KeyMatch(jaccard.getFingerprintKey().getFile(), Confidence.MEDIUM));
+          if (computeJaccardIndex((NameFingerprintKey)jaccard.getFingerprintKey()) >= FingerprintClusterer.MINIMUM_JACCARD_INDEX.getValue()) {
+            matches.add(new KeyMatch(jaccard.getFingerprintKey().getFile(), Confidence.HIGH));
+          } else {
+            matches.add(new KeyMatch(jaccard.getFingerprintKey().getFile(), Confidence.MEDIUM));
+          }
         } else {
           matches.add(new KeyMatch(jaccard.getFingerprintKey().getFile(), Confidence.LOW));
         }
