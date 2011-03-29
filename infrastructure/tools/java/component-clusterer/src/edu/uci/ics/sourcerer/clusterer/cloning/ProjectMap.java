@@ -20,16 +20,23 @@ package edu.uci.ics.sourcerer.clusterer.cloning;
 import java.util.Collection;
 import java.util.Map;
 
+import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintFile;
+import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnFile;
+import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashedFile;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ProjectMap {
-  private Map<String, Project> projectMap = Helper.newHashMap();
-  
-  public File getFile(String project, String file) {
-    return getProject(project).getFile(file);
+  private KeyFactory keyFactory;
+  private FingerprintFactory fingerprintFactory;
+  private Map<String, Project> projectMap;
+
+  public ProjectMap() {
+    keyFactory = new KeyFactory();
+    fingerprintFactory = new FingerprintFactory();
+    projectMap = Helper.newHashMap();
   }
   
   private Project getProject(String path) {
@@ -43,5 +50,29 @@ public class ProjectMap {
   
   public Collection<Project> getProjects() {
     return projectMap.values();
+  }
+  
+  public ProjectMatchSet getProjectMatchSet() {
+    return new ProjectMatchSet(getProjects());
+  }
+  
+  public void addFile(FqnFile file) {
+    getProject(file.getProject()).getFile(file.getPath()).setFqnKey(keyFactory.getFqnKey(file));
+  }
+  
+  public void addFile(HashedFile file) {
+    getProject(file.getProject()).getFile(file.getPath()).setHashKey(keyFactory.getHashKey(file));
+  }
+  
+  public void addFile(FingerprintFile file) {
+    getProject(file.getProject()).getFile(file.getPath()).setFingerprintKey(fingerprintFactory.getNameFingerprintKey(file));
+  }
+  
+  public KeyFactory getKeyFactory() {
+    return keyFactory;
+  }
+  
+  public FingerprintFactory getFingerprintFactory() {
+    return fingerprintFactory;
   }
 }

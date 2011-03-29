@@ -4,6 +4,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
@@ -140,7 +141,8 @@ public class RepoFile implements LWRec {
     return relativePath;
   }
   
-  public static RepoFile makeFromString(String value) {
+  public static RepoFile makeFromScanner(Scanner scanner) {
+    String value = scanner.next();
     int colon = value.indexOf(';');
     if (colon == -1) {
       logger.log(Level.SEVERE, "Invalid value: " + value);

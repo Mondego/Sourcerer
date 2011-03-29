@@ -17,13 +17,23 @@
  */
 package edu.uci.ics.sourcerer.clusterer.cloning;
 
-import java.util.Collection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface Key {
-  public void addFile(File file);
-  public Collection<KeyMatch> getMatches();
-  public boolean isUnique(Confidence confidence);
+public abstract class FingerprintKey implements Key {
+  private File file;
+  
+  @Override
+  public void addFile(File file) {
+    if (this.file != null) {
+      throw new IllegalStateException("A fingerprint key is unique per file.");
+    } else {
+      this.file = file;
+    }
+  }
+  
+  public File getFile() {
+    return file;
+  }
 }

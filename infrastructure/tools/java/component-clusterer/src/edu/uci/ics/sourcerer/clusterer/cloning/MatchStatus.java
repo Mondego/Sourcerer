@@ -15,27 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning.method.fqn;
+package edu.uci.ics.sourcerer.clusterer.cloning;
 
-import java.util.Map;
-
-import edu.uci.ics.sourcerer.clusterer.cloning.Key;
-import edu.uci.ics.sourcerer.util.Helper;
-
-/**
- * @author Joel Ossher (jossher@uci.edu)
- */
-public class FqnKey extends Key {
-  private static Map<String, FqnKey> keys = Helper.newHashMap();
-  
-  private FqnKey() {}
-  
-  public static FqnKey getFqnKey(String fqn) {
-    FqnKey key = keys.get(fqn);
-    if (key == null) {
-      key = new FqnKey();
-      keys.put(fqn, key);
-    }
-    return key;
-  }
+public class MatchStatus {
+  boolean hash = false;
+  boolean fqn = false;
+  boolean fingerprint = false;
 }

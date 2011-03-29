@@ -52,7 +52,7 @@ public class LineFileWriter implements Closeable {
     // Check if it's a LWRec
     Collection<FieldConverter> fields = null;
     if (LWRec.class.isAssignableFrom(klass)) {
-      fields = Collections.singleton(FieldConverter.getLWRecConverter());
+      fields = Collections.singleton(FieldConverter.getLWRecWriteConverter());
     } else {
       // Write the fields
       LineBuilder builder = new LineBuilder();
@@ -61,7 +61,7 @@ public class LineFileWriter implements Closeable {
       for (Field field : allFields) {
         if (field.getAnnotation(LWField.class) != null) {
           builder.addItem(field.getName());
-          fields.add(FieldConverter.getFieldConverter(field));
+          fields.add(FieldConverter.getFieldWriteConverter(field));
         }
       }
       bw.write(builder.toLine());

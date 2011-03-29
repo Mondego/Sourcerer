@@ -22,8 +22,8 @@ import java.util.Collection;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface Key {
-  public void addFile(File file);
-  public Collection<KeyMatch> getMatches();
-  public boolean isUnique(Confidence confidence);
+public interface FingerprintIndex <T extends FingerprintKey> {
+  public void add(T key);
+  public Collection<JaccardIndex> getJaccardIndices(T key);
+  public void clearPopularNames();
 }

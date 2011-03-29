@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.clusterer.cloning.File;
 import edu.uci.ics.sourcerer.clusterer.cloning.ProjectMap;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
@@ -88,8 +87,7 @@ public class HashingClusterer {
       for (HashedFile hashedFile : FileUtils.readLineFile(HashedFile.class, HASH_FILE_LISTING, "project", "path", "md5", "length")) {
         if (hashedFile.getLength() > 0) {
           count++;
-          File file = projects.getFile(hashedFile.getProject(), hashedFile.getPath());
-          file.setHashKey(HashKey.getHashKey(hashedFile.getMd5()));
+          projects.addFile(hashedFile);
         }
       }
       logger.info("  " + count + " files loaded");

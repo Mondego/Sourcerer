@@ -15,27 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning.method.hash;
-
-import java.util.Map;
-
-import edu.uci.ics.sourcerer.clusterer.cloning.Key;
-import edu.uci.ics.sourcerer.util.Helper;
+package edu.uci.ics.sourcerer.clusterer.cloning;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class HashKey extends Key {
-  private static Map<String, HashKey> keys = Helper.newHashMap();
-  
-  private HashKey() {}
-  
-  public static HashKey getHashKey(String md5) {
-    HashKey key = keys.get(md5);
-    if (key == null) {
-      key = new HashKey();
-      keys.put(md5, key);
-    }
-    return key;
-  }
+public enum Confidence {
+  HIGH,
+  MEDIUM,
+  LOW;
 }

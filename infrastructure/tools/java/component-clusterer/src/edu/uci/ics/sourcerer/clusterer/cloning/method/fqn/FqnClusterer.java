@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.clusterer.cloning.File;
 import edu.uci.ics.sourcerer.clusterer.cloning.ProjectMap;
 import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
@@ -33,6 +32,7 @@ import edu.uci.ics.sourcerer.model.db.SmallProjectDB;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.LineFileWriter;
 import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
@@ -40,6 +40,7 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  */
 public class FqnClusterer {
   public static final Property<String> FQN_FILE_LISTING = new StringProperty("fqn-file-listing", "fqn-file-listing.txt", "List of all the files (and their FQNs) in the repository.");
+  public static final Property<Integer> MINIMUM_FQN_DOTS = new IntegerProperty("minimum-fqn-dots", 3, "Minimum number of dots for an fqn to be given high confidence.");
 
   private static class FqnDatabaseAccessor extends DatabaseAccessor {
     public FqnDatabaseAccessor(DatabaseConnection connection) {
@@ -50,7 +51,7 @@ public class FqnClusterer {
       return projectQueries.getSmallByType(edu.uci.ics.sourcerer.model.Project.CRAWLED);
     }
     
-    public Collection<FileDB> getFilesByByProjectID(Integer projectID) {
+    public Collection<FileDB> getFilesByProjectID(Integer projectID) {
       return fileQueries.getFilesByProjectID(projectID);
     }
     
@@ -76,7 +77,7 @@ public class FqnClusterer {
         for (SmallProjectDB project : projects) {
           logger.info("Processing " + project + " (" + ++count + " of " + projects.size() + ")");
           
-          for (FileDB file : accessor.getFilesByByProjectID(project.getProjectID())) {
+          for (FileDB file : accessor.getFilesByProjectID(project.getProjectID())) {
             if (file.getType() == edu.uci.ics.sourcerer.model.File.SOURCE) {
               MediumEntityDB shortest = null;
               for (MediumEntityDB entity : accessor.getMediumTopLevelByFileID(file.getFileID())) {
@@ -113,14 +114,47 @@ public class FqnClusterer {
       int count = 0;
       for (FqnFile fqnFile : FileUtils.readLineFile(FqnFile.class, FQN_FILE_LISTING)) {
         count++;
-        File file = projects.getFile(fqnFile.getProject(), fqnFile.getPath());
-        file.setFqnKey(FqnKey.getFqnKey(fqnFile.getFqn()));
+        projects.addFile(fqnFile);
       }
       logger.info("  " + count + " files loaded");
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error in reading fqn file listing.", e);
     }
   }
+  
+//  public static void computeConfidence(ProjectMap projects) {
+//    logger.info("Computing fqn confidence...");
+//    ProjectMatchSet matches = projects.getProjectMatchSet();
+//    
+//    int setToLow = 0;
+//    int setToMedium = 0;
+//    
+//    for (SimpleKey<String> key : projects.getKeyFactory().getFqnKeys()) {
+//      String fqn = key.getKey();
+//      if (fqn.startsWith("default.")) {
+//        key.setConfidence(Confidence.LOW);
+//        setToLow++;
+//      } else {
+//        int totalCount = 0;
+//        int lowCount = 0;
+//        ArrayList<File> files = key.getFiles();
+//        for (int i = 0, length = files.size(); i < length; i++) {
+//          for (int j = i + 1; j < length; j++) {
+//            totalCount++;
+//            FileMatch match = matches.getFileMatch(files.get(i).getProject(), files.get(j).getProject());
+//            if (match.getSharedCount() == 0 && match.getUniqueFqnCount() < 5) {
+//              lowCount++;
+//            }
+//          }
+//        }
+//        if (lowCount > 0) {
+//            key.setConfidence(Confidence.MEDIUM);
+//            setToMedium++;
+//        }
+//      }
+//    }
+//    logger.info("  Of " + projects.getKeyFactory().getFqnKeys().size() + " total keys, " + setToLow + " set to low and " + setToMedium + " set to medium confidence.");
+//  }
 //  private static class FqnDatabaseAccessor extends DatabaseAccessor {
 //    public FqnDatabaseAccessor(DatabaseConnection connection) {
 //      super(connection);

@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.repo.base.normal;
 
 import java.io.File;
 import java.util.Deque;
+import java.util.Scanner;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
 import edu.uci.ics.sourcerer.repo.base.JarFile;
@@ -37,8 +38,8 @@ public class FileSet extends AbstractFileSet {
   static {
     FieldConverter.registerConverterHelper(RepoFile.class, new FieldConverter.FieldConverterHelper() {
       @Override
-      protected Object makeFromString(String value) throws IllegalAccessException {
-        return RepoFile.makeFromString(value);
+      protected Object makeFromScanner(Scanner value) throws IllegalAccessException {
+        return RepoFile.makeFromScanner(value);
       }
     });
   }

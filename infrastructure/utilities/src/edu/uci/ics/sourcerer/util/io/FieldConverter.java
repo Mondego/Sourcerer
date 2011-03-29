@@ -19,8 +19,10 @@ package edu.uci.ics.sourcerer.util.io;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
@@ -28,11 +30,14 @@ import edu.uci.ics.sourcerer.util.Helper;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FieldConverter {
+public final class FieldConverter {
   private Field field;
   private FieldConverterHelper helper;
   
-  private FieldConverter() {}
+  private FieldConverter(Field field) {
+    this.field = field;
+    field.setAccessible(true);
+  }
   
   private FieldConverter(Field field, FieldConverterHelper helper) {
     this.field = field;
@@ -40,15 +45,45 @@ public class FieldConverter {
     field.setAccessible(true);
   }
   
-  public void set(Object obj, String value) throws IllegalAccessException {
-    if (!value.equals("null")) {
-      field.set(obj, helper.makeFromString(value));
+  public void set(Object obj, Scanner scanner) throws IllegalAccessException {
+    if (helper == null) {
+      throw new IllegalArgumentException("Helper may not be null");
+    } else {
+      field.set(obj, helper.makeFromScanner(scanner));
     }
   }
   
   public String get(Object obj) throws IllegalAccessException {
-    Object val = field.get(obj);
-    return helper.writeToString(val);
+    if (field == null) {
+      return writeToString(obj);
+    } else {
+      Object val = field.get(obj);
+      return writeToString(val);
+    }
+  }
+  
+  private String writeToString(Object o) throws IllegalAccessException {
+    if (o == null) {
+      return "null";
+    } else {
+      if (o instanceof LWRec) {
+        return ((LWRec)o).writeToString();
+      } else if (o.getClass().isArray()) {
+        LineBuilder result = new LineBuilder();
+        int length = Array.getLength(o);
+        result.addItem(length);
+        for (int i = 0; i < length; i++) {
+          result.addItem(writeToString(Array.get(o, i)));
+        }
+        return result.toLine();
+      } else {
+        String val = o.toString();
+        if (val.equals("null")) {
+          logger.log(Level.SEVERE, "null collision!");
+        } 
+        return o.toString();
+      }
+    }
   }
   
   private static Map<Class<?>, FieldConverterHelper> helperMap = Helper.newHashMap();
@@ -57,11 +92,23 @@ public class FieldConverter {
     helperMap.put(klass, helper);
   }
   
-  protected static FieldConverter getFieldConverter(Field field) {
+  protected static FieldConverter getFieldWriteConverter(Field field) {
     if (field == null) {
-      return NULL_CONVERTER;
+      throw new IllegalArgumentException("Field may not be null"); 
     } else {
-      FieldConverterHelper helper = helperMap.get(field.getType());
+      return new FieldConverter(field); 
+    }
+  }
+  
+  protected static FieldConverter getLWRecWriteConverter() {
+    return new FieldConverter(null);
+  }
+  
+  protected static FieldConverter getFieldReadConverter(Field field) {
+    if (field == null) {
+      throw new IllegalArgumentException("Field may not be null"); 
+    } else {
+      FieldConverterHelper helper = getHelper(field.getType());
       if (helper == null) {
         throw new IllegalArgumentException("Unsupported type: " + field.getType().getName());
       } else {
@@ -70,76 +117,76 @@ public class FieldConverter {
     }
   }
   
-  protected static FieldConverter getLWRecConverter() {
-    return LWREC_CONVERTER;
+  public static FieldConverterHelper getHelper(final Class<?> type) {
+    if (type.isArray()) {
+      return new FieldConverterHelper() {
+        private FieldConverterHelper componentHelper = getHelper(type.getComponentType());
+        
+        @Override
+        protected Object makeFromScanner(Scanner scanner) throws IllegalAccessException {
+          int length = scanner.nextInt();
+          Object array = Array.newInstance(type.getComponentType(), length);
+          for (int i = 0; i < length; i++) {
+            Array.set(array, i, componentHelper.makeFromScanner(scanner));
+          }
+          return array;
+        }
+      };
+    } else {
+      return helperMap.get(type);
+    }
   }
   
-  public abstract static class FieldConverterHelper {
-    protected abstract Object makeFromString(String value) throws IllegalAccessException;
-    protected final String writeToString(Object o) throws IllegalAccessException {
-      if (o == null) {
-        return "null";
+  protected static FieldConverter getNullReadConverter(Field field) {
+    if (field == null) {
+      throw new IllegalArgumentException("Field may not be null");
+    } else {
+      final FieldConverterHelper helper = helperMap.get(field.getType());
+      if (helper == null) {
+        throw new IllegalArgumentException("Unsupported type: " + field.getType().getName());
       } else {
-        if (o instanceof LWRec) {
-          return ((LWRec)o).writeToString();
-        } else {
-          String val = o.toString();
-          if (val.equals("null")) {
-            logger.log(Level.SEVERE, "null collision!");
-          } 
-          return o.toString();
-        }
+        return new FieldConverter(field, new FieldConverterHelper() {
+          @Override
+          protected Object makeFromScanner(Scanner scanner) throws IllegalAccessException {
+            helper.makeFromScanner(scanner);
+            return null;
+          }
+        }) ;
       }
     }
   }
   
+  public abstract static class FieldConverterHelper {
+    protected abstract Object makeFromScanner(Scanner scanner) throws IllegalAccessException;
+  }
+  
   private static final FieldConverterHelper INT_HELPER = new FieldConverterHelper() {
     @Override
-    protected Object makeFromString(String value) {
-      return Integer.parseInt(value);
+    protected Object makeFromScanner(Scanner scanner) {
+      return scanner.nextInt();
     }
   };
   
   private static final FieldConverterHelper LONG_HELPER = new FieldConverterHelper() {
     @Override
-    protected Object makeFromString(String value) {
-      return Long.parseLong(value);
+    protected Object makeFromScanner(Scanner scanner) {
+      return scanner.nextLong();
     }
   };
   
   
   private static final FieldConverterHelper BOOLEAN_HELPER = new FieldConverterHelper() {
     @Override
-    protected Object makeFromString(String value) {
-      return Boolean.parseBoolean(value);
+    protected Object makeFromScanner(Scanner scanner) {
+      return scanner.nextBoolean();
     }
   };
   
   private static final FieldConverterHelper STRING_HELPER = new FieldConverterHelper() {
     @Override
-    protected Object makeFromString(String value) {
-      return value;
+    protected Object makeFromScanner(Scanner scanner) {
+      return scanner.next();
     }
-  };
-  
-  private static final FieldConverter NULL_CONVERTER = new FieldConverter() {
-    @Override
-    public void set(Object obj, String value) throws IllegalAccessException {}
-
-    @Override
-    public String get(Object obj) throws IllegalAccessException {
-      return null;
-    }
-  };
-  
-  private static final FieldConverter LWREC_CONVERTER = new FieldConverter() {
-    @Override
-    public void set(Object obj, String value) throws IllegalAccessException {}
-
-    @Override
-    public String get(Object obj) throws IllegalAccessException {
-      return ((LWRec)obj).writeToString();
-    }    
   };
   
   static {

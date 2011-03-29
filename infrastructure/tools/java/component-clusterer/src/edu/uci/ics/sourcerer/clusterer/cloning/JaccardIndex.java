@@ -17,13 +17,23 @@
  */
 package edu.uci.ics.sourcerer.clusterer.cloning;
 
-import java.util.Collection;
-
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface Key {
-  public void addFile(File file);
-  public Collection<KeyMatch> getMatches();
-  public boolean isUnique(Confidence confidence);
+public class JaccardIndex {
+  private FingerprintKey key;
+  private double index;
+  
+  public JaccardIndex(FingerprintKey key, double index) {
+    this.key = key;
+    this.index = index;
+  }
+  
+  public FingerprintKey getFingerprintKey() {
+    return key;
+  }
+  
+  public double getIndex() {
+    return index;
+  }
 }

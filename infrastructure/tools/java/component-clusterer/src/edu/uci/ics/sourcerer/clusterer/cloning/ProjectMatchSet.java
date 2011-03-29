@@ -18,12 +18,28 @@
 package edu.uci.ics.sourcerer.clusterer.cloning;
 
 import java.util.Collection;
+import java.util.Map;
+
+import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface Key {
-  public void addFile(File file);
-  public Collection<KeyMatch> getMatches();
-  public boolean isUnique(Confidence confidence);
+public final class ProjectMatchSet {
+  private Map<Project, ProjectMatch> map;
+  
+  protected ProjectMatchSet(Collection<Project> projects) {
+    map = Helper.newHashMap();
+    for (Project project : projects) {
+      map.put(project, new ProjectMatch(project));
+    }
+  }
+  
+  public FileMatch getFileMatch(Project a, Project b) {
+    return map.get(a).getFileMatch(b);
+  }
+  
+  public Collection<Map.Entry<Project, ProjectMatch>> getProjectMatches() {
+    return map.entrySet();
+  }
 }

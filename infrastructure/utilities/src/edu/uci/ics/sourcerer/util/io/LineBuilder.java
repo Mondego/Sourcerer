@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.util.io;
 
+import java.util.Scanner;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
@@ -34,6 +36,10 @@ public final class LineBuilder {
     }
   }
   
+  public void addItem(int item) {
+    addItem(Integer.toString(item));
+  }
+  
   public String toLine() {
     if (lastItem == null) {
       return "";
@@ -47,5 +53,9 @@ public final class LineBuilder {
   
   public static String[] splitLine(String line) {
     return line.split(" ");
+  }
+  
+  public static Scanner getScanner(String line) {
+    return new Scanner(line).useDelimiter(" ");
   }
 }

@@ -86,13 +86,17 @@ public final class JoinQueries extends Queries {
   /**
    * Get the contained FQNs for a given entity.
    */
-  public Collection<String> getContainedFQNs(Integer entityID) {
+  public Collection<MediumEntityDB> getContainedEntities(Integer entityID) {
     return executor.select(
         join(RelationsTable.TABLE, EntitiesTable.TABLE) +
         on(RelationsTable.LHS_EID.getEquals(EntitiesTable.ENTITY_ID)),
-        EntitiesTable.FQN.getQualifiedName(), 
+        comma(EntitiesTable.ENTITY_ID.getQualifiedName(), EntitiesTable.ENTITY_TYPE.getQualifiedName(), EntitiesTable.FQN.getQualifiedName(), EntitiesTable.PROJECT_ID.getQualifiedName()),
         and(RelationsTable.RHS_EID.getEquals(entityID), RelationsTable.RELATION_TYPE.getEquals(Relation.INSIDE)), 
-        ResultTranslator.SIMPLE_STRING_TRANSLATOR);
+        new BasicResultTranslator<MediumEntityDB>() {
+          @Override
+          public MediumEntityDB translate(ResultSet result) throws SQLException {
+            return new MediumEntityDB(EntitiesTable.ENTITY_ID.convertFromDB(result.getString(1)), EntitiesTable.ENTITY_TYPE.convertFromDB(result.getString(2)), EntitiesTable.FQN.convertFromDB(result.getString(3)), EntitiesTable.PROJECT_ID.convertFromDB(result.getString(4)));
+          }});
   }
   
   /**

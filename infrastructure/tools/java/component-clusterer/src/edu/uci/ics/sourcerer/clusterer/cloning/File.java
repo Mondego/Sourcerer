@@ -26,6 +26,7 @@ public class File {
   
   private Key hashKey;
   private Key fqnKey;
+  private Key fingerprintKey;
   
   protected File(Project project, String path) {
     this.project = project;
@@ -72,8 +73,24 @@ public class File {
     return fqnKey != null;
   }
   
+  public void setFingerprintKey(Key fingerprintKey) {
+    if (this.fingerprintKey != null) {
+      throw new IllegalStateException("fingerprint may not be changed.");
+    }
+    this.fingerprintKey = fingerprintKey;
+    fingerprintKey.addFile(this);
+  }
+  
+  public Key getFingerprintKey() {
+    return fingerprintKey;
+  }
+  
+  public boolean hasFingerprintKey() {
+    return fingerprintKey != null;
+  }
+  
   public boolean hasAllKeys() {
-    return hashKey != null && fqnKey != null;
+    return hashKey != null && fqnKey != null && fingerprintKey != null;
   }
   
   public String toString() {

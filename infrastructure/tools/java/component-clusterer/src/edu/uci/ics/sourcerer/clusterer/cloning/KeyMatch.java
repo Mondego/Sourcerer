@@ -17,13 +17,23 @@
  */
 package edu.uci.ics.sourcerer.clusterer.cloning;
 
-import java.util.Collection;
-
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface Key {
-  public void addFile(File file);
-  public Collection<KeyMatch> getMatches();
-  public boolean isUnique(Confidence confidence);
+public class KeyMatch {
+  private File file;
+  private Confidence confidence;
+  
+  protected KeyMatch(File file, Confidence confidence) {
+    this.file = file;
+    this.confidence = confidence;
+  }
+
+  public File getFile() {
+    return file;
+  }
+
+  public Confidence getConfidence() {
+    return confidence;
+  }
 }

@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -132,8 +133,8 @@ public class CompressedFileSet extends AbstractFileSet {
   {
     FieldConverter.registerConverterHelper(CompressedRepoFile.class, new FieldConverter.FieldConverterHelper() {
       @Override
-      protected Object makeFromString(String value) throws IllegalAccessException {
-        return new CompressedRepoFile(value);
+      protected Object makeFromScanner(Scanner scanner) throws IllegalAccessException {
+        return new CompressedRepoFile(scanner.next());
       }
     });
   }

@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.clusterer;
 
 import edu.uci.ics.sourcerer.clusterer.cloning.CloningStatistics;
+import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
@@ -86,6 +87,13 @@ public class Main {
         FqnClusterer.generateFileListing();
       }
     }.setProperties(AbstractRepository.INPUT_REPO, FqnClusterer.FQN_FILE_LISTING, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
+    
+  public static final Command GENERATE_FINGERPRINT_FILE_LISTING =
+    new Command("generate-fingerprint-file-listing", "Generates the fingerprint file listing file.") {
+      protected void action() {
+        FingerprintClusterer.generateFileListing();
+      }
+    }.setProperties(AbstractRepository.INPUT_REPO, FingerprintClusterer.FINGERPRINT_FILE_LISTING, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
 
 //  public static final Command PRINT_HASH_PROJECT_MATCHING_RATES =
 //    new Command("print-hash-project-matching-rates", "Prints the project-project matching rates using the hashing method.") {
