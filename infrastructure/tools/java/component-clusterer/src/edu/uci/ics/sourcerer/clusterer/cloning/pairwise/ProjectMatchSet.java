@@ -15,46 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning;
+package edu.uci.ics.sourcerer.clusterer.cloning.pairwise;
 
 import java.util.Collection;
 import java.util.Map;
 
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.Project;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class Project {
-  private String path;
-  private Map<String, File> files;
+public final class ProjectMatchSet {
+  private Map<Project, ProjectMatch> map;
   
-  protected Project(String path) {
-    this.path = path;
-    files = Helper.newHashMap();
-  }
-  
-  public String getName() {
-    return path;
-  }
-  
-  public Collection<File> getFiles() {
-    return files.values();
-  }
-  
-  protected File getFile(String path) {
-    if (path.charAt(0) == '/') {
-      path = path.substring(1);
+  public ProjectMatchSet(Collection<Project> projects) {
+    map = Helper.newHashMap();
+    for (Project project : projects) {
+      map.put(project, new ProjectMatch(project));
     }
-    File file = files.get(path);
-    if (file == null) {
-      file = new File(this, path);
-      files.put(path, file);
-    }
-    return file;
   }
-
-  public String toString() {
-    return path;
+  
+  public FileMatching getFileMatch(Project a, Project b) {
+    return map.get(a).getFileMatch(b);
+  }
+  
+  public Collection<Map.Entry<Project, ProjectMatch>> getProjectMatches() {
+    return map.entrySet();
   }
 }

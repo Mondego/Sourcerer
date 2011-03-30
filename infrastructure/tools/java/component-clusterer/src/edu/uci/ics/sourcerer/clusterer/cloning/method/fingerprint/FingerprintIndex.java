@@ -15,10 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning;
+package edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint;
 
-public class MatchStatus {
-  boolean hash = false;
-  boolean fqn = false;
-  boolean fingerprint = false;
+import java.util.Collection;
+
+
+/**
+ * @author Joel Ossher (jossher@uci.edu)
+ */
+public interface FingerprintIndex <T extends FingerprintKey> {
+  public void add(T key);
+  public Collection<JaccardIndex> getJaccardIndices(T key);
+  public void clearPopularNames();
 }

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning;
+package edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.Key;
 import edu.uci.ics.sourcerer.util.Counter;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
@@ -53,7 +54,9 @@ public class InvertedIndex <T extends Key> {
         fingerprints = Helper.newArrayList();
         map.put(string, fingerprints);
       }
-      fingerprints.add(fingerprint);
+      if (!fingerprints.contains(fingerprint)) {
+        fingerprints.add(fingerprint);
+      }
     }
   }
   

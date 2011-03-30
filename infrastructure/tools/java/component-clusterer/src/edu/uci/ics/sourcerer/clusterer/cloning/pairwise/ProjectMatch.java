@@ -15,60 +15,59 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning;
+package edu.uci.ics.sourcerer.clusterer.cloning.pairwise;
 
 import java.util.Collection;
 import java.util.Map;
 
-import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintClusterer;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.KeyMatch;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.Project;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class ProjectMatch {
-  private Map<Project, FileMatch> map;
+  private Map<Project, FileMatching> map;
   
   protected ProjectMatch(Project project) {
     map = Helper.newHashMap();
-//    double minimumJaccard = FingerprintClusterer.MINIMUM_JACCARD_INDEX.getValue();
-//    for (File file : project.getFiles()) {
-//      if (file.hasAllKeys()) {
-//        for (File otherFile : file.getHashKey().getFiles()) {
-//          if (file != otherFile && otherFile.hasAllKeys()) {
-//            getMatchStatus(otherFile).hash = true;
-//          }
-//        }
-//        if (file.getFqnKey().getConfidence() == Confidence.HIGH) {
-//          for (File otherFile : file.getFqnKey().getFiles()) {
-//            if (file != otherFile && otherFile.hasAllKeys()) {
-//              getMatchStatus(otherFile).fqn = true;
-//            }
-//          }
-//        }
-//        for (JaccardIndex index : file.getFingerprint().getJaccardIndices()) {
-//          if (index.getIndex() > minimumJaccard) {
-//            getMatchStatus(index.getFingerprint().getFile()).fingerprint = true;
-//          }
-//        }
-//      }
-//    }
+    for (File file : project.getFiles()) {
+      if (file.hasAllKeys()) {
+        for (KeyMatch match : file.getHashKey().getMatches()) {
+          if (file != match.getFile() && match.getFile().hasAllKeys()) {
+            getMatchStatus(match.getFile()).hash = match.getConfidence();
+          }
+        }
+        for (KeyMatch match : file.getFqnKey().getMatches()) {
+          if (file != match.getFile() && match.getFile().hasAllKeys()) {
+            getMatchStatus(match.getFile()).fqn = match.getConfidence();
+          }
+        }
+        for (KeyMatch match : file.getFingerprintKey().getMatches()) {
+          if (file != match.getFile() && match.getFile().hasAllKeys()) {
+            getMatchStatus(match.getFile()).fingerprint = match.getConfidence();
+          }
+        }
+      }
+    }
   }
   
   private MatchStatus getMatchStatus(File file) {
-    FileMatch match = map.get(file.getProject());
+    FileMatching match = map.get(file.getProject());
     if (match == null) {
-      match = new FileMatch();
+      match = new FileMatching();
       map.put(file.getProject(), match);
     }
     return match.getMatchStatus(file);
   }
   
-  public FileMatch getFileMatch(Project project) {
+  public FileMatching getFileMatch(Project project) {
     return map.get(project);
   }
   
-  public Collection<Map.Entry<Project, FileMatch>> getFileMatches() {
+  public Collection<Map.Entry<Project, FileMatching>> getFileMatchings() {
     return map.entrySet();
   }
 }

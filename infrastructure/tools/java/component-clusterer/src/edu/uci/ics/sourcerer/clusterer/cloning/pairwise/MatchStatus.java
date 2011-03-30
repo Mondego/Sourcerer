@@ -15,25 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning;
+package edu.uci.ics.sourcerer.clusterer.cloning.pairwise;
 
-/**
- * @author Joel Ossher (jossher@uci.edu)
- */
-public class JaccardIndex {
-  private FingerprintKey key;
-  private double index;
-  
-  public JaccardIndex(FingerprintKey key, double index) {
-    this.key = key;
-    this.index = index;
-  }
-  
-  public FingerprintKey getFingerprintKey() {
-    return key;
-  }
-  
-  public double getIndex() {
-    return index;
-  }
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
+
+public class MatchStatus {
+  Confidence hash = null;
+  Confidence fqn = null;
+  Confidence fingerprint = null;
 }

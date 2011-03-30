@@ -15,14 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning;
+package edu.uci.ics.sourcerer.clusterer.cloning.basic;
 
 import java.util.Collection;
 import java.util.Map;
 
+import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintFactory;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintFile;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnFile;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashedFile;
+import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.ProjectMatchSet;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**

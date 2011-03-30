@@ -15,31 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning;
-
-import java.util.Collection;
-import java.util.Map;
-
-import edu.uci.ics.sourcerer.util.Helper;
+package edu.uci.ics.sourcerer.clusterer.cloning.basic;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class ProjectMatchSet {
-  private Map<Project, ProjectMatch> map;
-  
-  protected ProjectMatchSet(Collection<Project> projects) {
-    map = Helper.newHashMap();
-    for (Project project : projects) {
-      map.put(project, new ProjectMatch(project));
-    }
-  }
-  
-  public FileMatch getFileMatch(Project a, Project b) {
-    return map.get(a).getFileMatch(b);
-  }
-  
-  public Collection<Map.Entry<Project, ProjectMatch>> getProjectMatches() {
-    return map.entrySet();
-  }
+public enum Confidence {
+  HIGH,
+  MEDIUM,
+  LOW;
 }

@@ -15,20 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning;
+package edu.uci.ics.sourcerer.clusterer.cloning.pairwise;
 
 import java.util.Collection;
 import java.util.Map;
 
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
 import edu.uci.ics.sourcerer.util.Helper;
 
-public final class FileMatch {
+public final class FileMatching {
   private Map<File, MatchStatus> map = Helper.newHashMap();
-  private int sharedCount = -1;
-  private int uniqueHashCount = -1;
-  private int uniqueFqnCount = -1;
   
-  protected FileMatch() {}
+  protected FileMatching() {}
   
   protected MatchStatus getMatchStatus(File file) {
     MatchStatus status = map.get(file);
@@ -37,41 +35,6 @@ public final class FileMatch {
       map.put(file, status);
     }
     return status;
-  }
-    
-  private void computeCounts() {
-    sharedCount = 0;
-    uniqueHashCount = 0;
-    uniqueFqnCount = 0;
-    for (MatchStatus status : map.values()) {
-      if (status.hash && status.fqn) {
-        sharedCount++;
-      } else if (status.hash) {
-        uniqueHashCount++;
-      } else if (status.fqn) {
-        uniqueFqnCount++;
-      }
-    }
-  }
-  
-  public int getSharedCount() {
-    if (sharedCount == -1) {
-      computeCounts();
-    }
-    return sharedCount;
-  }
-  public int getUniqueHashCount() {
-    if (uniqueHashCount == -1) {
-      computeCounts();
-    }
-    return uniqueHashCount;
-  }
-  
-  public int getUniqueFqnCount() {
-    if (uniqueFqnCount == -1) {
-      computeCounts();
-    }
-    return uniqueFqnCount;
   }
   
   public Collection<Map.Entry<File, MatchStatus>> getMatchStatusSet() {

@@ -15,7 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning;
+package edu.uci.ics.sourcerer.clusterer.cloning.basic;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -27,6 +28,7 @@ public class File {
   private Key hashKey;
   private Key fqnKey;
   private Key fingerprintKey;
+  private Key combinedKey;
   
   protected File(Project project, String path) {
     this.project = project;
@@ -59,7 +61,7 @@ public class File {
   
   public void setFqnKey(Key fqnKey) {
     if (this.fqnKey != null) {
-      throw new IllegalStateException("fqn key may not be changed.");
+      throw new IllegalStateException("Fqn key may not be changed.");
     }
     this.fqnKey = fqnKey;
     fqnKey.addFile(this);
@@ -75,7 +77,7 @@ public class File {
   
   public void setFingerprintKey(Key fingerprintKey) {
     if (this.fingerprintKey != null) {
-      throw new IllegalStateException("fingerprint may not be changed.");
+      throw new IllegalStateException("Fingerprint may not be changed.");
     }
     this.fingerprintKey = fingerprintKey;
     fingerprintKey.addFile(this);
@@ -87,6 +89,22 @@ public class File {
   
   public boolean hasFingerprintKey() {
     return fingerprintKey != null;
+  }
+  
+  public void setCombinedKey(Key combinedKey) {
+    if (this.combinedKey != null) {
+      throw new IllegalStateException("Combined key may not be changed.");
+    }
+    this.combinedKey = combinedKey;
+    combinedKey.addFile(this);
+  }
+  
+  public Key getCombinedKey() {
+    return combinedKey;
+  }
+  
+  public boolean hasCombinedKey() {
+    return combinedKey != null;
   }
   
   public boolean hasAllKeys() {

@@ -15,13 +15,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning;
+package edu.uci.ics.sourcerer.clusterer.cloning.basic;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public enum Confidence {
-  HIGH,
-  MEDIUM,
-  LOW;
+public class KeyMatch {
+  private File file;
+  private Confidence confidence;
+  
+  public KeyMatch(File file, Confidence confidence) {
+    this.file = file;
+    this.confidence = confidence;
+  }
+
+  public File getFile() {
+    return file;
+  }
+
+  public Confidence getConfidence() {
+    return confidence;
+  }
 }

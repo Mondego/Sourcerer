@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning;
+package edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintClusterer.REQUIRE_FINGERPRINT_NAME_MATCH;
@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintClusterer;
 import edu.uci.ics.sourcerer.util.Counter;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;

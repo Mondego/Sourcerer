@@ -25,9 +25,16 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.Project;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.ProjectMap;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
+import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.FileMatching;
+import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.ProjectMatch;
+import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.ProjectMatchSet;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Properties;
@@ -273,9 +280,32 @@ public class CloningStatistics {
     }
   }
   
-  private static void computeProjectMatching(ProjectMatchSet matches) {
-//    if (COMPUTE_PROJECT_MATCHING.getValue()) {
-//      logger.info("Computing project matching...");
+  private static void computeProjectMatching(ProjectMap projects) {
+    if (COMPUTE_PROJECT_MATCHING.getValue()) {
+      logger.info("Computing project matching...");
+      ProjectMatchSet matches = projects.getProjectMatchSet();
+      int total = 0;
+      int withClones = 0;
+      for (Map.Entry<Project, ProjectMatch> entry : matches.getProjectMatches()) {
+        total++;
+        Collection<Map.Entry<Project, FileMatching>> fileMatchings = entry.getValue().getFileMatchings();
+        if (fileMatchings.size() > 0) {
+          withClones++;
+        }
+      }
+      
+      TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(PROJECT_MATCHING_STATS_FILE);
+      printer.beginTable(2);
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("Total Projects");
+      printer.addCell(total);
+      printer.beginRow();
+      printer.addCell("Projects with Clones");
+      printer.addCell(withClones);
+      printer.addDividerRow();
+      printer.endTable();
+      
 //      BufferedWriter matchWriter = null;
 //      BufferedWriter statsWriter = null;
 //      BufferedWriter augmentedWriter = null;
@@ -378,7 +408,7 @@ public class CloningStatistics {
 //        FileUtils.close(augmentedWriter);
 //        FileUtils.close(lonelyWriter);
 //      }
-//    }
+    }
   }
 
   public static void performAnalysis() {
@@ -394,7 +424,7 @@ public class CloningStatistics {
     compareFileSets(projects);
     logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
     computeCloningStatistics(projects);
-//    computeProjectMatching(projects.getProjectMatchSet());
+    computeProjectMatching(projects);
     
     logger.info("Done!");
   }

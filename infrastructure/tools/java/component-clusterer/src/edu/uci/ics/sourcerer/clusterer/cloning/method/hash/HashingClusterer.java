@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.clusterer.cloning.ProjectMap;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.ProjectMap;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.base.Repository;

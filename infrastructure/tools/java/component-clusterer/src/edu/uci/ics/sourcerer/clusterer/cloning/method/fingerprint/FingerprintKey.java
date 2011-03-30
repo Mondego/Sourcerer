@@ -15,7 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning;
+package edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint;
+
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.Key;
 
 
 /**

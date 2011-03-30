@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.clusterer.cloning.ProjectMap;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.ProjectMap;
 import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.db.FileDB;
