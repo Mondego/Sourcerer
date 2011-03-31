@@ -29,6 +29,7 @@ import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Project;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.ProjectMap;
+import edu.uci.ics.sourcerer.clusterer.cloning.method.combination.CombinedClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
@@ -112,13 +113,14 @@ public class CloningStatistics {
         int uniqueHashFiles = 0;
         int uniqueFqnFiles = 0;
         int uniqueFingerprintFiles = 0;
+        int uniqueCombinedFiles = 0;
         for (Project project : projects.getProjects()) {
           for (File file : project.getFiles()) {
             // Exclude all files that don't match
             if (file.hasAllKeys()) {
               if (++totalFiles % 100000 == 0) {
                 logger.info("    " + totalFiles + " analyzed");
-                logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
+//                logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
               }
               if (file.getHashKey().isUnique(Confidence.HIGH)) {
                 uniqueHashFiles++;
@@ -129,18 +131,22 @@ public class CloningStatistics {
               if (file.getFingerprintKey().isUnique(Confidence.HIGH)) {
                 uniqueFingerprintFiles++;
               }
+              if (file.getCombinedKey().isUnique(Confidence.HIGH)) {
+                uniqueCombinedFiles++;
+              }
             }
           }
         }
         logger.info("  " + totalFiles + " analyzed");
         
-        printer.beginTable(4);
+        printer.beginTable(5);
         printer.addHeader("High Confidence");
         printer.addDividerRow();
-        printer.addRow("", "Hash", "FQN", "Fingerprint");
+        printer.addRow("", "Hash", "FQN", "Fingerprint", "Combined");
         printer.addDividerRow();
         printer.beginRow();
         printer.addCell("Total Files");
+        printer.addCell(totalFiles);
         printer.addCell(totalFiles);
         printer.addCell(totalFiles);
         printer.addCell(totalFiles);
@@ -149,16 +155,19 @@ public class CloningStatistics {
         printer.addCell(uniqueHashFiles);
         printer.addCell(uniqueFqnFiles);
         printer.addCell(uniqueFingerprintFiles);
+        printer.addCell(uniqueCombinedFiles);
         printer.beginRow();
         printer.addCell("Duplicated Files");
         printer.addCell(totalFiles - uniqueHashFiles);
         printer.addCell(totalFiles - uniqueFqnFiles);
         printer.addCell(totalFiles - uniqueFingerprintFiles);
+        printer.addCell(totalFiles - uniqueCombinedFiles);
         printer.beginRow();
         printer.addCell("Cloning Rate");
         printer.addCell(((double)(totalFiles - uniqueHashFiles) / totalFiles));
         printer.addCell(((double)(totalFiles - uniqueFqnFiles) / totalFiles));
         printer.addCell(((double)(totalFiles - uniqueFingerprintFiles) / totalFiles));
+        printer.addCell(((double)(totalFiles - uniqueCombinedFiles) / totalFiles));
         printer.addDividerRow();
         printer.endTable();
       }
@@ -169,13 +178,14 @@ public class CloningStatistics {
         int uniqueHashFiles = 0;
         int uniqueFqnFiles = 0;
         int uniqueFingerprintFiles = 0;
+        int uniqueCombinedFiles = 0;
         for (Project project : projects.getProjects()) {
           for (File file : project.getFiles()) {
             // Exclude all files that don't match
             if (file.hasAllKeys()) {
               if (++totalFiles % 100000 == 0) {
                 logger.info("    " + totalFiles + " analyzed");
-                logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
+//                logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
               }
               if (file.getHashKey().isUnique(Confidence.MEDIUM)) {
                 uniqueHashFiles++;
@@ -186,18 +196,22 @@ public class CloningStatistics {
               if (file.getFingerprintKey().isUnique(Confidence.MEDIUM)) {
                 uniqueFingerprintFiles++;
               }
+              if (file.getCombinedKey().isUnique(Confidence.MEDIUM)) {
+                uniqueCombinedFiles++;
+              }
             }
           }
         }
         logger.info("  " + totalFiles + " analyzed");
         
-        printer.beginTable(4);
+        printer.beginTable(5);
         printer.addHeader("Medium Confidence");
         printer.addDividerRow();
-        printer.addRow("", "Hash", "FQN", "Fingerprint");
+        printer.addRow("", "Hash", "FQN", "Fingerprint", "Combined");
         printer.addDividerRow();
         printer.beginRow();
         printer.addCell("Total Files");
+        printer.addCell(totalFiles);
         printer.addCell(totalFiles);
         printer.addCell(totalFiles);
         printer.addCell(totalFiles);
@@ -206,16 +220,19 @@ public class CloningStatistics {
         printer.addCell(uniqueHashFiles);
         printer.addCell(uniqueFqnFiles);
         printer.addCell(uniqueFingerprintFiles);
+        printer.addCell(uniqueCombinedFiles);
         printer.beginRow();
         printer.addCell("Duplicated Files");
         printer.addCell(totalFiles - uniqueHashFiles);
         printer.addCell(totalFiles - uniqueFqnFiles);
         printer.addCell(totalFiles - uniqueFingerprintFiles);
+        printer.addCell(totalFiles - uniqueCombinedFiles);
         printer.beginRow();
         printer.addCell("Cloning Rate");
         printer.addCell(((double)(totalFiles - uniqueHashFiles) / totalFiles));
         printer.addCell(((double)(totalFiles - uniqueFqnFiles) / totalFiles));
         printer.addCell(((double)(totalFiles - uniqueFingerprintFiles) / totalFiles));
+        printer.addCell(((double)(totalFiles - uniqueCombinedFiles) / totalFiles));
         printer.addDividerRow();
         printer.endTable();
       }
@@ -226,13 +243,14 @@ public class CloningStatistics {
         int uniqueHashFiles = 0;
         int uniqueFqnFiles = 0;
         int uniqueFingerprintFiles = 0;
+        int uniqueCombinedFiles = 0;
         for (Project project : projects.getProjects()) {
           for (File file : project.getFiles()) {
             // Exclude all files that don't match
             if (file.hasAllKeys()) {
               if (++totalFiles % 100000 == 0) {
                 logger.info("    " + totalFiles + " analyzed");
-                logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());                
+//                logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());                
               }
               if (file.getHashKey().isUnique(Confidence.LOW)) {
                 uniqueHashFiles++;
@@ -243,18 +261,22 @@ public class CloningStatistics {
               if (file.getFingerprintKey().isUnique(Confidence.LOW)) {
                 uniqueFingerprintFiles++;
               }
+              if (file.getCombinedKey().isUnique(Confidence.LOW)) {
+                uniqueCombinedFiles++;
+              }
             }
           }
         }
         logger.info("  " + totalFiles + " analyzed");
         
-        printer.beginTable(4);
+        printer.beginTable(5);
         printer.addHeader("Low Confidence");
         printer.addDividerRow();
-        printer.addRow("", "Hash", "FQN", "Fingerprint");
+        printer.addRow("", "Hash", "FQN", "Fingerprint", "Combined");
         printer.addDividerRow();
         printer.beginRow();
         printer.addCell("Total Files");
+        printer.addCell(totalFiles);
         printer.addCell(totalFiles);
         printer.addCell(totalFiles);
         printer.addCell(totalFiles);
@@ -263,16 +285,19 @@ public class CloningStatistics {
         printer.addCell(uniqueHashFiles);
         printer.addCell(uniqueFqnFiles);
         printer.addCell(uniqueFingerprintFiles);
+        printer.addCell(uniqueCombinedFiles);
         printer.beginRow();
         printer.addCell("Duplicated Files");
         printer.addCell(totalFiles - uniqueHashFiles);
         printer.addCell(totalFiles - uniqueFqnFiles);
         printer.addCell(totalFiles - uniqueFingerprintFiles);
+        printer.addCell(totalFiles - uniqueCombinedFiles);
         printer.beginRow();
         printer.addCell("Cloning Rate");
         printer.addCell(((double)(totalFiles - uniqueHashFiles) / totalFiles));
         printer.addCell(((double)(totalFiles - uniqueFqnFiles) / totalFiles));
         printer.addCell(((double)(totalFiles - uniqueFingerprintFiles) / totalFiles));
+        printer.addCell(((double)(totalFiles - uniqueCombinedFiles) / totalFiles));
         printer.addDividerRow();
         printer.endTable();
       }
@@ -413,16 +438,18 @@ public class CloningStatistics {
 
   public static void performAnalysis() {
     ProjectMap projects = new ProjectMap();
-    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
+//    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
     HashingClusterer.loadFileListing(projects);
-    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
+//    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
     FqnClusterer.loadFileListing(projects);
-    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
+//    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
     FingerprintClusterer.loadFileListing(projects);
+//    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
+    CombinedClusterer.computeCombinedKeys(projects);
 
-    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
+//    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
     compareFileSets(projects);
-    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
+//    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
     computeCloningStatistics(projects);
     computeProjectMatching(projects);
     

@@ -20,7 +20,7 @@ package edu.uci.ics.sourcerer.clusterer.cloning.pairwise;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
 
 public class MatchStatus {
-  Confidence hash = null;
-  Confidence fqn = null;
-  Confidence fingerprint = null;
+  public Confidence hash = null;
+  public Confidence fqn = null;
+  public Confidence fingerprint = null;
 }
