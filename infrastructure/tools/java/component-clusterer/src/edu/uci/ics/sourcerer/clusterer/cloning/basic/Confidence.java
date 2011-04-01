@@ -20,8 +20,8 @@ package edu.uci.ics.sourcerer.clusterer.cloning.basic;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public enum Confidence {
-  HIGH,
+public enum Confidence implements Comparable<Confidence> {
+  LOW,
   MEDIUM,
-  LOW;
+  HIGH;
 }

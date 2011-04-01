@@ -18,16 +18,13 @@
 package edu.uci.ics.sourcerer.clusterer.cloning.method.combination;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
-import java.util.Map;
-
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.DetectionMethod;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.KeyMatch;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Project;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.ProjectMap;
-import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.FileMatching;
-import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.FileMatching.Type;
+import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.MatchingProjects;
 import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.MatchStatus;
 import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.ProjectMatchSet;
 import edu.uci.ics.sourcerer.util.io.Property;
@@ -56,23 +53,22 @@ public class CombinedClusterer {
         }
         files++;
         // For every file, collect the files it matches
-        FileMatching matching = new FileMatching();
+        MatchingProjects matching = new MatchingProjects(project);
         for (KeyMatch match : file.getHashKey().getMatches()) {
-          matching.getMatchStatus(match.getFile()).hash = match.getConfidence();
+          matching.getMatchStatus(match.getFile()).setHash(match.getConfidence());
         }
         for (KeyMatch match : file.getFqnKey().getMatches()) {
-          matching.getMatchStatus(match.getFile()).fqn = match.getConfidence();
+          matching.getMatchStatus(match.getFile()).setFqn(match.getConfidence());
         }
         for (KeyMatch match : file.getFingerprintKey().getMatches()) {
-          matching.getMatchStatus(match.getFile()).fingerprint = match.getConfidence();
+          matching.getMatchStatus(match.getFile()).setFingerprint(match.getConfidence());
         }
         
         CombinedKey key = new CombinedKey();
         file.setCombinedKey(key);
         // Now for each of these files, decide on a confidence level
-        for (Map.Entry<File, MatchStatus> entry : matching.getMatchStatusSet()) {
-          if (file != entry.getKey()) {
-            MatchStatus status = entry.getValue();
+        for (MatchStatus status : matching.getMatchStatusSet()) {
+          if (file != status.getFile()) {
             /*
              * What are the possible combinations (ignoring hash)?
              * 
@@ -103,31 +99,31 @@ public class CombinedClusterer {
              * LM: low if project correlation bad, medium if good
              * MH: medium if project correlation bad, high if good
              */
-            if (status.hash != null) {
+            if (status.getHash() != null) {
               // If the match is identical, it's high confidence
-              key.addMatch(new KeyMatch(entry.getKey(), Confidence.HIGH));
-            } else if ((status.fqn == Confidence.HIGH && (status.fingerprint == Confidence.HIGH || status.fingerprint == Confidence.MEDIUM))
-                || ((status.fqn == Confidence.MEDIUM || status.fqn == Confidence.LOW) && status.fingerprint == Confidence.HIGH)) {
-              key.addMatch(new KeyMatch(entry.getKey(), Confidence.HIGH));
-            } else if (status.fqn != null && status.fingerprint == Confidence.LOW) { 
-              key.addMatch(new KeyMatch(entry.getKey(), Confidence.LOW));
+              key.addMatch(new KeyMatch(status.getFile(), Confidence.HIGH));
+            } else if ((status.getFqn() == Confidence.HIGH && (status.getFingerprint() == Confidence.HIGH || status.getFingerprint() == Confidence.MEDIUM))
+                || ((status.getFqn() == Confidence.MEDIUM || status.getFqn() == Confidence.LOW) && status.getFingerprint() == Confidence.HIGH)) {
+              key.addMatch(new KeyMatch(status.getFile(), Confidence.HIGH));
+            } else if (status.getFqn() != null && status.getFingerprint() == Confidence.LOW) { 
+              key.addMatch(new KeyMatch(status.getFile(), Confidence.LOW));
             } else {
               // Get an idea of the copying between the two projects
-              FileMatching projectPair = matches.getFileMatch(project, entry.getKey().getProject());
+              MatchingProjects projectPair = matches.getFileMatch(project, status.getFile().getProject());
               
               // Is there a core of identical files?
               boolean goodCorrelation = false;
-              if (projectPair.getCount(Type.HASH, Confidence.HIGH) > 0) {
+              if (projectPair.getCount(DetectionMethod.HASH, Confidence.HIGH) > 0) {
                 goodCorrelation = true;
-              } else if (projectPair.getCount(Type.FQN, Confidence.LOW) > 5) {
+              } else if (projectPair.getCount(DetectionMethod.FQN, Confidence.LOW) > 5) {
                 goodCorrelation = true;
-              } else if (projectPair.getCount(Type.FINGERPRINT, Confidence.MEDIUM) > 5) {
+              } else if (projectPair.getCount(DetectionMethod.FINGERPRINT, Confidence.MEDIUM) > 5) {
                 goodCorrelation = true;
               }
-              if ((status.fqn != null && status.fingerprint == Confidence.MEDIUM) || status.fingerprint == Confidence.HIGH) {
-                key.addMatch(new KeyMatch(entry.getKey(), goodCorrelation ? Confidence.HIGH : Confidence.MEDIUM));
-              } else if (status.fqn == null && status.fingerprint == Confidence.MEDIUM) {
-                key.addMatch(new KeyMatch(entry.getKey(), goodCorrelation ? Confidence.MEDIUM : Confidence.LOW));
+              if ((status.getFqn() != null && status.getFingerprint() == Confidence.MEDIUM) || status.getFingerprint() == Confidence.HIGH) {
+                key.addMatch(new KeyMatch(status.getFile(), goodCorrelation ? Confidence.HIGH : Confidence.MEDIUM));
+              } else if (status.getFqn() == null && status.getFingerprint() == Confidence.MEDIUM) {
+                key.addMatch(new KeyMatch(status.getFile(), goodCorrelation ? Confidence.MEDIUM : Confidence.LOW));
               }
             }
           }

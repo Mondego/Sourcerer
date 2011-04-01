@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.DetectionMethod;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Project;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.ProjectMap;
@@ -33,8 +34,9 @@ import edu.uci.ics.sourcerer.clusterer.cloning.method.combination.CombinedCluste
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
-import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.FileMatching;
-import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.ProjectMatch;
+import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.MatchStatus;
+import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.MatchingProjects;
+import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.ProjectMatches;
 import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.ProjectMatchSet;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
@@ -309,27 +311,55 @@ public class CloningStatistics {
     if (COMPUTE_PROJECT_MATCHING.getValue()) {
       logger.info("Computing project matching...");
       ProjectMatchSet matches = projects.getProjectMatchSet();
-      int total = 0;
-      int withClones = 0;
-      for (Map.Entry<Project, ProjectMatch> entry : matches.getProjectMatches()) {
-        total++;
-        Collection<Map.Entry<Project, FileMatching>> fileMatchings = entry.getValue().getFileMatchings();
-        if (fileMatchings.size() > 0) {
-          withClones++;
-        }
+      
+      class Stats {
+        int projectsWithClones = 0;
       }
+      Map<Confidence, Map<DetectionMethod, Stats>> statsMap = Helper.newEnumMap(Confidence.class);
+      for (Confidence confidence : Confidence.values()) {
+        Map<DetectionMethod, Stats> innerMap = Helper.newEnumMap(DetectionMethod.class);
+        for (DetectionMethod method : DetectionMethod.values()) {
+          // For this specific confidence level and detection method, calculate the statistics
+          Stats stats = new Stats();
+          for (ProjectMatches projectMatch : matches.getProjectMatches()) {
+            boolean hasCloneProject = false;
+            for (MatchingProjects matchingProjects : projectMatch.getMatchingProjects()) {
+              for (MatchStatus status : matchingProjects.getMatchStatusSet()) {
+                if (confidence.compareTo(status.get(method)) <= 0) {
+                  hasCloneProject = true;
+                }
+              }
+            }
+            if (hasCloneProject) {
+              stats.projectsWithClones++;
+            }
+          }
+          innerMap.put(method, stats);
+        }
+        statsMap.put(confidence, innerMap);
+      }
+
+      int totalProjects = matches.getProjectMatches().size();
       
       TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(PROJECT_MATCHING_STATS_FILE);
-      printer.beginTable(2);
-      printer.addDividerRow();
-      printer.beginRow();
-      printer.addCell("Total Projects");
-      printer.addCell(total);
-      printer.beginRow();
-      printer.addCell("Projects with Clones");
-      printer.addCell(withClones);
-      printer.addDividerRow();
-      printer.endTable();
+      for (Map.Entry<Confidence, Map<DetectionMethod, Stats>> e1 : statsMap.entrySet()) {
+        for (Map.Entry<DetectionMethod, Stats> e2 : e1.getValue().entrySet()) {
+          Stats stats = e2.getValue();
+          
+          printer.beginTable(2);
+          printer.addHeader(e1.getKey() + " " + e2.getKey());
+          printer.addDividerRow();
+          printer.beginRow();
+          printer.addCell("Total Projects");
+          printer.addCell(totalProjects);
+          printer.beginRow();
+          printer.addCell("Projects with Clones");
+          printer.addCell(stats.projectsWithClones);
+          printer.addDividerRow();
+          printer.endTable();
+        }
+      }
+      printer.close();
       
 //      BufferedWriter matchWriter = null;
 //      BufferedWriter statsWriter = null;

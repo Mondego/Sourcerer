@@ -28,26 +28,35 @@ import edu.uci.ics.sourcerer.util.Helper;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class ProjectMatch {
-  private Map<Project, FileMatching> map;
+public final class ProjectMatches {
+  private Project project;
+  private Map<Project, MatchingProjects> map;
   
-  protected ProjectMatch(Project project) {
+  protected ProjectMatches(Project project) {
+    this.project = project;
     map = Helper.newHashMap();
     for (File file : project.getFiles()) {
       if (file.hasAllKeys()) {
         for (KeyMatch match : file.getHashKey().getMatches()) {
           if (file != match.getFile() && match.getFile().hasAllKeys()) {
-            getMatchStatus(match.getFile()).hash = match.getConfidence();
+            getMatchStatus(match.getFile()).setHash(match.getConfidence());
           }
         }
         for (KeyMatch match : file.getFqnKey().getMatches()) {
           if (file != match.getFile() && match.getFile().hasAllKeys()) {
-            getMatchStatus(match.getFile()).fqn = match.getConfidence();
+            getMatchStatus(match.getFile()).setFqn(match.getConfidence());
           }
         }
         for (KeyMatch match : file.getFingerprintKey().getMatches()) {
           if (file != match.getFile() && match.getFile().hasAllKeys()) {
-            getMatchStatus(match.getFile()).fingerprint = match.getConfidence();
+            getMatchStatus(match.getFile()).setFingerprint(match.getConfidence());
+          }
+        }
+        if (file.hasCombinedKey()) {
+          for (KeyMatch match : file.getCombinedKey().getMatches()) {
+            if (file != match.getFile() && match.getFile().hasAllKeys()) {
+              getMatchStatus(match.getFile()).setCombined(match.getConfidence());
+            }
           }
         }
       }
@@ -55,19 +64,23 @@ public final class ProjectMatch {
   }
   
   private MatchStatus getMatchStatus(File file) {
-    FileMatching match = map.get(file.getProject());
+    MatchingProjects match = map.get(file.getProject());
     if (match == null) {
-      match = new FileMatching();
+      match = new MatchingProjects(file.getProject());
       map.put(file.getProject(), match);
     }
     return match.getMatchStatus(file);
   }
   
-  public FileMatching getFileMatch(Project project) {
+  public MatchingProjects getFileMatch(Project project) {
     return map.get(project);
   }
   
-  public Collection<Map.Entry<Project, FileMatching>> getFileMatchings() {
-    return map.entrySet();
+  public Collection<MatchingProjects> getMatchingProjects() {
+    return map.values();
+  }
+  
+  public Project getProject() {
+    return project;
   }
 }

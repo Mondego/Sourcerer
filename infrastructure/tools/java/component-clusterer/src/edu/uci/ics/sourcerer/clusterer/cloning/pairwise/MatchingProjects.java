@@ -17,50 +17,49 @@
  */
 package edu.uci.ics.sourcerer.clusterer.cloning.pairwise;
 
+import static edu.uci.ics.sourcerer.clusterer.cloning.basic.DetectionMethod.*;
 import java.util.Collection;
 import java.util.Map;
 
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.DetectionMethod;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.Project;
 import edu.uci.ics.sourcerer.util.Counter;
 import edu.uci.ics.sourcerer.util.Helper;
 
-public final class FileMatching {
-  public static enum Type {
-    HASH(1),
-    FQN(2),
-    FINGERPRINT(4);
-    
-    private int val;
-    
-    Type(int val) {
-      this.val = val;
-    }
-  }
-  
+public final class MatchingProjects {
+  private Project project;
   private Map<File, MatchStatus> map = Helper.newHashMap();
   private Map<Confidence, Counter<?>[]> counterMap;
+  private static final int NUM_COUNTERS = (int)Math.pow(2, DetectionMethod.values().length); 
   
-  public FileMatching() {}
+  public MatchingProjects(Project project) {
+    this.project = project;
+  }
   
   public MatchStatus getMatchStatus(File file) {
     MatchStatus status = map.get(file);
     if (status == null) {
-      status = new MatchStatus();
+      status = new MatchStatus(file);
       map.put(file, status);
     }
     return status;
   }
   
-  public Collection<Map.Entry<File, MatchStatus>> getMatchStatusSet() {
-    return map.entrySet();
+  public Project getProject() {
+    return project;
+  }
+  
+  public Collection<MatchStatus> getMatchStatusSet() {
+    return map.values();
   }
   
   private void initCounterMap() {
     counterMap = Helper.newEnumMap(Confidence.class);
     for (Confidence conf : Confidence.values()) {
-      Counter<?>[] counters = new Counter<?>[8];
-      for (int i = 0; i < 8; i++) {
+      Counter<?>[] counters = new Counter<?>[NUM_COUNTERS];
+      for (int i = 0; i < NUM_COUNTERS; i++) {
         counters[i] = new Counter<Object>();
       }
       counterMap.put(conf, counters);
@@ -70,56 +69,66 @@ public final class FileMatching {
       int lowIndex = 0;
       int mediumIndex = 0;
       int highIndex = 0;
-      if (status.hash != null) {
-        lowIndex += Type.HASH.val;
-        mediumIndex += Type.HASH.val;
-        highIndex += Type.HASH.val;
+      if (status.getHash() != null) {
+        lowIndex += HASH.getVal();
+        mediumIndex += HASH.getVal();
+        highIndex += HASH.getVal();
       }
-      if (status.fqn == Confidence.HIGH) {
-        lowIndex += Type.FQN.val;
-        mediumIndex += Type.FQN.val;
-        highIndex += Type.FQN.val;
-      } else if (status.fqn == Confidence.MEDIUM) {
-        lowIndex += Type.FQN.val;
-        mediumIndex += Type.FQN.val;
-      } else if (status.fqn == Confidence.LOW) {
-        lowIndex += Type.FQN.val;
+      if (status.getFqn() == Confidence.HIGH) {
+        lowIndex += FQN.getVal();
+        mediumIndex += FQN.getVal();
+        highIndex += FQN.getVal();
+      } else if (status.getFqn() == Confidence.MEDIUM) {
+        lowIndex += FQN.getVal();
+        mediumIndex += FQN.getVal();
+      } else if (status.getFqn() == Confidence.LOW) {
+        lowIndex += FQN.getVal();
       }
-      if (status.fingerprint == Confidence.HIGH) {
-        lowIndex += Type.FINGERPRINT.val;
-        mediumIndex += Type.FINGERPRINT.val;
-        highIndex += Type.FINGERPRINT.val;
-      } else if (status.fingerprint == Confidence.MEDIUM) {
-        lowIndex += Type.FINGERPRINT.val;
-        mediumIndex += Type.FINGERPRINT.val;
-      } else if (status.fingerprint == Confidence.LOW) {
-        lowIndex += Type.FINGERPRINT.val;
+      if (status.getFingerprint() == Confidence.HIGH) {
+        lowIndex += FINGERPRINT.getVal();
+        mediumIndex += FINGERPRINT.getVal();
+        highIndex += FINGERPRINT.getVal();
+      } else if (status.getFingerprint() == Confidence.MEDIUM) {
+        lowIndex += FINGERPRINT.getVal();
+        mediumIndex += FINGERPRINT.getVal();
+      } else if (status.getFingerprint() == Confidence.LOW) {
+        lowIndex += FINGERPRINT.getVal();
       }
+      if (status.getCombined() == Confidence.HIGH) {
+        lowIndex += COMBINED.getVal();
+        mediumIndex += COMBINED.getVal();
+        highIndex += COMBINED.getVal();
+      } else if (status.getCombined() == Confidence.MEDIUM) {
+        lowIndex += COMBINED.getVal();
+        mediumIndex += COMBINED.getVal();
+      } else if (status.getCombined() == Confidence.LOW) {
+        lowIndex += COMBINED.getVal();
+      } 
       counterMap.get(Confidence.LOW)[lowIndex].increment();
       counterMap.get(Confidence.MEDIUM)[mediumIndex].increment();
       counterMap.get(Confidence.HIGH)[highIndex].increment();
     }
   }
   
-  public int getCount(Confidence confidence, Type ... types) {
+  public int getCount(Confidence confidence, DetectionMethod ... methods) {
     if (counterMap == null) {
       initCounterMap();
     }
     int idx = 0;
-    for (Type type : types) {
-      idx += type.val;
+    for (DetectionMethod method : methods) {
+      idx += method.getVal();
     }
     return counterMap.get(confidence)[idx].getCount();
   }
   
-  public int getCount(Type type, Confidence confidence) {
+  public int getCount(DetectionMethod method, Confidence confidence) {
     if (counterMap == null) {
       initCounterMap();
     }
     int count = 0;
     Counter<?>[] counters = counterMap.get(confidence);
     for (int i = 0; i < counters.length; i++) {
-      if ((i & type.val) == 1) {
+      if ((i & method.getVal()) == 1) {
         count += counters[i].getCount();
       }
     }

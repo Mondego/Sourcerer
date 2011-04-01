@@ -49,24 +49,11 @@ public final class CombinedKey implements Key {
 
   @Override
   public boolean isUnique(Confidence confidence) {
-    if (matches.size() == 0) {
-      return true;
-    } else if (confidence == Confidence.LOW) {
-      return false;
-    } else if (confidence == Confidence.MEDIUM) {
-      for (KeyMatch match : matches) {
-        if (match.getConfidence() != Confidence.LOW) {
-          return false;
-        }
+    for (KeyMatch match : matches) {
+      if (confidence.compareTo(match.getConfidence()) <= 0) {
+        return false;
       }
-      return true;
-    } else {
-      for (KeyMatch match : matches) {
-        if (match.getConfidence() == Confidence.HIGH) {
-          return false;
-        }
-      }
-      return true;
     }
+    return true;
   }
 }

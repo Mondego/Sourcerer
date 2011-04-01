@@ -17,10 +17,63 @@
  */
 package edu.uci.ics.sourcerer.clusterer.cloning.pairwise;
 
+import java.util.Map;
+
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.DetectionMethod;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
+import edu.uci.ics.sourcerer.util.Helper;
 
 public class MatchStatus {
-  public Confidence hash = null;
-  public Confidence fqn = null;
-  public Confidence fingerprint = null;
+  private File file;
+  private Map<DetectionMethod, Confidence> map;
+  
+  public MatchStatus(File file) {
+    this.file = file;
+    this.map = Helper.newEnumMap(DetectionMethod.class);
+  }
+
+  public Confidence get(DetectionMethod method) {
+    return map.get(method);
+  }
+  
+  public void set(DetectionMethod method, Confidence confidence) {
+    map.put(method, confidence);
+  }
+  
+  public Confidence getHash() {
+    return map.get(DetectionMethod.HASH); 
+  }
+
+  public void setHash(Confidence hash) {
+    map.put(DetectionMethod.HASH, hash);
+  }
+
+  public Confidence getFqn() {
+    return map.get(DetectionMethod.FQN);
+  }
+
+  public void setFqn(Confidence fqn) {
+    map.put(DetectionMethod.FQN, fqn);
+  }
+
+  public Confidence getFingerprint() {
+    return map.get(DetectionMethod.FINGERPRINT);
+  }
+
+  public void setFingerprint(Confidence fingerprint) {
+    map.put(DetectionMethod.FINGERPRINT, fingerprint);
+  }
+
+  public Confidence getCombined() {
+    return map.get(DetectionMethod.COMBINED);
+  }
+
+  public void setCombined(Confidence combined) {
+    map.put(DetectionMethod.COMBINED, combined);
+  }
+
+  public File getFile() {
+    return file;
+  }
 }

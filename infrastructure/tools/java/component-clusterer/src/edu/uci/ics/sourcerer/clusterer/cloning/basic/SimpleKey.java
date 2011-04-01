@@ -71,16 +71,7 @@ public final class SimpleKey implements Key {
     if (files.size() == 1) {
       return true;
     } else {
-      switch (this.confidence) {
-        case HIGH:
-          return false;
-        case MEDIUM:
-          return confidence == Confidence.HIGH;
-        case LOW:
-          return confidence != Confidence.LOW;
-        default:
-          return false;
-      }
+      return confidence.compareTo(this.confidence) > 0;
     }
   }
   

@@ -27,20 +27,20 @@ import edu.uci.ics.sourcerer.util.Helper;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class ProjectMatchSet {
-  private Map<Project, ProjectMatch> map;
+  private Map<Project, ProjectMatches> map;
   
   public ProjectMatchSet(Collection<Project> projects) {
     map = Helper.newHashMap();
     for (Project project : projects) {
-      map.put(project, new ProjectMatch(project));
+      map.put(project, new ProjectMatches(project));
     }
   }
   
-  public FileMatching getFileMatch(Project a, Project b) {
+  public MatchingProjects getFileMatch(Project a, Project b) {
     return map.get(a).getFileMatch(b);
   }
   
-  public Collection<Map.Entry<Project, ProjectMatch>> getProjectMatches() {
-    return map.entrySet();
+  public Collection<ProjectMatches> getProjectMatches() {
+    return map.values();
   }
 }
