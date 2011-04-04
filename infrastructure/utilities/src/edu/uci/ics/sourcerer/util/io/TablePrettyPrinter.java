@@ -352,6 +352,15 @@ public class TablePrettyPrinter {
     addCell(Integer.toString(value));
   }
   
+  public void addCellMeanSTD(double mean, double std) {
+    verifyTableBegun();
+    if (format == null) {
+      addCell(mean + " (" + std + ")");
+    } else {
+      addCell(format.format(mean) + " (" + format.format(std) + ")");
+    }
+  }
+  
   public void addCell(double value) {
     verifyTableBegun();
     if (format == null) {

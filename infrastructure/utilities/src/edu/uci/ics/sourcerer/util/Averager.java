@@ -9,7 +9,7 @@ public class Averager <T extends Number> {
   private Collection<T> values;
   
   public Averager() {
-    values = Helper.newLinkedList();
+    values = Helper.newArrayList();
     sum = 0;
   }
   
@@ -24,29 +24,29 @@ public class Averager <T extends Number> {
     }
   }
   
-  public String getSum() {
-    return "" + sum;
+  public double getSum() {
+    return sum;
   }
   
-  public String getMean() {
+  public double getMean() {
     if (values.size() == 0) {
-      return "-";
+      return Double.NaN;
     } else {
-      return Double.toString(sum / (double) values.size());
+      return sum / (double) values.size();
     }
   }
   
-  public String getMin() {
-    return min.toString(); 
+  public T getMin() {
+    return min; 
   }
   
-  public String getMax() {
-    return max.toString();
+  public T getMax() {
+    return max;
   }
   
-  public String getStandardDeviation() {
+  public double getStandardDeviation() {
     if (values.size() == 0) {
-      return "-";
+      return Double.NaN;
     } else {
       double mean = sum / (double) values.size();
       double variance = 0;
@@ -55,39 +55,39 @@ public class Averager <T extends Number> {
       }
       variance /= values.size();
       double std = Math.sqrt(variance);
-      return "" + std;
+      return std;
     }
   }
   
-  public String getCellValue() {
-    if (values.size() == 0) {
-      return "-";
-    } else {
-      double sum = 0;
-      for (T value : values) {
-        sum += value.doubleValue();
-      }
-      double mean = sum / values.size();
-      return "" + mean;
-    }
-  }
-  
-  public String getCellValueWithStandardDeviation() {
-    if (values.size() == 0) {
-      return "-";
-    } else {
-      double sum = 0;
-      for (T value : values) {
-        sum += value.doubleValue();
-      }
-      double mean = sum / values.size();
-      double variance = 0;
-      for (T value : values) {
-        variance += Math.pow(value.doubleValue() - mean, 2);
-      }
-      variance /= values.size();
-      double std = Math.sqrt(variance);
-      return mean + " (" + std + ")";
-    }
-  }
+//  public String getCellValue() {
+//    if (values.size() == 0) {
+//      return "-";
+//    } else {
+//      double sum = 0;
+//      for (T value : values) {
+//        sum += value.doubleValue();
+//      }
+//      double mean = sum / values.size();
+//      return "" + mean;
+//    }
+//  }
+//  
+//  public String getCellValueWithStandardDeviation() {
+//    if (values.size() == 0) {
+//      return "-";
+//    } else {
+//      double sum = 0;
+//      for (T value : values) {
+//        sum += value.doubleValue();
+//      }
+//      double mean = sum / values.size();
+//      double variance = 0;
+//      for (T value : values) {
+//        variance += Math.pow(value.doubleValue() - mean, 2);
+//      }
+//      variance /= values.size();
+//      double std = Math.sqrt(variance);
+//      return mean + " (" + std + ")";
+//    }
+//  }
 }

@@ -21,13 +21,14 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.DetectionMethod;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.KeyMatch;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Project;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.ProjectMap;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.combination.CombinedClusterer;
@@ -36,13 +37,16 @@ import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.MatchStatus;
 import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.MatchingProjects;
-import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.ProjectMatches;
 import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.ProjectMatchSet;
+import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.ProjectMatches;
+import edu.uci.ics.sourcerer.util.Averager;
+import edu.uci.ics.sourcerer.util.ComparableObject;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.WeightedAverager;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
+import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
@@ -58,7 +62,9 @@ public class CloningStatistics {
   
   public static Property<Boolean> COMPUTE_PROJECT_MATCHING = new BooleanProperty("compute-project-matching", true, "Computes the project-project matching rates.");
   public static Property<String> PROJECT_MATCHING_STATS_FILE = new StringProperty("project-matching-stats-file", "project-matching-stats.txt", "");
-  public static Property<String> PROJECT_MATCHING_FILE = new StringProperty("project-matching-file", "project-matching.txt", "");
+  public static Property<String> HIGHEST_PERCENT_CLONES_FILE = new StringProperty("highest-percent-clones-file", "highest-percent-clones.txt", "");
+  public static Property<String> LARGEST_CLONE_SIZE_FILE = new StringProperty("largest-clone-size-file", "largest-clone-size.txt", "");
+  public static Property<String> LARGEST_CLONED_PROJECTS_FILE = new StringProperty("largest-cloned-projects-file", "largest-cloned-projects.txt", "");
   public static Property<String> AUGMENTED_MATCHING_FILE = new StringProperty("augmented-matching-file", "augmented-matching.txt", "");
   public static Property<String> LONELY_FQNS_FILE = new StringProperty("lonely-fqns-file", "lonely-fqns.txt", "");
   
@@ -312,9 +318,19 @@ public class CloningStatistics {
       logger.info("Computing project matching...");
       ProjectMatchSet matches = projects.getProjectMatchSet();
       
+      int totalProjects = matches.getProjectMatches().size();
+      
       class Stats {
         int projectsWithClones = 0;
+        Averager<Double> averagefilesClonedPerProject = new Averager<Double>();
+        Averager<Integer> maxFilesClonedPerProject = new Averager<Integer>();
+        WeightedAverager<Double> averagePercentageFilesClonedPerProject = new WeightedAverager<Double>();
+        WeightedAverager<Double> maxPercentageFilesClonedPerProject = new WeightedAverager<Double>();
       }
+      PriorityQueue<ComparableObject<ProjectMatches, Double>> mostCloning = new PriorityQueue<ComparableObject<ProjectMatches,Double>>(totalProjects, ComparableObject.<ProjectMatches, Double>getReverseComparator());
+      PriorityQueue<ComparableObject<ProjectMatches, Integer>> biggestCloneSize = new PriorityQueue<ComparableObject<ProjectMatches,Integer>>(totalProjects, ComparableObject.<ProjectMatches, Integer>getReverseComparator());
+      PriorityQueue<ComparableObject<ProjectMatches, Integer>> biggestSizeCloning = new PriorityQueue<ComparableObject<ProjectMatches,Integer>>(totalProjects, ComparableObject.<ProjectMatches, Integer>getReverseComparator());
+      
       Map<Confidence, Map<DetectionMethod, Stats>> statsMap = Helper.newEnumMap(Confidence.class);
       for (Confidence confidence : Confidence.values()) {
         Map<DetectionMethod, Stats> innerMap = Helper.newEnumMap(DetectionMethod.class);
@@ -323,42 +339,327 @@ public class CloningStatistics {
           Stats stats = new Stats();
           for (ProjectMatches projectMatch : matches.getProjectMatches()) {
             boolean hasCloneProject = false;
+            Averager<Integer> filesClonedPerProject = new Averager<Integer>();
             for (MatchingProjects matchingProjects : projectMatch.getMatchingProjects()) {
-              for (MatchStatus status : matchingProjects.getMatchStatusSet()) {
-                if (confidence.compareTo(status.get(method)) <= 0) {
+              int filesCloned = 0;
+              for (MatchStatus status : matches.getFileMatch(matchingProjects.getProject(), projectMatch.getProject()).getMatchStatusSet()) {
+                Confidence other = status.get(method);
+                if (other != null && confidence.compareTo(other) <= 0) {
                   hasCloneProject = true;
+                  filesCloned++;
                 }
               }
+              filesClonedPerProject.addValue(filesCloned);
             }
             if (hasCloneProject) {
               stats.projectsWithClones++;
+              stats.averagefilesClonedPerProject.addValue(filesClonedPerProject.getMean());
+              stats.maxFilesClonedPerProject.addValue(filesClonedPerProject.getMax());
+              stats.averagePercentageFilesClonedPerProject.addValue(filesClonedPerProject.getMean() / (double) projectMatch.getProject().getFiles().size(), projectMatch.getProject().getFiles().size());
+              double maxPercentCloned = filesClonedPerProject.getMax() / (double) projectMatch.getProject().getFiles().size();
+              stats.maxPercentageFilesClonedPerProject.addValue(maxPercentCloned, projectMatch.getProject().getFiles().size());
+              if (method == DetectionMethod.COMBINED && confidence == Confidence.HIGH) {
+                mostCloning.add(new ComparableObject<ProjectMatches, Double>(projectMatch, maxPercentCloned));
+                biggestCloneSize.add(new ComparableObject<ProjectMatches, Integer>(projectMatch, filesClonedPerProject.getMax()));
+                if (maxPercentCloned >= .05) {
+                  biggestSizeCloning.add(new ComparableObject<ProjectMatches, Integer>(projectMatch, projectMatch.getProject().getFiles().size()));
+                }
+              }
+              if (filesClonedPerProject.getMax() > projectMatch.getProject().getFiles().size()) {
+                logger.log(Level.SEVERE, filesClonedPerProject.getMax() + " cloned files out of " + projectMatch.getProject().getFiles().size() + " total files");
+                logger.log(Level.SEVERE, "  " + projectMatch.getProject().toString());
+              }
             }
           }
           innerMap.put(method, stats);
         }
         statsMap.put(confidence, innerMap);
       }
-
-      int totalProjects = matches.getProjectMatches().size();
+      
+      // Print out the project-project matching report
+      BufferedWriter bw = null;
+      try {
+        bw = FileUtils.getBufferedWriter(HIGHEST_PERCENT_CLONES_FILE);
+        for (ComparableObject<ProjectMatches, Double> co : mostCloning) {
+          Project project = co.getObject().getProject();
+          bw.write(project + " at " + (co.getComp().doubleValue() * 100) + "% of " + project.getFiles().size() + " files");
+          bw.newLine();
+          for (MatchingProjects matchingProjects : co.getObject().getMatchingProjects()) {
+            Project otherProject = matchingProjects.getProject();
+            int count = 0;
+            int files = 0;
+            for (File file : project.getFiles()) {
+              if (file.hasAllKeys()) {
+                files++;
+                boolean found = false;
+                for (KeyMatch match : file.getCombinedKey().getMatches()) {
+                  if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
+                    found = true;
+                  }
+                }
+                if (found) {
+                  count++;
+                }
+              }
+            }
+            if (count > 0) {
+              bw.write("  " + otherProject + " " + count + " (" + ((double) count / (double) files) * 100 + "%)" );
+              bw.newLine();
+              for (File file : project.getFiles()) {
+                if (file.hasAllKeys()) {
+                  boolean first = true;
+                  for (KeyMatch match : file.getCombinedKey().getMatches()) {
+                    if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
+                      if (first) {
+                        first = false;
+                        bw.write("    " + file.getPath());
+                        bw.newLine();
+                      }
+                      // check if it's a perfect match
+                      MatchStatus status = matchingProjects.getMatchStatus(match.getFile());
+                      if (status.get(DetectionMethod.HASH) == Confidence.HIGH) {
+                        bw.write("    H " + match.getFile().getPath());
+                      } else {
+                        bw.write("      " + match.getFile().getPath());
+                      }
+                      bw.newLine();
+                    }
+                  }
+                } else {
+                  bw.write("  X " + file.getPath());
+                  bw.newLine();
+                }
+              }
+            }
+          }
+        }
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to write project matching file", e);
+      } finally {
+        FileUtils.close(bw);
+      }
+      
+      try {
+        bw = FileUtils.getBufferedWriter(LARGEST_CLONE_SIZE_FILE);
+        for (ComparableObject<ProjectMatches, Integer> co : biggestCloneSize) {
+          Project project = co.getObject().getProject();
+          bw.write(project + " at " + co.getComp() + " of " + project.getFiles().size() + " files");
+          bw.newLine();
+          for (MatchingProjects matchingProjects : co.getObject().getMatchingProjects()) {
+            Project otherProject = matchingProjects.getProject();
+            int count = 0;
+            int files = 0;
+            for (File file : project.getFiles()) {
+              if (file.hasAllKeys()) {
+                files++;
+                boolean found = false;
+                for (KeyMatch match : file.getCombinedKey().getMatches()) {
+                  if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
+                    found = true;
+                  }
+                }
+                if (found) {
+                  count++;
+                }
+              }
+            }
+            if (count > 0) {
+              bw.write("  " + otherProject + " " + count + " (" + ((double) count / (double) files) * 100 + "%)" );
+              bw.newLine();
+              for (File file : project.getFiles()) {
+                if (file.hasAllKeys()) {
+                  boolean first = true;
+                  for (KeyMatch match : file.getCombinedKey().getMatches()) {
+                    if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
+                      if (first) {
+                        first = false;
+                        bw.write("    " + file.getPath());
+                        bw.newLine();
+                      }
+                      // check if it's a perfect match
+                      MatchStatus status = matchingProjects.getMatchStatus(match.getFile());
+                      if (status.get(DetectionMethod.HASH) == Confidence.HIGH) {
+                        bw.write("    H " + match.getFile().getPath());
+                      } else {
+                        bw.write("      " + match.getFile().getPath());
+                      }
+                      bw.newLine();
+                    }
+                  }
+                } else {
+                  bw.write("  X " + file.getPath());
+                  bw.newLine();
+                }
+              }
+            }
+          }
+        }
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to write project matching file", e);
+      } finally {
+        FileUtils.close(bw);
+      }
+      
+      try {
+        bw = FileUtils.getBufferedWriter(LARGEST_CLONED_PROJECTS_FILE);
+        for (ComparableObject<ProjectMatches, Integer> co : biggestSizeCloning) {
+          Project project = co.getObject().getProject();
+          bw.write(project + ":" + project.getFiles().size() + " files");
+          bw.newLine();
+          for (MatchingProjects matchingProjects : co.getObject().getMatchingProjects()) {
+            Project otherProject = matchingProjects.getProject();
+            int count = 0;
+            int files = 0;
+            for (File file : project.getFiles()) {
+              if (file.hasAllKeys()) {
+                files++;
+                boolean found = false;
+                for (KeyMatch match : file.getCombinedKey().getMatches()) {
+                  if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
+                    found = true;
+                  }
+                }
+                if (found) {
+                  count++;
+                }
+              }
+            }
+            if (count > 0) {
+              bw.write("  " + otherProject + " " + count + " (" + ((double) count / (double) files) * 100 + "%)" );
+              bw.newLine();
+              for (File file : project.getFiles()) {
+                if (file.hasAllKeys()) {
+                  boolean first = true;
+                  for (KeyMatch match : file.getCombinedKey().getMatches()) {
+                    if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
+                      if (first) {
+                        first = false;
+                        bw.write("    " + file.getPath());
+                        bw.newLine();
+                      }
+                      // check if it's a perfect match
+                      MatchStatus status = matchingProjects.getMatchStatus(match.getFile());
+                      if (status.get(DetectionMethod.HASH) == Confidence.HIGH) {
+                        bw.write("    H " + match.getFile().getPath());
+                      } else {
+                        bw.write("      " + match.getFile().getPath());
+                      }
+                      bw.newLine();
+                    }
+                  }
+                } else {
+//                  bw.write("  X " + file.getPath());
+//                  bw.newLine();
+                }
+              }
+            }
+          }
+        }
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to write project matching file", e);
+      } finally {
+        FileUtils.close(bw);
+      }
       
       TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(PROJECT_MATCHING_STATS_FILE);
-      for (Map.Entry<Confidence, Map<DetectionMethod, Stats>> e1 : statsMap.entrySet()) {
-        for (Map.Entry<DetectionMethod, Stats> e2 : e1.getValue().entrySet()) {
-          Stats stats = e2.getValue();
-          
-          printer.beginTable(2);
-          printer.addHeader(e1.getKey() + " " + e2.getKey());
-          printer.addDividerRow();
-          printer.beginRow();
-          printer.addCell("Total Projects");
-          printer.addCell(totalProjects);
-          printer.beginRow();
-          printer.addCell("Projects with Clones");
-          printer.addCell(stats.projectsWithClones);
-          printer.addDividerRow();
-          printer.endTable();
+      printer.setFractionDigits(2);
+      int numConf = Confidence.values().length;
+      int numMeth = DetectionMethod.values().length;
+      printer.beginTable(numConf * numMeth + 1);
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("");
+      for (Confidence confidence : Confidence.values()) {
+        printer.addCell(confidence.toString(), DetectionMethod.values().length, Alignment.CENTER);
+      }
+      printer.beginRow();
+      printer.addCell("");
+      for (int i = 0; i < numConf; i++) {
+        for (DetectionMethod method : DetectionMethod.values()) {
+          printer.addCell(method.toString());
         }
       }
+      printer.addDividerRow();
+      printer.beginRow();
+      printer.addCell("Total Projects");
+      for (int i = 0, max = numConf * numMeth; i < max; i++) {
+        printer.addCell(totalProjects);
+      }
+      printer.beginRow();
+      printer.addCell("Project with Clones");
+      for (Confidence confidence : Confidence.values()) {
+        for (DetectionMethod method : DetectionMethod.values()) {
+          printer.addCell(statsMap.get(confidence).get(method).projectsWithClones);
+        }
+      }
+      printer.beginRow();
+      printer.addCell("Avg # Files Cloned Per Project Pair");
+      for (Confidence confidence : Confidence.values()) {
+        for (DetectionMethod method : DetectionMethod.values()) {
+          Stats stats = statsMap.get(confidence).get(method);
+          printer.addCellMeanSTD(stats.averagefilesClonedPerProject.getMean(), stats.averagefilesClonedPerProject.getStandardDeviation());
+        }
+      }
+      printer.beginRow();
+      printer.addCell("Avg # Files Cloned Per Project Max");
+      for (Confidence confidence : Confidence.values()) {
+        for (DetectionMethod method : DetectionMethod.values()) {
+          Stats stats = statsMap.get(confidence).get(method);
+          printer.addCellMeanSTD(stats.maxFilesClonedPerProject.getMean(), stats.maxFilesClonedPerProject.getStandardDeviation());
+        }
+      }
+      printer.beginRow();
+      printer.addCell("Max # Files Cloned Per Project Max");
+      for (Confidence confidence : Confidence.values()) {
+        for (DetectionMethod method : DetectionMethod.values()) {
+          Stats stats = statsMap.get(confidence).get(method);
+          printer.addCell(stats.maxFilesClonedPerProject.getMax());
+        }
+      }
+      printer.beginRow();
+      printer.addCell("Avg % Files Cloned Per Project Pair");
+      for (Confidence confidence : Confidence.values()) {
+        for (DetectionMethod method : DetectionMethod.values()) {
+          Stats stats = statsMap.get(confidence).get(method);
+          printer.addCellMeanSTD(stats.averagePercentageFilesClonedPerProject.getMean(), stats.averagePercentageFilesClonedPerProject.getStandardDeviation());
+        }
+      }
+      printer.beginRow();
+      printer.addCell("Avg W% Files Cloned Per Project Pair");
+      for (Confidence confidence : Confidence.values()) {
+        for (DetectionMethod method : DetectionMethod.values()) {
+          Stats stats = statsMap.get(confidence).get(method);
+          printer.addCellMeanSTD(stats.averagePercentageFilesClonedPerProject.getWeightedMean(), stats.averagePercentageFilesClonedPerProject.getWeightedStandardDeviation());
+        }
+      }
+      printer.beginRow();
+      printer.addCell("Avg % Files Cloned Per Project Max");
+      for (Confidence confidence : Confidence.values()) {
+        for (DetectionMethod method : DetectionMethod.values()) {
+          Stats stats = statsMap.get(confidence).get(method);
+          printer.addCellMeanSTD(stats.maxPercentageFilesClonedPerProject.getMean(), stats.maxPercentageFilesClonedPerProject.getStandardDeviation());
+        }
+      }
+      printer.beginRow();
+      printer.addCell("Avg W% Files Cloned Per Project Max");
+      for (Confidence confidence : Confidence.values()) {
+        for (DetectionMethod method : DetectionMethod.values()) {
+          Stats stats = statsMap.get(confidence).get(method);
+          printer.addCellMeanSTD(stats.maxPercentageFilesClonedPerProject.getWeightedMean(), stats.maxPercentageFilesClonedPerProject.getWeightedStandardDeviation());
+        }
+      }
+      printer.beginRow();
+      printer.addCell("Max % Files Cloned Per Project Max");
+      for (Confidence confidence : Confidence.values()) {
+        for (DetectionMethod method : DetectionMethod.values()) {
+          Stats stats = statsMap.get(confidence).get(method);
+          if (stats.maxPercentageFilesClonedPerProject.getMax() > 1) {
+            logger.log(Level.SEVERE, ">1!" + stats.maxPercentageFilesClonedPerProject.getMax());
+          }
+          printer.addCell(stats.maxPercentageFilesClonedPerProject.getMax());
+        }
+      }
+      printer.addDividerRow();
       printer.close();
       
 //      BufferedWriter matchWriter = null;
