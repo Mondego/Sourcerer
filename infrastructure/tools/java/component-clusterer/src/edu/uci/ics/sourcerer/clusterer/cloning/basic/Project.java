@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.clusterer.cloning.basic;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 import edu.uci.ics.sourcerer.util.Helper;
@@ -40,6 +41,15 @@ public final class Project {
   
   public Collection<File> getFiles() {
     return files.values();
+  }
+  
+  public void filterFiles() {
+    for (Iterator<File> iter = files.values().iterator(); iter.hasNext();) {
+      File file = iter.next();
+      if (!file.hasAllKeys()) {
+        iter.remove();
+      }
+    }
   }
   
   protected File getFile(String path) {
