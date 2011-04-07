@@ -123,12 +123,12 @@ public class EclipseUtils {
       if (jar.isMavenJar()) {
         File sourceFile = jar.getSourceFile();
         if (sourceFile != null) {
-          sourcePath = new Path(sourceFile.getPath());
+          sourcePath = new Path(sourceFile.getAbsolutePath());
         }
       } else {
         IndexedJar sourceJar = index.getPossibleSourceMatch(jar);
         if (sourceJar != null) {
-          sourcePath = new Path(sourceJar.getJarFile().getPath());
+          sourcePath = new Path(sourceJar.getJarFile().getAbsolutePath());
         }
       }
       entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getAbsolutePath()), sourcePath, null));
@@ -151,12 +151,12 @@ public class EclipseUtils {
         if (jar.isMavenJar()) {
           File sourceFile = jar.getSourceFile();
           if (sourceFile != null) {
-            sourcePath = new Path(sourceFile.getPath());
+            sourcePath = new Path(sourceFile.getAbsolutePath());
           }
         } else {
           IndexedJar sourceJar = index.getPossibleSourceMatch(jar);
           if (sourceJar != null) {
-            sourcePath = new Path(sourceJar.getJarFile().getPath());
+            sourcePath = new Path(sourceJar.getJarFile().getAbsolutePath());
           }
         }
         entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getAbsolutePath()), sourcePath, null));
@@ -306,7 +306,7 @@ public class EclipseUtils {
   }
   
   public static Collection<IClassFile> getClassFiles(IndexedJar jar) {
-    return getClassFiles(new Path(jar.getJarFile().getPath()));
+    return getClassFiles(new Path(jar.getJarFile().getAbsolutePath()));
   }
   
   private static Collection<IClassFile> getClassFiles(IPath path) {
