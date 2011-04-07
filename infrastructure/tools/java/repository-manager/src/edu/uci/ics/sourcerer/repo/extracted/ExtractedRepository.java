@@ -40,6 +40,7 @@ import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
+import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
@@ -292,8 +293,8 @@ public class ExtractedRepository extends AbstractRepository {
         }
       }
       
-      printer.addHeader("Extracted Library Statistics");
       printer.beginTable(2);
+      printer.addHeader("Extracted Library Statistics");
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Extracted libraries");
@@ -407,8 +408,8 @@ public class ExtractedRepository extends AbstractRepository {
         }
       }
       
-      printer.addHeader("Extracted Jar Statistics");
       printer.beginTable(2);
+      printer.addHeader("Extracted Jar Statistics");
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Extracted jars");
@@ -520,24 +521,29 @@ public class ExtractedRepository extends AbstractRepository {
         }
       }
       
-      printer.addHeader("Extracted Project Statistics");
       printer.beginTable(6);
+      printer.addHeader("Extracted Project Statistics");
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Extracted projects");
       printer.addCell(extracted);
+      printer.addCell("", 4, Alignment.CENTER);
       printer.beginRow();
       printer.addCell("Non-empty projects");
       printer.addCell(nonEmpty);
+      printer.addCell("", 4, Alignment.CENTER);
       printer.beginRow();
       printer.addCell("Extracted projects with missing types");
       printer.addCell(projectsWithMissingTypes);
+      printer.addCell("", 4, Alignment.CENTER);
       printer.beginRow();
       printer.addCell("Non-extracted projects with missing types");
       printer.addCell(withMissingTypes);
+      printer.addCell("", 4, Alignment.CENTER);
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Correct Projects", 6, TablePrettyPrinter.Alignment.CENTER);
+      printer.addDividerRow();
       printer.addRow("", "Sum", "Mean", "Dev", "Min", "Max");
       printer.addRow("Source files extracted", "" + correctSource.getSum(), "" + correctSource.getMean(), "" + correctSource.getStandardDeviation(), "" + correctSource.getMin(), "" + correctSource.getMax());
       printer.addRow("Using jars", "" + correctUsingJars);
@@ -545,17 +551,20 @@ public class ExtractedRepository extends AbstractRepository {
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Missing Type Projects", 6, TablePrettyPrinter.Alignment.CENTER);
+      printer.addDividerRow();
       printer.addRow("", "Sum", "Mean", "Dev", "Min", "Max");
       printer.addRow("Source files extracted", "" + missingSource.getSum(), "" + missingSource.getMean(), "" + missingSource.getStandardDeviation(), "" + missingSource.getMin(), "" + missingSource.getMax());
-      printer.addRow("Using jars", "" + missingUsingJars);
+//      printer.addRow("Using jars", "" + missingUsingJars, "", "", "", "");
       printer.addRow("Used jars", "" + missingJars.getSum(), "" + missingJars.getMean(), "" + missingJars.getStandardDeviation(), "" + missingJars.getMin(), "" + missingJars.getMax());
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Projects with source file exceptions");
       printer.addCell(projectsWithSourceExceptions);
+      printer.addCell("", 4, Alignment.CENTER);
       printer.beginRow();
       printer.addCell("Source files with exceptions");
       printer.addCell(sourceExceptions);
+      printer.addCell("", 4, Alignment.CENTER);
       printer.addDividerRow();
       printer.endTable();
     }
