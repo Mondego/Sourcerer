@@ -49,7 +49,7 @@ public final class EntityEX implements ModelEX {
     this.fqn = fqn;
     this.mods = mods;
     this.path = path;
-    if (offset >= 0) {
+    if (offset != null && offset >= 0) {
       this.startPos = offset;
       this.length = length;
     }
