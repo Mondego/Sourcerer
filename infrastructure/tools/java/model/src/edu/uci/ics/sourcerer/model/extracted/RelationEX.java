@@ -49,8 +49,10 @@ public class RelationEX implements ModelEX {
     this.lhs = lhs;
     this.rhs = rhs;
     this.path = path;
-    this.startPos = startPos;
-    this.length = length;
+    if (startPos != null && startPos >= 0) {
+      this.startPos = startPos;
+      this.length = length;
+    }
   }
   
   private RelationEX(Relation type, String lhs, String rhs, Integer paramPos, String path, Integer startPos, Integer length) {
@@ -58,8 +60,10 @@ public class RelationEX implements ModelEX {
     this.lhs = lhs;
     this.rhs = rhs;
     this.path = path;
-    this.startPos = startPos;
-    this.length = length;
+    if (startPos != null && startPos >= 0) {
+      this.startPos = startPos;
+      this.length = length;
+    }
     this.paramPos = paramPos;
     if (rhs.length() < 2) {
       this.paramName = rhs;
