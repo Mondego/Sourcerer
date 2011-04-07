@@ -246,7 +246,7 @@ public class ExtractedRepository extends AbstractRepository {
     TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(EXTRACTION_STATS_FILE);
     if (libraries == null) {
       logger.info("Loading libraries...");
-      populateLibraries();
+      getLibraries();
     }
     logger.info("Computing stats for " + libraries.size() + " libraries.");
     {

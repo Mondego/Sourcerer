@@ -131,7 +131,7 @@ public class EclipseUtils {
           sourcePath = new Path(sourceJar.getJarFile().getPath());
         }
       }
-      entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), sourcePath, null));
+      entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getAbsolutePath()), sourcePath, null));
       javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
     } catch (JavaModelException e) {
       logger.log(Level.SEVERE, "Unable to initialize jar project", e);
@@ -159,7 +159,7 @@ public class EclipseUtils {
             sourcePath = new Path(sourceJar.getJarFile().getPath());
           }
         }
-        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), sourcePath, null));
+        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getAbsolutePath()), sourcePath, null));
       }
       javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
     } catch (JavaModelException e) {
@@ -198,7 +198,7 @@ public class EclipseUtils {
         entries.add(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), location.getSystemLibrarySourcePath(), null));
       }
       for (IndexedJar jar : jars) {
-        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), null, null));
+        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getAbsolutePath()), null, null));
       }
       entries.add(JavaCore.newSourceEntry(srcFolder.getFullPath()));
       javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
@@ -211,7 +211,7 @@ public class EclipseUtils {
     try {
       List<IClasspathEntry> entries = Helper.newArrayList(Arrays.asList(javaProject.getRawClasspath()));
       for (IndexedJar jar : jars) {
-        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getPath()), null, null));
+        entries.add(JavaCore.newLibraryEntry(new Path(jar.getJarFile().getAbsolutePath()), null, null));
       }
       javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[entries.size()]), null);
     } catch (CoreException e) {
