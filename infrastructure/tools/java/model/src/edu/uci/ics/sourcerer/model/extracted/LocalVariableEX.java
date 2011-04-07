@@ -49,8 +49,10 @@ public class LocalVariableEX implements ModelEX {
     this.parent = parent;
     this.position = position;
     this.path = path;
-    this.startPos = startPos;
-    this.length = length; 
+    if (startPos != null && startPos >= 0) {
+      this.startPos = startPos;
+      this.length = length; 
+    }
   }
   
   public LocalVariable getType() {
