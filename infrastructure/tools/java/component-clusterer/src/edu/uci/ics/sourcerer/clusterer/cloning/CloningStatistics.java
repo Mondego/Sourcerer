@@ -387,47 +387,35 @@ public class CloningStatistics {
           for (MatchingProjects matchingProjects : co.getObject().getMatchingProjects()) {
             Project otherProject = matchingProjects.getProject();
             int count = 0;
-            int files = 0;
             for (File file : project.getFiles()) {
-              if (file.hasAllKeys()) {
-                files++;
-                boolean found = false;
-                for (KeyMatch match : file.getCombinedKey().getMatches()) {
-                  if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
-                    found = true;
-                  }
-                }
-                if (found) {
+              for (KeyMatch match : file.getCombinedKey().getMatches()) {
+                if (match.getFile().getProject() == otherProject && match.getConfidence() == Confidence.HIGH) {
                   count++;
+                  break;
                 }
               }
             }
             if (count > 0) {
-              bw.write("  " + otherProject + " " + count + " (" + ((double) count / (double) files) * 100 + "%)" );
+              bw.write("  " + otherProject + " " + count + " (" + ((double) count / (double) project.getFiles().size()) * 100 + "%)" );
               bw.newLine();
               for (File file : project.getFiles()) {
-                if (file.hasAllKeys()) {
-                  boolean first = true;
-                  for (KeyMatch match : file.getCombinedKey().getMatches()) {
-                    if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
-                      if (first) {
-                        first = false;
-                        bw.write("    " + file.getPath());
-                        bw.newLine();
-                      }
-                      // check if it's a perfect match
-                      MatchStatus status = matchingProjects.getMatchStatus(match.getFile());
-                      if (status.get(DetectionMethod.HASH) == Confidence.HIGH) {
-                        bw.write("    H " + match.getFile().getPath());
-                      } else {
-                        bw.write("      " + match.getFile().getPath());
-                      }
+                boolean first = true;
+                for (KeyMatch match : file.getCombinedKey().getMatches()) {
+                  if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
+                    if (first) {
+                      first = false;
+                      bw.write("    " + file.getPath());
                       bw.newLine();
                     }
+                    // check if it's a perfect match
+                    MatchStatus status = matchingProjects.getMatchStatus(match.getFile());
+                    if (status.get(DetectionMethod.HASH) == Confidence.HIGH) {
+                      bw.write("    H " + match.getFile().getPath());
+                    } else {
+                      bw.write("      " + match.getFile().getPath());
+                    }
+                    bw.newLine();
                   }
-                } else {
-                  bw.write("  X " + file.getPath());
-                  bw.newLine();
                 }
               }
             }
@@ -448,47 +436,35 @@ public class CloningStatistics {
           for (MatchingProjects matchingProjects : co.getObject().getMatchingProjects()) {
             Project otherProject = matchingProjects.getProject();
             int count = 0;
-            int files = 0;
             for (File file : project.getFiles()) {
-              if (file.hasAllKeys()) {
-                files++;
-                boolean found = false;
-                for (KeyMatch match : file.getCombinedKey().getMatches()) {
-                  if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
-                    found = true;
-                  }
-                }
-                if (found) {
+              for (KeyMatch match : file.getCombinedKey().getMatches()) {
+                if (match.getFile().getProject() == otherProject && match.getConfidence() == Confidence.HIGH) {
                   count++;
+                  break;
                 }
               }
             }
             if (count > 0) {
-              bw.write("  " + otherProject + " " + count + " (" + ((double) count / (double) files) * 100 + "%)" );
+              bw.write("  " + otherProject + " " + count + " (" + ((double) count / (double) project.getFiles().size()) * 100 + "%)" );
               bw.newLine();
               for (File file : project.getFiles()) {
-                if (file.hasAllKeys()) {
-                  boolean first = true;
-                  for (KeyMatch match : file.getCombinedKey().getMatches()) {
-                    if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
-                      if (first) {
-                        first = false;
-                        bw.write("    " + file.getPath());
-                        bw.newLine();
-                      }
-                      // check if it's a perfect match
-                      MatchStatus status = matchingProjects.getMatchStatus(match.getFile());
-                      if (status.get(DetectionMethod.HASH) == Confidence.HIGH) {
-                        bw.write("    H " + match.getFile().getPath());
-                      } else {
-                        bw.write("      " + match.getFile().getPath());
-                      }
+                boolean first = true;
+                for (KeyMatch match : file.getCombinedKey().getMatches()) {
+                  if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
+                    if (first) {
+                      first = false;
+                      bw.write("    " + file.getPath());
                       bw.newLine();
                     }
+                    // check if it's a perfect match
+                    MatchStatus status = matchingProjects.getMatchStatus(match.getFile());
+                    if (status.get(DetectionMethod.HASH) == Confidence.HIGH) {
+                      bw.write("    H " + match.getFile().getPath());
+                    } else {
+                      bw.write("      " + match.getFile().getPath());
+                    }
+                    bw.newLine();
                   }
-                } else {
-                  bw.write("  X " + file.getPath());
-                  bw.newLine();
                 }
               }
             }
@@ -504,52 +480,40 @@ public class CloningStatistics {
         bw = FileUtils.getBufferedWriter(LARGEST_CLONED_PROJECTS_FILE);
         for (ComparableObject<ProjectMatches, Integer> co : biggestSizeCloning) {
           Project project = co.getObject().getProject();
-          bw.write(project + ":" + project.getFiles().size() + " files");
+          bw.write(project + ": " + project.getFiles().size() + " files");
           bw.newLine();
           for (MatchingProjects matchingProjects : co.getObject().getMatchingProjects()) {
             Project otherProject = matchingProjects.getProject();
             int count = 0;
-            int files = 0;
             for (File file : project.getFiles()) {
-              if (file.hasAllKeys()) {
-                files++;
-                boolean found = false;
-                for (KeyMatch match : file.getCombinedKey().getMatches()) {
-                  if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
-                    found = true;
-                  }
-                }
-                if (found) {
+              for (KeyMatch match : file.getCombinedKey().getMatches()) {
+                if (match.getFile().getProject() == otherProject && match.getConfidence() == Confidence.HIGH) {
                   count++;
+                  break;
                 }
               }
             }
             if (count > 0) {
-              bw.write("  " + otherProject + " " + count + " (" + ((double) count / (double) files) * 100 + "%)" );
+              bw.write("  " + otherProject + " " + count + " (" + ((double) count / (double) project.getFiles().size()) * 100 + "%)" );
               bw.newLine();
               for (File file : project.getFiles()) {
-                if (file.hasAllKeys()) {
-                  boolean first = true;
-                  for (KeyMatch match : file.getCombinedKey().getMatches()) {
-                    if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
-                      if (first) {
-                        first = false;
-                        bw.write("    " + file.getPath());
-                        bw.newLine();
-                      }
-                      // check if it's a perfect match
-                      MatchStatus status = matchingProjects.getMatchStatus(match.getFile());
-                      if (status.get(DetectionMethod.HASH) == Confidence.HIGH) {
-                        bw.write("    H " + match.getFile().getPath());
-                      } else {
-                        bw.write("      " + match.getFile().getPath());
-                      }
+                boolean first = true;
+                for (KeyMatch match : file.getCombinedKey().getMatches()) {
+                  if (match.getConfidence() == Confidence.HIGH && match.getFile().getProject() == otherProject) {
+                    if (first) {
+                      first = false;
+                      bw.write("    " + file.getPath());
                       bw.newLine();
                     }
+                    // check if it's a perfect match
+                    MatchStatus status = matchingProjects.getMatchStatus(match.getFile());
+                    if (status.get(DetectionMethod.HASH) == Confidence.HIGH) {
+                      bw.write("    H " + match.getFile().getPath());
+                    } else {
+                      bw.write("      " + match.getFile().getPath());
+                    }
+                    bw.newLine();
                   }
-                } else {
-//                  bw.write("  X " + file.getPath());
-//                  bw.newLine();
                 }
               }
             }
@@ -769,18 +733,15 @@ public class CloningStatistics {
 
   public static void performAnalysis() {
     ProjectMap projects = new ProjectMap();
-//    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
     HashingClusterer.loadFileListing(projects);
-//    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
     FqnClusterer.loadFileListing(projects);
-//    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
     FingerprintClusterer.loadFileListing(projects);
-//    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
+    
+    compareFileSets(projects);
+    projects.filterFiles();
+    
     CombinedClusterer.computeCombinedKeys(projects);
 
-//    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
-    compareFileSets(projects);
-//    logger.log(Level.WARNING, "Free mem: " + Runtime.getRuntime().freeMemory());
     computeCloningStatistics(projects);
     computeProjectMatching(projects);
     

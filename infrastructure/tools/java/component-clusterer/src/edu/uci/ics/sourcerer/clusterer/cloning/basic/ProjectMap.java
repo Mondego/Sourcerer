@@ -54,6 +54,12 @@ public class ProjectMap {
     return projectMap.values();
   }
   
+  public void filterFiles() {
+    for (Project project : projectMap.values()) {
+      project.filterFiles();
+    }
+  }
+  
   public ProjectMatchSet getProjectMatchSet() {
     return new ProjectMatchSet(getProjects());
   }
