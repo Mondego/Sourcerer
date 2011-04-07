@@ -137,8 +137,9 @@ public class ExtractedRepository extends AbstractRepository {
                   }
                 }
                 return next != null;
+              } else {
+                return true;
               }
-              return iter.hasNext();
             }
           };
         }
