@@ -32,13 +32,15 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.LineFileReader;
 import edu.uci.ics.sourcerer.util.io.LineFileWriter;
 import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractFileSet implements IFileSet {
-  private Property<String> FILE_CACHE = new StringProperty("file-cache-file", "file-cache.txt", "Cache of the file set's files.");
+  public static final Property<String> FILE_CACHE = new StringProperty("file-cache-file", "file-cache.txt", "Cache of the file set's files.");
+  public static final Property<Boolean> CLEAR_FILE_CACHE = new BooleanProperty("clear-file-cache", false, "Clears the file caches.");
   
   private File cache;
   
@@ -57,7 +59,10 @@ public abstract class AbstractFileSet implements IFileSet {
   }
   
   protected final void populateFileSet() {
-    if (cache.exists()) {
+    if (CLEAR_FILE_CACHE.getValue() || !cache.exists()) {
+      cache.delete();
+      buildRepoMap();
+    } else {
       LineFileReader reader = null;
       try {
         reader = FileUtils.getLineFileReader(cache);
@@ -75,8 +80,6 @@ public abstract class AbstractFileSet implements IFileSet {
       } finally {
         FileUtils.close(reader);
       }
-    } else {
-      buildRepoMap();
     }
   }
   
@@ -235,6 +238,9 @@ public abstract class AbstractFileSet implements IFileSet {
   
   @Override
   public final int getFilteredJavaFileCount() {
+    if (uniqueFiles == null || bestDuplicateFiles == null) {
+      computeFiles();
+    }
     return uniqueFiles.size() + bestDuplicateFiles.size();
   }
   
