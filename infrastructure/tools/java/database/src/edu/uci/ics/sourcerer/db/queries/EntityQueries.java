@@ -69,8 +69,13 @@ public class EntityQueries extends Queries {
   public LocationDB getLocationByEntityID(Integer entityID) {
     return executor.selectSingle(ENTITY_ID.getEquals(entityID), LOCATION_TRANSLATOR); 
   }
+  
   public Collection<SmallEntityDB> getSmallByFqn(String fqn, String inClause) {
     return executor.select(and(FQN.getEquals(fqn), PROJECT_ID.getInFromClause(inClause)), SMALL_ENTITY_TRANSLATOR);
+  }
+  
+  public Iterable<MediumEntityDB> getMediumReferenceableByFqnPrefix(String prefix) {
+    return executor.selectStreamed(and(FQN.getLike(prefix + "%"), ENTITY_TYPE.getNin(Entity.PARAMETER, Entity.LOCAL_VARIABLE)), MEDIUM_ENTITY_TRANSLATOR);
   }
   
   public Iterable<MediumEntityDB> getMediumExternalByProjectID(Integer projectID) {

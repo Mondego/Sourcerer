@@ -21,6 +21,7 @@ import edu.uci.ics.sourcerer.clusterer.cloning.CloningStatistics;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
+import edu.uci.ics.sourcerer.clusterer.usage.project.UsageComputer;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.io.Command;
@@ -103,12 +104,18 @@ public class Main {
 //    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING);
     
   public static final Command PERFORM_CLONING_ANALYSIS =
-    new Command ("perform-cloning-analysis", "Analyzes the cloning results.") {
+    new Command("perform-cloning-analysis", "Analyzes the cloning results.") {
       protected void action() {
         CloningStatistics.performAnalysis();
       }
     }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, FqnClusterer.FQN_FILE_LISTING, CloningStatistics.COMPARE_FILE_SETS, CloningStatistics.COMPUTE_CLONING_STATS);
 
+  public static final Command COMPUTE_ENTITY_LISTING =
+    new Command("compute-entity-listing", "Computes the list of entities starting with the specified prefix.") {
+      protected void action() {
+        UsageComputer.computeEntityListing();
+      }
+    }.setProperties(UsageComputer.ENTITY_LISTING_FILE, UsageComputer.FQN_PREFIX, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
 //  public static final Command COMPUTE_GENERAL_STATISTICS =
 //    new Command("compute-general-stats", "Compute general statistics.") {
 //      protected void action() {
