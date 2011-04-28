@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.clusterer.cloning.pairwise;
 import java.util.Collection;
 import java.util.Map;
 
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.DetectionMethod;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.KeyMatch;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Project;
@@ -56,6 +57,13 @@ public final class ProjectMatches {
           for (KeyMatch match : file.getCombinedKey().getMatches()) {
             if (file != match.getFile() && match.getFile().hasAllKeys()) {
               getMatchStatus(match.getFile()).setCombined(match.getConfidence());
+            }
+          }
+        }
+        if (file.hasDirKey()) {
+          for (KeyMatch match : file.getDirKey().getMatches()) {
+            if (file != match.getFile() && match.getFile().hasAllKeys()) {
+              getMatchStatus(match.getFile()).set(DetectionMethod.DIR, match.getConfidence());
             }
           }
         }

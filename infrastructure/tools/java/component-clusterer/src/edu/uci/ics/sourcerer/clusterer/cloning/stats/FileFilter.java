@@ -38,7 +38,7 @@ public class FileFilter implements Filter {
     files = Helper.newHashSet();
   }
   
-  private void addFile(String project, String path) {
+  public void addFile(String project, String path) {
     if (path.startsWith("/")) {
       files.add(project + ":" + path);
     } else {
@@ -46,7 +46,7 @@ public class FileFilter implements Filter {
     }
   }
   
-  private void addFile(String file) {
+  public void addFile(String file) {
     files.add(file);
   }
   

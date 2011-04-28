@@ -75,6 +75,10 @@ public class ProjectMap {
   public void addFile(FingerprintFile file) {
     getProject(file.getProject()).getFile(file.getPath()).setFingerprintKey(fingerprintFactory.getNameFingerprintKey(file));
   }
+
+  public File getFile(String project, String file) {
+    return getProject(project).getFile(file);
+  }
   
   public KeyFactory getKeyFactory() {
     return keyFactory;

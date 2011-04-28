@@ -288,6 +288,23 @@ public class Repository extends AbstractRepository {
     }
   }
   
+  public String getFilePath(String projectPath, String path) {
+    path = path.replace('*', ' ');
+    
+    RepoProject project = getProject(projectPath);
+    RepoFile content = project.getContent();
+    if (content.isDirectory()) {
+      File file = content.getChildFile(path);
+      if (file.exists()) {
+        return file.getAbsolutePath();
+      } else {
+        return null;
+      }
+    } else {
+      return "C:" + project.getProjectRoot().getChild("content").getChildFile(path).getAbsolutePath();
+    }
+  }
+  
   protected RepoFile getRoot() {
     return repoRoot;
   }

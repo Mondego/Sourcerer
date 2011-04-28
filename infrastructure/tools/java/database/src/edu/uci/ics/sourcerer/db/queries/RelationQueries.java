@@ -21,9 +21,11 @@ import static edu.uci.ics.sourcerer.db.schema.RelationsTable.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.ResultTranslator;
+import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.db.LocationDB;
 
 /**
@@ -46,5 +48,13 @@ public class RelationQueries extends Queries {
   
   public LocationDB getLocationByRelationID(Integer relationID) {
     return executor.selectSingle(RELATION_ID.getEquals(relationID), LOCATION_TRANSLATOR); 
+  }
+  
+  public int getRelationCountBy(int targetID, Relation ... relations) {
+    return executor.selectSingleInt(TABLE, "count(*)", and(RHS_EID.getEquals(targetID), RELATION_TYPE.getIn(relations)));
+  }
+  
+  public Collection<Integer> getRelationProjectCountBy(int targetID, Relation ... relations) {
+    return executor.select(TABLE, "project_id", and(RHS_EID.getEquals(targetID), RELATION_TYPE.getIn(relations)), ResultTranslator.SIMPLE_INT_TRANSLATOR);
   }
 }

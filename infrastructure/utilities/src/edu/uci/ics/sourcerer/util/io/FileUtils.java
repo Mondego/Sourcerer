@@ -160,6 +160,9 @@ public final class FileUtils {
   }
   
   public static byte[] getFileAsByteArray(File file) {
+    if (file == null) {
+      return null;
+    }
     InputStream is = null;
     try {
       long length = file.length();

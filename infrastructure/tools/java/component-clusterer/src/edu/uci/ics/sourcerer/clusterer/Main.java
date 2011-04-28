@@ -116,6 +116,14 @@ public class Main {
         UsageComputer.computeEntityListing();
       }
     }.setProperties(UsageComputer.ENTITY_LISTING_FILE, UsageComputer.FQN_PREFIX, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
+
+  public static final Command COMPUTE_USAGE_LISTING =
+    new Command("compute-usage-listing", "") {
+      protected void action() {
+        UsageComputer.computeUsageListing();
+        
+      }
+    }.setProperties(Properties.INPUT, UsageComputer.ENTITY_LISTING_FILE, UsageComputer.USAGE_LISTING_FILE, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
 //  public static final Command COMPUTE_GENERAL_STATISTICS =
 //    new Command("compute-general-stats", "Compute general statistics.") {
 //      protected void action() {

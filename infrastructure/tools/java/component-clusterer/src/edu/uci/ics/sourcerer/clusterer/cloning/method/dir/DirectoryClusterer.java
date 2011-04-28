@@ -39,6 +39,11 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.ComplexKey;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.KeyMatch;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.ProjectMap;
+import edu.uci.ics.sourcerer.clusterer.cloning.method.combination.CombinedClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.stats.EasyFilter;
 import edu.uci.ics.sourcerer.clusterer.cloning.stats.FileCluster;
 import edu.uci.ics.sourcerer.clusterer.cloning.stats.Filter;
@@ -374,6 +379,51 @@ public class DirectoryClusterer {
     } finally {
       FileUtils.close(br);
       FileUtils.close(bw);
+    }
+  }
+  
+  public static void loadMatching(ProjectMap projects) {
+    logger.info("Loading dir file listing...");
+    
+    BufferedReader br = null;
+    try {
+      br = FileUtils.getBufferedReader(FILTERED_MATCHED_FILES);
+      
+      for (String line = br.readLine(); line != null; line = br.readLine()) {
+        String[] parts = line.split(" ");
+        if (parts.length < 6) {
+          logger.log(Level.SEVERE, "Invalid line: " + line);
+        } else {
+          String project = parts[0];
+          String file = parts[1] + "/" + parts[2];
+          edu.uci.ics.sourcerer.clusterer.cloning.basic.File f = projects.getFile(project, file);
+          ComplexKey key = new ComplexKey();
+          f.setDirKey(key);
+          
+          int high = Integer.parseInt(parts[3]);
+          int medium = Integer.parseInt(parts[4]);
+          int low = Integer.parseInt(parts[5]);
+          if (high + medium + low > 0) {
+            for (int i = 6, max = 6 + high; i < max; i++) {
+              int idx = parts[i].indexOf(':');
+              key.addMatch(new KeyMatch(projects.getFile(parts[i].substring(0, idx), parts[i].substring(idx + 1)), Confidence.HIGH));
+            }
+            for (int i = 6 + high, max = 6 + high + medium; i < max; i++) {
+              int idx = parts[i].indexOf(':');
+              key.addMatch(new KeyMatch(projects.getFile(parts[i].substring(0, idx), parts[i].substring(idx + 1)), Confidence.MEDIUM));
+            }
+            for (int i = 6 + high + medium, max = 6 + high + medium + low; i < max; i++) {
+              int idx = parts[i].indexOf(':');
+              key.addMatch(new KeyMatch(projects.getFile(parts[i].substring(0, idx), parts[i].substring(idx + 1)), Confidence.LOW));
+            }
+              
+          }
+        }
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error in reading file listing.", e);
+    } finally {
+      FileUtils.close(br);
     }
   }
   

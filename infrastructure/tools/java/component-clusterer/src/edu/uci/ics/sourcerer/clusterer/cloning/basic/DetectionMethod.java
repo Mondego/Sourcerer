@@ -24,7 +24,8 @@ public enum DetectionMethod {
   HASH(1),
   FQN(2),
   FINGERPRINT(4),
-  COMBINED(8);
+  COMBINED(8),
+  DIR(16);
     
   private final int val;
   

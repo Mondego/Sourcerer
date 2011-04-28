@@ -15,30 +15,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.clusterer.cloning.method.combination;
+package edu.uci.ics.sourcerer.clusterer.cloning.basic;
 
 import java.util.Collection;
 
-import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
-import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
-import edu.uci.ics.sourcerer.clusterer.cloning.basic.Key;
-import edu.uci.ics.sourcerer.clusterer.cloning.basic.KeyMatch;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class CombinedKey implements Key {
+public final class ComplexKey implements Key {
   private Collection<KeyMatch> matches;
   
-  protected CombinedKey() {
+  public ComplexKey() {
     matches = Helper.newArrayList();
   }
 
   @Override
   public void addFile(File file) {}
 
-  protected void addMatch(KeyMatch match) {
+  public void addMatch(KeyMatch match) {
     matches.add(match);
   }
   

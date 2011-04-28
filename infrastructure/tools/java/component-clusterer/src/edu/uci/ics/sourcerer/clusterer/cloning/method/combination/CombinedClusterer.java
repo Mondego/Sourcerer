@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.clusterer.cloning.method.combination;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import edu.uci.ics.sourcerer.clusterer.cloning.basic.ComplexKey;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.DetectionMethod;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.File;
@@ -64,7 +65,7 @@ public class CombinedClusterer {
           matching.getMatchStatus(match.getFile()).setFingerprint(match.getConfidence());
         }
         
-        CombinedKey key = new CombinedKey();
+        ComplexKey key = new ComplexKey();
         file.setCombinedKey(key);
         // Now for each of these files, decide on a confidence level
         for (MatchStatus status : matching.getMatchStatusSet()) {

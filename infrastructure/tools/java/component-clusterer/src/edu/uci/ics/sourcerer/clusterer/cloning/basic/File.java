@@ -29,6 +29,7 @@ public class File {
   private Key fqnKey;
   private Key fingerprintKey;
   private Key combinedKey;
+  private Key dirKey;
   
   protected File(Project project, String path) {
     this.project = project;
@@ -107,6 +108,22 @@ public class File {
     return combinedKey != null;
   }
   
+  public void setDirKey(Key dirKey) {
+    if (this.dirKey != null) {
+      throw new IllegalStateException("Dir key may not be changed.");
+    }
+    this.dirKey = dirKey;
+    dirKey.addFile(this);
+  }
+  
+  public Key getDirKey() {
+    return dirKey;
+  }
+  
+  public boolean hasDirKey() {
+    return dirKey != null;
+  }
+
   public boolean hasAllKeys() {
     return hashKey != null && fqnKey != null && fingerprintKey != null;
   }
