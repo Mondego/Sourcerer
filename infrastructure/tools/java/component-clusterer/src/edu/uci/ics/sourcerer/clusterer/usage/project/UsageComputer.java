@@ -136,10 +136,10 @@ public class UsageComputer {
         writer = FileUtils.getBufferedWriter(USAGE_LISTING_FILE);
         writer.write("fqn,times called, projects calling, times used, projects using");
         writer.newLine();
+        Collection<Integer> totalProjects = Helper.newHashSet();
         Collection<Integer> projectsCalling = Helper.newHashSet();
         Collection<Integer> projectsUsing = Helper.newHashSet();
         for (MatchingFqnEntities matching : reader.readNextToIterable(MatchingFqnEntities.class, true)) {
-          logger.info("Processing: " + matching.getFqn());
           int calledCount = 0;
           projectsCalling.clear();
           int usedCount = 0;
@@ -150,9 +150,12 @@ public class UsageComputer {
             usedCount += accessor.getUsedCount(id);
             projectsUsing.addAll(accessor.getUsedCountByProject(id));
           }
+          totalProjects.addAll(projectsCalling);
+          totalProjects.addAll(projectsUsing);
           writer.write(matching.getFqn() + "," + calledCount + "," + projectsCalling.size() + "," + usedCount + "," + projectsUsing.size());
           writer.newLine();
         }
+        logger.info("Total projects: " + totalProjects.size());
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Error reading file.", e);
       } finally {
