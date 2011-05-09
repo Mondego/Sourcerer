@@ -19,7 +19,68 @@ The Sourcerer Project
 <div id="content">
 <div id="main">
 <h1>Tutorial</h1>
-<p>Proper formatting will arrive later</p>
+<p>This tutorial is designed to show the reader how to download, install,
+and use the Sourcerer infrastructure to build SourcererDB. Before you begin,
+you should make sure to have a working version of the Java Development Kit, 
+<a href="http://git-scm.com/">Git</a> and <a href="http://ant.apache.org/">Ant</a> installed.
+</p>
+<h2>Step 1: <span class="colora">Download Sourcerer</span></h2>
+<p>Run</p>
+<div class="code-block">
+[install]$ git clone https://github.com/sourcerer/Sourcerer.git
+</div>
+<p>
+where <span class="code">[install]</span> is the directory into which
+you wish to download Sourcerer.
+</p>
+<h2>Step 2: <span class="colora">Set up a Repository</span></h2>
+<p>For the purposes of the tutorial, there are three ways of doing this:</p>
+<h3>A) Create the test-repository</h3>
+<p>Run</p>
+<div class="code-block">
+[install]$ cd Sourcerer/bin<br>
+[install]/Sourcerer/bin$ ant create-test-repo
+</div>
+<p>
+This creates a test repository. To view it's contents, run
+</p>
+<div class="code-block">
+[install]/Sourcerer/bin$ cd ../infrastructure/tools/java/extractor/test-repo<br>
+[install]/Sourcerer/infrastructure/tools/java/extractor/test-repo$ ls
+</div>
+<p>This test repository contains two projects, 0/0, a project for testing the 
+feature extractor, and 0/1, the Sourcerer project itself.
+</p>
+<h3>B) Download a sample repository</h3>
+<p>
+A sample repository containing a small random selection of projects from 
+the full repository can be found online
+<a href="http://sourcerer.ics.uci.edu/files/sample-repo.tgz">here</a>.
+Simply download this file and extract it to the desired directory.
+</p>
+<h3>C) Download the full repository</h3>
+<p>The full repository can be found online 
+<a href="http://www.ics.uci.edu/~lopes/datasets/SDS_source-repo-18k.html">here</a>.
+Simply download this file (very very big) and extract it to the desired directory.
+</p>
+<h2>Step 3: <span class="colora">Compile the repository tools</span></h2>
+<p>Run</p>
+<div class="code-block">
+[install]/Sourcerer/bin$ ant repo-tools 
+</div>
+<p>This will create <span class="code">repo-tools.jar</span> in the <span class="code">dist</span> subdirectory.
+Running</p>
+<div class="code-block">
+[install]/Sourcerer/bin$ cd dist<br>
+[install]/Sourcerer/bin/dist$ java -jar repo-tools.jar
+</div>
+<p>will print a complete list of the commands provided by <span class="code">repo-tools.jar</span>.
+<h2>Step 4: <span class="colora">Finish setting up the repository</span></h2>
+<p><span class="colora bold">Note</span>: If you used step 2A (create-test-repo ant task), these tasks have already been run and you may skip this step.</p>
+<p>Run>
+<div class="code-block">
+[install]/Sourcerer/bin/dist$ java -jar [path to repo-tools.jar] --aggregate-jar-files --input-repo [path to repository]
+</div>
 <pre style="
 white-space: -moz-pre-wrap;
 white-space: -pre-wrap;
@@ -27,47 +88,8 @@ white-space: -o-pre-wrap;
 white-space: pre-wrap;
 word-wrap: break-word;
 ">
-Step 1: Download Sourcerer
-
-Run
-git clone https://github.com/sourcerer/Sourcerer.git
-in the directory you wish to download Sourcerer, [install]
-
-Step 2: Set up a Repository
-
-For the purposes of the tutorial, there are three ways of doing this.
-A) Create the test-repository
-Navigate to the [install]/Sourcerer/bin directory and run
-ant create-test-repo
-
-This will create a test repository which can be found at 
-[install]/Sourcerer/infrastructure/tools/java/extractor/test-repo
-This test repository contains two projects, 0/0, a project for testing the 
-feature extractor, and 0/1, the Sourcerer project itself.
-
-B) Download a sample repository (more interesting)
-A sample repository containing a small random selection of projects from 
-the full repository can be found online at 
-http://sourcerer.ics.uci.edu/files/sample-repo.tgz.
-Simply download this file and extract it to the desired directory.
-
-C) Download the full repository
-The full repository can be found online at http://www.ics.uci.edu/~lopes/datasets/SDS_source-repo-18k.html
-Simply download this file (very very big) and extract it to the desired directory.
-
-Step 3: Compile the repository tools
-To compile the basic repository tools, navigate to the [install]/Sourcerer/bin directory and run
-ant repo-tools
-
-This will create repo-tools.jar in the [install]/Sourcerer/bin/dist directory.
-
-Run java -jar [path to repo-tools.jar] to see a complete list of commands provided by repo-tools.jar
-
-Step 4: Finish setting up the repository
-Note: If you used the create-test-repo ant task, these tasks have already been run and you may skip this step.
-
 Run the following command to collect all of the jar files in the repository into the jars directory
-java -jar [path to repo-tools.jar] --aggregate-jar-files --input-repo [path to repository]
+
 
 To see the effect of running this command, navigate to [path to repository]. Notice that a new directory, jars, has been created, which in turn contains all of the jar files collection from the repository.
 

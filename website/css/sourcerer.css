@@ -15,7 +15,7 @@ body {
 }
 
 #container {
-	width: 800px;
+	width: 900px;
 	min-height: 100%;
 	margin: 0 auto;
 	background-image: url(../images/background.png);
@@ -164,6 +164,22 @@ body {
 	color: #A6843F;
 }
 
+.colora {
+	color: #2C1964;
+}
+
+.colorb {
+	color: #135558;
+}
+
+.colorc {
+	color: #534874;
+}
+
+.colord {
+	color: #A6843F;
+}
+	
 h1 {
 	margin: 0px;
 	padding: 0px;
@@ -242,6 +258,24 @@ img {
 	padding-left: 40px;
 }
 
+.code {
+	font-family: monospace;
+  font-size: 11pt;
+}
+
+div.code-block {
+  font-family: monospace;
+  font-size: 10pt;
+  font-weight: bold;
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  padding: 3px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: lightgrey;
+  background-color: black;
+}
 /* Table Format */
 
 table {
