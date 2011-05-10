@@ -23,8 +23,8 @@ The Sourcerer Project
 accessible through a set of Web-services. Currently three 
 services are open to public.</p>
 
-<div class="sub">
 <h3>Code Search</h3>
+<div class="sub">
 <p>This service implements a query processing facility. Client
 applications (such as CodeGenie) can send queries as combination of
 terms and fields and the service returns a result set with detailed
@@ -32,12 +32,16 @@ information on the entities that matched the queries. The query language
 is based on Lucene's implementation and our extended query parser
 supports different query forms that allow the clients to express more
 structural information in the queries.</p>
+</div>
 <h3>Repository Access</h3>
+<div class="sub">
 <p>This service provides access to the code stored in the Managed
 Repository in Sourcerer. Every entity that is stored in the Sourcerer
 repository has a unique identifier and this service provides access to
 the source of the entity given the unique id.</p>
+</div>
 <h3>Dependency Slicing</h3>
+<div class="sub">
 <p>This service provide access to extract dependency slices of
 entities stored in the repository. Clients can request the slice by
 specifying an entry point in the program. For example, if the entry
@@ -88,16 +92,16 @@ http://sourcerer.ics.uci.edu/sourcerer/ws-search/search?qry=sort&amp;epp=10&amp;
 </span></p> 
  
 <h3>Search Results</h3> 
- 
+<div class="sub">
 <p>You can copy and paste the above url in a browser to see the result
 returned by the search sevice. The XML represenation of the search
 results returned by the service follows the following schema as shown
 below.</p> 
  
 <img style="width: 100%" src="images/services/search-results.png"> 
- 
+ </div>
 <h3>Index Fields</h3> 
- 
+<div class="sub">
 <p> 
 Please refer to these available index fields to see what index field names
 you can use while constructing a query. Please refer this <a
@@ -105,8 +109,9 @@ you can use while constructing a query. Please refer this <a
 learn how to construct a valid lucene query.</p> 
  
 <img style="width: 100%" src="images/services/indexfields.png"/> 
- 
-<h2>Dependency (Program) Slicing API Description</h2> 
+</div>
+<h2>Dependency (Program) Slicing API Description</h2>
+<div class="sub"> 
 <p> 
 The URL request for dependency slicing has the following form:
 </p> 
@@ -127,8 +132,9 @@ code query service. Each result entry has a field that provides the
 entity id of the entity that the entry represents. Using that value in
 the slice request sends back a zip with sliced dependencies for that
 entity.</p> 
- 
-<h2>File Server API Description</h2> 
+</div>
+<h2>File Server API Description</h2>
+<div class="sub"> 
 <p> 
 The File Server or the repository access service provides access to
 all the source code in the Sourcerer repository. The URL has the
@@ -149,10 +155,10 @@ as described in previous services. Here is how a valid url looks like:
 <p><span class="fixed"> 
 http://sourcerer.ics.uci.edu/sourcerer/repodata/resource?rp=8/454/src/delivery/java/org/stringtree/util/sort/Sorter.java&amp;client=webapp
 </span></p> 
- 
- 
+</div>
+
 <h2>Java Library</h2> 
- 
+<div class="sub"> 
 <p> 
 We have implemented a Java library that makes it easy to program the
 Sourcerer search service. Using this library will take away the
@@ -165,9 +171,9 @@ programming with the Sourcerer search service.
  
 <p>Please <a href="#contact">email the contact</a> below if you want
 to obtain this library.</p> 
- 
+ </div>
 <h3>Programming</h3> 
- 
+<div class="sub">
 <p>It is quite simple to program the search service using the library
 mentioned above. You open a HTTP input stream with a valid URL, and, give it to the
 <i>SearchResultUnMarshaller</i> class; that will give you a
@@ -179,17 +185,18 @@ mentioned above. You open a HTTP input stream with a valid URL, and, give it to 
 <p>Make sure you have all the HTTP parameters correct while creating
 the URL if you do not get the results you expect.</p> 
  
- 
+</div>
 <h2><a name="contact">Contact</a></h2> 
- 
+<div class="sub"> 
 <p> 
-Please contact Joel Ossher
+Please contact Joel Ossher 
 (<script>document.write(String.fromCharCode(60, 97, 32, 104, 114, 101,
 	102, 61, 39, 109, 97, 105, 108, 116, 111, 58, 115, 98, 97,
 	106, 114, 97, 99, 104, 64, 117, 99, 105, 46, 101, 100, 117,
 	39, 62, 106, 111, 115, 115, 104, 101, 114, 64, 117, 99, 105, 46, 101, 100, 117, 60, 47, 97, 62))</script>) if you
 intend to use Sourcerer Web-Services. Thank You!
 </p>
+</div>
 </div> 
 </div>
 </div>

@@ -19,138 +19,251 @@ The Sourcerer Project
 <div id="content">
 <div id="main">
 <h1>Tutorial</h1>
-<p>This tutorial is designed to show the reader how to download, install,
-and use the Sourcerer infrastructure to build SourcererDB. Before you begin,
-you should make sure to have a working version of the Java Development Kit, 
-<a href="http://git-scm.com/">Git</a> and <a href="http://ant.apache.org/">Ant</a> installed.
-</p>
-<h2>Step 1: <span class="colora">Download Sourcerer</span></h2>
-<p>Run</p>
-<div class="code-block">
-[install]$ git clone https://github.com/sourcerer/Sourcerer.git
-</div>
 <p>
-where <span class="code">[install]</span> is the directory into which
-you wish to download Sourcerer.
+  This tutorial is designed to show the reader how to download, install,
+  and use the Sourcerer infrastructure to build SourcererDB. Before you begin,
+  you should make sure to have a working version of the Java Development Kit, 
+  <a href="http://git-scm.com/">Git</a> and <a href="http://ant.apache.org/">Ant</a> installed.
 </p>
-<h2>Step 2: <span class="colora">Set up a Repository</span></h2>
-<p>For the purposes of the tutorial, there are four ways of doing this. They
-all result in a repository located in a directory referred to as <span class="code">[root]</span>
-for the remainder of this tutorial.</p>
-<h3>A) Create the test-repository</h3>
-<p>Run</p>
-<div class="code-block">
-[install]$ cd Sourcerer/bin<br>
-[install]/Sourcerer/bin$ ant create-test-repo
-</div>
-<p>
-This creates a test repository. To view it's contents, run
-</p>
-<div class="code-block">
-[install]/Sourcerer/bin$ cd ../infrastructure/tools/java/extractor/test-repo<br>
-[install]/Sourcerer/infrastructure/tools/java/extractor/test-repo$ ls
-</div>
-<p>This test repository contains two projects, 0/0, a project for testing the 
-feature extractor, and 0/1, the Sourcerer project itself.
-</p>
-<h3>B) Download a sample repository</h3>
-<p>
-A sample repository containing a small random selection of projects from 
-the full repository can be found online
-<a href="http://sourcerer.ics.uci.edu/files/sample-repo.tgz">here</a>.
-Simply download this file and extract it to the desired directory.
-</p>
-<h3>C) Download the full repository</h3>
-<p>The full repository can be found online 
-<a href="http://www.ics.uci.edu/~lopes/datasets/SDS_source-repo-18k.html">here</a>.
-Simply download this file (very very big) and extract it to the desired directory.
-</p>
-<h3>D) Create your own repository</h3>
-<p>To create a repository with custom, simply follow the repository 
-structure <a href="repository.html">here</a>. 
-<h4>2D.1 Designate a directory as the root of the repository, henceforth referred to as <span class="code">[ROOT]</span>.</h4>
-<div class="code-block">
-[?]$ mkdir [root]<br>
-[?]$ cd [root]
-</div>
-<p>Next, for every project you wish to include in the repository, create a subdirectory of
-<span class="code">[root]</span> of the form <span class="code">[root]/[number]/[number]</span>.</p>
-<div class="code-block">
-[root]$ mkdir 0<br>
-[root]$ mkdir 0/0<br>
-[root]$ mkdir 0/1<br>
-[root]$ mkdir 0/2<br>
-[root]$ ls<br>
-0<br>
-[root]/0$ cd 0<br>
-[root]$ ls<br>
-0 1 2
-</div>
-<p>This creates space for 3 projects. It doesn't matter what numbers are picked 
-for the directories, as long as they are numbers.</p>
-<p>To add the actual content for each project, do the following.</p>
-<div class="code-block">
-[root]/0$ cd 0<br>
-[root]/0/0$ mkdir content<br>
-[root]/0/0$ cp -R [project-content]/* content
-</div>
-<p>This copies the contents of the project from some <span class="code">[project-content]</span>
-directory into the content directory of the repository. This content can be any combination of Java 
-source code and jar files.</p>
-<p>The final step is to create the project properties file.</p>
-<div class="code-block">
-[root]/0/0$ echo name=[project-name] &gt; project.properties
-</div>
-<p>There are a number of other supported properties, but the only required one is name.</p>
-<p>Simply do this (by hand or automatically) for every project you wish to include, and you
-will have a custom repository.</p>
-<h2>Step 3: <span class="colora">Compile the repository tools</span></h2>
-<p>Run</p>
-<div class="code-block">
-[install]/Sourcerer/bin$ ant repo-tools 
-</div>
-<p>This will create <span class="code">repo-tools.jar</span> in the <span class="code">dist</span> subdirectory.
-Running</p>
-<div class="code-block">
-[install]/Sourcerer/bin$ cd dist<br>
-[install]/Sourcerer/bin/dist$ java -jar repo-tools.jar
-</div>
-<p>will print a complete list of the commands provided by <span class="code">repo-tools.jar</span>.
-<h2>Step 4: <span class="colora">Finish setting up the repository</span></h2>
-<p><span class="colora bold">Note</span>: If you used step 2A (create-test-repo ant task), these tasks have already been run and you may skip this step.</p>
-<p>Run</p>
-<div class="code-block">
-[install]/Sourcerer/bin/dist$ java -jar repo-tools.jar --aggregate-jar-files --input-repo [root]
-</div>
-<p>This collects all of the jar files in the repository into the jars directory. To see the result, do the following.</p>
-<div class="code-block">
-[?]$ cd [root]<br>
-[root]$ ls jars<br>
-jars<br>
-[root]$ cd jars<br>
-[root]/jars$ ls<br>
-project
-</div>
-<p>The project subdirectory contains all of the jar files aggregated from the repository. They are stored in a two-layered structure
-of directories, similar to the main repository itself.</p>
-<p>Next, run the following command to create the jar index.</p>
-<div class="code-block">
-[?]$ cd [install]/Sourcerer/bin/dist<br>
-[install]/Sourcerer/bin/dist$
-java -jar repo-tools.jar --create-jar-index --input-repo [root]
-</div>
-<p>This creates the jar index file in the jars directory, which is a list of all the jar files in the repository. To view it, do the following.</p>
-<div class="code-block">
-[?]$ cd [root]/jars<br>
-[root]/jars$ less index.txt<br>
-</div>
-<p>Finally, run the following command to clean out the jar manifests.</p>
-<div class="code-block">
-[?]$ cd [install]/Sourcerer/bin/dist<br>
-[install]/Sourcerer/bin/dist$ java -jar repo-tools.jar --clean-jar-manifests --input-repo [root]
-</div>
-<p>The effect of this command is to remove all classpath manifest entries from jar files contained in the jars directory.</p>
 
+<h2>Step 1: <span class="colora">Download Sourcerer</span></h2>
+<p>
+  Run
+</p>
+<div class="code-block">
+  [install]$ git clone https://github.com/sourcerer/Sourcerer.git
+</div>
+<p>
+  where <span class="code">[install]</span> is the directory into which
+  you wish to download Sourcerer.
+</p>
+
+<h2>Step 2: <span class="colora">Set up a Repository</span></h2>
+<p>
+  For the purposes of the tutorial, there are four ways of doing this. They
+  all result in a repository located in a directory referred to as <span class="code">[root]</span>
+  for the remainder of this tutorial.
+</p>
+
+<h3>2.A) Create the test-repository</h3>
+<div class="sub">
+  <p>
+    Run
+  </p>
+  <div class="code-block">
+    [install]$ cd Sourcerer/bin<br>
+    [install]/Sourcerer/bin$ ant create-test-repo
+  </div>
+  <p>
+    This creates a test repository. To view it's contents, run
+  </p>
+  <div class="code-block">
+    [install]/Sourcerer/bin$ cd ../infrastructure/tools/java/extractor/test-repo<br>
+    [install]/Sourcerer/infrastructure/tools/java/extractor/test-repo$ ls
+  </div>
+  <p>
+    This test repository contains two projects, 0/0, a project for testing the 
+    feature extractor, and 0/1, the Sourcerer project itself.
+  </p>
+</div>
+
+<h3>2.B) Download a sample repository</h3>
+<div class="sub">
+  <p>
+    A sample repository containing a small random selection of projects from 
+    the full repository can be found online
+    <a href="http://sourcerer.ics.uci.edu/files/sample-repo.tgz">here</a>.
+    Simply download this file and extract it to the desired directory.
+  </p>
+</div>
+
+<h3>2.C) Download the full repository</h3>
+<div class="sub">
+  <p>
+    The full repository can be found online 
+    <a href="http://www.ics.uci.edu/~lopes/datasets/SDS_source-repo-18k.html">here</a>.
+    Simply download this file (very very big) and extract it to the desired directory.
+  </p>
+</div>
+
+<h3>2.D) Create your own repository</h3>
+<div class="sub">
+  <p>
+    To create a repository with custom, simply follow the repository 
+    structure <a href="repository.html">here</a>.
+  </p>
+  
+  <h4>2.D.1) Create <span class="fixed">[ROOT]</span> directory</h4>
+  <div class="sub">
+    <div class="code-block">
+      [?]$ mkdir [root]<br>
+      [?]$ cd [root]
+    </div>
+  </div>
+  
+  <h4>2.D.2) Create project directories</h4>
+  <div class="sub">
+    <p>
+      For every project you wish to include in the repository, create a subdirectory of
+      <span class="fixed">[root]</span> of the form <span class="fixed">[root]/[number]/[number]</span>.
+    </p>
+    <div class="code-block">
+      [root]$ mkdir 0<br>
+      [root]$ mkdir 0/0<br>
+      [root]$ mkdir 0/1<br>
+      [root]$ mkdir 0/2<br>
+      [root]$ ls<br>
+      0<br>
+      [root]/0$ cd 0<br>
+      [root]$ ls<br>
+      0 1 2
+    </div>
+    <p>
+      This creates space for 3 projects. It doesn't matter what numbers are picked 
+      for the directories, as long as they are numbers.
+    </p>
+  </div>
+  
+  <h4>2.D.3) Add project content</h4>
+  <div class="sub">
+    <p>
+      To add the actual content for each project, do the following.
+    </p>
+    <div class="code-block">
+      [root]/0$ cd 0<br>
+      [root]/0/0$ mkdir content<br>
+      [root]/0/0$ cp -R [project-content]/* content
+    </div>
+    <p>
+      This copies the contents of the project from some <span class="code">[project-content]</span>
+      directory into the content directory of the repository. This content can be any combination of Java 
+      source code and jar files.
+    </p>
+  </div>
+  
+  <h4>2.D.4) Create <span class="fixed">project.properties</span> files</h4>
+  <div class="sub">
+    <div class="code-block">
+      [root]/0/0$ echo name=[project-name] &gt; project.properties
+    </div>
+    <p>
+      There are a number of other supported properties, but the only required one is name.
+    </p>
+  </div>
+</div>
+
+<h2>Step 3: <span class="colora">Compile the repository tools</span></h2>
+<div class="sub">
+  <p>Run</p>
+  <div class="code-block">
+    [install]/Sourcerer/bin$ ant repo-tools 
+  </div>
+  <p>
+    This will create <span class="fixed">repo-tools.jar</span> in the <span class="fixed">dist</span> subdirectory. We will
+    refer to this subdirectory as <span class="fixed">[install-dist]</span>.
+  </p>
+  <p>
+    Running
+  </p>
+  <div class="code-block">
+    [install]/Sourcerer/bin$ cd dist<br>
+    [install-dist]$ java -jar repo-tools.jar
+  </div>
+  <p>
+    will print a complete list of the commands provided by <span class="fixed">repo-tools.jar</span>.
+  </p>
+</div>
+
+<h2>Step 4: <span class="colora">Finish setting up the repository</span></h2>
+<div class="sub">
+  <p>
+    <span class="colora bold">Note</span>: If you used step 2A (create-test-repo ant task), these tasks have already been run and you may skip this step.
+  </p>
+  
+  <h3>4.1) Aggregate jar files</h3>
+  <div class="sub">
+    <p>
+      Run
+    </p>
+    <div class="code-block">
+      [install-dist]$ java -jar repo-tools.jar --aggregate-jar-files --input-repo [root]
+    </div>
+    <p>
+      This collects all of the jar files in the repository into the jars directory. To see the result, do the following.
+    </p>
+    <div class="code-block">
+      [?]$ cd [root]<br>
+      [root]$ ls jars<br>
+      jars<br>
+      [root]$ cd jars<br>
+      [root]/jars$ ls<br>
+      project
+    </div>
+    <p>
+      The project subdirectory contains all of the jar files aggregated from the repository. They are stored in a two-layered structure
+      of directories, similar to the main repository itself.
+    </p>
+  </div>
+  
+  <h3>4.2) Create jar index</h3>
+  <div class="sub">
+    <p>
+      Next, run the following command to create the jar index.
+    </p>
+    <div class="code-block">
+      [?]$ cd [install]/Sourcerer/bin/dist<br>
+      [install-dist]$ java -jar repo-tools.jar --create-jar-index --input-repo [root]
+    </div>
+    <p>
+      This creates the jar index file in the jars directory, which is a list of all the jar files in the repository. To view it, do the following.
+    </p>
+    <div class="code-block">
+      [?]$ cd [root]/jars<br>
+      [root]/jars$ less index.txt<br>
+    </div>
+  </div>
+  
+  <h3>4.3) Clean jar manifests</h3>
+  <div class="sub">
+    <p>
+      Finally, run the following command to clean out the jar manifests.
+    </p>
+    <div class="code-block">
+      [?]$ cd [install]/Sourcerer/bin/dist<br>
+      [install-dist]$ java -jar repo-tools.jar --clean-jar-manifests --input-repo [root]
+    </div>
+    <p>
+      The effect of this command is to remove all classpath manifest entries from jar files contained in the jars directory.
+    </p>
+  </div>
+  
+  <h4>4.4) Other commands</h4>
+  <div class="sub">
+    <p>
+      Some other commands that might be interesting to run are:
+    </p>
+    <div class="code-block">
+      [?]$ cd [install]/Sourcerer/bin/dist<br>
+      [install-dist]$ java -jar repo-tools.jar --print-repo-disk-usage --input-repo [root]<br>
+      [install-dist]$ java -jar repo-tools.jar --print-project-names --input-repo [root]<br>
+      [install-dist]$ java -jar repo-tools.jar --print-jar-stats --input-repo [root]<br>
+      [install-dist]$ java -jar repo-tools.jar --print-project-sizes --input-repo [root]<br>
+    </div>
+    <p>
+      If you wish for the output logs to be saved to a file, the <span class="fixed">--output [path]</span>
+      parameter may be added. When this parameter is specified, logs are saved to 
+      <span class="fixed">[path]/[command name]/[date]/[time]</span> and are no longer printed to the command line. 
+      To have them printed to the command line again, add the <span class="fixed">--report-to-console</span> flag.
+    </p>
+  </div>
+</div>
+
+<h2>Step 5: <span class="colora">Set up the Extractor</span></h2>
+<p>
+  Unfortunately, as the extractor is an Eclipse plugin, this step cannot be done from the command line. 
+  The Eclipse-specific ant task extractor must be run, which requires the following Eclipse projects 
+  to be loaded: bin, extractor, model, repository-manager, and utilities.
+</p>
 <pre style="
 white-space: -moz-pre-wrap;
 white-space: -pre-wrap;
@@ -158,21 +271,10 @@ white-space: -o-pre-wrap;
 white-space: pre-wrap;
 word-wrap: break-word;
 ">
-Some other commands that might be interesting to run are:
-print-repo-disk-usage
-print-project-names
-print-jar-stats
-print-project-sizes
 
-To see the list of required inputs for any command, run
-java -jar [path to repo-tools.jar] --[command]
-
-Each of the above commands only requires the input-repo parameter.
-
-If you wish for the output logs to be saved to a file, the --output [path] parameter may be added. When this parameter is specified, logs are saved to [path]/[command name]/[date]/[time] and are no longer printed to the command line. To have them printed to the command line again, add the --report-to-console flag.
 
 Step 5: Set up the Extractor
-Unfortunately, as the extractor is an Eclipse plugin, this step cannot be done from the command line. The Eclipse-specific ant task extractor must be run, which requires the following Eclipse projects to be loaded: bin, extractor, model, repository-manager, and utilities.
+
 
 Next, run the ant task
 ant repackage-extractor
