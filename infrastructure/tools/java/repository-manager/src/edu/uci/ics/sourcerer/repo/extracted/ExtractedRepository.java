@@ -28,26 +28,24 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.repo.general.JarIndex.MavenFilter;
 import edu.uci.ics.sourcerer.repo.general.JarIndex.ProjectFilter;
+import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedRepository extends AbstractRepository {
-  public static final Property<String> EXTRACTION_STATS_FILE = new StringProperty("extraction-stats-file", "extraction-stats.txt", "Output file for the extraction stats.");
+  public static final IOFilePropertyFactory EXTRACTION_STATS_FILE = new IOFilePropertyFactory("extraction-stats-file", "extraction-stats.txt", "Output file for the extraction stats.");
   
   private boolean includeNotExtracted = false;
   private Collection<ExtractedLibrary> libraries;

@@ -68,7 +68,7 @@ public class Main {
         Repository repo = Repository.getRepository(INPUT_REPO.getValue());
         RepositoryStatistics.printJarStatistics(repo);
       }
-    }.setProperties(INPUT_REPO, JARS_DIR, JAR_INDEX_FILE, JAR_STATS_FILE);      
+    }.setProperties(INPUT_REPO, JARS_DIR, JAR_INDEX_FILE, JAR_STATS_FILE.asOutput());      
 
   public static final Command PRINT_PROJECT_SIZES =
     new Command("print-project-sizes", "Prints size statistics on the projects in the repository.") {
@@ -76,7 +76,7 @@ public class Main {
         Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
         RepositoryStatistics.printProjectSizes(repo);
       }
-    }.setProperties(INPUT_REPO, PROJECT_SIZES_FILE);
+    }.setProperties(INPUT_REPO, PROJECT_SIZES_FILE.asOutput());
     
     
   public static final Command PRINT_REPO_DISK_USAGE =
@@ -85,7 +85,7 @@ public class Main {
         Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
         DiskUsageCalculator.printRepositoryDiskUsage(repo);
       }
-    }.setProperties(INPUT_REPO, REPO_DISK_USAGE_FILE, CSV_MODE);
+    }.setProperties(INPUT_REPO, REPO_DISK_USAGE_FILE.asOutput(), CSV_MODE);
     
   public static final Command COMPRESS_FILTERED_REPOSITORY =
     new Command("compress-filtered-repo", "Creates a compressed repository containing only the filtered files.") {
@@ -93,7 +93,7 @@ public class Main {
         Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
         RepositoryFilterer.compressFilteredRepository(repo, false);
       }
-    }.setProperties(INPUT_REPO, COMPRESSED_FILTERED_REPO_FILE);
+    }.setProperties(INPUT_REPO, COMPRESSED_FILTERED_REPO_FILE.asOutput());
     
   public static final Command COMPRESS_FILTERED_REPOSITORY_SUBSET =
     new Command("compress-filtered-repo-subset", "Creates a compressed repository containing only the filtered files.") {
@@ -101,7 +101,7 @@ public class Main {
         Repository repo = Repository.getRepository(INPUT_REPO.getValue(), FileUtils.getTempDir());
         RepositoryFilterer.compressFilteredRepository(repo, true);
       }
-    }.setProperties(INPUT_REPO, COMPRESSED_FILTERED_REPO_FILE, REPO_SUBSET_RATE);
+    }.setProperties(INPUT_REPO, COMPRESSED_FILTERED_REPO_FILE.asOutput(), REPO_SUBSET_RATE);
     
   public static final Command CREATE_REPOSITORY_SUBSET =
     new Command("create-repo-subset", "Creates a subset of the main repository.") {
@@ -124,7 +124,7 @@ public class Main {
           throw new IllegalStateException("This should have been caught by the property manager");
         }
       }
-    }.setProperties(PROJECT_NAMES_FILE, CSV_MODE)
+    }.setProperties(PROJECT_NAMES_FILE.asOutput(), CSV_MODE)
      .setConditionalProperties(INPUT_REPO, OUTPUT_REPO);
   
   public static final Command MIGRATE_REPOSITORY =
@@ -147,7 +147,7 @@ public class Main {
       protected void action() {
         ExtractedRepository.getRepository(INPUT_REPO.getValue()).computeExtractionStats();
       }
-    }.setProperties(INPUT_REPO, EXTRACTION_STATS_FILE);
+    }.setProperties(INPUT_REPO, EXTRACTION_STATS_FILE.asOutput());
 
 
 //  public static final Command SPLIT_PROJECTS = 

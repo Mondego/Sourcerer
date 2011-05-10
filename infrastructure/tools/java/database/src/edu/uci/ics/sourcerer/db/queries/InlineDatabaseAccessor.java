@@ -15,37 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io.properties;
+package edu.uci.ics.sourcerer.db.queries;
 
-import java.io.File;
+import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 
-import edu.uci.ics.sourcerer.util.io.Property;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FileProperty extends Property<File> {
-  public FileProperty(String name, String description) {
-    super(name, null, description);
+public abstract class InlineDatabaseAccessor extends DatabaseAccessor {
+  protected InlineDatabaseAccessor() {
+    super();
   }
   
-  public FileProperty(String name, File defaultValue, String description) {
-    super(name, defaultValue, description);
-  }
+  public abstract void action();
   
-  
-  @Override
-  public String getType() {
-    return "path";
-  }
-  
-  @Override
-  public String getDefaultString() {
-    return defaultValue.getPath();
-  }
-  
-  @Override
-  protected File parseString(String value) {
-    return new File(value);
+  public void execute() {
+    DatabaseConnection conn = new DatabaseConnection();
+    if (conn.open()) {
+      init(conn);
+      action();
+      close();
+    }
   }
 }

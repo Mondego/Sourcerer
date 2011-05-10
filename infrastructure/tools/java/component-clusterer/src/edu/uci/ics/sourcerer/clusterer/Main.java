@@ -80,21 +80,21 @@ public class Main {
       protected void action() {
         HashingClusterer.generateFileListing();
       }
-    }.setProperties(AbstractRepository.INPUT_REPO, HashingClusterer.HASH_FILE_LISTING);
+    }.setProperties(AbstractRepository.INPUT_REPO, HashingClusterer.HASH_FILE_LISTING.asOutput());
     
   public static final Command GENERATE_FQN_FILE_LISTING =
     new Command("generate-fqn-file-listing", "Generates the fqn file listing file.") {
       protected void action() {
         FqnClusterer.generateFileListing();
       }
-    }.setProperties(AbstractRepository.INPUT_REPO, FqnClusterer.FQN_FILE_LISTING, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
+    }.setProperties(AbstractRepository.INPUT_REPO, FqnClusterer.FQN_FILE_LISTING.asOutput(), DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
     
   public static final Command GENERATE_FINGERPRINT_FILE_LISTING =
     new Command("generate-fingerprint-file-listing", "Generates the fingerprint file listing file.") {
       protected void action() {
         FingerprintClusterer.generateFileListing();
       }
-    }.setProperties(AbstractRepository.INPUT_REPO, FingerprintClusterer.FINGERPRINT_FILE_LISTING, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
+    }.setProperties(AbstractRepository.INPUT_REPO, FingerprintClusterer.FINGERPRINT_FILE_LISTING.asOutput(), DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
 
 //  public static final Command PRINT_HASH_PROJECT_MATCHING_RATES =
 //    new Command("print-hash-project-matching-rates", "Prints the project-project matching rates using the hashing method.") {
@@ -108,14 +108,14 @@ public class Main {
       protected void action() {
         CloningStatistics.performAnalysis();
       }
-    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING, FqnClusterer.FQN_FILE_LISTING, CloningStatistics.COMPARE_FILE_SETS, CloningStatistics.COMPUTE_CLONING_STATS);
+    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING.asInput(), FqnClusterer.FQN_FILE_LISTING.asInput(), FingerprintClusterer.FINGERPRINT_FILE_LISTING.asInput(), CloningStatistics.COMPARE_FILE_SETS, CloningStatistics.COMPUTE_CLONING_STATS);
 
   public static final Command COMPUTE_ENTITY_LISTING =
     new Command("compute-entity-listing", "Computes the list of entities starting with the specified prefix.") {
       protected void action() {
         UsageComputer.computeEntityListing();
       }
-    }.setProperties(UsageComputer.ENTITY_LISTING_FILE, UsageComputer.FQN_PREFIX, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
+    }.setProperties(UsageComputer.ENTITY_LISTING_FILE.asOutput(), UsageComputer.FQN_PREFIX, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
 
   public static final Command COMPUTE_USAGE_LISTING =
     new Command("compute-usage-listing", "") {
@@ -123,7 +123,7 @@ public class Main {
         UsageComputer.computeUsageListing();
         
       }
-    }.setProperties(Properties.INPUT, UsageComputer.ENTITY_LISTING_FILE, UsageComputer.USAGE_LISTING_FILE, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
+    }.setProperties(Properties.INPUT, UsageComputer.ENTITY_LISTING_FILE.asInput(), UsageComputer.USAGE_LISTING_FILE.asInput(), DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
 //  public static final Command COMPUTE_GENERAL_STATISTICS =
 //    new Command("compute-general-stats", "Compute general statistics.") {
 //      protected void action() {

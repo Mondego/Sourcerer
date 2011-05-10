@@ -94,10 +94,6 @@ public abstract class Property <T> {
     }
   }
   
-  protected String toString(T value) {
-    return value.toString();
-  }
-  
   public String getDescription() {
     String required = "";
     if (requiredBy != null) {
@@ -108,10 +104,10 @@ public abstract class Property <T> {
       builder.setCharAt(builder.length() - 1, '.');
       required = builder.toString();
     }
-    if (defaultValue == null) {
+    if (hasDefaultValue()) {
       return description + required;
     } else {
-      return description + " Defaults to " + toString(defaultValue) + "." + required;
+      return description + " Defaults to " + getDefaultString() + "." + required;
     }
   }
   
@@ -127,7 +123,7 @@ public abstract class Property <T> {
     if (!initialized) {
       initializeValue();
     }
-    return value != null || defaultValue != null;
+    return value != null || hasDefaultValue();
   }
   
   public synchronized void setValue(T value) {
@@ -146,8 +142,16 @@ public abstract class Property <T> {
     }
   }
   
+  public boolean hasDefaultValue() {
+    return defaultValue != null;
+  }
+  
   public T getDefaultValue() {
     return defaultValue;
+  }
+  
+  protected String getDefaultString() {
+    return defaultValue.toString();
   }
   
   protected abstract T parseString(String value);
@@ -159,7 +163,7 @@ public abstract class Property <T> {
       if (stringValue == null) {
         stringValue = System.getProperty(name);
         if (stringValue == null) {
-          if (defaultValue == null && this != PROMPT_MISSING && PROMPT_MISSING.getValue() && isNotOptional()) {
+          if (hasDefaultValue() && this != PROMPT_MISSING && PROMPT_MISSING.getValue() && isNotOptional()) {
             try {
               System.out.print("Please enter value for " + name + ":");
               BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -170,7 +174,7 @@ public abstract class Property <T> {
               throw new RuntimeException(e);
             }
           } else {
-            value = defaultValue;
+            value = getDefaultValue();
           }
         } else {
           value = parseString(stringValue);

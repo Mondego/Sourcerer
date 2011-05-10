@@ -22,41 +22,26 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.IOException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
-import edu.uci.ics.sourcerer.model.db.ImportFqn;
+import edu.uci.ics.sourcerer.db.queries.InlineDatabaseAccessor;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ImportUsageGenerator {
-  public static final Property<String> IMPORT_USAGE_LISTING = new StringProperty("import-usage-listing", "import-usage-listing.txt", "List of all the import statements.");
+  public static final IOFilePropertyFactory IMPORT_USAGE_LISTING = new IOFilePropertyFactory("import-usage-listing", "import-usage-listing.txt", "List of all the import statements.");
   
   public static void generateImportUsageListing() {
-    class Acc extends DatabaseAccessor {
-      public Acc(DatabaseConnection connection) {
-        super(connection);
+    new InlineDatabaseAccessor() {
+      @Override
+      public void action() {
+        try {
+          FileUtils.writeLineFile(joinQueries.getImportFqns(), IMPORT_USAGE_LISTING);
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Error writing file.", e);
+        }
       }
-      
-      public Iterable<ImportFqn> getImportFqns() {
-        return joinQueries.getImportFqns();
-      }
-    }
-    
-    DatabaseConnection conn = new DatabaseConnection();
-    if (conn.open()) {
-      Acc accessor = null;
-      try {
-        accessor = new Acc(conn);
-        FileUtils.writeLineFile(accessor.getImportFqns(), IMPORT_USAGE_LISTING);
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Error writing to file.", e);
-      } finally {
-        FileUtils.close(accessor);
-      }
-    }
+    }.execute();
   }
 }

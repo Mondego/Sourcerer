@@ -18,12 +18,9 @@
 package edu.uci.ics.sourcerer.util.io;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.BufferedWriter;
 import java.io.Closeable;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.Flushable;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -33,6 +30,7 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -427,9 +425,9 @@ public class TablePrettyPrinter {
     }
   }
   
-  public static TablePrettyPrinter getTablePrettyPrinter(Property<String> prop) {
+  public static TablePrettyPrinter getTablePrettyPrinter(IOFilePropertyFactory ioFactory) {
     try {
-      BufferedWriter writer = new BufferedWriter(new FileWriter(new File(OUTPUT.getValue(), prop.getValue())));
+      BufferedWriter writer = FileUtils.getBufferedWriter(ioFactory);
       TablePrettyPrinter retval = new TablePrettyPrinter(new WriterTableWriter(writer));
       retval.setCSVMode(CSV_MODE.getValue());
       return retval;

@@ -31,15 +31,14 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class RepositoryStatistics {
-  public static final Property<String> JAR_STATS_FILE = new StringProperty("jar-stats-file", "jar-stats.txt", "File containing repository jar statistics.");
+  public static final IOFilePropertyFactory JAR_STATS_FILE = new IOFilePropertyFactory("jar-stats-file", "jar-stats.txt", "File containing repository jar statistics.");
   public static void printJarStatistics(Repository repo) {
     JarIndex index = repo.getJarIndex();
     int project = 0;
@@ -82,7 +81,7 @@ public class RepositoryStatistics {
     }
   }
   
-  public static final Property<String> PROJECT_SIZES_FILE = new StringProperty("project-sizes-file", "project-sizes.txt", "File containing project size information");
+  public static final IOFilePropertyFactory PROJECT_SIZES_FILE = new IOFilePropertyFactory("project-sizes-file", "project-sizes.txt", "File containing project size information");
   public static void printProjectSizes(Repository repo) {
     BufferedWriter bw = null;
     try {
@@ -101,7 +100,7 @@ public class RepositoryStatistics {
     }
   }
   
-  public static final Property<String> PROJECT_NAMES_FILE = new StringProperty("project-names-file", "project-names.txt", "File containing the names of the projects in the repository.");
+  public static final IOFilePropertyFactory PROJECT_NAMES_FILE = new IOFilePropertyFactory("project-names-file", "project-names.txt", "File containing the names of the projects in the repository.");
   public static void printProjectNames(Repository repo) {
     BufferedWriter bw = null;
     try {
@@ -118,6 +117,7 @@ public class RepositoryStatistics {
       FileUtils.close(bw);
     }
   }
+  
   public static void printProjectNames(ExtractedRepository repo) {
     BufferedWriter bw = null;
     try {

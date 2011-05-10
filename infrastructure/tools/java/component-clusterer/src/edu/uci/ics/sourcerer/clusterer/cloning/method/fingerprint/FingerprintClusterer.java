@@ -35,15 +35,15 @@ import edu.uci.ics.sourcerer.util.io.LineFileWriter;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
 import edu.uci.ics.sourcerer.util.io.properties.DoubleProperty;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FingerprintClusterer {
-  public static final Property<String> FINGERPRINT_FILE_LISTING = new StringProperty("fingerprint-file-listing", "fingerprint-file-list.txt", "List of all the files (and the types inside the files) in the repository.");
-  public static final Property<String> EXCLUDED_NAMES_FILE = new StringProperty("excluded-names-file", "excluded-names.txt", "List of excluded names.");
+  public static final IOFilePropertyFactory FINGERPRINT_FILE_LISTING = new IOFilePropertyFactory("fingerprint-file-listing", "fingerprint-file-list.txt", "List of all the files (and the types inside the files) in the repository.");
+  public static final IOFilePropertyFactory EXCLUDED_NAMES_FILE = new IOFilePropertyFactory("excluded-names-file", "excluded-names.txt", "List of excluded names.");
   
   public static final Property<Boolean> REQUIRE_FINGERPRINT_NAME_MATCH = new BooleanProperty("require-fingerprint-name-match", true, "Give special priority to class names.");
   public static final Property<Double> MINIMUM_JACCARD_INDEX = new DoubleProperty("minimum-jaccard-index", .75, "Minimum jaccard index to count as a match.");

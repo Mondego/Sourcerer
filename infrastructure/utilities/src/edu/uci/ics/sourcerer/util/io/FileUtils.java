@@ -18,8 +18,6 @@
 package edu.uci.ics.sourcerer.util.io;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
-import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -45,13 +43,13 @@ import java.util.zip.ZipOutputStream;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class FileUtils {
-  protected static final Property<String> TEMP_DIR = new StringProperty("temp-dir", "temp", "Name of temp directory placed into OUTPUT directory").register("General");
+  protected static final Property<File> TEMP_DIR = new IOFilePropertyFactory("temp-dir", "temp", "Name of temp directory placed into OUTPUT directory").asOutput().register("General");
   
   private FileUtils() {}
   
@@ -71,8 +69,8 @@ public final class FileUtils {
     }
   }
   
-  public static void zipFile(File in, Property<String> out) {
-    zipFile(in, new File(OUTPUT.getValue(), out.getValue()));
+  public static void zipFile(File in, Property<File> out) {
+    zipFile(in, out.getValue());
   }
   
   public static void zipFile(File in, File out) {
@@ -101,7 +99,7 @@ public final class FileUtils {
   }
   
   public static File getTempDir() {
-    File tempDir = new File(OUTPUT.getValue(), TEMP_DIR.getValue());
+    File tempDir = TEMP_DIR.getValue();
     tempDir = new File(tempDir, "thread-" + Thread.currentThread().getId());
     if (tempDir.exists() || tempDir.mkdirs()) {
       return tempDir;
@@ -391,46 +389,50 @@ public final class FileUtils {
     }
   }
   
-  public static BufferedWriter getBufferedWriter(String name) throws IOException {
-    return new BufferedWriter(new FileWriter(new File(OUTPUT.getValue(), name)));
+  public static BufferedWriter getBufferedWriter(IOFilePropertyFactory ioFactory) throws IOException {
+    return new BufferedWriter(new FileWriter(ioFactory.asOutput().getValue()));
   }
   
-  public static BufferedWriter getBufferedWriter(Property<String> property) throws IOException {
-    return new BufferedWriter(new FileWriter(new File(OUTPUT.getValue(), property.getValue())));
-  }
+//  public static BufferedWriter getBufferedWriter(Property<File> property) throws IOException {
+//    return new BufferedWriter(new FileWriter(property.getValue()));
+//  }
   
-  public static BufferedReader getBufferedReader(Property<String> property) throws IOException {
-    return new BufferedReader(new FileReader(new File(INPUT.getValue(), property.getValue())));
+//  public static BufferedReader getBufferedReader(Property<File> property) throws IOException {
+//    return new BufferedReader(new FileReader(property.getValue()));
+//  }
+  
+  public static BufferedReader getBufferedReader(IOFilePropertyFactory ioFactory) throws IOException {
+    return new BufferedReader(new FileReader(ioFactory.asInput().getValue()));
   }
   
   /**
    * Uses reflection. This will break if a heterogeneous collection is used.
    */
-  public static <T extends LineWriteable> void writeLineFile(Iterable<T> iterable, Property<String> property) throws IOException {
+  public static <T extends LineWriteable> void writeLineFile(Iterable<T> iterable, IOFilePropertyFactory ioFactory) throws IOException {
     LineFileWriter writer = null;
     try {
-      writer = new LineFileWriter(getBufferedWriter(property));
+      writer = new LineFileWriter(getBufferedWriter(ioFactory));
       writer.write(iterable);
     } finally {
       close(writer);
     }
   }
   
-  public static LineFileWriter getLineFileWriter(Property<String> property) throws IOException {
-    return new LineFileWriter(getBufferedWriter(property));
+  public static LineFileWriter getLineFileWriter(IOFilePropertyFactory ioFactory) throws IOException {
+    return new LineFileWriter(getBufferedWriter(ioFactory));
   }
   
   public static LineFileWriter getLineFileWriter(File file) throws IOException {
     return new LineFileWriter(new BufferedWriter(new FileWriter(file)));
   }
   
-  public static <T extends LineWriteable> Iterable<T> readLineFile(Class<T> klass, Property<String> property, String ... fields) throws IOException {
-    LineFileReader reader = new LineFileReader(getBufferedReader(property));
+  public static <T extends LineWriteable> Iterable<T> readLineFile(Class<T> klass, IOFilePropertyFactory ioFactory, String ... fields) throws IOException {
+    LineFileReader reader = new LineFileReader(getBufferedReader(ioFactory));
     return reader.readNextToIterable(klass, true, fields);
   }
   
-  public static LineFileReader getLineFileReader(Property<String> property) throws IOException {
-    return new LineFileReader(getBufferedReader(property));
+  public static LineFileReader getLineFileReader(IOFilePropertyFactory ioFactory) throws IOException {
+    return new LineFileReader(getBufferedReader(ioFactory));
   }
   
   public static LineFileReader getLineFileReader(File file) throws IOException {

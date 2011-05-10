@@ -34,27 +34,33 @@ import edu.uci.ics.sourcerer.db.util.TableLocker;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class DatabaseAccessor implements Closeable {
-  protected final QueryExecutor executor;
-  protected final TableLocker locker;
+  protected QueryExecutor executor;
+  protected TableLocker locker;
 
-  protected final ProjectsTable projectsTable;
-  protected final FilesTable filesTable;
-  protected final ImportsTable importsTable;
-  protected final ProblemsTable problemsTable;
-  protected final CommentsTable commentsTable;
-  protected final EntitiesTable entitiesTable;
-  protected final RelationsTable relationsTable;
+  protected ProjectsTable projectsTable;
+  protected FilesTable filesTable;
+  protected ImportsTable importsTable;
+  protected ProblemsTable problemsTable;
+  protected CommentsTable commentsTable;
+  protected EntitiesTable entitiesTable;
+  protected RelationsTable relationsTable;
 
-  protected final ProjectQueries projectQueries;
-  protected final FileQueries fileQueries;
-  protected final ImportQueries importQueries;
-  protected final CommentQueries commentQueries;
-  protected final EntityQueries entityQueries;
-  protected final RelationQueries relationQueries;
+  protected ProjectQueries projectQueries;
+  protected FileQueries fileQueries;
+  protected ImportQueries importQueries;
+  protected CommentQueries commentQueries;
+  protected EntityQueries entityQueries;
+  protected RelationQueries relationQueries;
   
-  protected final JoinQueries joinQueries;
+  protected JoinQueries joinQueries;
   
   protected DatabaseAccessor(DatabaseConnection connection) {
+    init(connection);
+  }
+  
+  protected DatabaseAccessor() {}
+  
+  protected void init(DatabaseConnection connection) {
     executor = new QueryExecutor(connection.getConnection());
     locker = executor.getTableLocker();
     

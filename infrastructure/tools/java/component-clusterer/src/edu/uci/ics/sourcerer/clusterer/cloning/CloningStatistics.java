@@ -53,33 +53,33 @@ import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
 import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class CloningStatistics {
   public static Property<Boolean> COMPARE_FILE_SETS = new BooleanProperty("compare-file-sets", false, "Compare the sets of files analyzed by each clustering method.");
-  public static Property<String> FILE_SET_COMPARISON_FILE = new StringProperty("file-set-comparison-file", "file-set-comparison.txt", "");
+  public static IOFilePropertyFactory FILE_SET_COMPARISON_FILE = new IOFilePropertyFactory("file-set-comparison-file", "file-set-comparison.txt", "");
 
   public static Property<Boolean> PRINT_CLONE_PAIRS = new BooleanProperty("compute-randomized-clone-pairs", true, "Prints out the clone pairings in a randomized order");
-  public static Property<String> HIGH_CONFIDENCE_CLONE_PAIRS_FILE = new StringProperty("high-confidence-clone-pairs-file", "high-confidence-clone-pairs.txt", "");
-  public static Property<String> HIGH_CONFIDENCE_FQN_CLONE_PAIRS_FILE = new StringProperty("high-confidence-fqn-clone-pairs-file", "high-confidence-fqn-clone-pairs.txt", "");
-  public static Property<String> HIGH_CONFIDENCE_FINGERPRINT_CLONE_PAIRS_FILE = new StringProperty("high-confidence-fingerprint-clone-pairs-file", "high-confidence-fingerprint-clone-pairs.txt", "");
+  public static IOFilePropertyFactory HIGH_CONFIDENCE_CLONE_PAIRS_FILE = new IOFilePropertyFactory("high-confidence-clone-pairs-file", "high-confidence-clone-pairs.txt", "");
+  public static IOFilePropertyFactory HIGH_CONFIDENCE_FQN_CLONE_PAIRS_FILE = new IOFilePropertyFactory("high-confidence-fqn-clone-pairs-file", "high-confidence-fqn-clone-pairs.txt", "");
+  public static IOFilePropertyFactory HIGH_CONFIDENCE_FINGERPRINT_CLONE_PAIRS_FILE = new IOFilePropertyFactory("high-confidence-fingerprint-clone-pairs-file", "high-confidence-fingerprint-clone-pairs.txt", "");
   
   public static Property<Boolean> COMPUTE_CLONING_STATS = new BooleanProperty("compute-cloning-stats", true, "Computes the clong rates for each method.");
-  public static Property<String> CLONING_STATS_FILE = new StringProperty("cloning-stats-file", "cloning-stats.txt", "");
+  public static IOFilePropertyFactory CLONING_STATS_FILE = new IOFilePropertyFactory("cloning-stats-file", "cloning-stats.txt", "");
   
   public static Property<Boolean> COMPUTE_PROJECT_MATCHING = new BooleanProperty("compute-project-matching", true, "Computes the project-project matching rates.");
-  public static Property<String> PROJECT_MATCHING_STATS_FILE = new StringProperty("project-matching-stats-file", "project-matching-stats.txt", "");
-  public static Property<String> HIGHEST_PERCENT_CLONES_FILE = new StringProperty("highest-percent-clones-file", "highest-percent-clones.txt", "");
-  public static Property<String> LARGEST_CLONE_SIZE_FILE = new StringProperty("largest-clone-size-file", "largest-clone-size.txt", "");
-  public static Property<String> LARGEST_CLONED_PROJECTS_FILE = new StringProperty("largest-cloned-projects-file", "largest-cloned-projects.txt", "");
+  public static IOFilePropertyFactory PROJECT_MATCHING_STATS_FILE = new IOFilePropertyFactory("project-matching-stats-file", "project-matching-stats.txt", "");
+  public static IOFilePropertyFactory HIGHEST_PERCENT_CLONES_FILE = new IOFilePropertyFactory("highest-percent-clones-file", "highest-percent-clones.txt", "");
+  public static IOFilePropertyFactory LARGEST_CLONE_SIZE_FILE = new IOFilePropertyFactory("largest-clone-size-file", "largest-clone-size.txt", "");
+  public static IOFilePropertyFactory LARGEST_CLONED_PROJECTS_FILE = new IOFilePropertyFactory("largest-cloned-projects-file", "largest-cloned-projects.txt", "");
   
-  public static Property<String> PROJECT_CLONE_RATES_FILE = new StringProperty("project-clone-rates-file", "project-clone-rates.txt", "");
+  public static IOFilePropertyFactory PROJECT_CLONE_RATES_FILE = new IOFilePropertyFactory("project-clone-rates-file", "project-clone-rates.txt", "");
   
-  public static Property<String> AUGMENTED_MATCHING_FILE = new StringProperty("augmented-matching-file", "augmented-matching.txt", "");
-  public static Property<String> LONELY_FQNS_FILE = new StringProperty("lonely-fqns-file", "lonely-fqns.txt", "");
+  public static IOFilePropertyFactory AUGMENTED_MATCHING_FILE = new IOFilePropertyFactory("augmented-matching-file", "augmented-matching.txt", "");
+  public static IOFilePropertyFactory LONELY_FQNS_FILE = new IOFilePropertyFactory("lonely-fqns-file", "lonely-fqns.txt", "");
   
   private static void compareFileSets(ProjectMap projects) {
     if (COMPARE_FILE_SETS.getValue()) {

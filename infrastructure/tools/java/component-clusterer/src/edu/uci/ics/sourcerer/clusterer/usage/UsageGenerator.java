@@ -21,67 +21,52 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
+import edu.uci.ics.sourcerer.db.queries.InlineDatabaseAccessor;
 import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class UsageGenerator {
-  public static final Property<String> FQN_USAGE_LISTING = new StringProperty("fqn-usage-listing", "fqn-usage-listing.txt", "Listing of externally used FQNs.");
+  public static final IOFilePropertyFactory FQN_USAGE_LISTING_FILE = new IOFilePropertyFactory("fqn-usage-listing", "fqn-usage-listing.txt", "Listing of externally used FQNs.");
   public static final Property<Integer> TOP_COUNT = new IntegerProperty("top-count", 1000, "Number of top items to compute.");
-  public static final Property<String> TOP_REFERENCED_FRAGMENTS_FILE = new StringProperty("top-referenced-fragments-file", "top-referenced-fragments-file.txt", "File name for the list of the top referenced fragments.");
-  
-  private static class UsageDatabaseAccessor extends DatabaseAccessor {
-    public UsageDatabaseAccessor(DatabaseConnection connection) {
-      super (connection);
-    }
-    
-    public Iterable<MediumEntityDB> getUsedExternalFQNs() {
-      return joinQueries.getUsedExternalFQNs();
-    }
-  }
+  public static final IOFilePropertyFactory TOP_REFERENCED_FRAGMENTS_FILE = new IOFilePropertyFactory("top-referenced-fragments-file", "top-referenced-fragments-file.txt", "File name for the list of the top referenced fragments.");
   
   public static void generateFqnUsageListing() {
-    DatabaseConnection conn = new DatabaseConnection();
-    if (conn.open()) {
-      UsageDatabaseAccessor accessor = null;
-      BufferedWriter bw = null;
-      try {
-        accessor = new UsageDatabaseAccessor(conn);
-        bw = new BufferedWriter(new FileWriter(new File(Properties.OUTPUT.getValue(), FQN_USAGE_LISTING.getValue())));
-        int count = 0;
-        for (MediumEntityDB entity : accessor.getUsedExternalFQNs()) {
-          if (++count % 10000 == 0) {
-            logger.info(count + " rows written");
+    new InlineDatabaseAccessor() {
+      @Override
+      public void action() {
+        BufferedWriter bw = null;
+        try {
+          bw = FileUtils.getBufferedWriter(FQN_USAGE_LISTING_FILE);
+          int count = 0;
+          for (MediumEntityDB entity : joinQueries.getUsedExternalFQNs()) {
+            if (++count % 10000 == 0) {
+              logger.info(count + " rows written");
+            }
+            bw.write(entity.getFqn() + " " + entity.getEntityID() + " " + entity.getType() + "\n");
           }
-          bw.write(entity.getFqn() + " " + entity.getEntityID() + " " + entity.getType() + "\n");
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Error writing to file.", e);
+        } finally {
+          FileUtils.close(bw);
         }
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Error writing to file.", e);
-      } finally {
-        FileUtils.close(accessor);
-        FileUtils.close(bw);
       }
-    }
+    }.execute();
   }
   
   public static void createFqnUsageTree() {
     BufferedReader br = null;
     try {
-      br = FileUtils.getBufferedReader(FQN_USAGE_LISTING);
+      br = FileUtils.getBufferedReader(FQN_USAGE_LISTING_FILE);
       logger.info("Building tree...");
       FqnTree tree = new FqnTree();
       int count = 0;

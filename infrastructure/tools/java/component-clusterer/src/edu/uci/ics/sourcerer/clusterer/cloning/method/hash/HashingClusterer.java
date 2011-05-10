@@ -31,14 +31,13 @@ import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.LineFileWriter;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class HashingClusterer {
-  public static final Property<String> HASH_FILE_LISTING = new StringProperty("hash-file-listing", "hash-file-listing.txt", "List of all the files (and their hashes) in the repository.");
+  public static final IOFilePropertyFactory HASH_FILE_LISTING = new IOFilePropertyFactory("hash-file-listing", "hash-file-listing.txt", "List of all the files (and their hashes) in the repository.");
   
   public static void generateFileListing() {
     logger.info("Loading repository...");

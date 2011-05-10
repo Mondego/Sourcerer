@@ -26,7 +26,7 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -75,10 +75,10 @@ public class FileFilter implements Filter {
     }
   }
   
-  public static FileFilter loadFilter(Property<String> property) {
+  public static FileFilter loadFilter(IOFilePropertyFactory ioFactory) {
     BufferedReader br = null;
     try {
-      br = FileUtils.getBufferedReader(property);
+      br = FileUtils.getBufferedReader(ioFactory);
       
       FileFilter filter = new FileFilter();
       

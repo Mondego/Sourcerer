@@ -37,13 +37,13 @@ import edu.uci.ics.sourcerer.repo.general.RepoFile;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.DoubleProperty;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class RepositoryFilterer {
-  public static final Property<String> COMPRESSED_FILTERED_REPO_FILE = new StringProperty("compressed-filtered-repo-file", "filtered-repo.zip", "The compressed file containing the filtered repository.");
+  public static final IOFilePropertyFactory COMPRESSED_FILTERED_REPO_FILE = new IOFilePropertyFactory("compressed-filtered-repo-file", "filtered-repo.zip", "The compressed file containing the filtered repository.");
   public static final Property<Double> REPO_SUBSET_RATE = new DoubleProperty("repo-subset-rate", .1, "Percentage of repository to include.");
   
   /**
@@ -118,7 +118,7 @@ public class RepositoryFilterer {
     }
     
     // Compress the repository
-    FileUtils.zipFile(newRoot.toFile(), COMPRESSED_FILTERED_REPO_FILE);
+    FileUtils.zipFile(newRoot.toFile(), COMPRESSED_FILTERED_REPO_FILE.asOutput());
     
     // Clean temp files
     FileUtils.cleanTempDir();

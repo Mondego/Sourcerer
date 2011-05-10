@@ -28,14 +28,13 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FqnTree {
-  public static Property<String> FQN_TREE = new StringProperty("fqn-tree", "fqn-tree.txt", "File for storing fqn tree");
+  public static IOFilePropertyFactory FQN_TREE = new IOFilePropertyFactory("fqn-tree", "fqn-tree.txt", "File for storing fqn tree");
   
   private FqnFragment root;
   

@@ -30,15 +30,14 @@ import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class DiskUsageCalculator {
-  public static final Property<String> REPO_DISK_USAGE_FILE = new StringProperty("repo-disk-usage-file", "repo-disk-usage.txt", "File containing repository disk usage information.");
+  public static final IOFilePropertyFactory REPO_DISK_USAGE_FILE = new IOFilePropertyFactory("repo-disk-usage-file", "repo-disk-usage.txt", "File containing repository disk usage information.");
   
   public static void printRepositoryDiskUsage(Repository repo) {
     long totalSize = 0;
