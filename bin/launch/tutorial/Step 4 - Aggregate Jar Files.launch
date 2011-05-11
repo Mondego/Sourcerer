@@ -7,6 +7,6 @@
 <listEntry value="1"/>
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="edu.uci.ics.sourcerer.repo.Main"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--aggregate-jar-files --input-repo ${file_prompt:input-repo}"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--aggregate-jar-files --input-repo ${folder_prompt:input-repo}"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="extractor"/>
 </launchConfiguration>
