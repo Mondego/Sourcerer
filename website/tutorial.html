@@ -23,132 +23,173 @@ The Sourcerer Project
   This tutorial is designed to show the reader how to download, install,
   and use the Sourcerer infrastructure to build SourcererDB. Before you begin,
   you should make sure to have a working version of the Java Development Kit, 
-  <a href="http://git-scm.com/">Git</a> and <a href="http://ant.apache.org/">Ant</a> installed.
+  <a href="http://git-scm.com/">Git</a>, <a href="http://ant.apache.org/">Ant</a>,
+  and <a href="http://www.eclipse.org">Eclipse</a> installed.
+</p>
+<p>
+  This tutorial is written to use the command line wherever possible. All of the
+  ant tasks can be done through Eclipse, and will be indicated as such during
+  the tutorial.
 </p>
 
 <h2>Step 1: <span class="colora">Download Sourcerer</span></h2>
-<p>
-  Run
-</p>
-<div class="code-block">
-  [install]$ git clone https://github.com/sourcerer/Sourcerer.git
-</div>
-<p>
-  where <span class="code">[install]</span> is the directory into which
-  you wish to download Sourcerer.
-</p>
-
-<h2>Step 2: <span class="colora">Set up a Repository</span></h2>
-<p>
-  For the purposes of the tutorial, there are four ways of doing this. They
-  all result in a repository located in a directory referred to as <span class="code">[root]</span>
-  for the remainder of this tutorial.
-</p>
-
-<h3>2.A) Create the test-repository</h3>
 <div class="sub">
   <p>
     Run
   </p>
   <div class="code-block">
-    [install]$ cd Sourcerer/bin<br>
-    [install]/Sourcerer/bin$ ant create-test-repo
+    [install]$ git clone https://github.com/sourcerer/Sourcerer.git
   </div>
   <p>
-    This creates a test repository. To view it's contents, run
+    where <span class="code">[install]</span> is the directory into which
+    you wish to download Sourcerer.
   </p>
-  <div class="code-block">
-    [install]/Sourcerer/bin$ cd ../infrastructure/tools/java/extractor/test-repo<br>
-    [install]/Sourcerer/infrastructure/tools/java/extractor/test-repo$ ls
+  
+  <h3>Optional) Load Sourcerer in Eclipse</h3>
+  <div class="sub">
+    <p>
+      If you wish to complete this tutorial using Eclipse, do
+      the following once you have opened a fresh Eclipse workspace.
+    </p>
+    <ol>
+      <li>Go to <span class="fixed">File-&gt;Import</span></li>
+      <li>Select <span class="fixed">General-&gt;Existing Projects into Workspace</span> and hit <span class="fixed">Next</span>.</li>
+      <li>Click <span class="fixed">Browse</span> next to <span class="fixed">Select Root Directory</span>.</li>
+      <li>Navigate to the <span class="fixed">[install]/Sourcerer</span> directory and click <span class="fixed">OK</span>.</li>
+      <li>Make sure the following projects are selected
+        <ul>
+          <li><span class="fixed">bin</span></li>
+          <li><span class="fixed">database</span></li>
+          <li><span class="fixed">extractor</span></li>
+          <li><span class="fixed">lib</span></li>
+          <li><span class="fixed">model</span></li>
+          <li><span class="fixed">repository-manager</span></li>
+          <li><span class="fixed">utilities</span></li>
+        </ul>
+      </li>
+      <li>Click finish, and wait for the projects to build.</li>
+      <li>
+        Once built, there should still be errors in the <span class="fixed">extractor</span> project.
+        To correct these, go to the <span class="fixed">bin</span> project, and run <span class="fixed">launch->lib->sourcerer-lib.launch</span>.
+        Then refresh the <span class="fixed">bin</span> project, and the errors should disappear.
+      </li> 
+    </ol>
   </div>
-  <p>
-    This test repository contains two projects, 0/0, a project for testing the 
-    feature extractor, and 0/1, the Sourcerer project itself.
-  </p>
 </div>
 
-<h3>2.B) Download a sample repository</h3>
+<h2>Step 2: <span class="colora">Set up a Repository</span></h2>
 <div class="sub">
   <p>
-    A sample repository containing a small random selection of projects from 
-    the full repository can be found online
-    <a href="http://sourcerer.ics.uci.edu/files/sample-repo.tgz">here</a>.
-    Simply download this file and extract it to the desired directory.
+    For the purposes of the tutorial, there are four ways of doing this. They
+    all result in a repository located in a directory referred to as <span class="code">[root]</span>
+    for the remainder of this tutorial.
   </p>
-</div>
 
-<h3>2.C) Download the full repository</h3>
-<div class="sub">
-  <p>
-    The full repository can be found online 
-    <a href="http://www.ics.uci.edu/~lopes/datasets/SDS_source-repo-18k.html">here</a>.
-    Simply download this file (very very big) and extract it to the desired directory.
-  </p>
-</div>
+  <h3>2.A) Create the test-repository</h3>
+  <div class="sub">
+    <p>
+      Run
+    </p>
+    <div class="code-block">
+      [install]$ cd Sourcerer/bin<br>
+      [install]/Sourcerer/bin$ ant create-test-repo
+    </div>
+    <p>
+      This creates a test repository. To view it's contents, run
+    </p>
+    <div class="code-block">
+      [install]/Sourcerer/bin$ cd ../infrastructure/tools/java/extractor/test-repo<br>
+      [install]/Sourcerer/infrastructure/tools/java/extractor/test-repo$ ls
+    </div>
+    <p>
+      This test repository contains two projects, 0/0, a project for testing the 
+      feature extractor, and 0/1, the Sourcerer project itself.
+    </p>
+  </div>
 
-<h3>2.D) Create your own repository</h3>
-<div class="sub">
-  <p>
-    To create a repository with custom, simply follow the repository 
-    structure <a href="repository.html">here</a>.
-  </p>
-  
-  <h4>2.D.1) Create <span class="fixed">[ROOT]</span> directory</h4>
-  <div class="sub">
-    <div class="code-block">
-      [?]$ mkdir [root]<br>
-      [?]$ cd [root]
-    </div>
-  </div>
-  
-  <h4>2.D.2) Create project directories</h4>
+  <h3>2.B) Download a sample repository</h3>
   <div class="sub">
     <p>
-      For every project you wish to include in the repository, create a subdirectory of
-      <span class="fixed">[root]</span> of the form <span class="fixed">[root]/[number]/[number]</span>.
-    </p>
-    <div class="code-block">
-      [root]$ mkdir 0<br>
-      [root]$ mkdir 0/0<br>
-      [root]$ mkdir 0/1<br>
-      [root]$ mkdir 0/2<br>
-      [root]$ ls<br>
-      0<br>
-      [root]/0$ cd 0<br>
-      [root]$ ls<br>
-      0 1 2
-    </div>
-    <p>
-      This creates space for 3 projects. It doesn't matter what numbers are picked 
-      for the directories, as long as they are numbers.
+      A sample repository containing a small random selection of projects from 
+      the full repository can be found online
+      <a href="http://sourcerer.ics.uci.edu/files/sample-repo.tgz">here</a>.
+      Simply download this file and extract it to the desired directory.
     </p>
   </div>
   
-  <h4>2.D.3) Add project content</h4>
+  <h3>2.C) Download the full repository</h3>
   <div class="sub">
     <p>
-      To add the actual content for each project, do the following.
-    </p>
-    <div class="code-block">
-      [root]/0$ cd 0<br>
-      [root]/0/0$ mkdir content<br>
-      [root]/0/0$ cp -R [project-content]/* content
-    </div>
-    <p>
-      This copies the contents of the project from some <span class="code">[project-content]</span>
-      directory into the content directory of the repository. This content can be any combination of Java 
-      source code and jar files.
+      The full repository can be found online 
+      <a href="http://www.ics.uci.edu/~lopes/datasets/SDS_source-repo-18k.html">here</a>.
+      Simply download this file (very very big) and extract it to the desired directory.
     </p>
   </div>
   
-  <h4>2.D.4) Create <span class="fixed">project.properties</span> files</h4>
+  <h3>2.D) Create your own repository</h3>
   <div class="sub">
-    <div class="code-block">
-      [root]/0/0$ echo name=[project-name] &gt; project.properties
-    </div>
     <p>
-      There are a number of other supported properties, but the only required one is name.
+      To create a repository with custom, simply follow the repository 
+      structure <a href="repository.html">here</a>.
     </p>
+    
+    <h4>2.D.1) Create <span class="fixed">[ROOT]</span> directory</h4>
+    <div class="sub">
+      <div class="code-block">
+        [?]$ mkdir [root]<br>
+        [?]$ cd [root]
+      </div>
+    </div>
+    
+    <h4>2.D.2) Create project directories</h4>
+    <div class="sub">
+      <p>
+        For every project you wish to include in the repository, create a subdirectory of
+        <span class="fixed">[root]</span> of the form <span class="fixed">[root]/[number]/[number]</span>.
+      </p>
+      <div class="code-block">
+        [root]$ mkdir 0<br>
+        [root]$ mkdir 0/0<br>
+        [root]$ mkdir 0/1<br>
+        [root]$ mkdir 0/2<br>
+        [root]$ ls<br>
+        0<br>
+        [root]/0$ cd 0<br>
+        [root]$ ls<br>
+        0 1 2
+      </div>
+      <p>
+        This creates space for 3 projects. It doesn't matter what numbers are picked 
+        for the directories, as long as they are numbers.
+      </p>
+    </div>
+    
+    <h4>2.D.3) Add project content</h4>
+    <div class="sub">
+      <p>
+        To add the actual content for each project, do the following.
+      </p>
+      <div class="code-block">
+        [root]/0$ cd 0<br>
+        [root]/0/0$ mkdir content<br>
+        [root]/0/0$ cp -R [project-content]/* content
+      </div>
+      <p>
+        This copies the contents of the project from some <span class="code">[project-content]</span>
+        directory into the content directory of the repository. This content can be any combination of Java 
+        source code and jar files.
+      </p>
+    </div>
+  
+    <h4>2.D.4) Create <span class="fixed">project.properties</span> files</h4>
+    <div class="sub">
+      <div class="code-block">
+        [root]/0/0$ echo name=[project-name] &gt; project.properties
+      </div>
+      <p>
+        There are a number of other supported properties, but the only required one is name.
+      </p>
+    </div>
   </div>
 </div>
 
@@ -237,7 +278,7 @@ The Sourcerer Project
     </p>
   </div>
   
-  <h4>4.4) Other commands</h4>
+  <h3>4.4) Other commands</h3>
   <div class="sub">
     <p>
       Some other commands that might be interesting to run are:
@@ -259,11 +300,30 @@ The Sourcerer Project
 </div>
 
 <h2>Step 5: <span class="colora">Set up the Extractor</span></h2>
-<p>
-  Unfortunately, as the extractor is an Eclipse plugin, this step cannot be done from the command line. 
-  The Eclipse-specific ant task extractor must be run, which requires the following Eclipse projects 
-  to be loaded: bin, extractor, model, repository-manager, and utilities.
-</p>
+<div class="sub">
+  <p>
+    Unfortunately, as the extractor is an Eclipse plugin, this step cannot be done from the command line.
+    You can download the plugin <a href="">here</a>. Place it in the <span class="fixed">[install]/Sourcerer/bin/plugins</span>
+    directory (you will have to create this directory).
+  </p>
+  <p>
+    If you decided to load the projects into Eclipse, you can instead run <span class="fixed">launch-&gt;extractor-&gt;Build Extractor</span>.
+    This Eclipse-specific ant task will create the plugin and place it in the directory mentioned above.
+  </p>
+  <p>
+    Next, run
+  </p>
+  <div class="code-block">
+    [?]$ cd [install]/Sourcerer/bin<br>
+    [install]/Sourcerer/bin$ ant repackage-extractor<br>
+  </div>
+  <p>
+    This ant task will repackage the plugin to contain the necessary dependencies, and will place it in the <span class="fixed">dist</span> directory.
+  </p>
+    As the Extractor is a headless Eclipse plugin, it must be installed into a working Eclipse instance. This installation can be done as follows:
+  <p>
+  </p>
+</div>
 <pre style="
 white-space: -moz-pre-wrap;
 white-space: -pre-wrap;
@@ -276,12 +336,7 @@ word-wrap: break-word;
 Step 5: Set up the Extractor
 
 
-Next, run the ant task
-ant repackage-extractor
 
-This task creates the final version of the extractor plugin, which can be found at [install]/Sourcerer/bin/dist/Extractor_1.0.0.jar
-
-As the Extractor is a headless Eclipse plugin, it must be installed into a working Eclipse instance. This installation can be done as follows:
 * Download a recent version of Eclipse and extract it to some directory [eclipse].
 * Place the Extractor_1.0.0.jar file generated by the ant task in the [eclipse]/plugins directory
 
