@@ -70,7 +70,7 @@ The Sourcerer Project
       <li>Click finish, and wait for the projects to build.</li>
       <li>
         Once built, there should still be errors in the <span class="fixed">extractor</span> project.
-        To correct these, go to the <span class="fixed">bin</span> project, and run <span class="fixed">launch->lib->sourcerer-lib.launch</span>.
+        To correct these, go to the <span class="fixed">bin</span> project, and run <span class="fixed">launch-&gt;lib-&gt;sourcerer-lib.launch</span>.
         Then refresh the <span class="fixed">bin</span> project, and the errors should disappear.
       </li> 
     </ol>
@@ -82,13 +82,13 @@ The Sourcerer Project
   <p>
     For the purposes of the tutorial, there are four ways of doing this. They
     all result in a repository located in a directory referred to as <span class="code">[root]</span>
-    for the remainder of this tutorial.
+    for the remainder of this tutorial. So pick either 2.A, 2.B, 2.C or 2.D.
   </p>
 
   <h3>2.A) Create the test-repository</h3>
   <div class="sub">
     <p>
-      Run
+      Run (Eclipse launcher <span class="fixed">launch-&gt;test-repo-&gt;Create test repo.launch</span>)
     </p>
     <div class="code-block">
       [install]$ cd Sourcerer/bin<br>
@@ -146,6 +146,7 @@ The Sourcerer Project
       <p>
         For every project you wish to include in the repository, create a subdirectory of
         <span class="fixed">[root]</span> of the form <span class="fixed">[root]/[number]/[number]</span>.
+        For example, if you wanted to create a repository with 3 projects, you would do the following.
       </p>
       <div class="code-block">
         [root]$ mkdir 0<br>
@@ -195,40 +196,59 @@ The Sourcerer Project
 
 <h2>Step 3: <span class="colora">Compile the repository tools</span></h2>
 <div class="sub">
-  <p>Run</p>
-  <div class="code-block">
-    [install]/Sourcerer/bin$ ant repo-tools 
+  <h3>3.A) Compile</h3>
+  <div class="sub">
+    <p>
+      <span class="colora bold">Note</span>: This step need only be completed if you wish to use the repository tools from the command line.
+    </p>
+    <p>
+      Run (Eclipse launcher <span class="fixed">launch-&gt;lib-&gt;repo-tools.launch</span>)
+    </p>
+    <div class="code-block">
+      [install]/Sourcerer/bin$ ant repo-tools 
+    </div>
+    <p>
+      This will create <span class="fixed">repo-tools.jar</span> in the <span class="fixed">dist</span> subdirectory. We will
+      refer to this subdirectory as <span class="fixed">[install-dist]</span>.
+    </p>
   </div>
-  <p>
-    This will create <span class="fixed">repo-tools.jar</span> in the <span class="fixed">dist</span> subdirectory. We will
-    refer to this subdirectory as <span class="fixed">[install-dist]</span>.
-  </p>
-  <p>
-    Running
-  </p>
-  <div class="code-block">
-    [install]/Sourcerer/bin$ cd dist<br>
-    [install-dist]$ java -jar repo-tools.jar
+  <h3>3.B) Test</h3>
+  <div class="sub">
+    <p>
+      Running (Eclipse launcher <span class="fixed">launch-&gt;tutorial-&gt;Step 3 - Repo Tools.launch</span>)
+    </p>
+    <div class="code-block">
+      [install]/Sourcerer/bin$ cd dist<br>
+      [install-dist]$ java -jar repo-tools.jar
+    </div>
+    <p>
+      will print a complete list of the commands provided by <span class="fixed">repo-tools.jar</span>.
+    </p>
   </div>
-  <p>
-    will print a complete list of the commands provided by <span class="fixed">repo-tools.jar</span>.
-  </p>
 </div>
 
 <h2>Step 4: <span class="colora">Finish setting up the repository</span></h2>
 <div class="sub">
   <p>
-    <span class="colora bold">Note</span>: If you used step 2A (create-test-repo ant task), these tasks have already been run and you may skip this step.
+    <span class="colora bold">Note</span>: If you used step 2.A (create-test-repo ant task), these tasks have already been run and you may skip this step.
   </p>
   
   <h3>4.1) Aggregate jar files</h3>
   <div class="sub">
     <p>
-      Run
+      Run (Eclipse launcher <span class="fixed">launch-&gt;tutorial-&gt;Step 4 - Aggregate Jar Files.launch</span>)
     </p>
     <div class="code-block">
       [install-dist]$ java -jar repo-tools.jar --aggregate-jar-files --input-repo [root]
     </div>
+    <p>
+      If you are using Eclipse, a dialog will pop up asking for the value of <span class="fixed">input-repo</span>.
+      You should direct it to the root of the repository you created in Step 2.
+    </p>
+    <p>
+      If you are running it from the command line, you should replace <span class="fixed">[root]</span> with the
+      path to the repository you created in Step 2.
+    </p>
     <p>
       This collects all of the jar files in the repository into the jars directory. To see the result, do the following.
     </p>
@@ -249,7 +269,7 @@ The Sourcerer Project
   <h3>4.2) Create jar index</h3>
   <div class="sub">
     <p>
-      Next, run the following command to create the jar index.
+      Next, run the following command to create the jar index. (Eclipse launcher <span class="fixed">launch-&gt;tutorial-&gt;Step 4 - Create Jar Index.launch</span>)
     </p>
     <div class="code-block">
       [?]$ cd [install]/Sourcerer/bin/dist<br>
@@ -267,7 +287,7 @@ The Sourcerer Project
   <h3>4.3) Clean jar manifests</h3>
   <div class="sub">
     <p>
-      Finally, run the following command to clean out the jar manifests.
+      Finally, run the following command to clean out the jar manifests. (Eclipse launcher <span class="fixed">launch-&gt;tutorial-&gt;Step 4 - Clean Jar Manifests.launch</span>)
     </p>
     <div class="code-block">
       [?]$ cd [install]/Sourcerer/bin/dist<br>
@@ -281,7 +301,7 @@ The Sourcerer Project
   <h3>4.4) Other commands</h3>
   <div class="sub">
     <p>
-      Some other commands that might be interesting to run are:
+      Some other commands that might be interesting to run are: (the Eclipse launchers are all found in <span class="fixed">launch-&gt;tutorial</span>)
     </p>
     <div class="code-block">
       [?]$ cd [install]/Sourcerer/bin/dist<br>
@@ -302,27 +322,43 @@ The Sourcerer Project
 <h2>Step 5: <span class="colora">Set up the Extractor</span></h2>
 <div class="sub">
   <p>
-    Unfortunately, as the extractor is an Eclipse plugin, this step cannot be done from the command line.
-    You can download the plugin <a href="">here</a>. Place it in the <span class="fixed">[install]/Sourcerer/bin/plugins</span>
-    directory (you will have to create this directory).
+    <span class="colora bold">Note</span>: The following steps only need to be done if you wish to run the Extractor from the command line.
+    They are not necessary if you are doing this tutorial through Eclipse.
   </p>
-  <p>
-    If you decided to load the projects into Eclipse, you can instead run <span class="fixed">launch-&gt;extractor-&gt;Build Extractor</span>.
-    This Eclipse-specific ant task will create the plugin and place it in the directory mentioned above.
-  </p>
-  <p>
-    Next, run
-  </p>
-  <div class="code-block">
-    [?]$ cd [install]/Sourcerer/bin<br>
-    [install]/Sourcerer/bin$ ant repackage-extractor<br>
+  <h3>5.A) Build Extractor plugin</h3>
+  <div class="sub">
+    <p>
+      Unfortunately, as the extractor is an Eclipse plugin, this step cannot be done from the command line.
+      You can download the plugin <a href="">here</a>. Place it in the <span class="fixed">[install]/Sourcerer/bin/plugins</span>
+      directory (you will have to create this directory).
+    </p>
+    <p>
+      If you decided to load the projects into Eclipse, you can instead run <span class="fixed">launch-&gt;extractor-&gt;Build Extractor</span>.
+      This Eclipse-specific ant task will create the plugin and place it in the directory mentioned above.
+    </p>
+    <p>
+      Next, run <span class="fixed">launch-&gt;extractor-&gt;Repackage Extractor.launch</span>
+    </p>
+    <div class="code-block">
+      [?]$ cd [install]/Sourcerer/bin<br>
+      [install]/Sourcerer/bin$ ant repackage-extractor<br>
+    </div>
+    <p>
+      This ant task will repackage the plugin to contain the necessary dependencies, and will place it in the <span class="fixed">dist</span> directory.
+    </p>
   </div>
-  <p>
-    This ant task will repackage the plugin to contain the necessary dependencies, and will place it in the <span class="fixed">dist</span> directory.
-  </p>
-    As the Extractor is a headless Eclipse plugin, it must be installed into a working Eclipse instance. This installation can be done as follows:
-  <p>
-  </p>
+  <h3>5.B) Copy plugin into Eclipse</h3>
+  <div class="sub">
+    <p>
+      As the Extractor is a headless Eclipse plugin, it must be installed into a working Eclipse instance. This installation can be done as follows:
+    <p>
+    <ol>
+      <li>Download a recent version of Eclipse and extract it to some directory <span class="fixed">[eclipse]</span>.</li>
+      <li>Place the Extractor_1.0.0.jar file generated by the ant task in the [eclipse]/plugins directory.</li>
+    </ol>
+    <p>
+      To test that it's working, try to run
+  </div>
 </div>
 <pre style="
 white-space: -moz-pre-wrap;
@@ -331,14 +367,6 @@ white-space: -o-pre-wrap;
 white-space: pre-wrap;
 word-wrap: break-word;
 ">
-
-
-Step 5: Set up the Extractor
-
-
-
-* Download a recent version of Eclipse and extract it to some directory [eclipse].
-* Place the Extractor_1.0.0.jar file generated by the ant task in the [eclipse]/plugins directory
 
 To test that it's working, try to run
 java -jar [eclipse]/plugins/org.eclipse.[version-name].launcher_[version-number].jar -consolelog -application Extractor.Extractor

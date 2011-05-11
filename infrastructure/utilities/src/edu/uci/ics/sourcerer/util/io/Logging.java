@@ -128,34 +128,37 @@ public final class Logging {
     } else if (!loggingInitialized) {
       throw new IllegalStateException("Logging must be initialized before resume logging");
     }
-    
-    File resumeFile = new File(OUTPUT.getValue(), command.getName() + "/" + RESUME_LOG.getValue());
-    
-    if (CLEAR_RESUME_LOG.getValue()) {
-      if (resumeFile.exists()) {
-        resumeFile.delete();
-      }
-    }
-    
-    Set<String> resumeSet = getResumeSet(resumeFile);
-    
-    try {
-      FileHandler resumeHandler = new FileHandler(resumeFile.getPath(), true);
-      resumeHandler.setLevel(RESUME);
-      resumeHandler.setFormatter(new Formatter() {
-        @Override
-        public String format(LogRecord record) {
-          return record.getMessage() + "\n";
+    if (OUTPUT.hasValue()) {
+      File resumeFile = new File(OUTPUT.getValue(), command.getName() + "/" + RESUME_LOG.getValue());
+      
+      if (CLEAR_RESUME_LOG.getValue()) {
+        if (resumeFile.exists()) {
+          resumeFile.delete();
         }
-      });
-      logger.addHandler(resumeHandler);
-    } catch (IOException e) {
-      e.printStackTrace();
-      System.exit(1);
+      }
+      
+      Set<String> resumeSet = getResumeSet(resumeFile);
+      
+      try {
+        FileHandler resumeHandler = new FileHandler(resumeFile.getPath(), true);
+        resumeHandler.setLevel(RESUME);
+        resumeHandler.setFormatter(new Formatter() {
+          @Override
+          public String format(LogRecord record) {
+            return record.getMessage() + "\n";
+          }
+        });
+        logger.addHandler(resumeHandler);
+      } catch (IOException e) {
+        e.printStackTrace();
+        System.exit(1);
+      }
+      
+      resumeLoggingInitialized = true;
+      return resumeSet;
+    } else {
+      return Collections.emptySet();
     }
-    
-    resumeLoggingInitialized = true;
-    return resumeSet;
   }
  
   public synchronized static void initializeLogger(Command command) {

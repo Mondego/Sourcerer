@@ -105,9 +105,9 @@ public abstract class Property <T> {
       required = builder.toString();
     }
     if (hasDefaultValue()) {
-      return description + required;
-    } else {
       return description + " Defaults to " + getDefaultString() + "." + required;
+    } else {
+      return description + required;
     }
   }
   
