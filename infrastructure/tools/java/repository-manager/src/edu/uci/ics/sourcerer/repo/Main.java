@@ -124,8 +124,7 @@ public class Main {
           throw new IllegalStateException("This should have been caught by the property manager");
         }
       }
-    }.setProperties(PROJECT_NAMES_FILE.asOutput(), CSV_MODE)
-     .setConditionalProperties(INPUT_REPO, OUTPUT_REPO);
+    }.setProperties(PROJECT_NAMES_FILE.asOutput(), CSV_MODE, INPUT_REPO, OUTPUT_REPO);
   
   public static final Command MIGRATE_REPOSITORY =
     new Command("migrate-repository", "Migrates (while compressing) the input repository to the target repository.") {

@@ -261,12 +261,15 @@ The Sourcerer Project
       <li>
         On the first line, for the property <span class="fixed">input-repo</span>,
         replace <span class="fixed">[root]</span> with the path to the repository
-        you created in Step 2.
+        you created in Step 2. As this is a Java properties file, make sure to 
+        escape any used of <span class="fixed">\</span> as <span class="fixed">\\</span>. 
       </li>
       <li>
         On the second line, for the property <span class="fixed">output-repo</span>,
         replace <span class="fixed">[path]</span> with the path to where you would
-        like the extracted version of the repository to be stored.
+        like the extracted version of the repository to be stored. As this is a Java 
+        properties file, make sure to any used of <span class="fixed">\</span> as 
+        <span class="fixed">\\</span>.
     </ol>
   </div>
   <h3>4.1) Aggregate jar files</h3>
@@ -403,12 +406,75 @@ The Sourcerer Project
 
 <h2>Step 6: <span class="colora">Run the Extractor</span></h2>
 <div class="sub">
-  <p>
-    The first step in extraction is to extract from the Java library code. To do so, run (Eclipse launcher <span class="fixed">launch/tutorial/Step 5 - Test Extractor.launch</span>)
-  </p>
-  <div class="code-block">
-    [?]$ java -jar [...] -application Extractor.Extractor --extract-libraries --output-repo [path] --output [path] &amp;
+  <h3>6.A) Extract Libraries</h3>
+  <div class="sub">
+    <p>
+      The first step in extraction is to extract from the Java library code. To do so, run (Eclipse launcher <span class="fixed">launch/tutorial/Step 6 - Extract Libraries.launch</span>)
+    </p>
+    <div class="code-block">
+      [?]$ java -jar [...] -application Extractor.Extractor --extract-libraries --output-repo [path]
+    </div>
+    <p>
+      Unfortunately, Eclipse buffers all output printed to <span class="fixed">System.out</span>/<span class="fixed">System.err</span> by headless plugins until
+      the termination of the plugin. Therefore, to receive real-time feedback regarding the status of the Extractor, you must add the <span class="fixed">output</span>
+      property. For the command-line, this entails adding <span class="fixed">--output [path]</span> to the end of the command. For Eclipse, this means uncommenting a line
+      in <span class="fixed">tutorial.properties</span> that says <span class="fixed">output=[path]</span>. In either case, <span class="fixed">[path]</span> should
+      be the path to where the output logs get written. 
+    </p>
+    <p>
+      You can track the progress of the extractor by running 
+    </p>
+    <div class="code-block">
+      [?]$ tail -f [output-path]/extract-libraries/[date]/[time]/error.log
+    </div>
+    <p>
+      When using the command-line, it is recommended to run this in the background (using &amp;), 
+      as it can take a while to complete.
+    </p>
+    <p>
+      The results of the extraction can be seen in <span class="fixed">[output-repo]/libs/</span>. The extracted 
+      data for each Java library jar file is contained within the directory with that 
+      jar file's name. <span class="fixed">rt.jar</span> contains the vast majority of the Java library. Looking 
+      into any directory, you can see the various flat files that are used to build the database.
+    </p>
+  </div>
+  <h3>6.B) Extract Jars</h3>
+  <div class="sub">
+    <p>
+      Next, extract the jar files using (Eclipse launcher <span class="fixed">launch/tutorial/Step 6 - Extract Jars.launch</span>)
+    </p>
+    <div class="code-block">
+      [?]$ java -jar [...] -application Extractor.Extractor --extract-jars --input-repo [path] --output-repo [path]
+    </div>
+    <p>
+      Notice that an input-repo is needed this time, as the jar files are not being picked off the Java classpath.
+    </p>
+    <p>
+      The results of this extraction can be found in <span class="fixed">[output-repo]/jars/</span>.
+    </p>
+  </div>
+  <h3>6.C) Extract Projects</h3>
+  <div class="sub">
+    <p>
+      Lastly, extract the source files using (Eclipse launcher <span class="fixed">launch/tutorial/Step 6 - Extract Projects.launch</span>) 
+    </p>
+    <div class="code-block">
+      [?]$ java -jar [...] -application Extractor.Extractor --extract-projects --input-repo [path] --output-repo [path]
+    </div>
+    <p>
+      The results of this extraction can be found in <span class="fixed">[output-repo]</span>.
+    </p>
   </div> 
+  <h3>6.D) Extraction summary</h3>
+    <p>
+      To view some summary statistics of the extraction, please run
+    </p>
+    <div class="code-block">
+      [?]$ cd [install-dist]<br>
+      [install-dist]$ java -jar repo-tools.jar --extraction-stats --input-repo [path]
+    </div>
+    <p>
+      
 </div>
 <pre style="
 white-space: -moz-pre-wrap;
@@ -420,26 +486,6 @@ word-wrap: break-word;
 
 
 
-It is recommended to run this in the background (using &), as it can take a while to complete. Also, due to Eclipse's headless functionality, output that is not directed using the --output parameter is blocked until completion of the application, so no updates are received.
-
-You can track the progress of the extractor by running tail -f [output-path]/extract-libraries/[date]/[time]/error.log or info.log. 
-
-The results of the extraction can be seen in [output-repo-path]/libs/. The extracted data for each Java library jar file is contained within the directory with that jar file's name. rt.jar contains the vast majority of the Java library. Looking into any directory, you can see the various flat files that are used to build the database.
-
-Next, extract the jar files using
-java -jar [...] -application Extractor.Extractor --extract-jars --input-repo [path] --output-repo [path] --output [path] &
-
-Notice that an input-repo is needed this time, as the jar files are not being picked off the Java classpath.
-
-The results of this extraction can be found in [output-repo-path]/jars/.
-
-Lastly, extract the source files using
-java -jar [...] -application Extractor.Extractor --extract-projects --input-repo [path] --output-repo [path] --output [path] &
-
-The results of this extraction can be found in [output-repo-path].
-
-To view some summary statistics of the extraction, please run
-java -jar [path to repo-tools.jar] --extraction-stats --input-repo [path-to-output-repo]
 
 This will create an extraction-stats.txt file which contains some details on what was extracted from the repository.
 
