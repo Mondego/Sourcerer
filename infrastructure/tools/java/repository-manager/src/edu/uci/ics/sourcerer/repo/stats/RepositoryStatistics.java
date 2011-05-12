@@ -58,6 +58,8 @@ public class RepositoryStatistics {
         }
       }
     }
+    
+    logger.info("Writing jar statistics to: " + JAR_STATS_FILE.asOutput().getValue().getAbsolutePath());
       
     TablePrettyPrinter printer = null;
     try {
@@ -85,6 +87,7 @@ public class RepositoryStatistics {
   public static void printProjectSizes(Repository repo) {
     BufferedWriter bw = null;
     try {
+      logger.info("Writing project sizes to: " + PROJECT_SIZES_FILE.asOutput().getValue().getAbsolutePath());
       bw = FileUtils.getBufferedWriter(PROJECT_SIZES_FILE);
       bw.write("project-path total-file-count filtered-file-count jar-count");
       bw.newLine();
@@ -104,6 +107,7 @@ public class RepositoryStatistics {
   public static void printProjectNames(Repository repo) {
     BufferedWriter bw = null;
     try {
+      logger.info("Writing project names to: " + PROJECT_NAMES_FILE.asOutput().getValue().getAbsolutePath());
       bw = FileUtils.getBufferedWriter(PROJECT_NAMES_FILE);
       bw.write("project-path project-name");
       bw.newLine();
@@ -111,6 +115,7 @@ public class RepositoryStatistics {
         bw.write(project.getProjectRoot().getRelativePath() + " " + project.loadProperties().getName());
         bw.newLine();
       }
+      logger.info("Done!");
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error writing to file", e);
     } finally { 
@@ -121,6 +126,7 @@ public class RepositoryStatistics {
   public static void printProjectNames(ExtractedRepository repo) {
     BufferedWriter bw = null;
     try {
+      logger.info("Writing project names to: " + PROJECT_NAMES_FILE.asOutput().getValue().getAbsolutePath());
       bw = FileUtils.getBufferedWriter(PROJECT_NAMES_FILE);
       bw.write("project-path project-name");
       bw.newLine();
