@@ -83,11 +83,10 @@ public final class Logging {
       @Override
       public String format(LogRecord record) {
         String msg = Logging.formatError(record);
-        System.err.print(msg);
         return msg;
       }
     };
-    defaultHandler = new StreamHandler(System.err, formatter);
+    defaultHandler = new StreamHandler(System.out, formatter);
     defaultHandler.setLevel(Level.INFO);
     logger.addHandler(defaultHandler);
     
@@ -181,6 +180,7 @@ public final class Logging {
           new File(getOutputDir(command)).mkdirs();
         } else {
           suppressFileLogging = true;
+          SUPPRESS_FILE_LOGGING.setValue(true);
         }
       }
       
@@ -196,7 +196,7 @@ public final class Logging {
             }
           }
         };
-        errorHandler = new StreamHandler(System.err, errorFormatter);
+        errorHandler = new StreamHandler(System.out, errorFormatter);
       } else {
         Formatter errorFormatter = new Formatter() {
           @Override
@@ -219,14 +219,6 @@ public final class Logging {
       
       StreamHandler infoHandler = null;
       if (!suppressFileLogging) {
-//        Formatter infoFormatter = new Formatter() {
-//          @Override
-//          public String format(LogRecord record) {
-//            return formatInfo(record);
-//          }
-//        };
-//        infoHandler = new StreamHandler(System.out, infoFormatter);
-//      } else {
         Formatter infoFormatter = new Formatter() {
           @Override
           public String format(LogRecord record) {
@@ -267,34 +259,36 @@ public final class Logging {
       throw new IllegalArgumentException("Error logging may not be added to the same thread twice: " + thread.getId());
     }
 
-    final long id = thread.getId();
-    
-    Formatter formatter = new Formatter() {
-      @Override
-      public String format(LogRecord record) {
-        if (Thread.currentThread().getId() == id) {
-          if (record.getLevel() == RESUME) {
-            return "";
-          } else if (record.getLevel() == Level.INFO || record.getLevel() == THREAD_INFO) {
-            return Logging.formatInfo(record);
+    if (!SUPPRESS_FILE_LOGGING.getValue()) {
+      final long id = thread.getId();
+      
+      Formatter formatter = new Formatter() {
+        @Override
+        public String format(LogRecord record) {
+          if (Thread.currentThread().getId() == id) {
+            if (record.getLevel() == RESUME) {
+              return "";
+            } else if (record.getLevel() == Level.INFO || record.getLevel() == THREAD_INFO) {
+              return Logging.formatInfo(record);
+            } else {
+              return Logging.formatError(record);
+            }
           } else {
-            return Logging.formatError(record);
+            return "";
           }
-        } else {
-          return "";
         }
+      };
+      
+      try {
+        String handlerPath = getFileHandlerPattern(command, THREAD_LOG);
+        StreamHandler handler = new FileHandler(handlerPath);
+        handler.setFormatter(formatter);
+        handler.setLevel(Level.INFO);
+        threadHandlerMap.put(id, handler);
+        logger.addHandler(handler);
+      } catch (IOException e) {
+        logger.log(THREAD_INFO, "Error adding file logger.", e);
       }
-    };
-    
-    try {
-      String handlerPath = getFileHandlerPattern(command, THREAD_LOG);
-      StreamHandler handler = new FileHandler(handlerPath);
-      handler.setFormatter(formatter);
-      handler.setLevel(Level.INFO);
-      threadHandlerMap.put(id, handler);
-      logger.addHandler(handler);
-    } catch (IOException e) {
-      logger.log(THREAD_INFO, "Error adding file logger.", e);
     }
   }
   
