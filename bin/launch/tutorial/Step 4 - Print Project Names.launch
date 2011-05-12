@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/bin/dist/sourcerer-lib.jar"/>
+<listEntry value="/repository-manager/src/edu/uci/ics/sourcerer/repo/Main.java"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="1"/>
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="edu.uci.ics.sourcerer.repo.Main"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--print-project-names --input-repo ${folder_prompt:input-repo}"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--properties-file ${project_loc:bin}/launch/tutorial/tutorial.properties --print-project-names"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="repository-manager"/>
 </launchConfiguration>
