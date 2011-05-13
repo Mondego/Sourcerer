@@ -243,6 +243,7 @@ public class ExtractedRepository extends AbstractRepository {
   
   public void computeExtractionStats() {
     includeNotExtracted = true;
+    logger.info("Writing extraction stats to " + EXTRACTION_STATS_FILE.asOutput().getValue().getAbsolutePath());
     TablePrettyPrinter printer = TablePrettyPrinter.getTablePrettyPrinter(EXTRACTION_STATS_FILE);
     if (libraries == null) {
       logger.info("Loading libraries...");
