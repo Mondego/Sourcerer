@@ -26,9 +26,6 @@ import edu.uci.ics.sourcerer.db.schema.FilesTable;
 import edu.uci.ics.sourcerer.db.schema.ImportsTable;
 import edu.uci.ics.sourcerer.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.db.schema.RelationsTable;
-import edu.uci.ics.sourcerer.db.util.BasicResultTranslator;
-import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.Relation;
@@ -36,6 +33,9 @@ import edu.uci.ics.sourcerer.model.RelationClass;
 import edu.uci.ics.sourcerer.model.db.FileFqn;
 import edu.uci.ics.sourcerer.model.db.ImportFqn;
 import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
+import edu.uci.ics.sourcerer.util.db.BasicResultTranslator;
+import edu.uci.ics.sourcerer.util.db.QueryExecutor;
+import edu.uci.ics.sourcerer.util.db.ResultTranslator;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

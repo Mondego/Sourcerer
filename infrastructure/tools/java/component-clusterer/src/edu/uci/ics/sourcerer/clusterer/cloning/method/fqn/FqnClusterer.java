@@ -25,10 +25,10 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.ProjectMap;
 import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.db.FileDB;
 import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
 import edu.uci.ics.sourcerer.model.db.SmallProjectDB;
+import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.LineFileWriter;
 import edu.uci.ics.sourcerer.util.io.Property;

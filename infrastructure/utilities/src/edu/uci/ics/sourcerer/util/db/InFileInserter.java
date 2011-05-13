@@ -1,4 +1,4 @@
-package edu.uci.ics.sourcerer.db.util;
+package edu.uci.ics.sourcerer.util.db;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 

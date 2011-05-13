@@ -17,11 +17,12 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
-import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.TableLocker;
-import edu.uci.ics.sourcerer.db.util.columns.BooleanColumn;
-import edu.uci.ics.sourcerer.db.util.columns.Column;
-import edu.uci.ics.sourcerer.db.util.columns.IntColumn;
+import edu.uci.ics.sourcerer.util.db.DatabaseTable;
+import edu.uci.ics.sourcerer.util.db.QueryExecutor;
+import edu.uci.ics.sourcerer.util.db.TableLocker;
+import edu.uci.ics.sourcerer.util.db.columns.BooleanColumn;
+import edu.uci.ics.sourcerer.util.db.columns.Column;
+import edu.uci.ics.sourcerer.util.db.columns.IntColumn;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

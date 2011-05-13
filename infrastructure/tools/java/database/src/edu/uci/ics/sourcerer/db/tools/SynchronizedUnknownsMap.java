@@ -24,11 +24,11 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.schema.EntitiesTable;
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
 import edu.uci.ics.sourcerer.model.db.SmallEntityDB;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

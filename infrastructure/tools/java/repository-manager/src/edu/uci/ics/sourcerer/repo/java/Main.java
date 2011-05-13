@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo;
+package edu.uci.ics.sourcerer.repo.java;
 
 import static edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository.EXTRACTION_STATS_FILE;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;

@@ -21,12 +21,12 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
 
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.db.SmallProjectDB;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.TimeCounter;
+import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

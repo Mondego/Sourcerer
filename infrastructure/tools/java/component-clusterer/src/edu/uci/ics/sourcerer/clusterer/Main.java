@@ -22,8 +22,8 @@ import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintClu
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
 import edu.uci.ics.sourcerer.clusterer.usage.project.UsageComputer;
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
+import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.io.Command;
 import edu.uci.ics.sourcerer.util.io.Properties;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;

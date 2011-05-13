@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.Comment;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.File;
@@ -29,6 +28,7 @@ import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.util.TimeCounter;
+import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 

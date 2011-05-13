@@ -15,15 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.db.queries;
-
-import edu.uci.ics.sourcerer.util.db.QueryExecutor;
+package edu.uci.ics.sourcerer.repo;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class ImportQueries extends Queries {
-  protected ImportQueries(QueryExecutor executor) {
-    super(executor);
-  }
+public class Main {
+
 }

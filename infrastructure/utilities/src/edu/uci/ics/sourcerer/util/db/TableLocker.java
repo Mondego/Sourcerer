@@ -1,6 +1,4 @@
-package edu.uci.ics.sourcerer.db.util;
-
-import edu.uci.ics.sourcerer.db.schema.DatabaseTable;
+package edu.uci.ics.sourcerer.util.db;
 
 public class TableLocker {
   private boolean locked;

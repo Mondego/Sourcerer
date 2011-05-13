@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.db.schema;
+package edu.uci.ics.sourcerer.util.db;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
@@ -23,10 +23,6 @@ import java.io.File;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
-import edu.uci.ics.sourcerer.db.util.InFileInserter;
-import edu.uci.ics.sourcerer.db.util.KeyInsertBatcher;
-import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.TableLocker;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
