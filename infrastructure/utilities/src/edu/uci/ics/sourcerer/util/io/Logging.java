@@ -82,8 +82,8 @@ public final class Logging {
     Formatter formatter = new Formatter() {
       @Override
       public String format(LogRecord record) {
-        String msg = Logging.formatError(record);
-        return msg;
+        System.out.print(Logging.formatError(record));
+        return "";
       }
     };
     defaultHandler = new StreamHandler(System.out, formatter);
