@@ -22,9 +22,9 @@ import static edu.uci.ics.sourcerer.db.schema.CommentsTable.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.model.db.LocationDB;
+import edu.uci.ics.sourcerer.util.db.QueryExecutor;
+import edu.uci.ics.sourcerer.util.db.ResultTranslator;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

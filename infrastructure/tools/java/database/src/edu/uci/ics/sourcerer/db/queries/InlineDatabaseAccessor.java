@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.db.queries;
 
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
+import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
 
 
 /**

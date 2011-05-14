@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.db.util;
+package edu.uci.ics.sourcerer.util.db;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 

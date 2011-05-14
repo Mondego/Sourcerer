@@ -17,16 +17,17 @@
  */
 package edu.uci.ics.sourcerer.db.schema;
 
-import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.TableLocker;
-import edu.uci.ics.sourcerer.db.util.columns.Column;
-import edu.uci.ics.sourcerer.db.util.columns.EnumColumn;
-import edu.uci.ics.sourcerer.db.util.columns.IntColumn;
-import edu.uci.ics.sourcerer.db.util.columns.StringColumn;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.LocalVariable;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
+import edu.uci.ics.sourcerer.util.db.DatabaseTable;
+import edu.uci.ics.sourcerer.util.db.QueryExecutor;
+import edu.uci.ics.sourcerer.util.db.TableLocker;
+import edu.uci.ics.sourcerer.util.db.columns.Column;
+import edu.uci.ics.sourcerer.util.db.columns.EnumColumn;
+import edu.uci.ics.sourcerer.util.db.columns.IntColumn;
+import edu.uci.ics.sourcerer.util.db.columns.StringColumn;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

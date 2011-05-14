@@ -15,24 +15,40 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.db.util;
+package edu.uci.ics.sourcerer.util.db.columns;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class InsertBatcher extends AbstractInsertBatcher {
-
-  protected InsertBatcher(QueryExecutor executor, String table) {
-    super(executor, table);
+public class BooleanColumn extends Column<Boolean> {
+  private BooleanColumn(String name, String table, String type, boolean nullable) {
+    super(name, table, type, nullable);
   }
 
-  public void addValue(String value) {
-    appendValue(value);
-    incrementCount();
+  public static Column<Boolean> getBoolean(String name, String table) {
+    return new BooleanColumn(name, table, "BOOLEAN", true);
+  }
+  
+  public static Column<Boolean> getBooleanNotNull(String name, String table) {
+    return new BooleanColumn(name, table, "BOOLEAN NOT NULL", false);
   }
   
   @Override
-  protected void insert(String value) {
-    executor.executeUpdate(value);
+  public Boolean convertFromDB(String value) {
+    if (value == null) {
+      return null; 
+    } else {
+      return Boolean.valueOf(value);
+    }
+  }
+
+  @Override
+  protected String convertHelper(Boolean value) {
+    return value.toString();
+  }
+  
+  @Override
+  protected String equalsHelper(Boolean value) {
+    return value.toString();
   }
 }

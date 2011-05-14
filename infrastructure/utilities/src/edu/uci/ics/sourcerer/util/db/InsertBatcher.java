@@ -15,32 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.db.util;
-
-import edu.uci.ics.sourcerer.db.util.columns.Column;
+package edu.uci.ics.sourcerer.util.db;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class ResultTranslator<T> extends BasicResultTranslator<T> {
-  private final String table;
-  private final String select;
-  
-  public ResultTranslator(String table, Column<?> ... columns) {
-    this.table = table;
-    StringBuilder builder = new StringBuilder();
-    for (Column<?> column : columns) {
-      builder.append(column.getName()).append(',');
-    }
-    builder.deleteCharAt(builder.length() - 1);
-    select = builder.toString();
+public class InsertBatcher extends AbstractInsertBatcher {
+
+  protected InsertBatcher(QueryExecutor executor, String table) {
+    super(executor, table);
+  }
+
+  public void addValue(String value) {
+    appendValue(value);
+    incrementCount();
   }
   
-  public final String getTable() {
-    return table;
-  }
-  
-  public final String getSelect() {
-    return select;
+  @Override
+  protected void insert(String value) {
+    executor.executeUpdate(value);
   }
 }

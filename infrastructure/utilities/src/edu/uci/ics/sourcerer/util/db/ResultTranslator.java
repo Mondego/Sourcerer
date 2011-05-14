@@ -15,40 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.db.util.columns;
+package edu.uci.ics.sourcerer.util.db;
+
+import edu.uci.ics.sourcerer.util.db.columns.Column;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class BooleanColumn extends Column<Boolean> {
-  private BooleanColumn(String name, String table, String type, boolean nullable) {
-    super(name, table, type, nullable);
-  }
-
-  public static Column<Boolean> getBoolean(String name, String table) {
-    return new BooleanColumn(name, table, "BOOLEAN", true);
-  }
+public abstract class ResultTranslator<T> extends BasicResultTranslator<T> {
+  private final String table;
+  private final String select;
   
-  public static Column<Boolean> getBooleanNotNull(String name, String table) {
-    return new BooleanColumn(name, table, "BOOLEAN NOT NULL", false);
-  }
-  
-  @Override
-  public Boolean convertFromDB(String value) {
-    if (value == null) {
-      return null; 
-    } else {
-      return Boolean.valueOf(value);
+  public ResultTranslator(String table, Column<?> ... columns) {
+    this.table = table;
+    StringBuilder builder = new StringBuilder();
+    for (Column<?> column : columns) {
+      builder.append(column.getName()).append(',');
     }
-  }
-
-  @Override
-  protected String convertHelper(Boolean value) {
-    return value.toString();
+    builder.deleteCharAt(builder.length() - 1);
+    select = builder.toString();
   }
   
-  @Override
-  protected String equalsHelper(Boolean value) {
-    return value.toString();
+  public final String getTable() {
+    return table;
+  }
+  
+  public final String getSelect() {
+    return select;
   }
 }

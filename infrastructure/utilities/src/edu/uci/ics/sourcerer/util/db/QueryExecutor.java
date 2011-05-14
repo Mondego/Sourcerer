@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.db.util;
+package edu.uci.ics.sourcerer.util.db;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
@@ -27,9 +27,8 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.db.schema.DatabaseTable;
-import edu.uci.ics.sourcerer.db.util.columns.Column;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.db.columns.Column;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
