@@ -10,5 +10,6 @@
 	<classpathentry kind="lib" path="/lib/commons-cli-1.1.jar"/>
 	<classpathentry kind="lib" path="/lib/guice-1.0.jar"/>
 	<classpathentry kind="lib" path="/lib/svnclientadapter-svnant_1.2.1.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/utilities"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.repo.base;
 
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
+import edu.uci.ics.sourcerer.repo.core.RepoFile;
 import edu.uci.ics.sourcerer.util.io.LineWriteable;
 
 /**

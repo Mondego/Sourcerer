@@ -52,6 +52,14 @@ public final class FileUtils {
   protected static final Property<File> TEMP_DIR = new IOFilePropertyFactory("temp-dir", "temp", "Name of temp directory placed into OUTPUT directory").asOutput().register("General");
   
   private FileUtils() {}
+
+  public static String toWriteableString(File file) {
+    return file.getAbsolutePath().replace(' ', '*');
+  }
+  
+  public static File fromWriteableString(String path) {
+    return new File(path.replace('*', ' '));
+  }
   
   public static void close (Closeable closeMe) {
     if (closeMe != null) {

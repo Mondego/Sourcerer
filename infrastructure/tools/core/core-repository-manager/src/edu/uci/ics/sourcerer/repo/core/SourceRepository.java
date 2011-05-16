@@ -15,39 +15,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.base;
+package edu.uci.ics.sourcerer.repo.core;
 
-import edu.uci.ics.sourcerer.repo.core.RepoFile;
-import edu.uci.ics.sourcerer.util.io.LWField;
+import java.io.File;
+
+import edu.uci.ics.sourcerer.util.io.Property;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarFile implements IJarFile {
-  @LWField
-  private String hash;
-  @LWField
-  private RepoFile file;
+public class SourceRepository extends AbstractRepository<RepoProject> {
+  protected SourceRepository(RepoFile repoRoot) {
+    super(repoRoot);
+  }
 
-  protected JarFile() {}
-  
-  public JarFile(String hash, RepoFile file) {
-    this.hash = hash;
-    this.file = file;
+  public static SourceRepository make(Property<File> root) {
+    return new SourceRepository(RepoFile.makeRoot(root.getValue()));
   }
 
   @Override
-  public String getHash() {
-    return hash;
-  }
-  
-  @Override
-  public RepoFile getFile() {
-    return file;
-  }
-  
-  @Override
-  public String toString() {
-    return file.getName();
+  protected RepoProject createProject(RepoFile file) {
+    return new SourceProject(file);
   }
 }

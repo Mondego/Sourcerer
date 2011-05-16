@@ -21,6 +21,8 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -133,7 +135,20 @@ public final class FieldConverter {
         }
       };
     } else {
-      return helperMap.get(type);
+      FieldConverterHelper helper = helperMap.get(type);
+      if (helper == null) {
+        try {
+          Method method = type.getMethod("registerConverterHelper");
+          method.invoke(null);
+          helper = helperMap.get(type);
+        } catch (SecurityException e) {
+        } catch (NoSuchMethodException e) {
+        } catch (IllegalArgumentException e) {
+        } catch (IllegalAccessException e) {
+        } catch (InvocationTargetException e) {
+        }
+      }
+      return helper;
     }
   }
   

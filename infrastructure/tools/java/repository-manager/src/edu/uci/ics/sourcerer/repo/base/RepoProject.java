@@ -19,10 +19,10 @@ package edu.uci.ics.sourcerer.repo.base;
 
 import edu.uci.ics.sourcerer.repo.base.compressed.CompressedFileSet;
 import edu.uci.ics.sourcerer.repo.base.normal.FileSet;
+import edu.uci.ics.sourcerer.repo.core.RepoFile;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
