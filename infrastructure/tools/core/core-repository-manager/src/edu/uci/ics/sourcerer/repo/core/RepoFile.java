@@ -17,16 +17,12 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
 import java.io.File;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FieldConverter;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.LWRec;
 
 /**
@@ -36,13 +32,21 @@ public class RepoFile implements LWRec {
   private final RepoFile root;
   private final RelativePath relativePath;
   private final File file;
+  private Map<RelativePath, RepoFile> subrootMap;
   
-  private static Map<File, RepoFile> rootMap = Helper.newHashMap();
-
   private RepoFile(File file) {
-    root = this;
-    relativePath = RelativePath.make("");
+    root = null;
+    relativePath = RelativePath.makeEmpty();
     this.file = file;
+    subrootMap = Helper.newHashMap();
+  }
+  
+  private RepoFile(RepoFile root) {
+    this.root = root;
+    this.relativePath = RelativePath.makeEmpty();
+    this.file = root.root.file;
+    root.subrootMap.put(relativePath, this);
+    subrootMap = Helper.newHashMap();
   }
   
   private RepoFile(RepoFile root, RelativePath relativePath) {
@@ -52,12 +56,7 @@ public class RepoFile implements LWRec {
   }
   
   public static RepoFile makeRoot(File root) {
-    RepoFile file = rootMap.get(root);
-    if (file == null) {
-      file = new RepoFile(root);
-      rootMap.put(root, file);
-    }
-    return file;
+    return new RepoFile(root);
   }
 
   public RepoFile getRoot() {
@@ -69,7 +68,11 @@ public class RepoFile implements LWRec {
   }
   
   public RepoFile asRoot() {
-    return makeRoot(file);
+    RepoFile subRoot = root.subrootMap.get(relativePath);
+    if (subRoot == null) {
+      subRoot = new RepoFile(this);
+    }
+    return subRoot;
   }
   
   public boolean isDirectory() {
@@ -143,6 +146,32 @@ public class RepoFile implements LWRec {
     }
   }
   
+  public RepoFile getChildRoot(String child) {
+    if (file.isFile()) {
+      throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
+    } else {
+      RelativePath path = relativePath.append(child);
+      RepoFile subRoot = root.subrootMap.get(path);
+      if (subRoot == null) {
+        subRoot = new RepoFile(new RepoFile(root, path));
+      }
+      return subRoot;
+    }
+  }
+  
+  public RepoFile getChildRoot(RelativePath relativePath) {
+    if (file.isFile()) {
+      throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
+    } else {
+      RelativePath path = this.relativePath.append(relativePath);
+      RepoFile subRoot = root.subrootMap.get(path);
+      if (subRoot == null) {
+        subRoot = new RepoFile(new RepoFile(root, path));
+      }
+      return subRoot;
+    }
+  }
+  
   public String getName() {
     return file.getName();
   }
@@ -154,27 +183,29 @@ public class RepoFile implements LWRec {
   
   /* LWRec Related Methods */
   
-  public static void registerConverterHelper(RepoFile repoRoot) {
+  public static void registerConverterHelper(final RepoFile repoRoot) {
     FieldConverter.registerConverterHelper(RepoFile.class, new FieldConverter.FieldConverterHelper() {
       @Override
       protected Object makeFromScanner(Scanner scanner) throws IllegalAccessException {
         String value = scanner.next();
-        int colon = value.indexOf(';');
-        if (colon == -1) {
-          logger.log(Level.SEVERE, "Invalid value: " + value);
-          return null;
-        } else {
-          File rootFile = FileUtils.fromWriteableString(value.substring(0, colon));
-          RepoFile root = makeRoot(rootFile);
-          RelativePath relativePath = RelativePath.makeFromWriteable(value.substring(colon + 1));
-          return new RepoFile(root, relativePath);
+        RepoFile root = repoRoot;
+        int sep = -1;
+        int prevSep = sep + 1;
+        while ((sep = value.indexOf(';', prevSep)) >= 0) {
+          root = root.getChildRoot(RelativePath.makeFromWriteable(value.substring(prevSep, sep)));
+          prevSep = sep + 1;
         }
+        return root.getChild(RelativePath.makeFromWriteable(value.substring(prevSep)));
       }
     });
   }
   
   @Override
   public String writeToString() {
-    return FileUtils.toWriteableString(root.file) + ";" + relativePath.toWriteableString();
+    if (root.root == null) {
+      return relativePath.toWriteableString();
+    } else {
+      return root.writeToString() + ";" + relativePath.toWriteableString();
+    }
   }
 }

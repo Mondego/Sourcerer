@@ -44,6 +44,10 @@ public class RelativePath {
     return path;
   }
   
+  protected static RelativePath makeEmpty() {
+    return getSingleton("");
+  }
+  
   protected static RelativePath make(String relativePath) {
     relativePath = relativePath.replace('\\', '/');
     if (relativePath.charAt(0) == '/') {
