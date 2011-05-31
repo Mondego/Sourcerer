@@ -24,9 +24,9 @@ import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
 import edu.uci.ics.sourcerer.clusterer.usage.project.UsageComputer;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
-import edu.uci.ics.sourcerer.util.io.Command;
-import edu.uci.ics.sourcerer.util.io.Arguments;
-import edu.uci.ics.sourcerer.util.io.ArgumentManager;
+import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
+import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
+import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

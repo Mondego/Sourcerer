@@ -43,6 +43,7 @@ import java.util.zip.ZipOutputStream;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
 
 /**

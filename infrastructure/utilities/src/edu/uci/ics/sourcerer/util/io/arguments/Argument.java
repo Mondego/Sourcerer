@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io;
+package edu.uci.ics.sourcerer.util.io.arguments;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

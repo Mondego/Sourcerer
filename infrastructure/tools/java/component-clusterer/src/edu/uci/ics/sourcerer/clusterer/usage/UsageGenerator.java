@@ -27,8 +27,8 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.db.queries.InlineDatabaseAccessor;
 import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Argument;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
 import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 

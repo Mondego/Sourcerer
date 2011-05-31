@@ -28,7 +28,7 @@ import edu.uci.ics.sourcerer.clusterer.cloning.basic.ProjectMap;
 import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.MatchingProjects;
 import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.MatchStatus;
 import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.ProjectMatchSet;
-import edu.uci.ics.sourcerer.util.io.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**

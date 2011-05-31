@@ -21,7 +21,6 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.util.io.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

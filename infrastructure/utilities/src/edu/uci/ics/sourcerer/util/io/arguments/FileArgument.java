@@ -19,7 +19,6 @@ package edu.uci.ics.sourcerer.util.io.arguments;
 
 import java.io.File;
 
-import edu.uci.ics.sourcerer.util.io.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

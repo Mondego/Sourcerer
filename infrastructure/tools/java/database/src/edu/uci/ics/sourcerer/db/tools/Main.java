@@ -27,8 +27,8 @@ import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.PROJECT_FILT
 import static edu.uci.ics.sourcerer.util.db.DatabaseConnection.DATABASE_PASSWORD;
 import static edu.uci.ics.sourcerer.util.db.DatabaseConnection.DATABASE_URL;
 import static edu.uci.ics.sourcerer.util.db.DatabaseConnection.DATABASE_USER;
-import edu.uci.ics.sourcerer.util.io.Command;
-import edu.uci.ics.sourcerer.util.io.ArgumentManager;
+import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
+import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

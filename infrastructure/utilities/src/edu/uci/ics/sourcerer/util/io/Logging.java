@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.util.io;
 
-import static edu.uci.ics.sourcerer.util.io.Arguments.OUTPUT;
+import static edu.uci.ics.sourcerer.util.io.arguments.Arguments.OUTPUT;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -40,7 +40,9 @@ import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.Command;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
@@ -49,7 +51,7 @@ import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 @SuppressWarnings("serial")
 public final class Logging {
   protected static final Argument<Boolean> SUPPRESS_FILE_LOGGING = new BooleanArgument("suppress-file-logging", false, "Suppresses all logging to files.").register("Logging");
-  protected static final Argument<Boolean> REPORT_TO_CONSOLE = new BooleanArgument("report-to-console", false, "Prints all the logging messages to the console.").register("Logging");
+  public static final Argument<Boolean> REPORT_TO_CONSOLE = new BooleanArgument("report-to-console", false, "Prints all the logging messages to the console.").register("Logging");
   protected static final Argument<String> ERROR_LOG = new StringArgument("error-log", "error.log", "Filename for error log.").register("Logging");
   protected static final Argument<String> THREAD_LOG = new StringArgument("thread-log", "thread-%t.log", "Filename for thread log.").register("Logging");
   protected static final Argument<String> INFO_LOG = new StringArgument("info-log", "info.log", "Filename for the info log.").register("Logging");

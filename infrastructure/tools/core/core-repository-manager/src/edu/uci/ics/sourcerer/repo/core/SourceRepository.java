@@ -19,7 +19,7 @@ package edu.uci.ics.sourcerer.repo.core;
 
 import java.io.File;
 
-import edu.uci.ics.sourcerer.util.io.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

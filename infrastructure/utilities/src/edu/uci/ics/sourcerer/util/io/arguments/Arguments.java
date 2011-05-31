@@ -15,11 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io.properties;
+package edu.uci.ics.sourcerer.util.io.arguments;
+
+import java.io.File;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class WrappedProperties {
-
+public final class Arguments {
+  private Arguments() {}
+  
+  public static final Argument<File> OUTPUT = new FileArgument("output", "General purpose output directory.");
+  public static final Argument<File> INPUT = new FileArgument("input", "General purpose input file/directory.");
 }

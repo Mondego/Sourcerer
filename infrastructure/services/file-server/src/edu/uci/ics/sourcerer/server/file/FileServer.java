@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import edu.uci.ics.sourcerer.db.tools.FileAccessor;
 import edu.uci.ics.sourcerer.db.tools.FileAccessor.Result;
-import edu.uci.ics.sourcerer.util.io.ArgumentManager;
+import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
 import edu.uci.ics.sourcerer.util.server.ServletUtils;
 
 /**

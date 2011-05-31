@@ -20,6 +20,44 @@ package edu.uci.ics.sourcerer.util.io.properties;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class Property {
-
+public abstract class Property<T> {
+  private String name;
+  private T value;
+  private boolean initialized;
+  private AbstractProperties properties;
+  
+  protected Property(String name, AbstractProperties properties) {
+    this.name = name;
+    this.properties = properties;
+    properties.registerProperty(this);
+  }
+  
+  protected abstract T parseValue(String value);
+  
+  protected String toString(T value) {
+    return value.toString();
+  }
+  
+  protected String getName() {
+    return name;
+  }
+  
+  protected T getValue() {
+    if (!initialized) {
+      String val = properties.getValue(name);
+      if (val != null) {
+        value = parseValue(val);
+      }
+      initialized = true;
+    }
+    return value;
+  }
+  
+  protected String getValueAsString() {
+    return toString(getValue());
+  }
+  
+  public void setValue(T value) {
+    this.value = value;
+  }
 }

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io;
+package edu.uci.ics.sourcerer.util.io.arguments;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
@@ -37,10 +37,10 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.Logging;
+import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
-import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
-import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
-import edu.uci.ics.sourcerer.util.io.arguments.StreamArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.Command.Disable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

@@ -15,12 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io;
+package edu.uci.ics.sourcerer.util.io.arguments;
 
 import java.util.Collection;
 import java.util.Collections;
 
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.Logging;
 
 
 /**
@@ -50,7 +51,7 @@ public abstract class Command {
     return this;
   }
   
-  protected String getName() {
+  public String getName() {
     return name;
   }
   
