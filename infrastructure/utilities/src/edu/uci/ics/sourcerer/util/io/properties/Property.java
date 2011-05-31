@@ -15,18 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io;
-
-import java.io.File;
-
-import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
+package edu.uci.ics.sourcerer.util.io.properties;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class Properties {
-  private Properties() {}
-  
-  public static final Property<File> OUTPUT = new FileProperty("output", "General purpose output directory.");
-  public static final Property<File> INPUT = new FileProperty("input", "General purpose input file/directory.");
+public class Property {
+
 }

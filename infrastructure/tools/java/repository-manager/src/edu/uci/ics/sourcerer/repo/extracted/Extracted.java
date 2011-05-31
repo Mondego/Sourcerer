@@ -35,22 +35,22 @@ import edu.uci.ics.sourcerer.repo.core.RepoFile;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class Extracted {
-  public static final Property<String> ENTITY_FILE = new StringProperty("entity-file", "entities.txt", "Filename for the extracted entities.");
-  public static final Property<String> RELATION_FILE = new StringProperty("relation-file", "relations.txt", "Filename for the extracted relations.");
-  public static final Property<String> LOCAL_VARIABLE_FILE = new StringProperty("local-variables-file", "local-variables.txt", "Filename for the extracted local variables / parameters.");
-  public static final Property<String> COMMENT_FILE = new StringProperty("comment-file", "comments.txt", "Filename for the extracted comments.");
-  public static final Property<String> FILE_FILE = new StringProperty("file-file", "files.txt", "Filename for the extracted files.");
-  public static final Property<String> PROBLEM_FILE = new StringProperty("problem-file", "problems.txt", "Filename for the extracted problems.");
-  public static final Property<String> IMPORT_FILE = new StringProperty("import-file", "imports.txt", "Filename for the extracted imports.");
-  public static final Property<String> USED_JAR_FILE = new StringProperty("used-jar-file", "used-jars.txt", "Filename for used jar files.");
-  public static final Property<String> MISSING_TYPE_FILE = new StringProperty("missing-type-file", "missing-types.txt", "Filename for missing types.");
+  public static final Argument<String> ENTITY_FILE = new StringArgument("entity-file", "entities.txt", "Filename for the extracted entities.");
+  public static final Argument<String> RELATION_FILE = new StringArgument("relation-file", "relations.txt", "Filename for the extracted relations.");
+  public static final Argument<String> LOCAL_VARIABLE_FILE = new StringArgument("local-variables-file", "local-variables.txt", "Filename for the extracted local variables / parameters.");
+  public static final Argument<String> COMMENT_FILE = new StringArgument("comment-file", "comments.txt", "Filename for the extracted comments.");
+  public static final Argument<String> FILE_FILE = new StringArgument("file-file", "files.txt", "Filename for the extracted files.");
+  public static final Argument<String> PROBLEM_FILE = new StringArgument("problem-file", "problems.txt", "Filename for the extracted problems.");
+  public static final Argument<String> IMPORT_FILE = new StringArgument("import-file", "imports.txt", "Filename for the extracted imports.");
+  public static final Argument<String> USED_JAR_FILE = new StringArgument("used-jar-file", "used-jars.txt", "Filename for used jar files.");
+  public static final Argument<String> MISSING_TYPE_FILE = new StringArgument("missing-type-file", "missing-types.txt", "Filename for missing types.");
   
   protected RepoFile content;
 
@@ -78,11 +78,11 @@ public abstract class Extracted {
     }
   }
   
-  protected File getInputFile(Property<String> property) {
+  protected File getInputFile(Argument<String> property) {
     return content.getChildFile(property.getValue());
   }
   
-  protected InputStream getInputStream(Property<String> property) throws IOException {
+  protected InputStream getInputStream(Argument<String> property) throws IOException {
     File file = getInputFile(property);
     if (file.exists()) {
       return new FileInputStream(file);

@@ -28,14 +28,14 @@ import edu.uci.ics.sourcerer.clusterer.cloning.basic.ProjectMap;
 import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.MatchingProjects;
 import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.MatchStatus;
 import edu.uci.ics.sourcerer.clusterer.cloning.pairwise.ProjectMatchSet;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class CombinedClusterer {
-  public static final Property<String> COMBINED_STATS = new StringProperty("combined-stats", "combined-stats.txt", "Stats calculated when creating the combined keys.");
+  public static final Argument<String> COMBINED_STATS = new StringArgument("combined-stats", "combined-stats.txt", "Stats calculated when creating the combined keys.");
   public static void computeCombinedKeys(ProjectMap projects) {
     logger.info("Computing combined keys...");
     ProjectMatchSet matches = projects.getProjectMatchSet();

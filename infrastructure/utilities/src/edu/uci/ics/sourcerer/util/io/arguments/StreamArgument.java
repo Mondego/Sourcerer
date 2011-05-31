@@ -15,25 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io.properties;
+package edu.uci.ics.sourcerer.util.io.arguments;
 
-import edu.uci.ics.sourcerer.util.io.Property;
+import java.io.InputStream;
+
+import edu.uci.ics.sourcerer.util.io.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DoubleProperty extends Property<Double> {
-  public DoubleProperty(String name, Double defaultValue, String description) {
-    super(name, defaultValue, description);
+public class StreamArgument extends Argument<InputStream> {
+  public StreamArgument(String name, String description) {
+    super(name, null, description);
   }
   
   @Override
   public String getType() {
-    return "double";
+    return "InputStream";
   }
   
   @Override
-  protected Double parseString(String value) {
-    return Double.parseDouble(value);
+  protected InputStream parseString(String value) {
+    throw new UnsupportedOperationException("A stream property may not come from a string");
   }
 }

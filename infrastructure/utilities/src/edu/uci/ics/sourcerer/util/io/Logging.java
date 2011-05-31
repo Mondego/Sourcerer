@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.util.io;
 
-import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
+import static edu.uci.ics.sourcerer.util.io.Arguments.OUTPUT;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -40,21 +40,21 @@ import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 @SuppressWarnings("serial")
 public final class Logging {
-  protected static final Property<Boolean> SUPPRESS_FILE_LOGGING = new BooleanProperty("suppress-file-logging", false, "Suppresses all logging to files.").register("Logging");
-  protected static final Property<Boolean> REPORT_TO_CONSOLE = new BooleanProperty("report-to-console", false, "Prints all the logging messages to the console.").register("Logging");
-  protected static final Property<String> ERROR_LOG = new StringProperty("error-log", "error.log", "Filename for error log.").register("Logging");
-  protected static final Property<String> THREAD_LOG = new StringProperty("thread-log", "thread-%t.log", "Filename for thread log.").register("Logging");
-  protected static final Property<String> INFO_LOG = new StringProperty("info-log", "info.log", "Filename for the info log.").register("Logging");
-  protected static final Property<String> RESUME_LOG = new StringProperty("resume-log", "resume.log", "Filename for the resume log.");
-  protected static final Property<Boolean> CLEAR_RESUME_LOG = new BooleanProperty("clear-resume-log", false, "Clears the resume log before beginning."); 
+  protected static final Argument<Boolean> SUPPRESS_FILE_LOGGING = new BooleanArgument("suppress-file-logging", false, "Suppresses all logging to files.").register("Logging");
+  protected static final Argument<Boolean> REPORT_TO_CONSOLE = new BooleanArgument("report-to-console", false, "Prints all the logging messages to the console.").register("Logging");
+  protected static final Argument<String> ERROR_LOG = new StringArgument("error-log", "error.log", "Filename for error log.").register("Logging");
+  protected static final Argument<String> THREAD_LOG = new StringArgument("thread-log", "thread-%t.log", "Filename for thread log.").register("Logging");
+  protected static final Argument<String> INFO_LOG = new StringArgument("info-log", "info.log", "Filename for the info log.").register("Logging");
+  protected static final Argument<String> RESUME_LOG = new StringArgument("resume-log", "resume.log", "Filename for the resume log.");
+  protected static final Argument<Boolean> CLEAR_RESUME_LOG = new BooleanArgument("clear-resume-log", false, "Clears the resume log before beginning."); 
   
   public static final Level RESUME = new Level("RESUME", 10000) {};
   public static final Level THREAD_INFO = new Level("TINFO", 100000) {};
@@ -117,7 +117,7 @@ public final class Logging {
     return OUTPUT.getValue().getPath().replace('\\', '/') + "/" + command.getName() + "/" + day + "/" + time;
   }
   
-  private static String getFileHandlerPattern(Command command, Property<String> prop) {
+  private static String getFileHandlerPattern(Command command, Argument<String> prop) {
     return getOutputDir(command) + "/" + prop.getValue().replace("%t", "" + Thread.currentThread().getId());
   }
   

@@ -34,14 +34,14 @@ import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.TimeCounter;
 import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
+import edu.uci.ics.sourcerer.util.io.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class ParallelDatabaseImporter {
-  public static Property<Integer> THREAD_COUNT = new IntegerProperty("thread-count", 4, "Number of simultaneous threads");
+  public static Argument<Integer> THREAD_COUNT = new IntegerArgument("thread-count", 4, "Number of simultaneous threads");
   
   private ParallelDatabaseImporter() {}
   

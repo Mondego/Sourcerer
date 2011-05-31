@@ -15,26 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.util.io;
 
-import edu.uci.ics.sourcerer.util.io.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+import java.io.File;
+
+import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class RepoProject {
-  public static final Argument<String> PROJECT_PROPERTIES = new StringArgument("project-properties-file", "project.properties", "Properties files for a project.");
+public final class Arguments {
+  private Arguments() {}
   
-  protected final ProjectLocation loc;
-  protected final RepoFile properties;
-  
-  protected RepoProject(ProjectLocation loc) {
-    this.loc = loc;
-    properties = loc.getProjectRoot().getChild(PROJECT_PROPERTIES.getValue());
-  }
-  
-  protected ProjectLocation getLocation() {
-    return loc;
-  }
+  public static final Argument<File> OUTPUT = new FileArgument("output", "General purpose output directory.");
+  public static final Argument<File> INPUT = new FileArgument("input", "General purpose input file/directory.");
 }

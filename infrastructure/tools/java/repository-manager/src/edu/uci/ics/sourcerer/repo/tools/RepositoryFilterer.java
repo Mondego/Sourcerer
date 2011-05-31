@@ -35,16 +35,16 @@ import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.core.RepoFile;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.DoubleProperty;
-import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
+import edu.uci.ics.sourcerer.util.io.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class RepositoryFilterer {
-  public static final IOFilePropertyFactory COMPRESSED_FILTERED_REPO_FILE = new IOFilePropertyFactory("compressed-filtered-repo-file", "filtered-repo.zip", "The compressed file containing the filtered repository.");
-  public static final Property<Double> REPO_SUBSET_RATE = new DoubleProperty("repo-subset-rate", .1, "Percentage of repository to include.");
+  public static final IOFileArgumentFactory COMPRESSED_FILTERED_REPO_FILE = new IOFileArgumentFactory("compressed-filtered-repo-file", "filtered-repo.zip", "The compressed file containing the filtered repository.");
+  public static final Argument<Double> REPO_SUBSET_RATE = new DoubleArgument("repo-subset-rate", .1, "Percentage of repository to include.");
   
   /**
    * Creates a compressed version of the repository. Each

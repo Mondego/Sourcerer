@@ -15,26 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
-
-import edu.uci.ics.sourcerer.util.io.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+package edu.uci.ics.sourcerer.util.io.properties;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class RepoProject {
-  public static final Argument<String> PROJECT_PROPERTIES = new StringArgument("project-properties-file", "project.properties", "Properties files for a project.");
-  
-  protected final ProjectLocation loc;
-  protected final RepoFile properties;
-  
-  protected RepoProject(ProjectLocation loc) {
-    this.loc = loc;
-    properties = loc.getProjectRoot().getChild(PROJECT_PROPERTIES.getValue());
-  }
-  
-  protected ProjectLocation getLocation() {
-    return loc;
-  }
+public class WrappedProperties {
+
 }

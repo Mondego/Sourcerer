@@ -19,7 +19,7 @@ package edu.uci.ics.sourcerer.repo.core;
 
 import java.io.File;
 
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -29,12 +29,12 @@ public class SourceRepository extends AbstractRepository<RepoProject> {
     super(repoRoot);
   }
 
-  public static SourceRepository make(Property<File> root) {
+  public static SourceRepository make(Argument<File> root) {
     return new SourceRepository(RepoFile.makeRoot(root.getValue()));
   }
 
   @Override
-  protected RepoProject createProject(RepoFile file) {
-    return new SourceProject(file);
+  protected RepoProject createProject(ProjectLocation loc) {
+    return new SourceProject(loc);
   }
 }

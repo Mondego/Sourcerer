@@ -39,13 +39,13 @@ import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
-import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedRepository extends AbstractRepository {
-  public static final IOFilePropertyFactory EXTRACTION_STATS_FILE = new IOFilePropertyFactory("extraction-stats-file", "extraction-stats.txt", "Output file for the extraction stats.");
+  public static final IOFileArgumentFactory EXTRACTION_STATS_FILE = new IOFileArgumentFactory("extraction-stats-file", "extraction-stats.txt", "Output file for the extraction stats.");
   
   private boolean includeNotExtracted = false;
   private Collection<ExtractedLibrary> libraries;

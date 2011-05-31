@@ -29,20 +29,20 @@ import edu.uci.ics.sourcerer.util.Helper;
 public abstract class Command {
   private String name;
   private String description;
-  private Property<?>[] properties;
-  private Collection<Property<?>[]> conditionalProperties;
+  private Argument<?>[] properties;
+  private Collection<Argument<?>[]> conditionalProperties;
   
   public Command(String name, String description) {
     this.name = name;
     this.description = description;
   }
   
-  public Command setProperties(Property<?> ... properties) {
+  public Command setProperties(Argument<?> ... properties) {
     this.properties = properties;
     return this;
   }
   
-  public Command setConditionalProperties(Property<?> ... properties) {
+  public Command setConditionalProperties(Argument<?> ... properties) {
     if (conditionalProperties == null) {
       conditionalProperties = Helper.newLinkedList();
     }
@@ -58,15 +58,15 @@ public abstract class Command {
     return description;
   }
   
-  protected Property<?>[] getProperties() {
+  protected Argument<?>[] getProperties() {
     if (properties == null) {
-      return new Property<?>[0];
+      return new Argument<?>[0];
     } else {
       return properties;
     }
   }
   
-  protected Collection<Property<?>[]> getConditionalProperties() {
+  protected Collection<Argument<?>[]> getConditionalProperties() {
     if (conditionalProperties == null) {
       return Collections.emptyList();
     } else {

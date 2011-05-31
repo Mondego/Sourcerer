@@ -15,36 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io.properties;
-
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
-import java.util.logging.Level;
-
-import edu.uci.ics.sourcerer.util.io.Property;
+package edu.uci.ics.sourcerer.repo.core;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class BooleanProperty extends Property<Boolean> {
-  public BooleanProperty(String name, Boolean defaultValue, String description) {
-    super(name, defaultValue, description);
-  }
-
-  @Override
-  public String getType() {
-    return "bool";
-  }
-  
-  @Override
-  protected Boolean parseString(String value) {
-    if ("true".equals(value)) {
-      return true;
-    } else if ("false".equals(value)) {
-      return false;
-    } else {
-      logger.log(Level.SEVERE, value + " is not a valid boolean value for " + name);
-      return null;
-    }
+public class RepositoryFactory {
+  public static SourceRepository getSourceRepository() {
+    return new SourceRepository(RepoFile.makeRoot(AbstractRepository.INPUT_REPO.getValue()));
   }
 }

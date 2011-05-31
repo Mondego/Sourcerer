@@ -31,16 +31,16 @@ import edu.uci.ics.sourcerer.util.Iterators;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.LineFileReader;
 import edu.uci.ics.sourcerer.util.io.LineFileWriter;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractFileSet implements IFileSet {
-  public static final Property<String> FILE_CACHE = new StringProperty("file-cache-file", "file-cache.txt", "Cache of the file set's files.");
-  public static final Property<Boolean> CLEAR_FILE_CACHE = new BooleanProperty("clear-file-cache", false, "Clears the file caches.");
+  public static final Argument<String> FILE_CACHE = new StringArgument("file-cache-file", "file-cache.txt", "Cache of the file set's files.");
+  public static final Argument<Boolean> CLEAR_FILE_CACHE = new BooleanArgument("clear-file-cache", false, "Clears the file caches.");
   
   private File cache;
   

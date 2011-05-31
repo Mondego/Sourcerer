@@ -17,28 +17,36 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.LWRec;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
-import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.LineFileWriter;
+import edu.uci.ics.sourcerer.util.io.LineFileWriter.EntryWriter;
+import edu.uci.ics.sourcerer.util.io.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractRepository <Project extends RepoProject> {
-  public static final Property<File> INPUT_REPO = new FileProperty("input-repo", "The root directory of the input repository.");
-  public static final Property<File> OUTPUT_REPO = new FileProperty("output-repo", "The root directory of the output repository.");
+  public static final Argument<File> INPUT_REPO = new FileArgument("input-repo", "The root directory of the input repository.");
+  public static final Argument<File> OUTPUT_REPO = new FileArgument("output-repo", "The root directory of the output repository.");
   
-  public static final Property<Integer> MAX_CHECKOUT = new IntegerProperty("max-checkout", 1000, "The maximum checkout number when building the repository.");
+  public static final Argument<String> REPO_PROPERTIES = new StringArgument("repo-properties-file", "File name for repo properties file.");
+  public static final Argument<String> PROJECT_CACHE = new StringArgument("project-cache-file", "project-cache.txt", "File containing a cached list of the projects.");
+  public static final Argument<String> BATCH_PROPERTIES = new StringArgument("batch-properties-file", "batch.properties", "File name for batch properties file.");
   
   protected RepoFile repoRoot;
   
@@ -48,12 +56,23 @@ public abstract class AbstractRepository <Project extends RepoProject> {
     this.repoRoot = repoRoot;
   }
   
-  protected abstract Project createProject(RepoFile file);
+  protected abstract Project createProject(ProjectLocation loc);
   
   protected void populateProjects() {
     if (batchSet == null) {
       batchSet = new BatchSet();
       if (repoRoot.exists()) {
+        RepoFile cache = repoRoot.getChild(PROJECT_CACHE.getValue());
+        if (cache.exists()) {
+          try {
+            for (ProjectLocation loc : FileUtils.readLineFile(ProjectLocation.class, cache.toFile(), true)) {
+              batchSet.add(loc.getBatch(), loc.getCheckout());
+            }
+            return;
+          } catch (IOException e) {
+            logger.log(Level.SEVERE, "Unable to load project cache: " + cache.toString(), e);
+          }
+        }
         Pattern pattern = Pattern.compile("\\d*");
         for (File batch : repoRoot.toFile().listFiles()) {
           if (batch.isDirectory() && pattern.matcher(batch.getName()).matches()) {
@@ -63,6 +82,20 @@ public abstract class AbstractRepository <Project extends RepoProject> {
               }
             }
           }
+        }
+        LineFileWriter writer = null;
+        EntryWriter<ProjectLocation> ew = null;
+        try {
+          writer = FileUtils.getLineFileWriter(cache.toFile());
+          ew = writer.getEntryWriter(ProjectLocation.class);
+          for (Project project : getProjects()) {
+            ew.write(project.getLocation());
+          }
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Unable to write project cache.", e);
+        } finally {
+          FileUtils.close(ew);
+          FileUtils.close(writer);
         }
       }
     }
@@ -74,8 +107,8 @@ public abstract class AbstractRepository <Project extends RepoProject> {
     }
     return batchSet;
   }
-    
-  public class BatchSet extends AbstractCollection<Project> implements LWRec {
+
+  private class BatchSet extends AbstractCollection<Project> {
     private Map<Integer, Batch> batches;
     private int size;
     
@@ -145,13 +178,6 @@ public abstract class AbstractRepository <Project extends RepoProject> {
     public int size() {
       return size;
     }
-
-    /* LWRec Related Methods */
-    public static void regi
-    @Override
-    public String writeToString() {
-      
-    }
   }
   
   private final class Batch {
@@ -163,12 +189,12 @@ public abstract class AbstractRepository <Project extends RepoProject> {
     private Batch(RepoFile dir, Integer batch) {
       this.dir = dir;
       this.batch = batch;
-      properties = dir.getChild("batch.properties");
+      properties = dir.getChild(BATCH_PROPERTIES.getValue());
       projects = Helper.newTreeMap();
     }
     
     private void add(Integer checkout) {
-      projects.put(checkout, createProject(dir.getChild(checkout.toString())));
+      projects.put(checkout, createProject(new ProjectLocation(batch, checkout,dir.getChild(checkout.toString()))));
     }
   }
 }

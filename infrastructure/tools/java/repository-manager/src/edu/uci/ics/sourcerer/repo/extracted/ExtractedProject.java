@@ -22,14 +22,14 @@ import java.io.File;
 import edu.uci.ics.sourcerer.repo.core.RepoFile;
 import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
 import edu.uci.ics.sourcerer.repo.general.ExtractedProjectProperties;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedProject extends Extracted {
-  public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Filename for the associated jars.");
+  public static final Argument<String> JAR_FILE_FILE = new StringArgument("jar-file-file", "jars.txt", "Filename for the associated jars.");
   
   private ExtractedProjectProperties properties;
    

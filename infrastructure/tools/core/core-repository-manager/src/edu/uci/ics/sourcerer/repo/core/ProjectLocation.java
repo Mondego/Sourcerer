@@ -15,29 +15,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io.properties;
+package edu.uci.ics.sourcerer.repo.core;
 
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.LWField;
+import edu.uci.ics.sourcerer.util.io.LineWriteable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class StringProperty extends Property<String> {
-  public StringProperty(String name, String description) {
-    super(name, null, description);
+public class ProjectLocation implements LineWriteable {
+  private @LWField Integer batch;
+  private @LWField Integer checkout;
+  private RepoFile projectRoot;
+  
+  protected ProjectLocation() {}
+  
+  protected ProjectLocation(Integer batch, Integer checkout, RepoFile projectRoot) {
+    this.batch = batch;
+    this.checkout = checkout;
+    this.projectRoot = projectRoot;
   }
   
-  public StringProperty(String name, String defaultValue, String description) {
-    super(name, defaultValue, description);
+  public RepoFile getProjectRoot() {
+    return projectRoot;
   }
   
-  @Override
-  public String getType() {
-    return "string";
+  protected Integer getBatch() {
+    return batch;
   }
   
-  @Override
-  protected String parseString(String value) {
-    return value;
+  protected Integer getCheckout() {
+    return checkout;
   }
 }

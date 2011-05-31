@@ -31,16 +31,16 @@ import edu.uci.ics.sourcerer.model.db.SmallProjectDB;
 import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.LineFileWriter;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
-import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
+import edu.uci.ics.sourcerer.util.io.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FqnClusterer {
-  public static final IOFilePropertyFactory FQN_FILE_LISTING = new IOFilePropertyFactory("fqn-file-listing", "fqn-file-listing.txt", "List of all the files (and their FQNs) in the repository.");
-  public static final Property<Integer> MINIMUM_FQN_DOTS = new IntegerProperty("minimum-fqn-dots", 3, "Minimum number of dots for an fqn to be given high confidence.");
+  public static final IOFileArgumentFactory FQN_FILE_LISTING = new IOFileArgumentFactory("fqn-file-listing", "fqn-file-listing.txt", "List of all the files (and their FQNs) in the repository.");
+  public static final Argument<Integer> MINIMUM_FQN_DOTS = new IntegerArgument("minimum-fqn-dots", 3, "Minimum number of dots for an fqn to be given high confidence.");
 
   private static class FqnDatabaseAccessor extends DatabaseAccessor {
     public FqnDatabaseAccessor(DatabaseConnection connection) {

@@ -38,25 +38,25 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
-import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
-import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
-import edu.uci.ics.sourcerer.util.io.properties.StreamProperty;
+import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.StreamArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class PropertyManager {
-  private static PropertyManager singleton = null;
+public class ArgumentManager {
+  private static ArgumentManager singleton = null;
   
-  private static Map<String, Collection<Property<?>>> registeredProperties = null;
+  private static Map<String, Collection<Argument<?>>> registeredProperties = null;
   
-  public static final Property<Boolean> HELP = new BooleanProperty("help", false, "Prints usage information.").register("General");
-  public static final Property<File> PROPERTIES_FILE = new FileProperty("properties-file", "File containing Java-style property bindings.").makeOptional().register("General");
-  public static final Property<InputStream> PROPERTIES_STREAM = new StreamProperty("properties-stream", "Stream containing Java-style property bindings.").makeOptional().register("General");
+  public static final Argument<Boolean> HELP = new BooleanArgument("help", false, "Prints usage information.").register("General");
+  public static final Argument<File> PROPERTIES_FILE = new FileArgument("properties-file", "File containing Java-style property bindings.").makeOptional().register("General");
+  public static final Argument<InputStream> PROPERTIES_STREAM = new StreamArgument("properties-stream", "Stream containing Java-style property bindings.").makeOptional().register("General");
   
   private Map<String, String> propertyMap;
   
-  private PropertyManager() {
+  private ArgumentManager() {
     propertyMap = Helper.newHashMap();
   }
   
@@ -66,12 +66,12 @@ public class PropertyManager {
   
   public static void executeCommand(String[] args, Class<?> klass) {
     Command activeCommand = null;
-    Collection<Property<?>> missingProperties = Helper.newLinkedList();
-    Collection<Property<?>[]> invalidConditionals = Helper.newLinkedList();
+    Collection<Argument<?>> missingProperties = Helper.newLinkedList();
+    Collection<Argument<?>[]> invalidConditionals = Helper.newLinkedList();
     
-    synchronized(PropertyManager.class) {
+    synchronized(ArgumentManager.class) {
       initializeProperties(args);
-      PropertyManager properties = getProperties();
+      ArgumentManager properties = getProperties();
       
       // Populate the command list reflectively
       LinkedList<Command> commands = Helper.newLinkedList();
@@ -111,18 +111,18 @@ public class PropertyManager {
       }
          
       // Add all the command properties
-      Deque<Property<?>> stack = Helper.newStack();
+      Deque<Argument<?>> stack = Helper.newStack();
       stack.addAll(Arrays.asList(activeCommand.getProperties()));
-      for (Property<?>[] conditionals : activeCommand.getConditionalProperties()) {
-        for (Property<?> prop : conditionals) {
+      for (Argument<?>[] conditionals : activeCommand.getConditionalProperties()) {
+        for (Argument<?> prop : conditionals) {
           stack.add(prop.makeOptional());
         }
       }
-      Collection<Property<?>> commandProps = Helper.getFromMap(registeredProperties, activeCommand.getName(), LinkedHashSet.class);
+      Collection<Argument<?>> commandProps = Helper.getFromMap(registeredProperties, activeCommand.getName(), LinkedHashSet.class);
       while (!stack.isEmpty()) {
-        Property<?> prop = stack.pop();
+        Argument<?> prop = stack.pop();
         commandProps.add(prop);
-        for (Property<?> required : prop.getRequiredProperties()) {
+        for (Argument<?> required : prop.getRequiredProperties()) {
           if (!Boolean.TRUE.equals(prop.getValue())) {
             required.makeOptional();
           }
@@ -135,9 +135,9 @@ public class PropertyManager {
 
       
       // Check the conditional properties
-      for (Property<?>[] conditionals : activeCommand.getConditionalProperties()) {
+      for (Argument<?>[] conditionals : activeCommand.getConditionalProperties()) {
         boolean foundOne = false;
-        for (Property<?> prop : conditionals) {
+        for (Argument<?> prop : conditionals) {
           if (prop.hasValue()) {
             if (foundOne) {
               invalidConditionals.add(conditionals);
@@ -153,8 +153,8 @@ public class PropertyManager {
       }
       
       // Check all of the registered properties
-      for (Collection<Property<?>> props :  registeredProperties.values()) {
-        for (Property<?> prop : props) {
+      for (Collection<Argument<?>> props :  registeredProperties.values()) {
+        for (Argument<?> prop : props) {
           if (prop.isNotOptional() && !prop.hasValue()) {
             missingProperties.add(prop);
           }
@@ -171,7 +171,7 @@ public class PropertyManager {
     }
   }
   
-  public synchronized static void registerProperty(String category, Property<?> property) {
+  public synchronized static void registerProperty(String category, Argument<?> property) {
     if (registeredProperties == null) {
       registeredProperties = Helper.newHashMap();   
     }
@@ -195,7 +195,7 @@ public class PropertyManager {
     printer.close();
   }
   
-  private static void printCommand(Command command, Collection<Property<?>> missingProperties, Collection<Property<?>[]> invalidConditionals) {
+  private static void printCommand(Command command, Collection<Argument<?>> missingProperties, Collection<Argument<?>[]> invalidConditionals) {
     Logging.REPORT_TO_CONSOLE.setValue(true);
     TablePrettyPrinter printer = TablePrettyPrinter.getLoggerPrettyPrinter();
     if (!missingProperties.isEmpty()) {
@@ -203,7 +203,7 @@ public class PropertyManager {
       printer.beginTable(3, 57);
       printer.makeColumnWrappable(2);
       printer.addDividerRow();
-      for (Property<?> prop : missingProperties) {
+      for (Argument<?> prop : missingProperties) {
         printer.beginRow();
         printer.addCell(prop.getName());
         printer.addCell(prop.getType());
@@ -213,12 +213,12 @@ public class PropertyManager {
       printer.endTable();
     }
     if (!invalidConditionals.isEmpty()) {
-      for (Property<?>[] conditional : invalidConditionals) {
+      for (Argument<?>[] conditional : invalidConditionals) {
         printer.addHeader("Exactly one of following required properties for " + command.getName() + " must be supplied. Properties should be specified as --<name> <value>.");
         printer.beginTable(3, 57);
         printer.makeColumnWrappable(2);
         printer.addDividerRow();
-        for (Property<?> prop : conditional) {
+        for (Argument<?> prop : conditional) {
           printer.beginRow();
           printer.addCell(prop.getName());
           printer.addCell(prop.getType());
@@ -243,7 +243,7 @@ public class PropertyManager {
     printer.beginRow();
     printer.addCell(command.getName(), 3, Alignment.CENTER);
     printer.addDividerRow();
-    for (Property<?> prop : registeredProperties.get(command.getName())) {
+    for (Argument<?> prop : registeredProperties.get(command.getName())) {
       printer.beginRow();
       printer.addCell(prop.getName());
       printer.addCell(prop.getType());
@@ -252,12 +252,12 @@ public class PropertyManager {
     
     // Now do the remainder
     registeredProperties.remove(command.getName());
-    for (Map.Entry<String, Collection<Property<?>>> entry : registeredProperties.entrySet()) {
+    for (Map.Entry<String, Collection<Argument<?>>> entry : registeredProperties.entrySet()) {
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell(entry.getKey(), 3, Alignment.CENTER);
       printer.addDividerRow();
-      for (Property<?> prop : entry.getValue()) {
+      for (Argument<?> prop : entry.getValue()) {
         printer.beginRow();
         printer.addCell(prop.getName());
         printer.addCell(prop.getType());
@@ -276,7 +276,7 @@ public class PropertyManager {
   @SuppressWarnings("unchecked")
   public synchronized static void initializeProperties(String[] args) {
     if (singleton == null) {
-      singleton = new PropertyManager();
+      singleton = new ArgumentManager();
     }
       
     if (args != null) {
@@ -339,7 +339,7 @@ public class PropertyManager {
     }
   }
   
-  protected synchronized static PropertyManager getProperties() {
+  protected synchronized static ArgumentManager getProperties() {
     if (singleton == null) {
       throw new IllegalStateException("Properties not initialized");
     } else {

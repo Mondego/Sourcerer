@@ -15,26 +15,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.util.io.arguments;
+
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.io.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class RepoProject {
-  public static final Argument<String> PROJECT_PROPERTIES = new StringArgument("project-properties-file", "project.properties", "Properties files for a project.");
-  
-  protected final ProjectLocation loc;
-  protected final RepoFile properties;
-  
-  protected RepoProject(ProjectLocation loc) {
-    this.loc = loc;
-    properties = loc.getProjectRoot().getChild(PROJECT_PROPERTIES.getValue());
+public class BooleanArgument extends Argument<Boolean> {
+  public BooleanArgument(String name, Boolean defaultValue, String description) {
+    super(name, defaultValue, description);
+  }
+
+  @Override
+  public String getType() {
+    return "bool";
   }
   
-  protected ProjectLocation getLocation() {
-    return loc;
+  @Override
+  protected Boolean parseString(String value) {
+    if ("true".equals(value)) {
+      return true;
+    } else if ("false".equals(value)) {
+      return false;
+    } else {
+      logger.log(Level.SEVERE, value + " is not a valid boolean value for " + name);
+      return null;
+    }
   }
 }

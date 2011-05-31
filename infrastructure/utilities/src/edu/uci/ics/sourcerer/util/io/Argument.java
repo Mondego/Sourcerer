@@ -25,27 +25,27 @@ import java.util.Collection;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
+import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class Property <T> {
-  public static final Property<Boolean> PROMPT_MISSING = new BooleanProperty("prompt-missing", false, "Prompt for missing properties.").register("General");
+public abstract class Argument <T> {
+  public static final Argument<Boolean> PROMPT_MISSING = new BooleanArgument("prompt-missing", false, "Prompt for missing properties.").register("General");
   
   protected String name;
   protected boolean initialized;
   protected T value;
   protected T defaultValue;
-  protected Property<?>[] requiredProperties;
+  protected Argument<?>[] requiredProperties;
 
-  protected Collection<Property<?>> requiredBy;
+  protected Collection<Argument<?>> requiredBy;
   protected String description;
   
   protected boolean optional = false;
   protected boolean allowNull = false;
   
-  protected Property(String name, T defaultValue, String description) {
+  protected Argument(String name, T defaultValue, String description) {
     this.name = name;
     this.defaultValue = defaultValue;
     this.description = description;
@@ -54,24 +54,24 @@ public abstract class Property <T> {
     }
   }
   
-  protected void isRequiredBy(Property<?> prop) {
+  protected void isRequiredBy(Argument<?> prop) {
     if (requiredBy == null) {
       requiredBy = Helper.newLinkedList();
     }
     requiredBy.add(prop);
   }
   
-  public Property<T> makeOptional() {
+  public Argument<T> makeOptional() {
     optional = true;
     return this;
   }
   
-  public Property<T> register(String category) {
-    PropertyManager.registerProperty(category, this);
+  public Argument<T> register(String category) {
+    ArgumentManager.registerProperty(category, this);
     return this;
   }
   
-  public Property<T> setRequiredProperties(Property<?> ... properties) {
+  public Argument<T> setRequiredProperties(Argument<?> ... properties) {
     if (requiredProperties == null) {
       requiredProperties = properties;
       return this;
@@ -86,9 +86,9 @@ public abstract class Property <T> {
   
   public abstract String getType();
   
-  protected Property<?>[] getRequiredProperties() {
+  protected Argument<?>[] getRequiredProperties() {
     if (requiredProperties == null) {
-      return new Property<?>[0];
+      return new Argument<?>[0];
     } else {
       return requiredProperties;
     }
@@ -98,7 +98,7 @@ public abstract class Property <T> {
     String required = "";
     if (requiredBy != null) {
       StringBuilder builder = new StringBuilder(" Required by");
-      for (Property<?> prop : requiredBy) {
+      for (Argument<?> prop : requiredBy) {
         builder.append(' ').append(prop.getName()).append(',');
       }
       builder.setCharAt(builder.length() - 1, '.');
@@ -143,7 +143,7 @@ public abstract class Property <T> {
   }
   
   public boolean hasDefaultValue() {
-    return defaultValue != null;
+    return getDefaultValue() != null;
   }
   
   public T getDefaultValue() {
@@ -158,7 +158,7 @@ public abstract class Property <T> {
   
   private synchronized void initializeValue() {
     if (!initialized) {
-      PropertyManager properties = PropertyManager.getProperties();
+      ArgumentManager properties = ArgumentManager.getProperties();
       String stringValue = properties.getValue(name);
       if (stringValue == null) {
         stringValue = System.getProperty(name);

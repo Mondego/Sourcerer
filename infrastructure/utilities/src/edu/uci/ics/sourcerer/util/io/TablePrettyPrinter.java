@@ -29,14 +29,14 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
-import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class TablePrettyPrinter {
-  public static final Property<Boolean> CSV_MODE = new BooleanProperty("csv-mode", false, "Print tables as csv instead of prettily.");
+  public static final Argument<Boolean> CSV_MODE = new BooleanArgument("csv-mode", false, "Print tables as csv instead of prettily.");
   
   private TableWriter writer;
   private ArrayList<TableRow> table;
@@ -425,7 +425,7 @@ public class TablePrettyPrinter {
     }
   }
   
-  public static TablePrettyPrinter getTablePrettyPrinter(IOFilePropertyFactory ioFactory) {
+  public static TablePrettyPrinter getTablePrettyPrinter(IOFileArgumentFactory ioFactory) {
     try {
       BufferedWriter writer = FileUtils.getBufferedWriter(ioFactory);
       TablePrettyPrinter retval = new TablePrettyPrinter(new WriterTableWriter(writer));

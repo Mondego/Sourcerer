@@ -15,54 +15,54 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io.properties;
+package edu.uci.ics.sourcerer.util.io.arguments;
 
 import java.io.File;
 
-import edu.uci.ics.sourcerer.util.io.Properties;
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.Arguments;
+import edu.uci.ics.sourcerer.util.io.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class IOFilePropertyFactory {
+public class IOFileArgumentFactory {
   private String name;
   private String description;
   private String defaultValue;
   
-  private Property<File> input;
-  private Property<File> output;
+  private Argument<File> input;
+  private Argument<File> output;
   
-  public IOFilePropertyFactory(String name, String description) {
+  public IOFileArgumentFactory(String name, String description) {
     this.name = name;
     this.description = description;
   }
   
-  public IOFilePropertyFactory(String name, String defaultValue, String description) {
+  public IOFileArgumentFactory(String name, String defaultValue, String description) {
     this.name = name;
     this.description = description;
     this.defaultValue = defaultValue;
   }
   
-  public Property<File> asInput() {
+  public Argument<File> asInput() {
     if (input == null) {
-      input = new FileProperty(Properties.INPUT);
+      input = new FileProperty(Arguments.INPUT);
     }
     return input;
   }
   
-  public Property<File> asOutput() {
+  public Argument<File> asOutput() {
     if (output == null) {
-      output = new FileProperty(Properties.OUTPUT);
+      output = new FileProperty(Arguments.OUTPUT);
     }
     return output;
   }
   
-  private class FileProperty extends Property<File> {
-    private Property<File> base;
+  private class FileProperty extends Argument<File> {
+    private Argument<File> base;
     
-    protected FileProperty(Property<File> base) {
-      super(IOFilePropertyFactory.this.name, null, IOFilePropertyFactory.this.description);
+    protected FileProperty(Argument<File> base) {
+      super(IOFileArgumentFactory.this.name, null, IOFileArgumentFactory.this.description);
       this.base = base;
     }
 
@@ -73,20 +73,20 @@ public class IOFilePropertyFactory {
 
     @Override
     public String getDefaultString() {
-      return base.getName() + "/" + IOFilePropertyFactory.this.defaultValue;
+      return base.getName() + "/" + IOFileArgumentFactory.this.defaultValue;
     }
     
     @Override
     public boolean hasDefaultValue() {
-      return IOFilePropertyFactory.this.defaultValue != null;
+      return IOFileArgumentFactory.this.defaultValue != null;
     }
     
     @Override
     public File getDefaultValue() {
-      if (IOFilePropertyFactory.this.defaultValue == null) {
+      if (IOFileArgumentFactory.this.defaultValue == null) {
         return null;
       } else {
-        return new File(base.getValue(), IOFilePropertyFactory.this.defaultValue);
+        return new File(base.getValue(), IOFileArgumentFactory.this.defaultValue);
       }
     }
     

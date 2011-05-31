@@ -17,19 +17,25 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
+import edu.uci.ics.sourcerer.util.io.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class SourceProject extends RepoProject {
+  public static final Argument<String> PROJECT_CONTENT = new StringArgument("project-content-dir", "content", "Project contents.");
+  public static final Argument<String> PROJECT_CONTENT_ZIP = new StringArgument("project-content-zip-file", "content.zip", "Project contents.");
+  
   private final RepoFile content;
   
-  protected SourceProject(RepoFile projectRoot) {
-    super(projectRoot);
-    RepoFile possibleContent = projectRoot.getChild("content");
+  protected SourceProject(ProjectLocation loc) {
+    super(loc);
+    RepoFile possibleContent = loc.getProjectRoot().getChild(PROJECT_CONTENT.getValue());
     if (possibleContent.exists()) {
       content = possibleContent;
     } else {
-      possibleContent = projectRoot.getChild("content.zip");
+      possibleContent = loc.getProjectRoot().getChild(PROJECT_CONTENT_ZIP.getValue());
       if (possibleContent.exists()) {
         content = possibleContent;
       } else {

@@ -43,13 +43,13 @@ import java.util.zip.ZipOutputStream;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
-import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class FileUtils {
-  protected static final Property<File> TEMP_DIR = new IOFilePropertyFactory("temp-dir", "temp", "Name of temp directory placed into OUTPUT directory").asOutput().register("General");
+  protected static final Argument<File> TEMP_DIR = new IOFileArgumentFactory("temp-dir", "temp", "Name of temp directory placed into OUTPUT directory").asOutput().register("General");
   
   private FileUtils() {}
 
@@ -77,7 +77,7 @@ public final class FileUtils {
     }
   }
   
-  public static void zipFile(File in, Property<File> out) {
+  public static void zipFile(File in, Argument<File> out) {
     zipFile(in, out.getValue());
   }
   
@@ -397,26 +397,34 @@ public final class FileUtils {
     }
   }
   
-  public static BufferedWriter getBufferedWriter(IOFilePropertyFactory ioFactory) throws IOException {
-    return new BufferedWriter(new FileWriter(ioFactory.asOutput().getValue()));
+  public static BufferedWriter getBufferedWriter(Argument<File> property) throws IOException {
+    return new BufferedWriter(new FileWriter(property.getValue()));
   }
   
-//  public static BufferedWriter getBufferedWriter(Property<File> property) throws IOException {
-//    return new BufferedWriter(new FileWriter(property.getValue()));
-//  }
+  public static BufferedWriter getBufferedWriter(File file) throws IOException {
+    return new BufferedWriter(new FileWriter(file));
+  }
   
-//  public static BufferedReader getBufferedReader(Property<File> property) throws IOException {
-//    return new BufferedReader(new FileReader(property.getValue()));
-//  }
+  public static BufferedWriter getBufferedWriter(IOFileArgumentFactory ioFactory) throws IOException {
+    return getBufferedWriter(ioFactory.asOutput());
+  }
+    
+  public static BufferedReader getBufferedReader(Argument<File> property) throws IOException {
+    return new BufferedReader(new FileReader(property.getValue()));
+  }
   
-  public static BufferedReader getBufferedReader(IOFilePropertyFactory ioFactory) throws IOException {
-    return new BufferedReader(new FileReader(ioFactory.asInput().getValue()));
+  public static BufferedReader getBufferedReader(File file) throws IOException {
+    return new BufferedReader(new FileReader(file));
+  }
+  
+  public static BufferedReader getBufferedReader(IOFileArgumentFactory ioFactory) throws IOException {
+    return getBufferedReader(ioFactory.asInput());
   }
   
   /**
    * Uses reflection. This will break if a heterogeneous collection is used.
    */
-  public static <T extends LineWriteable> void writeLineFile(Iterable<T> iterable, IOFilePropertyFactory ioFactory) throws IOException {
+  public static <T extends LineWriteable> void writeLineFile(Iterable<T> iterable, IOFileArgumentFactory ioFactory) throws IOException {
     LineFileWriter writer = null;
     try {
       writer = new LineFileWriter(getBufferedWriter(ioFactory));
@@ -426,20 +434,54 @@ public final class FileUtils {
     }
   }
   
-  public static LineFileWriter getLineFileWriter(IOFilePropertyFactory ioFactory) throws IOException {
+  public static <T extends LineWriteable> void writeLineFile(Iterable<T> iterable, Argument<File> prop) throws IOException {
+    LineFileWriter writer = null;
+    try {
+      writer = new LineFileWriter(getBufferedWriter(prop));
+      writer.write(iterable);
+    } finally {
+      close(writer);
+    }
+  }
+  
+  public static LineFileWriter getLineFileWriter(IOFileArgumentFactory ioFactory) throws IOException {
     return new LineFileWriter(getBufferedWriter(ioFactory));
   }
   
+  public static LineFileWriter getLineFileWriter(Argument<File> property) throws IOException {
+    return new LineFileWriter(getBufferedWriter(property));
+  }
+  
   public static LineFileWriter getLineFileWriter(File file) throws IOException {
-    return new LineFileWriter(new BufferedWriter(new FileWriter(file)));
+    return new LineFileWriter(getBufferedWriter(file));
   }
   
-  public static <T extends LineWriteable> Iterable<T> readLineFile(Class<T> klass, IOFilePropertyFactory ioFactory, String ... fields) throws IOException {
+  public static <T extends LineWriteable> Iterable<T> readLineFile(Class<T> klass, IOFileArgumentFactory ioFactory, String ... fields) throws IOException {
     LineFileReader reader = new LineFileReader(getBufferedReader(ioFactory));
-    return reader.readNextToIterable(klass, true, fields);
+    return reader.readNextToIterable(klass, true, false, fields);
   }
   
-  public static LineFileReader getLineFileReader(IOFilePropertyFactory ioFactory) throws IOException {
+  public static <T extends LineWriteable> Iterable<T> readLineFile(Class<T> klass, Argument<File> prop, String ... fields) throws IOException {
+    LineFileReader reader = new LineFileReader(getBufferedReader(prop));
+    return reader.readNextToIterable(klass, true, false, fields);
+  }
+  
+  public static <T extends LineWriteable> Iterable<T> readLineFile(Class<T> klass, IOFileArgumentFactory ioFactory, boolean trans, String ... fields) throws IOException {
+    LineFileReader reader = new LineFileReader(getBufferedReader(ioFactory));
+    return reader.readNextToIterable(klass, true, trans, fields);
+  }
+  
+  public static <T extends LineWriteable> Iterable<T> readLineFile(Class<T> klass, Argument<File> prop, boolean trans, String ... fields) throws IOException {
+    LineFileReader reader = new LineFileReader(getBufferedReader(prop));
+    return reader.readNextToIterable(klass, true, trans, fields);
+  }
+  
+  public static <T extends LineWriteable> Iterable<T> readLineFile(Class<T> klass, File file, boolean trans, String ... fields) throws IOException {
+    LineFileReader reader = new LineFileReader(getBufferedReader(file));
+    return reader.readNextToIterable(klass, true, trans, fields);
+  }
+  
+  public static LineFileReader getLineFileReader(IOFileArgumentFactory ioFactory) throws IOException {
     return new LineFileReader(getBufferedReader(ioFactory));
   }
   

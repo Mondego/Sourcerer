@@ -48,7 +48,7 @@ public final class LineFileReader implements Closeable {
   }
   
   @SuppressWarnings("unchecked")
-  private <T extends LineWriteable> EntryReader<T> positionForNext(Class<T> klass, String ... fields) throws IOException {
+  private <T extends LineWriteable> EntryReader<T> positionForNext(Class<T> klass, boolean trans, String ... fields) throws IOException {
     if (br == null) {
       logger.log(Level.SEVERE, "File already empty, unable to read " + klass.getName() + ".");
       return null;
@@ -110,29 +110,37 @@ public final class LineFileReader implements Closeable {
           }
         }
         Constructor<? extends T> constructor = (Constructor<? extends T>) loadedClass.getDeclaredConstructor();
-        return new BasicEntryReader<T>(constructor, converters);
+        if (trans) {
+          return new TransientEntryReader<T>(constructor, converters);
+        } else {
+          return new BasicEntryReader<T>(constructor, converters);
+        }
       } catch (ClassNotFoundException e) {
         logger.log(Level.SEVERE, "Unable to load class", e);
-        close();
-        return null;
       } catch (NoSuchFieldException e) {
         logger.log(Level.SEVERE, "The current fields of this class (" + klass.getName() + ") do not match the file.", e);
-        close();
-        return null;
       } catch (NoSuchMethodException e) {
         logger.log(Level.SEVERE, "Unable to load default constructor", e);
-        close();
-        return null;
+      } catch (IllegalArgumentException e) {
+        logger.log(Level.SEVERE, "Unable to invoke constructor", e);
+      } catch (InstantiationException e) {
+        logger.log(Level.SEVERE, "Unable to invoke constructor", e);
+      } catch (IllegalAccessException e) {
+        logger.log(Level.SEVERE, "Unable to invoke constructor", e);
+      } catch (InvocationTargetException e) {
+        logger.log(Level.SEVERE, "Unable to invoke constructor", e);
       }
+      close();
+      return null;
     }
   }
   
   public <T extends LineWriteable> Iterable<T> readNextToIterable(final Class<T> klass, String ... fields) throws IOException {
-    return readNextToIterable(klass, false, fields);
+    return readNextToIterable(klass, false, false, fields);
   }
     
-  public <T extends LineWriteable> Iterable<T> readNextToIterable(Class<T> klass, final boolean closeOnCompletion, String ... fields) throws IOException {
-    final EntryReader<T> entryReader = positionForNext(klass, fields);
+  public <T extends LineWriteable> Iterable<T> readNextToIterable(Class<T> klass, final boolean closeOnCompletion, boolean trans, String ... fields) throws IOException {
+    final EntryReader<T> entryReader = positionForNext(klass, trans, fields);
     if (entryReader == null) {
       return Collections.emptyList();
     }
@@ -199,7 +207,11 @@ public final class LineFileReader implements Closeable {
   }
   
   public <T extends LineWriteable> Collection<T> readNextToCollection(Class<T> klass, String ... fields) throws IOException {
-    EntryReader<T> entryReader = positionForNext(klass, fields);
+    return readNextToCollection(klass, false, fields);
+  }
+  
+  public <T extends LineWriteable> Collection<T> readNextToCollection(Class<T> klass, boolean trans, String ... fields) throws IOException {
+    EntryReader<T> entryReader = positionForNext(klass, trans, fields);
     if (entryReader != null) {
       Collection<T> coll = Helper.newLinkedList();
       for (String line = br.readLine(); !LineFileWriter.isFinished(line); line = br.readLine()) {
@@ -244,6 +256,25 @@ public final class LineFileReader implements Closeable {
     
     public T create(String line) throws InvocationTargetException, InstantiationException, IllegalAccessException {
       T obj = constructor.newInstance();
+      Scanner scanner = LineBuilder.getScanner(line);
+      for (FieldConverter converter : converters) {
+        converter.set(obj, scanner);
+      }
+      return obj;
+    }
+  }
+  
+  private static class TransientEntryReader <T extends LineWriteable> extends EntryReader<T> {
+    private FieldConverter[] converters;
+    private T obj = null;
+    
+    public TransientEntryReader(Constructor<? extends T> constructor, FieldConverter[] converters) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+      constructor.setAccessible(true);
+      this.converters = converters;
+      obj = constructor.newInstance();
+    }
+    
+    public T create(String line) throws IllegalAccessException  {
       Scanner scanner = LineBuilder.getScanner(line);
       for (FieldConverter converter : converters) {
         converter.set(obj, scanner);

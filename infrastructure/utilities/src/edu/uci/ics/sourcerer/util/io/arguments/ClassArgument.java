@@ -15,37 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io.properties;
+package edu.uci.ics.sourcerer.util.io.arguments;
 
-import java.io.File;
-
-import edu.uci.ics.sourcerer.util.io.Property;
+import edu.uci.ics.sourcerer.util.io.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FileProperty extends Property<File> {
-  public FileProperty(String name, String description) {
-    super(name, null, description);
-  }
-  
-  public FileProperty(String name, File defaultValue, String description) {
+public class ClassArgument extends Argument<Class<?>> {
+  public ClassArgument(String name, Class<?> defaultValue, String description) {
     super(name, defaultValue, description);
   }
-  
-  
+
   @Override
   public String getType() {
-    return "path";
+    return "class";
   }
-  
+
   @Override
-  public String getDefaultString() {
-    return defaultValue.getPath();
-  }
-  
-  @Override
-  protected File parseString(String value) {
-    return new File(value);
+  protected Class<?> parseString(String value) {
+    try {
+      return Class.forName(value);
+    } catch (ClassNotFoundException e) {
+      throw new IllegalArgumentException("Unknown class: " + value);
+    }
   }
 }
