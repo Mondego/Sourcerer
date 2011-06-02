@@ -29,23 +29,23 @@ import edu.uci.ics.sourcerer.util.Helper;
  */
 public class RelativePath {
   private final String relativePath;
-  private static final Map<String, RelativePath> singletonMap = Helper.newHashMap();
+  private static final Map<String, RelativePath> interned = Helper.newHashMap();
   
   private RelativePath(String relativePath) {
     this.relativePath = relativePath;
   }
   
-  private static RelativePath getSingleton(String relativePath) {
-    RelativePath path = singletonMap.get(relativePath);
+  private static RelativePath intern(String relativePath) {
+    RelativePath path = interned.get(relativePath);
     if (path == null) {
       path = new RelativePath(relativePath);
-      singletonMap.put(relativePath, path);
+      interned.put(relativePath, path);
     }
     return path;
   }
   
   protected static RelativePath makeEmpty() {
-    return getSingleton("");
+    return intern("");
   }
   
   protected static RelativePath make(String relativePath) {
@@ -59,30 +59,34 @@ public class RelativePath {
     if (relativePath.indexOf('*') >= 0) {
       logger.log(Level.WARNING, "Problematic relative path for writing: " + relativePath);
     }
-    return getSingleton(relativePath);
+    return intern(relativePath);
   }
   
   protected static RelativePath makeFromWriteable(String relativePath) {
     relativePath = relativePath.replace('*', ' ');
-    return getSingleton(relativePath);
+    return intern(relativePath);
   }
   
   protected RelativePath append(String path) {
-    path = path.replace('\\', '/');
-    if (path.charAt(path.length() - 1) == '/') {
-      path = path.substring(0, path.length() - 1);
-    }
-    if (path.charAt(0) == '/') {
-      if (relativePath.equals("")) {
-        return getSingleton(path.substring(1));
-      } else {
-        return getSingleton(relativePath + path);
-      }
+    if (path.equals("")) {
+      return this;
     } else {
-      if (relativePath.equals("")) {
-        return getSingleton(path);
+      path = path.replace('\\', '/');
+      if (path.charAt(path.length() - 1) == '/') {
+        path = path.substring(0, path.length() - 1);
+      }
+      if (path.charAt(0) == '/') {
+        if (relativePath.equals("")) {
+          return intern(path.substring(1));
+        } else {
+          return intern(relativePath + path);
+        }
       } else {
-        return getSingleton(relativePath + "/" + path);
+        if (relativePath.equals("")) {
+          return intern(path);
+        } else {
+          return intern(relativePath + "/" + path);
+        }
       }
     }
   }
@@ -90,8 +94,10 @@ public class RelativePath {
   protected RelativePath append(RelativePath path) {
     if (relativePath.equals("")) {
       return path;
+    } else if (path.relativePath.equals("")) {
+      return this;
     } else {
-      return getSingleton(relativePath + "/" + path.relativePath);
+      return intern(relativePath + "/" + path.relativePath);
     }
   }
   

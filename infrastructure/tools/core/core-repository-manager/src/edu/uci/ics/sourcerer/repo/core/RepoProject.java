@@ -34,7 +34,9 @@ public class RepoProject {
     properties = loc.getProjectRoot().getChild(PROJECT_PROPERTIES.getValue());
   }
   
-  protected ProjectLocation getLocation() {
+  protected final ProjectLocation getLocation() {
     return loc;
   }
+  
+  
 }

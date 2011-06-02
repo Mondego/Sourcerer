@@ -24,6 +24,7 @@ import java.util.Scanner;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FieldConverter;
 import edu.uci.ics.sourcerer.util.io.LWRec;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -32,31 +33,65 @@ public class RepoFile implements LWRec {
   private final RepoFile root;
   private final RelativePath relativePath;
   private final File file;
-  private Map<RelativePath, RepoFile> subrootMap;
+  private final boolean isRoot;
+  
+  private final Map<RelativePath, RepoFile> internedChildren;
+  private final Map<RelativePath, RepoFile> internedRoots;
   
   private RepoFile(File file) {
-    root = null;
-    relativePath = RelativePath.makeEmpty();
-    this.file = file;
-    subrootMap = Helper.newHashMap();
-  }
-  
-  private RepoFile(RepoFile root) {
-    this.root = root;
+    this.root = null;
+    this.isRoot = true;
     this.relativePath = RelativePath.makeEmpty();
-    this.file = root.root.file;
-    root.subrootMap.put(relativePath, this);
-    subrootMap = Helper.newHashMap();
+    this.file = file;
+    this.internedChildren = Helper.newHashMap();
+    this.internedRoots = Helper.newHashMap();
   }
-  
-  private RepoFile(RepoFile root, RelativePath relativePath) {
+
+  private RepoFile(RepoFile root, boolean isRoot, RelativePath relativePath) {
     this.root = root;
-    this.relativePath = relativePath;
+    this.isRoot = isRoot;
+    if (isRoot) {
+      this.relativePath = RelativePath.makeEmpty();
+    } else {
+      this.relativePath = relativePath;
+    }
     this.file = new File(root.file, relativePath.toString());
+    this.internedRoots = root.internedRoots;
+    if (isRoot) {
+      this.internedChildren = Helper.newHashMap();
+    } else {
+      this.internedChildren = root.internedChildren;
+    }
   }
   
-  public static RepoFile makeRoot(File root) {
-    return new RepoFile(root);
+  public static RepoFile makeRoot(Argument<File> root) {
+    return new RepoFile(root.getValue());
+  }
+  
+  private RepoFile internRoot(RelativePath path) {
+    RepoFile newRoot = internedRoots.get(path);
+    if (newRoot == null) {
+      newRoot = new RepoFile(getOirignalRoot(), true, path);
+      internedRoots.put(path, newRoot);
+    }
+    return newRoot;
+  }
+  
+  private RepoFile internChild(RelativePath path) {
+    RepoFile newChild = internedChildren.get(path);
+    if (newChild == null) {
+      newChild = new RepoFile(isRoot ? this : root, false, path);
+      internedChildren.put(path, newChild);
+    }
+    return newChild;
+  }
+  
+  private RepoFile getOirignalRoot() {
+    if (root == null) {
+      return this;
+    } else {
+      return root.getOirignalRoot();
+    }
   }
 
   public RepoFile getRoot() {
@@ -68,11 +103,7 @@ public class RepoFile implements LWRec {
   }
   
   public RepoFile asRoot() {
-    RepoFile subRoot = root.subrootMap.get(relativePath);
-    if (subRoot == null) {
-      subRoot = new RepoFile(this);
-    }
-    return subRoot;
+    return internRoot(root.relativePath.append(relativePath));
   }
   
   public boolean isDirectory() {
@@ -134,7 +165,7 @@ public class RepoFile implements LWRec {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
     } else {
-      return new RepoFile(root, relativePath.append(child));
+      return internChild(relativePath.append(child));
     }
   }
   
@@ -142,7 +173,7 @@ public class RepoFile implements LWRec {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
     } else {
-      return new RepoFile(root, this.relativePath.append(relativePath));
+      return internChild(this.relativePath.append(relativePath));
     }
   }
   
@@ -150,12 +181,7 @@ public class RepoFile implements LWRec {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
     } else {
-      RelativePath path = relativePath.append(child);
-      RepoFile subRoot = root.subrootMap.get(path);
-      if (subRoot == null) {
-        subRoot = new RepoFile(new RepoFile(root, path));
-      }
-      return subRoot;
+      return internRoot(relativePath.append(child));
     }
   }
   
@@ -163,12 +189,7 @@ public class RepoFile implements LWRec {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
     } else {
-      RelativePath path = this.relativePath.append(relativePath);
-      RepoFile subRoot = root.subrootMap.get(path);
-      if (subRoot == null) {
-        subRoot = new RepoFile(new RepoFile(root, path));
-      }
-      return subRoot;
+      return internRoot(this.relativePath.append(relativePath));
     }
   }
   
