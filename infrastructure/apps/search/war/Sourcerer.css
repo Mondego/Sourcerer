@@ -1,0 +1,24 @@
+/** Add css rules here for your application. */
+
+
+/** Example rules used by the template application (remove for your app) */
+h1 {
+  font-size: 2em;
+  font-weight: bold;
+  color: #000000';
+  margin: 40px 0px 70px;
+  text-align: center;
+}
+
+.addPanel {
+	margin: 95px 0px 15px 500px;
+}
+
+.resultLabel{
+	margin: 0px 0px 15px 500px;
+}
+
+.gwt-Button-search{
+  width: 100px;
+}
+
