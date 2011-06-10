@@ -95,7 +95,7 @@ public class SearchResult {
         if (index >= nextToFetch) {
           result = new SingleResult();
         }
-      } else if (qName.equals("entityID")) {
+      } else if (qName.equals("entityId")) {
         entityID = true;
       } else if (qName.equals("entityName")) {
         entityName = true;
@@ -123,10 +123,13 @@ public class SearchResult {
       if (result != null) {
         if (entityID) {
           result.setEntityID(new String(ch, start, length));
+          entityID = false;
         } else if (entityName) {
           result.setEntityName(new String(ch, start, length));
+          entityName = false;
         } else if (filePath) {
           result.setFilePath(new String(ch, start, length));
+          filePath = false;
         }
       }
     }
