@@ -33,6 +33,9 @@ public class TestSearchAdapter {
     List<SingleResult> results = result.getResults(0, 10);
     Assert.assertNotNull(results);
     Assert.assertEquals(10, results.size());
+    for (SingleResult res : results) {
+    	Assert.assertNotNull(res.getEntityID());
+    }
     List<SingleResult> results2 = result.getResults(5, 15);
     Assert.assertNotNull(results2);
     Assert.assertEquals(15, results2.size());
