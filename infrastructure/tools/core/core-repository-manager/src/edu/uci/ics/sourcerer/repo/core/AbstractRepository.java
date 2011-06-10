@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
@@ -36,6 +37,9 @@ import edu.uci.ics.sourcerer.util.io.LineFileWriter.EntryWriter;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+import edu.uci.ics.sourcerer.util.io.properties.AbstractProperties;
+import edu.uci.ics.sourcerer.util.io.properties.Property;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -50,6 +54,7 @@ public abstract class AbstractRepository <Project extends RepoProject> {
   
   protected RepoFile repoRoot;
   
+  private RepoFile cache;
   private BatchSet batchSet;
   
   protected AbstractRepository(RepoFile repoRoot) {
@@ -58,15 +63,15 @@ public abstract class AbstractRepository <Project extends RepoProject> {
   
   protected abstract Project createProject(ProjectLocation loc);
   
-  protected void populateProjects() {
+  private final void populateProjects() {
     if (batchSet == null) {
       batchSet = new BatchSet();
+      cache = repoRoot.getChild(PROJECT_CACHE.getValue());
       if (repoRoot.exists()) {
-        RepoFile cache = repoRoot.getChild(PROJECT_CACHE.getValue());
         if (cache.exists()) {
           try {
             for (ProjectLocation loc : FileUtils.readLineFile(ProjectLocation.class, cache.toFile(), true)) {
-              batchSet.add(loc.getBatch(), loc.getCheckout());
+              batchSet.add(loc.getBatchNumber(), loc.getCheckoutNumber());
             }
             return;
           } catch (IOException e) {
@@ -101,6 +106,20 @@ public abstract class AbstractRepository <Project extends RepoProject> {
     }
   }
   
+  public Batch createBatch() {
+    if (batchSet == null) {
+      populateProjects();
+    }
+    return batchSet.createBatch();
+  }
+ 
+  public Collection<Batch> getBatches() {
+    if (batchSet == null) {
+      populateProjects();
+     }
+    return batchSet.getBatches();
+  }
+  
   public Collection<Project> getProjects() {
     if (batchSet == null) {
       populateProjects();
@@ -109,7 +128,7 @@ public abstract class AbstractRepository <Project extends RepoProject> {
   }
 
   private class BatchSet extends AbstractCollection<Project> {
-    private Map<Integer, Batch> batches;
+    private TreeMap<Integer, Batch> batches;
     private int size;
     
     private BatchSet() {
@@ -117,15 +136,31 @@ public abstract class AbstractRepository <Project extends RepoProject> {
       size = 0;
     }
     
-    private void add(Integer batch, Integer checkout) {
+    private Project add(Integer batch, Integer checkout) {
       Batch b = batches.get(batch);
       if (b == null) {
         RepoFile dir = repoRoot.getChild(batch.toString());
         b = new Batch(dir, batch);
         batches.put(batch, b);
       }
-      b.add(checkout);
       size++;
+      return b.add(checkout);
+    }
+    
+    private Batch createBatch() {
+      Integer batch = null;
+      if (batches.isEmpty()) {
+        batch = Integer.valueOf(0);
+      } else {
+        batch = batches.lastKey() + 1;
+      }
+      Batch b = new Batch(repoRoot.getChild(batch.toString()), batch);
+      batches.put(batch, b);
+      return b;
+    }
+    
+    public Collection<Batch> getBatches() {
+      return batches.values();
     }
     
     @Override
@@ -180,21 +215,55 @@ public abstract class AbstractRepository <Project extends RepoProject> {
     }
   }
   
-  private final class Batch {
+  public final class Batch {
     private final RepoFile dir;
     private final Integer batch;
-    private final RepoFile properties;
-    private final Map<Integer, Project> projects;
+    private final RepoFile propFile;
+    private BatchProperties properties;
+    private final TreeMap<Integer, Project> projects;
     
     private Batch(RepoFile dir, Integer batch) {
       this.dir = dir;
       this.batch = batch;
-      properties = dir.getChild(BATCH_PROPERTIES.getValue());
-      projects = Helper.newTreeMap();
+      this.propFile = dir.getChild(BATCH_PROPERTIES.getValue());
+      this.projects = Helper.newTreeMap();
     }
     
-    private void add(Integer checkout) {
-      projects.put(checkout, createProject(new ProjectLocation(batch, checkout,dir.getChild(checkout.toString()))));
+    private Project add(Integer checkout) {
+      Project project = AbstractRepository.this.createProject(new ProjectLocation(batch, checkout,dir.getChild(checkout.toString())));
+      projects.put(checkout, project);
+      return project;
+    }
+    
+    public Project createProject() {
+      // Invalidate the cache
+      cache.toFile().delete();
+      
+      Integer nextCheckout = projects.isEmpty() ? 0 : (projects.lastKey() + 1); 
+      return batchSet.add(batch, nextCheckout);
+    }
+    
+    public Collection<Project> getProjects() {
+      return projects.values();
+    }
+    
+    public Integer getBatchNumber() {
+      return batch;
+    }
+    
+    public BatchProperties getProperties() {
+      if (properties == null) {
+        properties = new BatchProperties(propFile);
+      }
+      return properties;
+    }
+  }
+  
+  public final class BatchProperties extends AbstractProperties {
+    public Property<String> DESCRIPTION = new StringProperty("description", this);
+    
+    protected BatchProperties(RepoFile file) {
+      super(file.toFile());
     }
   }
 }

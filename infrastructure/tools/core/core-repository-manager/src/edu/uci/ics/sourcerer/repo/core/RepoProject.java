@@ -27,16 +27,27 @@ public class RepoProject {
   public static final Argument<String> PROJECT_PROPERTIES = new StringArgument("project-properties-file", "project.properties", "Properties files for a project.");
   
   protected final ProjectLocation loc;
-  protected final RepoFile properties;
+  
+  protected final RepoFile propFile;
+  private ProjectProperties properties;
   
   protected RepoProject(ProjectLocation loc) {
     this.loc = loc;
-    properties = loc.getProjectRoot().getChild(PROJECT_PROPERTIES.getValue());
+    propFile = loc.getProjectRoot().getChild(PROJECT_PROPERTIES.getValue());
   }
   
-  protected final ProjectLocation getLocation() {
+  public final ProjectLocation getLocation() {
     return loc;
   }
+
+  protected final RepoFile getProjectFile(Argument<String> arg) {
+    return loc.getProjectRoot().getChild(arg.getValue());
+  }
   
-  
+  public ProjectProperties getProperties() {
+    if (properties == null) {
+      properties = new ProjectProperties(propFile);
+    }
+    return properties;
+  }
 }

@@ -15,19 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io.properties;
+package edu.uci.ics.sourcerer.repo.java.core.source;
+
+import edu.uci.ics.sourcerer.repo.core.RepoFile;
+import edu.uci.ics.sourcerer.repo.core.SourceProjectProperties;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class StringProperty extends Property<String> {
-  
-  public StringProperty(String name, AbstractProperties properties) {
-    super(name, properties);
-  }
+public class JavaSourceProjectProperties extends SourceProjectProperties {
 
-  @Override
-  protected String parseValue(String value) {
-    return value;
+  protected JavaSourceProjectProperties(RepoFile file) {
+    super(file);
   }
 }

@@ -15,13 +15,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.repo.java.core.extracted;
+
+import edu.uci.ics.sourcerer.repo.core.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.core.ProjectLocation;
+import edu.uci.ics.sourcerer.repo.core.RepoFile;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class RepositoryFactory {
-  public static SourceRepository getSourceRepository() {
-    return new SourceRepository(RepoFile.makeRoot(AbstractRepository.INPUT_REPO.getValue()));
+public class ExtractedJavaRepository extends AbstractRepository<ExtractedJavaProject> {
+  protected ExtractedJavaRepository(RepoFile repoRoot) {
+    super(repoRoot);
+  }
+
+  @Override
+  protected ExtractedJavaProject createProject(ProjectLocation loc) {
+    return new ExtractedJavaProject(loc);
   }
 }

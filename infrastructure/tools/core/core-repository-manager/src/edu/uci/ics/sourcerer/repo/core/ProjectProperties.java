@@ -17,20 +17,17 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
-import java.io.File;
-
 import edu.uci.ics.sourcerer.util.io.properties.AbstractProperties;
+import edu.uci.ics.sourcerer.util.io.properties.Property;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ProjectProperties extends AbstractProperties {
-
-  protected ProjectProperties(File file) {
-    super(file);
-  }
-
-  public static ProjectProperties make(RepoFile file) {
-    file.
+  public Property<String> NAME = new StringProperty("name", this);
+  
+  protected ProjectProperties(RepoFile file) {
+    super(file.toFile());
   }
 }

@@ -68,7 +68,7 @@ public class HashingClusterer {
             ew.write(hashedFile);
           }
         }
-        FileUtils.resetTempDir();
+        FileUtils.cleanTempDir();
       }
       logger.info("Done!");
     } catch (IOException e) {

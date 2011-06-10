@@ -15,19 +15,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io.properties;
+package edu.uci.ics.sourcerer.repo.java;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import edu.uci.ics.sourcerer.repo.core.CoreRepositoryTest;
+import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
+import edu.uci.ics.sourcerer.util.io.arguments.Command;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class StringProperty extends Property<String> {
+public class JavaRepositoryTest {
+  public static final Command COMMAND = new Command("test", "Run a junit test.") {
+    @Override
+    protected void action() {
+    }
+  };
   
-  public StringProperty(String name, AbstractProperties properties) {
-    super(name, properties);
+  @Rule
+  public TemporaryFolder folder = new TemporaryFolder();
+  
+  @Before
+  public void initialize() {
+    // Initializes the logging
+    ArgumentManager.executeCommand(new String[] { "--test" }, CoreRepositoryTest.class);
   }
-
-  @Override
-  protected String parseValue(String value) {
-    return value;
+  
+  @Test
+  public void test() {
+    
   }
 }

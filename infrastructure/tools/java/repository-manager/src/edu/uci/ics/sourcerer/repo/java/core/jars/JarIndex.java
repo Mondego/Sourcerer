@@ -15,19 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io.properties;
+package edu.uci.ics.sourcerer.repo.java.core.jars;
+
+import java.util.Map;
+
+import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class StringProperty extends Property<String> {
+public class JarIndex {
+  private Map<String, IndexedJar> index;
+  private Map<String, IndexedJar> nameIndex;
   
-  public StringProperty(String name, AbstractProperties properties) {
-    super(name, properties);
-  }
-
-  @Override
-  protected String parseValue(String value) {
-    return value;
+  private JarIndex() {
+    index = Helper.newHashMap();
+    nameIndex = Helper.newHashMap();
   }
 }

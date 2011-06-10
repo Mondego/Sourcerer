@@ -40,11 +40,11 @@ public class ProjectLocation implements LineWriteable {
     return projectRoot;
   }
   
-  protected Integer getBatch() {
+  protected Integer getBatchNumber() {
     return batch;
   }
   
-  protected Integer getCheckout() {
+  protected Integer getCheckoutNumber() {
     return checkout;
   }
 }

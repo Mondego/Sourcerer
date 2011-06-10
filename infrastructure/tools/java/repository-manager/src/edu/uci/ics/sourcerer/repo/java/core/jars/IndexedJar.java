@@ -15,46 +15,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.java.core;
+package edu.uci.ics.sourcerer.repo.java.core.jars;
 
 import java.util.Scanner;
 
 import edu.uci.ics.sourcerer.repo.core.RepoFile;
 import edu.uci.ics.sourcerer.util.io.FieldConverter;
+import edu.uci.ics.sourcerer.util.io.LWField;
 import edu.uci.ics.sourcerer.util.io.LWRec;
+import edu.uci.ics.sourcerer.util.io.LineWriteable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class IndexedJar implements LWRec {
+public class IndexedJar implements LineWriteable {
   public enum Type {
     PROJECT,
     MAVEN;
   }
-  private final Type type;
-  private final String hash;
-  private final String groupName;
-  private final String version;
-  private final String artifactName;
-  private final RepoFile path;
-  private final String jarName;
-  private final String sourceName;
+  @LWField private Type type;
+  @LWField private String hash;
+  @LWField private String groupName;
+  @LWField private String version;
+  @LWField private String artifactName;
+  @LWField private RepoFile path;
+  @LWField private String jarName;
+  @LWField private String sourceName;
   
-  /* LWRec Related Methods */
-  public static void registerConveterHelper() {
-    FieldConverter.registerConverterHelper(IndexedJar.class, new FieldConverter.FieldConverterHelper() {
-      @Override
-      protected Object makeFromScanner(Scanner scanner) throws IllegalAccessException {
-        String value = scanner.next();
-      }
-    });
-  }
+  protected IndexedJar() {}
   
-  @Override
-  public String writeToString() {
-    if (type == Type.PROJECT) {
-      return type.name() + " " +
-    }
-  }
-
 }

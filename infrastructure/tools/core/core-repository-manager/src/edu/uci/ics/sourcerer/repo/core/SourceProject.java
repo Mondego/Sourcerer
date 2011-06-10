@@ -17,6 +17,10 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
+import java.io.File;
+import java.util.Collection;
+
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
@@ -27,20 +31,73 @@ public class SourceProject extends RepoProject {
   public static final Argument<String> PROJECT_CONTENT = new StringArgument("project-content-dir", "content", "Project contents.");
   public static final Argument<String> PROJECT_CONTENT_ZIP = new StringArgument("project-content-zip-file", "content.zip", "Project contents.");
   
-  private final RepoFile content;
+  private RepoFile contentFile;
+  
+  private SourceProjectProperties properties;
   
   protected SourceProject(ProjectLocation loc) {
     super(loc);
-    RepoFile possibleContent = loc.getProjectRoot().getChild(PROJECT_CONTENT.getValue());
+    RepoFile possibleContent = getProjectFile(PROJECT_CONTENT);
     if (possibleContent.exists()) {
-      content = possibleContent;
+      contentFile = possibleContent;
     } else {
-      possibleContent = loc.getProjectRoot().getChild(PROJECT_CONTENT_ZIP.getValue());
+      possibleContent = getProjectFile(PROJECT_CONTENT_ZIP);
       if (possibleContent.exists()) {
-        content = possibleContent;
+        contentFile = possibleContent;
       } else {
-        content = null;
+        contentFile = null;
       }
     }
+  }
+  
+  public SourceProjectProperties getProperties() {
+    if (properties == null) {
+      properties = new SourceProjectProperties(propFile);
+    }
+    return properties;
+  }
+  
+  /**
+   * Deletes the project's contents.
+   *  
+   * @return <tt>true</tt> if successful
+   */
+  public boolean deleteContent() {
+    if (contentFile != null) {
+      return contentFile.delete();
+    } else {
+      return true;
+    }
+  }
+  
+  /**
+   * Copies the contents of <tt>file</tt> into the
+   * project's <tt>content</tt>> directory. Will
+   * not work if the project's contents are compressed.
+   * 
+   * This will not overwrite anything.
+   */
+  public void addContent(File file) {
+    if (contentFile == null) {
+      contentFile = getProjectFile(PROJECT_CONTENT);
+    }
+    if (contentFile.isDirectory()) {
+      FileUtils.copyFile(file, contentFile.toDir());
+    } else {
+      throw new IllegalStateException("May not add content to a compressed project.");
+    }
+  }
+  
+  public void zipContent() {}
+  
+  public FileSet getContent() {
+    return null;
+  }
+  
+  protected RepoFile getContentFile() {
+    if (contentFile == null) {
+      contentFile = getProjectFile(PROJECT_CONTENT);
+    }
+    return contentFile;
   }
 }

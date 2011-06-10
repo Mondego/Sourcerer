@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.io.File;
 
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
@@ -24,17 +26,18 @@ import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class SourceRepository extends AbstractRepository<RepoProject> {
+public class SourceRepository extends AbstractRepository<SourceProject> {
   protected SourceRepository(RepoFile repoRoot) {
     super(repoRoot);
   }
 
   public static SourceRepository make(Argument<File> root) {
-    return new SourceRepository(RepoFile.makeRoot(root.getValue()));
+    logger.info("Loading source repository at: " + AbstractRepository.INPUT_REPO.getValue().getPath());
+    return new SourceRepository(RepoFile.makeRoot(root));
   }
 
   @Override
-  protected RepoProject createProject(ProjectLocation loc) {
+  protected SourceProject createProject(ProjectLocation loc) {
     return new SourceProject(loc);
   }
 }

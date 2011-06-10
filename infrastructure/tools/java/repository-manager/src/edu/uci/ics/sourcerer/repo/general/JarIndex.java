@@ -434,7 +434,7 @@ public class JarIndex {
             totalFiles++;
           }
           logger.log(RESUME, project.getProjectRoot().getRelativePath());
-          FileUtils.resetTempDir();
+          FileUtils.cleanTempDir();
         } catch (Exception e) {
           logger.log(Level.SEVERE, "Unable to extract project: " + project, e);
         }
@@ -449,7 +449,7 @@ public class JarIndex {
       namer.rename();
     }
     
-    FileUtils.cleanTempDir();
+    FileUtils.deleteTempDir();
     
     logger.info("--- Done! ---");
   }

@@ -42,7 +42,7 @@ public abstract class Property<T> {
     return name;
   }
   
-  protected T getValue() {
+  public T getValue() {
     if (!initialized) {
       String val = properties.getValue(name);
       if (val != null) {

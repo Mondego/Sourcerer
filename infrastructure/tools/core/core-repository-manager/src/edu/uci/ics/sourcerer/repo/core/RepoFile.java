@@ -23,6 +23,7 @@ import java.util.Scanner;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FieldConverter;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.LWRec;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 
@@ -64,7 +65,7 @@ public class RepoFile implements LWRec {
     }
   }
   
-  public static RepoFile makeRoot(Argument<File> root) {
+  protected static RepoFile makeRoot(Argument<File> root) {
     return new RepoFile(root.getValue());
   }
   
@@ -94,6 +95,10 @@ public class RepoFile implements LWRec {
     }
   }
 
+  public boolean isRoot() {
+    return isRoot;
+  }
+  
   public RepoFile getRoot() {
     return root;
   }
@@ -102,7 +107,7 @@ public class RepoFile implements LWRec {
     return relativePath;
   }
   
-  public RepoFile asRoot() {
+  protected RepoFile asRoot() {
     return internRoot(root.relativePath.append(relativePath));
   }
   
@@ -125,6 +130,18 @@ public class RepoFile implements LWRec {
       }
     } else {
       return false;
+    }
+  }
+  
+  protected boolean delete() {
+    if (file.exists()) {
+      if (file.isDirectory()) {
+        return FileUtils.deleteDirectory(file);
+      } else {
+        return file.delete();
+      }
+    } else {
+      return true;
     }
   }
   
@@ -153,7 +170,7 @@ public class RepoFile implements LWRec {
     return file;
   }
     
-  public File getChildFile(String child) {
+  protected File getChildFile(String child) {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
     } else {
@@ -161,7 +178,7 @@ public class RepoFile implements LWRec {
     }
   }
   
-  public RepoFile getChild(String child) {
+  protected RepoFile getChild(String child) {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
     } else {
@@ -169,7 +186,7 @@ public class RepoFile implements LWRec {
     }
   }
   
-  public RepoFile getChild(RelativePath relativePath) {
+  protected RepoFile getChild(RelativePath relativePath) {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
     } else {
@@ -177,7 +194,7 @@ public class RepoFile implements LWRec {
     }
   }
   
-  public RepoFile getChildRoot(String child) {
+  protected RepoFile getChildRoot(String child) {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
     } else {
@@ -185,12 +202,16 @@ public class RepoFile implements LWRec {
     }
   }
   
-  public RepoFile getChildRoot(RelativePath relativePath) {
+  protected RepoFile getChildRoot(RelativePath relativePath) {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
     } else {
       return internRoot(this.relativePath.append(relativePath));
     }
+  }
+  
+  public RepoFile getParent() {
+    return internChild(relativePath.getParent());
   }
   
   public String getName() {

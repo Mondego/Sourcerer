@@ -66,7 +66,7 @@ public class DiskUsageCalculator {
       }
     }
     
-    FileUtils.cleanTempDir();
+    FileUtils.deleteTempDir();
     
     logger.info("Loading jar index...");
     JarIndex index = repo.getJarIndex();

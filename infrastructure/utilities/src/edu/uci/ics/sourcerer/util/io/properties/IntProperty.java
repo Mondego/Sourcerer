@@ -22,7 +22,7 @@ package edu.uci.ics.sourcerer.util.io.properties;
  */
 public class IntProperty extends Property<Integer> {
 
-  protected IntProperty(String name, AbstractProperties properties) {
+  public IntProperty(String name, AbstractProperties properties) {
     super(name, properties);
   }
 

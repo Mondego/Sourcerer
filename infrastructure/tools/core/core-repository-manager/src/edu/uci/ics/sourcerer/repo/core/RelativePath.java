@@ -105,6 +105,19 @@ public class RelativePath {
     return relativePath.replace(' ', '*');
   }
   
+  protected RelativePath getParent() {
+    if (relativePath.equals("")) {
+      throw new IllegalStateException("Cannot get a parent for an empty relative path.");
+    } else {
+      int idx = relativePath.lastIndexOf('/');
+      if (idx == -1) {
+        return intern("");
+      } else {
+        return intern(relativePath.substring(0, idx));
+      }
+    }
+  }
+  
   @Override
   public String toString() {
     return relativePath;

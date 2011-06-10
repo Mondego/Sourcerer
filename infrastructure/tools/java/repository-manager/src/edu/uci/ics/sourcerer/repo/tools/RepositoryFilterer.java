@@ -121,7 +121,7 @@ public class RepositoryFilterer {
     FileUtils.zipFile(newRoot.toFile(), COMPRESSED_FILTERED_REPO_FILE.asOutput());
     
     // Clean temp files
-    FileUtils.cleanTempDir();
+    FileUtils.deleteTempDir();
   }
   
   public static void createRepositorySubset(Repository repo) {
@@ -158,6 +158,6 @@ public class RepositoryFilterer {
     
     logger.info(included + " projects included in new repository.");
     // Clean temp files
-    FileUtils.cleanTempDir();
+    FileUtils.deleteTempDir();
   }
 }

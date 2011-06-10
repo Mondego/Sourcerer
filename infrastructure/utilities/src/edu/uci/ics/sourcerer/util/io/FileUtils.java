@@ -117,7 +117,7 @@ public final class FileUtils {
     }
   }
   
-  public static void resetTempDir() {
+  public static void cleanTempDir() {
     File tempDir = getTempDir();
     for (File file : tempDir.listFiles()) {
       if (file.isDirectory()) {
@@ -128,20 +128,22 @@ public final class FileUtils {
     }
   }
   
-  public static void cleanTempDir() {
+  public static void deleteTempDir() {
     File tempDir = getTempDir();
     deleteDirectory(tempDir);
   }
   
-  private static void deleteDirectory(File dir) {
+  public static boolean deleteDirectory(File dir) {
+    boolean success = true;
     for (File file : dir.listFiles()) {
       if (file.isDirectory()) {
-        deleteDirectory(file);
+        success &= deleteDirectory(file);
       } else {
-        file.delete();
+        success &= file.delete();
       }
     }
-    dir.delete();
+    success &= dir.delete();
+    return success;
   }
   
   public static String getFileAsString(String path) {

@@ -15,19 +15,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io.properties;
+package edu.uci.ics.sourcerer.repo.core;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class StringProperty extends Property<String> {
+public class ContentFile {
+  private ContentDirectory parent;
+  private RepoFile file;
   
-  public StringProperty(String name, AbstractProperties properties) {
-    super(name, properties);
+  protected ContentFile(ContentDirectory parent, RepoFile file) {
+    this.parent = parent;
+    this.file = file;
+    parent.addFile(this);
   }
-
-  @Override
-  protected String parseValue(String value) {
-    return value;
+  
+  public RepoFile getFile() {
+    return file;
+  }
+  
+  public ContentDirectory getParentDirectory() {
+    return parent;
   }
 }

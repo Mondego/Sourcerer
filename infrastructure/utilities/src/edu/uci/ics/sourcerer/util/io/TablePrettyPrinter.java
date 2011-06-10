@@ -36,7 +36,7 @@ import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class TablePrettyPrinter {
+public class TablePrettyPrinter implements Closeable {
   public static final Argument<Boolean> CSV_MODE = new BooleanArgument("csv-mode", false, "Print tables as csv instead of prettily.");
   
   private TableWriter writer;
