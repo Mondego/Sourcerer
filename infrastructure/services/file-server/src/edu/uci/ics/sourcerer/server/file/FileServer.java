@@ -61,6 +61,7 @@ public class FileServer extends HttpServlet {
       }
     }
   }
+  
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     // Should the files download or be shown in browser?

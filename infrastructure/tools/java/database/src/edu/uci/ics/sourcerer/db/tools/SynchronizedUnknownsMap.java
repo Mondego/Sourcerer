@@ -43,7 +43,7 @@ public class SynchronizedUnknownsMap extends DatabaseAccessor {
     unknownsProject = projectQueries.getUnknownsProjectID();
     
     unknowns = Helper.newHashMap();
-    for (MediumEntityDB entity : entityQueries.getMediumByProjectID(unknownsProject, Entity.UNKNOWN)) {
+    for (MediumEntityDB entity : entityQueries.getMediumByProjectIDStreamed(unknownsProject, Entity.UNKNOWN)) {
       unknowns.put(entity.getFqn(), entity.getEntityID());
     }
     close();

@@ -21,6 +21,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -262,6 +263,10 @@ public final class FileUtils {
     } finally {
       close(br);
     }
+  }
+  
+  public static void writeByteArrayToFile(byte[] source, File target) throws IOException {
+    writeStreamToStream(new ByteArrayInputStream(source), new FileOutputStream(target));
   }
   
   public static void writeFileToStream(File source, OutputStream out) throws IOException {

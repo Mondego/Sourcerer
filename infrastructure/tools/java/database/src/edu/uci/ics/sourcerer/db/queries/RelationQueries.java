@@ -27,6 +27,7 @@ import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.db.LocationDB;
+import edu.uci.ics.sourcerer.model.db.RelationDB;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -39,6 +40,22 @@ public class RelationQueries extends Queries {
           FILE_ID.convertFromDB(result.getString(1)),
           OFFSET.convertFromDB(result.getString(2)),
           LENGTH.convertFromDB(result.getString(3)));
+    }
+  };
+  
+  private static final ResultTranslator<RelationDB> RELATION_TRANSLATOR = new ResultTranslator<RelationDB>(TABLE, RELATION_ID, RELATION_TYPE, RELATION_CLASS, LHS_EID, RHS_EID, PROJECT_ID, FILE_ID, OFFSET, LENGTH) {
+    @Override
+    public RelationDB translate(ResultSet result) throws SQLException {
+      return new RelationDB(
+          RELATION_ID.convertFromDB(result.getString(1)),
+          RELATION_TYPE.convertFromDB(result.getString(2)),
+          RELATION_CLASS.convertFromDB(result.getString(3)),
+          LHS_EID.convertFromDB(result.getString(4)),
+          RHS_EID.convertFromDB(result.getString(5)),
+          PROJECT_ID.convertFromDB(result.getString(6)),
+          FILE_ID.convertFromDB(result.getString(7)),
+          OFFSET.convertFromDB(result.getString(8)),
+          LENGTH.convertFromDB(result.getString(9)));
     }
   };
   
@@ -56,5 +73,9 @@ public class RelationQueries extends Queries {
   
   public Collection<Integer> getRelationProjectCountBy(int targetID, Relation ... relations) {
     return executor.select(TABLE, "project_id", and(RHS_EID.getEquals(targetID), RELATION_TYPE.getIn(relations)), ResultTranslator.SIMPLE_INT_TRANSLATOR);
+  }
+  
+  public Collection<RelationDB> getRelationsByProject(Integer projectID, Relation ... relations) {
+    return executor.select(and(PROJECT_ID.getEquals(projectID), RELATION_TYPE.getIn(relations)), RELATION_TRANSLATOR);
   }
 }

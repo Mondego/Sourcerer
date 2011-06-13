@@ -69,6 +69,13 @@ public class Main {
       }
     }.setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, INPUT_REPO, OUTPUT_REPO); 
   
+  public static final Command MOOSE_EXPORTER =
+    new Command("moose-exporter", "Moose exporter!") {
+      protected void action() {
+        FamixExporter.writeFamixModelToFile();
+    }
+  }.setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, FamixExporter.PROJECT_ID, FamixExporter.FAMIX_FILE.asOutput());
+  
   public static void main(String[] args) {
     PropertyManager.executeCommand(args, Main.class);
   }

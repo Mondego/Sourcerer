@@ -106,6 +106,10 @@ public class ProjectQueries extends Queries {
     return executor.selectSingle(PROJECT_ID.getEquals(projectID), LARGE_PROJECT_TRANSLATOR);
   }
   
+  public Collection<LargeProjectDB> getLargeByType(Project type) {
+    return executor.select(PROJECT_TYPE.getEquals(type), LARGE_PROJECT_TRANSLATOR);
+  }
+  
   public String getHashByProjectID(Integer projectID) {
     return executor.selectSingle(TABLE, HASH.getName(), PROJECT_ID.getEquals(projectID));
   }
