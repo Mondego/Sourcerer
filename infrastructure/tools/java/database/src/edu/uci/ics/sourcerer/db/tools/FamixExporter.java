@@ -151,8 +151,8 @@ public class FamixExporter {
       if (relation.getRelationClass() == RelationClass.INTERNAL) {
         builder.append("(FAMIX.InheritanceDefinition\n");
         builder.append("\t(id: ").append(relation.getRelationID() + largestID).append(")\n");
-        builder.append("\t(subclass (idref: ").append(relation.getLhsEid()).append(")\n");
-        builder.append("\t(superclass (idref: ").append(relation.getRhsEid()).append(")\n");
+        builder.append("\t(subclass (idref: ").append(relation.getLhsEid()).append("))\n");
+        builder.append("\t(superclass (idref: ").append(relation.getRhsEid()).append("))\n");
         builder.append(")\n");
       }
     }

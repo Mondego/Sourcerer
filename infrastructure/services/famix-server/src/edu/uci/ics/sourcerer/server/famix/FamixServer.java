@@ -67,7 +67,9 @@ public class FamixServer extends HttpServlet {
     if (projectID == null) {
       StringBuilder builder = new StringBuilder();
       for (LargeProjectDB project : FamixExporter.getProjects()) {
-        builder.append(project.getProjectID()).append(" ").append(project.getName()).append("\n");
+        if (!"END_FIRST".equals(project.getHash())) {
+          builder.append(project.getProjectID()).append(" ").append(project.getName()).append("\n");
+        }
       }
       ServletUtils.writeByteArray(response, null, builder.toString().getBytes());
     } else {
