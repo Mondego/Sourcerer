@@ -21,9 +21,12 @@ import java.io.Closeable;
 
 import edu.uci.ics.sourcerer.db.schema.CommentsTable;
 import edu.uci.ics.sourcerer.db.schema.EntitiesTable;
+import edu.uci.ics.sourcerer.db.schema.EntityMetricsTable;
+import edu.uci.ics.sourcerer.db.schema.FileMetricsTable;
 import edu.uci.ics.sourcerer.db.schema.FilesTable;
 import edu.uci.ics.sourcerer.db.schema.ImportsTable;
 import edu.uci.ics.sourcerer.db.schema.ProblemsTable;
+import edu.uci.ics.sourcerer.db.schema.ProjectMetricsTable;
 import edu.uci.ics.sourcerer.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
@@ -38,18 +41,24 @@ public abstract class DatabaseAccessor implements Closeable {
   protected TableLocker locker;
 
   protected ProjectsTable projectsTable;
+  protected ProjectMetricsTable projectMetricsTable;
   protected FilesTable filesTable;
+  protected FileMetricsTable fileMetricsTable;
   protected ImportsTable importsTable;
   protected ProblemsTable problemsTable;
   protected CommentsTable commentsTable;
   protected EntitiesTable entitiesTable;
+  protected EntityMetricsTable entityMetricsTable;
   protected RelationsTable relationsTable;
 
   protected ProjectQueries projectQueries;
+  protected ProjectMetricQueries projectMetricQueries;
   protected FileQueries fileQueries;
+  protected FileMetricQueries fileMetricQueries;
   protected ImportQueries importQueries;
   protected CommentQueries commentQueries;
   protected EntityQueries entityQueries;
+  protected EntityMetricQueries entityMetricQueries;
   protected RelationQueries relationQueries;
   
   protected JoinQueries joinQueries;
@@ -65,18 +74,24 @@ public abstract class DatabaseAccessor implements Closeable {
     locker = executor.getTableLocker();
     
     projectsTable = new ProjectsTable(executor, locker);
+    projectMetricsTable = new ProjectMetricsTable(executor, locker);
     filesTable = new FilesTable(executor, locker);
+    fileMetricsTable = new FileMetricsTable(executor, locker);
     importsTable = new ImportsTable(executor, locker);
     problemsTable = new ProblemsTable(executor, locker);
     commentsTable = new CommentsTable(executor, locker);
     entitiesTable = new EntitiesTable(executor, locker);
+    entityMetricsTable = new EntityMetricsTable(executor, locker);
     relationsTable = new RelationsTable(executor, locker);
     
     projectQueries = new ProjectQueries(executor);
+    projectMetricQueries = new ProjectMetricQueries(executor);
     fileQueries = new FileQueries(executor);
+    fileMetricQueries = new FileMetricQueries(executor);
     importQueries = new ImportQueries(executor);
     commentQueries = new CommentQueries(executor);
     entityQueries = new EntityQueries(executor);
+    entityMetricQueries = new EntityMetricQueries(executor);
     relationQueries = new RelationQueries(executor);
     
     joinQueries = new JoinQueries(executor);

@@ -18,21 +18,18 @@
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
 import edu.uci.ics.sourcerer.extractor.io.IFileWriter;
+import edu.uci.ics.sourcerer.model.metrics.Metrics;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class DummyFileWriter implements IFileWriter {
   @Override
-  public void writeSourceFile(String name, String path) {
-  }
+  public void writeSourceFile(String name, Metrics metrics, String path) {}
   
   @Override
-  public void writeJarFile(String name, String hash) {
-    
-  }
+  public void writeJarFile(String name, String hash) {}
 
   @Override
-  public void close() {
-  }
+  public void close() {}
 }

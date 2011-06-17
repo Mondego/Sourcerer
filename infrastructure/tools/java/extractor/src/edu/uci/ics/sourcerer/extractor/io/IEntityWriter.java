@@ -17,29 +17,32 @@
  */
 package edu.uci.ics.sourcerer.extractor.io;
 
+import edu.uci.ics.sourcerer.model.Location;
+import edu.uci.ics.sourcerer.model.metrics.Metrics;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface IEntityWriter extends IExtractorWriter {
   public void writePackage(String fqn);
   
-  public void writeClass(String fqn, int modifiers, Location location);
+  public void writeClass(String fqn, int modifiers, Metrics metrics, Location location);
 
-  public void writeInterface(String fqn, int modifiers, Location location);
+  public void writeInterface(String fqn, int modifiers, Metrics metrics, Location location);
 
-  public void writeConstructor(String fqn, int modifiers, Location location);
+  public void writeConstructor(String fqn, int modifiers, Metrics metrics, Location location);
   
-  public void writeMethod(String fqn, int modifiers, Location location);
+  public void writeMethod(String fqn, int modifiers, Metrics metrics, Location location);
   
-  public void writeInitializer(String fqn, int modifiers, Location location);
+  public void writeInitializer(String fqn, int modifiers, Metrics metrics, Location location);
 
-  public void writeField(String fqn, int modifiers, Location location);
+  public void writeField(String fqn, int modifiers, Metrics metrics, Location location);
   
-  public void writeEnum(String fqn, int modifiers, Location location);
+  public void writeEnum(String fqn, int modifiers, Metrics metrics, Location location);
 
-  public void writeEnumConstant(String fqn, int modifiers, Location location);
+  public void writeEnumConstant(String fqn, int modifiers, Metrics metrics, Location location);
   
-  public void writeAnnotation(String fqn, int modifiers, Location location);
+  public void writeAnnotation(String fqn, int modifiers, Metrics metrics, Location location);
 
-  public void writeAnnotationElement(String fqn, int modifiers, Location location);
+  public void writeAnnotationElement(String fqn, int modifiers, Metrics metrics, Location location);
 }

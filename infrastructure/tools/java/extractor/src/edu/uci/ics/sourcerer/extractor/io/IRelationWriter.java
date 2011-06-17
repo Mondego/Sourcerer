@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.extractor.io;
 
+import edu.uci.ics.sourcerer.model.Location;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */

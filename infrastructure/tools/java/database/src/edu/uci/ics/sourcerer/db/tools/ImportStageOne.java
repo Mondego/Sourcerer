@@ -70,6 +70,7 @@ public class ImportStageOne extends ExtractedImporterThread {
 
       insertFiles(item, projectID);
       loadFileMap(projectID);
+      insertFileMetrics(item, projectID);
       insertProblems(item, projectID);
       insertEntities(item, projectID);
       

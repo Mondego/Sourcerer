@@ -20,7 +20,7 @@ package edu.uci.ics.sourcerer.extractor.io.file;
 import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.IImportWriter;
-import edu.uci.ics.sourcerer.extractor.io.Location;
+import edu.uci.ics.sourcerer.model.Location;
 import edu.uci.ics.sourcerer.model.extracted.ImportEX;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
@@ -34,6 +34,6 @@ public final class ImportWriter extends ExtractorWriter implements IImportWriter
   }
   
   public void writeImport(String name, boolean isStatic, boolean onDemand, Location location) {
-    write(ImportEX.getLine(name, isStatic, onDemand, convertToRelativePath(location.getPath()), location.getStartPosition(), location.getLength()));
+    write(ImportEX.getLine(name, isStatic, onDemand, convertToRelativePath(location.getPath()), location.getOffset(), location.getLength()));
   }
 }

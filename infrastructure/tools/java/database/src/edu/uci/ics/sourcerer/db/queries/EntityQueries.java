@@ -17,14 +17,7 @@
  */
 package edu.uci.ics.sourcerer.db.queries;
 
-import static edu.uci.ics.sourcerer.db.schema.EntitiesTable.ENTITY_ID;
-import static edu.uci.ics.sourcerer.db.schema.EntitiesTable.ENTITY_TYPE;
-import static edu.uci.ics.sourcerer.db.schema.EntitiesTable.FILE_ID;
-import static edu.uci.ics.sourcerer.db.schema.EntitiesTable.FQN;
-import static edu.uci.ics.sourcerer.db.schema.EntitiesTable.LENGTH;
-import static edu.uci.ics.sourcerer.db.schema.EntitiesTable.OFFSET;
-import static edu.uci.ics.sourcerer.db.schema.EntitiesTable.PROJECT_ID;
-import static edu.uci.ics.sourcerer.db.schema.EntitiesTable.TABLE;
+import static edu.uci.ics.sourcerer.db.schema.EntitiesTable.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,6 +26,7 @@ import java.util.Collection;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.model.Entity;
+import edu.uci.ics.sourcerer.model.db.EntityDB;
 import edu.uci.ics.sourcerer.model.db.LocationDB;
 import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
 import edu.uci.ics.sourcerer.model.db.SmallEntityDB;
@@ -59,6 +53,22 @@ public class EntityQueries extends Queries {
     @Override
     public MediumEntityDB translate(ResultSet result) throws SQLException {
       return new MediumEntityDB(ENTITY_ID.convertFromDB(result.getString(3)), ENTITY_TYPE.convertFromDB(result.getString(4)), FQN.convertFromDB(result.getString(1)), PROJECT_ID.convertFromDB(result.getString(2)));
+    }
+  };
+  
+  private static final ResultTranslator<EntityDB> ENTITY_TRANSLATOR = new ResultTranslator<EntityDB>(TABLE, ENTITY_ID, ENTITY_TYPE, FQN, MODIFIERS, MULTI, PROJECT_ID, FILE_ID, OFFSET, LENGTH) {
+    @Override
+    public EntityDB translate(ResultSet result) throws SQLException {
+      return new EntityDB(
+          ENTITY_ID.convertFromDB(result.getString(1)),
+          ENTITY_TYPE.convertFromDB(result.getString(2)),
+          FQN.convertFromDB(result.getString(3)),
+          MODIFIERS.convertFromDB(result.getString(4)),
+          MULTI.convertFromDB(result.getString(5)),
+          PROJECT_ID.convertFromDB(result.getString(6)),
+          FILE_ID.convertFromDB(result.getString(7)),
+          OFFSET.convertFromDB(result.getString(8)),
+          LENGTH.convertFromDB(result.getString(9)));
     }
   };
   
@@ -100,5 +110,9 @@ public class EntityQueries extends Queries {
   
   public Collection<MediumEntityDB> getMediumByProjectID(Integer projectID, Entity ... types) {
     return executor.select(and(PROJECT_ID.getEquals(projectID), ENTITY_TYPE.getIn(types)), MEDIUM_ENTITY_TRANSLATOR);
+  }
+  
+  public Collection<EntityDB> getByProjectID(Integer projectID, Entity ... types) {
+    return executor.select(and(PROJECT_ID.getEquals(projectID), ENTITY_TYPE.getIn(types)), ENTITY_TRANSLATOR);
   }
 }

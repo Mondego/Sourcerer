@@ -93,9 +93,9 @@ public final class LineFileReader implements Closeable {
           if (!nameList.isEmpty()) {
             LineBuilder builder = new LineBuilder();
             for (String name : nameList) {
-              builder.addItem(name);
+              builder.append(name);
             }
-            logger.log(Level.SEVERE, "Unable to find fields " + builder.toLine() + "in " + klass.getName() + ".");
+            logger.log(Level.SEVERE, "Unable to find fields " + builder.toString() + "in " + klass.getName() + ".");
             close();
             return null;
           }

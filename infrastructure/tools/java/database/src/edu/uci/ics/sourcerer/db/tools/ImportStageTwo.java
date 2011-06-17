@@ -48,12 +48,13 @@ public class ImportStageTwo extends ExtractedImporterThread {
     classifier = new RelationClassifier(libraryProjects);
     
     for (Extracted item : extracted) {
-      logger.info("    Verifying that item should be imported...");
+      logger.info("Stage two import of " + item.getName() + "(" + item.getRelativePath() + ")");
+      logger.info("  Verifying that item should be imported...");
       if (!item.extracted()) {
-        logger.info("      Extraction not completed... skipping");
+        logger.info("    Extraction not completed... skipping");
         continue;
       } else if (!item.reallyExtracted()) {
-        logger.info("      Extraction empty... skipping");
+        logger.info("    Extraction empty... skipping");
         continue;
       }
       SmallProjectDB project;
@@ -64,11 +65,11 @@ public class ImportStageTwo extends ExtractedImporterThread {
       }
       if (project != null) {
         if (project.completed()) {
-          logger.info("      Import already completed... skipping");
+          logger.info("    Import already completed... skipping");
           continue;
         }
       }
-      logger.info("Stage two import of " + item.getName() + "(" + item.getRelativePath() + ")");
+      
       
       buildInClause(Helper.newHashSet(libraryProjects), item);
       Integer projectID = project.getProjectID();
@@ -82,6 +83,7 @@ public class ImportStageTwo extends ExtractedImporterThread {
         projectsTable.beginSecondStageCrawledProjectInsert(projectID);
       }
       
+      insertEntityMetrics(item, projectID);
       insertRemainingEntities(item, projectID);
       loadRemainingEntityMap(projectID);
       insertRelations(item, projectID);

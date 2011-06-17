@@ -113,4 +113,6 @@ public class ProjectQueries extends Queries {
   public String getHashByProjectID(Integer projectID) {
     return executor.selectSingle(TABLE, HASH.getName(), PROJECT_ID.getEquals(projectID));
   }
+  
+
 }

@@ -70,6 +70,7 @@ public final class EntitiesTable extends DatabaseTable {
   public static final Column<Integer> LENGTH = IntColumn.getUnsignedInt("length", TABLE);
   
   // ---- CREATE ----
+  @Override
   public void createTable() {
     executor.createTable(table,
         ENTITY_ID,
@@ -97,7 +98,7 @@ public final class EntitiesTable extends DatabaseTable {
   }
   
   private String getInsertValue(EntityEX entity, Integer projectID, Integer fileID) {
-    return getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), null, projectID, fileID, entity.getStartPosition(), entity.getLength());
+    return getInsertValue(entity.getType(), entity.getFqn(), entity.getMods(), null, projectID, fileID, entity.getOffset(), entity.getLength());
   }
  
   public void insert(EntityEX entity, Integer projectID, Integer fileID) {

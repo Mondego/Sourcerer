@@ -18,7 +18,8 @@
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
 import edu.uci.ics.sourcerer.extractor.io.IEntityWriter;
-import edu.uci.ics.sourcerer.extractor.io.Location;
+import edu.uci.ics.sourcerer.model.Location;
+import edu.uci.ics.sourcerer.model.metrics.Metrics;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -32,34 +33,34 @@ public class DummyEntityWriter implements IEntityWriter {
   }
   
   @Override
-  public void writeAnnotation(String fqn, int modifiers, Location location) {}
+  public void writeAnnotation(String fqn, int modifiers, Metrics metrics, Location location) {}
 
   @Override
-  public void writeAnnotationElement(String fqn, int modifiers, Location location) {}
+  public void writeAnnotationElement(String fqn, int modifiers, Metrics metrics, Location location) {}
 
   @Override
-  public void writeClass(String fqn, int modifiers, Location location) {}
+  public void writeClass(String fqn, int modifiers, Metrics metrics, Location location) {}
 
   @Override
-  public void writeConstructor(String fqn, int modifiers, Location location) {}
+  public void writeConstructor(String fqn, int modifiers, Metrics metrics, Location location) {}
 
   @Override
-  public void writeEnum(String fqn, int modifiers, Location location) {}
+  public void writeEnum(String fqn, int modifiers, Metrics metrics, Location location) {}
 
   @Override
-  public void writeEnumConstant(String fqn, int modifiers, Location location) {}
+  public void writeEnumConstant(String fqn, int modifiers, Metrics metrics, Location location) {}
 
   @Override
-  public void writeField(String fqn, int modifiers, Location location) {}
+  public void writeField(String fqn, int modifiers, Metrics metrics, Location location) {}
 
   @Override
-  public void writeInitializer(String fqn, int modifiers, Location location) {}
+  public void writeInitializer(String fqn, int modifiers, Metrics metrics, Location location) {}
 
   @Override
-  public void writeInterface(String fqn, int modifiers, Location location) {}
+  public void writeInterface(String fqn, int modifiers, Metrics metrics, Location location) {}
 
   @Override
-  public void writeMethod(String fqn, int modifiers, Location location) {}
+  public void writeMethod(String fqn, int modifiers, Metrics metrics, Location location) {}
 
 
 }

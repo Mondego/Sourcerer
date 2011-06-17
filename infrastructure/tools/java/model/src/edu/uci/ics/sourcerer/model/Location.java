@@ -15,55 +15,52 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io;
+package edu.uci.ics.sourcerer.model;
 
 import java.util.Scanner;
+
+import edu.uci.ics.sourcerer.util.io.LineBuildable;
+import edu.uci.ics.sourcerer.util.io.LineBuilder;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class LineBuilder {
-  private StringBuilder builder;
-
-  public LineBuilder() {
-    builder = new StringBuilder();
+public class Location implements LineBuildable {
+  private String path;
+  private int offset;
+  private int length;
+  
+  public Location(String path) {
+    this(path, -1, 0);
   }
   
-  public LineBuilder append(String item) {
-    builder.append(item).append(" ");
-    return this;
+  public Location(String path, int offset, int length) {
+    this.path = path;
+    this.offset = offset;
+    this.length = length;
   }
   
-  public LineBuilder append(int item) {
-    return append(Integer.toString(item));
+  public void setPath(String path) {
+    this.path = path;
   }
   
-  public LineBuilder append(LineBuildable obj) {
-    if (obj == null) {
-      append("null");
-    } else {
-      obj.addToLineBuilder(this);
-    }
-    return this;
+  public String getPath() {
+    return path;
   }
   
-  public String toString() {
-    if (builder.length() == 0) {
-      return "";
-    } else {
-      return builder.toString().substring(0, builder.length() - 1);
-    }
+  public int getOffset() {
+    return offset;
   }
   
-  public void reset() {
-    builder.setLength(0);
+  public int getLength() {
+    return length;
   }
   
-  public static String[] splitLine(String line) {
-    return line.split(" ");
+  public static Location parse(Scanner scanner) {
+    return new Location(scanner.next(), scanner.nextInt(), scanner.nextInt());
   }
   
-  public static Scanner getScanner(String line) {
-    return new Scanner(line).useDelimiter(" ");
+  public void addToLineBuilder(LineBuilder builder) {
+    builder.append(path).append(offset).append(length);
   }
 }

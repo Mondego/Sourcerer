@@ -17,10 +17,12 @@
  */
 package edu.uci.ics.sourcerer.extractor.io;
 
+import edu.uci.ics.sourcerer.model.metrics.Metrics;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface IFileWriter extends IExtractorWriter {
-  public void writeSourceFile(String name, String path);
+  public void writeSourceFile(String name, Metrics metrics, String path);
   public void writeJarFile(String name, String hash);
 }

@@ -24,16 +24,19 @@ package edu.uci.ics.sourcerer.db.util.columns;
  */
 public abstract class EnumColumn<T extends Enum<T>> extends Column<T> {
   public EnumColumn(String name, String table, Enum<T>[] values, boolean nullable) {
-    super(name, table, getEnumCreate(values), nullable);
+    super(name, table, getEnumCreate(values, nullable), nullable);
   }
   
-  private static <T extends Enum<T>> String getEnumCreate(Enum<T>[] values) {
+  private static <T extends Enum<T>> String getEnumCreate(Enum<T>[] values, boolean nullable) {
     StringBuilder builder = new StringBuilder();
     builder.append("ENUM(");
     for (Enum<T> value : values) {
       builder.append("'").append(value.name()).append("'").append(",");
     }
     builder.setCharAt(builder.length() - 1, ')');
+    if (nullable) {
+      builder.append(" NOT NULL");
+    }
     return builder.toString();
   }
 

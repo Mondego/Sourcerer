@@ -48,6 +48,9 @@ public abstract class DatabaseTable {
     return table;
   }
   
+  // ---- CREATE ----
+  public abstract void createTable();
+  
   // ---- INSERT ----
   public <T> KeyInsertBatcher<T> getKeyInsertBatcher(KeyInsertBatcher.KeyProcessor<T> processor) {
     return executor.getKeyInsertBatcher(table, processor);

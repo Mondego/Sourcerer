@@ -18,7 +18,7 @@
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
 import edu.uci.ics.sourcerer.extractor.io.IRelationWriter;
-import edu.uci.ics.sourcerer.extractor.io.Location;
+import edu.uci.ics.sourcerer.model.Location;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

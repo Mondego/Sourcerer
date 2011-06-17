@@ -20,7 +20,7 @@ package edu.uci.ics.sourcerer.extractor.io.file;
 import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.IRelationWriter;
-import edu.uci.ics.sourcerer.extractor.io.Location;
+import edu.uci.ics.sourcerer.model.Location;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
@@ -35,7 +35,7 @@ public final class RelationWriter extends ExtractorWriter implements IRelationWr
   }
 
   private void writeRelation(Relation type, String lhs, String rhs, Location location) {
-    write(RelationEX.getSourceLine(type, lhs, rhs, convertToRelativePath(location.getPath()), location.getStartPosition(), location.getLength()));
+    write(RelationEX.getSourceLine(type, lhs, rhs, convertToRelativePath(location.getPath()), location.getOffset(), location.getLength()));
   }
   
   @Override
@@ -105,7 +105,7 @@ public final class RelationWriter extends ExtractorWriter implements IRelationWr
   
   @Override
   public void writeParametrizedBy(String fqn, String typeVariable, int pos, Location location) {
-    write(RelationEX.getSourceLineParametrizedBy(fqn, typeVariable, pos, convertToRelativePath(location.getPath()), location.getStartPosition(), location.getLength()));
+    write(RelationEX.getSourceLineParametrizedBy(fqn, typeVariable, pos, convertToRelativePath(location.getPath()), location.getOffset(), location.getLength()));
   }
 
   @Override

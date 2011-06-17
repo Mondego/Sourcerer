@@ -21,7 +21,6 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -31,16 +30,18 @@ import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.RelationClass;
+import edu.uci.ics.sourcerer.model.db.EntityDB;
+import edu.uci.ics.sourcerer.model.db.EntityMetricDB;
 import edu.uci.ics.sourcerer.model.db.LargeProjectDB;
-import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
+import edu.uci.ics.sourcerer.model.db.ProjectMetricDB;
 import edu.uci.ics.sourcerer.model.db.RelationDB;
+import edu.uci.ics.sourcerer.model.metrics.Metric;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.TimeoutManager;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
 import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -63,6 +64,10 @@ public class FamixExporter {
     return accessorManager.get().getProjects();
   }
   
+  public static Collection<ProjectMetricDB> getProjectMetrics() {
+    return accessorManager.get().getProjectMetrics();
+  }
+  
   public static void writeFamixModelToFile() {
     try {
       FileUtils.writeByteArrayToFile(getFamixModel(PROJECT_ID.getValue()), FAMIX_FILE.asOutput().getValue());
@@ -82,7 +87,7 @@ public class FamixExporter {
     Map<String, Integer> classMap = Helper.newHashMap();
     Map<Integer, String> methodNames = Helper.newHashMap();
     
-    for (MediumEntityDB entity : db.getEntities(projectID, Entity.PACKAGE)) {
+    for (EntityDB entity : db.getEntities(projectID, Entity.PACKAGE)) {
       pkgMap.put(entity.getFqn(), entity.getEntityID());
       builder.append("(FAMIX.Namespace\n");
       builder.append("\t(id: ").append(entity.getEntityID()).append(")\n");
@@ -92,7 +97,15 @@ public class FamixExporter {
     
     int largestID = 0;
     
-    for (MediumEntityDB entity : db.getEntities(projectID, Entity.CLASS, Entity.INTERFACE, Entity.ENUM)) {
+    Map<Integer, Integer> locMap = Helper.newHashMap();
+    
+    for (EntityMetricDB metric : db.getEntityMetrics(projectID)) {
+      if (metric.getMetric() == Metric.NON_WHITESPACE_LINES_OF_CODE) {
+        locMap.put(metric.getEntityID(), metric.getValue());
+      }
+    }
+    
+    for (EntityDB entity : db.getEntities(projectID, Entity.CLASS, Entity.INTERFACE, Entity.ENUM)) {
       largestID = Math.max(largestID, entity.getEntityID());
       classMap.put(entity.getFqn(), entity.getEntityID());
       
@@ -110,6 +123,12 @@ public class FamixExporter {
       Integer pkgId = pkgMap.get(pkg);
       
       int nom = db.getMethodCount(entity.getEntityID());
+      int loc = 0;
+      if (locMap.containsKey(entity.getEntityID())) {
+        loc = locMap.get(entity.getEntityID());
+      } else {
+        logger.log(Level.SEVERE, "Missing loc for: " + entity.getEntityID());
+      }
       
       builder.append("(FAMIX.Class\n");
       builder.append("\t(id: ").append(entity.getEntityID()).append(")\n");
@@ -117,12 +136,12 @@ public class FamixExporter {
       builder.append("\t(belongsTo (idref: ").append(pkgId).append("))\n");
       builder.append("\t(isInterface ").append(entity.getType() == Entity.INTERFACE).append(")\n");
       builder.append("\t(stub false)\n");
-      builder.append("\t(WLOC ").append(10 * nom).append(")\n");
+      builder.append("\t(WLOC ").append(loc).append(")\n");
       builder.append("\t(NOM ").append(nom).append(")\n");
       builder.append(")\n");
     }
     
-    for (MediumEntityDB entity : db.getEntities(projectID, Entity.METHOD, Entity.CONSTRUCTOR)) {
+    for (EntityDB entity : db.getEntities(projectID, Entity.METHOD, Entity.CONSTRUCTOR)) {
       largestID = Math.max(largestID, entity.getEntityID());
       
       String fqn = entity.getFqn();
@@ -130,7 +149,7 @@ public class FamixExporter {
       String name = null;
 
       
-      int parenIdx = fqn.lastIndexOf('(');
+      int parenIdx = fqn.indexOf('(');
       klass = fqn.substring(0, parenIdx);
       int dotIdx = klass.lastIndexOf('.');
       name = klass.substring(dotIdx + 1);
@@ -181,8 +200,16 @@ public class FamixExporter {
       return projectQueries.getLargeByType(Project.CRAWLED);
     }
     
-    public Iterable<MediumEntityDB> getEntities(Integer projectID, Entity ... types) {
-      return entityQueries.getMediumByProjectID(projectID, types);
+    public Collection<ProjectMetricDB> getProjectMetrics() {
+      return projectMetricQueries.getMetrics();
+    }
+    
+    public Collection<EntityMetricDB> getEntityMetrics(Integer projectID) {
+      return entityMetricQueries.getMetricsByProjectID(projectID, Metric.NON_WHITESPACE_LINES_OF_CODE);
+    }
+    
+    public Collection<EntityDB> getEntities(Integer projectID, Entity ... types) {
+      return entityQueries.getByProjectID(projectID, types);
     }
     
     public int getMethodCount(Integer classID) {

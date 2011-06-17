@@ -238,7 +238,7 @@ public final class FeatureExtractor {
     
     for (IFile source : sourceFiles) {
       ICompilationUnit icu = JavaCore.createCompilationUnitFrom(source);
-      
+
       parser.setStatementsRecovery(true);
       parser.setResolveBindings(true);
       parser.setBindingsRecovery(true);
@@ -265,6 +265,7 @@ public final class FeatureExtractor {
           visitor.setBindingFreeMode(true);
         }
         try {
+          visitor.setCompilationUnitSource(icu.getSource());
           unit.accept(visitor);
           report.reportSourceExtraction();
         } catch (Exception e) {

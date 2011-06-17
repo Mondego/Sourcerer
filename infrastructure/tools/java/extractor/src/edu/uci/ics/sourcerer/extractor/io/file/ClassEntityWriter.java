@@ -21,6 +21,7 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.IClassEntityWriter;
 import edu.uci.ics.sourcerer.model.Entity;
+import edu.uci.ics.sourcerer.model.Location;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
@@ -40,40 +41,40 @@ public final class ClassEntityWriter extends ExtractorWriter implements IClassEn
   
   @Override
   public void writeClass(String fqn, int modifiers, String path) {
-    write(EntityEX.getClassLine(Entity.CLASS, fqn, modifiers, path));
+    write(EntityEX.getClassLine(Entity.CLASS, fqn, modifiers, null, new Location(path)));
   }
   
   @Override
   public void writeInterface(String fqn, int modifiers, String path) {
-    write(EntityEX.getClassLine(Entity.INTERFACE, fqn, modifiers, path));
+    write(EntityEX.getClassLine(Entity.INTERFACE, fqn, modifiers, null, new Location(path)));
   }
   
   @Override
   public void writeAnnotation(String fqn, int modifiers, String path) {
-    write(EntityEX.getClassLine(Entity.ANNOTATION, fqn, modifiers, path));
+    write(EntityEX.getClassLine(Entity.ANNOTATION, fqn, modifiers, null, new Location(path)));
   }
   
   public void writeAnnotationElement(String fqn, int modifiers, String path) {
-    write(EntityEX.getClassLine(Entity.ANNOTATION_ELEMENT, fqn, modifiers, path));
+    write(EntityEX.getClassLine(Entity.ANNOTATION_ELEMENT, fqn, modifiers, null, new Location(path)));
   }
   
   public void writeEnum(String fqn, int modifiers, String path) {
-    write(EntityEX.getClassLine(Entity.ENUM, fqn, modifiers, path));
+    write(EntityEX.getClassLine(Entity.ENUM, fqn, modifiers, null, new Location(path)));
   }
   
   public void writeEnumConstant(String fqn, int modifiers, String path) {
-    write(EntityEX.getClassLine(Entity.ENUM_CONSTANT, fqn, modifiers, path));
+    write(EntityEX.getClassLine(Entity.ENUM_CONSTANT, fqn, modifiers, null, new Location(path)));
   }
   
   public void writeField(String fqn, int modifiers, String path) {
-    write(EntityEX.getClassLine(Entity.FIELD, fqn, modifiers, path));
+    write(EntityEX.getClassLine(Entity.FIELD, fqn, modifiers, null, new Location(path)));
   }
   
   public void writeMethod(String fqn, int modifiers, String path) {
-    write(EntityEX.getClassLine(Entity.METHOD, fqn, modifiers, path));
+    write(EntityEX.getClassLine(Entity.METHOD, fqn, modifiers, null, new Location(path)));
   }
   
   public void writeConstructor(String fqn, int modifiers, String path) {
-    write(EntityEX.getClassLine(Entity.CONSTRUCTOR, fqn, modifiers, path));
+    write(EntityEX.getClassLine(Entity.CONSTRUCTOR, fqn, modifiers, null, new Location(path)));
   }
 }

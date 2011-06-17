@@ -20,9 +20,10 @@ package edu.uci.ics.sourcerer.extractor.io.file;
 import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.IEntityWriter;
-import edu.uci.ics.sourcerer.extractor.io.Location;
 import edu.uci.ics.sourcerer.model.Entity;
+import edu.uci.ics.sourcerer.model.Location;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
+import edu.uci.ics.sourcerer.model.metrics.Metrics;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
@@ -34,8 +35,9 @@ public final class EntityWriter extends ExtractorWriter implements IEntityWriter
     super(new File(output, Extracted.ENTITY_FILE.getValue()), input);
   }
 
-  private void writeEntity(Entity type, String fqn, int modifiers, Location location) {
-    write(EntityEX.getSourceLine(type, fqn, modifiers, convertToRelativePath(location.getPath()), location.getStartPosition(), location.getLength()));
+  private void writeEntity(Entity type, String fqn, int modifiers, Metrics metrics, Location location) {
+    location.setPath(convertToRelativePath(location.getPath()));
+    write(EntityEX.getSourceLine(type, fqn, modifiers, metrics, location));
   }
   
   @Override
@@ -44,52 +46,52 @@ public final class EntityWriter extends ExtractorWriter implements IEntityWriter
   }
   
   @Override
-  public void writeClass(String fqn, int modifiers, Location location) {
-    writeEntity(Entity.CLASS, fqn, modifiers, location);
+  public void writeClass(String fqn, int modifiers, Metrics metrics, Location location) {
+    writeEntity(Entity.CLASS, fqn, modifiers, metrics, location);
   }
 
   @Override
-  public void writeInterface(String fqn, int modifiers, Location location) {
-    writeEntity(Entity.INTERFACE, fqn, modifiers, location);
+  public void writeInterface(String fqn, int modifiers, Metrics metrics, Location location) {
+    writeEntity(Entity.INTERFACE, fqn, modifiers, metrics, location);
   }
   
   @Override
-  public void writeInitializer(String fqn, int modifiers, Location location) {
-    writeEntity(Entity.INITIALIZER, fqn, modifiers, location);
+  public void writeInitializer(String fqn, int modifiers, Metrics metrics, Location location) {
+    writeEntity(Entity.INITIALIZER, fqn, modifiers, metrics, location);
   }
   
   @Override
-  public void writeConstructor(String fqn, int modifiers, Location location) {
-    writeEntity(Entity.CONSTRUCTOR, fqn, modifiers, location);
+  public void writeConstructor(String fqn, int modifiers, Metrics metrics, Location location) {
+    writeEntity(Entity.CONSTRUCTOR, fqn, modifiers, metrics, location);
   }
   
   @Override
-  public void writeEnum(String fqn, int modifiers, Location location) {
-    writeEntity(Entity.ENUM, fqn, modifiers, location);
+  public void writeEnum(String fqn, int modifiers, Metrics metrics, Location location) {
+    writeEntity(Entity.ENUM, fqn, modifiers, metrics, location);
   }
   
   @Override
-  public void writeMethod(String fqn, int modifiers, Location location) {
-    writeEntity(Entity.METHOD, fqn, modifiers, location);
+  public void writeMethod(String fqn, int modifiers, Metrics metrics, Location location) {
+    writeEntity(Entity.METHOD, fqn, modifiers, metrics, location);
   }
   
   @Override
-  public void writeField(String fqn, int modifiers, Location location) {
-    writeEntity(Entity.FIELD, fqn, modifiers, location);
+  public void writeField(String fqn, int modifiers, Metrics metrics, Location location) {
+    writeEntity(Entity.FIELD, fqn, modifiers, metrics, location);
   }
   
   @Override
-  public void writeEnumConstant(String fqn, int modifiers, Location location) {
-    writeEntity(Entity.ENUM_CONSTANT, fqn, modifiers, location);    
+  public void writeEnumConstant(String fqn, int modifiers, Metrics metrics, Location location) {
+    writeEntity(Entity.ENUM_CONSTANT, fqn, modifiers, metrics, location);    
   }
   
   @Override
-  public void writeAnnotation(String fqn, int modifiers, Location location) {
-    writeEntity(Entity.ANNOTATION, fqn, modifiers, location);
+  public void writeAnnotation(String fqn, int modifiers, Metrics metrics, Location location) {
+    writeEntity(Entity.ANNOTATION, fqn, modifiers, metrics, location);
   }
   
   @Override
-  public void writeAnnotationElement(String fqn, int modifiers, Location location) {
-    writeEntity(Entity.ANNOTATION_ELEMENT, fqn, modifiers, location);
+  public void writeAnnotationElement(String fqn, int modifiers, Metrics metrics, Location location) {
+    writeEntity(Entity.ANNOTATION_ELEMENT, fqn, modifiers, metrics, location);
   }
 }

@@ -71,11 +71,11 @@ public final class FieldConverter {
       } else if (o.getClass().isArray()) {
         LineBuilder result = new LineBuilder();
         int length = Array.getLength(o);
-        result.addItem(length);
+        result.append(length);
         for (int i = 0; i < length; i++) {
-          result.addItem(writeToString(Array.get(o, i)));
+          result.append(writeToString(Array.get(o, i)));
         }
-        return result.toLine();
+        return result.toString();
       } else {
         String val = o.toString();
         if (val.equals("null")) {
@@ -160,32 +160,44 @@ public final class FieldConverter {
     protected abstract Object makeFromScanner(Scanner scanner) throws IllegalAccessException;
   }
   
-  private static final FieldConverterHelper INT_HELPER = new FieldConverterHelper() {
+  public abstract static class SimpleFieldConverterHelper extends FieldConverterHelper {
+    protected final Object makeFromScanner(Scanner scanner) throws IllegalAccessException {
+      String string = scanner.next();
+      if ("null".equals(string)) {
+        return null;
+      } else {
+        return makeFromString(string);
+      }
+    }
+    protected abstract Object makeFromString(String string) throws IllegalAccessException;
+  }
+  
+  private static final FieldConverterHelper INT_HELPER = new SimpleFieldConverterHelper() {
     @Override
-    protected Object makeFromScanner(Scanner scanner) {
-      return scanner.nextInt();
+    protected Object makeFromString(String string) {
+      return Integer.valueOf(string);
     }
   };
   
-  private static final FieldConverterHelper LONG_HELPER = new FieldConverterHelper() {
+  private static final FieldConverterHelper LONG_HELPER = new SimpleFieldConverterHelper() {
     @Override
-    protected Object makeFromScanner(Scanner scanner) {
-      return scanner.nextLong();
+    protected Object makeFromString(String string) {
+      return Long.valueOf(string);
     }
   };
   
   
-  private static final FieldConverterHelper BOOLEAN_HELPER = new FieldConverterHelper() {
+  private static final FieldConverterHelper BOOLEAN_HELPER = new SimpleFieldConverterHelper() {
     @Override
-    protected Object makeFromScanner(Scanner scanner) {
-      return scanner.nextBoolean();
+    protected Object makeFromString(String string) {
+      return Boolean.valueOf(string);
     }
   };
   
-  private static final FieldConverterHelper STRING_HELPER = new FieldConverterHelper() {
+  private static final FieldConverterHelper STRING_HELPER = new SimpleFieldConverterHelper() {
     @Override
-    protected Object makeFromScanner(Scanner scanner) {
-      return scanner.next();
+    protected Object makeFromString(String string) {
+      return string;
     }
   };
   

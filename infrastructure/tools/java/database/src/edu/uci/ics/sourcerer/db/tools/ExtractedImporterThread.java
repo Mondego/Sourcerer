@@ -25,7 +25,9 @@ import edu.uci.ics.sourcerer.model.extracted.ModelEX;
 import edu.uci.ics.sourcerer.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
+import edu.uci.ics.sourcerer.model.metrics.Metric;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
+import edu.uci.ics.sourcerer.util.Counter;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.util.TimeCounter;
@@ -82,20 +84,22 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     
     TimeCounter counter = new TimeCounter();
     
+    logger.info("    Processing files...");
     filesTable.initializeInserter(tempDir);
     for (FileEX file : extracted.getFileReader()) {
       filesTable.insert(file, projectID);
       counter.increment();
     }
     
+    logger.info(counter.reportTimeAndCount(6, "files processed"));
+    
+    counter.lap();
+    
     logger.info("    Performing db insert...");
-    locker.addWrite(filesTable);
-    locker.lock();
     filesTable.flushInserts();
-    locker.unlock();
-    logger.info(counter.reportTimeAndCount(6, "files inserted"));
+    logger.info(counter.reportTimeAndTotalCount(6, "files inserted"));
 
-    logger.info(counter.reportTimeAndCount(4, "files processed and inserted"));
+    logger.info(counter.reportTotalTimeAndCount(4, "files processed and inserted"));
   }
   
   protected void loadFileMap(Integer projectID) {
@@ -103,19 +107,69 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
 
     TimeCounter counter = new TimeCounter();
     
-    locker.addRead(filesTable);
-    locker.lock();
     fileQueries.populateFileMap(fileMap, projectID);
-    locker.unlock();
     
     counter.setCount(fileMap.size());
     logger.info(counter.reportTimeAndCount(4, "files loaded"));
+  }
+  
+  protected void insertFileMetrics(Extracted extracted, Integer projectID) {
+    logger.info("  Inserting file metrics...");
+    
+    TimeCounter counter = new TimeCounter();
+    
+    logger.info("    Processing file metrics...");
+    
+    Map<Metric, Counter<Metric>> projectMetrics = Helper.newEnumMap(Metric.class);
+    
+    fileMetricsTable.initializeInserter(tempDir);
+    for (FileEX file : extracted.getFileReader()) {
+      if (file.getType() == File.SOURCE) {
+        Integer fileID = fileMap.get(file.getPath());
+        if (fileID == null) {
+          logger.log(Level.SEVERE, "Unknown file: " + file.getPath());
+        } else {
+          for (Map.Entry<Metric, Integer> metric : file.getMetrics().getMetricValues()) {
+            fileMetricsTable.insert(projectID, fileID, metric.getKey(), metric.getValue());
+            Counter<Metric> count = projectMetrics.get(metric.getKey());
+            if (count == null) {
+              count = new Counter<Metric>(metric.getKey());
+              projectMetrics.put(metric.getKey(), count);
+            }
+            count.add(metric.getValue());
+            counter.increment();
+          }
+        }
+      }
+    }
+    
+    logger.info(counter.reportTimeAndCount(6, "file metrics processed"));
+    
+    counter.lap();
+    
+    logger.info("    Performing db insert...");
+    fileMetricsTable.flushInserts();
+    logger.info(counter.reportTimeAndTotalCount(6, "file metrics inserted"));
+
+    counter.lap();
+    
+    logger.info("    Inserting project metrics...");
+    projectMetricsTable.initializeInserter(tempDir);
+    for (Counter<Metric> count : projectMetrics.values()) {
+      projectMetricsTable.insert(projectID, count.getObject(), count.getCount());
+    }
+    projectMetricsTable.flushInserts();
+    logger.info(counter.reportTime(6, "Project metrics inserted"));
+    
+    logger.info(counter.reportTotalTimeAndCount(4, "files processed and inserted"));
   }
   
   protected void insertProblems(Extracted extracted, Integer projectID) {
     logger.info("  Inserting problems...");
 
     TimeCounter counter = new TimeCounter();
+    
+    logger.info("    Processing problems...");
     
     problemsTable.initializeInserter(tempDir);
     for (ProblemEX problem : extracted.getProblemReader()) {
@@ -128,15 +182,15 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
       }
     }
     
-    counter.lap();
-    logger.info("    Performing db insert...");
-    locker.addWrite(problemsTable);
-    locker.lock();
-    problemsTable.flushInserts();
-    locker.unlock();
-    logger.info(counter.reportTimeAndCount(6, "problems inserted"));
+    logger.info(counter.reportTimeAndCount(6, "problems processed"));
     
-    logger.info(counter.reportTimeAndCount(4, "problems processed and inserted"));
+    counter.lap();
+    
+    logger.info("    Performing db insert...");
+    problemsTable.flushInserts();
+    logger.info(counter.reportTimeAndTotalCount(6, "problems inserted"));
+    
+    logger.info(counter.reportTotalTimeAndCount(4, "problems processed and inserted"));
   }
   
   protected void insertEntities(Extracted extracted, Integer projectID) {
@@ -144,30 +198,65 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
 
     TimeCounter counter = new TimeCounter();
     
-    entitiesTable.initializeInserter(tempDir);
+    logger.info("    Processing entities....");
     
+    entitiesTable.initializeInserter(tempDir);
     logger.info("    Processing from entities file...");
     for (EntityEX entity : extracted.getEntityReader()) {
-      // Get the file
       Integer fileID = getFileID(entity.getPath(), entity);
-      
-      // Add the entity
+      if (fileID == null && !entity.getType().isPackage()) {
+        logger.log(Level.SEVERE, "Unknown file: " + entity.getPath());
+      }
       entitiesTable.insert(entity, projectID, fileID);
         
       counter.increment();
     }
+    
     logger.info(counter.reportTimeAndCount(6, "entities processed"));
     
     counter.lap();
     
     logger.info("    Performing db insert...");
-    locker.addWrite(entitiesTable);
-    locker.lock();
     entitiesTable.flushInserts();
-    locker.unlock();
     logger.info(counter.reportTimeAndTotalCount(6, "entities inserted"));
     
     logger.info(counter.reportTotalTimeAndCount(4, "entities processed and inserted"));
+  }
+  
+  protected void insertEntityMetrics(Extracted extracted, Integer projectID) {
+    logger.info("  Inserting entity metrics...");
+    
+    TimeCounter counter = new TimeCounter();
+    
+    logger.info("    Processing entity metrics...");
+    
+    entityMetricsTable.initializeInserter(tempDir);
+    for (EntityEX entity: extracted.getEntityReader()) {
+      Integer fileID = fileMap.get(entity.getPath());
+      SmallEntityDB eid = getEid(entity.getFqn(), projectID);
+      if (fileID == null) {
+        logger.log(Level.SEVERE, "Unknown file: " + entity.getPath());
+      } else if (eid == null) {
+        logger.log(Level.SEVERE, "Unknown entity: " + entity.getFqn());
+      } else if (!eid.getProjectID().equals(projectID)) {
+        logger.log(Level.SEVERE, "Incorrect project: " + entity.getFqn());
+      } else {
+        for (Map.Entry<Metric, Integer> metric : entity.getMetrics().getMetricValues()) {
+          entityMetricsTable.insert(projectID, fileID, eid.getEntityID(), metric.getKey(), metric.getValue());
+          counter.increment();
+        }
+      } 
+    }
+    
+    logger.info(counter.reportTimeAndCount(6, "entity metrics processed"));
+    
+    counter.lap();
+    
+    logger.info("    Performing db insert...");
+    entityMetricsTable.flushInserts();
+    logger.info(counter.reportTimeAndTotalCount(6, "entity metrics inserted"));
+
+    logger.info(counter.reportTotalTimeAndCount(4, "files processed and inserted"));
   }
   
   public void loadEntityMap(Integer projectID) {
@@ -175,8 +264,6 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     
     TimeCounter counter = new TimeCounter();
   
-    locker.addRead(entitiesTable);
-    locker.lock();
     for (MediumEntityDB entity : entityQueries.getMediumExternalByProjectID(projectID)) {
       Ent ent = entityMap.get(entity.getFqn());
       if (ent == null) {
@@ -188,7 +275,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
         logger.severe("    FQN conflict! " + entity.getFqn());
       }
     }
-    locker.unlock();
+    
     logger.info(counter.reportTimeAndCount(4, "entities loaded"));
   }
   
@@ -198,10 +285,6 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     TimeCounter counter = new TimeCounter();
     
     entitiesTable.initializeInserter(tempDir);
-    locker.addWrite(entitiesTable);
-    locker.lock();
-    
-    counter.lap();
     
     logger.info("    Processing from local variables / parameters file...");
     for (LocalVariableEX local : extracted.getLocalVariableReader()) {
@@ -241,7 +324,6 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info("    Performing db insert...");
     
     entitiesTable.flushInserts();
-    locker.unlock();
     logger.info(counter.reportTimeAndTotalCount(6, "entities inserted"));
     
     logger.info(counter.reportTotalTimeAndCount(4, "entities processed and inserted"));
@@ -360,8 +442,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info("  Updating entity map...");
     
     TimeCounter counter = new TimeCounter();
-    locker.addRead(entitiesTable);
-    locker.lock();
+
     relationsTable.initializeInserter(tempDir);
     
     logger.info("    Loading project entities...");
@@ -386,15 +467,10 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     }
     logger.info(counter.reportTimeAndCount(6, "synthetic entities loaded"));
     
-    locker.unlock();
-    
     counter.reset();
     
     logger.info("    Performing db insert on duplicate relations...");
-    locker.addWrite(relationsTable);
-    locker.lock();
     relationsTable.flushInserts();
-    locker.unlock();
     logger.info(counter.reportTime(6, "Db insert performed"));
     
     counter.reset();
@@ -408,6 +484,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info("  Inserting relations...");
     
     TimeCounter counter = new TimeCounter();
+    
     relationsTable.initializeInserter(tempDir);
     
     logger.info("    Processing type relations...");
@@ -421,6 +498,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
       }
     }
     newTypeRelations.clear();
+    
     logger.info(counter.reportTimeAndCount(6, "relations processed"));
       
     counter.lap();
@@ -444,8 +522,6 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info(counter.reportTimeAndCount(6, "relations processed"));
     
     logger.info("    Processing local variables / parameters file...");
-    locker.addRead(entitiesTable);
-    locker.lock();
     Iterator<LocalVariableEX> iter = extracted.getLocalVariableReader().iterator();
     for (SmallEntityDB entity : entityQueries.getMediumLocalByProjectID(projectID)) {
       if (iter.hasNext()) {
@@ -475,14 +551,11 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
         logger.log(Level.SEVERE, "Missing db local variable for " + entity);
       }
     }
-    locker.unlock();
+    
     logger.info(counter.reportTimeAndCount(6, "relations processed"));
     
     logger.info("    Performing db insert...");
-    locker.addWrites(relationsTable);
-    locker.lock();
     relationsTable.flushInserts();
-    locker.unlock();
     logger.info(counter.reportTimeAndTotalCount(6, "relations inserted"));
   }
   
@@ -490,6 +563,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info("  Inserting imports...");
     
     TimeCounter counter = new TimeCounter();
+    
     importsTable.initializeInserter(tempDir);
     
     logger.info("    Processing imports file...");
@@ -512,10 +586,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     counter.lap();
     
     logger.info("    Performing db insert...");
-    locker.addWrite(importsTable);
-    locker.lock();
     importsTable.flushInserts();
-    locker.unlock();
     logger.info(counter.reportTimeAndTotalCount(6, "imports inserted"));
   }
   
@@ -523,6 +594,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     logger.info("  Inserting comments...");
     
     TimeCounter counter = new TimeCounter();
+
     commentsTable.initializeInserter(tempDir);
     
     logger.info("    Processing comments file...");
@@ -553,10 +625,7 @@ public abstract class ExtractedImporterThread extends ParallelDatabaseImporterTh
     
     
     logger.info("    Performing db insert...");
-    locker.addWrite(commentsTable);
-    locker.lock();
     commentsTable.flushInserts();
-    locker.unlock();
     logger.info(counter.reportTimeAndTotalCount(6, "comments inserted"));
   }
   

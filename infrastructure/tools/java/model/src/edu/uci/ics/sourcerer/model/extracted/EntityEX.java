@@ -19,11 +19,15 @@ package edu.uci.ics.sourcerer.model.extracted;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.model.Entity;
+import edu.uci.ics.sourcerer.model.Location;
+import edu.uci.ics.sourcerer.model.metrics.Metrics;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.LineBuilder;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -32,27 +36,19 @@ public final class EntityEX implements ModelEX {
   private Entity type;
   private String fqn;
   private Integer mods;
-  private String path;
-  private Integer startPos;
-  private Integer length;
+  private Metrics metrics;
+  private Location location;
   
-  private EntityEX(Entity type, String fqn) {
-    this(type, fqn, null, null, null, null);
+  private EntityEX(Entity type, String fqn, Metrics metrics) {
+    this(type, fqn, null, metrics, null);
   }
   
-  private EntityEX(Entity type, String fqn, Integer mods, String path) {
-    this(type, fqn, mods, path, null, null);
-  }
-  
-  private EntityEX(Entity type, String fqn, Integer mods, String path, Integer offset, Integer length) {
+  private EntityEX(Entity type, String fqn, Integer mods, Metrics metrics, Location location) {
     this.type = type;
     this.fqn = fqn;
     this.mods = mods;
-    this.path = path;
-    if (offset != null && offset >= 0) {
-      this.startPos = offset;
-      this.length = length;
-    }
+    this.metrics = metrics;
+    this.location = location;
   }
   
   public Entity getType() {
@@ -66,17 +62,33 @@ public final class EntityEX implements ModelEX {
   public Integer getMods() {
     return mods;
   }
-
-  public String getPath() {
-    return path;
+  
+  public Metrics getMetrics() {
+    return metrics;
   }
 
-  public Integer getStartPosition() {
-    return startPos;
+  public String getPath() {
+    if (location == null) {
+      return null;
+    } else {
+      return location.getPath();
+    }
+  }
+
+  public Integer getOffset() {
+    if (location == null || location.getOffset() == -1) {
+      return null;
+    } else {
+      return location.getOffset();
+    }
   }
 
   public Integer getLength() {
-    return length;
+    if (location == null || location.getOffset() == -1) {
+      return null;
+    } else {
+      return location.getLength();
+    }
   }
   
   public String toString() {
@@ -90,32 +102,32 @@ public final class EntityEX implements ModelEX {
       
       @Override
       public EntityEX parseLine(String line) {
-        String[] parts = line.split(" ");
-        
+        Scanner scanner = LineBuilder.getScanner(line);
+
         try {
-          if (parts.length == 2) {
-            Entity type = Entity.valueOf(parts[0]);
-            if (type == Entity.PACKAGE) {
-              if (!uniqueChecker.contains(parts[1])) {
-                uniqueChecker.add(parts[1]);
-                return new EntityEX(type, parts[1]);
-              } else {
-                return null;
-              }
-            } else {
-              logger.log(Level.SEVERE, "Unable to parse entity: " + line);
-              return null;
+          Entity type = Entity.valueOf(scanner.next());
+          String fqn = scanner.next();
+          if (type == Entity.PACKAGE) {
+            if (scanner.hasNext()) {
+              logger.log(Level.WARNING, "Line has extra entries: " + line);
             }
-          } else if (parts.length == 4) {
-            return new EntityEX(Entity.valueOf(parts[0]), parts[1], Integer.valueOf(parts[2]), parts[3]);
-          } else if (parts.length == 6) {
-            return new EntityEX(Entity.valueOf(parts[0]), parts[1], Integer.valueOf(parts[2]), parts[3], Integer.valueOf(parts[4]), Integer.valueOf(parts[5]));
+            if (uniqueChecker.contains(fqn)) {
+              return null;
+            } else {
+              uniqueChecker.add(fqn);
+              return new EntityEX(type, fqn, null);
+            }
           } else {
-            logger.log(Level.SEVERE, "Unable to parse entity: " + line);
-            return null;
+            int mods = scanner.nextInt();
+            Metrics metrics = Metrics.parse(scanner);
+            Location location = Location.parse(scanner);
+            if (scanner.hasNext()) {
+              logger.log(Level.WARNING, "Line has extra entries: " + line);
+            }
+            return new EntityEX(type, fqn, mods, metrics, location);
           }
-        } catch (IllegalArgumentException e) {
-          logger.log(Level.SEVERE, "Unable to parse entity: " + line);
+        } catch (Exception e) {
+          logger.log(Level.SEVERE, "Unable to parse entity: " + line, e);
           return null;
         }
       }
@@ -126,11 +138,27 @@ public final class EntityEX implements ModelEX {
     return Entity.PACKAGE.name() + " " + fqn;
   }
   
-  public static String getSourceLine(Entity type, String fqn, int modifiers, String path, int startPos, int length) {
-    return type.name() + " " + fqn + " " + modifiers + " " + path + " " + startPos + " " + length;
+  public static String getSourceLine(Entity type, String fqn, int modifiers, Metrics metrics, Location location) {
+    LineBuilder builder = new LineBuilder();
+    
+    builder.append(type.name());
+    builder.append(fqn);
+    builder.append(modifiers);
+    builder.append(metrics);
+    builder.append(location);
+    
+    return builder.toString();
   }
   
-  public static String getClassLine(Entity type, String fqn, int modifiers, String path) {
-    return type.name() + " " + fqn + " " + modifiers + " " + path;
+  public static String getClassLine(Entity type, String fqn, int modifiers, Metrics metrics, Location location) {
+    LineBuilder builder = new LineBuilder();
+    
+    builder.append(type.name());
+    builder.append(fqn);
+    builder.append(modifiers);
+    builder.append(metrics);
+    builder.append(location);
+    
+    return builder.toString();
   }
 }

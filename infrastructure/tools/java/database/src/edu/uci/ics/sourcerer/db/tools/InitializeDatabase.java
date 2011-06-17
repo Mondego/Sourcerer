@@ -35,20 +35,26 @@ public class InitializeDatabase extends ParallelDatabaseImporterThread {
     logger.info("  Dropping old tables...");
     executor.dropTables(
         projectsTable,
+        projectMetricsTable,
         filesTable,
+        fileMetricsTable,
         importsTable,
         problemsTable,
         commentsTable,
         entitiesTable,
+        entityMetricsTable,
         relationsTable);
     
     logger.info("  Adding new tables...");
     projectsTable.createTable();
+    projectMetricsTable.createTable();
     filesTable.createTable();
+    fileMetricsTable.createTable();
     importsTable.createTable();
     problemsTable.createTable();
     commentsTable.createTable();
     entitiesTable.createTable();
+    entityMetricsTable.createTable();
     relationsTable.createTable();
     
     logger.info("  Adding the primitive types...");

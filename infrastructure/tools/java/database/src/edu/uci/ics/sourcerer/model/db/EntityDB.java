@@ -22,20 +22,39 @@ import edu.uci.ics.sourcerer.model.Entity;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class LargeEntityDB extends MediumEntityDB {
+public class EntityDB {
+  private Integer entityID;
+  private Entity type;
+  private String fqn;
   private Integer modifiers;
   private Integer multi;
+  private Integer projectID;
   private Integer fileID;
   private Integer offset;
   private Integer length;
   
-  public LargeEntityDB(Integer entityID, Entity type, String fqn, Integer modifiers, Integer multi, Integer projectID, Integer fileID, Integer offset, Integer length) {
-    super(entityID, type, fqn, projectID);
+  public EntityDB(Integer entityID, Entity type, String fqn, Integer modifiers, Integer multi, Integer projectID, Integer fileID, Integer offset, Integer length) {
+    this.entityID = entityID;
+    this.type = type;
+    this.fqn = fqn;
     this.modifiers = modifiers;
     this.multi = multi;
+    this.projectID = projectID;
     this.fileID = fileID;
     this.offset = offset;
     this.length = length;
+  }
+
+  public Integer getEntityID() {
+    return entityID;
+  }
+
+  public Entity getType() {
+    return type;
+  }
+
+  public String getFqn() {
+    return fqn;
   }
 
   public Integer getModifiers() {
@@ -44,6 +63,10 @@ public class LargeEntityDB extends MediumEntityDB {
 
   public Integer getMulti() {
     return multi;
+  }
+
+  public Integer getProjectID() {
+    return projectID;
   }
 
   public Integer getFileID() {

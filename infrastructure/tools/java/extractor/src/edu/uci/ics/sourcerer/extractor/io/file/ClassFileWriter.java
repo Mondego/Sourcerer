@@ -19,8 +19,11 @@ package edu.uci.ics.sourcerer.extractor.io.file;
 
 import java.io.File;
 
+import javax.swing.plaf.metal.MetalBorders;
+
 import edu.uci.ics.sourcerer.extractor.io.IClassFileWriter;
 import edu.uci.ics.sourcerer.model.extracted.FileEX;
+import edu.uci.ics.sourcerer.model.metrics.Metrics;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 
@@ -33,6 +36,6 @@ public class ClassFileWriter extends ExtractorWriter implements IClassFileWriter
   }
   
   public void writeClassFile(String name, String path) {
-    write(FileEX.getClassLine(name, path));
+    write(FileEX.getClassLine(name, null, path));
   }
 }

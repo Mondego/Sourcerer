@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.model.extracted;
 
+import java.util.Scanner;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */

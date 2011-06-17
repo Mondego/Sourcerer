@@ -198,4 +198,8 @@ public abstract class Column <T> {
       throw new IllegalArgumentException("May not set a non-nullable column to be null: " + name);
     }
   }
-}
+  
+  public final boolean isNullable() {
+    return nullable;
+  }
+} 

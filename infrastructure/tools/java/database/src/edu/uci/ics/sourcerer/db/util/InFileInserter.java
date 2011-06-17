@@ -45,7 +45,7 @@ public class InFileInserter {
   
   public void insert() {
     FileUtils.close(writer);
-    executor.execute("LOAD DATA LOCAL INFILE '" + tempFile.getPath().replace('\\', '/') + "' " +
+    executor.execute("LOAD DATA CONCURRENT LOCAL INFILE '" + tempFile.getPath().replace('\\', '/') + "' " +
     		"INTO TABLE " + table + " " +
 				"FIELDS TERMINATED BY ',' " +
 				"OPTIONALLY ENCLOSED BY '\\\'' " + 

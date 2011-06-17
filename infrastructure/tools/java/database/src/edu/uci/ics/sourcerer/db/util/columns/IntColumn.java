@@ -40,6 +40,10 @@ public class IntColumn extends Column<Integer> {
     return new IntColumn(name, table, "BIGINT UNSIGNED NOT NULL", false, true);
   }
   
+  public static IntColumn getInt(String name, String table) {
+    return new IntColumn(name, table, "INT", true, true);
+  }
+  
   public static IntColumn getUnsignedInt(String name, String table) {
     return new IntColumn(name, table, "INT UNSIGNED", true, true);
   }

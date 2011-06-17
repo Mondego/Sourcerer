@@ -162,6 +162,10 @@ public class QueryExecutor {
     return execute("SELECT " + columns + " FROM " + table + " WHERE " + where + ";", translator);
   }
   
+  public <T> Collection<T> select(ResultTranslator<T> translator) {
+    return execute("SELECT " + translator.getSelect() + " FROM " + translator.getTable() + ";", translator);
+  }
+  
   public <T> Collection<T> select(String where, ResultTranslator<T> translator) {
     return execute("SELECT " + translator.getSelect() + " FROM " + translator.getTable() + " WHERE " + where + ";", translator);
   }

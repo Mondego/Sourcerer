@@ -20,7 +20,7 @@ package edu.uci.ics.sourcerer.extractor.io.file;
 import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.ILocalVariableWriter;
-import edu.uci.ics.sourcerer.extractor.io.Location;
+import edu.uci.ics.sourcerer.model.Location;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
@@ -35,7 +35,7 @@ public class LocalVariableWriter extends ExtractorWriter implements ILocalVariab
 
   @Override
   public void writeLocalVariable(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, Location location) {
-    write(LocalVariableEX.getSourceLineLocal(name, modifiers, type, typeStartPos, typeLength, parent, convertToRelativePath(location.getPath()), location.getStartPosition(), location.getLength()));
+    write(LocalVariableEX.getSourceLineLocal(name, modifiers, type, typeStartPos, typeLength, parent, convertToRelativePath(location.getPath()), location.getOffset(), location.getLength()));
   }
 
   @Override
@@ -45,6 +45,6 @@ public class LocalVariableWriter extends ExtractorWriter implements ILocalVariab
   
   @Override
   public void writeParameter(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, int position, Location location) {
-    write(LocalVariableEX.getSourceLineParam(name, modifiers, type, typeStartPos, typeLength, parent, position, convertToRelativePath(location.getPath()), location.getStartPosition(), location.getLength()));
+    write(LocalVariableEX.getSourceLineParam(name, modifiers, type, typeStartPos, typeLength, parent, position, convertToRelativePath(location.getPath()), location.getOffset(), location.getLength()));
   }
 }

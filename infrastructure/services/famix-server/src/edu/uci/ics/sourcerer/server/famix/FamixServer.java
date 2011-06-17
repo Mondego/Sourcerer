@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.server.famix;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 
 import javax.servlet.ServletException;
@@ -29,6 +30,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import edu.uci.ics.sourcerer.db.tools.FamixExporter;
 import edu.uci.ics.sourcerer.model.db.LargeProjectDB;
+import edu.uci.ics.sourcerer.model.db.ProjectMetricDB;
+import edu.uci.ics.sourcerer.model.metrics.Metric;
+import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 import edu.uci.ics.sourcerer.util.server.ServletUtils;
 
@@ -65,11 +69,25 @@ public class FamixServer extends HttpServlet {
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     Integer projectID = getIntValue(request, "projectID");
     if (projectID == null) {
+      Map<Metric, Map<Integer, Integer>> map = Helper.newEnumMap(Metric.class);
+      for (Metric metric : Metric.values()) {
+        map.put(metric, Helper.<Integer, Integer>newHashMap());
+      }
+      for (ProjectMetricDB metric : FamixExporter.getProjectMetrics()) {
+        map.get(metric.getMetric()).put(metric.getProjectID(), metric.getValue());
+      }
+      
       StringBuilder builder = new StringBuilder();
       for (LargeProjectDB project : FamixExporter.getProjects()) {
-        if (!"END_FIRST".equals(project.getHash())) {
-          builder.append(project.getProjectID()).append(" ").append(project.getName()).append("\n");
+        if (project.completed()) {
+          builder.append(project.getProjectID()).append(" ").append(project.getName());
+          for (Map.Entry<Metric, Map<Integer, Integer>> entry : map.entrySet()) {
+            if (entry.getValue().containsKey(project.getProjectID())) {
+              builder.append(" ").append(entry.getKey().name()).append(":").append(entry.getValue().get(project.getProjectID()));
+            }
+          }
         }
+        builder.append("\n");
       }
       ServletUtils.writeByteArray(response, null, builder.toString().getBytes());
     } else {
