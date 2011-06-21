@@ -18,7 +18,11 @@
 package edu.uci.ics.sourcerer.repo.core;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import edu.uci.ics.sourcerer.util.Helper;
 
@@ -36,6 +40,7 @@ public class ContentDirectory {
   private ContentDirectory(RepoFile file) {
     this.file = file;
     internedDirs = Helper.newHashMap();
+    internedDirs.put(file, this);
   }
   
   private ContentDirectory(ContentDirectory parent, RepoFile file) {
@@ -79,14 +84,64 @@ public class ContentDirectory {
   }
   
   public Collection<ContentDirectory> getSubdirectories() {
-    return dirs;
+    if (dirs == null) {
+      return Collections.emptyList();
+    } else {
+      return dirs;
+    }
+  }
+  
+  public RepoFile getFile() {
+    return file;
   }
   
   public Collection<ContentFile> getFiles() {
-    return files;
+    if (files == null) {
+      return Collections.emptyList();
+    } else {
+      return files;
+    }
   }
   
   public Iterable<ContentFile> getAllFiles() {
-    return null;
+    return new Iterable<ContentFile>() {
+      @Override
+      public Iterator<ContentFile> iterator() {
+        return new Iterator<ContentFile>() {
+          Deque<ContentDirectory> dirs = Helper.newStack();
+          Iterator<ContentFile> iter = getFiles().iterator(); 
+          {
+            dirs.push(ContentDirectory.this);
+          }
+          @Override
+          public boolean hasNext() {
+            while (!iter.hasNext()) {
+              if (dirs.isEmpty()) {
+                return false;
+              } else {
+                ContentDirectory dir = dirs.pop();
+                dirs.addAll(dir.getSubdirectories());
+                iter = dir.getFiles().iterator();
+              }
+            }
+            return true;
+          }
+
+          @Override
+          public ContentFile next() {
+            if (hasNext()) {
+              return iter.next();
+            } else {
+              throw new NoSuchElementException();
+            }
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
+      }
+    };
   }
 }

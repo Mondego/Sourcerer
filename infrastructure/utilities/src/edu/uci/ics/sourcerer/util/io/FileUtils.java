@@ -121,7 +121,7 @@ public final class FileUtils {
     File tempDir = getTempDir();
     for (File file : tempDir.listFiles()) {
       if (file.isDirectory()) {
-        deleteDirectory(file);
+        delete(file);
       } else {
         file.delete();
       }
@@ -130,14 +130,14 @@ public final class FileUtils {
   
   public static void deleteTempDir() {
     File tempDir = getTempDir();
-    deleteDirectory(tempDir);
+    delete(tempDir);
   }
   
-  public static boolean deleteDirectory(File dir) {
+  public static boolean delete(File dir) {
     boolean success = true;
     for (File file : dir.listFiles()) {
       if (file.isDirectory()) {
-        success &= deleteDirectory(file);
+        success &= delete(file);
       } else {
         success &= file.delete();
       }

@@ -18,7 +18,7 @@
 package edu.uci.ics.sourcerer.repo.core;
 
 import java.io.File;
-import java.util.Collection;
+import java.lang.ref.SoftReference;
 
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
@@ -32,20 +32,17 @@ public class SourceProject extends RepoProject {
   public static final Argument<String> PROJECT_CONTENT_ZIP = new StringArgument("project-content-zip-file", "content.zip", "Project contents.");
   
   private RepoFile contentFile;
+  private SoftReference<AbstractFileSet> files; 
   
   private SourceProjectProperties properties;
   
   protected SourceProject(ProjectLocation loc) {
     super(loc);
-    RepoFile possibleContent = getProjectFile(PROJECT_CONTENT);
-    if (possibleContent.exists()) {
-      contentFile = possibleContent;
-    } else {
-      possibleContent = getProjectFile(PROJECT_CONTENT_ZIP);
+    contentFile = getProjectFile(PROJECT_CONTENT);
+    if (!contentFile.exists()) {
+      RepoFile possibleContent = getProjectFile(PROJECT_CONTENT_ZIP);
       if (possibleContent.exists()) {
         contentFile = possibleContent;
-      } else {
-        contentFile = null;
       }
     }
   }
@@ -63,11 +60,7 @@ public class SourceProject extends RepoProject {
    * @return <tt>true</tt> if successful
    */
   public boolean deleteContent() {
-    if (contentFile != null) {
-      return contentFile.delete();
-    } else {
-      return true;
-    }
+    return contentFile.delete();
   }
   
   /**
@@ -78,26 +71,35 @@ public class SourceProject extends RepoProject {
    * This will not overwrite anything.
    */
   public void addContent(File file) {
-    if (contentFile == null) {
-      contentFile = getProjectFile(PROJECT_CONTENT);
-    }
-    if (contentFile.isDirectory()) {
+//    if (contentFile.isDirectory()) {
       FileUtils.copyFile(file, contentFile.toDir());
-    } else {
-      throw new IllegalStateException("May not add content to a compressed project.");
-    }
+      
+      if (files != null) {
+        AbstractFileSet fileSet = files.get();
+        if (fileSet != null) {
+          fileSet.reset();
+        }
+      }
+//    } else {
+//      throw new IllegalStateException("May not add content to a compressed project.");
+//    }
   }
   
   public void zipContent() {}
   
-  public FileSet getContent() {
-    return null;
+  public AbstractFileSet getContent() {
+    AbstractFileSet ret = null;
+    if (files != null) {
+      ret = files.get();
+    }
+    if (ret == null) {
+      ret = new FileSet(this);
+      files = new SoftReference<AbstractFileSet>(ret);
+    }
+    return ret;
   }
   
   protected RepoFile getContentFile() {
-    if (contentFile == null) {
-      contentFile = getProjectFile(PROJECT_CONTENT);
-    }
     return contentFile;
   }
 }

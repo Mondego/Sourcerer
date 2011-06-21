@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
@@ -26,7 +27,12 @@ public class FileSet extends AbstractFileSet {
   }
 
   @Override
-  protected void buildFileTree() {
-    
+  protected ContentDirectory makeRoot(RepoFile file) {
+    return ContentDirectory.makeRoot(file);
+  }
+  
+  @Override
+  protected ContentFile createFile(RepoFile file) {
+    return new ContentFile(getRoot().make(file.getParent()), file);
   }
 }

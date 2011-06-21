@@ -22,10 +22,14 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.LineFileReader;
+import edu.uci.ics.sourcerer.util.io.LineFileWriter;
+import edu.uci.ics.sourcerer.util.io.LineFileWriter.EntryWriter;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
@@ -41,50 +45,84 @@ public abstract class AbstractFileSet {
   private ContentDirectory root;
   private Collection<ContentFile> files;
   
-  public AbstractFileSet(SourceProject project) {
+  protected AbstractFileSet(SourceProject project) {
     cache = project.getLocation().getProjectRoot().getChildFile(FILE_CACHE.getValue());
-    root = ContentDirectory.makeRoot(project.getContentFile());
+    root = makeRoot(project.getContentFile());
+    files = Helper.newArrayList();
+    
+    if (CLEAR_FILE_CACHE.getValue() || !cache.exists() || !readCache()) {
+      populateFileSet();
+    }
+  }
+  
+  public final void reset() {
+    root = makeRoot(root.getFile());
+    files.clear();
     populateFileSet();
   }
   
   private final void populateFileSet() {
-    if (CLEAR_FILE_CACHE.getValue() || !cache.exists()) {
-      populateFileSetHelper();
-    } else {
-      readCache();
+    Deque<RepoFile> stack = Helper.newStack();
+    stack.push(getRoot().getFile());
+      
+    while (!stack.isEmpty()) {
+      RepoFile dir = stack.pop();
+      for (RepoFile child : dir.getChildren()) {
+        if (child.isDirectory()) {
+          stack.push(child);
+        } else {
+          addFile(child);
+        }
+      }
     }
+    
+    LineFileWriter writer = null;
+    try {
+      writer = FileUtils.getLineFileWriter(cache);
+      EntryWriter<RepoFile> ew = writer.getEntryWriter(RepoFile.class);
+      for (ContentFile file : files) {
+        ew.write(file.getFile());
+      }
+      ew.close();
+      return;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to write file cache", e);
+    } finally {
+      FileUtils.close(writer);
+    }
+    FileUtils.delete(cache);
   }
   
-  protected abstract void populateFileSetHelper();
-
-  private final void readCache() {
+  private final boolean readCache() {
     LineFileReader reader = null;
     try {
       reader = FileUtils.getLineFileReader(cache);
       for (RepoFile file : reader.readNextToIterable(RepoFile.class)) {
-        root.make(file);
-      }
-      for (RepoFile file : reader.readNextToIterable(RepoFile.class)) {
         addFile(file);
       }
-      readCacheHelper(reader);
+      return true;
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to load file cache", e);
-      FileUtils.close(reader);
-      populateFileSetHelper();
+      root = makeRoot(root.getFile());
+      files.clear();
+      return false;
     } finally {
       FileUtils.close(reader);
     }
   }
   
-  protected void readCacheHelper(LineFileReader reader) throws IOException {
-    
-  }
-  
-  private final void addFile(RepoFile file) {
-    ContentFile cFile = createFile(file);
-    
+  protected final void addFile(RepoFile file) {
+    files.add(createFile(file));
   }
 
+  protected abstract ContentDirectory makeRoot(RepoFile file);
   protected abstract ContentFile createFile(RepoFile file);
+  
+  public Collection<ContentFile> getFiles() {
+    return files;
+  }
+  
+  public ContentDirectory getRoot() {
+    return root;
+  }
 }

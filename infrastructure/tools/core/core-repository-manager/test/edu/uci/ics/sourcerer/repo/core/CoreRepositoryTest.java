@@ -17,14 +17,17 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
+import java.io.File;
 import java.util.Iterator;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
@@ -42,15 +45,15 @@ public class CoreRepositoryTest {
   @Rule
   public TemporaryFolder folder = new TemporaryFolder();
   
-  @Before
-  public void initialize() {
+  @BeforeClass
+  public static void initialize() {
     // Initializes the logging
     ArgumentManager.executeCommand(new String[] { "--test" }, CoreRepositoryTest.class);
+    
   }
   
   @Test
-  public void testRepositoryCreation() {
-    // Load up an empty repository
+  public void testProjectCreation() {
     AbstractRepository.INPUT_REPO.setValue(folder.newFolder("repo"));
     
     {
@@ -175,5 +178,31 @@ public class CoreRepositoryTest {
         Assert.assertFalse(iter.hasNext());
       }
     }
+  }
+  
+  @Test
+  public void testAddingProjectContent() {
+    File file = folder.newFolder("add-content");
+    FileUtils.copyFile(new File("./test/resources/test-repo"), file);
+    AbstractRepository.INPUT_REPO.setValue(file);
+    
+    SourceRepository repo = SourceRepository.make(AbstractRepository.INPUT_REPO);
+    
+    SourceProject project = repo.getProject(0, 0);
+    
+    AbstractFileSet files = project.getContent();
+    
+    Assert.assertEquals(0, files.getFiles().size());
+    Assert.assertFalse(files.getRoot().getAllFiles().iterator().hasNext());
+    
+    project.addContent(new File("./test/resources/project-content"));
+    
+    Assert.assertEquals(3, files.getFiles().size());
+    Iterator<ContentFile> iter = files.getFiles().iterator();
+    Assert.assertEquals("A.txt", iter.next().getFile().getName());
+    Assert.assertEquals("subdir/B.txt", iter.next().getFile().getRelativePath());
+    Assert.assertEquals("subdir/subsubdir/B.txt", iter.next().getFile().getRelativePath());
+    Assert.assertFalse(iter.hasNext());
+
   }
 }

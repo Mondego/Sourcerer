@@ -38,7 +38,9 @@ public final class FieldConverter {
   
   private FieldConverter(Field field) {
     this.field = field;
-    field.setAccessible(true);
+    if (field != null) {
+      field.setAccessible(true);
+    }
   }
   
   private FieldConverter(Field field, FieldConverterHelper helper) {

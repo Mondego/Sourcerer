@@ -24,11 +24,12 @@ import java.io.IOException;
 import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
+
+import javax.swing.Popup;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
@@ -120,13 +121,36 @@ public abstract class AbstractRepository <Project extends RepoProject> {
     return batchSet.getBatches();
   }
   
+  public Project getProject(String path) {
+    int slash = path.indexOf('/');
+    if (slash == -1) {
+      throw new IllegalArgumentException(path + " is not a valid path");
+    } else {
+      Integer batch = Integer.valueOf(path.substring(0, slash));
+      Integer checkout = Integer.valueOf(path.substring(slash + 1));
+      return getProject(batch, checkout);
+    }
+  }
+  
+  public Project getProject(Integer batch, Integer checkout) {
+    if (batchSet == null) {
+      populateProjects();
+    }
+    Batch b = batchSet.getBatch(batch);
+    if (b == null) {
+      return null;
+    } else {
+      return b.getProject(checkout);
+    }
+  }
+  
   public Collection<Project> getProjects() {
     if (batchSet == null) {
       populateProjects();
     }
     return batchSet;
   }
-
+  
   private class BatchSet extends AbstractCollection<Project> {
     private TreeMap<Integer, Batch> batches;
     private int size;
@@ -157,6 +181,10 @@ public abstract class AbstractRepository <Project extends RepoProject> {
       Batch b = new Batch(repoRoot.getChild(batch.toString()), batch);
       batches.put(batch, b);
       return b;
+    }
+    
+    public Batch getBatch(Integer batch) {
+      return batches.get(batch);
     }
     
     public Collection<Batch> getBatches() {
@@ -241,6 +269,10 @@ public abstract class AbstractRepository <Project extends RepoProject> {
       
       Integer nextCheckout = projects.isEmpty() ? 0 : (projects.lastKey() + 1); 
       return batchSet.add(batch, nextCheckout);
+    }
+    
+    public Project getProject(Integer checkout) {
+      return projects.get(checkout);
     }
     
     public Collection<Project> getProjects() {

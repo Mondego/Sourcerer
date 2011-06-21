@@ -18,6 +18,8 @@
 package edu.uci.ics.sourcerer.repo.core;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -136,7 +138,7 @@ public class RepoFile implements LWRec {
   protected boolean delete() {
     if (file.exists()) {
       if (file.isDirectory()) {
-        return FileUtils.deleteDirectory(file);
+        return FileUtils.delete(file);
       } else {
         return file.delete();
       }
@@ -196,7 +198,7 @@ public class RepoFile implements LWRec {
   
   protected RepoFile getChildRoot(String child) {
     if (file.isFile()) {
-      throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
+      throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
     } else {
       return internRoot(relativePath.append(child));
     }
@@ -212,6 +214,21 @@ public class RepoFile implements LWRec {
   
   public RepoFile getParent() {
     return internChild(relativePath.getParent());
+  }
+  
+  public Collection<RepoFile> getChildren() {
+    if (file.isFile()) {
+      throw new IllegalStateException("Cannot get children of a file: " + file.getPath());
+    } else if (!file.exists()) {
+      return Collections.emptyList();
+    } else {
+      String[] names = file.list();
+      Collection<RepoFile> children = Helper.newArrayList(names.length);
+      for (String name : names) {
+        children.add(getChild(name));
+      }
+      return children;
+    }
   }
   
   public String getName() {
