@@ -138,6 +138,7 @@ public class FamixExporter {
       builder.append("\t(stub false)\n");
       builder.append("\t(WLOC ").append(loc).append(")\n");
       builder.append("\t(NOM ").append(nom).append(")\n");
+      builder.append("\t(sourcererID ").append(entity.getEntityID()).append(")\n");
       builder.append(")\n");
     }
     
@@ -163,6 +164,7 @@ public class FamixExporter {
       builder.append("\t(name '").append(name).append("')\n");
       builder.append("\t(belongsTo (idref: ").append(classID).append("))\n");
       builder.append("\t(isConstructor ").append(entity.getType() == Entity.CONSTRUCTOR).append(")\n");
+      builder.append("\t(sourcererID ").append(entity.getEntityID()).append(")\n");
       builder.append(")\n");
     }
     
