@@ -263,7 +263,12 @@ public class EclipseUtils {
     try {
       IFile newFile = getIFileFromFile(file);
       if (newFile != null) {
-        newFile.createLink(new Path(file.getFile().toFile().getAbsolutePath()), replace ? IFile.REPLACE : IFile.NONE, null);
+        File f = file.getFile().toFile();
+        if (f != null) {
+          newFile.createLink(new Path(f.getAbsolutePath()), replace ? IFile.REPLACE : IFile.NONE, null);
+        } else {
+          return null;
+        }
         return newFile;
       } else {
         return null;
