@@ -151,7 +151,7 @@ public final class FileUtils {
       }
       return builder.toString();
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to read file.", e);
+      logger.log(Level.SEVERE, "Unable to read file: " + file.getAbsolutePath(), e);
       return null;
     } finally {
       close(reader);
@@ -263,6 +263,10 @@ public final class FileUtils {
     } finally {
       close(br);
     }
+  }
+  
+  public static void writeStringToFile(String source, File target) throws IOException {
+    writeByteArrayToFile(source.getBytes(), target);
   }
   
   public static void writeByteArrayToFile(byte[] source, File target) throws IOException {
