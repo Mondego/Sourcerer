@@ -32,7 +32,7 @@ import java.util.zip.ZipFile;
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
 import edu.uci.ics.sourcerer.repo.base.JarFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
-import edu.uci.ics.sourcerer.repo.core.RepoFile;
+import edu.uci.ics.sourcerer.repo.internal.core.RepoFile;
 import edu.uci.ics.sourcerer.util.io.FieldConverter;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 

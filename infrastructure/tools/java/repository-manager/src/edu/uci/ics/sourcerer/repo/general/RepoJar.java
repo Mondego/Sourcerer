@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.repo.general;
 
-import edu.uci.ics.sourcerer.repo.core.RepoFile;
+import edu.uci.ics.sourcerer.repo.internal.core.RepoFile;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**

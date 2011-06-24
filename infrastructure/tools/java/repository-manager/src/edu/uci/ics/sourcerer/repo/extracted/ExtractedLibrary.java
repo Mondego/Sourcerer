@@ -19,9 +19,9 @@ package edu.uci.ics.sourcerer.repo.extracted;
 
 import java.io.File;
 
-import edu.uci.ics.sourcerer.repo.core.RepoFile;
 import edu.uci.ics.sourcerer.repo.general.AbstractBinaryProperties;
 import edu.uci.ics.sourcerer.repo.general.ExtractedLibraryProperties;
+import edu.uci.ics.sourcerer.repo.internal.core.RepoFile;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**

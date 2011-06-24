@@ -24,10 +24,10 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ProjectProperties extends AbstractProperties {
-  public Property<String> NAME = new StringProperty("name", this);
+public final class BatchProperties extends AbstractProperties {
+  public Property<String> DESCRIPTION = new StringProperty("description", this);
   
-  public ProjectProperties(IRepoFile file) {
+  public BatchProperties(IRepoFile file) {
     super(file.toFile());
   }
 }

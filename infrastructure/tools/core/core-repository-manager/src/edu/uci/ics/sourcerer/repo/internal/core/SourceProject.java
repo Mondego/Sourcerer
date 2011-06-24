@@ -15,22 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.repo.internal.core;
 
 import java.io.File;
 import java.lang.ref.SoftReference;
 
+import edu.uci.ics.sourcerer.repo.core.IModifiableSourceProject;
+import edu.uci.ics.sourcerer.repo.core.SourceProjectProperties;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.arguments.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class SourceProject extends RepoProject {
-  public static final Argument<String> PROJECT_CONTENT = new StringArgument("project-content-dir", "content", "Project contents.");
-  public static final Argument<String> PROJECT_CONTENT_ZIP = new StringArgument("project-content-zip-file", "content.zip", "Project contents.");
-  
+class SourceProject extends RepoProject implements IModifiableSourceProject {
   private RepoFile contentFile;
   private SoftReference<AbstractFileSet> files; 
   
@@ -47,6 +44,7 @@ public class SourceProject extends RepoProject {
     }
   }
   
+  @Override
   public SourceProjectProperties getProperties() {
     if (properties == null) {
       properties = new SourceProjectProperties(propFile);
@@ -54,25 +52,16 @@ public class SourceProject extends RepoProject {
     return properties;
   }
   
-  /**
-   * Deletes the project's contents.
-   *  
-   * @return <tt>true</tt> if successful
-   */
+  @Override
   public boolean deleteContent() {
     return contentFile.delete();
   }
-  
-  /**
-   * Copies the contents of <tt>file</tt> into the
-   * project's <tt>content</tt>> directory. Will
-   * not work if the project's contents are compressed.
-   * 
-   * This will not overwrite anything.
-   */
+
+  @Override
   public void addContent(File file) {
 //    if (contentFile.isDirectory()) {
-      FileUtils.copyFile(file, contentFile.toDir());
+      contentFile.makeDirs();
+      FileUtils.copyFile(file, contentFile.toFile());
       
       if (files != null) {
         AbstractFileSet fileSet = files.get();
@@ -85,8 +74,7 @@ public class SourceProject extends RepoProject {
 //    }
   }
   
-  public void zipContent() {}
-  
+  @Override
   public AbstractFileSet getContent() {
     AbstractFileSet ret = null;
     if (files != null) {

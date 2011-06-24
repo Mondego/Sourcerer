@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.repo.internal.core;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -24,12 +24,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import edu.uci.ics.sourcerer.repo.core.IContentDirectory;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ContentDirectory {
+final class ContentDirectory implements IContentDirectory {
   private ContentDirectory parent;
   private Collection<ContentDirectory> dirs;
   private Collection<ContentFile> files;
@@ -79,10 +80,12 @@ public class ContentDirectory {
     files.add(file);
   }
   
+  @Override
   public ContentDirectory getParentDirectory() {
     return parent;
   }
   
+  @Override
   public Collection<ContentDirectory> getSubdirectories() {
     if (dirs == null) {
       return Collections.emptyList();
@@ -91,10 +94,12 @@ public class ContentDirectory {
     }
   }
   
+  @Override
   public RepoFile getFile() {
     return file;
   }
   
+  @Override
   public Collection<ContentFile> getFiles() {
     if (files == null) {
       return Collections.emptyList();
@@ -103,6 +108,7 @@ public class ContentDirectory {
     }
   }
   
+  @Override
   public Iterable<ContentFile> getAllFiles() {
     return new Iterable<ContentFile>() {
       @Override

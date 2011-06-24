@@ -44,7 +44,7 @@ import edu.uci.ics.sourcerer.repo.base.IJarFile;
 import edu.uci.ics.sourcerer.repo.base.JarNamer;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.base.Repository;
-import edu.uci.ics.sourcerer.repo.core.RepoFile;
+import edu.uci.ics.sourcerer.repo.internal.core.RepoFile;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;

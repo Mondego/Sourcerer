@@ -17,22 +17,19 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
+import java.util.Collection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FileSet extends AbstractFileSet {
-  protected FileSet(SourceProject project) {
-    super(project);
-  }
-
-  @Override
-  protected ContentDirectory makeRoot(RepoFile file) {
-    return ContentDirectory.makeRoot(file);
-  }
+public interface IContentDirectory {
+  public IContentDirectory getParentDirectory();
   
-  @Override
-  protected ContentFile createFile(RepoFile file) {
-    return new ContentFile(getRoot().make(file.getParent()), file);
-  }
+  public Collection<? extends IContentDirectory> getSubdirectories();
+  
+  public IRepoFile getFile();
+  
+  public Collection<? extends IContentFile> getFiles();
+  
+  public Iterable<? extends IContentFile> getAllFiles();
 }

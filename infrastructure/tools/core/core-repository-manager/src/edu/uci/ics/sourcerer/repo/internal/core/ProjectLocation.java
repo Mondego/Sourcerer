@@ -15,15 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.repo.internal.core;
 
+import edu.uci.ics.sourcerer.repo.core.IProjectLocation;
 import edu.uci.ics.sourcerer.util.io.LWField;
 import edu.uci.ics.sourcerer.util.io.LineWriteable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ProjectLocation implements LineWriteable {
+final class ProjectLocation implements IProjectLocation, LineWriteable {
   private @LWField Integer batch;
   private @LWField Integer checkout;
   private RepoFile projectRoot;
@@ -36,6 +37,7 @@ public class ProjectLocation implements LineWriteable {
     this.projectRoot = projectRoot;
   }
   
+  @Override
   public RepoFile getProjectRoot() {
     return projectRoot;
   }

@@ -17,17 +17,17 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
-import edu.uci.ics.sourcerer.util.io.properties.AbstractProperties;
-import edu.uci.ics.sourcerer.util.io.properties.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ProjectProperties extends AbstractProperties {
-  public Property<String> NAME = new StringProperty("name", this);
+public interface ISourceProject extends IProject {
+  public static final Argument<String> PROJECT_CONTENT = new StringArgument("project-content-dir", "content", "Project contents.");
+  public static final Argument<String> PROJECT_CONTENT_ZIP = new StringArgument("project-content-zip-file", "content.zip", "Project contents.");
   
-  public ProjectProperties(IRepoFile file) {
-    super(file.toFile());
-  }
+  public SourceProjectProperties getProperties();
+  
+  public IFileSet getContent();
 }

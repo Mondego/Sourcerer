@@ -15,19 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.repo.internal.core;
 
-import edu.uci.ics.sourcerer.util.io.properties.AbstractProperties;
-import edu.uci.ics.sourcerer.util.io.properties.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.repo.core.IContentFile;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ProjectProperties extends AbstractProperties {
-  public Property<String> NAME = new StringProperty("name", this);
+final class ContentFile implements IContentFile {
+  private ContentDirectory parent;
+  private RepoFile file;
   
-  public ProjectProperties(IRepoFile file) {
-    super(file.toFile());
+  protected ContentFile(ContentDirectory parent, RepoFile file) {
+    this.parent = parent;
+    this.file = file;
+    parent.addFile(this);
+  }
+  
+  @Override
+  public RepoFile getFile() {
+    return file;
+  }
+  
+  @Override
+  public ContentDirectory getParentDirectory() {
+    return parent;
   }
 }

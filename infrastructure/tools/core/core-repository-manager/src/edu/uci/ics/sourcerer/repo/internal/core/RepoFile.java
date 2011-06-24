@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.repo.internal.core;
 
 import java.io.File;
 import java.util.Collection;
@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Scanner;
 
+import edu.uci.ics.sourcerer.repo.core.IRepoFile;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FieldConverter;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
@@ -32,7 +33,7 @@ import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class RepoFile implements LWRec {
+class RepoFile implements IRepoFile, LWRec {
   private final RepoFile root;
   private final RelativePath relativePath;
   private final File file;
@@ -97,14 +98,15 @@ public class RepoFile implements LWRec {
     }
   }
 
-  public boolean isRoot() {
+  protected boolean isRoot() {
     return isRoot;
   }
   
-  public RepoFile getRoot() {
+  protected RepoFile getRoot() {
     return root;
   }
   
+  @Override
   public RelativePath getRelativePath() {
     return relativePath;
   }
@@ -113,10 +115,12 @@ public class RepoFile implements LWRec {
     return internRoot(root.relativePath.append(relativePath));
   }
   
+  @Override
   public boolean isDirectory() {
     return file.isDirectory();
   }
   
+  @Override
   public boolean exists() {
     if (file.exists()) {
       if (file.isDirectory()) {
@@ -147,36 +151,26 @@ public class RepoFile implements LWRec {
     }
   }
   
-  /**
-   * Creates the parent directories, if needed.
-   */
+  @Override
   public File toFile() {
-    if (!file.exists()) {
-      File parent = file.getParentFile();
-      if (!parent.exists()) {
-        parent.mkdirs();
-      }
-    }
-  
     return file;
   }
+
+  @Override
+  public boolean makeDirs() {
+    return file.mkdirs();
+  }
   
-  /**
-   * Creates the directory, if needed.
-   */
-  public File toDir() {
-    if (!file.exists()) {
-      file.mkdirs();
-    }
-    
-    return file;
+  @Override
+  public boolean makeParentDirs() {
+    return file.getParentFile().mkdirs();
   }
     
   protected File getChildFile(String child) {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
     } else {
-      return new File(toDir(), child);
+      return new File(file, child);
     }
   }
   
@@ -231,6 +225,7 @@ public class RepoFile implements LWRec {
     }
   }
   
+  @Override
   public String getName() {
     return file.getName();
   }

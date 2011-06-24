@@ -17,17 +17,17 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
-import edu.uci.ics.sourcerer.util.io.properties.AbstractProperties;
-import edu.uci.ics.sourcerer.util.io.properties.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import java.util.Collection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ProjectProperties extends AbstractProperties {
-  public Property<String> NAME = new StringProperty("name", this);
+public interface IRepository <Project extends IProject, Batch extends IBatch<Project>> {
+  public Collection<? extends Batch> getBatches();
   
-  public ProjectProperties(IRepoFile file) {
-    super(file.toFile());
-  }
+  public Project getProject(String path);
+  
+  public Project getProject(Integer batch, Integer checkout);
+  
+  public Collection<? extends Project> getProjects();
 }

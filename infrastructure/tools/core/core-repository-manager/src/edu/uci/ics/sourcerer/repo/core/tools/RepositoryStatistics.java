@@ -18,8 +18,10 @@
 package edu.uci.ics.sourcerer.repo.core.tools;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-import edu.uci.ics.sourcerer.repo.core.AbstractRepository;
-import edu.uci.ics.sourcerer.repo.core.RepoProject;
+import edu.uci.ics.sourcerer.repo.core.IProject;
+import edu.uci.ics.sourcerer.repo.core.IRepository;
+import edu.uci.ics.sourcerer.repo.internal.core.AbstractRepository;
+import edu.uci.ics.sourcerer.repo.internal.core.RepoProject;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
@@ -33,7 +35,7 @@ public class RepositoryStatistics {
   }
   
   public static final IOFileArgumentFactory PROJECT_NAMES_FILE = new IOFileArgumentFactory("project-names-file", "project-names.txt", "File containg a table of the project names.");
-  public static void exportProjectNames(AbstractRepository<RepoProject> repo) {
+  public static void exportProjectNames(IRepository<IProject> repo) {
     TablePrettyPrinter printer = null;
     try {
       printer = TablePrettyPrinter.getTablePrettyPrinter(PROJECT_NAMES_FILE);
@@ -42,7 +44,7 @@ public class RepositoryStatistics {
       printer.addDividerRow();
       printer.addRow("Project Name", "Project Path");
       printer.addDividerRow();
-      for (RepoProject project : repo.getProjects()) {
+      for (IProject project : repo.getProjects()) {
         printer.beginRow();
         printer.addCell(project.getProperties().NAME.getValue());
         printer.addCell(project.getLocation().getProjectRoot().getRelativePath().toString());

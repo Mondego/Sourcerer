@@ -87,6 +87,9 @@ public abstract class AbstractProperties {
     }
     OutputStream os = null;
     try {
+      if (!file.exists()) {
+        file.getParentFile().mkdirs();
+      }
       os = new FileOutputStream(file);
       properties.store(os, null);
       os.close();

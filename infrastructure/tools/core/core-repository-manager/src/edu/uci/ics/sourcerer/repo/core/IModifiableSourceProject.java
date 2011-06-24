@@ -17,17 +17,25 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
-import edu.uci.ics.sourcerer.util.io.properties.AbstractProperties;
-import edu.uci.ics.sourcerer.util.io.properties.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import java.io.File;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ProjectProperties extends AbstractProperties {
-  public Property<String> NAME = new StringProperty("name", this);
+public interface IModifiableSourceProject extends IModifiableProject, ISourceProject {
+  /**
+   * Deletes the project's contents.
+   *  
+   * @return <tt>true</tt> if successful
+   */
+  public boolean deleteContent();
   
-  public ProjectProperties(IRepoFile file) {
-    super(file.toFile());
-  }
+  /**
+   * Copies the contents of <tt>file</tt> into the
+   * project's <tt>content</tt>> directory. Will
+   * not work if the project's contents are compressed.
+   * 
+   * This will not overwrite anything.
+   */
+  public void addContent(File file);
 }

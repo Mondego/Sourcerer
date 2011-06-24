@@ -17,17 +17,23 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
-import edu.uci.ics.sourcerer.util.io.properties.AbstractProperties;
-import edu.uci.ics.sourcerer.util.io.properties.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import java.io.File;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ProjectProperties extends AbstractProperties {
-  public Property<String> NAME = new StringProperty("name", this);
+public interface IRepoFile {
+  public boolean exists();
   
-  public ProjectProperties(IRepoFile file) {
-    super(file.toFile());
-  }
+  public boolean isDirectory();
+  
+  public boolean makeDirs();
+  
+  public boolean makeParentDirs();
+  
+  public File toFile();
+  
+  public IRelativePath getRelativePath();
+  
+  public String getName();
 }

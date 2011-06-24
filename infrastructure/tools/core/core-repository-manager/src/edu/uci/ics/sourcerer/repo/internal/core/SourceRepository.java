@@ -15,25 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.repo.internal.core;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.io.File;
-
-import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class SourceRepository extends AbstractRepository<SourceProject> {
-  protected SourceRepository(RepoFile repoRoot) {
+  public SourceRepository(RepoFile repoRoot) {
     super(repoRoot);
-  }
-
-  public static SourceRepository make(Argument<File> root) {
-    logger.info("Loading source repository at: " + AbstractRepository.INPUT_REPO.getValue().getPath());
-    return new SourceRepository(RepoFile.makeRoot(root));
   }
 
   @Override

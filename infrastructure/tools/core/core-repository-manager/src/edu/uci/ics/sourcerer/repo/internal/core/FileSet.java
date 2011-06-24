@@ -15,19 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.repo.internal.core;
 
-import edu.uci.ics.sourcerer.util.io.properties.AbstractProperties;
-import edu.uci.ics.sourcerer.util.io.properties.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ProjectProperties extends AbstractProperties {
-  public Property<String> NAME = new StringProperty("name", this);
+public class FileSet extends AbstractFileSet {
+  protected FileSet(SourceProject project) {
+    super(project);
+  }
+
+  @Override
+  protected ContentDirectory makeRoot(RepoFile file) {
+    return ContentDirectory.makeRoot(file);
+  }
   
-  public ProjectProperties(IRepoFile file) {
-    super(file.toFile());
+  @Override
+  protected ContentFile createFile(RepoFile file) {
+    return new ContentFile(getRoot().make(file.getParent()), file);
   }
 }

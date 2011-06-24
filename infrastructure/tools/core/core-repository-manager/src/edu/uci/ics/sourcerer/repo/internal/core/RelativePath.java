@@ -15,19 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.repo.internal.core;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Map;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.repo.core.IRelativePath;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class RelativePath {
+final class RelativePath implements IRelativePath {
   private final String relativePath;
   private static final Map<String, RelativePath> interned = Helper.newHashMap();
   

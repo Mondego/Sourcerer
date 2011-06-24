@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.repo.internal.core;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
@@ -25,22 +25,17 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.repo.core.IFileSet;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.LineFileReader;
 import edu.uci.ics.sourcerer.util.io.LineFileWriter;
 import edu.uci.ics.sourcerer.util.io.LineFileWriter.EntryWriter;
-import edu.uci.ics.sourcerer.util.io.arguments.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
-import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class AbstractFileSet {
-  public static final Argument<String> FILE_CACHE = new StringArgument("file-cache-file", "file-cache.txt", "Cache of the file set's files.");
-  public static final Argument<Boolean> CLEAR_FILE_CACHE = new BooleanArgument("clear-file-cache", false, "Clears the file caches.");
-  
+public abstract class AbstractFileSet implements IFileSet {
   private final File cache;
   private ContentDirectory root;
   private Collection<ContentFile> files;
@@ -55,7 +50,7 @@ public abstract class AbstractFileSet {
     }
   }
   
-  public final void reset() {
+  protected final void reset() {
     root = makeRoot(root.getFile());
     files.clear();
     populateFileSet();

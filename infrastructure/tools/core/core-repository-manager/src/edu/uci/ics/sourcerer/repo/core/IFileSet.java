@@ -17,24 +17,20 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
+import java.util.Collection;
+
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ContentFile {
-  private ContentDirectory parent;
-  private RepoFile file;
+public interface IFileSet {
+  public static final Argument<String> FILE_CACHE = new StringArgument("file-cache-file", "file-cache.txt", "Cache of the file set's files.");
+  public static final Argument<Boolean> CLEAR_FILE_CACHE = new BooleanArgument("clear-file-cache", false, "Clears the file caches.");
   
-  protected ContentFile(ContentDirectory parent, RepoFile file) {
-    this.parent = parent;
-    this.file = file;
-    parent.addFile(this);
-  }
+  public Collection<? extends IContentFile> getFiles();
   
-  public RepoFile getFile() {
-    return file;
-  }
-  
-  public ContentDirectory getParentDirectory() {
-    return parent;
-  }
+  public IContentDirectory getRoot();
 }

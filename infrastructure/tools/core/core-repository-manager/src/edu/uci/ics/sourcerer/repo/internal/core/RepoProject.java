@@ -15,17 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.repo.core;
+package edu.uci.ics.sourcerer.repo.internal.core;
 
+import edu.uci.ics.sourcerer.repo.core.IModifiableProject;
+import edu.uci.ics.sourcerer.repo.core.ProjectProperties;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class RepoProject {
-  public static final Argument<String> PROJECT_PROPERTIES = new StringArgument("project-properties-file", "project.properties", "Properties files for a project.");
-  
+public class RepoProject implements IModifiableProject {
   protected final ProjectLocation loc;
   
   protected final RepoFile propFile;
@@ -36,6 +35,7 @@ public class RepoProject {
     propFile = loc.getProjectRoot().getChild(PROJECT_PROPERTIES.getValue());
   }
   
+  @Override
   public final ProjectLocation getLocation() {
     return loc;
   }
@@ -44,6 +44,7 @@ public class RepoProject {
     return loc.getProjectRoot().getChild(arg.getValue());
   }
   
+  @Override
   public ProjectProperties getProperties() {
     if (properties == null) {
       properties = new ProjectProperties(propFile);

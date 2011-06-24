@@ -18,11 +18,12 @@
 package edu.uci.ics.sourcerer.repo.core;
 
 
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class SourceProjectProperties extends ProjectProperties {
-  protected SourceProjectProperties(RepoFile file) {
+  public SourceProjectProperties(IRepoFile file) {
     super(file);
   }
 }
