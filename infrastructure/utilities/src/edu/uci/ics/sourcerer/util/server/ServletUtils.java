@@ -44,16 +44,7 @@ public class ServletUtils {
 		setResponse(response, null, false);
 	}
 
-	private static void setResponse(HttpServletResponse response, boolean link) {
-		setResponse(response, null, link);
-	}
-
-	private static void setResponse(HttpServletResponse response, String name) {
-		setResponse(response, name, false);
-	}
-
-	private static void setResponse(HttpServletResponse response, String name,
-			boolean link) {
+	private static void setResponse(HttpServletResponse response, String name, boolean link) {
 		if (name == null) {
 			if (link) {
 				response.setContentType("text/html");
@@ -66,9 +57,17 @@ public class ServletUtils {
 					+ name + "\"");
 		}
 	}
+	
+	public static void writeString(HttpServletResponse response, String name, String string, boolean html) throws IOException {
+	  writeByteArray(response, name, string.getBytes(), html);
+	}
 
 	public static void writeByteArray(HttpServletResponse response, String name, byte[] bytes) throws IOException {
-	  setResponse(response, name);
+	  writeByteArray(response, name, bytes, false);
+	}
+	
+	public static void writeByteArray(HttpServletResponse response, String name, byte[] bytes, boolean html) throws IOException {
+	  setResponse(response, name, html);
 
 	  OutputStream os = response.getOutputStream();
 	  os.write(bytes);
@@ -80,7 +79,11 @@ public class ServletUtils {
   }
 
   public static void writeInputStream(HttpServletResponse response, String name, InputStream is) throws IOException {
-    setResponse(response, name);
+    writeInputStream(response, name, is, false);
+  }
+  
+  public static void writeInputStream(HttpServletResponse response, String name, InputStream is, boolean html) throws IOException {
+    setResponse(response, name, html);
 
     OutputStream os = response.getOutputStream();
 
@@ -97,10 +100,12 @@ public class ServletUtils {
     writeInputStreamFragment(response, name, new FileInputStream(file), offset, length);
   }
 
-	public static void writeInputStreamFragment(HttpServletResponse response,
-			String name, InputStream is, int offset, int length)
-			throws IOException {
-		setResponse(response, name);
+  public static void writeInputStreamFragment(HttpServletResponse response, String name, InputStream is, int offset, int length) throws IOException {
+    writeInputStreamFragment(response, name, is, offset, length, false);
+  }
+  
+	public static void writeInputStreamFragment(HttpServletResponse response, String name, InputStream is, int offset, int length, boolean html) throws IOException {
+		setResponse(response, name, html);
 
 		OutputStream os = response.getOutputStream();
 

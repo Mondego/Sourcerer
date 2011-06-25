@@ -78,4 +78,8 @@ public class RelationQueries extends Queries {
   public Collection<RelationDB> getRelationsByProject(Integer projectID, Relation ... relations) {
     return executor.select(and(PROJECT_ID.getEquals(projectID), RELATION_TYPE.getIn(relations)), RELATION_TRANSLATOR);
   }
+  
+  public Collection<RelationDB> getRelationsByFileID(Integer fileID, Relation ... relations) {
+    return executor.select(and(FILE_ID.getEquals(fileID), RELATION_TYPE.getIn(relations)), RELATION_TRANSLATOR);
+  }
 }

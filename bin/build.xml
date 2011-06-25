@@ -38,6 +38,7 @@
 	<property name="component-clusterer" location="../infrastructure/tools/java/component-clusterer/src" />
   <property name="repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
   <property name="model" location="../infrastructure/tools/java/model/src" />
+	<property name="syntax-highlighter" location="../infrastructure/tools/java/syntax-highlighter/src" />
   <property name="database" location="../infrastructure/tools/java/database/src" />
   <property name="search-eval" location="../infrastructure/apps/codesearch/src" />
   <property name="core-repository-manager" location="../infrastructure/tools/core/core-repository-manager/src" />
@@ -46,6 +47,7 @@
   <property name="codecrawler" location="../infrastructure/tools/core/codecrawler/src" />
   <property name="file-server" location="../infrastructure/services/file-server/src" />
 	<property name="famix-server" location="../infrastructure/services/famix-server/src" />
+	<property name="code-browser" location="../infrastructure/apps/code-browser/src" />
   <property name="similarity-server" location="../infrastructure/services/similarity-server/src" />
   <property name="test-repo" location="../infrastructure/tools/java/extractor/test-repo" />
   <property name="lib" location="../lib" />
@@ -75,9 +77,11 @@
       <src path="${utilities}" />
       <src path="${repository-manager}" />
       <src path="${model}" />
+    	<src path="${syntax-highlighter}" />
       <src path="${database}" />
       <src path="${file-server}" />
     	<src path="${famix-server}" />
+    	<src path="${code-browser}" />
       <src path="${component-clusterer}" />
     </javac>
 
@@ -91,6 +95,9 @@
     <copy todir="${build-java-tools-core}">
       <fileset dir="${model}" includes="**/*.java" />
     </copy>
+  	<copy todir="${build-java-tools-core}">
+      <fileset dir="${syntax-highlighter}" includes="**/*.java" />
+    </copy>
     <copy todir="${build-java-tools-core}">
       <fileset dir="${database}" includes="**/*.java" />
     </copy>
@@ -99,6 +106,9 @@
     </copy>
   	<copy todir="${build-java-tools-core}">
       <fileset dir="${famix-server}" includes="**/*.java" />
+    </copy>
+  	<copy todir="${build-java-tools-core}">
+      <fileset dir="${code-browser}" includes="**/*.java" />
     </copy>
   	<copy todir="${component-clusterer}">
   	  <fileset dir="${component-clusterer}" includes="**/*.java" />
@@ -139,6 +149,15 @@
 	<target name="famix-server" depends="compile-java-tools-core">
     <war destfile="${dist}/famix-server.war" webxml="${famix-server}/edu/uci/ics/sourcerer/server/famix/web.xml">
       <lib dir="${famix-server}/edu/uci/ics/sourcerer/server/famix">
+        <include name="*.properties" />
+      </lib>
+      <classes dir="${build-java-tools-core}" />
+    </war>
+  </target>
+	
+	<target name="code-browser" depends="compile-java-tools-core">
+    <war destfile="${dist}/code-browser.war" webxml="${code-browser}/edu/uci/ics/sourcerer/apps/codebrowser/web.xml">
+      <lib dir="${code-browser}/edu/uci/ics/sourcerer/apps/codebrowser">
         <include name="*.properties" />
       </lib>
       <classes dir="${build-java-tools-core}" />

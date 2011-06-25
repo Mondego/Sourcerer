@@ -18,7 +18,6 @@
 package edu.uci.ics.sourcerer.tools.java.highlighter;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.TreeMap;
 
 import edu.uci.ics.sourcerer.util.Helper;
@@ -39,7 +38,29 @@ public class LinkLocationSet {
   
   public void addLinkLocation(Integer offset, Integer length, String link) {
     if (links.containsKey(offset)) {
-      throw new IllegalArgumentException("Set already contains link at offset: " + offset);
+      LinkLocation other = links.get(offset);
+      if (other.getLength().equals(length)) {
+        throw new IllegalArgumentException("Set already contains link at offset: " + offset);
+      } else {
+        if (other.getLength() < length) {
+          Integer newOffset = offset += other.getLength();
+          Integer newLength = length - other.getLength();
+          if (links.containsKey(newOffset)) {
+            throw new IllegalArgumentException("Set already contains link at offset: " + offset);
+          } else {
+            links.put(newOffset, new LinkLocation(newOffset, newLength, link));
+          }
+        } else {
+          Integer newOffset = offset + length;
+          Integer newLength = other.getLength() - length;
+          if (links.containsKey(newOffset)) {
+            throw new IllegalArgumentException("Set already contains link at offset: " + offset);
+          } else {
+            links.put(newOffset, new LinkLocation(newOffset, newLength, other.getLink()));
+            links.put(offset, new LinkLocation(offset, length, link));
+          }
+        }
+      }
     } else {
       links.put(offset, new LinkLocation(offset, length, link));
     }

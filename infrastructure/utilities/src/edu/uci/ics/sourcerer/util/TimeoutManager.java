@@ -12,6 +12,7 @@ public class TimeoutManager <T extends Closeable> {
   private final int TIMEOUT;
   private transient long lastTimeAccessed;
   private transient T instance;
+  private transient TimerTask task;
   
   public TimeoutManager(Instantiator<T> instantiator, int timeout) {
     this.instantiator = instantiator;
@@ -24,7 +25,7 @@ public class TimeoutManager <T extends Closeable> {
     if (instance == null) {
       instance = instantiator.create();
       Timer timer = new Timer();
-      TimerTask task = new TimerTask() {
+      task = new TimerTask() {
         @Override
         public void run() {
           synchronized (TimeoutManager.this) {
@@ -32,6 +33,7 @@ public class TimeoutManager <T extends Closeable> {
               logger.info("Timeout manager closing...");
               FileUtils.close(instance);
               instance = null;
+              task = null;
               this.cancel();
             }
           }
@@ -40,6 +42,13 @@ public class TimeoutManager <T extends Closeable> {
       timer.schedule(task, TIMEOUT, TIMEOUT);
     }
     return instance;
+  }
+  
+  public synchronized void destroy() {
+    if (task != null) {
+      task.cancel();
+      task.run();
+    }
   }
  
   public static interface Instantiator <T extends Closeable> {

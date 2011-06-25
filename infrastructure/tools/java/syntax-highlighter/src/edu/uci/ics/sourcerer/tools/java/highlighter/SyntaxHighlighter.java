@@ -24,14 +24,15 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.logging.Level;
 
-import javax.annotation.Generated;
-
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class SyntaxHighlighter {
+  public static final int TAB_WIDTH = 4;
+  public static final int MINIMUM_TAB_WIDTH = 0;
+  
   private static Collection<String> keywords = null;
   static {
     keywords = Helper.newHashSet();
@@ -87,6 +88,23 @@ public final class SyntaxHighlighter {
     keywords.add("while");
   }
 
+//  private static Collection<String> tags = null;
+//  static {
+//    tags = Helper.newHashSet();
+//    tags.add("@author");
+//    tags.add("@category");
+//    tags.add("@deprecated");
+//    tags.add("@exception");
+//    tags.add("@param");
+//    tags.add("@return");
+//    tags.add("@see");
+//    tags.add("@serial");
+//    tags.add("@serialData");
+//    tags.add("@serialField");
+//    tags.add("@since");
+//    tags.add("@throws");
+//    tags.add("@vesion");
+//  }
   public static String highlightSyntax(String code) {
     return highlightSyntax(code, Collections.<LinkLocation> emptyList());
   }
@@ -106,51 +124,73 @@ public final class SyntaxHighlighter {
     IN_STRING_LITERAL,
     IN_CHARACTER_LITERAL,
   }
-  
+
   private static String highlightSyntax(String code, Collection<LinkLocation> links) {
     EscapeBuilder builder = new EscapeBuilder();
 
-    builder.append("<style>.comment { color: green; } .javadoc-comment { color: blue; } .keyword { color: #800000; font-weight:bold; } .string { color: red; } .string { color: red; } .annotation { font-weight: bold; } .javadoc-tag { font-weight: bold; }</style>");
     Iterator<LinkLocation> iter = links.iterator();
     LinkLocation next = null;
     if (iter.hasNext()){
       next = iter.next();
     }
 
-//    int endLink = -1;
+    int endLink = -1;
     
+    int charsIntoLine = 0;
     int wordStart = -1;
-
 
     State state = State.START;
     for (int i = 0; i < code.length(); i++) {
       char c = code.charAt(i);
 
-//      if (endLink == -1 && next != null && next.getOffset() == i) {
-//        builder.append("<a href=\"");
-//        builder.append(next.getLink());
-//        builder.append(">");
-//        endLink = next.getOffset() + next.getLength();
-//      } else if (endLink == i) {
-//        builder.append("</a>");
-//        while (next == null && iter.hasNext()) {
-//          next = iter.next();
-//          if (next.getOffset() <= i) {
-//            logger.log(Level.SEVERE, "Conflicting links: " + next.getLink());
-//            next = null;
-//          }
-//        }
-//      }
-
-
+      if (endLink == -1 && next != null && next.getOffset() == i) {
+        if (state != State.START) {
+          logger.log(Level.SEVERE, "Unexpected state type for link: " + state);
+          next = null;
+          while (next == null && iter.hasNext()) {
+            next = iter.next();
+            if (next.getOffset() <= i) {
+              logger.log(Level.SEVERE, "Conflicting links: " + next.getLink());
+              next = null;
+            }
+          }
+        } else {
+          builder.append("<a href=\"");
+          builder.append(next.getLink());
+          builder.append("\">");
+          endLink = next.getOffset() + next.getLength();
+        }
+      } else if (endLink == i && state != State.IN_WORD) {
+        builder.append("</a>");
+        next = null;
+        while (next == null && iter.hasNext()) {
+          next = iter.next();
+          if (next.getOffset() <= i) {
+            logger.log(Level.SEVERE, "Conflicting links: " + next.getLink());
+            next = null;
+          }
+        }
+        endLink = -1;
+      }
+      
       if (state == State.START) {
         if (Character.isWhitespace(c)) {
           if (c == '\t') {
-            builder.append("&nbsp;&nbsp;");
-          } else if (c == 'r') {} else if (c == '\n') {
+            int remaining = charsIntoLine % TAB_WIDTH;
+            if (remaining <= MINIMUM_TAB_WIDTH) {
+              remaining += 4;
+            }
+            while (remaining-- > 0) {
+              builder.append("&nbsp;");
+            }
+            charsIntoLine = 0;
+          } else if (c == 'r') {
+          } else if (c == '\n') {
             builder.append("<br>\n");
+            charsIntoLine = 0;
           } else {
             builder.append("&nbsp;");
+            charsIntoLine++;
           }
         } else if (c == '/') {
           if (code.length() > i + 1) {
@@ -158,6 +198,7 @@ public final class SyntaxHighlighter {
             if (c2 == '/') {
               builder.append("<span class=\"comment\">");
               builder.append(c);
+              charsIntoLine++;
               state = State.IN_LINE_COMMENT;
             } else if (c2 == '*') {
               if (code.length() > i + 2) {
@@ -165,34 +206,41 @@ public final class SyntaxHighlighter {
                 if (c3 == '*') {
                   builder.append("<span class=\"javadoc-comment\">");
                   builder.append(c);
+                  charsIntoLine++;
                   state = State.IN_JAVADOC_COMMENT;
                 } else {
                   builder.append("<span class=\"comment\">");
                   builder.append(c);
+                  charsIntoLine++;
                   state = State.IN_BLOCK_COMMENT;
                 }
               } else {
                 logger.log(Level.SEVERE, "Invalid syntax! " + code.substring(i));
                 builder.append("<span class=\"comment\">");
                 builder.append(c);
+                charsIntoLine++;
                 state = State.IN_BLOCK_COMMENT;
               }
               
             } else {
               logger.log(Level.SEVERE, "Invalid syntax! " + code.substring(i));
               builder.append(c);
+              charsIntoLine++;
             }
           } else {
             logger.log(Level.SEVERE, "Invalid syntax! " + code.substring(i));
             builder.append(c);
+            charsIntoLine++;
           }
         } else if (c == '"') {
           builder.append("<span class=\"string\">");
           builder.append(c);
+          charsIntoLine++;
           state = State.IN_STRING_LITERAL;
         } else if (c == '\'') {
           builder.append("<span class=\"character\">");
           builder.append(c);
+          charsIntoLine++;
           state = State.IN_CHARACTER_LITERAL;
         } else if (Character.isJavaIdentifierPart(c)) {
           wordStart = i;
@@ -200,65 +248,101 @@ public final class SyntaxHighlighter {
         } else if (c == '@') {
           builder.append("<span class=\"annotation\">");
           builder.append(c);
+          charsIntoLine++;
           state = State.IN_ANNOTATION;
         } else {
           builder.append(c);
+          charsIntoLine++;
         }
       } else if (state == State.IN_LINE_COMMENT) {
         if (Character.isWhitespace(c)) {
           if (c == '\t') {
-            builder.append("&nbsp;&nbsp;");
+            int remaining = charsIntoLine % TAB_WIDTH;
+            if (remaining <= MINIMUM_TAB_WIDTH) {
+              remaining += 4;
+            }
+            while (remaining-- > 0) {
+              builder.append("&nbsp;");
+            }
+            charsIntoLine = 0;
           } else if (c == 'r') {
           } else if (c == '\n') {
-            builder.append("<br></span>");
+            builder.append("</span><br>");
             state = State.START;
+            charsIntoLine = 0;
           } else {
             builder.append("&nbsp;");
+            charsIntoLine++;
           }
         } else {
           builder.append(c);
+          charsIntoLine++;
         }
       } else if (state == State.IN_BLOCK_COMMENT) {
         if (Character.isWhitespace(c)) {
           if (c == '\t') {
-            builder.append("&nbsp;&nbsp;");
+            int remaining = charsIntoLine % TAB_WIDTH;
+            if (remaining <= MINIMUM_TAB_WIDTH) {
+              remaining += 4;
+            }
+            while (remaining-- > 0) {
+              builder.append("&nbsp;");
+            }
+            charsIntoLine = 0;
           } else if (c == 'r') {
           } else if (c == '\n') {
             builder.append("<br>\n");
+            charsIntoLine = 0;
           } else {
             builder.append("&nbsp;");
+            charsIntoLine++;
           }
         } else if (c == '/' && code.charAt(i - 1) == '*') {     
           builder.append(c);
+          charsIntoLine++;
           builder.append("</span>");
           state = State.START;
         } else {
           builder.append(c);
+          charsIntoLine++;
         }
       } else if (state == State.IN_JAVADOC_COMMENT) {
         if (Character.isWhitespace(c)) {
           if (c == '\t') {
-            builder.append("&nbsp;&nbsp;");
+            int remaining = charsIntoLine % TAB_WIDTH;
+            if (remaining <= MINIMUM_TAB_WIDTH) {
+              remaining += 4;
+            }
+            while (remaining-- > 0) {
+              builder.append("&nbsp;");
+            }
+            charsIntoLine = 0;
           } else if (c == 'r') {
           } else if (c == '\n') {
             builder.append("<br>\n");
+            charsIntoLine = 0;
           } else {
             builder.append("&nbsp;");
+            charsIntoLine++;
           }
         } else if (c == '/' && code.charAt(i - 1) == '*') {     
           builder.append(c);
+          charsIntoLine++;
           builder.append("</span>");
           state = State.START;
         } else if (c == '@' && Character.isWhitespace(code.charAt(i - 1))) {
           builder.append("<span class=\"javadoc-tag\">");
           builder.append(c);
+          charsIntoLine++;
           state = State.IN_JAVADOC_TAG;
         } else {
           builder.append(c);
+          charsIntoLine++;
         }
       } else if (state == State.IN_JAVADOC_TAG) {
         if (Character.isJavaIdentifierPart(c)) {
           builder.append(c);
+          charsIntoLine++;
         } else {
           builder.append("</span>");
           state = State.IN_JAVADOC_COMMENT;
@@ -275,12 +359,14 @@ public final class SyntaxHighlighter {
             builder.append(word);
             builder.append("</span>");
           }
+          charsIntoLine += word.length();
           state = State.START;
           i--;
         }
       } else if (state == State.IN_ANNOTATION) {
         if (Character.isJavaIdentifierPart(c)) {
           builder.append(c);
+          charsIntoLine++;
         } else {
           builder.append("</span>");
           state = State.START;
@@ -289,15 +375,25 @@ public final class SyntaxHighlighter {
       } else if (state == State.IN_STRING_LITERAL) {
         if (Character.isWhitespace(c)) {
           if (c == '\t') {
-            builder.append("&nbsp;&nbsp;");
+            int remaining = charsIntoLine % TAB_WIDTH;
+            if (remaining <= MINIMUM_TAB_WIDTH) {
+              remaining += 4;
+            }
+            while (remaining-- > 0) {
+              builder.append("&nbsp;");
+            }
+            charsIntoLine = 0;
           } else if (c == 'r') {
           } else if (c == '\n') {
             builder.append("<br>\n");
+            charsIntoLine = 0;
           } else {
             builder.append("&nbsp;");
+            charsIntoLine++;
           }
         } else {
           builder.append(c);
+          charsIntoLine++;
           if (c == '"' && code.charAt(i - 1) != '\\') {
             builder.append("</span>");
             state = State.START;
@@ -306,15 +402,25 @@ public final class SyntaxHighlighter {
       } else if (state == State.IN_CHARACTER_LITERAL) {
         if (Character.isWhitespace(c)) {
           if (c == '\t') {
-            builder.append("&nbsp;&nbsp;");
+            int remaining = charsIntoLine % TAB_WIDTH;
+            if (remaining <= MINIMUM_TAB_WIDTH) {
+              remaining += 4;
+            }
+            while (remaining-- > 0) {
+              builder.append("&nbsp;");
+            }
+            charsIntoLine = 0;
           } else if (c == 'r') {
           } else if (c == '\n') {
             builder.append("<br>\n");
+            charsIntoLine = 0;
           } else {
             builder.append("&nbsp;");
+            charsIntoLine++;
           }
         } else {
           builder.append(c);
+          charsIntoLine++;
           if (c == '\'' && code.charAt(i - 1) != '\\') {
             builder.append("</span>");
           }
@@ -322,6 +428,20 @@ public final class SyntaxHighlighter {
       } else {
         logger.log(Level.SEVERE, "Invalid state! " + state);
       }
+      
+      if (endLink == i) {
+        builder.append("</a>");
+        next = null;
+        while (next == null && iter.hasNext()) {
+          next = iter.next();
+          if (next.getOffset() <= i) {
+            logger.log(Level.SEVERE, "Conflicting links: " + next.getLink());
+            next = null;
+          }
+        }
+        endLink = -1;
+      }
+
     } 
     return builder.toString();
   }

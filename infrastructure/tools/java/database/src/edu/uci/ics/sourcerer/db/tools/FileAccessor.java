@@ -22,6 +22,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
@@ -31,9 +32,11 @@ import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.File;
 import edu.uci.ics.sourcerer.model.Project;
+import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.db.FileDB;
 import edu.uci.ics.sourcerer.model.db.LocationDB;
 import edu.uci.ics.sourcerer.model.db.LargeProjectDB;
+import edu.uci.ics.sourcerer.model.db.RelationDB;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
@@ -56,6 +59,10 @@ public class FileAccessor {
         }
       }, 10 * 60 * 1000);
   
+  public static void destroy() {
+    accessorManager.destroy();
+  }
+  
   private static Repository repo = Repository.getRepository(AbstractRepository.INPUT_REPO.getValue());
   private static ExtractedRepository extracted = ExtractedRepository.getRepository(AbstractRepository.OUTPUT_REPO.getValue());
   
@@ -67,6 +74,7 @@ public class FileAccessor {
       return null;
     }
   }
+  
   public static byte[] lookupByProjectID(Integer projectID) {
     return convertResult(lookupResultByProjectID(projectID));
   }
@@ -268,6 +276,10 @@ public class FileAccessor {
     }
   }
   
+  public static Collection<RelationDB> getDisplayRelations(Integer fileID) {
+    return accessorManager.get().getDisplayRelationsByFileID(fileID);
+  }
+  
   public static void testConsole() {
     try {
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -394,6 +406,10 @@ public class FileAccessor {
     
     public synchronized LargeProjectDB getProjectByProjectID(Integer projectID) {
       return projectQueries.getLargeByProjectID(projectID);
+    }
+    
+    public synchronized Collection<RelationDB> getDisplayRelationsByFileID(Integer fileID) {
+      return relationQueries.getRelationsByFileID(fileID, Relation.USES, Relation.CALLS);
     }
   }
 }
