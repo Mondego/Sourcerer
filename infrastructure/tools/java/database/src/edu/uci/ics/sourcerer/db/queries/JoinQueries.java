@@ -36,6 +36,7 @@ import edu.uci.ics.sourcerer.model.RelationClass;
 import edu.uci.ics.sourcerer.model.db.FileFqn;
 import edu.uci.ics.sourcerer.model.db.ImportFqn;
 import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
+import edu.uci.ics.sourcerer.model.db.RelationEntityDB;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -134,6 +135,57 @@ public final class JoinQueries extends Queries {
                 EntitiesTable.FQN.convertFromDB(result.getString(2)),
                 ImportsTable.PROJECT_ID.convertFromDB(result.getString(3)),
                 ImportsTable.FILE_ID.convertFromDB(result.getString(4)));
+          }
+        });
+  }
+  
+  public Collection<RelationEntityDB> getLinksByFileID(Integer fileID) {
+    return executor.select(
+        join(RelationsTable.TABLE, EntitiesTable.TABLE) + 
+        on(RelationsTable.RHS_EID.getEquals(EntitiesTable.ENTITY_ID)), 
+        comma(RelationsTable.RELATION_ID.getQualifiedName(),
+              RelationsTable.RELATION_TYPE.getQualifiedName(),
+              RelationsTable.RELATION_CLASS.getQualifiedName(),
+              RelationsTable.LHS_EID.getQualifiedName(),
+              RelationsTable.RHS_EID.getQualifiedName(),
+              RelationsTable.PROJECT_ID.getQualifiedName(),
+              RelationsTable.FILE_ID.getQualifiedName(),
+              RelationsTable.OFFSET.getQualifiedName(),
+              RelationsTable.LENGTH.getQualifiedName(),
+              EntitiesTable.ENTITY_ID.getQualifiedName(),
+              EntitiesTable.ENTITY_TYPE.getQualifiedName(),
+              EntitiesTable.FQN.getQualifiedName(),
+              EntitiesTable.MODIFIERS.getQualifiedName(),
+              EntitiesTable.MULTI.getQualifiedName(),
+              EntitiesTable.PROJECT_ID.getQualifiedName(),
+              EntitiesTable.FILE_ID.getQualifiedName(),
+              EntitiesTable.OFFSET.getQualifiedName(),
+              EntitiesTable.LENGTH.getQualifiedName()), 
+        and(RelationsTable.FILE_ID.getQualifiedEquals(fileID), 
+            RelationsTable.RELATION_TYPE.getIn(Relation.USES, Relation.CALLS, Relation.READS, Relation.WRITES), 
+            EntitiesTable.ENTITY_TYPE.getNequals(Entity.PRIMITIVE)), 
+        new BasicResultTranslator<RelationEntityDB>() {
+          @Override
+          public RelationEntityDB translate(ResultSet result) throws SQLException {
+            return new RelationEntityDB(
+                RelationsTable.RELATION_ID.convertFromDB(result.getString(1)),
+                RelationsTable.RELATION_TYPE.convertFromDB(result.getString(2)),
+                RelationsTable.RELATION_CLASS.convertFromDB(result.getString(3)),
+                RelationsTable.LHS_EID.convertFromDB(result.getString(4)),
+                RelationsTable.RHS_EID.convertFromDB(result.getString(5)),
+                RelationsTable.PROJECT_ID.convertFromDB(result.getString(6)),
+                RelationsTable.FILE_ID.convertFromDB(result.getString(7)),
+                RelationsTable.OFFSET.convertFromDB(result.getString(8)),
+                RelationsTable.LENGTH.convertFromDB(result.getString(9)),
+                EntitiesTable.ENTITY_ID.convertFromDB(result.getString(10)),
+                EntitiesTable.ENTITY_TYPE.convertFromDB(result.getString(11)),
+                EntitiesTable.FQN.convertFromDB(result.getString(12)),
+                EntitiesTable.MODIFIERS.convertFromDB(result.getString(13)),
+                EntitiesTable.MULTI.convertFromDB(result.getString(14)),
+                EntitiesTable.PROJECT_ID.convertFromDB(result.getString(15)),
+                EntitiesTable.FILE_ID.convertFromDB(result.getString(16)),
+                EntitiesTable.OFFSET.convertFromDB(result.getString(17)),
+                EntitiesTable.LENGTH.convertFromDB(result.getString(18)));
           }
         });
   }

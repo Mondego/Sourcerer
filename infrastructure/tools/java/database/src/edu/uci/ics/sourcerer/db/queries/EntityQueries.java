@@ -77,7 +77,7 @@ public class EntityQueries extends Queries {
   }
 
   public LocationDB getLocationByEntityID(Integer entityID) {
-    return executor.selectSingle(ENTITY_ID.getEquals(entityID), LOCATION_TRANSLATOR); 
+    return executor.selectSingle(and(ENTITY_ID.getEquals(entityID), OFFSET.getNequals(null), LENGTH.getNequals(null)), LOCATION_TRANSLATOR); 
   }
   
   public Collection<SmallEntityDB> getSmallByFqn(String fqn, String inClause) {
@@ -114,5 +114,9 @@ public class EntityQueries extends Queries {
   
   public Collection<EntityDB> getByProjectID(Integer projectID, Entity ... types) {
     return executor.select(and(PROJECT_ID.getEquals(projectID), ENTITY_TYPE.getIn(types)), ENTITY_TRANSLATOR);
+  }
+  
+  public Collection<EntityDB> getByFileID(Integer fileID, Entity ... types) {
+    return executor.select(and(FILE_ID.getEquals(fileID), ENTITY_TYPE.getIn(types)), ENTITY_TRANSLATOR);
   }
 }

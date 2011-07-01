@@ -30,7 +30,7 @@ public abstract class ResultTranslator<T> extends BasicResultTranslator<T> {
     this.table = table;
     StringBuilder builder = new StringBuilder();
     for (Column<?> column : columns) {
-      builder.append(column.getName()).append(',');
+      builder.append(column.getQualifiedName()).append(',');
     }
     builder.deleteCharAt(builder.length() - 1);
     select = builder.toString();

@@ -30,13 +30,15 @@ import java.util.zip.ZipFile;
 
 import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
+import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.File;
 import edu.uci.ics.sourcerer.model.Project;
-import edu.uci.ics.sourcerer.model.Relation;
+import edu.uci.ics.sourcerer.model.db.EntityDB;
 import edu.uci.ics.sourcerer.model.db.FileDB;
-import edu.uci.ics.sourcerer.model.db.LocationDB;
+import edu.uci.ics.sourcerer.model.db.ImportDB;
 import edu.uci.ics.sourcerer.model.db.LargeProjectDB;
-import edu.uci.ics.sourcerer.model.db.RelationDB;
+import edu.uci.ics.sourcerer.model.db.LocationDB;
+import edu.uci.ics.sourcerer.model.db.RelationEntityDB;
 import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
@@ -93,10 +95,10 @@ public class FileAccessor {
         if (indexed == null) {
           return new Result("Unable to find " + project + " with hash " + project.getHash());
         } else {
-          return new Result(indexed.getName(), FileUtils.getFileAsByteArray(indexed.getJarFile()));
+          return new Result(indexed.getName(), null, FileUtils.getFileAsByteArray(indexed.getJarFile()));
         }
       } else if (project.getType() == Project.JAVA_LIBRARY) {
-        return new Result(project.getName(), FileUtils.getFileAsByteArray(extracted.getJavaLibrary(project.getPath())));
+        return new Result(project.getName(), null, FileUtils.getFileAsByteArray(extracted.getJavaLibrary(project.getPath())));
       } else if (project.getType() == Project.CRAWLED) {
         return new Result("Crawled projects not supported: " + project);
       } else {
@@ -188,7 +190,7 @@ public class FileAccessor {
         return new Result("Unable to find " + file + " with hash " + file.getHash());
       } else {
         if (location == null) {
-          return new Result(indexed.getName(), FileUtils.getFileAsByteArray(indexed.getJarFile()));
+          return new Result(indexed.getName(), file.getFileID(), FileUtils.getFileAsByteArray(indexed.getJarFile()));
         } else {
           return new Result("Cannot get a fragment of a jar file");
         }
@@ -200,13 +202,11 @@ public class FileAccessor {
           return new Result("Unable to find " + file.getPath() + " for " + file);
         } else {
           if (location == null) {
-            return new Result(file.getName(), javaFile);
+            return new Result(file.getName(), file.getFileID(), javaFile);
           } else {
             String name = file.getName();
             name = name.substring(0, name.indexOf('.')) + "-" + location.getOffset() + "-" + location.getLength() + ".java";
-            byte[] fragment = new byte[location.getLength()];
-            System.arraycopy(javaFile, location.getOffset(), fragment, 0, location.getLength());
-            return new Result(name, fragment);
+            return new Result(name, file.getFileID(), javaFile, location.getOffset(), location.getLength());
           }
         }
       } else {
@@ -256,11 +256,11 @@ public class FileAccessor {
               return new Result("Unable to find entry " + entryName + " in " + sourceFile.getName() + " for " + file + " and " + project);
             } else {
               if (location == null) {
-                return new Result(entry.getName(), FileUtils.getInputStreamAsByteArray(zip.getInputStream(entry), (int)entry.getSize()));
+                return new Result(entry.getName(), file.getFileID(), FileUtils.getInputStreamAsByteArray(zip.getInputStream(entry), (int)entry.getSize()));
               } else {
                 String name = entry.getName();
                 name = name.substring(0, name.lastIndexOf('.')) + "-" + location.getOffset() + "-" + location.getLength() + ".java";
-                return new Result(name, FileUtils.getInputStreamFragmentAsByteArray(zip.getInputStream(entry), location.getOffset(), location.getLength()));
+                return new Result(name, file.getFileID(), FileUtils.getInputStreamAsByteArray(zip.getInputStream(entry), (int)entry.getSize()), location.getOffset(), location.getLength());
               }
             }
           } catch (Exception e) {
@@ -276,8 +276,16 @@ public class FileAccessor {
     }
   }
   
-  public static Collection<RelationDB> getDisplayRelations(Integer fileID) {
-    return accessorManager.get().getDisplayRelationsByFileID(fileID);
+  public static Collection<RelationEntityDB> getLinksByFileID(Integer fileID) {
+    return accessorManager.get().getLinksByFileID(fileID);
+  }
+  
+  public static Collection<ImportDB> getImportsByFileID(Integer fileID) {
+    return accessorManager.get().getImportsByFileID(fileID);
+  }
+  
+  public static Collection<EntityDB> getFieldsByFileID(Integer fileID) {
+    return accessorManager.get().getFieldsByFileID(fileID);
   }
   
   public static void testConsole() {
@@ -353,13 +361,24 @@ public class FileAccessor {
   }
   
   public static class Result {
+    private byte[] fullResult;
+    private int offset;
+    private int length;
+    private Integer fileID;
     private String name;
     private byte[] result;
     private String errorMessage;
     
-    private Result(String name, byte[] result) {
+    private Result(String name, Integer fileID, byte[] fullResult) {
+      this(name, fileID, fullResult, -1, 0);
+    }
+    
+    private Result(String name, Integer fileID, byte[] fullResult, int offset, int length) {
       this.name = name;
-      this.result = result;
+      this.fileID = fileID;
+      this.fullResult = fullResult;
+      this.offset = offset;
+      this.length = length;
     }
     
     private Result(String errorMessage) {
@@ -374,8 +393,30 @@ public class FileAccessor {
       return name;
     }
     
+    public Integer getFileID() {
+      return fileID;
+    }
+    
     public byte[] getResult() {
+      if (offset == -1) {
+        return fullResult;
+      } else if (result == null) {
+        result = new byte[length];
+        System.arraycopy(fullResult, offset, result, 0, length);
+      }
       return result;
+    }
+    
+    public byte[] getFullResult() {
+      return fullResult;
+    }
+    
+    public Integer getOffset() {
+      return offset;
+    }
+    
+    public int getLength() {
+      return length;
     }
     
     public String getErrorMessage() {
@@ -408,8 +449,16 @@ public class FileAccessor {
       return projectQueries.getLargeByProjectID(projectID);
     }
     
-    public synchronized Collection<RelationDB> getDisplayRelationsByFileID(Integer fileID) {
-      return relationQueries.getRelationsByFileID(fileID, Relation.USES, Relation.CALLS);
+    public synchronized Collection<RelationEntityDB> getLinksByFileID(Integer fileID) {
+      return joinQueries.getLinksByFileID(fileID);
+    }
+    
+    public synchronized Collection<ImportDB> getImportsByFileID(Integer fileID) {
+      return importQueries.getImportsByFileID(fileID);
+    }
+    
+    public synchronized Collection<EntityDB> getFieldsByFileID(Integer fileID) {
+      return entityQueries.getByFileID(fileID, Entity.FIELD);
     }
   }
 }

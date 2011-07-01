@@ -52,6 +52,7 @@ public class StringColumn extends Column<String> {
   }
   
   public StringColumn addIndex(int indexCharCount) {
+    addIndex();
     this.indexCharCount = indexCharCount;
     return this;
   }

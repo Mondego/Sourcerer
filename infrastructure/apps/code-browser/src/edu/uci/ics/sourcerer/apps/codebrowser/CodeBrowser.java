@@ -29,8 +29,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import edu.uci.ics.sourcerer.db.tools.FileAccessor;
 import edu.uci.ics.sourcerer.db.tools.FileAccessor.Result;
-import edu.uci.ics.sourcerer.model.db.RelationDB;
-import edu.uci.ics.sourcerer.tools.java.highlighter.LinkLocationSet;
+import edu.uci.ics.sourcerer.model.Entity;
+import edu.uci.ics.sourcerer.model.Relation;
+import edu.uci.ics.sourcerer.model.db.EntityDB;
+import edu.uci.ics.sourcerer.model.db.ImportDB;
+import edu.uci.ics.sourcerer.model.db.RelationEntityDB;
+import edu.uci.ics.sourcerer.tools.java.highlighter.TagInfo;
+import edu.uci.ics.sourcerer.tools.java.highlighter.TagType;
 import edu.uci.ics.sourcerer.tools.java.highlighter.SyntaxHighlighter;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 import edu.uci.ics.sourcerer.util.server.ServletUtils;
@@ -73,27 +78,25 @@ public class CodeBrowser extends HttpServlet {
     boolean download = "t".equals(request.getParameter("dl"));
     
     Result result = null;
-    Integer fileID = null;
     
     Integer projectID = getIntValue(request, "projectID");
     if (projectID != null) {
-//      result = FileAccessor.lookupResultByProjectID(projectID);
     } else {
-      fileID = getIntValue(request, "fileID");
+      Integer fileID = getIntValue(request, "fileID");
       if (fileID != null) {
         result = FileAccessor.lookupResultByFileID(fileID);
       } else {
         Integer entityID = getIntValue(request, "entityID");
         if (entityID != null) {
-//          result = FileAccessor.lookupResultByEntityID(entityID);
+          result = FileAccessor.lookupResultByEntityID(entityID);
         } else {
           Integer relationID = getIntValue(request, "relationID");
           if (relationID != null) {
-//            result = FileAccessor.lookupResultByRelationID(relationID);
+            result = FileAccessor.lookupResultByRelationID(relationID);
           } else {
             String commentID = request.getParameter("commentID");
             if (commentID != null) {
-//              result = FileAccessor.lookupResultByCommentID(relationID);
+              result = FileAccessor.lookupResultByCommentID(relationID);
             }
           }
         }
@@ -105,12 +108,44 @@ public class CodeBrowser extends HttpServlet {
     } else if (!result.success()) {
       ServletUtils.writeErrorMsg(response, result.getErrorMessage());
     } else {
-      LinkLocationSet links = LinkLocationSet.make();
+      String code = new String(result.getFullResult());
+      Integer fileID = result.getFileID();
       
-      for (RelationDB relation : FileAccessor.getDisplayRelations(fileID)) {
-        if (relation.getOffset() != null) {
-          links.addLinkLocation(relation.getOffset(), relation.getLength(), "?entityID=" + relation.getRhsEid());
+      TagInfo links = TagInfo.make();
+      
+      for (ImportDB imp : FileAccessor.getImportsByFileID(fileID)) {
+        links.addLinkLocation(TagType.IMPORT_LINK, imp.getOffset(), imp.getLength(), "link", "?entityID=" + imp.getEid(), null);
+      }
+      
+      for (EntityDB ent : FileAccessor.getFieldsByFileID(fileID)) {
+        links.addColorLocation(ent.getOffset(), ent.getLength(), "field");
+      }
+      
+      for (RelationEntityDB join : FileAccessor.getLinksByFileID(fileID)) {
+        if (join.getRelation().getOffset() != null) {
+          if (join.getRelation().getRelationType() == Relation.USES) {
+            if (join.getEntity().getType().isInternalMeaningful()) {
+              links.addLinkLocation(TagType.TYPE_LINK, join.getRelation().getOffset(), join.getRelation().getLength(), "link", "?entityID=" + join.getEntity().getEntityID(), join.getEntity().getFqn());
+            }
+          } else if (join.getRelation().getRelationType() == Relation.READS) {
+            links.addLinkLocation(TagType.FIELD_LINK, join.getRelation().getOffset(), join.getRelation().getLength(), "field", "?entityID=" + join.getEntity().getEntityID(), join.getEntity().getFqn());
+          } else if (join.getRelation().getRelationType() == Relation.WRITES) {
+            if (!(join.getRelation().getFileID().equals(join.getEntity().getFileID()) && join.getRelation().getOffset().equals(join.getEntity().getOffset()))) {
+              links.addLinkLocation(TagType.FIELD_LINK, join.getRelation().getOffset(), join.getRelation().getLength(), "field", "?entityID=" + join.getEntity().getEntityID(), join.getEntity().getFqn());
+            }
+          } else if (join.getRelation().getRelationType() == Relation.CALLS) {
+            int off = join.getRelation().getOffset();
+            while (!Character.isJavaIdentifierPart(code.charAt(off))) {
+              off++;
+            }
+            int paren = code.indexOf(')', off);
+            links.addLinkLocation(TagType.METHOD_LINK, off, paren - off, "method", "?entityID=" + join.getEntity().getEntityID(), join.getEntity().getFqn());
+          }
         }
+      }
+      
+      if (result.getOffset() != null) {
+        links.setMainAnchorLocation(result.getOffset());
       }
       
       StringBuilder builder = new StringBuilder();
@@ -119,17 +154,34 @@ public class CodeBrowser extends HttpServlet {
       builder.append("<title>").append(result.getName()).append("</title>");
       builder.append("<style>" +
       		"body { font-family: monospace; } " +
+      		"a.link:link { color: black; text-decoration: none; } " +
+          "a.link:visited { color: black; text-decoration: none; } " +
+          "a.link:hover { color: black; text-decoration: underline; } " +
+          "a.method:link { color: black; font-style: italic; text-decoration: none; } " +
+          "a.method:visited { color: black; font-style: italic; text-decoration: none; } " +
+          "a.method:hover { color: black; font-style: italic; text-decoration: underline; } " +
       		".comment { color: #3F7F5F; } " +
       		".javadoc-comment { color: #7F7F9F; } " +
       		".keyword { color: #7F0055; font-weight:bold; } " +
       		".string { color: #2A00FF; } " +
       		".character { color: #2A00FF; } " +
       		".annotation { color: #646464; font-weight: bold; } " +
-      		".javadoc-tag { color: #7F9FBF; font-weight: bold; }" +
+      		".annotation a.link:link { color: #646464; text-decoration: none; } " +
+      		".annotation a.link:visited { color: #646464; text-decoration: none; } " +
+      		".annotation a.link:hover { color: #646464; text-decoration: underline; } " +
+      		
+      		".javadoc-tag { color: #7F9FBF; font-weight: bold; } " +
+      		".field { color: #0000C0; } " +
+      		"a.field:link { color: #0000C0; text-decoration: none; } " +
+      		"a.field:visited { color: #0000C0; text-decoration: none; } " +
+      		"a.field:hover { color: #0000C0; text-decoration: underline; } " +
       		"</style>");
       builder.append("</head>");
       builder.append("<body>");
-      builder.append(SyntaxHighlighter.highlightSyntax(new String(result.getResult()), links));
+      builder.append(SyntaxHighlighter.highlightSyntax(code, links));
+      builder.append("<script>\n" +
+          "document.getElementById('main').scrollIntoView(true);\n" +
+          "</script>");
       builder.append("</body>");
       builder.append("</html>");
 

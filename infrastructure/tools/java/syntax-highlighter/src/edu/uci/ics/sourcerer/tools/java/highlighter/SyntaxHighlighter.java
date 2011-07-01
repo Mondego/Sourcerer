@@ -30,9 +30,6 @@ import edu.uci.ics.sourcerer.util.Helper;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class SyntaxHighlighter {
-  public static final int TAB_WIDTH = 4;
-  public static final int MINIMUM_TAB_WIDTH = 0;
-  
   private static Collection<String> keywords = null;
   static {
     keywords = Helper.newHashSet();
@@ -86,31 +83,9 @@ public final class SyntaxHighlighter {
     keywords.add("void");
     keywords.add("volatile");
     keywords.add("while");
-  }
-
-//  private static Collection<String> tags = null;
-//  static {
-//    tags = Helper.newHashSet();
-//    tags.add("@author");
-//    tags.add("@category");
-//    tags.add("@deprecated");
-//    tags.add("@exception");
-//    tags.add("@param");
-//    tags.add("@return");
-//    tags.add("@see");
-//    tags.add("@serial");
-//    tags.add("@serialData");
-//    tags.add("@serialField");
-//    tags.add("@since");
-//    tags.add("@throws");
-//    tags.add("@vesion");
-//  }
-  public static String highlightSyntax(String code) {
-    return highlightSyntax(code, Collections.<LinkLocation> emptyList());
-  }
-
-  public static String highlightSyntax(String code, LinkLocationSet links) {
-    return highlightSyntax(code, links.getLinks());
+    
+    keywords.add("true");
+    keywords.add("false");
   }
 
   private static enum State {
@@ -125,226 +100,196 @@ public final class SyntaxHighlighter {
     IN_CHARACTER_LITERAL,
   }
 
-  private static String highlightSyntax(String code, Collection<LinkLocation> links) {
-    EscapeBuilder builder = new EscapeBuilder();
+  private static enum TagState {
+    START,
+    IN_TAG,
+    IN_FIELD_HIGHLIGHT,
+    WAITING_FOR_IMPORT,
+    WAITING_FOR_IMPORT_FQN,
+    IN_METHOD,
+  }
 
-    Iterator<LinkLocation> iter = links.iterator();
-    LinkLocation next = null;
-    if (iter.hasNext()){
-      next = iter.next();
+  public static String highlightSyntax(String code, TagInfo info) {
+    State state = State.START;
+    TagState tagState = TagState.START;
+
+    HighlightBuilder builder = new HighlightBuilder();
+
+    TagLocation nextTag = null;
+
+    Iterator<TagLocation> iter = info.getLinks().iterator();
+    if (iter.hasNext()) {
+      nextTag = iter.next();
     }
 
-    int endLink = -1;
-    
-    int charsIntoLine = 0;
+    int mainAnchor = -1;
+    if (info.getMainAnchor() != null) {
+      mainAnchor = info.getMainAnchor();
+    }
     int wordStart = -1;
+    int endtag = -1;
 
-    State state = State.START;
     for (int i = 0; i < code.length(); i++) {
       char c = code.charAt(i);
 
-      if (endLink == -1 && next != null && next.getOffset() == i) {
-        if (state != State.START) {
-          logger.log(Level.SEVERE, "Unexpected state type for link: " + state);
-          next = null;
-          while (next == null && iter.hasNext()) {
-            next = iter.next();
-            if (next.getOffset() <= i) {
-              logger.log(Level.SEVERE, "Conflicting links: " + next.getLink());
-              next = null;
-            }
+      if (i == mainAnchor) {
+        builder.appendHtmlTag("<a id=\"main\" name=\"main\"></a>");
+      }
+      if (tagState == TagState.START && nextTag.getOffset() == i) {
+        if (state == State.START) {
+          if (nextTag.getType() == TagType.TYPE_LINK || nextTag.getType() == TagType.FIELD_LINK) {
+            tagState = TagState.IN_TAG;
+            builder.appendTag(nextTag);
+            endtag = nextTag.getOffset() + nextTag.getLength();
+          } else if (nextTag.getType() == TagType.IMPORT_LINK) {
+            tagState = TagState.WAITING_FOR_IMPORT;
+          } else if (nextTag.getType() == TagType.COLOR) {
+            tagState = TagState.IN_FIELD_HIGHLIGHT;
+            builder.appendTag(nextTag);
+            endtag = nextTag.getOffset() + nextTag.getLength();
+          } else if (nextTag.getType() == TagType.METHOD_LINK) {
+            tagState = TagState.IN_METHOD;
+            builder.appendTag(nextTag);
+          } else {
+            logger.log(Level.SEVERE, "Unexpected type of link " + nextTag.getLink() + " in " + state.name() + ": " + nextTag.getType());
+          }
+        } else if (state == State.IN_JAVADOC_COMMENT) {
+          if (nextTag.getType() == TagType.TYPE_LINK) {
+            tagState = TagState.IN_TAG;
+            builder.appendTag(nextTag);
+            endtag = nextTag.getOffset() + nextTag.getLength();
+          } else {
+            logger.log(Level.SEVERE, "Unexpected type of link " + nextTag.getLink() + " in " + state.name() + ": " + nextTag.getType());
+          }
+        } else if (state == State.IN_ANNOTATION) {
+          if (nextTag.getType() == TagType.TYPE_LINK) {
+            tagState = TagState.IN_TAG;
+            builder.appendTag(nextTag);
+            endtag = nextTag.getOffset() + nextTag.getLength();
+          } else {
+            logger.log(Level.SEVERE, "Unexpected type of link " + nextTag.getLink() + " in " + state.name() + ": " + nextTag.getType());
           }
         } else {
-          builder.append("<a href=\"");
-          builder.append(next.getLink());
-          builder.append("\">");
-          endLink = next.getOffset() + next.getLength();
+          logger.log(Level.SEVERE, "Unexpected state type for link " + nextTag.getTitle() + ": " + state);
+          nextTag = iter.next();
         }
-      } else if (endLink == i && state != State.IN_WORD) {
-        builder.append("</a>");
-        next = null;
-        while (next == null && iter.hasNext()) {
-          next = iter.next();
-          if (next.getOffset() <= i) {
-            logger.log(Level.SEVERE, "Conflicting links: " + next.getLink());
-            next = null;
+      } else if (endtag == i && tagState == TagState.IN_TAG) {
+        if (state == State.IN_WORD) {
+          // Make sure the word will end this round
+          if (Character.isJavaIdentifierPart(c)) {
+            logger.log(Level.SEVERE, "Link ending in middle of word! " + code.substring(wordStart, i));
+            builder.appendEndTag(nextTag);
+            nextTag = null;
+            while (nextTag == null) {
+              nextTag = iter.next();
+              if (nextTag.getOffset() <= i) {
+                logger.log(Level.SEVERE, "Conflicting link " + nextTag.getLink() + " at " + nextTag.getOffset());
+                nextTag = null;
+              }
+            }
+            tagState = TagState.START;
+            endtag = -1;
           }
+        } else {
+          builder.appendEndTag(nextTag);
+          nextTag = null;
+          while (nextTag == null) {
+            nextTag = iter.next();
+            if (nextTag.getOffset() <= i) {
+              logger.log(Level.SEVERE, "Conflicting link " + code.substring(nextTag.getOffset(), nextTag.getOffset() + nextTag.getLength()) + " at " + nextTag.getOffset());
+              nextTag = null;
+            }
+          }
+          tagState = TagState.START;
+          endtag = -1;
         }
-        endLink = -1;
       }
-      
+
       if (state == State.START) {
-        if (Character.isWhitespace(c)) {
-          if (c == '\t') {
-            int remaining = charsIntoLine % TAB_WIDTH;
-            if (remaining <= MINIMUM_TAB_WIDTH) {
-              remaining += 4;
-            }
-            while (remaining-- > 0) {
-              builder.append("&nbsp;");
-            }
-            charsIntoLine = 0;
-          } else if (c == 'r') {
-          } else if (c == '\n') {
-            builder.append("<br>\n");
-            charsIntoLine = 0;
-          } else {
-            builder.append("&nbsp;");
-            charsIntoLine++;
-          }
-        } else if (c == '/') {
+        if (c == '/') {
           if (code.length() > i + 1) {
             char c2 = code.charAt(i + 1);
             if (c2 == '/') {
-              builder.append("<span class=\"comment\">");
-              builder.append(c);
-              charsIntoLine++;
               state = State.IN_LINE_COMMENT;
+              builder.appendHtmlTag("<span class=\"comment\">");
+              builder.append(c);
             } else if (c2 == '*') {
               if (code.length() > i + 2) {
                 char c3 = code.charAt(i + 2);
                 if (c3 == '*') {
-                  builder.append("<span class=\"javadoc-comment\">");
-                  builder.append(c);
-                  charsIntoLine++;
                   state = State.IN_JAVADOC_COMMENT;
-                } else {
-                  builder.append("<span class=\"comment\">");
+                  builder.appendHtmlTag("<span class=\"javadoc-comment\">");
                   builder.append(c);
-                  charsIntoLine++;
+                } else {
                   state = State.IN_BLOCK_COMMENT;
+                  builder.appendHtmlTag("<span class=\"comment\">");
+                  builder.append(c);
                 }
               } else {
-                logger.log(Level.SEVERE, "Invalid syntax! " + code.substring(i));
-                builder.append("<span class=\"comment\">");
-                builder.append(c);
-                charsIntoLine++;
+                logger.log(Level.SEVERE, "Invalid syntax! Opening comment too close to end of file: " + code.substring(i));
                 state = State.IN_BLOCK_COMMENT;
+                builder.appendHtmlTag("<span class=\"comment\">");
+                builder.append(c);
               }
-              
             } else {
-              logger.log(Level.SEVERE, "Invalid syntax! " + code.substring(i));
               builder.append(c);
-              charsIntoLine++;
             }
           } else {
-            logger.log(Level.SEVERE, "Invalid syntax! " + code.substring(i));
+            logger.log(Level.SEVERE, "Invalid syntax! / At end of file" + code.substring(i));
             builder.append(c);
-            charsIntoLine++;
           }
         } else if (c == '"') {
-          builder.append("<span class=\"string\">");
-          builder.append(c);
-          charsIntoLine++;
           state = State.IN_STRING_LITERAL;
+          builder.appendHtmlTag("<span class=\"string\">");
+          builder.append(c);
         } else if (c == '\'') {
-          builder.append("<span class=\"character\">");
-          builder.append(c);
-          charsIntoLine++;
           state = State.IN_CHARACTER_LITERAL;
-        } else if (Character.isJavaIdentifierPart(c)) {
-          wordStart = i;
-          state = State.IN_WORD;
-        } else if (c == '@') {
-          builder.append("<span class=\"annotation\">");
+          builder.appendHtmlTag("<span class=\"character\">");
           builder.append(c);
-          charsIntoLine++;
+        } else if (Character.isJavaIdentifierPart(c)) {
+          state = State.IN_WORD;
+          wordStart = i;
+          if (tagState == TagState.WAITING_FOR_IMPORT_FQN) {
+            tagState = TagState.IN_TAG;
+            builder.appendTag(nextTag);
+            endtag = nextTag.getOffset() + nextTag.getLength() - 1;
+          }
+        } else if (c == '@') {
           state = State.IN_ANNOTATION;
+          builder.appendHtmlTag("<span class=\"annotation\">");
+          builder.append(c);
         } else {
           builder.append(c);
-          charsIntoLine++;
         }
       } else if (state == State.IN_LINE_COMMENT) {
-        if (Character.isWhitespace(c)) {
-          if (c == '\t') {
-            int remaining = charsIntoLine % TAB_WIDTH;
-            if (remaining <= MINIMUM_TAB_WIDTH) {
-              remaining += 4;
-            }
-            while (remaining-- > 0) {
-              builder.append("&nbsp;");
-            }
-            charsIntoLine = 0;
-          } else if (c == 'r') {
-          } else if (c == '\n') {
-            builder.append("</span><br>");
-            state = State.START;
-            charsIntoLine = 0;
-          } else {
-            builder.append("&nbsp;");
-            charsIntoLine++;
-          }
-        } else {
-          builder.append(c);
-          charsIntoLine++;
-        }
-      } else if (state == State.IN_BLOCK_COMMENT) {
-        if (Character.isWhitespace(c)) {
-          if (c == '\t') {
-            int remaining = charsIntoLine % TAB_WIDTH;
-            if (remaining <= MINIMUM_TAB_WIDTH) {
-              remaining += 4;
-            }
-            while (remaining-- > 0) {
-              builder.append("&nbsp;");
-            }
-            charsIntoLine = 0;
-          } else if (c == 'r') {
-          } else if (c == '\n') {
-            builder.append("<br>\n");
-            charsIntoLine = 0;
-          } else {
-            builder.append("&nbsp;");
-            charsIntoLine++;
-          }
-        } else if (c == '/' && code.charAt(i - 1) == '*') {     
-          builder.append(c);
-          charsIntoLine++;
-          builder.append("</span>");
+        if (c == '\n') {
+          builder.appendHtmlTag("</span>");
           state = State.START;
-        } else {
-          builder.append(c);
-          charsIntoLine++;
+        }
+        builder.append(c);
+      } else if (state == State.IN_BLOCK_COMMENT) {
+        builder.append(c);
+        if (c == '/' && code.charAt(i - 1) == '*') {
+          builder.appendHtmlTag("</span>");
+          state = State.START;
         }
       } else if (state == State.IN_JAVADOC_COMMENT) {
-        if (Character.isWhitespace(c)) {
-          if (c == '\t') {
-            int remaining = charsIntoLine % TAB_WIDTH;
-            if (remaining <= MINIMUM_TAB_WIDTH) {
-              remaining += 4;
-            }
-            while (remaining-- > 0) {
-              builder.append("&nbsp;");
-            }
-            charsIntoLine = 0;
-          } else if (c == 'r') {
-          } else if (c == '\n') {
-            builder.append("<br>\n");
-            charsIntoLine = 0;
-          } else {
-            builder.append("&nbsp;");
-            charsIntoLine++;
-          }
-        } else if (c == '/' && code.charAt(i - 1) == '*') {     
+        if (c == '/' && code.charAt(i - 1) == '*') {
           builder.append(c);
-          charsIntoLine++;
-          builder.append("</span>");
+          builder.appendHtmlTag("</span>");
           state = State.START;
         } else if (c == '@' && Character.isWhitespace(code.charAt(i - 1))) {
-          builder.append("<span class=\"javadoc-tag\">");
-          builder.append(c);
-          charsIntoLine++;
           state = State.IN_JAVADOC_TAG;
+          builder.appendHtmlTag("<span class=\"javadoc-tag\">");
+          builder.append(c);
         } else {
           builder.append(c);
-          charsIntoLine++;
         }
       } else if (state == State.IN_JAVADOC_TAG) {
         if (Character.isJavaIdentifierPart(c)) {
           builder.append(c);
-          charsIntoLine++;
         } else {
-          builder.append("</span>");
+          builder.appendHtmlTag("</span>");
           state = State.IN_JAVADOC_COMMENT;
           i--;
         }
@@ -352,97 +297,53 @@ public final class SyntaxHighlighter {
         if (!Character.isJavaIdentifierPart(c)) {
           String word = code.substring(wordStart, i);
           if (keywords.contains(word)) {
-            builder.append("<span class=\"keyword\">");
-            builder.append(word);
-            builder.append("</span>");
+            if (tagState == TagState.WAITING_FOR_IMPORT) {
+              if (word.equals("import")) {
+                tagState = TagState.WAITING_FOR_IMPORT_FQN;
+              } else {
+                logger.log(Level.SEVERE, "Was expecting import, instead got: " + word);
+                tagState = TagState.START;
+                nextTag = iter.next();
+              }
+            }
+            builder.appendHtmlTag("<span class=\"keyword\">");
+            builder.appendWord(word);
+            builder.appendHtmlTag("</span>");
           } else {
-            builder.append(word);
-            builder.append("</span>");
+            builder.appendWord(word);
           }
-          charsIntoLine += word.length();
-          state = State.START;
-          i--;
-        }
-      } else if (state == State.IN_ANNOTATION) {
-        if (Character.isJavaIdentifierPart(c)) {
-          builder.append(c);
-          charsIntoLine++;
-        } else {
-          builder.append("</span>");
+          if (tagState == TagState.IN_FIELD_HIGHLIGHT || tagState == TagState.IN_METHOD) {
+            tagState = TagState.IN_TAG;
+            endtag = i;
+          }
           state = State.START;
           i--;
         }
       } else if (state == State.IN_STRING_LITERAL) {
-        if (Character.isWhitespace(c)) {
-          if (c == '\t') {
-            int remaining = charsIntoLine % TAB_WIDTH;
-            if (remaining <= MINIMUM_TAB_WIDTH) {
-              remaining += 4;
-            }
-            while (remaining-- > 0) {
-              builder.append("&nbsp;");
-            }
-            charsIntoLine = 0;
-          } else if (c == 'r') {
-          } else if (c == '\n') {
-            builder.append("<br>\n");
-            charsIntoLine = 0;
-          } else {
-            builder.append("&nbsp;");
-            charsIntoLine++;
-          }
-        } else {
-          builder.append(c);
-          charsIntoLine++;
-          if (c == '"' && code.charAt(i - 1) != '\\') {
-            builder.append("</span>");
-            state = State.START;
-          }
+        builder.append(c);
+        if (c == '"' && code.charAt(i - 1) != '\\') {
+          builder.appendHtmlTag("</span>");
+          state = State.START;
         }
       } else if (state == State.IN_CHARACTER_LITERAL) {
-        if (Character.isWhitespace(c)) {
-          if (c == '\t') {
-            int remaining = charsIntoLine % TAB_WIDTH;
-            if (remaining <= MINIMUM_TAB_WIDTH) {
-              remaining += 4;
-            }
-            while (remaining-- > 0) {
-              builder.append("&nbsp;");
-            }
-            charsIntoLine = 0;
-          } else if (c == 'r') {
-          } else if (c == '\n') {
-            builder.append("<br>\n");
-            charsIntoLine = 0;
-          } else {
-            builder.append("&nbsp;");
-            charsIntoLine++;
-          }
-        } else {
+        builder.append(c);
+        if (c == '\'' && code.charAt(i - 1) != '\\') {
+          builder.appendHtmlTag("</span>");
+          state = State.START;
+        }
+      } else if (state == State.IN_ANNOTATION) {
+        if (Character.isJavaIdentifierPart(c)) {
           builder.append(c);
-          charsIntoLine++;
-          if (c == '\'' && code.charAt(i - 1) != '\\') {
-            builder.append("</span>");
-          }
+        } else {
+          builder.appendHtmlTag("</span>");
+          state = State.START;
+          i--;
         }
       } else {
         logger.log(Level.SEVERE, "Invalid state! " + state);
       }
-      
-      if (endLink == i) {
-        builder.append("</a>");
-        next = null;
-        while (next == null && iter.hasNext()) {
-          next = iter.next();
-          if (next.getOffset() <= i) {
-            logger.log(Level.SEVERE, "Conflicting links: " + next.getLink());
-            next = null;
-          }
-        }
-        endLink = -1;
-      }
+    }
 
-    } 
     return builder.toString();
   }
 }

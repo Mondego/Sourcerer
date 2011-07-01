@@ -45,12 +45,12 @@ public class SyntaxHighlighterTest {
 
   @Test
   public void testHighlighter() {
-    try {
-      String code = FileUtils.getFileAsString(new File("test/edu/uci/ics/sourcerer/tools/java/highlighter/SyntaxHighlighterTest.java"));
-      LinkLocationSet links = LinkLocationSet.make();
-      links.addLinkLocation(1242, 7, "command");
-      links.addLinkLocation(1261, 7, "command2");
-      FileUtils.writeStringToFile(SyntaxHighlighter.highlightSyntax(code, links), new File("test/edu/uci/ics/sourcerer/tools/java/highlighter/test.html"));
-    } catch (IOException e) {}
+//    try {
+//      String code = FileUtils.getFileAsString(new File("test/edu/uci/ics/sourcerer/tools/java/highlighter/SyntaxHighlighterTest.java"));
+//      TagInfo links = TagInfo.make();
+//      links.addLinkLocation(1242, 7, "command");
+//      links.addLinkLocation(1261, 7, "command2");
+//      FileUtils.writeStringToFile(SyntaxHighlighter.highlightSyntax(code, links), new File("test/edu/uci/ics/sourcerer/tools/java/highlighter/test.html"));
+//    } catch (IOException e) {}
   }
 }

@@ -155,7 +155,7 @@ public class QueryExecutor {
   }
   
   public <T> T selectSingle(String where, ResultTranslator<T> translator) {
-    return executeSingle("SELECT " + translator.getSelect()+ " FROM " + translator.getTable() + " WHERE " + where + ";", translator);
+    return executeSingle("SELECT " + translator.getSelect() + " FROM " + translator.getTable() + " WHERE " + where + ";", translator);
   }
   
   public <T> Collection<T> select(String table, String columns, String where, BasicResultTranslator<T> translator) {

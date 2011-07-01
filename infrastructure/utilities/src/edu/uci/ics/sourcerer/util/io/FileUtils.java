@@ -336,6 +336,8 @@ public final class FileUtils {
     } else {
       if (path.startsWith(base)) {
         return path.substring(base.length()).replace(' ', '*');
+      } else if (base.endsWith("content")) { 
+        return path.substring(path.indexOf("content") + "content".length()).replace(' ', '*');
       } else {
         logger.severe("Unable to convert " + path + " to relative path (" + base + ")");
         return path.replace(' ', '*');

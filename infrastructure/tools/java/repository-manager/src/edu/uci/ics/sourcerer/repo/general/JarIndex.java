@@ -592,6 +592,8 @@ public class JarIndex {
     path = path.replace('\\', '/');
     if (path.startsWith(basePath)) {
       return path.substring(basePath.length());
+    } else if (basePath.endsWith("content")) { 
+      return path.substring(path.indexOf("content") + "content".length());
     } else {
       logger.log(Level.SEVERE, "Unable to convert to relative path: " + path);
       return path;

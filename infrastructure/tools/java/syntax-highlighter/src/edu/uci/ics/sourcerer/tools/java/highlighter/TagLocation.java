@@ -20,34 +20,44 @@ package edu.uci.ics.sourcerer.tools.java.highlighter;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class EscapeBuilder {
-  private StringBuilder builder = new StringBuilder();
+class TagLocation {
+  private TagType type;
+  private Integer offset;
+  private Integer length;
+  private String klass;
+  private String link;
+  private String title;
   
-  protected EscapeBuilder() {}
-  
-  public EscapeBuilder append(String s) {
-    builder.append(s);
-    return this;
+  TagLocation(TagType type, Integer offset, Integer length, String klass, String link, String title) {
+    this.type = type;
+    this.offset = offset;
+    this.length = length;
+    this.klass = klass;
+    this.link = link;
+    this.title = title;
   }
   
-  public EscapeBuilder append(char c) {
-    switch (c) {
-      case '<':
-        builder.append("&lt;");
-        break;
-      case '>':
-        builder.append("&gt;");
-        break;
-      case '&':
-        builder.append("&amp;");
-        break;
-      default:
-        builder.append(c);
-    }
-    return this;
+  TagType getType() {
+    return type;
+  }
+
+  Integer getOffset() {
+    return offset;
+  }
+
+  Integer getLength() {
+    return length;
   }
   
-  public String toString() {
-    return builder.toString();
+  String getKlass() {
+    return klass;
+  }
+  
+  String getLink() {
+    return link;
+  }
+  
+  String getTitle() {
+    return title;
   }
 }

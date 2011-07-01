@@ -43,7 +43,7 @@ public class RelationQueries extends Queries {
     }
   };
   
-  private static final ResultTranslator<RelationDB> RELATION_TRANSLATOR = new ResultTranslator<RelationDB>(TABLE, RELATION_ID, RELATION_TYPE, RELATION_CLASS, LHS_EID, RHS_EID, PROJECT_ID, FILE_ID, OFFSET, LENGTH) {
+  public static final ResultTranslator<RelationDB> RELATION_TRANSLATOR = new ResultTranslator<RelationDB>(TABLE, RELATION_ID, RELATION_TYPE, RELATION_CLASS, LHS_EID, RHS_EID, PROJECT_ID, FILE_ID, OFFSET, LENGTH) {
     @Override
     public RelationDB translate(ResultSet result) throws SQLException {
       return new RelationDB(
