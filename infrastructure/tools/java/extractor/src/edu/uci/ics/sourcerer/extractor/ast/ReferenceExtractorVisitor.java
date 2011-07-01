@@ -152,7 +152,6 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private String compilationUnitSource = null;
 
   private boolean inLhsAssignment = false;
-  private boolean inFieldDeclaration = false;
   
   private boolean bindingFree = false;
   
@@ -751,8 +750,6 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       
       // Write the javadoc comment
       accept(parent.getJavadoc());
-      
-      inFieldDeclaration = true;
     } else if (node.getParent() instanceof VariableDeclarationStatement) {
       VariableDeclarationStatement parent = (VariableDeclarationStatement)node.getParent();
       
@@ -782,10 +779,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       inLhsAssignment = true;
       accept(node.getName());
       inLhsAssignment = false;
-      inFieldDeclaration = false;
       accept(node.getInitializer());
     }
-    inFieldDeclaration = false;
     
     return false;
   }
@@ -938,9 +933,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     } else {
       fqn = getMethodFqn(binding, false);
     }
-    
+
     // Write the calls relation
-    relationWriter.writeCalls(fqnStack.getFqn(), fqn, getLocation(node));
+    relationWriter.writeCalls(fqnStack.getFqn(), fqn, new Location(compilationUnitPath, node.getName().getStartPosition(), node.getLength() - (node.getName().getStartPosition() - node.getStartPosition())));
     
     return true;
   }
@@ -1117,17 +1112,19 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
 
     // Write the relation
     if (inLhsAssignment) {
-      relationWriter.writeWrites(fqnStack.getFqn(), fqn, getLocation(node));
+      relationWriter.writeWrites(fqnStack.getFqn(), fqn, getLocation(node.getName()));
     } else {
-      relationWriter.writeReads(fqnStack.getFqn(), fqn, getLocation(node));
+      relationWriter.writeReads(fqnStack.getFqn(), fqn, getLocation(node.getName()));
     }
     
-    return true;
+    inLhsAssignment = false;
+    
+    node.getExpression().accept(this);
+    return false;
   }
   
   @Override
   public boolean visit(Assignment node) {
-    //TODO: make it so that only the rightmost in the lhs counts as a write
     inLhsAssignment = true;
     node.getLeftHandSide().accept(this);
     inLhsAssignment = false;
@@ -1259,12 +1256,12 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         } else {
           relationWriter.writeReads(fqnStack.getFqn(), fqn, getLocation(node));
         }
-        if (!inFieldDeclaration) {
-          relationWriter.writeUses(fqnStack.getFqn(), fqn, getLocation(node));
-        }
+//        if (!inFieldDeclaration) {
+//          relationWriter.writeUses(fqnStack.getFqn(), fqn, getLocation(node));
+//        }
       } else {
         // Write the uses relation
-        relationWriter.writeUses(fqnStack.getFqn(), getTypeFqn(getBaseType(varBinding.getType())), getLocation(node));
+//        relationWriter.writeUses(fqnStack.getFqn(), getTypeFqn(getBaseType(varBinding.getType())), getLocation(node));
       }
     } else if (binding instanceof ITypeBinding) {
       ITypeBinding typeBinding = (ITypeBinding) binding;
@@ -1395,7 +1392,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   @Override
   public boolean visit(StringLiteral node) {
     // Write the uses relation
-    relationWriter.writeUses(fqnStack.getFqn(), "java.lang.String", getLocation(node));
+//    relationWriter.writeUses(fqnStack.getFqn(), "java.lang.String", getLocation(node));
     return true;
   }
 
@@ -2109,6 +2106,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       if (fqn == null) {
         return UNKNOWN;
       } else {
+        fqn = fqn.replaceAll("\\$(\\d+)", "\\$anonymous-$1");
         return fqn;
       }
     } else if (binding.isLocal()) {
