@@ -19,7 +19,7 @@ package edu.uci.ics.sourcerer.repo.java.core.jars;
 
 import java.util.Scanner;
 
-import edu.uci.ics.sourcerer.repo.internal.core.RepoFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFile;
 import edu.uci.ics.sourcerer.util.io.FieldConverter;
 import edu.uci.ics.sourcerer.util.io.LWField;
 import edu.uci.ics.sourcerer.util.io.LWRec;

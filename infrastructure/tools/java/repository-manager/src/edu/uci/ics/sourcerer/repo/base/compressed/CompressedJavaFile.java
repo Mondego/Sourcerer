@@ -27,7 +27,7 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractJavaFile;
 import edu.uci.ics.sourcerer.repo.base.compressed.CompressedFileSet.CompressedRepoFile;
-import edu.uci.ics.sourcerer.repo.internal.core.RepoFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFile;
 import edu.uci.ics.sourcerer.util.io.LWField;
 
 /**

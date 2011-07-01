@@ -33,7 +33,7 @@ import edu.uci.ics.sourcerer.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.model.extracted.UsedJarEX;
 import edu.uci.ics.sourcerer.repo.extracted.io.ExtractedReader;
 import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
-import edu.uci.ics.sourcerer.repo.internal.core.RepoFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFile;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;

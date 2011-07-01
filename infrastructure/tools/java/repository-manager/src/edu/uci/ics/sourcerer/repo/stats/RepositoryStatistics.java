@@ -25,11 +25,11 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
-import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
+import edu.uci.ics.sourcerer.tools.core.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;

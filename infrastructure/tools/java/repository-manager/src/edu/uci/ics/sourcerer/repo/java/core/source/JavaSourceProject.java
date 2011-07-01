@@ -17,8 +17,8 @@
  */
 package edu.uci.ics.sourcerer.repo.java.core.source;
 
-import edu.uci.ics.sourcerer.repo.internal.core.ProjectLocation;
-import edu.uci.ics.sourcerer.repo.internal.core.SourceProject;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ProjectLocation;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.SourceProject;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

@@ -25,6 +25,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import edu.uci.ics.sourcerer.tools.core.repo.model.IBatch;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IBatchMod;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IRepositoryMod;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectMod;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IRepository;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProject;
+import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
@@ -54,12 +61,12 @@ public class CoreRepositoryTest {
     RepositoryFactory.INPUT_REPO.setValue(folder.newFolder("repo"));
     
     {
-      IModifiableRepository<? extends IModifiableSourceProject, ? extends IModifiableBatch<? extends IModifiableSourceProject>> repo = RepositoryFactory.make().loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
+      IRepositoryMod<? extends ISourceProjectMod, ? extends IBatchMod<? extends ISourceProjectMod>> repo = RepositoryFactory.make().loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
       Assert.assertEquals(0, repo.getProjects().size());
       
       {
         // Create a new batch
-        IModifiableBatch<? extends IModifiableSourceProject> batch = repo.createBatch();
+        IBatchMod<? extends ISourceProjectMod> batch = repo.createBatch();
         batch.getProperties().DESCRIPTION.setValue("A test batch");
         batch.getProperties().save();
         
@@ -68,7 +75,7 @@ public class CoreRepositoryTest {
   
         {
           // Create a new project
-          IModifiableSourceProject project = batch.createProject();
+          ISourceProjectMod project = batch.createProject();
           
           Assert.assertEquals("0/0", project.getLocation().getProjectRoot().getRelativePath().toString());
           project.getProperties().NAME.setValue("Test project A");
@@ -77,7 +84,7 @@ public class CoreRepositoryTest {
         
         {
           // Create a new project
-          IModifiableSourceProject project = batch.createProject();
+          ISourceProjectMod project = batch.createProject();
           
           Assert.assertEquals("0/1", project.getLocation().getProjectRoot().getRelativePath().toString());
           project.getProperties().NAME.setValue("Test project B");
@@ -88,7 +95,7 @@ public class CoreRepositoryTest {
       }
       {
         // Create a new batch
-        IModifiableBatch<? extends IModifiableSourceProject> batch = repo.createBatch();
+        IBatchMod<? extends ISourceProjectMod> batch = repo.createBatch();
         batch.getProperties().DESCRIPTION.setValue("A second test batch");
         batch.getProperties().save();
         
@@ -97,7 +104,7 @@ public class CoreRepositoryTest {
   
         {
           // Create a new project
-          IModifiableSourceProject project = batch.createProject();
+          ISourceProjectMod project = batch.createProject();
           
           Assert.assertEquals("1/0", project.getLocation().getProjectRoot().getRelativePath().toString());
           project.getProperties().NAME.setValue("Test project C");
@@ -108,7 +115,7 @@ public class CoreRepositoryTest {
         
         {
           // Create a new project
-          IModifiableSourceProject project = batch.createProject();
+          ISourceProjectMod project = batch.createProject();
           
           Assert.assertEquals("1/1", project.getLocation().getProjectRoot().getRelativePath().toString());
           project.getProperties().NAME.setValue("Test project D");

@@ -21,7 +21,7 @@ import java.io.File;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import edu.uci.ics.sourcerer.repo.internal.core.RepoFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFile;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;

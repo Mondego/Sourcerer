@@ -18,9 +18,9 @@
 package edu.uci.ics.sourcerer.repo.java.core.source;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-import edu.uci.ics.sourcerer.repo.internal.core.AbstractRepository;
-import edu.uci.ics.sourcerer.repo.internal.core.ProjectLocation;
-import edu.uci.ics.sourcerer.repo.internal.core.RepoFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractRepository;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ProjectLocation;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFile;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 

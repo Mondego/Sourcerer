@@ -33,7 +33,7 @@ import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.repo.general.JarIndex.MavenFilter;
 import edu.uci.ics.sourcerer.repo.general.JarIndex.ProjectFilter;
-import edu.uci.ics.sourcerer.repo.internal.core.RepoFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFile;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;

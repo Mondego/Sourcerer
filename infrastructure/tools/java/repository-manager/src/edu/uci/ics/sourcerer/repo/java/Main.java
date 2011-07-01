@@ -32,11 +32,11 @@ import static edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.CSV_MODE;
 
 import java.util.Set;
 
-import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.stats.DiskUsageCalculator;
 import edu.uci.ics.sourcerer.repo.stats.RepositoryStatistics;
 import edu.uci.ics.sourcerer.repo.tools.RepositoryFilterer;
+import edu.uci.ics.sourcerer.tools.core.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
