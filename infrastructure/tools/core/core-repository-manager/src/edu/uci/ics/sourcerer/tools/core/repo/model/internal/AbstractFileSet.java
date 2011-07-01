@@ -73,6 +73,7 @@ public abstract class AbstractFileSet implements IFileSet {
     
     LineFileWriter writer = null;
     try {
+      cache.getParentFile().mkdirs();
       writer = FileUtils.getLineFileWriter(cache);
       EntryWriter<RepoFile> ew = writer.getEntryWriter(RepoFile.class);
       for (ContentFile file : files) {

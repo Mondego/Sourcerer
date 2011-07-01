@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.repo.core;
 
+import java.io.File;
 import java.util.Iterator;
 
 import org.junit.Assert;
@@ -27,6 +28,8 @@ import org.junit.rules.TemporaryFolder;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.IBatch;
 import edu.uci.ics.sourcerer.tools.core.repo.model.IBatchMod;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IContentFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IFileSet;
 import edu.uci.ics.sourcerer.tools.core.repo.model.IRepositoryMod;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectMod;
 import edu.uci.ics.sourcerer.tools.core.repo.model.IRepository;
@@ -61,7 +64,7 @@ public class CoreRepositoryTest {
     RepositoryFactory.INPUT_REPO.setValue(folder.newFolder("repo"));
     
     {
-      IRepositoryMod<? extends ISourceProjectMod, ? extends IBatchMod<? extends ISourceProjectMod>> repo = RepositoryFactory.make().loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
+      IRepositoryMod<? extends ISourceProjectMod, ? extends IBatchMod<? extends ISourceProjectMod>> repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
       Assert.assertEquals(0, repo.getProjects().size());
       
       {
@@ -129,7 +132,7 @@ public class CoreRepositoryTest {
     
     {
       // Reload the repo and make sure everything works
-      IRepository<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> repo = RepositoryFactory.make().loadSourceRepository(RepositoryFactory.INPUT_REPO);
+      IRepository<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
       
       Assert.assertEquals(4, repo.getProjects().size());
       Assert.assertEquals(2, repo.getBatches().size());
@@ -153,7 +156,7 @@ public class CoreRepositoryTest {
     
     {
       // Reload one last time to check for the cache
-      IRepository<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> repo = RepositoryFactory.make().loadSourceRepository(RepositoryFactory.INPUT_REPO);
+      IRepository<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
       
       Assert.assertEquals(4, repo.getProjects().size());
       Assert.assertEquals(2, repo.getBatches().size());
@@ -178,27 +181,27 @@ public class CoreRepositoryTest {
   
   @Test
   public void testAddingProjectContent() {
-//    File file = folder.newFolder("add-content");
-//    FileUtils.copyFile(new File("./test/resources/test-repo"), file);
-//    AbstractRepository.INPUT_REPO.setValue(file);
-//    
-//    SourceRepository repo = SourceRepository.make(AbstractRepository.INPUT_REPO);
-//    
-//    SourceProject project = repo.getProject(0, 0);
-//    
-//    AbstractFileSet files = project.getContent();
-//    
-//    Assert.assertEquals(0, files.getFiles().size());
-//    Assert.assertFalse(files.getRoot().getAllFiles().iterator().hasNext());
-//    
-//    project.addContent(new File("./test/resources/project-content"));
-//    
-//    Assert.assertEquals(3, files.getFiles().size());
-//    Iterator<ContentFile> iter = files.getFiles().iterator();
-//    Assert.assertEquals("A.txt", iter.next().getFile().getName());
-//    Assert.assertEquals("subdir/B.txt", iter.next().getFile().getRelativePath());
-//    Assert.assertEquals("subdir/subsubdir/B.txt", iter.next().getFile().getRelativePath());
-//    Assert.assertFalse(iter.hasNext());
-
+    RepositoryFactory.INPUT_REPO.setValue(folder.newFolder("add-content"));
+    
+    // Create the repository
+    IRepositoryMod<? extends ISourceProjectMod, ? extends IBatchMod<? extends ISourceProjectMod>> repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
+    
+    IBatchMod<? extends ISourceProjectMod> batch = repo.createBatch();
+    
+    ISourceProjectMod project = batch.createProject();
+    
+    IFileSet files = project.getContent();
+    
+    Assert.assertEquals(0, files.getFiles().size());
+    Assert.assertFalse(files.getRoot().getAllFiles().iterator().hasNext());
+    
+    project.addContent(new File("./test/resources/project-content"));
+    
+    Assert.assertEquals(3, files.getFiles().size());
+    Iterator<? extends IContentFile> iter = files.getFiles().iterator();
+    Assert.assertEquals("A.txt", iter.next().getFile().getName());
+    Assert.assertEquals("subdir/B.txt", iter.next().getFile().getRelativePath().toString());
+    Assert.assertEquals("subdir/subsubdir/B.txt", iter.next().getFile().getRelativePath().toString());
+    Assert.assertFalse(iter.hasNext());
   }
 }

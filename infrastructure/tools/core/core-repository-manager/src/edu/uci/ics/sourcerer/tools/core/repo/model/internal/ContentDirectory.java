@@ -150,4 +150,8 @@ final class ContentDirectory implements IContentDirectory {
       }
     };
   }
+  
+  public String toString() {
+    return file.toString();
+  }
 }

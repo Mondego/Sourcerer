@@ -82,12 +82,16 @@ class RepoFile implements IRepoFile, LWRec {
   }
   
   private RepoFile internChild(RelativePath path) {
-    RepoFile newChild = internedChildren.get(path);
-    if (newChild == null) {
-      newChild = new RepoFile(isRoot ? this : root, false, path);
-      internedChildren.put(path, newChild);
+    if (path.isEmpty()) {
+      return root;
+    } else {
+      RepoFile newChild = internedChildren.get(path);
+      if (newChild == null) {
+        newChild = new RepoFile(isRoot ? this : root, false, path);
+        internedChildren.put(path, newChild);
+      }
+      return newChild;
     }
-    return newChild;
   }
   
   private RepoFile getOirignalRoot() {
@@ -112,7 +116,11 @@ class RepoFile implements IRepoFile, LWRec {
   }
   
   protected RepoFile asRoot() {
-    return internRoot(root.relativePath.append(relativePath));
+    if (isRoot) {
+      return this;
+    } else {
+      return internRoot(root.relativePath.append(relativePath));
+    }
   }
   
   @Override
@@ -232,7 +240,15 @@ class RepoFile implements IRepoFile, LWRec {
   
   @Override
   public String toString() {
-    return relativePath.toString();
+    if (isRoot) {
+      if (root == null) {
+        return "/";
+      } else {
+        return root.toString();
+      }
+    } else {
+      return root.toString() + "/" + relativePath.toString();
+    }
   }
   
   /* LWRec Related Methods */

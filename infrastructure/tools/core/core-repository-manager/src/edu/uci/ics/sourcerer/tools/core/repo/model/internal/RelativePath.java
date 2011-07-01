@@ -45,11 +45,11 @@ final class RelativePath implements IRelativePath {
     return path;
   }
   
-  protected static RelativePath makeEmpty() {
+  static RelativePath makeEmpty() {
     return intern("");
   }
   
-  protected static RelativePath make(String relativePath) {
+  static RelativePath make(String relativePath) {
     relativePath = relativePath.replace('\\', '/');
     if (relativePath.charAt(0) == '/') {
       relativePath = relativePath.substring(1);
@@ -63,12 +63,16 @@ final class RelativePath implements IRelativePath {
     return intern(relativePath);
   }
   
-  protected static RelativePath makeFromWriteable(String relativePath) {
+  static RelativePath makeFromWriteable(String relativePath) {
     relativePath = relativePath.replace('*', ' ');
     return intern(relativePath);
   }
   
-  protected RelativePath append(String path) {
+  boolean isEmpty() {
+    return relativePath.equals("");
+  }
+  
+  RelativePath append(String path) {
     if (path.equals("")) {
       return this;
     } else {
@@ -92,7 +96,7 @@ final class RelativePath implements IRelativePath {
     }
   }
   
-  protected RelativePath append(RelativePath path) {
+  RelativePath append(RelativePath path) {
     if (relativePath.equals("")) {
       return path;
     } else if (path.relativePath.equals("")) {
@@ -102,17 +106,17 @@ final class RelativePath implements IRelativePath {
     }
   }
   
-  protected String toWriteableString() {
+  String toWriteableString() {
     return relativePath.replace(' ', '*');
   }
   
-  protected RelativePath getParent() {
-    if (relativePath.equals("")) {
+  RelativePath getParent() {
+    if (isEmpty()) {
       throw new IllegalStateException("Cannot get a parent for an empty relative path.");
     } else {
       int idx = relativePath.lastIndexOf('/');
       if (idx == -1) {
-        return intern("");
+        return makeEmpty();
       } else {
         return intern(relativePath.substring(0, idx));
       }

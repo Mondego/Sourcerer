@@ -30,9 +30,7 @@ public abstract class RepositoryFactory {
   public static final Argument<File> INPUT_REPO = new FileArgument("input-repo", "The root directory of the input repository.");
   public static final Argument<File> OUTPUT_REPO = new FileArgument("output-repo", "The root directory of the output repository.");
 
-  public static RepositoryFactory make() {
-    return new InternalRepositoryFactory();
-  }
+  public static final RepositoryFactory INSTANCE = new InternalRepositoryFactory(); 
   
   public abstract IRepository<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> loadSourceRepository(Argument<File> root);
   
