@@ -33,9 +33,9 @@ import edu.uci.ics.sourcerer.model.RelationClass;
 import edu.uci.ics.sourcerer.model.db.FileFqn;
 import edu.uci.ics.sourcerer.model.db.ImportFqn;
 import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
-import edu.uci.ics.sourcerer.util.db.BasicResultTranslator;
-import edu.uci.ics.sourcerer.util.db.QueryExecutor;
-import edu.uci.ics.sourcerer.util.db.ResultTranslator;
+import edu.uci.ics.sourcerer.utils.db.BasicResultTranslator;
+import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
+import edu.uci.ics.sourcerer.utils.db.ResultTranslator;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

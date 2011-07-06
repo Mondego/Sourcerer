@@ -21,13 +21,13 @@ import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.LocalVariable;
 import edu.uci.ics.sourcerer.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.model.extracted.LocalVariableEX;
-import edu.uci.ics.sourcerer.util.db.DatabaseTable;
-import edu.uci.ics.sourcerer.util.db.QueryExecutor;
-import edu.uci.ics.sourcerer.util.db.TableLocker;
 import edu.uci.ics.sourcerer.util.db.columns.Column;
 import edu.uci.ics.sourcerer.util.db.columns.EnumColumn;
 import edu.uci.ics.sourcerer.util.db.columns.IntColumn;
 import edu.uci.ics.sourcerer.util.db.columns.StringColumn;
+import edu.uci.ics.sourcerer.utils.db.DatabaseTable;
+import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
+import edu.uci.ics.sourcerer.utils.db.TableLocker;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

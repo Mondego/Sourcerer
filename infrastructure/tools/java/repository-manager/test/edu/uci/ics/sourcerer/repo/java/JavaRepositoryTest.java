@@ -22,7 +22,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import edu.uci.ics.sourcerer.repo.core.CoreRepositoryTest;
+import edu.uci.ics.sourcerer.tools.core.repo.CoreRepositoryTest;
 import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
