@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.utils.db;
 
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+import edu.uci.ics.sourcerer.utils.db.internal.InternalDatabaseConnectionFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -28,7 +29,7 @@ public abstract class DatabaseConnectionFactory {
   public static final Argument<String> DATABASE_USER = new StringArgument("database-user", "Database user account to use when connecting.");
   public static final Argument<String> DATABASE_PASSWORD = new StringArgument("database-password", null, "Password for the user account.");
   
-  public static final DatabaseConnectionFactory INSTANCE = null;
+  public static final DatabaseConnectionFactory INSTANCE = new InternalDatabaseConnectionFactory();
   
   public abstract IDatabaseConnection make();
 }

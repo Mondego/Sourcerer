@@ -18,12 +18,14 @@
 package edu.uci.ics.sourcerer.util;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
@@ -56,6 +58,10 @@ public class Helper {
 	
 	public static <K,V> HashMap<K,V> newHashMap() {
 		return new HashMap<K, V>();
+	}
+	
+	public static <K,V> LinkedHashMap<K,V> newLinkedHashMap() {
+	  return new LinkedHashMap<K, V>();
 	}
 	
 	@SuppressWarnings("unchecked")

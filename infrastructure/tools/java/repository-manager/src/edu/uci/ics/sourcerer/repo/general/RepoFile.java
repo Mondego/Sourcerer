@@ -8,7 +8,7 @@ import java.util.Scanner;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.LWRec;
+import edu.uci.ics.sourcerer.util.io.internal.LWRec;
 
 public class RepoFile implements LWRec {
   private final RepoFile root;

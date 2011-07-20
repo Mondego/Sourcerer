@@ -194,7 +194,8 @@ public final class Logging {
             if (record.getLevel() == RESUME || Thread.currentThread().getId() != mainThread) {
               return "";
             } else {
-              return Logging.formatError(record);
+              System.out.println(Logging.formatError(record));
+              return "";
             }
           }
         };

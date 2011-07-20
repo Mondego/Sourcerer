@@ -29,8 +29,8 @@ import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.util.TimeCounter;
 import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 public abstract class ExtractedImporterThread extends ParallelDatabaseImporterThread {
   private java.io.File tempDir;

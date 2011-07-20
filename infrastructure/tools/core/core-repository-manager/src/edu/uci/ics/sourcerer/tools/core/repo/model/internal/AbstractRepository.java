@@ -26,11 +26,11 @@ import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.IRepositoryMod;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.LineFileWriter;
-import edu.uci.ics.sourcerer.util.io.LineFileWriter.EntryWriter;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
+import edu.uci.ics.sourcerer.util.io.internal.SimpleSerializerImpl;
+import edu.uci.ics.sourcerer.util.io.internal.SimpleSerializerImpl.EntryWriter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -83,7 +83,7 @@ public abstract class AbstractRepository <Project extends RepoProject> implement
             }
           }
         }
-        LineFileWriter writer = null;
+        SimpleSerializerImpl writer = null;
         EntryWriter<ProjectLocation> ew = null;
         try {
           writer = FileUtils.getLineFileWriter(cache.toFile());

@@ -25,10 +25,10 @@ import java.util.Scanner;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.IRepoFile;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.FieldConverter;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.LWRec;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.internal.FieldConverter;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
+import edu.uci.ics.sourcerer.util.io.internal.LWRec;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

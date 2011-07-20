@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.util;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
@@ -25,11 +27,21 @@ public final class TimeCounter {
   private long lapTime;
   private int totalCount;
   private int count;
+  private final int progressInterval;
+  private final int progressIndent;
+  private final String progressAction;
   
   public TimeCounter() {
+    this(-1, -1, null);
+  }
+  
+  public TimeCounter(int progressInterval, int progressIndent, String progressAction) {
     startTime = System.currentTimeMillis();
     lapTime = startTime;
     count = 0;
+    this.progressInterval = progressInterval;
+    this.progressIndent = progressIndent;
+    this.progressAction = progressAction;
   }
   
   public void reset() {
@@ -38,6 +50,7 @@ public final class TimeCounter {
     startTime = System.currentTimeMillis();
     lapTime = startTime;
   }
+  
   public void lap() {
     totalCount += count;
     count = 0;
@@ -46,6 +59,9 @@ public final class TimeCounter {
   
   public void increment() {
     count++;
+    if (progressInterval >= 0 && count % progressInterval == 0) {
+      logTimeAndCount(progressIndent, progressAction);
+    }
   }
   
   public void setCount(int count) {
@@ -54,27 +70,44 @@ public final class TimeCounter {
   
   private String formatTime(long time) {
     long elapsedTime = System.currentTimeMillis() - time;
-    return elapsedTime / 1000 + "." + ((elapsedTime / 100) % 100) + "s.";
+    long seconds = elapsedTime / 1000;
+    long minutes = seconds / 60;
+    long hours = minutes / 60;
+    long days = hours / 24;
+    StringBuilder result = new StringBuilder();
+    if (days > 0) {
+      result.append(days).append(days == 1 ? " day " : " days ");
+    }
+    if (hours > 0) {
+      hours = hours % 24;
+      result.append(hours).append(hours == 1 ? " hour " : " hours ");
+    }
+    if (minutes > 0) {
+      minutes = minutes % 60;
+      result.append(minutes).append(minutes == 1 ? " minute " : " minutes ");
+    }
+    result.append(seconds % 60).append(".").append((elapsedTime / 100) % 100).append(" seconds.");
+    return result.toString();
   }
   
   private static final String SPACES = "          ";
-  public String reportTime(int spaces, String action) {
-    return SPACES.substring(0, spaces) + action + " in " + formatTime(lapTime);
+  public void logTime(int spaces, String action) {
+    logger.info(SPACES.substring(0, spaces) + action + " in " + formatTime(lapTime));
   }
   
-  public String reportTimeAndCount(int spaces, String action) {
-    return SPACES.substring(0, spaces) + count + " " + action + " in " + formatTime(lapTime);
+  public void logTimeAndCount(int spaces, String action) {
+    logger.info(SPACES.substring(0, spaces) + count + " " + action + " in " + formatTime(lapTime));
   }
   
-  public String reportTotalTime(int spaces, String action) {
-    return SPACES.substring(0, spaces) + action + " in " + formatTime(startTime);
+  public void logTotalTime(int spaces, String action) {
+    logger.info(SPACES.substring(0, spaces) + action + " in " + formatTime(startTime));
   }
   
-  public String reportTotalTimeAndCount(int spaces, String action) {
-    return SPACES.substring(0, spaces) + (totalCount + count) + " " + action + " in " + formatTime(startTime);
+  public void logTotalTimeAndCount(int spaces, String action) {
+    logger.info(SPACES.substring(0, spaces) + (totalCount + count) + " " + action + " in " + formatTime(startTime));
   }
   
-  public String reportTimeAndTotalCount(int spaces, String action) {
-    return SPACES.substring(0, spaces) + (totalCount + count) + " " + action + " in " + formatTime(lapTime);
+  public void logTimeAndTotalCount(int spaces, String action) {
+    logger.info(SPACES.substring(0, spaces) + (totalCount + count) + " " + action + " in " + formatTime(lapTime));
   }
 }

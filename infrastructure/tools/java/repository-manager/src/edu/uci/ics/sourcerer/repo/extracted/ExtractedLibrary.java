@@ -22,7 +22,7 @@ import java.io.File;
 import edu.uci.ics.sourcerer.repo.general.AbstractBinaryProperties;
 import edu.uci.ics.sourcerer.repo.general.ExtractedLibraryProperties;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFile;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

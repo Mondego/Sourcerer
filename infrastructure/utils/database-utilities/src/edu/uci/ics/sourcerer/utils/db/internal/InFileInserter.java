@@ -8,20 +8,20 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 import edu.uci.ics.sourcerer.utils.db.IRowInsert;
 import edu.uci.ics.sourcerer.utils.db.IRowInserter;
-import edu.uci.ics.sourcerer.utils.db.sql.ITable;
+import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
 
 class InFileInserter implements IRowInserter {
   private File tempFile;
   private BufferedWriter writer;
   private QueryExecutor executor;
-  private ITable table;
+  private DatabaseTable table;
   
   private InFileInserter() {}
   
-  static InFileInserter getInFileInserter(File tempDir, QueryExecutor executor, ITable table) {
+  static InFileInserter getInFileInserter(File tempDir, QueryExecutor executor, DatabaseTable table) {
     File tempFile = new File(tempDir, table.toString());
     try {
       BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));

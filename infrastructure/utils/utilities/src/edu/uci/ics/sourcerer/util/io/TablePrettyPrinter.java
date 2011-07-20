@@ -31,7 +31,7 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
-import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -426,9 +426,9 @@ public class TablePrettyPrinter implements Closeable {
     }
   }
   
-  public static TablePrettyPrinter getTablePrettyPrinter(IOFileArgumentFactory ioFactory) {
+  public static TablePrettyPrinter getTablePrettyPrinter(DualFileArgument arg) {
     try {
-      BufferedWriter writer = FileUtils.getBufferedWriter(ioFactory);
+      BufferedWriter writer = IOUtils.makeBufferedWriter(arg);
       TablePrettyPrinter retval = new TablePrettyPrinter(new WriterTableWriter(writer));
       retval.setCSVMode(CSV_MODE.getValue());
       return retval;

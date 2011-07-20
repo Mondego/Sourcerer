@@ -27,10 +27,10 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.IFileSet;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.LineFileReader;
-import edu.uci.ics.sourcerer.util.io.LineFileWriter;
-import edu.uci.ics.sourcerer.util.io.LineFileWriter.EntryWriter;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
+import edu.uci.ics.sourcerer.util.io.internal.LineFileReader;
+import edu.uci.ics.sourcerer.util.io.internal.SimpleSerializerImpl;
+import edu.uci.ics.sourcerer.util.io.internal.SimpleSerializerImpl.EntryWriter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -71,7 +71,7 @@ public abstract class AbstractFileSet implements IFileSet {
       }
     }
     
-    LineFileWriter writer = null;
+    SimpleSerializerImpl writer = null;
     try {
       cache.getParentFile().mkdirs();
       writer = FileUtils.getLineFileWriter(cache);

@@ -17,12 +17,12 @@
  */
 package edu.uci.ics.sourcerer.model.db;
 
-import edu.uci.ics.sourcerer.util.io.LineWriteable;
+import edu.uci.ics.sourcerer.util.io.SimpleSerializable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ImportFqn implements LineWriteable {
+public class ImportFqn implements SimpleSerializable {
   private boolean onDemand;
   private String fqn;
   private Integer projectID;

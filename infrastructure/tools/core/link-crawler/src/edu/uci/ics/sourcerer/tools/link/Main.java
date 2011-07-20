@@ -17,9 +17,33 @@
  */
 package edu.uci.ics.sourcerer.tools.link;
 
+import edu.uci.ics.sourcerer.tools.link.crawler.FlossmoleCrawler;
+import edu.uci.ics.sourcerer.tools.link.downloader.Subversion;
+import edu.uci.ics.sourcerer.util.io.arguments.Command;
+import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
+import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
-    
+  public static final DualFileArgument GOOGLE_CODE_JAVA_LIST = new DualFileArgument("google-code-java-list", "google-code-java-list.txt", "File containing list of crawled Google Code projects containing Java in their svn repositories.");
+  
+  public static final Command CRAWL_GOOGLE_CODE = new Command("crawl-google-code", "Gets the listing of google code projects from Flossmole.") {
+    @Override
+    protected void action() {
+      FlossmoleCrawler.crawlGoogleCode();
+    }
+  }.setProperties(FlossmoleCrawler.GOOGLE_CODE_LIST.asOutput(), DatabaseConnectionFactory.DATABASE_URL, DatabaseConnectionFactory.DATABASE_USER, DatabaseConnectionFactory.DATABASE_PASSWORD);
+  
+  public static final Command FILTER_GC_PROJECTS_FOR_JAVA = new Command("filter-gc-projects-for-java", "Filters the Google Code projects for the projects that contain Java in their SVN.") {
+    @Override
+    protected void action() {
+      Subversion.filterSubversionLinksForJava(FlossmoleCrawler.GOOGLE_CODE_LIST, GOOGLE_CODE_JAVA_LIST);
+    }
+  }.setProperties(FlossmoleCrawler.GOOGLE_CODE_LIST.asInput(), GOOGLE_CODE_JAVA_LIST.asOutput());
+  
+  public static void main(String[] args) {
+    Command.execute(args, Main.class);
+  }
 }

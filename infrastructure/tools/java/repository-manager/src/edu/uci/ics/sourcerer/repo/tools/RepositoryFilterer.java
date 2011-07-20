@@ -34,16 +34,16 @@ import edu.uci.ics.sourcerer.repo.base.RepoProject;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.tools.core.repo.base.Repository;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFile;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
-import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class RepositoryFilterer {
-  public static final IOFileArgumentFactory COMPRESSED_FILTERED_REPO_FILE = new IOFileArgumentFactory("compressed-filtered-repo-file", "filtered-repo.zip", "The compressed file containing the filtered repository.");
+  public static final DualFileArgument COMPRESSED_FILTERED_REPO_FILE = new DualFileArgument("compressed-filtered-repo-file", "filtered-repo.zip", "The compressed file containing the filtered repository.");
   public static final Argument<Double> REPO_SUBSET_RATE = new DoubleArgument("repo-subset-rate", .1, "Percentage of repository to include.");
   
   /**

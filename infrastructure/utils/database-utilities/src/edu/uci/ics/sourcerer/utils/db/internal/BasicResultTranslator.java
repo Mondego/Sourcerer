@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.utils.db.internal;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;

@@ -83,4 +83,8 @@ public abstract class Command {
   protected abstract void action();
   
   public @interface Disable {}
+  
+  public static void execute(String[] args, Class<?> klass) {
+    ArgumentManager.executeCommand(args, klass);
+  }
 }

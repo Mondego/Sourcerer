@@ -15,12 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.utils.db.sql;
+package edu.uci.ics.sourcerer.util.io;
 
 /**
+ * Marker interface for Java objects that can be written/read by {@link SimpleSerializer}
+ * and {@link SimpleDeserializer}
+ * 
+ * If a field should not be included, annotate it with {@link Ignore}.
+ * 
+ * If you wish to override the default behavior, use {@link CustomSimpleSerializable}.
+ * 
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface ISelectFromClause {
-  public String getSelect();
-  public String getFrom();
+public interface SimpleSerializable {
 }

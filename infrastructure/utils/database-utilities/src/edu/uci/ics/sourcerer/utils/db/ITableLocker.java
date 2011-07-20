@@ -17,17 +17,17 @@
  */
 package edu.uci.ics.sourcerer.utils.db;
 
-import edu.uci.ics.sourcerer.utils.db.sql.ITable;
+import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface ITableLocker {
-  public void addWrite(ITable table);
-  public void addWrites(ITable ... tables);
+  public void addWrite(DatabaseTable table);
+  public void addWrites(DatabaseTable ... tables);
   
-  public void addRead(ITable table);
-  public void addReads(ITable ... tables);
+  public void addRead(DatabaseTable table);
+  public void addReads(DatabaseTable ... tables);
   
   public void lock();
   public void unlock();

@@ -15,11 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io;
+package edu.uci.ics.sourcerer.utils.db.sql;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface LWRec extends LineWriteable {
-  public String writeToString();
+public interface IConstantCondition<T> extends ICondition {
+  public ITable getTable();
+  public IBindVariable bind(T value);
 }

@@ -36,16 +36,16 @@ import edu.uci.ics.sourcerer.repo.general.JarIndex.ProjectFilter;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFile;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
-import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedRepository extends AbstractRepository {
-  public static final IOFileArgumentFactory EXTRACTION_STATS_FILE = new IOFileArgumentFactory("extraction-stats-file", "extraction-stats.txt", "Output file for the extraction stats.");
+  public static final DualFileArgument EXTRACTION_STATS_FILE = new DualFileArgument("extraction-stats-file", "extraction-stats.txt", "Output file for the extraction stats.");
   
   private boolean includeNotExtracted = false;
   private Collection<ExtractedLibrary> libraries;

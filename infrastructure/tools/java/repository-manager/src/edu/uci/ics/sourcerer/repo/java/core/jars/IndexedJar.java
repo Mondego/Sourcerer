@@ -20,27 +20,27 @@ package edu.uci.ics.sourcerer.repo.java.core.jars;
 import java.util.Scanner;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFile;
-import edu.uci.ics.sourcerer.util.io.FieldConverter;
-import edu.uci.ics.sourcerer.util.io.LWField;
-import edu.uci.ics.sourcerer.util.io.LWRec;
-import edu.uci.ics.sourcerer.util.io.LineWriteable;
+import edu.uci.ics.sourcerer.util.io.SimpleSerializable;
+import edu.uci.ics.sourcerer.util.io.internal.FieldConverter;
+import edu.uci.ics.sourcerer.util.io.internal.LWRec;
+import edu.uci.ics.sourcerer.util.io.internal.LineWriterIgnore;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class IndexedJar implements LineWriteable {
+public class IndexedJar implements SimpleSerializable {
   public enum Type {
     PROJECT,
     MAVEN;
   }
-  @LWField private Type type;
-  @LWField private String hash;
-  @LWField private String groupName;
-  @LWField private String version;
-  @LWField private String artifactName;
-  @LWField private RepoFile path;
-  @LWField private String jarName;
-  @LWField private String sourceName;
+  @LineWriterIgnore private Type type;
+  @LineWriterIgnore private String hash;
+  @LineWriterIgnore private String groupName;
+  @LineWriterIgnore private String version;
+  @LineWriterIgnore private String artifactName;
+  @LineWriterIgnore private RepoFile path;
+  @LineWriterIgnore private String jarName;
+  @LineWriterIgnore private String sourceName;
   
   protected IndexedJar() {}
   

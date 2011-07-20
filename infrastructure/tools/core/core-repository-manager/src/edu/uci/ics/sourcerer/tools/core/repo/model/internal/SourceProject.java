@@ -22,7 +22,7 @@ import java.lang.ref.SoftReference;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectMod;
 import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProjectProperties;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

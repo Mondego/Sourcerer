@@ -23,7 +23,7 @@ import java.io.File;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class IOFileArgumentFactory {
+public class DualFileArgument {
   private String name;
   private String description;
   private String defaultValue;
@@ -31,12 +31,12 @@ public class IOFileArgumentFactory {
   private Argument<File> input;
   private Argument<File> output;
   
-  public IOFileArgumentFactory(String name, String description) {
+  public DualFileArgument(String name, String description) {
     this.name = name;
     this.description = description;
   }
   
-  public IOFileArgumentFactory(String name, String defaultValue, String description) {
+  public DualFileArgument(String name, String defaultValue, String description) {
     this.name = name;
     this.description = description;
     this.defaultValue = defaultValue;
@@ -60,7 +60,7 @@ public class IOFileArgumentFactory {
     private Argument<File> base;
     
     protected FileProperty(Argument<File> base) {
-      super(IOFileArgumentFactory.this.name, null, IOFileArgumentFactory.this.description);
+      super(DualFileArgument.this.name, null, DualFileArgument.this.description);
       this.base = base;
     }
 
@@ -71,20 +71,20 @@ public class IOFileArgumentFactory {
 
     @Override
     public String getDefaultString() {
-      return base.getName() + "/" + IOFileArgumentFactory.this.defaultValue;
+      return base.getName() + "/" + DualFileArgument.this.defaultValue;
     }
     
     @Override
     public boolean hasDefaultValue() {
-      return IOFileArgumentFactory.this.defaultValue != null;
+      return DualFileArgument.this.defaultValue != null;
     }
     
     @Override
     public File getDefaultValue() {
-      if (IOFileArgumentFactory.this.defaultValue == null) {
+      if (DualFileArgument.this.defaultValue == null) {
         return null;
       } else {
-        return new File(base.getValue(), IOFileArgumentFactory.this.defaultValue);
+        return new File(base.getValue(), DualFileArgument.this.defaultValue);
       }
     }
     
@@ -97,5 +97,10 @@ public class IOFileArgumentFactory {
         return new File(base.getValue(), value);
       }
     }
+  }
+  
+  @Override
+  public String toString() {
+    return name;
   }
 }

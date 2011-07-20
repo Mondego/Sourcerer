@@ -28,14 +28,16 @@ import edu.uci.ics.sourcerer.utils.db.IDatabaseConnection;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class InternalDatabaseConnectionFactory extends DatabaseConnectionFactory {
-  @Override
-  public IDatabaseConnection make() {
+  public InternalDatabaseConnectionFactory() {
     try {
       Class.forName("com.mysql.jdbc.Driver");
-      return new DatabaseConnection();
     } catch (ClassNotFoundException e) {
       logger.log(Level.SEVERE, "Exception registering driver", e);
-      return null;
     }
+  }
+  
+  @Override
+  public IDatabaseConnection make() {
+    return new DatabaseConnection();
   }
 }

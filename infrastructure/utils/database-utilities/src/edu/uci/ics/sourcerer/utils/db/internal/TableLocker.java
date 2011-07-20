@@ -1,7 +1,7 @@
 package edu.uci.ics.sourcerer.utils.db.internal;
 
 import edu.uci.ics.sourcerer.utils.db.ITableLocker;
-import edu.uci.ics.sourcerer.utils.db.sql.ITable;
+import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
 
 class TableLocker implements ITableLocker {
   private boolean locked;
@@ -18,7 +18,7 @@ class TableLocker implements ITableLocker {
     tables = new StringBuilder("LOCK TABLES ");
   }
   
-  public void addWrite(ITable table) {
+  public void addWrite(DatabaseTable table) {
     if (locked) {
       throw new IllegalStateException("Cannot add when already locked");
     } else {
@@ -26,13 +26,13 @@ class TableLocker implements ITableLocker {
     }
   }
   
-  public void addWrites(ITable... tables) {
-    for (ITable table : tables) {
+  public void addWrites(DatabaseTable... tables) {
+    for (DatabaseTable table : tables) {
       addWrite(table);
     }
   }
   
-  public void addRead(ITable table) {
+  public void addRead(DatabaseTable table) {
     if (locked) {
       throw new IllegalStateException("Cannot add when already locked");
     } else {
@@ -40,8 +40,8 @@ class TableLocker implements ITableLocker {
     }
   }
   
-  public void addReads(ITable... tables) {
-    for (ITable table : tables) {
+  public void addReads(DatabaseTable... tables) {
+    for (DatabaseTable table : tables) {
       addRead(table);
     }
   }

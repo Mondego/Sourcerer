@@ -18,15 +18,15 @@
 package edu.uci.ics.sourcerer.repo.base;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFile;
-import edu.uci.ics.sourcerer.util.io.LWField;
+import edu.uci.ics.sourcerer.util.io.internal.LineWriterIgnore;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarFile implements IJarFile {
-  @LWField
+  @LineWriterIgnore
   private String hash;
-  @LWField
+  @LineWriterIgnore
   private RepoFile file;
 
   protected JarFile() {}

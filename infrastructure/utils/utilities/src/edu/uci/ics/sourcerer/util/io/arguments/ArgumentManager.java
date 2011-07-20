@@ -40,7 +40,6 @@ import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
-import edu.uci.ics.sourcerer.util.io.arguments.Command.Disable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -64,7 +63,7 @@ public class ArgumentManager {
     return propertyMap.get(name);
   }
   
-  public static void executeCommand(String[] args, Class<?> klass) {
+  static void executeCommand(String[] args, Class<?> klass) {
     Command activeCommand = null;
     Collection<Argument<?>> missingProperties = Helper.newLinkedList();
     Collection<Argument<?>[]> invalidConditionals = Helper.newLinkedList();

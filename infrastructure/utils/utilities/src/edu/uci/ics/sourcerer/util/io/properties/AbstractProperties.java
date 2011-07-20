@@ -30,7 +30,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -55,7 +55,7 @@ public abstract class AbstractProperties {
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Unable to load properties file: " + file.getPath(), e);
       } finally {
-        FileUtils.close(is);
+        IOUtils.close(is);
       }
     }
   }
@@ -96,7 +96,7 @@ public abstract class AbstractProperties {
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to write properties file: " + file.getPath(), e);
     } finally {
-      FileUtils.close(os);
+      IOUtils.close(os);
     }
   }
 }

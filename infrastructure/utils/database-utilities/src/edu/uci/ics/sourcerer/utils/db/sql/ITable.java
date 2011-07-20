@@ -21,5 +21,5 @@ package edu.uci.ics.sourcerer.utils.db.sql;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface ITable {
-  public String getName();
+  public String toSql();
 }

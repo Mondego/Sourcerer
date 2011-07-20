@@ -18,12 +18,12 @@
 package edu.uci.ics.sourcerer.repo.base;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFile;
-import edu.uci.ics.sourcerer.util.io.LineWriteable;
+import edu.uci.ics.sourcerer.util.io.SimpleSerializable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IJavaFile extends LineWriteable {
+public interface IJavaFile extends SimpleSerializable {
   public String getPackage();
   
   /**

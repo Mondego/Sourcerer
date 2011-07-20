@@ -17,9 +17,23 @@
  */
 package edu.uci.ics.sourcerer.utils.db.sql;
 
+
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ISetClause {
+public interface IColumn <T> extends ISelectable<T> {
+  public String getName();
+  public String getType();
+  
+  public IColumn<T> addIndex();
+  public boolean isIndexed();
+  public String getIndex();
+  
+  public ITable getTable();
+  
+  public IQualifiedColumn<T> qualify(IQualifiedTable table);
+  public IComparisonCondition compareEquality(IColumn<T> other);
 
+  public IBindVariable bind(T value);
 }

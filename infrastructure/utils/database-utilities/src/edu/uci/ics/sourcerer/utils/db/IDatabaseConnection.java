@@ -1,4 +1,3 @@
-package edu.uci.ics.sourcerer.utils.db;
 /* 
  * Sourcerer: an infrastructure for large-scale source code analysis.
  * Copyright (C) by contributors. See CONTRIBUTORS.txt for full list.
@@ -16,11 +15,14 @@ package edu.uci.ics.sourcerer.utils.db;
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+package edu.uci.ics.sourcerer.utils.db;
+
+import java.io.Closeable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IDatabaseConnection extends Cloneable {
+public interface IDatabaseConnection extends Closeable {
   public boolean open();
   public void close();
   

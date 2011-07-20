@@ -18,15 +18,15 @@
 package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.IProjectLocation;
-import edu.uci.ics.sourcerer.util.io.LWField;
-import edu.uci.ics.sourcerer.util.io.LineWriteable;
+import edu.uci.ics.sourcerer.util.io.SimpleSerializable;
+import edu.uci.ics.sourcerer.util.io.internal.LineWriterIgnore;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-final class ProjectLocation implements IProjectLocation, LineWriteable {
-  private @LWField Integer batch;
-  private @LWField Integer checkout;
+final class ProjectLocation implements IProjectLocation, SimpleSerializable {
+  private @LineWriterIgnore Integer batch;
+  private @LineWriterIgnore Integer checkout;
   private RepoFile projectRoot;
   
   protected ProjectLocation() {}

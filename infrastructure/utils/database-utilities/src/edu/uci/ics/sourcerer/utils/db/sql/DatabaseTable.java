@@ -15,17 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.link.flossmole;
+package edu.uci.ics.sourcerer.utils.db.sql;
 
+import edu.uci.ics.sourcerer.utils.db.internal.InternalDatabaseTable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FlossmoleCrawler {
-  private FlossmoleCrawler() {
-    
-  }
-  
-  public static void crawlGoogleCode() {
+public abstract class DatabaseTable extends InternalDatabaseTable {
+  protected DatabaseTable(String name) {
+    super(name);
   }
 }

@@ -19,35 +19,39 @@ package edu.uci.ics.sourcerer.utils.db;
 
 import java.io.Closeable;
 import java.io.File;
-import java.util.Collection;
 
-import edu.uci.ics.sourcerer.utils.db.sql.ISelectFromClause;
-import edu.uci.ics.sourcerer.utils.db.sql.ISetClause;
+import edu.uci.ics.sourcerer.utils.db.sql.IComparisonCondition;
+import edu.uci.ics.sourcerer.utils.db.sql.IQueryResult;
+import edu.uci.ics.sourcerer.utils.db.sql.ITypedQueryResult;
+import edu.uci.ics.sourcerer.utils.db.sql.ISelectQuery;
+import edu.uci.ics.sourcerer.utils.db.sql.IStatement;
+import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
+import edu.uci.ics.sourcerer.utils.db.sql.ISetStatement;
 import edu.uci.ics.sourcerer.utils.db.sql.ITable;
-import edu.uci.ics.sourcerer.utils.db.sql.IWhereClause;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface IQueryExecutor extends Closeable {
   public ITableLocker getTableLocker();
-  public IRowInserter getInFileInserter(File tempDir, ITable table);
+  public IRowInserter getInFileInserter(File tempDir, DatabaseTable table);
 
   // Raw Updates
   public void executeUpdate(String sql);
-  public IQueryResult executeUpdateWithKeys(String sql);
   public String executeUpdateWithKey(String sql);
-  
-  // Typed Updates
-  public void executeUpdate(ITable table, ISetClause set, IWhereClause where);
-  public void deleteRows(ITable table, IWhereClause where);
-  
+  public IQueryResult executeUpdateWithKeys(String sql);
+
   // Raw Executes
   public String executeSingle(String sql);
   public int exucuteSingleInt(String sql);
+  public IQueryResult execute(String sql);
+  
+  // Typed Updates
+  public IStatement makeCreateTableStatement(DatabaseTable table);
+  public IStatement makeDropTableStatement(DatabaseTable ... tables);
+  public ISetStatement makeSetStatement(DatabaseTable table);
   
   // Typed Executes
-  public int getRowCount(ITable table, IWhereClause where);
-  public <T> T selectSingle(ITable table, IColumn<T> column, IWhereClause where);
-  public <T> Collection<T> select(ITable table, ISelectFromClause from, IWhereClause where);
+  public ISelectQuery makeSelectQuery(ITable fromTable);
+  public ISelectQuery makeSelectQuery(IComparisonCondition ... joinConditions);
 }

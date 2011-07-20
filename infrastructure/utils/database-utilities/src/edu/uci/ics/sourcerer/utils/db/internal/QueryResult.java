@@ -23,7 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.utils.db.IQueryResult;
+import edu.uci.ics.sourcerer.utils.db.sql.IQueryResult;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

@@ -1,11 +1,12 @@
 package edu.uci.ics.sourcerer.util;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.io.Closeable;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
 
 public class TimeoutManager <T extends Closeable> {
   private Instantiator<T> instantiator;
@@ -30,7 +31,7 @@ public class TimeoutManager <T extends Closeable> {
           synchronized (TimeoutManager.this) {
             if (System.currentTimeMillis() - lastTimeAccessed > TIMEOUT) {
               logger.info("Timeout manager closing...");
-              FileUtils.close(instance);
+              IOUtils.close(instance);
               instance = null;
               this.cancel();
             }
