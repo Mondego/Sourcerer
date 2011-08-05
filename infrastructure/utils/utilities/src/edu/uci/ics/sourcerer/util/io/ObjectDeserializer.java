@@ -33,7 +33,7 @@ import edu.uci.ics.sourcerer.util.Helper;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class ObjectDeserializer<T> {
-  private ObjectDeserializer() {}
+  public ObjectDeserializer() {}
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static ObjectDeserializer<?> makeDeserializer(Class<?> klass) {

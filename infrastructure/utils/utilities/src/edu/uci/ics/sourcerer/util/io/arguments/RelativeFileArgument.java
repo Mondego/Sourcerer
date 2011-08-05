@@ -61,7 +61,7 @@ public class RelativeFileArgument extends FileArgument {
   
   @Override
   public String getDefaultString() {
-    return defaultValue.getPath();
+    return getDefaultValue().getPath();
   }
   
   @Override

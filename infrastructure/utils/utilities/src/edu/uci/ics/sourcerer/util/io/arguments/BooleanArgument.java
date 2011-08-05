@@ -42,7 +42,7 @@ public class BooleanArgument extends Argument<Boolean> {
     } else if ("false".equals(value)) {
       return false;
     } else {
-      logger.log(Level.SEVERE, value + " is not a valid boolean value for " + name);
+      logger.log(Level.SEVERE, value + " is not a valid boolean value for " + getName());
       return null;
     }
   }

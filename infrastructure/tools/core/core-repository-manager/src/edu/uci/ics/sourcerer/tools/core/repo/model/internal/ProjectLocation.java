@@ -18,16 +18,16 @@
 package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.IProjectLocation;
+import edu.uci.ics.sourcerer.util.io.Ignore;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializable;
-import edu.uci.ics.sourcerer.util.io.internal.LineWriterIgnore;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 final class ProjectLocation implements IProjectLocation, SimpleSerializable {
-  private @LineWriterIgnore Integer batch;
-  private @LineWriterIgnore Integer checkout;
-  private RepoFile projectRoot;
+  private Integer batch;
+  private Integer checkout;
+  private @Ignore RepoFile projectRoot;
   
   protected ProjectLocation() {}
   
@@ -48,5 +48,10 @@ final class ProjectLocation implements IProjectLocation, SimpleSerializable {
   
   protected Integer getCheckoutNumber() {
     return checkout;
+  }
+  
+  @Override
+  public String toString() {
+    return batch + "/" + checkout;
   }
 }

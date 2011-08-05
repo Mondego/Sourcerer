@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.utils.db;
 
+import edu.uci.ics.sourcerer.util.io.IOUtils;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -32,10 +34,9 @@ public abstract class DatabaseRunnable {
       if (conn.open()) {
         exec = conn.getExecutor();
         action();
-        conn.close();
       }
     } finally {
-      conn.close();
+      IOUtils.close(conn);
     }
   }
 }

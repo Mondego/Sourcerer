@@ -17,9 +17,10 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo.model;
 
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IProjectMod extends IProject {
-
+public interface IRepoM <Project extends IProjectM, Batch extends IBatchM<Project>> extends IRepo<Project, Batch> {
+  public Batch createBatch();
 }

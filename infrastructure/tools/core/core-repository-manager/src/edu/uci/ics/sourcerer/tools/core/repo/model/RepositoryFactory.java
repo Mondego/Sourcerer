@@ -32,7 +32,7 @@ public abstract class RepositoryFactory {
 
   public static final RepositoryFactory INSTANCE = new InternalRepositoryFactory(); 
   
-  public abstract IRepository<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> loadSourceRepository(Argument<File> root);
+  public abstract IRepo<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> loadSourceRepository(Argument<File> root);
   
-  public abstract IRepositoryMod<? extends ISourceProjectMod, ? extends IBatchMod<? extends ISourceProjectMod>> loadModifiableSourceRepository(Argument<File> root);
+  public abstract IRepoM<? extends ISourceProjectM, ? extends IBatchM<? extends ISourceProjectM>> loadModifiableSourceRepository(Argument<File> root);
 }

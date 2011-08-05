@@ -17,7 +17,9 @@
  */
 package edu.uci.ics.sourcerer.tools.link;
 
+import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
 import edu.uci.ics.sourcerer.tools.link.crawler.FlossmoleCrawler;
+import edu.uci.ics.sourcerer.tools.link.downloader.RepoBuilder;
 import edu.uci.ics.sourcerer.tools.link.downloader.Subversion;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
@@ -42,6 +44,20 @@ public class Main {
       Subversion.filterSubversionLinksForJava(FlossmoleCrawler.GOOGLE_CODE_LIST, GOOGLE_CODE_JAVA_LIST);
     }
   }.setProperties(FlossmoleCrawler.GOOGLE_CODE_LIST.asInput(), GOOGLE_CODE_JAVA_LIST.asOutput());
+  
+  public static final Command ADD_JAVA_GC_PROJECTS_TO_REPO = new Command("add-java-gc-projects-to-repo", "Adds the Java Google Code projects to the repository.") {
+    @Override
+    protected void action() {
+      RepoBuilder.addProjectsToRepository(GOOGLE_CODE_JAVA_LIST, "Projects from Google Code Project Hosting");
+    }
+  }.setProperties(GOOGLE_CODE_JAVA_LIST.asInput(), RepositoryFactory.OUTPUT_REPO);
+  
+  public static final Command DOWNLOAD_REPO_CONTENT = new Command("download-repo-content", "Downloads the repository content.") {
+    @Override
+    protected void action() {
+      RepoBuilder.downloadProjectContent();
+    }
+  }.setProperties(RepositoryFactory.INPUT_REPO);
   
   public static void main(String[] args) {
     Command.execute(args, Main.class);

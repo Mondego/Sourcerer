@@ -24,7 +24,7 @@ import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface IProject {
-  public static final Argument<String> PROJECT_PROPERTIES = new StringArgument("project-properties-file", "project.properties", "Properties files for a project.");
+  public static final Argument<String> PROJECT_PROPERTIES = new StringArgument("project-properties-file", "project.properties", "Properties files for a project.").permit();
   
   public IProjectLocation getLocation();
   

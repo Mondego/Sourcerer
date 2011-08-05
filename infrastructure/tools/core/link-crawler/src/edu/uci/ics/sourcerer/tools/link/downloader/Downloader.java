@@ -15,26 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.core.repo.model;
+package edu.uci.ics.sourcerer.tools.link.downloader;
 
-import java.util.Collection;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import edu.uci.ics.sourcerer.util.io.arguments.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+import java.io.File;
+import java.util.logging.Level;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IBatch <Project extends IProject> {
-  public static final Argument<String> BATCH_PROPERTIES_FILE = new StringArgument("batch-properties-file", "batch.properties", "File name for batch properties file.").permit();
-  
-  public Project getProject(Integer checkout);
-  
-  public Collection<Project> getProjects();
-  
-  public int getProjectCount();
-  
-  public Integer getBatchNumber();
-  
-  public BatchProperties getProperties();
+public class Downloader {
+  public static File download(String url) {
+    if (url.endsWith("svn")) {
+      return Subversion.download(url);
+    } else {
+      logger.log(Level.SEVERE, "Unable to identify form of url: " + url);
+      return null;
+    }
+  }
 }

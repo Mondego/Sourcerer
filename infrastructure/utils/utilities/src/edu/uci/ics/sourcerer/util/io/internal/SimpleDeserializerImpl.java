@@ -186,8 +186,13 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     private BasicEntryReader(Class<?> klass, Field[] fields, ObjectDeserializer<?>[] deserializers) throws SecurityException, NoSuchMethodException {
       this.fields = fields;
       this.deserializers = deserializers;
-      this.constructor = (Constructor<T>) klass.getConstructor();
-      constructor.setAccessible(true);
+      for (Constructor<?> con : klass.getDeclaredConstructors()) {
+        if (con.getParameterTypes().length == 0) {
+          this.constructor = (Constructor<T>) con;
+          con.setAccessible(true);
+          break;
+        }
+      }
     }
     
     public T create(String line) throws InstantiationException, IllegalAccessException, InvocationTargetException  {
@@ -209,9 +214,13 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     private TransientEntryReader(Class<?> klass, Field[] fields, ObjectDeserializer<?>[] deserializers) throws SecurityException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
       this.fields = fields;
       this.deserializers = deserializers;
-      Constructor<T> constructor = (Constructor<T>) klass.getConstructor();
-      constructor.setAccessible(true);
-      obj = constructor.newInstance();
+      for (Constructor<?> con : klass.getDeclaredConstructors()) {
+        if (con.getParameterTypes().length == 0) {
+          con.setAccessible(true);
+          obj = (T) con.newInstance();
+          break;
+        }
+      }
     }
     
     public T create(String line) throws IllegalAccessException {

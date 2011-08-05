@@ -19,22 +19,17 @@ package edu.uci.ics.sourcerer.tools.core.repo.model;
 
 import java.util.Collection;
 
-import edu.uci.ics.sourcerer.util.io.arguments.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
-
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IBatch <Project extends IProject> {
-  public static final Argument<String> BATCH_PROPERTIES_FILE = new StringArgument("batch-properties-file", "batch.properties", "File name for batch properties file.").permit();
+public interface IRepo <Project extends IProject, Batch extends IBatch<Project>> {
+  public Collection<? extends Batch> getBatches();
   
-  public Project getProject(Integer checkout);
+  public Project getProject(String path);
   
-  public Collection<Project> getProjects();
+  public Project getProject(Integer batch, Integer checkout);
+  
+  public Collection<? extends Project> getProjects();
   
   public int getProjectCount();
-  
-  public Integer getBatchNumber();
-  
-  public BatchProperties getProperties();
 }

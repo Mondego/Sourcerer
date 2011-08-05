@@ -20,21 +20,21 @@ package edu.uci.ics.sourcerer.tools.core.repo.internal;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import edu.uci.ics.sourcerer.tools.core.repo.model.IBatch;
 import edu.uci.ics.sourcerer.tools.core.repo.model.IProject;
-import edu.uci.ics.sourcerer.tools.core.repo.model.IRepository;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IRepo;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
-import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class RepositoryStatistics {
-  public static void printProjectCount(IRepository<IProject, IBatch<IProject>> repo) {
+  public static void printProjectCount(IRepo<IProject, IBatch<IProject>> repo) {
     logger.info(repo + " has " + repo.getProjects().size() + " projects");
   }
   
   public static final DualFileArgument PROJECT_NAMES_FILE = new DualFileArgument("project-names-file", "project-names.txt", "File containg a table of the project names.");
-  public static void exportProjectNames(IRepository<IProject, IBatch<IProject>> repo) {
+  public static void exportProjectNames(IRepo<IProject, IBatch<IProject>> repo) {
     TablePrettyPrinter printer = null;
     try {
       printer = TablePrettyPrinter.getTablePrettyPrinter(PROJECT_NAMES_FILE);
@@ -50,7 +50,7 @@ public class RepositoryStatistics {
       }
       printer.endTable();
     } finally {
-      FileUtils.close(printer);
+      IOUtils.close(printer);
     }
   }
 }

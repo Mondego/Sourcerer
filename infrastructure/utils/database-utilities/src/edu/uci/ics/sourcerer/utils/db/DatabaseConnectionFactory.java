@@ -25,7 +25,7 @@ import edu.uci.ics.sourcerer.utils.db.internal.InternalDatabaseConnectionFactory
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class DatabaseConnectionFactory {
-  public static final Argument<String> DATABASE_URL = new StringArgument("database-url", "jdbc:mysql://tagus.ics.uci.edu:3306/sourcerer", "Url of the database.");
+  public static final Argument<String> DATABASE_URL = new StringArgument("database-url", "Url of the database.");
   public static final Argument<String> DATABASE_USER = new StringArgument("database-user", "Database user account to use when connecting.");
   public static final Argument<String> DATABASE_PASSWORD = new StringArgument("database-password", null, "Password for the user account.");
   

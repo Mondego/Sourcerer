@@ -26,6 +26,7 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  */
 public class ProjectProperties extends AbstractProperties {
   public Property<String> NAME = new StringProperty("name", this);
+  public Property<String> SOURCE = new StringProperty("source", this);
   
   public ProjectProperties(IRepoFile file) {
     super(file.toFile());

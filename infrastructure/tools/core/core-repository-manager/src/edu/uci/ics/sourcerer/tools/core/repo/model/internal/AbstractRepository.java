@@ -25,19 +25,19 @@ import java.util.Collection;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.IRepositoryMod;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IRepoM;
+import edu.uci.ics.sourcerer.util.io.EntryWriter;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
+import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
-import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
-import edu.uci.ics.sourcerer.util.io.internal.SimpleSerializerImpl;
-import edu.uci.ics.sourcerer.util.io.internal.SimpleSerializerImpl.EntryWriter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class AbstractRepository <Project extends RepoProject> implements IRepositoryMod<Project, Batch<Project>> {
-  public static final Argument<String> REPO_PROPERTIES = new StringArgument("repo-properties-file", "File name for repo properties file.");
-  public static final Argument<String> PROJECT_CACHE = new StringArgument("project-cache-file", "project-cache.txt", "File containing a cached list of the projects.");
+public abstract class AbstractRepository <Project extends RepoProject> implements IRepoM<Project, Batch<Project>> {
+  public static final Argument<String> REPO_PROPERTIES = new StringArgument("repo-properties-file", "File name for repo properties file.").permit();
+  public static final Argument<String> PROJECT_CACHE = new StringArgument("project-cache-file", "project-cache.txt", "File containing a cached list of the projects.").permit();
   
   protected RepoFile repoRoot;
   
@@ -65,7 +65,7 @@ public abstract class AbstractRepository <Project extends RepoProject> implement
       if (repoRoot.exists()) {
         if (cache.exists()) {
           try {
-            for (ProjectLocation loc : FileUtils.readLineFile(ProjectLocation.class, cache.toFile(), true)) {
+            for (ProjectLocation loc : IOUtils.deserialize(ProjectLocation.class, cache.toFile(), true)) {
               batchSet.add(loc.getBatchNumber(), loc.getCheckoutNumber());
             }
             return;
@@ -83,10 +83,10 @@ public abstract class AbstractRepository <Project extends RepoProject> implement
             }
           }
         }
-        SimpleSerializerImpl writer = null;
+        SimpleSerializer writer = null;
         EntryWriter<ProjectLocation> ew = null;
         try {
-          writer = FileUtils.getLineFileWriter(cache.toFile());
+          writer = IOUtils.makeSimpleSerializer(cache.toFile());
           ew = writer.getEntryWriter(ProjectLocation.class);
           for (Project project : getProjects()) {
             ew.write(project.getLocation());
@@ -94,8 +94,8 @@ public abstract class AbstractRepository <Project extends RepoProject> implement
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Unable to write project cache.", e);
         } finally {
-          FileUtils.close(ew);
-          FileUtils.close(writer);
+          IOUtils.close(ew);
+          IOUtils.close(writer);
         }
       }
     }
@@ -145,5 +145,9 @@ public abstract class AbstractRepository <Project extends RepoProject> implement
       populateProjects();
     }
     return batchSet;
+  }
+  
+  public int getProjectCount() {
+    return getProjects().size();
   }
 }

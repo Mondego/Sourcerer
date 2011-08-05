@@ -17,17 +17,25 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo.model;
 
-import java.util.Collection;
+import java.io.File;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IRepository <Project extends IProject, Batch extends IBatch<Project>> {
-  public Collection<? extends Batch> getBatches();
+public interface ISourceProjectM extends IProjectM, ISourceProject {
+  /**
+   * Deletes the project's contents.
+   *  
+   * @return <tt>true</tt> if successful
+   */
+  public boolean deleteContent();
   
-  public Project getProject(String path);
-  
-  public Project getProject(Integer batch, Integer checkout);
-  
-  public Collection<? extends Project> getProjects();
+  /**
+   * Copies the contents of <tt>file</tt> into the
+   * project's <tt>content</tt>> directory. Will
+   * not work if the project's contents are compressed.
+   * 
+   * This will not overwrite anything.
+   */
+  public boolean addContent(File file, boolean move);
 }

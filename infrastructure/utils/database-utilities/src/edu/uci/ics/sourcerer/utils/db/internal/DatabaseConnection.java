@@ -42,13 +42,16 @@ class DatabaseConnection implements IDatabaseConnection {
       return true;
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Exception opening connection", e);
+      connection = null;
       return false;
     }
   }
   
   public void close() {
     try {
-      connection.close();
+      if (connection != null) {
+        connection.close();
+      }
     } catch (SQLException e) {
       logger.log(Level.SEVERE, "Exception closing connection", e);
     }

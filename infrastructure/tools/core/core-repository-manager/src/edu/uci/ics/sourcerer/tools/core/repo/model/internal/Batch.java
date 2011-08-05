@@ -21,13 +21,13 @@ import java.util.Collection;
 import java.util.TreeMap;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.BatchProperties;
-import edu.uci.ics.sourcerer.tools.core.repo.model.IBatchMod;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IBatchM;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-final class Batch <Project extends RepoProject> implements IBatchMod<Project> {
+final class Batch <Project extends RepoProject> implements IBatchM<Project> {
   private final AbstractRepository<Project> repo;
   private final RepoFile dir;
   private final Integer batch;
@@ -56,6 +56,11 @@ final class Batch <Project extends RepoProject> implements IBatchMod<Project> {
   @Override
   public Collection<Project> getProjects() {
     return projects.values();
+  }
+  
+  @Override
+  public int getProjectCount() {
+    return projects.size();
   }
   
   @Override

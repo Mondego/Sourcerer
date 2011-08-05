@@ -15,12 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.core.repo.model;
-
+package edu.uci.ics.sourcerer.util.io.properties;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IBatchMod <Project extends IProject> extends IBatch<Project> {
-  public Project createProject();
+public class EnumProperty<T extends Enum<T>> extends Property<T> {
+  Class<T> klass;
+  public EnumProperty(String name, Class<T> klass, AbstractProperties properties) {
+    super(name, properties);
+    this.klass = klass;
+  }
+
+  @Override 
+  protected T parseValue(String value) {
+    return Enum.valueOf(klass, value);
+  }
 }

@@ -50,13 +50,13 @@ import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
  */
 @SuppressWarnings("serial")
 public final class Logging {
-  protected static final Argument<Boolean> SUPPRESS_FILE_LOGGING = new BooleanArgument("suppress-file-logging", false, "Suppresses all logging to files.").register("Logging");
-  public static final Argument<Boolean> REPORT_TO_CONSOLE = new BooleanArgument("report-to-console", false, "Prints all the logging messages to the console.").register("Logging");
-  protected static final Argument<String> ERROR_LOG = new StringArgument("error-log", "error.log", "Filename for error log.").register("Logging");
-  protected static final Argument<String> THREAD_LOG = new StringArgument("thread-log", "thread-%t.log", "Filename for thread log.").register("Logging");
-  protected static final Argument<String> INFO_LOG = new StringArgument("info-log", "info.log", "Filename for the info log.").register("Logging");
-  protected static final Argument<String> RESUME_LOG = new StringArgument("resume-log", "resume.log", "Filename for the resume log.");
-  protected static final Argument<Boolean> CLEAR_RESUME_LOG = new BooleanArgument("clear-resume-log", false, "Clears the resume log before beginning."); 
+  protected static final Argument<Boolean> SUPPRESS_FILE_LOGGING = new BooleanArgument("suppress-file-logging", false, "Suppresses all logging to files.").permit();
+  public static final Argument<Boolean> REPORT_TO_CONSOLE = new BooleanArgument("report-to-console", false, "Prints all the logging messages to the console.").permit();
+  protected static final Argument<String> ERROR_LOG = new StringArgument("error-log", "error.log", "Filename for error log.").permit();
+  protected static final Argument<String> THREAD_LOG = new StringArgument("thread-log", "thread-%t.log", "Filename for thread log.").permit();
+  protected static final Argument<String> INFO_LOG = new StringArgument("info-log", "info.log", "Filename for the info log.").permit();
+  protected static final Argument<String> RESUME_LOG = new StringArgument("resume-log", "resume.log", "Filename for the resume log.").permit();
+  protected static final Argument<Boolean> CLEAR_RESUME_LOG = new BooleanArgument("clear-resume-log", false, "Clears the resume log before beginning.").permit(); 
   
   public static final Level RESUME = new Level("RESUME", 10000) {};
   public static final Level THREAD_INFO = new Level("TINFO", 100000) {};

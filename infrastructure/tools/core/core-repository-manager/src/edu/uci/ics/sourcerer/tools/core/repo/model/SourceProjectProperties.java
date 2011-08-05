@@ -17,12 +17,18 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo.model;
 
+import edu.uci.ics.sourcerer.util.io.properties.Property;
+import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+
 
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class SourceProjectProperties extends ProjectProperties {
+  public Property<String> URL = new StringProperty("url", this);
+  public Property<String> DOWNLOAD_DATE = new StringProperty("download-date", this);
+  
   public SourceProjectProperties(IRepoFile file) {
     super(file);
   }

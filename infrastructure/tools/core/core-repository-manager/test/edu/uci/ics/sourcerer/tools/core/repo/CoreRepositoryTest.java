@@ -27,15 +27,14 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.IBatch;
-import edu.uci.ics.sourcerer.tools.core.repo.model.IBatchMod;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IBatchM;
 import edu.uci.ics.sourcerer.tools.core.repo.model.IContentFile;
 import edu.uci.ics.sourcerer.tools.core.repo.model.IFileSet;
-import edu.uci.ics.sourcerer.tools.core.repo.model.IRepositoryMod;
-import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectMod;
-import edu.uci.ics.sourcerer.tools.core.repo.model.IRepository;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IRepo;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IRepoM;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProject;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectM;
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
-import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
 
@@ -55,7 +54,7 @@ public class CoreRepositoryTest {
   @BeforeClass
   public static void initialize() {
     // Initializes the logging
-    ArgumentManager.executeCommand(new String[] { "--test" }, CoreRepositoryTest.class);
+    Command.execute(new String[] { "--test" }, CoreRepositoryTest.class);
     
   }
   
@@ -64,21 +63,21 @@ public class CoreRepositoryTest {
     RepositoryFactory.INPUT_REPO.setValue(folder.newFolder("repo"));
     
     {
-      IRepositoryMod<? extends ISourceProjectMod, ? extends IBatchMod<? extends ISourceProjectMod>> repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
-      Assert.assertEquals(0, repo.getProjects().size());
+      IRepoM<? extends ISourceProjectM, ? extends IBatchM<? extends ISourceProjectM>> repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
+      Assert.assertEquals(0, repo.getProjectCount());
       
       {
         // Create a new batch
-        IBatchMod<? extends ISourceProjectMod> batch = repo.createBatch();
+        IBatchM<? extends ISourceProjectM> batch = repo.createBatch();
         batch.getProperties().DESCRIPTION.setValue("A test batch");
         batch.getProperties().save();
         
         Assert.assertEquals(0, batch.getBatchNumber().intValue());
-        Assert.assertEquals(0, batch.getProjects().size());
+        Assert.assertEquals(0, batch.getProjectCount());
   
         {
           // Create a new project
-          ISourceProjectMod project = batch.createProject();
+          ISourceProjectM project = batch.createProject();
           
           Assert.assertEquals("0/0", project.getLocation().getProjectRoot().getRelativePath().toString());
           project.getProperties().NAME.setValue("Test project A");
@@ -87,27 +86,27 @@ public class CoreRepositoryTest {
         
         {
           // Create a new project
-          ISourceProjectMod project = batch.createProject();
+          ISourceProjectM project = batch.createProject();
           
           Assert.assertEquals("0/1", project.getLocation().getProjectRoot().getRelativePath().toString());
           project.getProperties().NAME.setValue("Test project B");
           project.getProperties().save();
         }
         
-        Assert.assertEquals(2, batch.getProjects().size());
+        Assert.assertEquals(2, batch.getProjectCount());
       }
       {
         // Create a new batch
-        IBatchMod<? extends ISourceProjectMod> batch = repo.createBatch();
+        IBatchM<? extends ISourceProjectM> batch = repo.createBatch();
         batch.getProperties().DESCRIPTION.setValue("A second test batch");
         batch.getProperties().save();
         
         Assert.assertEquals(1, batch.getBatchNumber().intValue());
-        Assert.assertEquals(0, batch.getProjects().size());
+        Assert.assertEquals(0, batch.getProjectCount());
   
         {
           // Create a new project
-          ISourceProjectMod project = batch.createProject();
+          ISourceProjectM project = batch.createProject();
           
           Assert.assertEquals("1/0", project.getLocation().getProjectRoot().getRelativePath().toString());
           project.getProperties().NAME.setValue("Test project C");
@@ -118,24 +117,24 @@ public class CoreRepositoryTest {
         
         {
           // Create a new project
-          ISourceProjectMod project = batch.createProject();
+          ISourceProjectM project = batch.createProject();
           
           Assert.assertEquals("1/1", project.getLocation().getProjectRoot().getRelativePath().toString());
           project.getProperties().NAME.setValue("Test project D");
           project.getProperties().save();
         }
-        Assert.assertEquals(2, batch.getProjects().size());
+        Assert.assertEquals(2, batch.getProjectCount());
       }
-      Assert.assertEquals(4, repo.getProjects().size());
-      Assert.assertEquals(2, repo.getBatches().size());
+      Assert.assertEquals(4, repo.getProjectCount());
+      Assert.assertEquals(2, repo.getProjectCount());
     }
     
     {
       // Reload the repo and make sure everything works
-      IRepository<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
+      IRepo<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
       
-      Assert.assertEquals(4, repo.getProjects().size());
-      Assert.assertEquals(2, repo.getBatches().size());
+      Assert.assertEquals(4, repo.getProjectCount());
+      Assert.assertEquals(2, repo.getProjectCount());
 
       {
         Iterator<? extends IBatch<? extends ISourceProject>> iter = repo.getBatches().iterator();
@@ -156,10 +155,10 @@ public class CoreRepositoryTest {
     
     {
       // Reload one last time to check for the cache
-      IRepository<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
+      IRepo<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
       
-      Assert.assertEquals(4, repo.getProjects().size());
-      Assert.assertEquals(2, repo.getBatches().size());
+      Assert.assertEquals(4, repo.getProjectCount());
+      Assert.assertEquals(2, repo.getProjectCount());
 
       {
         Iterator<? extends IBatch<? extends ISourceProject>> iter = repo.getBatches().iterator();
@@ -184,18 +183,18 @@ public class CoreRepositoryTest {
     RepositoryFactory.INPUT_REPO.setValue(folder.newFolder("add-content"));
     
     // Create the repository
-    IRepositoryMod<? extends ISourceProjectMod, ? extends IBatchMod<? extends ISourceProjectMod>> repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
+    IRepoM<? extends ISourceProjectM, ? extends IBatchM<? extends ISourceProjectM>> repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
     
-    IBatchMod<? extends ISourceProjectMod> batch = repo.createBatch();
+    IBatchM<? extends ISourceProjectM> batch = repo.createBatch();
     
-    ISourceProjectMod project = batch.createProject();
+    ISourceProjectM project = batch.createProject();
     
     IFileSet files = project.getContent();
     
     Assert.assertEquals(0, files.getFiles().size());
     Assert.assertFalse(files.getRoot().getAllFiles().iterator().hasNext());
     
-    project.addContent(new File("./test/resources/project-content"));
+    project.addContent(new File("./test/resources/project-content"), false);
     
     Assert.assertEquals(3, files.getFiles().size());
     Iterator<? extends IContentFile> iter = files.getFiles().iterator();

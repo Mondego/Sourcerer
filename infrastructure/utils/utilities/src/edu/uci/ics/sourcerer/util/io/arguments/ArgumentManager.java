@@ -47,11 +47,9 @@ import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
 public class ArgumentManager {
   private static ArgumentManager singleton = null;
   
-  private static Map<String, Collection<Argument<?>>> registeredProperties = null;
-  
-  public static final Argument<Boolean> HELP = new BooleanArgument("help", false, "Prints usage information.").register("General");
-  public static final Argument<File> PROPERTIES_FILE = new FileArgument("properties-file", "File containing Java-style property bindings.").makeOptional().register("General");
-  public static final Argument<InputStream> PROPERTIES_STREAM = new StreamArgument("properties-stream", "Stream containing Java-style property bindings.").makeOptional().register("General");
+  public static final Argument<Boolean> HELP = new BooleanArgument("help", false, "Prints usage information.").permit();
+  public static final Argument<File> PROPERTIES_FILE = new FileArgument("properties-file", "File containing Java-style property bindings.").makeOptional().permit();
+  public static final Argument<InputStream> PROPERTIES_STREAM = new StreamArgument("properties-stream", "Stream containing Java-style property bindings.").makeOptional().permit();
   
   private Map<String, String> propertyMap;
   
@@ -65,6 +63,7 @@ public class ArgumentManager {
   
   static void executeCommand(String[] args, Class<?> klass) {
     Command activeCommand = null;
+    Collection<Argument<?>> commandProps = null;
     Collection<Argument<?>> missingProperties = Helper.newLinkedList();
     Collection<Argument<?>[]> invalidConditionals = Helper.newLinkedList();
     
@@ -117,10 +116,10 @@ public class ArgumentManager {
           stack.add(prop.makeOptional());
         }
       }
-      Collection<Argument<?>> commandProps = Helper.getFromMap(registeredProperties, activeCommand.getName(), LinkedHashSet.class);
+      commandProps = Helper.newLinkedList();
       while (!stack.isEmpty()) {
         Argument<?> prop = stack.pop();
-        commandProps.add(prop);
+        commandProps.add(prop.permit());
         for (Argument<?> required : prop.getRequiredProperties()) {
           if (!Boolean.TRUE.equals(prop.getValue())) {
             required.makeOptional();
@@ -152,29 +151,20 @@ public class ArgumentManager {
       }
       
       // Check all of the registered properties
-      for (Collection<Argument<?>> props :  registeredProperties.values()) {
-        for (Argument<?> prop : props) {
-          if (prop.isNotOptional() && !prop.hasValue()) {
-            missingProperties.add(prop);
-          }
+      for (Argument<?> prop : commandProps) {
+        if (prop.isNotOptional() && !prop.hasValue()) {
+          missingProperties.add(prop);
         }
       }
     }
     
     if (HELP.getValue()) {
-      printHelp(activeCommand);
+      printHelp(activeCommand, commandProps);
     } else if (missingProperties.isEmpty() && invalidConditionals.isEmpty()) {
       activeCommand.execute();
     } else {
       printCommand(activeCommand, missingProperties, invalidConditionals);
     }
-  }
-  
-  public synchronized static void registerProperty(String category, Argument<?> property) {
-    if (registeredProperties == null) {
-      registeredProperties = Helper.newHashMap();   
-    }
-    Helper.getFromMap(registeredProperties, category, HashSet.class).add(property);
   }
   
   private static void printCommands(Collection<Command> commands) {
@@ -230,7 +220,7 @@ public class ArgumentManager {
     printer.close();
   }
   
-  private synchronized static void printHelp(Command command) {
+  private synchronized static void printHelp(Command command, Collection<Argument<?>> args) {
     Logging.REPORT_TO_CONSOLE.setValue(true);
     TablePrettyPrinter printer = TablePrettyPrinter.getLoggerPrettyPrinter();
     printer.addHeader("The following properties are available for " + command.getName() + ". Properties should be specified as --<name> <value>.");
@@ -242,27 +232,13 @@ public class ArgumentManager {
     printer.beginRow();
     printer.addCell(command.getName(), 3, Alignment.CENTER);
     printer.addDividerRow();
-    for (Argument<?> prop : registeredProperties.get(command.getName())) {
+    for (Argument<?> prop : args) {
       printer.beginRow();
       printer.addCell(prop.getName());
       printer.addCell(prop.getType());
       printer.addCell(prop.getDescription());
     }
     
-    // Now do the remainder
-    registeredProperties.remove(command.getName());
-    for (Map.Entry<String, Collection<Argument<?>>> entry : registeredProperties.entrySet()) {
-      printer.addDividerRow();
-      printer.beginRow();
-      printer.addCell(entry.getKey(), 3, Alignment.CENTER);
-      printer.addDividerRow();
-      for (Argument<?> prop : entry.getValue()) {
-        printer.beginRow();
-        printer.addCell(prop.getName());
-        printer.addCell(prop.getType());
-        printer.addCell(prop.getDescription());
-      }
-    }
     printer.addDividerRow();
     printer.endTable();
     printer.close();

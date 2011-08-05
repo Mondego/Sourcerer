@@ -22,10 +22,10 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.File;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.IBatch;
-import edu.uci.ics.sourcerer.tools.core.repo.model.IBatchMod;
-import edu.uci.ics.sourcerer.tools.core.repo.model.IRepositoryMod;
-import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectMod;
-import edu.uci.ics.sourcerer.tools.core.repo.model.IRepository;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IBatchM;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IRepoM;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectM;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IRepo;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProject;
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
@@ -36,13 +36,13 @@ import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 public final class InternalRepositoryFactory extends RepositoryFactory {
   
   @Override
-  public IRepository<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> loadSourceRepository(Argument<File> root) {
+  public IRepo<? extends ISourceProject, ? extends IBatch<? extends ISourceProject>> loadSourceRepository(Argument<File> root) {
     logger.info("Loading source repository at: " + root.getValue().getPath());
     return new SourceRepository(RepoFile.makeRoot(root));
   }
 
   @Override
-  public IRepositoryMod<? extends ISourceProjectMod, ? extends IBatchMod<? extends ISourceProjectMod>> loadModifiableSourceRepository(Argument<File> root) {
+  public IRepoM<? extends ISourceProjectM, ? extends IBatchM<? extends ISourceProjectM>> loadModifiableSourceRepository(Argument<File> root) {
     logger.info("Loading modifiable source repository at: " + root.getValue().getPath());
     return new SourceRepository(RepoFile.makeRoot(root));
   }

@@ -19,7 +19,7 @@ package edu.uci.ics.sourcerer.util.io;
 
 /**
  * Marker interface for Java objects that can be written/read by {@link SimpleSerializer}
- * and {@link SimpleDeserializer}
+ * and {@link SimpleDeserializer}. Every implementing class must have a no-argument constructor.
  * 
  * If a field should not be included, annotate it with {@link Ignore}.
  * 

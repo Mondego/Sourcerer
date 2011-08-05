@@ -40,7 +40,7 @@ public class FileArgument extends Argument<File> {
   
   @Override
   public String getDefaultString() {
-    return defaultValue.getPath();
+    return getDefaultValue().getPath();
   }
   
   @Override

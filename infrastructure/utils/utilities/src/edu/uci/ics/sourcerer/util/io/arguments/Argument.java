@@ -30,19 +30,21 @@ import edu.uci.ics.sourcerer.util.Helper;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class Argument <T> {
-  public static final Argument<Boolean> PROMPT_MISSING = new BooleanArgument("prompt-missing", false, "Prompt for missing properties.").register("General");
+  public static final Argument<Boolean> PROMPT_MISSING = new BooleanArgument("prompt-missing", false, "Prompt for missing properties.").permit();
   
-  protected String name;
-  protected boolean initialized;
-  protected T value;
-  protected T defaultValue;
-  protected Argument<?>[] requiredProperties;
+  private String name;
+  private boolean initialized;
+  private T value;
+  private T defaultValue;
+  private Argument<?>[] requiredProperties;
 
-  protected Collection<Argument<?>> requiredBy;
-  protected String description;
+  private Collection<Argument<?>> requiredBy;
+  private String description;
   
-  protected boolean optional = false;
-  protected boolean allowNull = false;
+  private boolean optional = false;
+  private boolean allowNull = false;
+  
+  private boolean permitted = false;
   
   protected Argument(String name, T defaultValue, String description) {
     this.name = name;
@@ -53,24 +55,24 @@ public abstract class Argument <T> {
     }
   }
   
-  protected void isRequiredBy(Argument<?> prop) {
+  protected final void isRequiredBy(Argument<?> prop) {
     if (requiredBy == null) {
       requiredBy = Helper.newLinkedList();
     }
     requiredBy.add(prop);
   }
   
-  public Argument<T> makeOptional() {
+  public Argument<T> permit() {
+    permitted = true;
+    return this;
+  }
+  
+  public final Argument<T> makeOptional() {
     optional = true;
     return this;
   }
-  
-  public Argument<T> register(String category) {
-    ArgumentManager.registerProperty(category, this);
-    return this;
-  }
-  
-  public Argument<T> setRequiredProperties(Argument<?> ... properties) {
+    
+  public final Argument<T> setRequiredProperties(Argument<?> ... properties) {
     if (requiredProperties == null) {
       requiredProperties = properties;
       return this;
@@ -79,13 +81,13 @@ public abstract class Argument <T> {
     }
   }
   
-  public String getName() {
+  public final String getName() {
     return name;
   }
   
   public abstract String getType();
   
-  protected Argument<?>[] getRequiredProperties() {
+  protected final Argument<?>[] getRequiredProperties() {
     if (requiredProperties == null) {
       return new Argument<?>[0];
     } else {
@@ -93,7 +95,7 @@ public abstract class Argument <T> {
     }
   }
   
-  public String getDescription() {
+  public final String getDescription() {
     String required = "";
     if (requiredBy != null) {
       StringBuilder builder = new StringBuilder(" Required by");
@@ -110,27 +112,30 @@ public abstract class Argument <T> {
     }
   }
   
-  public String toString() {
+  public final String toString() {
     return name;
   }
   
-  public boolean isNotOptional() {
+  public final boolean isNotOptional() {
     return !optional;
   }
   
-  public boolean hasValue() {
+  public final boolean hasValue() {
     if (!initialized) {
       initializeValue();
     }
     return value != null || hasDefaultValue();
   }
   
-  public synchronized void setValue(T value) {
+  public final synchronized void setValue(T value) {
     this.value = value;
     initialized = true;
   }
   
-  public synchronized T getValue() {
+  public final synchronized T getValue() {
+    if (!permitted) {
+      throw new IllegalStateException(name + " is not registered, and so access is not permitted.");
+    }
     if (!initialized) {
       initializeValue();
     }
@@ -155,7 +160,7 @@ public abstract class Argument <T> {
   
   protected abstract T parseString(String value);
   
-  private synchronized void initializeValue() {
+  private final synchronized void initializeValue() {
     if (!initialized) {
       ArgumentManager properties = ArgumentManager.getProperties();
       String stringValue = properties.getValue(name);

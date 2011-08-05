@@ -17,9 +17,13 @@
  */
 package edu.uci.ics.sourcerer.util.io;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Ignore {
 
 }

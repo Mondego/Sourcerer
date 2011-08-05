@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.tools.link.downloader;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,9 +39,9 @@ import edu.uci.ics.sourcerer.tools.link.model.Project;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.TimeCounter;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
@@ -60,11 +61,9 @@ public final class Subversion {
     
     DAVRepositoryFactory.setup();
       
-    SimpleDeserializer reader = null;
     SimpleSerializer writer = null;
     EntryWriter<Project> ew = null;
     try {
-      reader = IOUtils.makeSimpleDeserializer(in);
       writer = IOUtils.resumeSimpleSerializer(out);
       ew = writer.getEntryWriter(Project.class);
       
@@ -82,10 +81,10 @@ public final class Subversion {
       SVNRepository repo = null;
       boolean fast = FAST_CONTAINS_JAVA.getValue();
       
-      for (Project project : reader.readNextToIterable(Project.class, true, true)) {
+      for (Project project : IOUtils.deserialize(Project.class, in, true)) {
         if (!resume.contains(project.getName())) {
           try {
-            logger.info("  Examining " + project.getName());
+            logger.info("Examining " + project.getName());
             repo = SVNRepositoryFactory.create(SVNURL.parseURIDecoded(project.getUrl()));
             SVNNodeKind nodeKind = repo.checkPath("", -1);
             if (nodeKind == SVNNodeKind.DIR) {
@@ -127,7 +126,7 @@ public final class Subversion {
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error reading from file system.", e);
     } finally {
-      IOUtils.close(ew, reader, writer);
+      IOUtils.close(ew, writer);
     }
   }
   
@@ -216,5 +215,58 @@ public final class Subversion {
     }
     timer.logTimeAndCount(4, "directories examined and no Java found");
     return false;
+  }
+  
+  @SuppressWarnings("unchecked")
+  public static File download(String url) {
+    File content = FileUtils.makeTempDir();
+    
+    DAVRepositoryFactory.setup();
+    
+    try {
+      SVNRepository repo = SVNRepositoryFactory.create(SVNURL.parseURIDecoded(url));
+      SVNNodeKind nodeKind = repo.checkPath("", -1);
+      if (nodeKind == SVNNodeKind.DIR) {
+        Collection<String> trunks = findTrunks(repo);
+        if (trunks == null) {
+          logger.log(Level.WARNING, "Unable to find trunk for " + url);
+          trunks = Collections.singleton("");
+        }
+        
+        Deque<String> stack = Helper.newStack();
+        stack.addAll(trunks);
+        
+        TimeCounter timer = new TimeCounter(10, 2, "files downloaded");
+        while (!stack.isEmpty()) {
+          String path = stack.pop();
+          File dir = new File(content, path);
+          Collection<SVNDirEntry> entries = repo.getDir(path, -1, null, (Collection<?>) null);
+          for (SVNDirEntry entry : entries) {
+            String child = path.equals("") ? entry.getName() : path + "/" + entry.getName(); 
+            if (entry.getKind() == SVNNodeKind.FILE) {
+              dir.mkdirs();
+              repo.getFile(child, -1, null, IOUtils.makeOutputStream(new File(dir, entry.getName())));
+              timer.increment();
+            } else if (entry.getKind() == SVNNodeKind.DIR) {
+              stack.push(child);
+            }
+          }
+        }
+        timer.logTotalTimeAndCount(2, "files downloaded");
+        return content;
+      } else {
+        logger.log(Level.SEVERE, "Unexpected node kind: " + nodeKind + " for " + url);
+        FileUtils.delete(content);
+        return null;
+      }
+    } catch (SVNException e) {
+      logger.log(Level.SEVERE, "Error downloading " + url, e);
+      FileUtils.delete(content);
+      return null;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error writing download from " + url, e);
+      FileUtils.delete(content);
+      return null;
+    }
   }
 }

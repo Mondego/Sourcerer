@@ -24,10 +24,12 @@ import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface ISourceProject extends IProject {
-  public static final Argument<String> PROJECT_CONTENT = new StringArgument("project-content-dir", "content", "Project contents.");
-  public static final Argument<String> PROJECT_CONTENT_ZIP = new StringArgument("project-content-zip-file", "content.zip", "Project contents.");
+  public static final Argument<String> PROJECT_CONTENT = new StringArgument("project-content-dir", "content", "Project contents.").permit();
+  public static final Argument<String> PROJECT_CONTENT_ZIP = new StringArgument("project-content-zip-file", "content.zip", "Project contents.").permit();
   
   public SourceProjectProperties getProperties();
   
   public IFileSet getContent();
+  
+  public boolean hasContent();
 }

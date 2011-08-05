@@ -25,15 +25,15 @@ import java.util.Scanner;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.IRepoFile;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.CustomSimpleSerializable;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
-import edu.uci.ics.sourcerer.util.io.internal.FieldConverter;
-import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
-import edu.uci.ics.sourcerer.util.io.internal.LWRec;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-class RepoFile implements IRepoFile, LWRec {
+class RepoFile implements IRepoFile, CustomSimpleSerializable {
   private final RepoFile root;
   private final RelativePath relativePath;
   private final File file;
@@ -251,14 +251,14 @@ class RepoFile implements IRepoFile, LWRec {
     }
   }
   
-  /* LWRec Related Methods */
+  /* Serialization Related Methods */
   
-  public static void registerConverterHelper(final RepoFile repoRoot) {
-    FieldConverter.registerConverterHelper(RepoFile.class, new FieldConverter.FieldConverterHelper() {
+  public ObjectDeserializer<RepoFile> makeDeserializer() {
+    return new ObjectDeserializer<RepoFile>() {
       @Override
-      protected Object makeFromScanner(Scanner scanner) throws IllegalAccessException {
+      public Object deserialize(Scanner scanner) {
         String value = scanner.next();
-        RepoFile root = repoRoot;
+        RepoFile root = RepoFile.this;
         int sep = -1;
         int prevSep = sep + 1;
         while ((sep = value.indexOf(';', prevSep)) >= 0) {
@@ -267,15 +267,15 @@ class RepoFile implements IRepoFile, LWRec {
         }
         return root.getChild(RelativePath.makeFromWriteable(value.substring(prevSep)));
       }
-    });
+    };
   }
   
   @Override
-  public String writeToString() {
+  public String serialize() {
     if (root.root == null) {
       return relativePath.toWriteableString();
     } else {
-      return root.writeToString() + ";" + relativePath.toWriteableString();
+      return root.serialize() + ";" + relativePath.toWriteableString();
     }
   }
 }

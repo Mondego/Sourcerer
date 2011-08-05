@@ -21,7 +21,6 @@ package edu.uci.ics.sourcerer.util.io.properties;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class StringProperty extends Property<String> {
-  
   public StringProperty(String name, AbstractProperties properties) {
     super(name, properties);
   }

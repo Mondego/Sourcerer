@@ -17,17 +17,20 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.io.File;
 import java.lang.ref.SoftReference;
+import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectMod;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectM;
 import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProjectProperties;
-import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-class SourceProject extends RepoProject implements ISourceProjectMod {
+class SourceProject extends RepoProject implements ISourceProjectM {
   private RepoFile contentFile;
   private SoftReference<AbstractFileSet> files; 
   
@@ -58,20 +61,30 @@ class SourceProject extends RepoProject implements ISourceProjectMod {
   }
 
   @Override
-  public void addContent(File file) {
-//    if (contentFile.isDirectory()) {
-      contentFile.makeDirs();
-      FileUtils.copyFile(file, contentFile.toFile());
-      
-      if (files != null) {
-        AbstractFileSet fileSet = files.get();
-        if (fileSet != null) {
-          fileSet.reset();
-        }
+  public boolean addContent(File file, boolean move) {
+    boolean success = false;
+    if (move) {
+      success = FileUtils.moveFile(file, contentFile.toFile());
+    } else {
+      success = FileUtils.copyFile(file, contentFile.toFile());
+    }
+    if (!success) {
+      logger.log(Level.SEVERE, "Unable to move/copy content from " + file.getPath() + " to " + contentFile.toFile().getPath());
+    }
+    
+    if (files != null) {
+      AbstractFileSet fileSet = files.get();
+      if (fileSet != null) {
+        fileSet.reset();
       }
-//    } else {
-//      throw new IllegalStateException("May not add content to a compressed project.");
-//    }
+    }
+    
+    return success;
+  }
+  
+  @Override
+  public boolean hasContent() {
+    return contentFile.exists();
   }
   
   @Override

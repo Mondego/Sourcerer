@@ -26,6 +26,6 @@ import java.io.File;
 public final class Arguments {
   private Arguments() {}
   
-  public static final Argument<File> OUTPUT = new FileArgument("output", "General purpose output directory.");
+  public static final Argument<File> OUTPUT = new FileArgument("output", "General purpose output directory.").permit();
   public static final Argument<File> INPUT = new FileArgument("input", "General purpose input file/directory.");
 }

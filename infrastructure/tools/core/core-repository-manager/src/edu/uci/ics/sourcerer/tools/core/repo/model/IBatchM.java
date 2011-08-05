@@ -17,25 +17,10 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo.model;
 
-import java.io.File;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface ISourceProjectMod extends IProjectMod, ISourceProject {
-  /**
-   * Deletes the project's contents.
-   *  
-   * @return <tt>true</tt> if successful
-   */
-  public boolean deleteContent();
-  
-  /**
-   * Copies the contents of <tt>file</tt> into the
-   * project's <tt>content</tt>> directory. Will
-   * not work if the project's contents are compressed.
-   * 
-   * This will not overwrite anything.
-   */
-  public void addContent(File file);
+public interface IBatchM <Project extends IProject> extends IBatch<Project> {
+  public Project createProject();
 }

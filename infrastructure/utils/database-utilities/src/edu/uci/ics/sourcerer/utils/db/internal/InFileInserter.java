@@ -8,7 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.utils.db.IRowInsert;
 import edu.uci.ics.sourcerer.utils.db.IRowInserter;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
@@ -49,7 +49,7 @@ class InFileInserter implements IRowInserter {
   
   @Override
   public void insert() {
-    FileUtils.close(writer);
+    IOUtils.close(writer);
     executor.execute("LOAD DATA LOCAL INFILE '" + tempFile.getPath().replace('\\', '/') + "' " +
     		"INTO TABLE " + table + " " +
 				"FIELDS TERMINATED BY ',' " +

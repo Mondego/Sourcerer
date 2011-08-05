@@ -32,11 +32,19 @@ public final class IOUtilFactory {
     return SimpleSerializerImpl.make(file.getValue());
   }
   
+  public static SimpleSerializer makeSimpleSerializer(File file) throws IOException {
+    return SimpleSerializerImpl.make(file);
+  }
+  
   public static SimpleSerializer resumeSimpleSerializer(Argument<File> file) throws IOException {
     return SimpleSerializerImpl.resume(file.getValue());
   }
   
   public static SimpleDeserializer makeSimpleDeserializer(Argument<File> file) throws IOException {
     return SimpleDeserializerImpl.make(file.getValue());
+  }
+  
+  public static SimpleDeserializer makeSimpleDeserializer(File file) throws IOException {
+    return SimpleDeserializerImpl.make(file);
   }
 }

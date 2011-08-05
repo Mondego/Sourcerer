@@ -17,14 +17,14 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.IProjectMod;
+import edu.uci.ics.sourcerer.tools.core.repo.model.IProjectM;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ProjectProperties;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class RepoProject implements IProjectMod {
+public class RepoProject implements IProjectM {
   protected final ProjectLocation loc;
   
   protected final RepoFile propFile;

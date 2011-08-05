@@ -27,10 +27,11 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.IFileSet;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
-import edu.uci.ics.sourcerer.util.io.internal.LineFileReader;
-import edu.uci.ics.sourcerer.util.io.internal.SimpleSerializerImpl;
-import edu.uci.ics.sourcerer.util.io.internal.SimpleSerializerImpl.EntryWriter;
+import edu.uci.ics.sourcerer.util.io.EntryWriter;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
+import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
+import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -71,10 +72,10 @@ public abstract class AbstractFileSet implements IFileSet {
       }
     }
     
-    SimpleSerializerImpl writer = null;
+    SimpleSerializer writer = null;
     try {
       cache.getParentFile().mkdirs();
-      writer = FileUtils.getLineFileWriter(cache);
+      writer = IOUtils.makeSimpleSerializer(cache);
       EntryWriter<RepoFile> ew = writer.getEntryWriter(RepoFile.class);
       for (ContentFile file : files) {
         ew.write(file.getFile());
@@ -84,16 +85,16 @@ public abstract class AbstractFileSet implements IFileSet {
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Unable to write file cache", e);
     } finally {
-      FileUtils.close(writer);
+      IOUtils.close(writer);
     }
     FileUtils.delete(cache);
   }
   
   private final boolean readCache() {
-    LineFileReader reader = null;
+    SimpleDeserializer reader = null;
     try {
-      reader = FileUtils.getLineFileReader(cache);
-      for (RepoFile file : reader.readNextToIterable(RepoFile.class)) {
+      reader = IOUtils.makeSimpleDeserializer(cache);
+      for (RepoFile file : reader.readNextToIterable(root.getFile().makeDeserializer(), false)) {
         addFile(file);
       }
       return true;
@@ -103,7 +104,7 @@ public abstract class AbstractFileSet implements IFileSet {
       files.clear();
       return false;
     } finally {
-      FileUtils.close(reader);
+      IOUtils.close(reader);
     }
   }
   
