@@ -44,7 +44,7 @@ public class Main {
     protected void action() {
       Subversion.filterSubversionLinksForJava(FlossmoleCrawler.GOOGLE_CODE_LIST, GOOGLE_CODE_JAVA_LIST);
     }
-  }.setProperties(Arguments.INPUT, FlossmoleCrawler.GOOGLE_CODE_LIST.asInput(), GOOGLE_CODE_JAVA_LIST.asOutput());
+  }.setProperties(Arguments.INPUT, FlossmoleCrawler.GOOGLE_CODE_LIST.asInput(), GOOGLE_CODE_JAVA_LIST.asOutput(), Subversion.FAST_CONTAINS_JAVA);
   
   public static final Command ADD_JAVA_GC_PROJECTS_TO_REPO = new Command("add-java-gc-projects-to-repo", "Adds the Java Google Code projects to the repository.") {
     @Override
