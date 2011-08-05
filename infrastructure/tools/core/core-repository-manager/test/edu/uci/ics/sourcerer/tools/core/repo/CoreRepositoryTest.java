@@ -194,7 +194,7 @@ public class CoreRepositoryTest {
     Assert.assertEquals(0, files.getFiles().size());
     Assert.assertFalse(files.getRoot().getAllFiles().iterator().hasNext());
     
-    project.addContent(new File("./test/resources/project-content"), false);
+    project.addContent(new File("./test/resources/project-content"));
     
     Assert.assertEquals(3, files.getFiles().size());
     Iterator<? extends IContentFile> iter = files.getFiles().iterator();

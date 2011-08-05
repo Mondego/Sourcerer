@@ -83,7 +83,12 @@ public abstract class AbstractProperties {
       initialize();
     }
     for (Property<?> prop : props) {
-      properties.setProperty(prop.getName(), prop.getValueAsString());
+      String val = prop.getValueAsString();
+      if (val == null) {
+        properties.remove(prop.getName());
+      } else {
+        properties.setProperty(prop.getName(), val);
+      }
     }
     OutputStream os = null;
     try {

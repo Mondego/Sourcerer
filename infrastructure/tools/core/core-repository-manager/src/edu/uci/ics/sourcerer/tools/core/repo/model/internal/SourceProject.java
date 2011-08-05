@@ -61,32 +61,42 @@ class SourceProject extends RepoProject implements ISourceProjectM {
   }
 
   @Override
-  public boolean addContent(File file, boolean move) {
-    boolean success = false;
-    if (move) {
-      success = FileUtils.moveFile(file, contentFile.toFile());
-    } else {
-      success = FileUtils.copyFile(file, contentFile.toFile());
-    }
-    if (!success) {
-      logger.log(Level.SEVERE, "Unable to move/copy content from " + file.getPath() + " to " + contentFile.toFile().getPath());
-    }
-    
-    if (files != null) {
-      AbstractFileSet fileSet = files.get();
-      if (fileSet != null) {
-        fileSet.reset();
+  public boolean addContent(File file) {
+    if (FileUtils.copyFile(file, contentFile.toFile())) {
+      if (files != null) {
+        AbstractFileSet fileSet = files.get();
+        if (fileSet != null) {
+          fileSet.reset();
+        }
       }
+      return true;
+    } else {
+      logger.log(Level.SEVERE, "Unable to copy content from " + file.getPath() + " to " + contentFile.toFile().getPath());
+      return false;
     }
-    
-    return success;
+  }
+  
+  @Override
+  public boolean addContent(ContentAdder adder) {
+    if (adder.addContent(contentFile.toFile())) {
+      if (files != null) {
+        AbstractFileSet fileSet = files.get();
+        if (fileSet != null) {
+          fileSet.reset();
+        }
+      }
+      return true;
+    } else {
+      logger.log(Level.SEVERE, "Unable to add content to " + contentFile.toFile().getPath());
+      return false;
+    }
   }
   
   @Override
   public boolean hasContent() {
     return contentFile.exists();
   }
-  
+    
   @Override
   public AbstractFileSet getContent() {
     AbstractFileSet ret = null;

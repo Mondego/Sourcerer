@@ -37,5 +37,11 @@ public interface ISourceProjectM extends IProjectM, ISourceProject {
    * 
    * This will not overwrite anything.
    */
-  public boolean addContent(File file, boolean move);
+  public boolean addContent(File file);
+  
+  public boolean addContent(ContentAdder adder);
+  
+  public interface ContentAdder {
+    public boolean addContent(File file);
+  }
 }

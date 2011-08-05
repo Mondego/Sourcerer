@@ -218,9 +218,7 @@ public final class Subversion {
   }
   
   @SuppressWarnings("unchecked")
-  public static File download(String url) {
-    File content = FileUtils.makeTempDir();
-    
+  public static boolean download(String url, File target) {
     DAVRepositoryFactory.setup();
     
     try {
@@ -239,7 +237,7 @@ public final class Subversion {
         TimeCounter timer = new TimeCounter(10, 2, "files downloaded");
         while (!stack.isEmpty()) {
           String path = stack.pop();
-          File dir = new File(content, path);
+          File dir = new File(target, path);
           Collection<SVNDirEntry> entries = repo.getDir(path, -1, null, (Collection<?>) null);
           for (SVNDirEntry entry : entries) {
             String child = path.equals("") ? entry.getName() : path + "/" + entry.getName(); 
@@ -253,20 +251,20 @@ public final class Subversion {
           }
         }
         timer.logTotalTimeAndCount(2, "files downloaded");
-        return content;
+        return true;
       } else {
         logger.log(Level.SEVERE, "Unexpected node kind: " + nodeKind + " for " + url);
-        FileUtils.delete(content);
-        return null;
+        FileUtils.delete(target);
+        return false;
       }
     } catch (SVNException e) {
       logger.log(Level.SEVERE, "Error downloading " + url, e);
-      FileUtils.delete(content);
-      return null;
+      FileUtils.delete(target);
+      return false;
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error writing download from " + url, e);
-      FileUtils.delete(content);
-      return null;
+      FileUtils.delete(target);
+      return false;
     }
   }
 }

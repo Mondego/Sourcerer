@@ -35,7 +35,11 @@ public abstract class Property<T> {
   protected abstract T parseValue(String value);
   
   protected String toString(T value) {
-    return value.toString();
+    if (value == null) {
+      return null;
+    } else {
+      return value.toString();
+    }
   }
   
   protected String getName() {

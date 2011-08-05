@@ -28,11 +28,11 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.tools.core.repo.model.IBatchM;
 import edu.uci.ics.sourcerer.tools.core.repo.model.IRepoM;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectM;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectM.ContentAdder;
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
 import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProjectProperties;
 import edu.uci.ics.sourcerer.tools.link.model.Project;
 import edu.uci.ics.sourcerer.util.TimeCounter;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
 
@@ -91,15 +91,18 @@ public final class RepoBuilder {
     
     TimeCounter timer = new TimeCounter();
     
-    for (ISourceProjectM project : repo.getProjects()) {
-      if (!project.hasContent()) {
+    for (final ISourceProjectM project : repo.getProjects()) {
+      if (!project.hasContent() || project.getProperties().DOWNLOAD_DATE.getValue() == null) {
         logger.info("Downloading content for " + project.getProperties().NAME.getValue() + " (" + project.getLocation() + ") from " + project.getProperties().URL.getValue());
-        File content = Downloader.download(project.getProperties().URL.getValue());
-        if (content != null) {
-          project.addContent(content, true);
+        ContentAdder adder = new ContentAdder() {
+          @Override
+          public boolean addContent(File file) {
+            return Downloader.download(project.getProperties().URL.getValue(), file);
+          }
+        };
+        if (project.addContent(adder)) {
           project.getProperties().DOWNLOAD_DATE.setValue(day);
           project.getProperties().save();
-          FileUtils.delete(content);
         }
         timer.increment();
       }

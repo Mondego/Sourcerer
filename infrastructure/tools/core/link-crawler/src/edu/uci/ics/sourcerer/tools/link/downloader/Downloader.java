@@ -22,16 +22,19 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.File;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectM;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ISourceProjectM.ContentAdder;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Downloader {
-  public static File download(String url) {
+  public static boolean download(String url, File file) {
     if (url.endsWith("svn")) {
-      return Subversion.download(url);
+      return Subversion.download(url, file);
     } else {
       logger.log(Level.SEVERE, "Unable to identify form of url: " + url);
-      return null;
+      return false;
     }
   }
 }
