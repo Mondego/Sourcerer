@@ -108,10 +108,14 @@ public final class Subversion {
               } else {
                 withoutJava++;
               }
+            } else if (nodeKind == SVNNodeKind.NONE) {
+              logger.info("  No SVN");
+              noSVN++;
             } else {
               logger.log(Level.SEVERE, "Unexpected node kind: " + nodeKind + " for " + project.getName());
             }
           } catch (SVNException e) {
+            logger.log(Level.SEVERE, "SVN Exception", e);
             noSVN++;
           }
           logger.log(Logging.RESUME, project.getName());
