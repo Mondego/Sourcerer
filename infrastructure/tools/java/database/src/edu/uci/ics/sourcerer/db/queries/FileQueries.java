@@ -30,11 +30,11 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
 
-import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.QueryResult;
-import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.model.File;
 import edu.uci.ics.sourcerer.model.db.FileDB;
+import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
+import edu.uci.ics.sourcerer.utils.db.QueryResult;
+import edu.uci.ics.sourcerer.utils.db.ResultTranslator;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

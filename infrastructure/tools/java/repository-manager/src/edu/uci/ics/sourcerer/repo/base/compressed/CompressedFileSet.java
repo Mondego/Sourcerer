@@ -32,22 +32,22 @@ import java.util.zip.ZipFile;
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
 import edu.uci.ics.sourcerer.repo.base.JarFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
-import edu.uci.ics.sourcerer.util.io.FieldConverter;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
+import edu.uci.ics.sourcerer.util.io.internal.FieldConverter;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class CompressedFileSet extends AbstractFileSet {
   private RepoProject project;
-  private RepoFile base;
+  private RepoFileImpl base;
   private String baseCanonical;
  
   public CompressedFileSet(RepoProject project) {
     super(project);
     this.project = project;
-    base = RepoFile.make(project.getRepository().getTempDir());
+    base = RepoFileImpl.make(project.getRepository().getTempDir());
     try {
       baseCanonical = base.toFile().getCanonicalPath();
     } catch (IOException e) {
@@ -81,7 +81,7 @@ public class CompressedFileSet extends AbstractFileSet {
     }
   }
     
-  protected class CompressedRepoFile extends RepoFile {
+  protected class CompressedRepoFile extends RepoFileImpl {
     private boolean tempExtracted;
     
     public CompressedRepoFile(String path) {

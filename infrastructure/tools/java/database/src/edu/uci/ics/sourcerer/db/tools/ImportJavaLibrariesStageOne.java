@@ -18,9 +18,9 @@
 package edu.uci.ics.sourcerer.db.tools;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.util.TimeCounter;
+import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

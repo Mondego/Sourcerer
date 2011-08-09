@@ -27,18 +27,18 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.db.queries.InlineDatabaseAccessor;
 import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
-import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
-import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class UsageGenerator {
-  public static final IOFilePropertyFactory FQN_USAGE_LISTING_FILE = new IOFilePropertyFactory("fqn-usage-listing", "fqn-usage-listing.txt", "Listing of externally used FQNs.");
-  public static final Property<Integer> TOP_COUNT = new IntegerProperty("top-count", 1000, "Number of top items to compute.");
-  public static final IOFilePropertyFactory TOP_REFERENCED_FRAGMENTS_FILE = new IOFilePropertyFactory("top-referenced-fragments-file", "top-referenced-fragments-file.txt", "File name for the list of the top referenced fragments.");
+  public static final IOFileArgumentFactory FQN_USAGE_LISTING_FILE = new IOFileArgumentFactory("fqn-usage-listing", "fqn-usage-listing.txt", "Listing of externally used FQNs.");
+  public static final Argument<Integer> TOP_COUNT = new IntegerArgument("top-count", 1000, "Number of top items to compute.");
+  public static final IOFileArgumentFactory TOP_REFERENCED_FRAGMENTS_FILE = new IOFileArgumentFactory("top-referenced-fragments-file", "top-referenced-fragments-file.txt", "File name for the list of the top referenced fragments.");
   
   public static void generateFqnUsageListing() {
     new InlineDatabaseAccessor() {

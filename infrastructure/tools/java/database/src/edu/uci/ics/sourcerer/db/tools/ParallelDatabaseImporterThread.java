@@ -18,7 +18,7 @@
 package edu.uci.ics.sourcerer.db.tools;
 
 import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
+import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
 
 public abstract class ParallelDatabaseImporterThread extends DatabaseAccessor implements Runnable {
   private Thread t;

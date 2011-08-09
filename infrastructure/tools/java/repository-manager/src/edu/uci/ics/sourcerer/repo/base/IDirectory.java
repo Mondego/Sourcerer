@@ -17,12 +17,12 @@
  */
 package edu.uci.ics.sourcerer.repo.base;
 
-import edu.uci.ics.sourcerer.util.io.LineWriteable;
+import edu.uci.ics.sourcerer.util.io.SimpleSerializable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IDirectory extends LineWriteable {
+public interface IDirectory extends SimpleSerializable {
   public String getName();
   
   public Iterable<IDirectory> getSubdirectories();

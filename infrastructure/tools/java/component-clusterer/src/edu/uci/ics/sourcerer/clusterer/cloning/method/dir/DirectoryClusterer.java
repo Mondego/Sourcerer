@@ -46,25 +46,25 @@ import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.Counter;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
-import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
-import edu.uci.ics.sourcerer.util.io.properties.IntegerProperty;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class DirectoryClusterer {
-  public static final IOFilePropertyFactory DIRECTORY_LISTING = new IOFilePropertyFactory("directory-listing", "dir-listing.txt", "List of all the directories in the repository.");
+  public static final IOFileArgumentFactory DIRECTORY_LISTING = new IOFileArgumentFactory("directory-listing", "dir-listing.txt", "List of all the directories in the repository.");
 
-  public static final IOFilePropertyFactory MATCHED_DIRECTORIES = new IOFilePropertyFactory("dir-matched-dirs", "dir-matched-dirs.txt", "The results of matching the directories.");
-  public static final IOFilePropertyFactory MATCHED_FILES = new IOFilePropertyFactory("dir-matched-files", "dir-matched-files.txt", "The results of matching the files.");
-  public static final IOFilePropertyFactory FILTERED_MATCHED_FILES = new IOFilePropertyFactory("filtered-dir-matched-files", "filtered-dir-matched-files.txt", "The matched files filtered by the intersection list.");
+  public static final IOFileArgumentFactory MATCHED_DIRECTORIES = new IOFileArgumentFactory("dir-matched-dirs", "dir-matched-dirs.txt", "The results of matching the directories.");
+  public static final IOFileArgumentFactory MATCHED_FILES = new IOFileArgumentFactory("dir-matched-files", "dir-matched-files.txt", "The results of matching the files.");
+  public static final IOFileArgumentFactory FILTERED_MATCHED_FILES = new IOFileArgumentFactory("filtered-dir-matched-files", "filtered-dir-matched-files.txt", "The matched files filtered by the intersection list.");
   
-  public static final Property<Integer> MINIMUM_MATCH_SIZE = new IntegerProperty("minimum-match-size", 5, "Minimum number of files that must match per directory.");
+  public static final Argument<Integer> MINIMUM_MATCH_SIZE = new IntegerArgument("minimum-match-size", 5, "Minimum number of files that must match per directory.");
   
-  public static final IOFilePropertyFactory POPULAR_NAMES = new IOFilePropertyFactory("popular-names", "popular-names.txt", "Filenames sorted by popularity.");
-  public static final Property<Integer> POPULAR_DISCARD = new IntegerProperty("popular-discard", 500, "Discard the filenames that occur too often.");  
+  public static final IOFileArgumentFactory POPULAR_NAMES = new IOFileArgumentFactory("popular-names", "popular-names.txt", "Filenames sorted by popularity.");
+  public static final Argument<Integer> POPULAR_DISCARD = new IntegerArgument("popular-discard", 500, "Discard the filenames that occur too often.");  
   
   public static void generateDirectoryListing() {
     logger.info("Loading repository...");

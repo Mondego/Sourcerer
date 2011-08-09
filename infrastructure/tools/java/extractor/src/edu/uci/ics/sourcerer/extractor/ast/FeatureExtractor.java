@@ -38,6 +38,7 @@ import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.internal.core.BinaryType;
 
 import edu.uci.ics.sourcerer.extractor.Extractor;
+import edu.uci.ics.sourcerer.extractor.bytecode.ClassFileExtractor;
 import edu.uci.ics.sourcerer.extractor.io.IMissingTypeWriter;
 import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.util.Helper;
@@ -93,100 +94,102 @@ public final class FeatureExtractor {
   
   public ClassExtractionReport extractClassFiles(Collection<IClassFile> classFiles, boolean force) {
     ClassExtractionReport report = new ClassExtractionReport();
-    ClassFileExtractor extractor = new ClassFileExtractor(bundle);
-    ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
-    IMissingTypeWriter missingTypeWriter = bundle.getMissingTypeWriter();
+//    ClassFileExtractor extractor = new ClassFileExtractor(bundle);
+//    ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(bundle);
+//    IMissingTypeWriter missingTypeWriter = bundle.getMissingTypeWriter();
     
+    ClassFileExtractor extractor = new ClassFileExtractor();
     for (IClassFile classFile : classFiles) {
-      try {
-        if (ClassFileExtractor.isTopLevelOrAnonymous(classFile)) {
-          ISourceRange source = classFile.getSourceRange();
+      extractor.extractClassFile(classFile);
+//      try {
+//        if (ClassFileExtractor.isTopLevelOrAnonymous(classFile)) {
+//          ISourceRange source = classFile.getSourceRange();
+//          
+//          boolean hasSource = true; 
+//          if (source == null || source.getLength() == 0) {
+//            source = classFile.getSourceRange();
+//            if (source == null || source.getLength() == 0) {
+//              hasSource = false;
+//            }
+//          }
           
-          boolean hasSource = true; 
-          if (source == null || source.getLength() == 0) {
-            source = classFile.getSourceRange();
-            if (source == null || source.getLength() == 0) {
-              hasSource = false;
-            }
-          }
+//          if (hasSource) {
+//            // Verify that the source file matches the binary file
+//            BinaryType type = (BinaryType)classFile.getType();
+//            if (type.isAnonymous()) {
+//              continue;
+//            }
+//            String sourceFile = type.getPackageFragment().getElementName() + "." + type.getSourceFileName(null);
+//            String fqn = classFile.getType().getFullyQualifiedName() + ".java";
+//            if (!fqn.equals(sourceFile)) {
+////              logger.log(Level.WARNING, "Source fqn mismatch: " + sourceFile + " " + fqn);
+//              continue;
+//            }
+//          }
           
-          if (hasSource) {
-            // Verify that the source file matches the binary file
-            BinaryType type = (BinaryType)classFile.getType();
-            if (type.isAnonymous()) {
-              continue;
-            }
-            String sourceFile = type.getPackageFragment().getElementName() + "." + type.getSourceFileName(null);
-            String fqn = classFile.getType().getFullyQualifiedName() + ".java";
-            if (!fqn.equals(sourceFile)) {
-//              logger.log(Level.WARNING, "Source fqn mismatch: " + sourceFile + " " + fqn);
-              continue;
-            }
-          }
-          
-          if (!hasSource || Extractor.EXTRACT_BINARY.getValue()) {
-            extractor.extractClassFile(classFile);
-            report.reportBinaryExtraction();
-            if (hasSource) {
-              report.reportSourceSkipped();
-            }
-          } else {
-            try {
-              parser.setStatementsRecovery(true);
-              parser.setResolveBindings(true);
-              parser.setBindingsRecovery(true);
-              parser.setSource(classFile);
-              
-              CompilationUnit unit = (CompilationUnit) parser.createAST(null);
-              boolean foundProblem = false;
-              // start by checking for a "public type" error
-              // just skip this unit in if one is found 
-              for (IProblem problem : unit.getProblems()) {
-                if (problem.isError() && problem.getID() == IProblem.PublicClassMustMatchFileName) {
-                  foundProblem = true;
-                }
-              }
-              if (foundProblem) {
-                continue;
-              }
-              
-              boolean secondOrder = checkForMissingTypes(unit, report, missingTypeWriter);
-              if (force || !report.hadMissingType()) {
-                if (secondOrder) {
-                  visitor.setBindingFreeMode(true);
-                }
-                try {
-                  unit.accept(visitor);
-                  report.reportSourceExtraction();
-                } catch (Exception e) {
-                  logger.log(Level.SEVERE, "Error in extracting " + classFile.getElementName(), e);
-                  for (IProblem problem : unit.getProblems()) {
-                    if (problem.isError()) {
-                      logger.log(Level.SEVERE, "Error in source for class file (" + classFile.getElementName() + "): " + problem.getMessage());
-                    }
-                  }
-                  report.reportSourceExtractionException();
-                  try {
-                    extractor.extractClassFile(classFile);
-                    report.reportBinaryExtraction();
-                  } catch (Exception e2) {
-                    logger.log(Level.SEVERE, "Unable to extract " + classFile.getElementName(), e2);
-                    report.reportBinaryExtractionException();
-                  }
-                }
-                visitor.setBindingFreeMode(false);
-              }
-            } catch (Exception e) {
-              logger.log(Level.SEVERE, "Error in extracting " + classFile.getElementName(), e);
-              extractor.extractClassFile(classFile);
-              report.reportBinaryExtraction();
-            }
-          }
-        }
-      } catch (Exception e) {
-        logger.log(Level.SEVERE, "Unable to extract " + classFile.getElementName(), e);
-        report.reportBinaryExtractionException();
-      }
+//          if (!hasSource || Extractor.EXTRACT_BINARY.getValue()) {
+//            extractor.extractClassFile(classFile);
+//            report.reportBinaryExtraction();
+//            if (hasSource) {
+//              report.reportSourceSkipped();
+//            }
+//          } else {
+//            try {
+//              parser.setStatementsRecovery(true);
+//              parser.setResolveBindings(true);
+//              parser.setBindingsRecovery(true);
+//              parser.setSource(classFile);
+//              
+//              CompilationUnit unit = (CompilationUnit) parser.createAST(null);
+//              boolean foundProblem = false;
+//              // start by checking for a "public type" error
+//              // just skip this unit in if one is found 
+//              for (IProblem problem : unit.getProblems()) {
+//                if (problem.isError() && problem.getID() == IProblem.PublicClassMustMatchFileName) {
+//                  foundProblem = true;
+//                }
+//              }
+//              if (foundProblem) {
+//                continue;
+//              }
+//              
+//              boolean secondOrder = checkForMissingTypes(unit, report, missingTypeWriter);
+//              if (force || !report.hadMissingType()) {
+//                if (secondOrder) {
+//                  visitor.setBindingFreeMode(true);
+//                }
+//                try {
+//                  unit.accept(visitor);
+//                  report.reportSourceExtraction();
+//                } catch (Exception e) {
+//                  logger.log(Level.SEVERE, "Error in extracting " + classFile.getElementName(), e);
+//                  for (IProblem problem : unit.getProblems()) {
+//                    if (problem.isError()) {
+//                      logger.log(Level.SEVERE, "Error in source for class file (" + classFile.getElementName() + "): " + problem.getMessage());
+//                    }
+//                  }
+//                  report.reportSourceExtractionException();
+//                  try {
+//                    extractor.extractClassFile(classFile);
+//                    report.reportBinaryExtraction();
+//                  } catch (Exception e2) {
+//                    logger.log(Level.SEVERE, "Unable to extract " + classFile.getElementName(), e2);
+//                    report.reportBinaryExtractionException();
+//                  }
+//                }
+//                visitor.setBindingFreeMode(false);
+//              }
+//            } catch (Exception e) {
+//              logger.log(Level.SEVERE, "Error in extracting " + classFile.getElementName(), e);
+//              extractor.extractClassFile(classFile);
+//              report.reportBinaryExtraction();
+//            }
+//          }
+//        }
+//      } catch (Exception e) {
+//        logger.log(Level.SEVERE, "Unable to extract " + classFile.getElementName(), e);
+//        report.reportBinaryExtractionException();
+//      }
     }
     return report;
   }

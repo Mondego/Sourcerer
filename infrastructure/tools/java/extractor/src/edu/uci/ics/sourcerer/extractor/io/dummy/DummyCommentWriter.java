@@ -17,12 +17,12 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import edu.uci.ics.sourcerer.extractor.io.ICommentWriter;
+import edu.uci.ics.sourcerer.extractor.io.CommentWriter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyCommentWriter implements ICommentWriter {
+public class DummyCommentWriter implements CommentWriter {
   @Override
   public void writeBlockComment(String containingFile, int startPos, int length) {
   }

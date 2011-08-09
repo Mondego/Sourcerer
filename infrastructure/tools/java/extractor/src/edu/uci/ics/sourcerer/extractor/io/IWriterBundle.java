@@ -31,7 +31,7 @@ public interface IWriterBundle {
 
   public IRelationWriter getRelationWriter();
 
-  public ICommentWriter getCommentWriter();
+  public CommentWriter getCommentWriter();
 
   public IFileWriter getFileWriter();
 

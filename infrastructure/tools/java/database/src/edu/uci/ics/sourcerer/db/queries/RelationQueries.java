@@ -23,11 +23,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 
-import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.model.Relation;
 import edu.uci.ics.sourcerer.model.db.LocationDB;
+<<<<<<< HEAD
 import edu.uci.ics.sourcerer.model.db.RelationDB;
+=======
+import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
+import edu.uci.ics.sourcerer.utils.db.ResultTranslator;
+>>>>>>> flossmole
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

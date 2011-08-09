@@ -25,19 +25,19 @@ import java.util.Deque;
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.base.IJavaFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
-import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
+import edu.uci.ics.sourcerer.tools.core.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
-import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class DiskUsageCalculator {
-  public static final IOFilePropertyFactory REPO_DISK_USAGE_FILE = new IOFilePropertyFactory("repo-disk-usage-file", "repo-disk-usage.txt", "File containing repository disk usage information.");
+  public static final DualFileArgument REPO_DISK_USAGE_FILE = new DualFileArgument("repo-disk-usage-file", "repo-disk-usage.txt", "File containing repository disk usage information.");
   
   public static void printRepositoryDiskUsage(Repository repo) {
     long totalSize = 0;
@@ -66,7 +66,7 @@ public class DiskUsageCalculator {
       }
     }
     
-    FileUtils.cleanTempDir();
+    FileUtils.deleteTempDir();
     
     logger.info("Loading jar index...");
     JarIndex index = repo.getJarIndex();

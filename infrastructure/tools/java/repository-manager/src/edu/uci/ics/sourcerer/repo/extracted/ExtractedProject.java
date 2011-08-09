@@ -21,24 +21,24 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractExtractedProperties;
 import edu.uci.ics.sourcerer.repo.general.ExtractedProjectProperties;
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedProject extends Extracted {
-  public static final Property<String> JAR_FILE_FILE = new StringProperty("jar-file-file", "jars.txt", "Filename for the associated jars.");
+  public static final Argument<String> JAR_FILE_FILE = new StringArgument("jar-file-file", "jars.txt", "Filename for the associated jars.");
   
   private ExtractedProjectProperties properties;
    
-  public ExtractedProject(RepoFile content) {
+  public ExtractedProject(RepoFileImpl content) {
     super(content);
     properties = ExtractedProjectProperties.loadProperties(getPropertiesFile());
   }
   
-  public ExtractedProject(RepoFile content, File propFile) {
+  public ExtractedProject(RepoFileImpl content, File propFile) {
     super(content);
     properties = ExtractedProjectProperties.loadProperties(propFile);
     File exPropFile = getPropertiesFile();

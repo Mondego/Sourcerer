@@ -31,13 +31,13 @@ import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.LineFileWriter;
-import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class HashingClusterer {
-  public static final IOFilePropertyFactory HASH_FILE_LISTING = new IOFilePropertyFactory("hash-file-listing", "hash-file-listing.txt", "List of all the files (and their hashes) in the repository.");
+  public static final IOFileArgumentFactory HASH_FILE_LISTING = new IOFileArgumentFactory("hash-file-listing", "hash-file-listing.txt", "List of all the files (and their hashes) in the repository.");
   
   public static void generateFileListing() {
     logger.info("Loading repository...");
@@ -68,7 +68,7 @@ public class HashingClusterer {
             ew.write(hashedFile);
           }
         }
-        FileUtils.resetTempDir();
+        FileUtils.cleanTempDir();
       }
       logger.info("Done!");
     } catch (IOException e) {

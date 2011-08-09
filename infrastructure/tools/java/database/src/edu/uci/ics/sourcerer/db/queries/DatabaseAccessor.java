@@ -29,9 +29,9 @@ import edu.uci.ics.sourcerer.db.schema.ProblemsTable;
 import edu.uci.ics.sourcerer.db.schema.ProjectMetricsTable;
 import edu.uci.ics.sourcerer.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.db.schema.RelationsTable;
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
-import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.TableLocker;
+import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
+import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
+import edu.uci.ics.sourcerer.utils.db.TableLocker;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

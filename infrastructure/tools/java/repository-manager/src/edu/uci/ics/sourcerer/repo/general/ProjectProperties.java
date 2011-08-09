@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.repo.general;
 
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

@@ -17,14 +17,14 @@
  */
 package edu.uci.ics.sourcerer.repo.base;
 
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
-import edu.uci.ics.sourcerer.util.io.LineWriteable;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
+import edu.uci.ics.sourcerer.util.io.SimpleSerializable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IJarFile extends LineWriteable {
+public interface IJarFile extends SimpleSerializable {
   public String getHash();
   
-  public RepoFile getFile();
+  public RepoFileImpl getFile();
 }

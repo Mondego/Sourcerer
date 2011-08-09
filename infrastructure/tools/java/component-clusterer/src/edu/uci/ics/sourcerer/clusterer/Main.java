@@ -22,11 +22,11 @@ import edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintClu
 import edu.uci.ics.sourcerer.clusterer.cloning.method.fqn.FqnClusterer;
 import edu.uci.ics.sourcerer.clusterer.cloning.method.hash.HashingClusterer;
 import edu.uci.ics.sourcerer.clusterer.usage.project.UsageComputer;
-import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
-import edu.uci.ics.sourcerer.util.io.Command;
-import edu.uci.ics.sourcerer.util.io.Properties;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
+import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
+import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
+import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
+import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -108,7 +108,7 @@ public class Main {
       protected void action() {
         CloningStatistics.performAnalysis();
       }
-    }.setProperties(Properties.INPUT, HashingClusterer.HASH_FILE_LISTING.asInput(), FqnClusterer.FQN_FILE_LISTING.asInput(), FingerprintClusterer.FINGERPRINT_FILE_LISTING.asInput(), CloningStatistics.COMPARE_FILE_SETS, CloningStatistics.COMPUTE_CLONING_STATS);
+    }.setProperties(Arguments.INPUT, HashingClusterer.HASH_FILE_LISTING.asInput(), FqnClusterer.FQN_FILE_LISTING.asInput(), FingerprintClusterer.FINGERPRINT_FILE_LISTING.asInput(), CloningStatistics.COMPARE_FILE_SETS, CloningStatistics.COMPUTE_CLONING_STATS);
 
   public static final Command COMPUTE_ENTITY_LISTING =
     new Command("compute-entity-listing", "Computes the list of entities starting with the specified prefix.") {
@@ -123,7 +123,7 @@ public class Main {
         UsageComputer.computeUsageListing();
         
       }
-    }.setProperties(Properties.INPUT, UsageComputer.ENTITY_LISTING_FILE.asInput(), UsageComputer.USAGE_LISTING_FILE.asInput(), DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
+    }.setProperties(Arguments.INPUT, UsageComputer.ENTITY_LISTING_FILE.asInput(), UsageComputer.USAGE_LISTING_FILE.asInput(), DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
 //  public static final Command COMPUTE_GENERAL_STATISTICS =
 //    new Command("compute-general-stats", "Compute general statistics.") {
 //      protected void action() {
@@ -201,6 +201,6 @@ public class Main {
 //    }.setProperties(ImportUsageGenerator.IMPORT_USAGE_LISTING, DatabaseConnection.DATABASE_URL, DatabaseConnection.DATABASE_USER, DatabaseConnection.DATABASE_PASSWORD);
   
   public static void main(String[] args) {
-    PropertyManager.executeCommand(args, Main.class);
+    ArgumentManager.executeCommand(args, Main.class);
   }
 }

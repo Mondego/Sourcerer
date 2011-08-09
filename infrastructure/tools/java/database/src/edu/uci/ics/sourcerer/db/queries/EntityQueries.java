@@ -23,13 +23,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 
-import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.model.Entity;
 import edu.uci.ics.sourcerer.model.db.EntityDB;
 import edu.uci.ics.sourcerer.model.db.LocationDB;
 import edu.uci.ics.sourcerer.model.db.MediumEntityDB;
 import edu.uci.ics.sourcerer.model.db.SmallEntityDB;
+import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
+import edu.uci.ics.sourcerer.utils.db.ResultTranslator;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

@@ -17,9 +17,16 @@
  */
 package edu.uci.ics.sourcerer.extractor.io;
 
+import java.io.Closeable;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface IExtractorWriter {
-  public void close();
+public abstract class IExtractorWriter implements Closeable {
+  private BufferedWriter writer;
+  
+  protected void open(File output) {
+    
+  }
+  public void close() {}
 }

@@ -120,7 +120,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.jdt.core.dom.WildcardType;
 
-import edu.uci.ics.sourcerer.extractor.io.ICommentWriter;
+import edu.uci.ics.sourcerer.extractor.io.CommentWriter;
 import edu.uci.ics.sourcerer.extractor.io.IEntityWriter;
 import edu.uci.ics.sourcerer.extractor.io.IFileWriter;
 import edu.uci.ics.sourcerer.extractor.io.IImportWriter;
@@ -142,7 +142,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private IFileWriter fileWriter;
   private IProblemWriter problemWriter;
   private IImportWriter importWriter;
-  private ICommentWriter commentWriter;
+  private CommentWriter commentWriter;
   private IEntityWriter entityWriter;
   private ILocalVariableWriter localVariableWriter;
   private IRelationWriter relationWriter;

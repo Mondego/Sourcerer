@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.db.queries;
 
-import edu.uci.ics.sourcerer.db.util.QueryExecutor;
+import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

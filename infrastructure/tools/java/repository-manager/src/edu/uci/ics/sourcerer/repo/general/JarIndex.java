@@ -43,10 +43,11 @@ import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.base.IJarFile;
 import edu.uci.ics.sourcerer.repo.base.JarNamer;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
-import edu.uci.ics.sourcerer.repo.base.Repository;
+import edu.uci.ics.sourcerer.tools.core.repo.base.Repository;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -433,7 +434,7 @@ public class JarIndex {
             totalFiles++;
           }
           logger.log(RESUME, project.getProjectRoot().getRelativePath());
-          FileUtils.resetTempDir();
+          FileUtils.cleanTempDir();
         } catch (Exception e) {
           logger.log(Level.SEVERE, "Unable to extract project: " + project, e);
         }
@@ -448,7 +449,7 @@ public class JarIndex {
       namer.rename();
     }
     
-    FileUtils.cleanTempDir();
+    FileUtils.deleteTempDir();
     
     logger.info("--- Done! ---");
   }

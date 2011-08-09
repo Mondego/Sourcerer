@@ -10,4 +10,5 @@ Require-Bundle: org.eclipse.core.runtime,
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
- ../../../../bin/dist/sourcerer-lib.jar
+ ../../../../bin/dist/sourcerer-lib.jar,
+ ../../../../lib/asm-3.3.1.jar

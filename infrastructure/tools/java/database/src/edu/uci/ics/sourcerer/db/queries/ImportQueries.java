@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.db.queries;
 
+<<<<<<< HEAD
 import static edu.uci.ics.sourcerer.db.schema.ImportsTable.*;
 
 import java.sql.ResultSet;
@@ -26,6 +27,9 @@ import java.util.Collection;
 import edu.uci.ics.sourcerer.db.util.QueryExecutor;
 import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.model.db.ImportDB;
+=======
+import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
+>>>>>>> flossmole
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

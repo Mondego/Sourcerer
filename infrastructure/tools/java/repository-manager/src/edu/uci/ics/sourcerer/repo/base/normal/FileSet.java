@@ -24,22 +24,22 @@ import java.util.Scanner;
 import edu.uci.ics.sourcerer.repo.base.AbstractFileSet;
 import edu.uci.ics.sourcerer.repo.base.JarFile;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.FieldConverter;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.internal.FieldConverter;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FileSet extends AbstractFileSet {
-  private RepoFile content;
+  private RepoFileImpl content;
   
   static {
-    FieldConverter.registerConverterHelper(RepoFile.class, new FieldConverter.FieldConverterHelper() {
+    FieldConverter.registerConverterHelper(RepoFileImpl.class, new FieldConverter.FieldConverterHelper() {
       @Override
       protected Object makeFromScanner(Scanner value) throws IllegalAccessException {
-        return RepoFile.makeFromScanner(value);
+        return RepoFileImpl.makeFromScanner(value);
       }
     });
   }

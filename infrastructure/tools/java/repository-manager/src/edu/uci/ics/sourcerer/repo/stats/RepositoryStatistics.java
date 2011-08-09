@@ -25,20 +25,20 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.IFileSet;
 import edu.uci.ics.sourcerer.repo.base.RepoProject;
-import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.tools.core.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
-import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class RepositoryStatistics {
-  public static final IOFilePropertyFactory JAR_STATS_FILE = new IOFilePropertyFactory("jar-stats-file", "jar-stats.txt", "File containing repository jar statistics.");
+  public static final DualFileArgument JAR_STATS_FILE = new DualFileArgument("jar-stats-file", "jar-stats.txt", "File containing repository jar statistics.");
   public static void printJarStatistics(Repository repo) {
     JarIndex index = repo.getJarIndex();
     int project = 0;
@@ -83,7 +83,7 @@ public class RepositoryStatistics {
     }
   }
   
-  public static final IOFilePropertyFactory PROJECT_SIZES_FILE = new IOFilePropertyFactory("project-sizes-file", "project-sizes.txt", "File containing project size information");
+  public static final DualFileArgument PROJECT_SIZES_FILE = new DualFileArgument("project-sizes-file", "project-sizes.txt", "File containing project size information");
   public static void printProjectSizes(Repository repo) {
     BufferedWriter bw = null;
     try {
@@ -103,7 +103,7 @@ public class RepositoryStatistics {
     }
   }
   
-  public static final IOFilePropertyFactory PROJECT_NAMES_FILE = new IOFilePropertyFactory("project-names-file", "project-names.txt", "File containing the names of the projects in the repository.");
+  public static final DualFileArgument PROJECT_NAMES_FILE = new DualFileArgument("project-names-file", "project-names.txt", "File containing the names of the projects in the repository.");
   public static void printProjectNames(Repository repo) {
     BufferedWriter bw = null;
     try {

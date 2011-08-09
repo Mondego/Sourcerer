@@ -19,7 +19,7 @@ package edu.uci.ics.sourcerer.repo.maven;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-import static edu.uci.ics.sourcerer.util.io.Properties.OUTPUT;
+import static edu.uci.ics.sourcerer.util.io.arguments.Arguments.OUTPUT;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -37,15 +37,15 @@ import java.util.regex.Pattern;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class MavenCrawler {
-  public static final Property<String> MAVEN_URL = new StringProperty("maven-url", "URL of the maven repository");
-  public static final Property<String> LINKS_FILE = new StringProperty("links-file", "links.txt", "File containing links crawled from maven.");
+  public static final Argument<String> MAVEN_URL = new StringArgument("maven-url", "URL of the maven repository");
+  public static final Argument<String> LINKS_FILE = new StringArgument("links-file", "links.txt", "File containing links crawled from maven.");
   
   public static void getDownloadLinks() {
     Pattern linkPattern = Pattern.compile("<a\\shref=\"(.*?)\">");

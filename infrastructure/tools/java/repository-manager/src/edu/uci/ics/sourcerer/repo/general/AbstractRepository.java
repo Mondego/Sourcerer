@@ -21,23 +21,24 @@ import java.io.File;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.FileProperty;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractRepository {
-  public static final Property<File> INPUT_REPO = new FileProperty("input-repo", "The root directory of the input repository.");
-  public static final Property<File> OUTPUT_REPO = new FileProperty("output-repo", "The root directory of the output repository.");
+  public static final Argument<File> INPUT_REPO = new FileArgument("input-repo", "The root directory of the input repository.");
+  public static final Argument<File> OUTPUT_REPO = new FileArgument("output-repo", "The root directory of the output repository.");
   
-  public static final Property<File> JAR_FILTER = new FileProperty("jar-filter", "Only load these jars.").makeOptional();
-  public static final Property<File> PROJECT_FILTER = new FileProperty("project-filter", "Only load these projects.").makeOptional();
+  public static final Argument<File> JAR_FILTER = new FileArgument("jar-filter", "Only load these jars.").makeOptional();
+  public static final Argument<File> PROJECT_FILTER = new FileArgument("project-filter", "Only load these projects.").makeOptional();
   
-  public static final Property<String> JARS_DIR = new StringProperty("jars-dir", "jars", "The subdirectory containing the jar files.");
-  public static final Property<String> JAR_INDEX_FILE = new StringProperty("jar-index", "index.txt", "The filename of the jar index.");
+  public static final Argument<String> JARS_DIR = new StringArgument("jars-dir", "jars", "The subdirectory containing the jar files.");
+  public static final Argument<String> JAR_INDEX_FILE = new StringArgument("jar-index", "index.txt", "The filename of the jar index.");
 
   protected RepoFile repoRoot;
   protected RepoFile libsRoot;

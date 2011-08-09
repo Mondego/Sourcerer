@@ -25,23 +25,23 @@ import java.io.IOException;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.repo.base.AbstractJavaFile;
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
-import edu.uci.ics.sourcerer.util.io.LWField;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
+import edu.uci.ics.sourcerer.util.io.internal.LineWriterIgnore;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JavaFile extends AbstractJavaFile {
-  @LWField
+  @LineWriterIgnore
   private String pkg;
-  @LWField
-  private RepoFile file;
-  @LWField
+  @LineWriterIgnore
+  private RepoFileImpl file;
+  @LineWriterIgnore
   private boolean packageComputed = false;
   
   protected JavaFile() {}
   
-  public JavaFile(RepoFile file) {
+  public JavaFile(RepoFileImpl file) {
     this.file = file;
   }
   
@@ -83,7 +83,7 @@ public class JavaFile extends AbstractJavaFile {
   }
   
   @Override
-  public RepoFile getFile() {
+  public RepoFileImpl getFile() {
     return file;
   }
   

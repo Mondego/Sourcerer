@@ -34,18 +34,18 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.LineFileReader;
 import edu.uci.ics.sourcerer.util.io.LineFileWriter;
 import edu.uci.ics.sourcerer.util.io.LineFileWriter.EntryWriter;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class UsageComputer {
-  public static final Property<String> FQN_PREFIX = new StringProperty("fqn-prefix", "String prefix for which to compute project usage information.");
+  public static final Argument<String> FQN_PREFIX = new StringArgument("fqn-prefix", "String prefix for which to compute project usage information.");
   
-  public static final IOFilePropertyFactory ENTITY_LISTING_FILE = new IOFilePropertyFactory("entity-listing-file", "entity-listing.txt", "File containing the list of entities matching the fqn prefix.");
-  public static final IOFilePropertyFactory USAGE_LISTING_FILE = new IOFilePropertyFactory("usage-listing-file", "usage-listing.txt", "File containing the usage listing.");
+  public static final IOFileArgumentFactory ENTITY_LISTING_FILE = new IOFileArgumentFactory("entity-listing-file", "entity-listing.txt", "File containing the list of entities matching the fqn prefix.");
+  public static final IOFileArgumentFactory USAGE_LISTING_FILE = new IOFileArgumentFactory("usage-listing-file", "usage-listing.txt", "File containing the usage listing.");
   
   public static void computeEntityListing() {
     new InlineDatabaseAccessor() {

@@ -28,19 +28,19 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Iterators;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.LineFileReader;
-import edu.uci.ics.sourcerer.util.io.LineFileWriter;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.BooleanProperty;
-import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
+import edu.uci.ics.sourcerer.util.io.internal.LineFileReader;
+import edu.uci.ics.sourcerer.util.io.internal.SimpleSerializerImpl;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractFileSet implements IFileSet {
-  public static final Property<String> FILE_CACHE = new StringProperty("file-cache-file", "file-cache.txt", "Cache of the file set's files.");
-  public static final Property<Boolean> CLEAR_FILE_CACHE = new BooleanProperty("clear-file-cache", false, "Clears the file caches.");
+  public static final Argument<String> FILE_CACHE = new StringArgument("file-cache-file", "file-cache.txt", "Cache of the file set's files.");
+  public static final Argument<Boolean> CLEAR_FILE_CACHE = new BooleanArgument("clear-file-cache", false, "Clears the file caches.");
   
   private File cache;
   
@@ -208,7 +208,7 @@ public abstract class AbstractFileSet implements IFileSet {
     }
     
     // Store in the cache
-    LineFileWriter writer = null;
+    SimpleSerializerImpl writer = null;
     try {
       writer = FileUtils.getLineFileWriter(cache);
       writer.write(jarFiles);

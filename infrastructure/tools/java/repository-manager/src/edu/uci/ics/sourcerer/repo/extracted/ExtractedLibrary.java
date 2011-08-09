@@ -21,8 +21,8 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.repo.general.AbstractBinaryProperties;
 import edu.uci.ics.sourcerer.repo.general.ExtractedLibraryProperties;
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -30,7 +30,7 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 public class ExtractedLibrary extends ExtractedBinary {
   private ExtractedLibraryProperties properties;
   
-  public ExtractedLibrary(RepoFile content) {
+  public ExtractedLibrary(RepoFileImpl content) {
     super(content);
     properties = ExtractedLibraryProperties.loadProperties(getPropertiesFile());
   }

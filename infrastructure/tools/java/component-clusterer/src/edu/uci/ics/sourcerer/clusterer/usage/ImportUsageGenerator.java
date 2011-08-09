@@ -24,13 +24,13 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.db.queries.InlineDatabaseAccessor;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.properties.IOFilePropertyFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.IOFileArgumentFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ImportUsageGenerator {
-  public static final IOFilePropertyFactory IMPORT_USAGE_LISTING = new IOFilePropertyFactory("import-usage-listing", "import-usage-listing.txt", "List of all the import statements.");
+  public static final IOFileArgumentFactory IMPORT_USAGE_LISTING = new IOFileArgumentFactory("import-usage-listing", "import-usage-listing.txt", "List of all the import statements.");
   
   public static void generateImportUsageListing() {
     new InlineDatabaseAccessor() {

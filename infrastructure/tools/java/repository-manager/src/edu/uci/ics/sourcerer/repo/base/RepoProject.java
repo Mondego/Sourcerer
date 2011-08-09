@@ -22,18 +22,18 @@ import edu.uci.ics.sourcerer.repo.base.normal.FileSet;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedRepository;
 import edu.uci.ics.sourcerer.repo.general.ProjectProperties;
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class RepoProject {
   private Repository repo;
-  private RepoFile projectRoot;
-  private RepoFile content;
-  private RepoFile properties;
+  private RepoFileImpl projectRoot;
+  private RepoFileImpl content;
+  private RepoFileImpl properties;
   
-  public RepoProject(Repository repo, RepoFile projectRoot, RepoFile content) {
+  public RepoProject(Repository repo, RepoFileImpl projectRoot, RepoFileImpl content) {
     this.repo = repo;
     this.projectRoot = projectRoot;
     this.content = content;
@@ -59,15 +59,15 @@ public class RepoProject {
     return repo;
   }
   
-  public RepoFile getProjectRoot() {
+  public RepoFileImpl getProjectRoot() {
     return projectRoot;
   }
   
-  public RepoFile getContent() {
+  public RepoFileImpl getContent() {
     return content;
   }
   
-  public RepoFile getProperties() {
+  public RepoFileImpl getProperties() {
     return properties;
   }
   

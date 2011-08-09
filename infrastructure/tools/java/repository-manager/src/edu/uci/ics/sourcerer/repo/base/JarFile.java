@@ -17,21 +17,21 @@
  */
 package edu.uci.ics.sourcerer.repo.base;
 
-import edu.uci.ics.sourcerer.repo.general.RepoFile;
-import edu.uci.ics.sourcerer.util.io.LWField;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
+import edu.uci.ics.sourcerer.util.io.internal.LineWriterIgnore;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarFile implements IJarFile {
-  @LWField
+  @LineWriterIgnore
   private String hash;
-  @LWField
-  private RepoFile file;
+  @LineWriterIgnore
+  private RepoFileImpl file;
 
   protected JarFile() {}
   
-  public JarFile(String hash, RepoFile file) {
+  public JarFile(String hash, RepoFileImpl file) {
     this.hash = hash;
     this.file = file;
   }
@@ -42,7 +42,7 @@ public class JarFile implements IJarFile {
   }
   
   @Override
-  public RepoFile getFile() {
+  public RepoFileImpl getFile() {
     return file;
   }
   

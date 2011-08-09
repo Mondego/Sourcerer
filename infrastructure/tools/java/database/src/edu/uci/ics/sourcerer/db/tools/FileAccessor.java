@@ -29,8 +29,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import edu.uci.ics.sourcerer.db.queries.DatabaseAccessor;
+<<<<<<< HEAD
 import edu.uci.ics.sourcerer.db.util.DatabaseConnection;
 import edu.uci.ics.sourcerer.model.Entity;
+=======
+>>>>>>> flossmole
 import edu.uci.ics.sourcerer.model.File;
 import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.db.EntityDB;
@@ -45,7 +48,8 @@ import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
 import edu.uci.ics.sourcerer.repo.general.IndexedJar;
 import edu.uci.ics.sourcerer.repo.general.JarIndex;
 import edu.uci.ics.sourcerer.util.TimeoutManager;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

@@ -18,17 +18,17 @@
 package edu.uci.ics.sourcerer.db.tools;
 
 import static edu.uci.ics.sourcerer.db.tools.ParallelDatabaseImporter.THREAD_COUNT;
-import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_PASSWORD;
-import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_URL;
-import static edu.uci.ics.sourcerer.db.util.DatabaseConnection.DATABASE_USER;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JARS_DIR;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JAR_FILTER;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.JAR_INDEX_FILE;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.OUTPUT_REPO;
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.PROJECT_FILTER;
-import edu.uci.ics.sourcerer.util.io.Command;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
+import static edu.uci.ics.sourcerer.util.db.DatabaseConnection.DATABASE_PASSWORD;
+import static edu.uci.ics.sourcerer.util.db.DatabaseConnection.DATABASE_URL;
+import static edu.uci.ics.sourcerer.util.db.DatabaseConnection.DATABASE_USER;
+import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
+import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -77,6 +77,6 @@ public class Main {
   }.setProperties(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD, FamixExporter.PROJECT_ID, FamixExporter.FAMIX_FILE.asOutput());
   
   public static void main(String[] args) {
-    PropertyManager.executeCommand(args, Main.class);
+    ArgumentManager.executeCommand(args, Main.class);
   }
 }

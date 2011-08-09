@@ -21,18 +21,19 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.TableLocker;
-import edu.uci.ics.sourcerer.db.util.columns.BooleanColumn;
-import edu.uci.ics.sourcerer.db.util.columns.Column;
-import edu.uci.ics.sourcerer.db.util.columns.EnumColumn;
-import edu.uci.ics.sourcerer.db.util.columns.IntColumn;
-import edu.uci.ics.sourcerer.db.util.columns.StringColumn;
 import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedJar;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedLibrary;
 import edu.uci.ics.sourcerer.repo.extracted.ExtractedProject;
+import edu.uci.ics.sourcerer.util.db.columns.BooleanColumn;
+import edu.uci.ics.sourcerer.util.db.columns.Column;
+import edu.uci.ics.sourcerer.util.db.columns.EnumColumn;
+import edu.uci.ics.sourcerer.util.db.columns.IntColumn;
+import edu.uci.ics.sourcerer.util.db.columns.StringColumn;
+import edu.uci.ics.sourcerer.utils.db.DatabaseTable;
+import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
+import edu.uci.ics.sourcerer.utils.db.TableLocker;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

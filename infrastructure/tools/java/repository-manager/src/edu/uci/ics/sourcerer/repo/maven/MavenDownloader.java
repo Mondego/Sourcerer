@@ -21,7 +21,7 @@ import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.LINKS_FILE;
 import static edu.uci.ics.sourcerer.repo.maven.MavenCrawler.MAVEN_URL;
 import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-import static edu.uci.ics.sourcerer.util.io.Properties.INPUT;
+import static edu.uci.ics.sourcerer.util.io.arguments.Arguments.INPUT;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,10 +31,10 @@ import java.net.URL;
 import java.util.Set;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.repo.base.Repository;
 import edu.uci.ics.sourcerer.repo.general.AbstractRepository;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.tools.core.repo.base.Repository;
 import edu.uci.ics.sourcerer.util.io.Logging;
+import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

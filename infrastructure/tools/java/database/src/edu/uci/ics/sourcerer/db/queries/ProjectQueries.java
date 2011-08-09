@@ -24,12 +24,12 @@ import java.sql.SQLException;
 import java.util.Collection;
 
 import edu.uci.ics.sourcerer.db.schema.ProjectsTable;
-import edu.uci.ics.sourcerer.db.util.BasicResultTranslator;
-import edu.uci.ics.sourcerer.db.util.QueryExecutor;
-import edu.uci.ics.sourcerer.db.util.ResultTranslator;
 import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.db.LargeProjectDB;
 import edu.uci.ics.sourcerer.model.db.SmallProjectDB;
+import edu.uci.ics.sourcerer.utils.db.BasicResultTranslator;
+import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
+import edu.uci.ics.sourcerer.utils.db.ResultTranslator;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
