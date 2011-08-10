@@ -174,6 +174,7 @@ final class SimpleSerializerImpl implements SimpleSerializer {
           builder.append(serializer.serialize(write));
         }
         bw.write(builder.toString());
+        builder.reset();
         bw.newLine();
       }
       
