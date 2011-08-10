@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.model.internal;
 
+import java.util.Map;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */

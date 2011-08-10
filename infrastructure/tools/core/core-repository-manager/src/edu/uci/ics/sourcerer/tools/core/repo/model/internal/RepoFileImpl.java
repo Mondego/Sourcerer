@@ -182,7 +182,7 @@ public class RepoFileImpl implements RepoFile, CustomSimpleSerializable {
     }
   }
   
-  protected RepoFileImpl getChild(String child) {
+  public RepoFileImpl getChild(String child) {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
     } else {

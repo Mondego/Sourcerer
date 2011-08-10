@@ -21,7 +21,7 @@ package edu.uci.ics.sourcerer.util.io.properties;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class EnumProperty<T extends Enum<T>> extends Property<T> {
-  Class<T> klass;
+  private Class<T> klass;
   public EnumProperty(String name, Class<T> klass, AbstractProperties properties) {
     super(name, properties);
     this.klass = klass;

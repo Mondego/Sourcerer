@@ -17,11 +17,18 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.model.internal;
 
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarFileImpl implements JarFile {
-
+class JarFileImpl implements JarFile {
+  private JarProperties properties;
+  private RepoFileImpl file;
+  
+  JarFileImpl(RepoFileImpl dir) {
+    properties = new JarProperties(dir.getChild("jar.properties"));
+  }
 }
