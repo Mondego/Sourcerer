@@ -5,5 +5,7 @@
 	<classpathentry kind="con" path="com.google.appengine.eclipse.core.GAE_CONTAINER"/>
 	<classpathentry kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/search-adapter"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/utilities"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

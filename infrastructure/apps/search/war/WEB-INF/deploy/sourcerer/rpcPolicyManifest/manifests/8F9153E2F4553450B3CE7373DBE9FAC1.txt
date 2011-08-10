@@ -1,0 +1,2 @@
+serviceClass: com.Sourcerer.search.client.SearchService
+path: 83682DCE7A65FF802648746EE343B4A0.gwt.rpc

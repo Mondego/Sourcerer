@@ -4,5 +4,5 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface SearchServiceAsync {
 	
-	public void update(String text, AsyncCallback<String> callback);
+	public void update(String text, int pageNumber, AsyncCallback<String> callback);
 }

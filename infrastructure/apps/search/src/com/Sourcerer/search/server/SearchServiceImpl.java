@@ -1,24 +1,43 @@
 package com.Sourcerer.search.server;
 
-import java.util.Date;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.Sourcerer.search.client.SearchService;
-import com.google.gwt.i18n.client.DateTimeFormat;
+
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+
+import edu.uci.ics.sourcerer.search.adapter.SearchAdapter;
+import edu.uci.ics.sourcerer.search.adapter.SearchResult;
+import edu.uci.ics.sourcerer.search.adapter.SingleResult;
 
 public class SearchServiceImpl extends RemoteServiceServlet implements
 		SearchService {
 
-	public String update(String text) {
-		String str = "Searched:  " + text ;
+	private HashMap<String, List<SingleResult>> data = new HashMap<String, List<SingleResult>>();
+	
+	public String update(String text, int pageNumber)throws IOException {
+		List<SingleResult> results;
 		
-		try {
-			Thread.sleep(500);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		StringBuilder builder = new StringBuilder();
+		if(data.get(text+pageNumber) == null){
+		
+			SearchResult result = SearchAdapter.search(text);
+			results = result.getResults((pageNumber-1)*10, pageNumber*10);
+			data.put(text+pageNumber, results);
 		}
-		return str;
+		else{
+			results = data.get(text+pageNumber);
+		}
+		for(int i = 0; i < results.size(); i++){
+			SingleResult temp = results.get(i);
+			builder.append(temp.getEntityID()).append("<br>").append(temp.getEntityName()).append("\n").append(temp.getFilePath()).append("\n");
+		}
+		
+		return builder.toString();
 	}
 
 }

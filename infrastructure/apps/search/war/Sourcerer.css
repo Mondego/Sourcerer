@@ -11,14 +11,59 @@ h1 {
 }
 
 .addPanel {
-	margin: 95px 0px 15px 500px;
+	margin: 0px 0px 15px 500px;
 }
 
+.newPanel {
+	margin: 10px 0px 30px 0px;
+}
+
+
 .resultLabel{
-	margin: 0px 0px 15px 500px;
+	margin: 0px 0px 20px 0px;
+}
+
+.lastUpdatedLabel{
+	margin-left: 450px;
+	margin-top: 100px;
+	margin-bottom: 50px;
+	text-align: center;
+	font-size: 2em;
+	font-weight: bold;
+}
+
+.searchedLabel{
+	font-size: 3em;
+	font-weight: bold;
+	margin-left: 15px;
+}
+
+.searchedTextBox{
+	margin-top: 13px;
+	margin-left: 40px;
+	width: 500px
+}
+
+.gwt-Button-searched{
+	width: 100px;
+	vertical-align: -18px;
 }
 
 .gwt-Button-search{
   width: 100px;
+}
+
+.previouslink{
+	margin-right: 25px;
+	margin-left: 20px;
+	font-weight: bold;
+}
+
+.nextlink{
+	font-weight: bold;
+}
+
+.HTMLstyle{
+	margin-left: 20px;
 }
 
