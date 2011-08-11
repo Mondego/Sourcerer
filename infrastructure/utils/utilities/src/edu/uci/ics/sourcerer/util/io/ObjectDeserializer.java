@@ -64,7 +64,7 @@ public abstract class ObjectDeserializer<T> {
     }
   }
   
-  public abstract Object deserialize(Scanner scanner);
+  public abstract T deserialize(Scanner scanner);
   
   private static Map<Class<?>, ObjectDeserializer<?>> deserializers = Helper.newHashMap();
   
@@ -149,7 +149,7 @@ public abstract class ObjectDeserializer<T> {
     }
     
     @Override
-    public Object deserialize(Scanner scanner) {
+    public T deserialize(Scanner scanner) {
       String next = scanner.next();
       if ("null".equals(next)) {
         return null;

@@ -102,11 +102,11 @@ public class RepoFileImpl implements RepoFile, CustomSimpleSerializable {
     }
   }
 
-  protected boolean isRoot() {
+  public boolean isRoot() {
     return isRoot;
   }
   
-  protected RepoFileImpl getRoot() {
+  public RepoFileImpl getRoot() {
     return root;
   }
   
@@ -115,7 +115,7 @@ public class RepoFileImpl implements RepoFile, CustomSimpleSerializable {
     return relativePath;
   }
   
-  protected RepoFileImpl asRoot() {
+  public RepoFileImpl asRoot() {
     if (isRoot) {
       return this;
     } else {
@@ -147,7 +147,7 @@ public class RepoFileImpl implements RepoFile, CustomSimpleSerializable {
     }
   }
   
-  protected boolean delete() {
+  public boolean delete() {
     if (file.exists()) {
       if (file.isDirectory()) {
         return FileUtils.delete(file);
@@ -190,7 +190,7 @@ public class RepoFileImpl implements RepoFile, CustomSimpleSerializable {
     }
   }
   
-  protected RepoFileImpl getChild(RelativePathImpl relativePath) {
+  private RepoFileImpl getChild(RelativePathImpl relativePath) {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
     } else {
@@ -198,7 +198,7 @@ public class RepoFileImpl implements RepoFile, CustomSimpleSerializable {
     }
   }
   
-  protected RepoFileImpl getChildRoot(String child) {
+  public RepoFileImpl getChildRoot(String child) {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
     } else {
@@ -206,7 +206,7 @@ public class RepoFileImpl implements RepoFile, CustomSimpleSerializable {
     }
   }
   
-  protected RepoFileImpl getChildRoot(RelativePathImpl relativePath) {
+  private RepoFileImpl getChildRoot(RelativePathImpl relativePath) {
     if (file.isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
     } else {
@@ -256,7 +256,7 @@ public class RepoFileImpl implements RepoFile, CustomSimpleSerializable {
   public ObjectDeserializer<RepoFileImpl> makeDeserializer() {
     return new ObjectDeserializer<RepoFileImpl>() {
       @Override
-      public Object deserialize(Scanner scanner) {
+      public RepoFileImpl deserialize(Scanner scanner) {
         String value = scanner.next();
         RepoFileImpl root = RepoFileImpl.this;
         int sep = -1;

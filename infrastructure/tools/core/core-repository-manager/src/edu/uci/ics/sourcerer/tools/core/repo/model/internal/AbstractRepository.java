@@ -45,7 +45,7 @@ public abstract class AbstractRepository<Project extends RepoProjectImpl<? exten
   private BatchSetImpl<Project> batchSet;
   
   protected AbstractRepository(RepoFileImpl repoRoot) {
-    this.repoRoot = repoRoot;
+    this.repoRoot = repoRoot.asRoot();
   }
   
   protected void clearCache() {

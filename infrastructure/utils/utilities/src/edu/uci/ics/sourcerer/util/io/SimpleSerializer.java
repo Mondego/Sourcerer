@@ -19,11 +19,13 @@ package edu.uci.ics.sourcerer.util.io;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface SimpleSerializer extends Closeable {
+  public <K extends SimpleSerializable, V extends SimpleSerializable> void write(Map<K, V> iterable) throws IOException;
   public <T extends SimpleSerializable> void write(Iterable<T> iterable) throws IOException;
   public <T extends SimpleSerializable> EntryWriter<T> getEntryWriter(Class<T> klass) throws IOException;
 }

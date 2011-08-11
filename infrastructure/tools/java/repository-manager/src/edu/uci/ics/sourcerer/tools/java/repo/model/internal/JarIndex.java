@@ -17,11 +17,42 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.model.internal;
 
+import java.util.AbstractCollection;
+import java.util.Iterator;
 import java.util.Map;
+
+import edu.uci.ics.sourcerer.repo.general.RepoFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarIndex {
+class JarIndex extends AbstractCollection<JarFileImpl> {
+  public static final Argument<String> JAR_INDEX = new StringArgument("jar-index", "index.txt", "Jar index file.");
+  
+  private RepoFileImpl root;
+  private RepoFileImpl indexFile;
+  
   private Map<String, JarFileImpl> index;
+  
+  private JarIndex(RepoFileImpl dir) {
+    root = dir.asRoot();
+    indexFile = dir.getChild(JAR_INDEX.getValue());
+  }
+  
+  static JarIndex make(RepoFileImpl dir) {
+    return new JarIndex(dir);
+  }
+
+  @Override
+  public Iterator<JarFileImpl> iterator() {
+    return null;
+  }
+
+  @Override
+  public int size() {
+    return 0;
+  }
 }

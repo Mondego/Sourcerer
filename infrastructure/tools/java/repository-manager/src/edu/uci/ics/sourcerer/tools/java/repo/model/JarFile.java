@@ -36,4 +36,6 @@ public interface JarFile {
   public JarProperties getProperties();
   
   public RepoFile getFile();
+  
+  public RepoFile getSourceFile();
 }

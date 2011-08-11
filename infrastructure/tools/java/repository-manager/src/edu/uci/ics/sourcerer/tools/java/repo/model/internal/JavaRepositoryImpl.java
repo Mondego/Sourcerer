@@ -22,13 +22,22 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.internal.BatchImpl;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ProjectLocationImpl;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepository;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JavaRepositoryImpl extends AbstractRepository<JavaProjectImpl> implements JavaRepository<JavaProjectImpl, BatchImpl<JavaProjectImpl>> {
+class JavaRepositoryImpl extends AbstractRepository<JavaProjectImpl> implements JavaRepository<JavaProjectImpl, BatchImpl<JavaProjectImpl>> {
+  public static final Argument<String> JARS_DIRECTORY = new StringArgument("jars-dir", "jars", "Repository subdirectory containing jar files.").permit();
+  
+  
+  private JarIndex jarIndex;
+  
   protected JavaRepositoryImpl(RepoFileImpl repoRoot) {
     super(repoRoot);
+    RepoFileImpl jarsDir = this.repoRoot.getChild(JARS_DIRECTORY.getValue());
+    
   }
 
   @Override

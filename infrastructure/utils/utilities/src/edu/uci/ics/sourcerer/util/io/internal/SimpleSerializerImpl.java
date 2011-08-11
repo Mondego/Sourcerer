@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.CustomSimpleSerializable;
@@ -138,6 +139,11 @@ final class SimpleSerializerImpl implements SimpleSerializer {
     }
 
     return converters;
+  }
+  
+  @Override
+  public <K extends SimpleSerializable, V extends SimpleSerializable> void write(Map<K, V> map) throws IOException {
+    
   }
   
   @Override
