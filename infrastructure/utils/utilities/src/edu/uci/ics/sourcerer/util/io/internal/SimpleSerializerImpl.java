@@ -105,40 +105,40 @@ final class SimpleSerializerImpl implements SimpleSerializer {
     // Check if it overrides the default behavior
     if (CustomSimpleSerializable.class.isAssignableFrom(klass)) {
       if (expectedKlass != null) {
-        if (!"writeToString".equals(expectedFields)) {
-          throw new IllegalStateException("Serializer was resumed at class " + expectedKlass + " with fields " + expectedFields + ", but expecting writeToString.");
+        if (!"serialize".equals(expectedFields)) {
+          throw new IllegalStateException("Serializer was resumed at class " + expectedKlass + " with fields " + expectedFields + ", but expecting serialize.");
         }
       } else {
-        bw.write("writeToString");
+        bw.write("serialize");
         bw.newLine();
       }
       return Collections.singleton(ObjectSerializer.makeCustomSerializer());
-    }
-    
-    Collection<ObjectSerializer> converters = Helper.newLinkedList();
-    if (expectedKlass == null) {
-      LineBuilder builder = new LineBuilder();
-      Field[] allFields = klass.getDeclaredFields();
-      for (Field field : allFields) {
-        if (field.getAnnotation(Ignore.class) == null) {
-          builder.append(field.getName());
-          converters.add(ObjectSerializer.makeBasicSerializer(field));
-        }
-      }
-      bw.write(builder.toString());
-      bw.newLine();
     } else {
-      for (String field : LineBuilder.splitLine(expectedFields)) {
-        try {
-          Field f = klass.getDeclaredField(field);
-          converters.add(ObjectSerializer.makeBasicSerializer(f));
-        } catch (NoSuchFieldException e) {
-          throw new IllegalStateException("Field " + field + " is missing for class " + expectedKlass);
+      Collection<ObjectSerializer> converters = Helper.newLinkedList();
+      if (expectedKlass == null) {
+        LineBuilder builder = new LineBuilder();
+        Field[] allFields = klass.getDeclaredFields();
+        for (Field field : allFields) {
+          if (field.getAnnotation(Ignore.class) == null) {
+            builder.append(field.getName());
+            converters.add(ObjectSerializer.makeBasicSerializer(field));
+          }
+        }
+        bw.write(builder.toString());
+        bw.newLine();
+      } else {
+        for (String field : LineBuilder.splitLine(expectedFields)) {
+          try {
+            Field f = klass.getDeclaredField(field);
+            converters.add(ObjectSerializer.makeBasicSerializer(f));
+          } catch (NoSuchFieldException e) {
+            throw new IllegalStateException("Field " + field + " is missing for class " + expectedKlass);
+          }
         }
       }
+  
+      return converters;
     }
-
-    return converters;
   }
   
   @Override
