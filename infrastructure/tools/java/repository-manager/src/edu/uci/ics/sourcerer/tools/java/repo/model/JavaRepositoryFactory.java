@@ -19,15 +19,23 @@ package edu.uci.ics.sourcerer.tools.java.repo.model;
 
 import java.io.File;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.Batch;
+import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
+import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaRepository;
+import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaRepository;
 import edu.uci.ics.sourcerer.tools.java.repo.model.internal.InternalJavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class JavaRepositoryFactory {
+public interface JavaRepositoryFactory extends RepositoryFactory {
   public static final JavaRepositoryFactory INSTANCE = new InternalJavaRepositoryFactory();
   
-  public abstract JavaRepository<? extends JavaProject, ? extends Batch<? extends JavaProject>> loadJavaRepository(Argument<File> root);
+  public JavaRepository loadJavaRepository(Argument<File> root);
+  
+  public ModifiableJavaRepository loadModifiableJavaRepository(Argument<File> root);
+  
+  public ExtractedJavaRepository loadExtractedJavaRepository(Argument<File> root);
+  
+  public ModifiableExtractedJavaRepository loadModifiableExtractedJavaRepository(Argument<File> root);
 }

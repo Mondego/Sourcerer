@@ -17,19 +17,21 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import edu.uci.ics.sourcerer.extractor.io.IFileWriter;
-import edu.uci.ics.sourcerer.model.metrics.Metrics;
+import edu.uci.ics.sourcerer.extractor.io.FileWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.FileEX;
+import edu.uci.ics.sourcerer.tools.java.model.types.File;
+import edu.uci.ics.sourcerer.tools.java.model.types.Metrics;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyFileWriter implements IFileWriter {
+public class DummyFileWriter implements FileWriter {
   @Override
-  public void writeSourceFile(String name, Metrics metrics, String path) {}
+  public void writeFile(File type, String name, Metrics metrics, String hashPath) {}
   
   @Override
-  public void writeJarFile(String name, String hash) {}
-
+  public void writeFile(FileEX file) {}
+  
   @Override
   public void close() {}
 }

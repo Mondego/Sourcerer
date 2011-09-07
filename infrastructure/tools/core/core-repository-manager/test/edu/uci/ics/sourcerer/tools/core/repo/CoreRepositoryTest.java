@@ -26,15 +26,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.Batch;
-import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableBatch;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ContentFile;
 import edu.uci.ics.sourcerer.tools.core.repo.model.FileSet;
-import edu.uci.ics.sourcerer.tools.core.repo.model.Repository;
-import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableRepository;
-import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProject;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceBatch;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceProject;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceRepository;
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
+import edu.uci.ics.sourcerer.tools.core.repo.model.SourceBatch;
+import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProject;
+import edu.uci.ics.sourcerer.tools.core.repo.model.SourceRepository;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
 
@@ -46,7 +46,7 @@ public class CoreRepositoryTest {
     @Override
     protected void action() {
     }
-  };
+  }.setProperties(RepositoryFactory.INPUT_REPO);
   
   @Rule
   public TemporaryFolder folder = new TemporaryFolder();
@@ -55,7 +55,6 @@ public class CoreRepositoryTest {
   public static void initialize() {
     // Initializes the logging
     Command.execute(new String[] { "--test" }, CoreRepositoryTest.class);
-    
   }
   
   @Test
@@ -63,12 +62,12 @@ public class CoreRepositoryTest {
     RepositoryFactory.INPUT_REPO.setValue(folder.newFolder("repo"));
     
     {
-      ModifiableRepository<? extends ModifiableSourceProject, ? extends ModifiableBatch<? extends ModifiableSourceProject>> repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
+      ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
       Assert.assertEquals(0, repo.getProjectCount());
       
       {
         // Create a new batch
-        ModifiableBatch<? extends ModifiableSourceProject> batch = repo.createBatch();
+        ModifiableSourceBatch batch = repo.createBatch();
         batch.getProperties().DESCRIPTION.setValue("A test batch");
         batch.getProperties().save();
         
@@ -97,7 +96,7 @@ public class CoreRepositoryTest {
       }
       {
         // Create a new batch
-        ModifiableBatch<? extends ModifiableSourceProject> batch = repo.createBatch();
+        ModifiableSourceBatch batch = repo.createBatch();
         batch.getProperties().DESCRIPTION.setValue("A second test batch");
         batch.getProperties().save();
         
@@ -111,8 +110,6 @@ public class CoreRepositoryTest {
           Assert.assertEquals("1/0", project.getLocation().getProjectRoot().getRelativePath().toString());
           project.getProperties().NAME.setValue("Test project C");
           project.getProperties().save();
-          
-          
         }
         
         {
@@ -126,18 +123,18 @@ public class CoreRepositoryTest {
         Assert.assertEquals(2, batch.getProjectCount());
       }
       Assert.assertEquals(4, repo.getProjectCount());
-      Assert.assertEquals(2, repo.getProjectCount());
+      Assert.assertEquals(2, repo.getBatches().size());
     }
     
     {
       // Reload the repo and make sure everything works
-      Repository<? extends SourceProject, ? extends Batch<? extends SourceProject>> repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
+      SourceRepository repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
       
       Assert.assertEquals(4, repo.getProjectCount());
-      Assert.assertEquals(2, repo.getProjectCount());
+      Assert.assertEquals(2, repo.getBatches().size());
 
       {
-        Iterator<? extends Batch<? extends SourceProject>> iter = repo.getBatches().iterator();
+        Iterator<? extends SourceBatch> iter = repo.getBatches().iterator();
         Assert.assertEquals("A test batch", iter.next().getProperties().DESCRIPTION.getValue());
         Assert.assertEquals("A second test batch", iter.next().getProperties().DESCRIPTION.getValue());
         Assert.assertFalse(iter.hasNext());
@@ -155,13 +152,13 @@ public class CoreRepositoryTest {
     
     {
       // Reload one last time to check for the cache
-      Repository<? extends SourceProject, ? extends Batch<? extends SourceProject>> repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
+      SourceRepository repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
       
       Assert.assertEquals(4, repo.getProjectCount());
-      Assert.assertEquals(2, repo.getProjectCount());
+      Assert.assertEquals(2, repo.getBatches().size());
 
       {
-        Iterator<? extends Batch<? extends SourceProject>> iter = repo.getBatches().iterator();
+        Iterator<? extends SourceBatch> iter = repo.getBatches().iterator();
         Assert.assertEquals("A test batch", iter.next().getProperties().DESCRIPTION.getValue());
         Assert.assertEquals("A second test batch", iter.next().getProperties().DESCRIPTION.getValue());
         Assert.assertFalse(iter.hasNext());
@@ -183,9 +180,9 @@ public class CoreRepositoryTest {
     RepositoryFactory.INPUT_REPO.setValue(folder.newFolder("add-content"));
     
     // Create the repository
-    ModifiableRepository<? extends ModifiableSourceProject, ? extends ModifiableBatch<? extends ModifiableSourceProject>> repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
+    ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
     
-    ModifiableBatch<? extends ModifiableSourceProject> batch = repo.createBatch();
+    ModifiableSourceBatch batch = repo.createBatch();
     
     ModifiableSourceProject project = batch.createProject();
     

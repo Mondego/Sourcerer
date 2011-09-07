@@ -18,23 +18,11 @@
 package edu.uci.ics.sourcerer.tools.java.repo.model;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepoFile;
-import edu.uci.ics.sourcerer.util.io.arguments.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface JarFile {
-  public static final Argument<String> JAR_PROPERTIES = new StringArgument("jar-properties-file", "jar.properties", "Properties file for a jar.").permit();
-  
-  public enum Type {
-    PROJECT,
-    MAVEN,
-    ;
-  }
-  
-  public JarProperties getProperties();
-  
+public interface JarFile extends Jar {
   public RepoFile getFile();
   
   public RepoFile getSourceFile();

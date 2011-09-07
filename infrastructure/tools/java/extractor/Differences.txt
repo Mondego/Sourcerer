@@ -1,0 +1,65 @@
+Differences between Eclipse and ASM extractors (primarily caused by bytecode compilation)
+
+Type Erasure
+  Eclipse extractor generates calls to the call with type variables
+  ASM extractor generates the erasure calls (everything replaced with object)
+
+Inherited method calls
+  Eclipse extractor resolves it to the method provider's type. (java.lang.Throwable.getMessage())
+  ASM extractor reports the referential type. (java.lang.Exception.getMessage())
+  
+Inherited fields
+  Eclipse extractor resolves it to the field ownder's type.
+  ASM extractor reports the referential type.
+  
+Static Initializers
+  Eclipse extractor generates an INITIALIZER entity for each static initialization block
+  ASM extractor generates a single <clinit> INITIALIZER entity combining all static initialization blocks
+
+Initializers
+  Eclipse extractor generates an INITIALIZER entity for each initialization block.
+  ASM extractor adds the code from each initialization block to every constructor that does not begin with this(...).
+
+Inner Class Constructors
+  Eclipse extractor generates a CONSTRUCTOR entity as one would expect.
+  ASM extractor generates a CONSTRUCTOR entity with an additional first argument (the type of the enclosing class).
+  
+Anonymous Classes within methods
+  Eclipse extractor knows its inside of the method.
+  ASM extractor thinks it inside of the enclosing class.
+
+Annotations
+  Eclipse extractor can detect all annotations.
+  ASM extractor cannot detect anything with SOURCE retention.
+
+Enum Static Initializer
+  Eclipse extractor only reports static initializers in the source.
+  ASM extractor reports the generated static initializer.
+  
+Enum methods
+  Eclipse extractor reports what can be seen in the source, plus the values and valueOf methods.
+  ASM extractor reports the details of the values and valueOf methods.
+  
+Enum Initialization
+  Eclipse extractor reports CALLS relations referencing the standard constructors.
+  ASM extractor reports CALLS relations referencing the constructors with the string/int extra argument.
+  
+Field Initialization
+  Eclipse extractor reports the relations as originating with the field.
+  ASM extractor reports the relations as originating with the class initializer.
+    
+String Operations
+  Eclipse extractor reports string operations as they appear in the source.
+  ASM extractor reports string concatenations that turned into StringBuilder calls.
+  
+++/--
+  Eclipse extractor reports one read and one write relation, if the operand is a field.
+  ASM extractor either reports additional reads, or creates a synthetic method.
+
+Boxing / Unboxing
+  Eclipse extractor doesn't notice it.
+  ASM extractor reports calls to valueOf() and xValue()
+
+package-info files are ignored
+TODO
+  Don't filter out USES relations

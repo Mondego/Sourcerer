@@ -17,14 +17,15 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import edu.uci.ics.sourcerer.extractor.io.IMissingTypeWriter;
+import edu.uci.ics.sourcerer.extractor.io.MissingTypeWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.MissingTypeEX;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyMissingTypeWriter implements IMissingTypeWriter {
+public class DummyMissingTypeWriter implements MissingTypeWriter {
   @Override
-  public void writeMissingType(String fqn) {}
+  public void writeMissingType(MissingTypeEX type) {}
 
   @Override
   public void close() {}

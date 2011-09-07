@@ -17,17 +17,20 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import edu.uci.ics.sourcerer.extractor.io.IImportWriter;
-import edu.uci.ics.sourcerer.model.Location;
+import edu.uci.ics.sourcerer.extractor.io.ImportWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.ImportEX;
+import edu.uci.ics.sourcerer.tools.java.model.types.Location;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyImportWriter implements IImportWriter {
-
+public class DummyImportWriter implements ImportWriter {
+  @Override
+  public void writeImport(ImportEX imp) {}
+  
+  @Override
+  public void writeImport(String imported, boolean isStatic, boolean onDemand, Location location) {}
+  
   @Override
   public void close() {}
-
-  @Override
-  public void writeImport(String name, boolean isStatic, boolean onDemand, Location location) {}
 }

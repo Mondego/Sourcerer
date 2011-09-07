@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.extractor.io;
 
+import java.io.Closeable;
 import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyCommentWriter;
@@ -28,121 +29,106 @@ import edu.uci.ics.sourcerer.extractor.io.dummy.DummyMissingTypeWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyProblemWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyRelationWriter;
 import edu.uci.ics.sourcerer.extractor.io.dummy.DummyUsedJarWriter;
-import edu.uci.ics.sourcerer.repo.base.IFileSet;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Property;
-import edu.uci.ics.sourcerer.util.io.properties.ClassProperty;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.ClassArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class WriterBundle implements IWriterBundle {
-  public static final Property<Class<?>> IMPORT_WRITER = new ClassProperty("import-writer", DummyImportWriter.class, "Import writer.");
-  public static final Property<Class<?>> PROBLEM_WRITER = new ClassProperty("problem-writer", DummyProblemWriter.class, "Problem writer.");
-  public static final Property<Class<?>> ENTITY_WRITER = new ClassProperty("entity-writer", DummyEntityWriter.class, "Entity writer.");
-  public static final Property<Class<?>> LOCAL_VARIABLE_WRITER = new ClassProperty("local-variable-writer", DummyLocalVariableWriter.class, "Local variable writer.");
-  public static final Property<Class<?>> RELATION_WRITER = new ClassProperty("relation-writer", DummyRelationWriter.class, "Relation writer.");
-  public static final Property<Class<?>> COMMENT_WRITER = new ClassProperty("comment-writer", DummyCommentWriter.class, "Comment writer.");
-  public static final Property<Class<?>> FILE_WRITER = new ClassProperty("file-writer", DummyFileWriter.class, "File writer.");
-  public static final Property<Class<?>> USED_JAR_WRITER = new ClassProperty("used-jar-writer", DummyUsedJarWriter.class, "Jar file writer.");
-  public static final Property<Class<?>> MISSING_TYPE_WRITER = new ClassProperty("missing-class-writer", DummyMissingTypeWriter.class, "Missing type writer.");
+public final class WriterBundle implements Closeable {
+  public static final Argument<Class<?>> IMPORT_WRITER = new ClassArgument("import-writer", DummyImportWriter.class, "Import writer.").permit();
+  public static final Argument<Class<?>> PROBLEM_WRITER = new ClassArgument("problem-writer", DummyProblemWriter.class, "Problem writer.").permit();
+  public static final Argument<Class<?>> ENTITY_WRITER = new ClassArgument("entity-writer", DummyEntityWriter.class, "Entity writer.").permit();
+  public static final Argument<Class<?>> LOCAL_VARIABLE_WRITER = new ClassArgument("local-variable-writer", DummyLocalVariableWriter.class, "Local variable writer.").permit();
+  public static final Argument<Class<?>> RELATION_WRITER = new ClassArgument("relation-writer", DummyRelationWriter.class, "Relation writer.").permit();
+  public static final Argument<Class<?>> COMMENT_WRITER = new ClassArgument("comment-writer", DummyCommentWriter.class, "Comment writer.").permit();
+  public static final Argument<Class<?>> FILE_WRITER = new ClassArgument("file-writer", DummyFileWriter.class, "File writer.").permit();
+  public static final Argument<Class<?>> USED_JAR_WRITER = new ClassArgument("used-jar-writer", DummyUsedJarWriter.class, "Jar file writer.").permit();
+  public static final Argument<Class<?>> MISSING_TYPE_WRITER = new ClassArgument("missing-class-writer", DummyMissingTypeWriter.class, "Missing type writer.").permit();
   
-  private IImportWriter importWriter;
-  private IProblemWriter problemWriter;
-  private IEntityWriter entityWriter;
-  private ILocalVariableWriter localVariableWriter;
-  private IRelationWriter relationWriter;
+  private ImportWriter importWriter;
+  private ProblemWriter problemWriter;
+  private EntityWriter entityWriter;
+  private LocalVariableWriter localVariableWriter;
+  private RelationWriter relationWriter;
   private CommentWriter commentWriter;
-  private IFileWriter fileWriter;
-  private IUsedJarWriter usedJarWriter;
-  private IMissingTypeWriter missingTypeWriter;
+  private FileWriter fileWriter;
+  private UsedJarWriter usedJarWriter;
+  private MissingTypeWriter missingTypeWriter;
   
-  private IFileSet input;
-  
-  private File output;
+  private final File output;
 
   public WriterBundle(File output) {
     this.output = output;
     output.mkdirs();
   }
-  
-  public WriterBundle(File output, IFileSet input) {
-    this(output);
-    this.input = input;
-  }
 
-  public IImportWriter getImportWriter() {
+  public ImportWriter getImportWriter() {
     if (importWriter == null) {
-      importWriter = WriterFactory.createWriter(output, input, IMPORT_WRITER);
+      importWriter = WriterFactory.createWriter(output, IMPORT_WRITER);
     }
     return importWriter;
   }
   
-  public IProblemWriter getProblemWriter() {
+  public ProblemWriter getProblemWriter() {
     if (problemWriter == null) {
-      problemWriter = WriterFactory.createWriter(output, input, PROBLEM_WRITER);
+      problemWriter = WriterFactory.createWriter(output, PROBLEM_WRITER);
     }
     return problemWriter;
   }
   
-  public IEntityWriter getEntityWriter() {
+  public EntityWriter getEntityWriter() {
     if (entityWriter == null) {
-      entityWriter = WriterFactory.createWriter(output, input, ENTITY_WRITER);
+      entityWriter = WriterFactory.createWriter(output, ENTITY_WRITER);
     }
     return entityWriter;
   }
   
-  public ILocalVariableWriter getLocalVariableWriter() {
+  public LocalVariableWriter getLocalVariableWriter() {
     if (localVariableWriter == null) {
-      localVariableWriter = WriterFactory.createWriter(output, input, LOCAL_VARIABLE_WRITER);
+      localVariableWriter = WriterFactory.createWriter(output, LOCAL_VARIABLE_WRITER);
     }
     return localVariableWriter;
   }
   
-  public IRelationWriter getRelationWriter() {
+  public RelationWriter getRelationWriter() {
     if (relationWriter == null) {
-      relationWriter = WriterFactory.createWriter(output, input, RELATION_WRITER);
+      relationWriter = WriterFactory.createWriter(output, RELATION_WRITER);
     }
     return relationWriter;
   }
   
   public CommentWriter getCommentWriter() {
     if (commentWriter == null) {
-      commentWriter = WriterFactory.createWriter(output, input, COMMENT_WRITER);
+      commentWriter = WriterFactory.createWriter(output, COMMENT_WRITER);
     }
     return commentWriter;
   }
   
-  public IFileWriter getFileWriter() {
+  public FileWriter getFileWriter() {
     if (fileWriter == null) {
-      fileWriter = WriterFactory.createWriter(output, input, FILE_WRITER);
+      fileWriter = WriterFactory.createWriter(output, FILE_WRITER);
     }
     return fileWriter;
   }
   
-  public IUsedJarWriter getUsedJarWriter() {
+  public UsedJarWriter getUsedJarWriter() {
     if (usedJarWriter == null) {
-      usedJarWriter = WriterFactory.createWriter(output, input, USED_JAR_WRITER);
+      usedJarWriter = WriterFactory.createWriter(output, USED_JAR_WRITER);
     }
     return usedJarWriter;
   }
   
-  public IMissingTypeWriter getMissingTypeWriter() {
+  public MissingTypeWriter getMissingTypeWriter() {
     if (missingTypeWriter == null) {
-      missingTypeWriter = WriterFactory.createWriter(output, input, MISSING_TYPE_WRITER);
+      missingTypeWriter = WriterFactory.createWriter(output, MISSING_TYPE_WRITER);
     }
     return missingTypeWriter;
   }
 
+  @Override
   public void close() {
-    FileUtils.close(importWriter);
-    FileUtils.close(problemWriter);
-    FileUtils.close(entityWriter);
-    FileUtils.close(localVariableWriter);
-    FileUtils.close(relationWriter);
-    FileUtils.close(commentWriter);
-    FileUtils.close(fileWriter);
-    FileUtils.close(usedJarWriter);
-    FileUtils.close(missingTypeWriter);
+    IOUtils.close(importWriter, problemWriter, entityWriter, localVariableWriter, relationWriter, commentWriter, fileWriter, usedJarWriter, missingTypeWriter);
   }
 }

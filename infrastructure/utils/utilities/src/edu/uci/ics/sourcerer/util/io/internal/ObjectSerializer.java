@@ -23,7 +23,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.util.io.CustomSimpleSerializable;
+import edu.uci.ics.sourcerer.util.io.CustomSerializable;
 import edu.uci.ics.sourcerer.util.io.LineBuilder;
 
 /**
@@ -32,12 +32,12 @@ import edu.uci.ics.sourcerer.util.io.LineBuilder;
 abstract class ObjectSerializer {
   private ObjectSerializer() {}
   
-  static ObjectSerializer makeCustomSerializer() {
+  static ObjectSerializer makeSerializer() {
     return new CustomSerializer();
   }
   
-  static ObjectSerializer makeBasicSerializer(Field field) {
-    return new BasicSerializer(field);
+  static ObjectSerializer makeSerializer(Field ... fields) {
+    return new BasicSerializer(fields);
   }
   
   abstract String serialize(Object o);
@@ -45,8 +45,8 @@ abstract class ObjectSerializer {
   private static String writeToString(Object o) {
     if (o == null) {
       return "null";
-    } else if (o instanceof CustomSimpleSerializable) {
-      return ((CustomSimpleSerializable) o).serialize();
+    } else if (o instanceof CustomSerializable) {
+      return ((CustomSerializable) o).serialize();
     } else if (o.getClass().isArray()) {
       LineBuilder result = new LineBuilder();
       int length = Array.getLength(o);
@@ -57,13 +57,28 @@ abstract class ObjectSerializer {
       return result.toString();
     } else if (o instanceof String) {
       String val = o.toString();
-      if (val.indexOf('*') != -1) {
-        logger.log(Level.SEVERE, "* collission for " + val);
-      }
       if (val.equals("null")) {
         logger.log(Level.SEVERE, "null collission");
       }
-      return val.replace(' ', '*');
+      int idx = val.indexOf(' ');
+      if (idx == -1) {
+        return val;
+      } else {
+        LineBuilder result = new LineBuilder();
+        result.append(val.substring(0, idx++));
+        int parts = 1;
+        while (idx > 0) {
+          parts++;
+          int next = val.indexOf(' ', idx);
+          if (next == -1) {
+            result.append(val.substring(idx));
+          } else {
+            result.append(val.substring(idx, next));
+          }
+          idx = next + 1;
+        }
+        return parts + " " + result.toString();
+      }
     } else if (o instanceof Enum<?>) {
       return ((Enum<?>)o).name();
     } else {
@@ -81,11 +96,13 @@ abstract class ObjectSerializer {
   }
   
   private static class BasicSerializer extends ObjectSerializer {
-    private Field field;
+    private Field[] fields;
     
-    private BasicSerializer(Field field) {
-      this.field = field;
-      field.setAccessible(true);
+    private BasicSerializer(Field[] fields) {
+      this.fields = fields;
+      for (Field field : fields) {
+        field.setAccessible(true);
+      }
     }
 
     @Override
@@ -94,7 +111,11 @@ abstract class ObjectSerializer {
         if (o == null) {
           return writeToString(null);
         } else {
-          return writeToString(field.get(o));
+          LineBuilder builder = new LineBuilder();
+          for (Field field : fields) {
+            builder.append(writeToString(field.get(o)));
+          }
+          return builder.toString();
         }
       } catch (IllegalArgumentException e) {
         logger.log(Level.SEVERE, "Error getting field value.", e);

@@ -21,11 +21,10 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Scanner;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.RepoFile;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
-import edu.uci.ics.sourcerer.util.io.CustomSimpleSerializable;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
@@ -33,7 +32,7 @@ import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-final class JarFileImpl implements JarFile, CustomSimpleSerializable {
+public final class JarFileImpl implements JarFile, IJar {
   public static final Argument<String> JAR_NAME = new StringArgument("jar-name", "jar.jar", "Name of indexed jar files.").permit();
   public static final Argument<String> SOURCE_JAR_NAME = new StringArgument("source-jar-name", "source.jar", "Name of indexed source jar files.").permit();
 
@@ -49,17 +48,25 @@ final class JarFileImpl implements JarFile, CustomSimpleSerializable {
   }
   
   static JarFileImpl make(RepoFileImpl dir) {
-    JarProperties properties = new JarProperties(dir.getChild(JAR_PROPERTIES.getValue()));
-    RepoFileImpl file = dir.getChild(JAR_NAME.getValue());
-    RepoFileImpl sourceFile = dir.getChild(SOURCE_JAR_NAME.getValue());
+    RepoFileImpl root = dir.asRoot();
+    JarProperties properties = new JarProperties(root.getChild(JAR_PROPERTIES.getValue()));
+    RepoFileImpl file = root.getChild(JAR_NAME.getValue());
+    RepoFileImpl sourceFile = root.getChild(SOURCE_JAR_NAME.getValue());
     if (file.exists()) {
+      // Verify the hash exists
+      String hash = properties.HASH.getValue();
+      if (hash == null) {
+        hash = FileUtils.computeHash(file.toFile());
+        properties.HASH.setValue(hash);
+        properties.save();
+      }
       if (sourceFile.exists()) {
         return new JarFileImpl(properties, file, sourceFile);
       } else {
         return new JarFileImpl(properties, file, null);
       }
     } else {
-      logger.severe("Unable to find jar in " + dir);
+      logger.severe("Unable to find jar in " + root);
       return null;
     }
   }
@@ -70,13 +77,18 @@ final class JarFileImpl implements JarFile, CustomSimpleSerializable {
   }
 
   @Override
-  public RepoFile getFile() {
+  public RepoFileImpl getFile() {
     return file;
   }
 
   @Override
-  public RepoFile getSourceFile() {
+  public RepoFileImpl getSourceFile() {
     return sourceFile;
+  }
+  
+  @Override
+  public String toString() {
+    return properties.NAME.getValue();
   }
 
   /* Serialization Related Methods */
@@ -86,8 +98,8 @@ final class JarFileImpl implements JarFile, CustomSimpleSerializable {
     return file.getRoot().serialize();
   }
   
-  public static ObjectDeserializer<JarFileImpl> makeDeserializer(RepoFileImpl repoRoot) {
-    final ObjectDeserializer<RepoFileImpl> dirDeserializer = repoRoot.makeDeserializer();
+  public static ObjectDeserializer<JarFileImpl> makeDeserializer(RepoFileImpl dir) {
+    final ObjectDeserializer<RepoFileImpl> dirDeserializer = dir.makeDeserializer();
     return new ObjectDeserializer<JarFileImpl>() {
       @Override
       public JarFileImpl deserialize(Scanner scanner) {

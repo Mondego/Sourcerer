@@ -17,13 +17,13 @@
  */
 package edu.uci.ics.sourcerer.db.queries;
 
-import static edu.uci.ics.sourcerer.db.schema.FilesTable.FILE_ID;
-import static edu.uci.ics.sourcerer.db.schema.FilesTable.FILE_TYPE;
-import static edu.uci.ics.sourcerer.db.schema.FilesTable.HASH;
-import static edu.uci.ics.sourcerer.db.schema.FilesTable.NAME;
-import static edu.uci.ics.sourcerer.db.schema.FilesTable.PATH;
-import static edu.uci.ics.sourcerer.db.schema.FilesTable.PROJECT_ID;
-import static edu.uci.ics.sourcerer.db.schema.FilesTable.TABLE;
+import static edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable.FILE_ID;
+import static edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable.FILE_TYPE;
+import static edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable.HASH;
+import static edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable.NAME;
+import static edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable.PATH;
+import static edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable.PROJECT_ID;
+import static edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable.TABLE;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

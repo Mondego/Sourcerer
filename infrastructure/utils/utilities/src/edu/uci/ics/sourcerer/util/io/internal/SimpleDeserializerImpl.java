@@ -28,12 +28,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.CustomSimpleSerializable;
+import edu.uci.ics.sourcerer.util.io.CustomSerializable;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LineBuilder;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
@@ -54,16 +55,17 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     return new SimpleDeserializerImpl(IOUtils.makeBufferedReader(file));
   }
   
-  private <T extends CustomSimpleSerializable> EntryReader<T> positionForNext(ObjectDeserializer<T> deserializer) throws IOException {
+  private <T extends CustomSerializable> EntryReader<T> positionForNext(ObjectDeserializer<T> deserializer) throws IOException {
     if (br == null) {
-      logger.log(Level.SEVERE, "File already closed, unable to read custom deserializer.");
-      return null;
+      throw new NoSuchElementException("File already closed, unable to read custom deserializer.");
     } else {
       try {
         // Read the class name
         String line = br.readLine();
         if (line == null) {
           close();
+          throw new NoSuchElementException("File is empty, unable to read custom deserializer.");
+        } else if (SimpleSerializerImpl.DIVIDER.equals(line)) {
           return null;
         }
         
@@ -71,52 +73,49 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
         
         // Read in the fields
         line = br.readLine();
-        if ("writeToString".equals(line)) {
-          if (CustomSimpleSerializable.class.isAssignableFrom(loadedClass)) {
+        if ("serialize".equals(line)) {
+          if (CustomSerializable.class.isAssignableFrom(loadedClass)) {
             return new CustomEntryReader<T>(deserializer);
           } else {
-            logger.log(Level.SEVERE, "File says custom serializable, but " + loadedClass.getName() + " is not");
-            return null;
+            throw new IllegalStateException("File says custom serializable, but " + loadedClass.getName() + " is not");
           }
         } else {
-          return null;
+          throw new IllegalStateException("Requested custom serializable, but file says it's not.");
         }
       } catch (ClassNotFoundException e) {
-        logger.log(Level.SEVERE, "Unable to load class for deserialization.", e);
+        throw new IllegalStateException("Unable to load class for deserialization.", e);
       }
-      return null;
     }
   }
   
   private <T extends SimpleSerializable> EntryReader<T> positionForNext(Class<T> klass, boolean trans) throws IOException {
     if (br == null) {
-      logger.log(Level.SEVERE, "File already closed, unable to read " + klass.getName() + ".");
-      return null;
+      throw new NoSuchElementException("File already closed, unable to read " + klass.getName() + ".");
     } else {
       try {
         // Read the class name
         String line = br.readLine();
         if (line == null) {
           close();
+          throw new NoSuchElementException("File is empty, unable to read " + klass.getName() + ".");
+        } else if (SimpleSerializerImpl.DIVIDER.equals(line)) {
           return null;
         }
         // Verify the class name matches
         Class<?> loadedClass = Class.forName(line);
         
         if (!klass.isAssignableFrom(loadedClass)) {
-          logger.log(Level.SEVERE, "Specified type does not match file: " + klass.getName() + " vs " + loadedClass.getName());
           close();
-          return null;
+          throw new IllegalStateException("Specified type does not match file: " + klass.getName() + " vs " + loadedClass.getName());
         }
         
         // Read in the fields
         line = br.readLine();
-        if ("writeToString".equals(line)) {
-          if (CustomSimpleSerializable.class.isAssignableFrom(loadedClass)) {
+        if ("serialize".equals(line)) {
+          if (CustomSerializable.class.isAssignableFrom(loadedClass)) {
             return new CustomEntryReader<T>(loadedClass);
           } else {
-            logger.log(Level.SEVERE, "File says custom serializable, but " + loadedClass.getName() + " is not");
-            return null;
+            throw new IllegalStateException("File says custom serializable, but " + loadedClass.getName() + " is not");
           }
         } else {
           String[] fieldNames = LineBuilder.splitLine(line);
@@ -126,9 +125,6 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
             fields[i] = loadedClass.getDeclaredField(fieldNames[i]);
             fields[i].setAccessible(true);
             deserializers[i] = ObjectDeserializer.makeDeserializer(fields[i].getType());
-            if (deserializers[i] == null) {
-              return null;
-            }
           }
           if (trans) {
             return new TransientEntryReader<T>(loadedClass, fields, deserializers);
@@ -136,31 +132,34 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
             return new BasicEntryReader<T>(loadedClass, fields, deserializers);
           }
         }
-        
       } catch (ClassNotFoundException e) {
-        logger.log(Level.SEVERE, "Unable to load class for deserialization.", e);
+        throw new IllegalStateException("Unable to load class for deserialization.", e);
       } catch (SecurityException e) {
-        logger.log(Level.SEVERE, "JVM does not have sufficient security priviliges for deserialization.", e);
+        throw new IllegalStateException("JVM does not have sufficient security priviliges for deserialization.", e);
       } catch (NoSuchFieldException e) {
-        logger.log(Level.SEVERE, "Unable to find field for deserialization.", e);
+        throw new IllegalStateException("Unable to find field for deserialization.", e);
       } catch (NoSuchMethodException e) {
-        logger.log(Level.SEVERE, "Unable to find method for deserialization.", e);
+        throw new IllegalStateException("Unable to find method for deserialization.", e);
       } catch (InstantiationException e) {
-        logger.log(Level.SEVERE, "Unable to instantiate object for deserialization.", e);
+        throw new IllegalStateException("Unable to instantiate object for deserialization.", e);
       } catch (IllegalAccessException e) {
-        logger.log(Level.SEVERE, "JVM does not have sufficient security priviliges for deserialization.", e);
+        throw new IllegalStateException("JVM does not have sufficient security priviliges for deserialization.", e);
       } catch (InvocationTargetException e) {
-        logger.log(Level.SEVERE, "Exception during object instantiation for deserialization.", e);
+        throw new IllegalStateException("Exception during object instantiation for deserialization.", e);
       }
-      return null;
     }
   }
   
-  private interface EntryReader<T> {
-    public T create(String line) throws InstantiationException, IllegalAccessException, InvocationTargetException;
+  private static abstract class EntryReader<T> {
+    public abstract T create(Scanner scanner) throws InstantiationException, IllegalAccessException, InvocationTargetException;
+    
+    public final T create(String line) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+      Scanner scanner = LineBuilder.getScanner(line);
+      return create(scanner);
+    }
   }
   
-  private static class CustomEntryReader<T> implements EntryReader<T> {
+  private static class CustomEntryReader<T> extends EntryReader<T> {
     private ObjectDeserializer<?> deserializer;
     
     public CustomEntryReader(Class<?> klass) {
@@ -172,12 +171,12 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     }
     
     @SuppressWarnings("unchecked")
-    public T create(String line) {
-      return (T) deserializer.deserialize(LineBuilder.getScanner(line));
+    public T create(Scanner scanner) {
+      return (T) deserializer.deserialize(scanner);
     }
   }
   
-  private static class BasicEntryReader<T> implements EntryReader<T> {
+  private static class BasicEntryReader<T> extends EntryReader<T> {
     private Constructor<T> constructor;
     private Field[] fields;
     private ObjectDeserializer<?>[] deserializers;
@@ -195,9 +194,8 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
       }
     }
     
-    public T create(String line) throws InstantiationException, IllegalAccessException, InvocationTargetException  {
+    public T create(Scanner scanner) throws InstantiationException, IllegalAccessException, InvocationTargetException  {
       T obj = constructor.newInstance();
-      Scanner scanner = LineBuilder.getScanner(line);
       for (int i = 0; i < fields.length; i++) {
         fields[i].set(obj, deserializers[i].deserialize(scanner));
       }
@@ -205,7 +203,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     }
   }
   
-  private static class TransientEntryReader<T> implements EntryReader<T> {
+  private static class TransientEntryReader<T> extends EntryReader<T> {
     private Field[] fields;
     private ObjectDeserializer<?>[] deserializers;
     private T obj;
@@ -223,8 +221,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
       }
     }
     
-    public T create(String line) throws IllegalAccessException {
-      Scanner scanner = LineBuilder.getScanner(line);
+    public T create(Scanner scanner) throws IllegalAccessException {
       for (int i = 0; i < fields.length; i++) {
         fields[i].set(obj, deserializers[i].deserialize(scanner));
       }
@@ -239,8 +236,8 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
   }
 
   @Override
-  public <T extends SimpleSerializable> Iterable<T> readNextToIterable(Class<T> klass) throws IOException {
-    return readNextToIterable(klass, false, false);
+  public <T extends SimpleSerializable> Iterable<T> deserializeToIterable(Class<T> klass) throws IOException {
+    return deserializeToIterable(klass, false, false);
   }
 
   private <T extends SimpleSerializable> Iterable<T> makeIterable(final EntryReader<T> entryReader, final boolean closeOnCompletion) {
@@ -304,7 +301,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     };
   }
   @Override
-  public <T extends SimpleSerializable> Iterable<T> readNextToIterable(Class<T> klass, final boolean closeOnCompletion, boolean trans) throws IOException {
+  public <T extends SimpleSerializable> Iterable<T> deserializeToIterable(Class<T> klass, final boolean closeOnCompletion, boolean trans) throws IOException {
     final EntryReader<T> entryReader = positionForNext(klass, trans);
     if (entryReader == null) {
       return Collections.emptyList();
@@ -314,9 +311,11 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
   }
 
   @Override
-  public <T extends SimpleSerializable> Collection<T> readNextToCollection(Class<T> klass) throws IOException {
+  public <T extends SimpleSerializable> Collection<T> deserializeToCollection(Class<T> klass) throws IOException {
     EntryReader<T> entryReader = positionForNext(klass, false);
-    if (entryReader != null) {
+    if (entryReader == null) {
+      return Collections.emptyList();
+    } else {
       Collection<T> coll = Helper.newLinkedList();
       for (String line = br.readLine(); !SimpleSerializerImpl.isFinished(line); line = br.readLine()) {
         try {
@@ -330,13 +329,11 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
         }
       }
       return coll;
-    } else {
-      return Collections.emptyList();
     }
   }
 
   @Override
-  public <T extends CustomSimpleSerializable> Iterable<T> readNextToIterable(ObjectDeserializer<T> deserializer, boolean closeOnCompletion) throws IOException {
+  public <T extends CustomSerializable> Iterable<T> deserializeToIterable(ObjectDeserializer<T> deserializer, boolean closeOnCompletion) throws IOException {
     EntryReader<T> entryReader = positionForNext(deserializer);
     if (entryReader == null) {
       return Collections.emptyList();
@@ -344,11 +341,13 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
       return makeIterable(entryReader, closeOnCompletion);
     }
   }
-
+  
   @Override
-  public <T extends CustomSimpleSerializable> Iterable<T> readNextToCollection(ObjectDeserializer<T> deserializer, boolean closeOnCompletion) throws IOException {
+  public <T extends CustomSerializable> Collection<T> deserializeToCollection(ObjectDeserializer<T> deserializer) throws IOException {
     EntryReader<T> entryReader = positionForNext(deserializer);
-    if (entryReader != null) {
+    if (entryReader == null) {
+      return Collections.emptyList();
+    } else {
       Collection<T> coll = Helper.newLinkedList();
       for (String line = br.readLine(); !SimpleSerializerImpl.isFinished(line); line = br.readLine()) {
         try {
@@ -362,9 +361,280 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
         }
       }
       return coll;
-    } else {
-      return Collections.emptyList();
     }
   }
 
+  private static class MapBuilder<K, V> {
+    private Map<K, V> map;
+    private EntryReader<K> keyReader;
+    private EntryReader<V> valueReader;
+    
+    public MapBuilder(Map<K, V> map, EntryReader<K> keyReader, EntryReader<V> valueReader) {
+      this.map = map;
+      this.keyReader = keyReader;
+      this.valueReader = valueReader;
+    }
+    
+    public void add(String line) {
+      Scanner scanner = LineBuilder.getScanner(line);
+      try {
+        map.put(keyReader.create(scanner), valueReader.create(scanner));
+      } catch (InstantiationException e) {
+        logger.log(Level.SEVERE, "Unable to deserialize: " + line, e);
+      } catch (IllegalAccessException e) {
+        logger.log(Level.SEVERE, "Unable to deserialize: " + line, e);
+      } catch (InvocationTargetException e) {
+        logger.log(Level.SEVERE, "Unable to deserialize: " + line, e);
+      }
+    }
+    
+    public Map<K, V> getMap() {
+      return map;
+    }
+  }
+  
+  @SuppressWarnings("unchecked")
+  private <K, V> Map<K, V> createMap() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+    // Read the class name
+    String line = br.readLine();
+    if (line == null) {
+      close();
+      throw new NoSuchElementException("File is empty, unable to read map.");
+    } else if (SimpleSerializerImpl.DIVIDER.equals(line)) {
+      return null;
+    }
+    
+    Class<?> loadedClass = Class.forName(line);
+    if (!Map.class.isAssignableFrom(loadedClass)) {
+      logger.log(Level.SEVERE, "Map deserialization requested, but type is " + loadedClass.getName());
+    }
+    return (Map<K, V>)loadedClass.newInstance();
+  }
+  
+  private <K, V> MapBuilder<K, V> positionForNext(Class<K> key, Class<V> value) throws IOException {
+    if (br == null) {
+      logger.log(Level.SEVERE, "File already closed, unable to deserialize map.");
+      return null;
+    } else {
+      try {
+        Map<K, V> map = createMap();
+        if (map == null) {
+          return null;
+        }
+        // Read in the fields
+        String[] fieldNames = LineBuilder.splitLine(br.readLine());
+        int idx = 0;
+        
+        EntryReader<K> keyReader = null;
+        if ("serialize".equals(fieldNames[idx])) {
+          keyReader = new CustomEntryReader<K>(key);
+          idx++;
+        } else {
+          int fieldCount = Integer.parseInt(fieldNames[idx++]);
+          Field[] fields = new Field[fieldCount];
+          ObjectDeserializer<?>[] deserializers = new ObjectDeserializer[fieldCount];
+          for (int i = 0; i < fieldCount; i++) {
+            fields[i] = key.getDeclaredField(fieldNames[idx++]);
+            fields[i].setAccessible(true);
+            deserializers[i] = ObjectDeserializer.makeDeserializer(fields[i].getType());
+            if (deserializers[i] == null) {
+              return null;
+            }
+          }
+          keyReader = new BasicEntryReader<K>(key, fields, deserializers);
+          idx += fieldCount;
+        }
+        
+        EntryReader<V> valueReader = null;
+        if ("serialize".equals(fieldNames[idx])) {
+          valueReader = new CustomEntryReader<V>(value);
+        } else {
+          int fieldCount = Integer.parseInt(fieldNames[idx++]);
+          Field[] fields = new Field[fieldCount];
+          ObjectDeserializer<?>[] deserializers = new ObjectDeserializer[fieldCount];
+          for (int i = 0; i < fieldCount; i++) {
+            fields[i] = value.getDeclaredField(fieldNames[idx++]);
+            fields[i].setAccessible(true);
+            deserializers[i] = ObjectDeserializer.makeDeserializer(fields[i].getType());
+            if (deserializers[i] == null) {
+              return null;
+            }
+          }
+          valueReader = new BasicEntryReader<V>(value, fields, deserializers);
+        }
+        
+        return new MapBuilder<K, V>(map, keyReader, valueReader);
+      } catch (ClassNotFoundException e) {
+        logger.log(Level.SEVERE, "Unable to load class for deserialization.", e);
+      } catch (SecurityException e) {
+        logger.log(Level.SEVERE, "JVM does not have sufficient security priviliges for deserialization.", e);
+      } catch (NoSuchFieldException e) {
+        logger.log(Level.SEVERE, "Unable to find field for deserialization.", e);
+      } catch (NoSuchMethodException e) {
+        logger.log(Level.SEVERE, "Unable to find method for deserialization.", e);
+      } catch (InstantiationException e) {
+        logger.log(Level.SEVERE, "Unable to instantiate object for deserialization.", e);
+      } catch (IllegalAccessException e) {
+        logger.log(Level.SEVERE, "JVM does not have sufficient security priviliges for deserialization.", e);
+      } 
+      return null;
+    }
+  }
+  
+  private <K, V> MapBuilder<K, V> positionForNext(ObjectDeserializer<K> keyDeserializer, Class<V> value) throws IOException {
+    if (br == null) {
+      logger.log(Level.SEVERE, "File already closed, unable to deserialize map.");
+      return null;
+    } else {
+      try {
+        Map<K, V> map = createMap();
+        
+        // Read in the fields
+        String[] fieldNames = LineBuilder.splitLine(br.readLine());
+        int idx = 0;
+        
+        EntryReader<K> keyReader = new CustomEntryReader<K>(keyDeserializer);
+        if ("serialize".equals(fieldNames[idx])) {
+          idx++;
+        } else {
+          int fieldCount = Integer.parseInt(fieldNames[idx++]);
+          idx += fieldCount;
+        }
+        
+        EntryReader<V> valueReader = null;
+        if ("serialize".equals(fieldNames[idx])) {
+          valueReader = new CustomEntryReader<V>(value);
+        } else {
+          int fieldCount = Integer.parseInt(fieldNames[idx++]);
+          Field[] fields = new Field[fieldCount];
+          ObjectDeserializer<?>[] deserializers = new ObjectDeserializer[fieldCount];
+          for (int i = 0; i < fieldCount; i++) {
+            fields[i] = value.getDeclaredField(fieldNames[idx++]);
+            fields[i].setAccessible(true);
+            deserializers[i] = ObjectDeserializer.makeDeserializer(fields[i].getType());
+          }
+          valueReader = new BasicEntryReader<V>(value, fields, deserializers);
+        }
+        
+        return new MapBuilder<K, V>(map, keyReader, valueReader);
+      } catch (ClassNotFoundException e) {
+        throw new IllegalStateException("Unable to load class for deserialization.", e);
+      } catch (SecurityException e) {
+        throw new IllegalStateException("JVM does not have sufficient security priviliges for deserialization.", e);
+      } catch (NoSuchFieldException e) {
+        throw new IllegalStateException("Unable to find field for deserialization.", e);
+      } catch (NoSuchMethodException e) {
+        throw new IllegalStateException("Unable to find method for deserialization.", e);
+      } catch (InstantiationException e) {
+        throw new IllegalStateException("Unable to instantiate object for deserialization.", e);
+      } catch (IllegalAccessException e) {
+        throw new IllegalStateException("JVM does not have sufficient security priviliges for deserialization.", e);
+      } 
+    }
+  }
+  
+  private <K, V> MapBuilder<K, V> positionForNext(Class<K> key, ObjectDeserializer<V> valueDeserializer) throws IOException {
+    if (br == null) {
+      logger.log(Level.SEVERE, "File already closed, unable to deserialize map.");
+      return null;
+    } else {
+      try {
+        Map<K, V> map = createMap();
+        if (map == null) {
+          return null;
+        }
+        // Read in the fields
+        String[] fieldNames = LineBuilder.splitLine(br.readLine());
+        int idx = 0;
+        
+        EntryReader<K> keyReader = null;
+        if ("serialize".equals(fieldNames[idx])) {
+          keyReader = new CustomEntryReader<K>(key);
+          idx++;
+        } else {
+          int fieldCount = Integer.parseInt(fieldNames[idx++]);
+          Field[] fields = new Field[fieldCount];
+          ObjectDeserializer<?>[] deserializers = new ObjectDeserializer[fieldCount];
+          for (int i = 0; i < fieldCount; i++) {
+            fields[i] = key.getDeclaredField(fieldNames[idx++]);
+            fields[i].setAccessible(true);
+            deserializers[i] = ObjectDeserializer.makeDeserializer(fields[i].getType());
+          }
+          keyReader = new BasicEntryReader<K>(key, fields, deserializers);
+          idx += fieldCount;
+        }
+        
+        EntryReader<V> valueReader = new CustomEntryReader<V>(valueDeserializer);
+        
+        return new MapBuilder<K, V>(map, keyReader, valueReader);
+      } catch (ClassNotFoundException e) {
+        throw new IllegalStateException("Unable to load class for deserialization.", e);
+      } catch (SecurityException e) {
+        throw new IllegalStateException("JVM does not have sufficient security priviliges for deserialization.", e);
+      } catch (NoSuchFieldException e) {
+        throw new IllegalStateException("Unable to find field for deserialization.", e);
+      } catch (NoSuchMethodException e) {
+        throw new IllegalStateException("Unable to find method for deserialization.", e);
+      } catch (InstantiationException e) {
+        throw new IllegalStateException("Unable to instantiate object for deserialization.", e);
+      } catch (IllegalAccessException e) {
+        throw new IllegalStateException("JVM does not have sufficient security priviliges for deserialization.", e);
+      } 
+    }
+  }
+  
+  private <K, V> MapBuilder<K, V> positionForNext(ObjectDeserializer<K> keyDeserializer, ObjectDeserializer<V> valueDeserializer) throws IOException {
+    if (br == null) {
+      logger.log(Level.SEVERE, "File already closed, unable to deserialize map.");
+      return null;
+    } else {
+      try {
+        Map<K, V> map = createMap();
+        if (map == null) {
+          return null;
+        }
+        // Read in the fields
+        br.readLine();
+        
+        return new MapBuilder<K, V>(map, new CustomEntryReader<K>(keyDeserializer), new CustomEntryReader<V>(valueDeserializer));
+      } catch (ClassNotFoundException e) {
+        throw new IllegalStateException("Unable to load class for deserialization.", e);
+      } catch (InstantiationException e) {
+        throw new IllegalStateException("Unable to instantiate map for deserialization.", e);
+      } catch (IllegalAccessException e) {
+        throw new IllegalStateException("Unable to instantiate map for deserialization.", e);
+      }
+    }
+  }
+  
+  private <K, V> Map<K, V> buildMap(MapBuilder<K, V> builder) throws IOException {
+    if (builder != null) {
+      for (String line = br.readLine(); !SimpleSerializerImpl.isFinished(line); line = br.readLine()) {
+        builder.add(line);
+      }
+      return builder.getMap();
+    } else {
+      return Collections.emptyMap();
+    }
+  }
+  
+  @Override
+  public <K, V> Map<K, V> deserializeMap(Class<K> key, Class<V> value) throws IOException {
+    return buildMap(positionForNext(key, value));
+  }
+  
+  @Override
+  public <K, V> Map<K, V> deserializeMap(ObjectDeserializer<K> keyDeserializer, Class<V> value) throws IOException {
+    return buildMap(positionForNext(keyDeserializer, value));
+  }
+  
+  @Override
+  public <K, V> Map<K, V> deserializeMap(Class<K> key, ObjectDeserializer<V> valueDeserializer) throws IOException {
+    return buildMap(positionForNext(key, valueDeserializer));
+  }
+  
+  @Override
+  public <K, V> Map<K, V> deserializeMap(ObjectDeserializer<K> keyDeserializer, ObjectDeserializer<V> valueDeserializer) throws IOException {
+    return buildMap(positionForNext(keyDeserializer, valueDeserializer));
+  }
 }

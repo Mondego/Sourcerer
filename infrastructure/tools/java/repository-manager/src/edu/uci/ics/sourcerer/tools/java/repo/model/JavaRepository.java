@@ -17,12 +17,31 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.model;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.Batch;
-import edu.uci.ics.sourcerer.tools.core.repo.model.Repository;
+import java.util.Collection;
+
+import edu.uci.ics.sourcerer.tools.core.repo.model.SourceRepository;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface JavaRepository<P extends JavaProject, B extends Batch<P>> extends Repository<P, B> {
+public interface JavaRepository extends SourceRepository {
+  @Override
+  public Collection<? extends JavaBatch> getBatches();
   
+  @Override
+  public JavaProject getProject(String path);
+  
+  @Override
+  public JavaProject getProject(Integer batch, Integer checkout);
+  
+  @Override
+  public Collection<? extends JavaProject> getProjects();
+  
+  public JarFile getJarFile(String hash);
+  
+  public Collection<? extends JarFile> getMavenJarFiles();
+  
+  public Collection<? extends JarFile> getProjectJarFiles();
+  
+  public Collection<? extends JarFile> getLibraryJarFiles();
 }

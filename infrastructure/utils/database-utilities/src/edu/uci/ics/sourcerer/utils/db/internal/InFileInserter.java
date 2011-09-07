@@ -9,20 +9,20 @@ import java.io.IOException;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.io.IOUtils;
-import edu.uci.ics.sourcerer.utils.db.IRowInsert;
-import edu.uci.ics.sourcerer.utils.db.IRowInserter;
+import edu.uci.ics.sourcerer.utils.db.Insert;
+import edu.uci.ics.sourcerer.utils.db.BatchInserter;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
 
-class InFileInserter implements IRowInserter {
+class InFileInserter implements BatchInserter {
   private File tempFile;
   private BufferedWriter writer;
-  private QueryExecutor executor;
+  private QueryExecutorImpl executor;
   private DatabaseTable table;
   
   private InFileInserter() {}
   
-  static InFileInserter getInFileInserter(File tempDir, QueryExecutor executor, DatabaseTable table) {
-    File tempFile = new File(tempDir, table.toString());
+  static InFileInserter makeInFileInserter(File tempDir, QueryExecutorImpl executor, DatabaseTable table) {
+    File tempFile = new File(tempDir, table.getName());
     try {
       BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
       InFileInserter retval = new InFileInserter();
@@ -38,10 +38,10 @@ class InFileInserter implements IRowInserter {
   }
   
   @Override
-  public void addRow(IRowInsert insert) {
+  public void addInsert(Insert insert) {
     try {
       writer.write(insert.toString());
-      writer.newLine();
+      writer.write('\n');
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error writing to file: " + tempFile.getPath(), e);
     }
@@ -51,7 +51,7 @@ class InFileInserter implements IRowInserter {
   public void insert() {
     IOUtils.close(writer);
     executor.execute("LOAD DATA CONCURRENT LOCAL INFILE '" + tempFile.getPath().replace('\\', '/') + "' " +
-    		"INTO TABLE " + table + " " +
+    		"INTO TABLE " + table.getName() + " " +
 				"FIELDS TERMINATED BY ',' " +
 				"OPTIONALLY ENCLOSED BY '\\\'' " + 
 				"LINES STARTING BY '(' " +

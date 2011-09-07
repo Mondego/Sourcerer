@@ -46,4 +46,14 @@ public class CounterSet <T> {
   public Collection<Counter<T>> getCounters() {
     return counters.values();
   }
+  
+  public Counter<T> getMax() {
+    Counter<T> max = null;
+    for (Counter<T> counter : counters.values()) {
+      if (max == null || counter.getCount() > max.getCount()) {
+        max = counter;
+      }
+    }
+    return max;
+  }
 }

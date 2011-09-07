@@ -17,16 +17,16 @@
  */
 package edu.uci.ics.sourcerer.tools.link.crawler.flossmole;
 
-import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
-import edu.uci.ics.sourcerer.utils.db.sql.IColumn;
+import edu.uci.ics.sourcerer.utils.db.sql.Table;
+import edu.uci.ics.sourcerer.utils.db.sql.Column;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class GoogleCodeProjects extends DatabaseTable {
-  public static final DatabaseTable TABLE = new GoogleCodeProjects();
+public final class GoogleCodeProjects extends Table {
+  public static final Table TABLE = new GoogleCodeProjects();
   
-  public static final IColumn<String> PROJECT_NAME = TABLE.addVarcharColumn("proj_name", 100, false); 
+  public static final Column<String> PROJECT_NAME = TABLE.addVarcharColumn("proj_name", 100, false); 
   
   private GoogleCodeProjects() {
     super("gc_projects");

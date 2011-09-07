@@ -25,7 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collection;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -38,10 +38,10 @@ import edu.uci.ics.sourcerer.util.io.IOUtils;
 public abstract class AbstractProperties {
   private Properties properties;
   private File file;
-  private Collection<Property<?>> props;
+  private Map<String, Property<?>> props;
   
   protected AbstractProperties(File file) {
-    props = Helper.newLinkedList();
+    props = Helper.newHashMap();
     this.file = file;
   }
   
@@ -67,22 +67,28 @@ public abstract class AbstractProperties {
     return properties.getProperty(name);
   }
   
-  protected void setValue(String name, String value) {
-    if (properties == null) {
-      initialize();      
-    }
-    
+  protected void registerProperty(Property<?> property) {
+    props.put(property.getName(), property);
   }
   
-  protected void registerProperty(Property<?> property) {
-    props.add(property);
+  public void clear() {
+    props.clear();
+  }
+  
+  public void copy(AbstractProperties other) {
+    for (Property<?> prop : props.values()) {
+      Property<?> otherProp = other.props.get(prop.getName());
+      if (otherProp != null) {
+        prop.copy(otherProp);
+      }
+    }
   }
   
   public void save() {
     if (properties == null) {
       initialize();
     }
-    for (Property<?> prop : props) {
+    for (Property<?> prop : props.values()) {
       String val = prop.getValueAsString();
       if (val == null) {
         properties.remove(prop.getName());

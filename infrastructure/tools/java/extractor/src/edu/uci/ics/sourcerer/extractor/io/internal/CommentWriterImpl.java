@@ -20,32 +20,30 @@ package edu.uci.ics.sourcerer.extractor.io.internal;
 import java.io.File;
 
 import edu.uci.ics.sourcerer.extractor.io.CommentWriter;
-import edu.uci.ics.sourcerer.model.Comment;
-import edu.uci.ics.sourcerer.model.extracted.CommentEX;
-import edu.uci.ics.sourcerer.repo.base.IFileSet;
-import edu.uci.ics.sourcerer.repo.extracted.Extracted;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.CommentEX;
+import edu.uci.ics.sourcerer.tools.java.model.types.Comment;
+import edu.uci.ics.sourcerer.tools.java.model.types.Location;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class CommentWriterImpl extends ExtractorWriter implements CommentWriter {
-  public CommentWriterImpl(File output, IFileSet input) {
-    super(new File(output, Extracted.COMMENT_FILE.getValue()), input);
-  }
-
-  public void writeLineComment(String containingFile, int startPos, int length) {
-    write(CommentEX.getUnlinkedLine(Comment.LINE, convertToRelativePath(containingFile), startPos, length));
+public final class CommentWriterImpl extends AbstractExtractorWriter<CommentEX> implements CommentWriter {
+  public CommentWriterImpl(File output) {
+    super(new File(output, CommentEX.COMMENT_FILE.getValue()), CommentEX.class);
   }
   
-  public void writeBlockComment(String containingFile, int startPos, int length) {
-    write(CommentEX.getUnlinkedLine(Comment.BLOCK, convertToRelativePath(containingFile), startPos, length));
+  public void writeComment(CommentEX comment) {
+    write(comment);
   }
   
-  public void writeUnassociatedJavadocComment(String containingFile, int startPos, int length) {
-    write(CommentEX.getUnlinkedLine(Comment.UJAVADOC, convertToRelativePath(containingFile), startPos, length));
+  private CommentEX trans = new CommentEX();
+  @Override
+  public void writeComment(Comment type, Location location) {
+    write(trans.update(type, location));
   }
   
-  public void writeJavadocComment(String containingFqn, String containingFile, int startPos, int length) {
-    write(CommentEX.getLinkedLine(Comment.JAVADOC, containingFqn, convertToRelativePath(containingFile), startPos, length));
+  @Override
+  public void writeComment(Comment type, String fqn, Location location) {
+    write(trans.update(type, fqn, location));
   }
 }

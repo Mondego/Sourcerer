@@ -17,17 +17,21 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import edu.uci.ics.sourcerer.extractor.io.IProblemWriter;
+import edu.uci.ics.sourcerer.extractor.io.ProblemWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.ProblemEX;
+import edu.uci.ics.sourcerer.tools.java.model.types.Problem;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyProblemWriter implements IProblemWriter {
+public class DummyProblemWriter implements ProblemWriter {
   @Override
-  public void writeProblem(String filename, boolean isError, int errorCode, String message) {
-  }
+  public void writeProblem(ProblemEX problem) {}
 
   @Override
-  public void close() {
+  public void writeProblem(Problem type, String path, Integer errorCode, String message) {
   }
+  
+  @Override
+  public void close() {}
 }

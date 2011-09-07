@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -119,6 +120,10 @@ public class Helper {
 	
 	public static <T> HashSet<T> newHashSet() {
 	  return new HashSet<T>();
+	}
+	
+	public static <T extends Enum<T>> EnumSet<T> newEnumSet(Class<T> klass) {
+	  return EnumSet.noneOf(klass);
 	}
 	
 	public static <T> HashSet<T> newHashSet(Collection<? extends T> c) {

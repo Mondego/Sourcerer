@@ -17,7 +17,10 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.ContentFile;
+import java.io.IOException;
+
+import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
+import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -28,8 +31,20 @@ public class FileSetImpl extends AbstractFileSet {
   }
 
   @Override
-  protected void init() {}
+  protected void initHelper(boolean loadNow) {}
 
   @Override
-  protected void fileAdded(ContentFile file) {}
+  protected void fileAdded(ContentFileImpl file) {}
+
+  @Override
+  protected void writeExtendedCache(SimpleSerializer serializer) throws IOException {
+  }
+
+  @Override
+  protected void readExtendedCache(SimpleDeserializer deserializer) throws IOException {
+  }
+
+  @Override
+  protected void populateFileSetHelper() {
+  }
 }

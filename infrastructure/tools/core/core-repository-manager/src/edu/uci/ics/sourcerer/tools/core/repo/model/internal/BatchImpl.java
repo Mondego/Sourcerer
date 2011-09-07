@@ -27,14 +27,14 @@ import edu.uci.ics.sourcerer.util.Helper;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class BatchImpl <Project extends RepoProjectImpl<? extends AbstractRepository<Project>>> implements ModifiableBatch<Project> {
-  private final AbstractRepository<Project> repo;
+public class BatchImpl<Project extends RepoProjectImpl<? extends AbstractRepository<Project, ? extends BatchImpl<Project>>>> implements ModifiableBatch {
+  private final AbstractRepository<Project, ?> repo;
   private final RepoFileImpl dir;
   private final Integer batch;
   private final BatchProperties properties;
   private final TreeMap<Integer, Project> projects;
   
-  protected BatchImpl(AbstractRepository<Project> repo, RepoFileImpl dir, Integer batch) {
+  protected BatchImpl(AbstractRepository<Project, ?> repo, RepoFileImpl dir, Integer batch) {
     this.repo = repo;
     this.dir = dir;
     this.batch = batch;

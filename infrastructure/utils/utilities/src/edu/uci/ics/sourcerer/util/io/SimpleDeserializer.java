@@ -20,14 +20,19 @@ package edu.uci.ics.sourcerer.util.io;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface SimpleDeserializer extends Closeable {
-  public <T extends SimpleSerializable> Iterable<T> readNextToIterable(Class<T> klass) throws IOException;
-  public <T extends SimpleSerializable> Iterable<T> readNextToIterable(Class<T> klass, boolean closeOnCompletion, boolean trans) throws IOException;
-  public <T extends SimpleSerializable> Collection<T> readNextToCollection(Class<T> klass) throws IOException;
-  public <T extends CustomSimpleSerializable> Iterable<T> readNextToIterable(ObjectDeserializer<T> deserializer, boolean closeOnCompletion) throws IOException;
-  public <T extends CustomSimpleSerializable> Iterable<T> readNextToCollection(ObjectDeserializer<T> deserializer, boolean closeOnCompletion) throws IOException;
+  public <T extends SimpleSerializable> Iterable<T> deserializeToIterable(Class<T> klass) throws IOException;
+  public <T extends SimpleSerializable> Iterable<T> deserializeToIterable(Class<T> klass, boolean closeOnCompletion, boolean trans) throws IOException;
+  public <T extends SimpleSerializable> Collection<T> deserializeToCollection(Class<T> klass) throws IOException;
+  public <T extends CustomSerializable> Iterable<T> deserializeToIterable(ObjectDeserializer<T> deserializer, boolean closeOnCompletion) throws IOException;
+  public <T extends CustomSerializable> Collection<T> deserializeToCollection(ObjectDeserializer<T> deserializer) throws IOException;
+  public <K, V> Map<K, V> deserializeMap(Class<K> key, Class<V> value) throws IOException;
+  public <K, V> Map<K, V> deserializeMap(ObjectDeserializer<K> keyDeserializer, Class<V> value) throws IOException;
+  public <K, V> Map<K, V> deserializeMap(Class<K> key, ObjectDeserializer<V> valueDeserializer) throws IOException;
+  public <K, V> Map<K, V> deserializeMap(ObjectDeserializer<K> keyDeserializer, ObjectDeserializer<V> valueDeserializer) throws IOException;
 }

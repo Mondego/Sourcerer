@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.db.queries;
 
-import static edu.uci.ics.sourcerer.db.schema.EntitiesTable.*;
+import static edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

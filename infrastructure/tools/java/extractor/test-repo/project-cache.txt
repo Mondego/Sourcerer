@@ -1,0 +1,6 @@
+edu.uci.ics.sourcerer.tools.core.repo.model.internal.ProjectLocationImpl
+batch checkout
+0 0
+0 1
+0 2
+!_DONE_!

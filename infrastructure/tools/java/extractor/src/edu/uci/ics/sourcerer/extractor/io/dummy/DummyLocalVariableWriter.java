@@ -17,22 +17,22 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import edu.uci.ics.sourcerer.extractor.io.ILocalVariableWriter;
-import edu.uci.ics.sourcerer.model.Location;
+import edu.uci.ics.sourcerer.extractor.io.LocalVariableWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.LocalVariableEX;
+import edu.uci.ics.sourcerer.tools.java.model.types.LocalVariable;
+import edu.uci.ics.sourcerer.tools.java.model.types.Location;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyLocalVariableWriter implements ILocalVariableWriter {
+public class DummyLocalVariableWriter implements LocalVariableWriter {
+  @Override
+  public void writeLocalVariable(LocalVariableEX var) {}
+  
+  @Override
+  public void writeLocalVariable(LocalVariable type, String name, int modifiers, String typeFqn, Location typeLocation, String parent, Integer position, Location location) {}
+  
   @Override
   public void close() {}
-
-  @Override
-  public void writeClassParameter(String name, String type, String parent, int position, String path) {}
-
-  @Override
-  public void writeLocalVariable(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, Location location) {}
-
-  @Override
-  public void writeParameter(String name, int modifiers, String type, int typeStartPos, int typeLength, String parent, int position, Location location) {}
+  
 }

@@ -17,14 +17,14 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.model.internal;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ProjectLocationImpl;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractSourceProject;
-import edu.uci.ics.sourcerer.tools.java.repo.model.JavaProject;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ProjectLocationImpl;
+import edu.uci.ics.sourcerer.tools.java.repo.model.ModifiableJavaProject;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JavaProjectImpl extends AbstractSourceProject<JavaRepositoryImpl, JavaFileSetImpl> implements JavaProject {
+public class JavaProjectImpl extends AbstractSourceProject<JavaRepositoryImpl, JavaFileSetImpl> implements ModifiableJavaProject {
   protected JavaProjectImpl(JavaRepositoryImpl repo, ProjectLocationImpl loc) {
     super(repo, loc);
   }

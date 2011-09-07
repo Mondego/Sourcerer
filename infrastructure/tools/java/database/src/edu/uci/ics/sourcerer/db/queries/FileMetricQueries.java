@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.db.queries;
 
-import static edu.uci.ics.sourcerer.db.schema.FileMetricsTable.*;
+import static edu.uci.ics.sourcerer.tools.java.db.schema.FileMetricsTable.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

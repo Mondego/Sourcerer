@@ -17,50 +17,22 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import edu.uci.ics.sourcerer.extractor.io.IEntityWriter;
-import edu.uci.ics.sourcerer.model.Location;
-import edu.uci.ics.sourcerer.model.metrics.Metrics;
+import edu.uci.ics.sourcerer.extractor.io.EntityWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.EntityEX;
+import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
+import edu.uci.ics.sourcerer.tools.java.model.types.Location;
+import edu.uci.ics.sourcerer.tools.java.model.types.Metrics;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyEntityWriter implements IEntityWriter {
+public class DummyEntityWriter implements EntityWriter {
   @Override
-  public void close() {}
-
-  @Override
-  public void writePackage(String fqn) {
-  }
+  public void writeEntity(Entity type, String fqn, int modifiers, Metrics metrics, Location location) {}
   
   @Override
-  public void writeAnnotation(String fqn, int modifiers, Metrics metrics, Location location) {}
-
+  public void writeEntity(EntityEX entity) {}
+  
   @Override
-  public void writeAnnotationElement(String fqn, int modifiers, Metrics metrics, Location location) {}
-
-  @Override
-  public void writeClass(String fqn, int modifiers, Metrics metrics, Location location) {}
-
-  @Override
-  public void writeConstructor(String fqn, int modifiers, Metrics metrics, Location location) {}
-
-  @Override
-  public void writeEnum(String fqn, int modifiers, Metrics metrics, Location location) {}
-
-  @Override
-  public void writeEnumConstant(String fqn, int modifiers, Metrics metrics, Location location) {}
-
-  @Override
-  public void writeField(String fqn, int modifiers, Metrics metrics, Location location) {}
-
-  @Override
-  public void writeInitializer(String fqn, int modifiers, Metrics metrics, Location location) {}
-
-  @Override
-  public void writeInterface(String fqn, int modifiers, Metrics metrics, Location location) {}
-
-  @Override
-  public void writeMethod(String fqn, int modifiers, Metrics metrics, Location location) {}
-
-
+  public void close() {}
 }

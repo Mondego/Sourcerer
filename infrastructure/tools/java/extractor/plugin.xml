@@ -9,7 +9,7 @@
             thread="main"
             visible="true">
          <run
-               class="edu.uci.ics.sourcerer.extractor.Extractor">
+               class="edu.uci.ics.sourcerer.tools.java.extractor.Main">
          </run>
       </application>
    </extension>

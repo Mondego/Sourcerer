@@ -17,12 +17,12 @@
  */
 package edu.uci.ics.sourcerer.utils.db.sql;
 
-import edu.uci.ics.sourcerer.utils.db.internal.InternalDatabaseTable;
+import edu.uci.ics.sourcerer.utils.db.internal.DatabaseTableImpl;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class DatabaseTable extends InternalDatabaseTable {
+public class DatabaseTable extends DatabaseTableImpl {
   protected DatabaseTable(String name) {
     super(name);
   }

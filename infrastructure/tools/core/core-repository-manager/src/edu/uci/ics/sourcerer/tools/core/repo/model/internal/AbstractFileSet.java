@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.ContentFile;
 import edu.uci.ics.sourcerer.tools.core.repo.model.FileSet;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
@@ -34,11 +33,15 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractFileSet implements FileSet {
+  public static final Argument<String> FILE_CACHE = new StringArgument("file-cache-file", "file-cache.txt", "Cache of the file set's files.").permit();
+  
   private final File cache;
   private ContentDirectoryImpl root;
   private Collection<ContentFileImpl> files;
@@ -46,65 +49,82 @@ public abstract class AbstractFileSet implements FileSet {
   protected AbstractFileSet(AbstractSourceProject<?, ?> project) {
     cache = project.getLocation().getProjectRoot().getChildFile(FILE_CACHE.getValue());
     root = ContentDirectoryImpl.makeRoot(project.getContentFile());
-    files = Helper.newArrayList();
-    init();
     
-    if (CLEAR_FILE_CACHE.getValue() || !cache.exists() || !readCache()) {
+  }
+
+  public final void init(boolean loadNow, boolean clearCache) {
+    if (clearCache) {
+      cache.delete();
+    }
+    root = ContentDirectoryImpl.makeRoot(root.getFile());
+    if (loadNow) {
+      if (files == null) {
+        files = Helper.newArrayList();
+      } else {
+        files.clear();
+      }
+      initHelper(loadNow);
       populateFileSet();
+    } else {
+      files = null;
+      initHelper(loadNow);
     }
   }
   
-  protected abstract void init();
-  
-  protected final void reset() {
-    root = ContentDirectoryImpl.makeRoot(root.getFile());
-    files.clear();
-    init();
-    populateFileSet();
-  }
+  protected abstract void initHelper(boolean loadNow);
   
   private final void populateFileSet() {
-    Deque<RepoFileImpl> stack = Helper.newStack();
-    stack.push(getRoot().getFile());
-      
-    while (!stack.isEmpty()) {
-      RepoFileImpl dir = stack.pop();
-      for (RepoFileImpl child : dir.getChildren()) {
-        if (child.isDirectory()) {
-          stack.push(child);
-        } else {
-          addFile(child);
+    if (CLEAR_FILE_CACHE.getValue() || !cache.exists() || !readCache()) {
+      Deque<RepoFileImpl> stack = Helper.newStack();
+      stack.push(getRoot().getFile());
+        
+      while (!stack.isEmpty()) {
+        RepoFileImpl dir = stack.pop();
+        for (RepoFileImpl child : dir.getChildren()) {
+          if (child.isDirectory()) {
+            stack.push(child);
+          } else {
+            addFile(child);
+          }
         }
       }
-    }
-    
-    SimpleSerializer writer = null;
-    try {
-      cache.getParentFile().mkdirs();
-      writer = IOUtils.makeSimpleSerializer(cache);
-      EntryWriter<RepoFileImpl> ew = writer.getEntryWriter(RepoFileImpl.class);
-      for (ContentFileImpl file : files) {
-        ew.write(file.getFile());
+      
+      populateFileSetHelper();
+      
+      SimpleSerializer writer = null;
+      try {
+        cache.getParentFile().mkdirs();
+        writer = IOUtils.makeSimpleSerializer(cache);
+        EntryWriter<RepoFileImpl> ew = writer.getEntryWriter(RepoFileImpl.class);
+        for (ContentFileImpl file : files) {
+          ew.write(file.getFile());
+        }
+        ew.close();
+        writeExtendedCache(writer);
+        return;
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to write file cache", e);
+      } finally {
+        IOUtils.close(writer);
       }
-      ew.close();
-      return;
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to write file cache", e);
-    } finally {
-      IOUtils.close(writer);
+      FileUtils.delete(cache);
     }
-    FileUtils.delete(cache);
   }
+  
+  protected abstract void populateFileSetHelper();
+  
+  protected abstract void writeExtendedCache(SimpleSerializer serializer) throws IOException;
   
   private final boolean readCache() {
     SimpleDeserializer reader = null;
     try {
       reader = IOUtils.makeSimpleDeserializer(cache);
-      for (RepoFileImpl file : reader.readNextToIterable(root.getFile().makeDeserializer(), false)) {
+      for (RepoFileImpl file : reader.deserializeToIterable(root.getFile().makeDeserializer(), false)) {
         addFile(file);
       }
+      readExtendedCache(reader);
       return true;
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.log(Level.SEVERE, "Unable to load file cache", e);
       root = ContentDirectoryImpl.makeRoot(root.getFile());
       files.clear();
@@ -114,13 +134,15 @@ public abstract class AbstractFileSet implements FileSet {
     }
   }
   
+  protected abstract void readExtendedCache(SimpleDeserializer deserializer) throws IOException;
+  
   private final void addFile(RepoFileImpl file) {
-    ContentFileImpl cFile = new ContentFileImpl(getRoot().make(file.getParent()), file);
+    ContentFileImpl cFile = getRoot().make(file.getParent()).makeFile(file);
     files.add(cFile);
     fileAdded(cFile);
   }
   
-  protected abstract void fileAdded(ContentFile file);
+  protected abstract void fileAdded(ContentFileImpl file);
 
 //  protected ContentDirectoryImpl makeRoot(RepoFileImpl file) {
 //    return ContentDirectoryImpl.makeRoot(file);
@@ -131,10 +153,16 @@ public abstract class AbstractFileSet implements FileSet {
 //  }
   
   public Collection<ContentFileImpl> getFiles() {
+    if (files == null) {
+      init(true, false);
+    }
     return Collections.unmodifiableCollection(files);
   }
   
   public ContentDirectoryImpl getRoot() {
+    if (files == null) {
+      init(true, false);
+    }
     return root;
   }
 }

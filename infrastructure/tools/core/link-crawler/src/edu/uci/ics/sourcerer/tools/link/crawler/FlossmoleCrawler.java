@@ -30,8 +30,8 @@ import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
 import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
-import edu.uci.ics.sourcerer.utils.db.sql.ISelectQuery;
-import edu.uci.ics.sourcerer.utils.db.sql.ITypedQueryResult;
+import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
+import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 
 
 /**
@@ -47,9 +47,9 @@ public class FlossmoleCrawler {
     new DatabaseRunnable() {
       @Override
       public void action() {
-        ISelectQuery select = exec.makeSelectQuery(GoogleCodeProjects.TABLE);
+        SelectQuery select = exec.makeSelectQuery(GoogleCodeProjects.TABLE);
         select.addSelect(GoogleCodeProjects.PROJECT_NAME);
-        ITypedQueryResult result = select.select();
+        TypedQueryResult result = select.select();
         
         SimpleSerializer writer = null;
         EntryWriter<Project> ew = null;

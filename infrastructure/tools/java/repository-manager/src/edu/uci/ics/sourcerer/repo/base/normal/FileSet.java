@@ -14,7 +14,7 @@
 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+ 
 package edu.uci.ics.sourcerer.repo.base.normal;
 
 import java.io.File;
@@ -29,9 +29,9 @@ import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.internal.FieldConverter;
 import edu.uci.ics.sourcerer.util.io.internal.FileUtils;
 
-/**
+*//**
  * @author Joel Ossher (jossher@uci.edu)
- */
+ *//*
 public class FileSet extends AbstractFileSet {
   private RepoFileImpl content;
   
@@ -76,3 +76,4 @@ public class FileSet extends AbstractFileSet {
     return FileUtils.convertToRelativePath(content.toFile().getAbsolutePath(), path);
   }
 }
+*/

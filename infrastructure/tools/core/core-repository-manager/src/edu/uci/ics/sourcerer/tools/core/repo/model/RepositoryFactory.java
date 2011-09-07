@@ -26,13 +26,13 @@ import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class RepositoryFactory {
+public interface RepositoryFactory {
   public static final Argument<File> INPUT_REPO = new FileArgument("input-repo", "The root directory of the input repository.");
   public static final Argument<File> OUTPUT_REPO = new FileArgument("output-repo", "The root directory of the output repository.");
 
   public static final RepositoryFactory INSTANCE = new InternalRepositoryFactory(); 
   
-  public abstract Repository<? extends SourceProject, ? extends Batch<? extends SourceProject>> loadSourceRepository(Argument<File> root);
+  public SourceRepository loadSourceRepository(Argument<File> root);
   
-  public abstract ModifiableRepository<? extends ModifiableSourceProject, ? extends ModifiableBatch<? extends ModifiableSourceProject>> loadModifiableSourceRepository(Argument<File> root);
+  public ModifiableSourceRepository loadModifiableSourceRepository(Argument<File> root);
 }

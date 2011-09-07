@@ -1,0 +1,5 @@
+(NULL,'CLASS','DNSNameService$1','sun.net.spi.nameservice.dns.DNSNameService$1',null,3)
+(NULL,'CLASS','DNSNameService$2','sun.net.spi.nameservice.dns.DNSNameService$2',null,3)
+(NULL,'CLASS','DNSNameService$ThreadContext','sun.net.spi.nameservice.dns.DNSNameService$ThreadContext',null,3)
+(NULL,'CLASS','DNSNameService','sun.net.spi.nameservice.dns.DNSNameService',null,3)
+(NULL,'CLASS','DNSNameServiceDescriptor','sun.net.spi.nameservice.dns.DNSNameServiceDescriptor',null,3)

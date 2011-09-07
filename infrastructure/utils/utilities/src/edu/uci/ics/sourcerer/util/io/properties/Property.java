@@ -57,11 +57,16 @@ public abstract class Property<T> {
     return value;
   }
   
+  protected void copy(Property<?> other) {
+    setValue(parseValue(other.getValueAsString()));
+  }
+  
   protected String getValueAsString() {
     return toString(getValue());
   }
   
   public void setValue(T value) {
     this.value = value;
+    this.initialized = true;
   }
 }

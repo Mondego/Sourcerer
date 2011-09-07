@@ -17,26 +17,22 @@
  */
 package edu.uci.ics.sourcerer.utils.db;
 
-import edu.uci.ics.sourcerer.util.io.IOUtils;
 
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class DatabaseRunnable {
-  protected IQueryExecutor exec;
+  protected QueryExecutor exec;
   
   public abstract void action();
   
   public final void run() {
-    IDatabaseConnection conn = DatabaseConnectionFactory.INSTANCE.make();
-    try {
+    try (DatabaseConnection conn = DatabaseConnectionFactory.INSTANCE.make()) {
       if (conn.open()) {
         exec = conn.getExecutor();
         action();
       }
-    } finally {
-      IOUtils.close(conn);
     }
   }
 }

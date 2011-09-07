@@ -28,5 +28,7 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.FileSet;
 public interface JavaFileSet extends FileSet {
   public Collection<? extends ContentFile> getJavaFiles();
   
-  public Collection<? extends ContentFile> getJarFiles();
+  public Collection<? extends JavaFile> getFilteredJavaFiles();
+  
+  public Collection<? extends JarFile> getJarFiles();
 }

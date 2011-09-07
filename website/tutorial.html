@@ -121,8 +121,9 @@ The Sourcerer Project
       [install]/Sourcerer/infrastructure/tools/java/extractor/test-repo$ ls
     </div>
     <p>
-      This test repository contains two projects, <span class="fixed">0/0</span>, a project for testing the 
-      feature extractor, and <span class="fixed">0/1</span>, the Sourcerer project itself.
+      This test repository contains three projects, <span class="fixed">0/0</span>, a project for testing the 
+      feature extractor, <span class="fixed">0/1</span>, a subset of the Sourcerer infrastructure, and <span class="fixed">0/2</span>,
+      an additional feature extractor test project.
     </p>
   </div>
 
@@ -218,9 +219,6 @@ The Sourcerer Project
   <h3>Command-Line) Compile</h3>
   <div class="sub">
     <p>
-      <span class="colora bold">Note</span>: This step need only be completed if you wish to use the repository tools from the command line.
-    </p>
-    <p>
       Run (Eclipse launcher <span class="fixed">launch/lib/repo-tools.launch</span>)
     </p>
     <div class="code-block">
@@ -248,10 +246,6 @@ The Sourcerer Project
 
 <h2>Step 4: <span class="colora">Finish setting up the repository</span></h2>
 <div class="sub">
-  <p>
-    <span class="colora bold">Note</span>: If you used step 2.A (create-test-repo ant task), these tasks have already been run and you may skip this step.
-  </p>
-  
   <h3>Eclipse) Set up properties file</h3>
   <div class="sub">
     <ol>
@@ -275,6 +269,9 @@ The Sourcerer Project
   </div>
   <h3>4.1) Aggregate jar files</h3>
   <div class="sub">
+    <p>
+      <span class="colora bold">Note</span>: If you used step 2.A (create-test-repo ant task), this task have already been run and you may skip this step.
+    </p>
     
     <p>
       Run (Eclipse launcher <span class="fixed">launch/tutorial/Step 4 - Aggregate Jar Files.launch</span>)
@@ -302,40 +299,7 @@ The Sourcerer Project
       of directories, similar to the main repository itself.
     </p>
   </div>
-  
-  <h3>4.2) Create jar index</h3>
-  <div class="sub">
-    <p>
-      Next, run the following command to create the jar index. (Eclipse launcher <span class="fixed">launch/tutorial/Step 4 - Create Jar Index.launch</span>)
-    </p>
-    <div class="code-block">
-      [?]$ cd [install]/Sourcerer/bin/dist<br>
-      [install-dist]$ java -jar repo-tools.jar --create-jar-index --input-repo [root]
-    </div>
-    <p>
-      This creates the jar index file in the jars directory, which is a list of all the jar files in the repository. To view it, do the following.
-    </p>
-    <div class="code-block">
-      [?]$ cd [root]/jars<br>
-      [root]/jars$ less index.txt<br>
-    </div>
-  </div>
-  
-  <h3>4.3) Clean jar manifests</h3>
-  <div class="sub">
-    <p>
-      Finally, run the following command to clean out the jar manifests. (Eclipse launcher <span class="fixed">launch/tutorial/Step 4 - Clean Jar Manifests.launch</span>)
-    </p>
-    <div class="code-block">
-      [?]$ cd [install]/Sourcerer/bin/dist<br>
-      [install-dist]$ java -jar repo-tools.jar --clean-jar-manifests --input-repo [root]
-    </div>
-    <p>
-      The effect of this command is to remove all classpath manifest entries from jar files contained in the jars directory.
-    </p>
-  </div>
-  
-  <h3>4.4) Other commands</h3>
+  <h3>4.2) Other commands</h3>
   <div class="sub">
     <p>
       Some other commands that might be interesting to run are: (the Eclipse launchers are all found in <span class="fixed">launch/tutorial</span>)
@@ -410,7 +374,14 @@ The Sourcerer Project
   <h3>6.A) Extract Libraries</h3>
   <div class="sub">
     <p>
-      The first step in extraction is to extract from the Java library code. To do so, run (Eclipse launcher <span class="fixed">launch/tutorial/Step 6 - Extract Libraries.launch</span>)
+      Before the Java libraries can be extracted, they must be added to the repository. To do this,
+      run (Eclipse launcher <span class="fixed">launch/tutorial/Step 6 - Add Java Libraries to Repo.launch</span>)
+    </p>
+    <div class="code-block">
+      [?]$ java -jar [...] -application Extractor.Extractor --add-libraries-to-repo --output-repo [path]
+    </div>
+    <p>
+      Now the repository is ready to extract Java library code. To do so, run (Eclipse launcher <span class="fixed">launch/tutorial/Step 6 - Extract Libraries.launch</span>)
     </p>
     <div class="code-block">
       [?]$ java -jar [...] -application Extractor.Extractor --extract-libraries --output-repo [path]

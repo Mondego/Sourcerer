@@ -18,7 +18,6 @@
 package edu.uci.ics.sourcerer.tools.core.repo.internal;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-import edu.uci.ics.sourcerer.tools.core.repo.model.Batch;
 import edu.uci.ics.sourcerer.tools.core.repo.model.Project;
 import edu.uci.ics.sourcerer.tools.core.repo.model.Repository;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
@@ -29,12 +28,12 @@ import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class RepositoryStatistics {
-  public static void printProjectCount(Repository<Project, Batch<Project>> repo) {
+  public static void printProjectCount(Repository repo) {
     logger.info(repo + " has " + repo.getProjects().size() + " projects");
   }
   
   public static final DualFileArgument PROJECT_NAMES_FILE = new DualFileArgument("project-names-file", "project-names.txt", "File containg a table of the project names.");
-  public static void exportProjectNames(Repository<Project, Batch<Project>> repo) {
+  public static void exportProjectNames(Repository repo) {
     TablePrettyPrinter printer = null;
     try {
       printer = TablePrettyPrinter.getTablePrettyPrinter(PROJECT_NAMES_FILE);

@@ -29,6 +29,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -166,14 +167,18 @@ public final class IOUtils {
    * If the iterable is never read to completion, the file will remain open.
    */
   public static <T extends SimpleSerializable> Iterable<T> deserialize(Class<T> klass, File file, boolean trans) throws IOException {
-    return makeSimpleDeserializer(file).readNextToIterable(klass, true, trans);
+    return makeSimpleDeserializer(file).deserializeToIterable(klass, true, trans);
+  }
+  
+  public static <T extends SimpleSerializable> Collection<T> deserialize(Class<T> klass, File file) throws IOException {
+    return makeSimpleDeserializer(file).deserializeToCollection(klass);
   }
   
   /**
    * If the iterable is never read to completion, the file will remain open.
    */
   public static <T extends SimpleSerializable> Iterable<T> deserialize(Class<T> klass, DualFileArgument file, boolean trans) throws IOException {
-    return makeSimpleDeserializer(file).readNextToIterable(klass, true, trans);
+    return makeSimpleDeserializer(file).deserializeToIterable(klass, true, trans);
   }
 
   public static void writeStreamToStream(InputStream in, OutputStream out) throws IOException {

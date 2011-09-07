@@ -24,7 +24,7 @@ import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class RepoProjectImpl<Repo extends AbstractRepository<?>> implements ModifiableProject {
+public class RepoProjectImpl<Repo extends AbstractRepository<?, ?>> implements ModifiableProject {
   protected final Repo repo;
   protected final ProjectLocationImpl loc;
   
@@ -56,5 +56,10 @@ public class RepoProjectImpl<Repo extends AbstractRepository<?>> implements Modi
       properties = new ProjectProperties(propFile);
     }
     return properties;
+  }
+  
+  @Override
+  public String toString() {
+    return loc.toString();
   }
 }

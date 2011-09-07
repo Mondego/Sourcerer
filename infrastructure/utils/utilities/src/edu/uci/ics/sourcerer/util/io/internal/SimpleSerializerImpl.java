@@ -21,12 +21,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.Collections;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Map;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.CustomSimpleSerializable;
+import edu.uci.ics.sourcerer.util.Pair;
+import edu.uci.ics.sourcerer.util.io.CustomSerializable;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.Ignore;
@@ -87,7 +88,68 @@ final class SimpleSerializerImpl implements SimpleSerializer {
     return DIVIDER.equals(line) || line == null;
   }
   
-  private <T extends SimpleSerializable> Collection<ObjectSerializer> prepareStream(Class<T> klass) throws IOException {
+  private Pair<ObjectSerializer, ObjectSerializer> prepareStream(Class<?> map, Class<?> key, Class<?> value) throws IOException {
+    // Close the old writer
+    IOUtils.close(writer);
+    
+    // Verify the klass matches what's being resumed
+    if (expectedKlass != null) {
+      throw new IllegalStateException("May not resume writing a map.");
+    } else {
+      // Write the class name
+      bw.write(map.getName());
+      bw.newLine();
+    }
+    
+    
+    // Make the serializer for the key
+    ObjectSerializer keySerializer = null;
+    // Check if it overrides the default behavior
+    if (CustomSerializable.class.isAssignableFrom(key) || !SimpleSerializable.class.isAssignableFrom(key)) {
+      bw.write("serialize");
+      keySerializer = ObjectSerializer.makeSerializer();
+    } else {
+      LineBuilder builder = new LineBuilder();
+      Field[] allFields = key.getDeclaredFields();
+      ArrayList<Field> fields = Helper.newArrayList();
+      for (Field field : allFields) {
+        if (field.getAnnotation(Ignore.class) == null && !Modifier.isStatic(field.getModifiers())) {
+          builder.append(field.getName());
+          fields.add(field);
+        }
+      }
+      bw.write(fields.size() + " ");
+      bw.write(builder.toString());
+      keySerializer = ObjectSerializer.makeSerializer(fields.toArray(new Field[fields.size()]));
+    }
+
+    // Make the serializer for the value
+    ObjectSerializer valueSerializer = null;
+    // Check if it overrides the default behavior
+    if (CustomSerializable.class.isAssignableFrom(value)  || !SimpleSerializable.class.isAssignableFrom(value)) {
+      bw.write(" serialize");
+      bw.newLine();
+      valueSerializer = ObjectSerializer.makeSerializer();
+    } else {
+      LineBuilder builder = new LineBuilder();
+      Field[] allFields = value.getDeclaredFields();
+      ArrayList<Field> fields = Helper.newArrayList();
+      for (Field field : allFields) {
+        if (field.getAnnotation(Ignore.class) == null && !Modifier.isStatic(field.getModifiers())) {
+          builder.append(field.getName());
+          fields.add(field);
+        }
+      }
+      bw.write(" " + fields.size() + " ");
+      bw.write(builder.toString());
+      bw.newLine();
+      valueSerializer = ObjectSerializer.makeSerializer(fields.toArray(new Field[fields.size()]));
+    }
+    
+    return new Pair<ObjectSerializer, ObjectSerializer>(keySerializer, valueSerializer);
+  }
+  
+  private <T extends SimpleSerializable> ObjectSerializer prepareStream(Class<T> klass) throws IOException {
     // Close the old writer
     IOUtils.close(writer);
     
@@ -103,7 +165,7 @@ final class SimpleSerializerImpl implements SimpleSerializer {
     }
     
     // Check if it overrides the default behavior
-    if (CustomSimpleSerializable.class.isAssignableFrom(klass)) {
+    if (CustomSerializable.class.isAssignableFrom(klass)) {
       if (expectedKlass != null) {
         if (!"serialize".equals(expectedFields)) {
           throw new IllegalStateException("Serializer was resumed at class " + expectedKlass + " with fields " + expectedFields + ", but expecting serialize.");
@@ -112,75 +174,82 @@ final class SimpleSerializerImpl implements SimpleSerializer {
         bw.write("serialize");
         bw.newLine();
       }
-      return Collections.singleton(ObjectSerializer.makeCustomSerializer());
+      return ObjectSerializer.makeSerializer();
     } else {
-      Collection<ObjectSerializer> converters = Helper.newLinkedList();
       if (expectedKlass == null) {
         LineBuilder builder = new LineBuilder();
         Field[] allFields = klass.getDeclaredFields();
+        ArrayList<Field> fields = Helper.newArrayList();
         for (Field field : allFields) {
-          if (field.getAnnotation(Ignore.class) == null) {
+          if (field.getAnnotation(Ignore.class) == null && !Modifier.isStatic(field.getModifiers())) {
             builder.append(field.getName());
-            converters.add(ObjectSerializer.makeBasicSerializer(field));
+            fields.add(field);
           }
         }
         bw.write(builder.toString());
         bw.newLine();
+        return ObjectSerializer.makeSerializer(fields.toArray(new Field[fields.size()]));
       } else {
-        for (String field : LineBuilder.splitLine(expectedFields)) {
+        String[] parts = LineBuilder.splitLine(expectedFields);
+        Field[] fields = new Field[parts.length];
+        for (int i = 0; i < parts.length; i++) {
           try {
-            Field f = klass.getDeclaredField(field);
-            converters.add(ObjectSerializer.makeBasicSerializer(f));
+            fields[i] = klass.getDeclaredField(parts[i]);
           } catch (NoSuchFieldException e) {
-            throw new IllegalStateException("Field " + field + " is missing for class " + expectedKlass);
+            throw new IllegalStateException("Field " + parts[i] + " is missing for class " + expectedKlass);
           }
         }
+        return ObjectSerializer.makeSerializer(fields);
       }
-  
-      return converters;
     }
   }
   
   @Override
-  public <K extends SimpleSerializable, V extends SimpleSerializable> void write(Map<K, V> map) throws IOException {
-    
-  }
-  
-  @Override
-  public <T extends SimpleSerializable> void write(Iterable<T> iterable) throws IOException {
-    Collection<ObjectSerializer> serializers = null;
+  public <K, V> void serialize(Map<K, V> map) throws IOException {
+    Pair<ObjectSerializer, ObjectSerializer> serializers = null;
     LineBuilder builder = new LineBuilder();
-    for (T write : iterable) {
+    for (Map.Entry<K, V> entry : map.entrySet()) {
       if (serializers == null) {
-        serializers = prepareStream(write.getClass());
+        serializers = prepareStream(map.getClass(), entry.getKey().getClass(), entry.getValue().getClass());
       }
-      for (ObjectSerializer serializer : serializers) {
-        builder.append(serializer.serialize(write));
-      }
+      builder.append(serializers.getFirst().serialize(entry.getKey()));
+      builder.append(serializers.getSecond().serialize(entry.getValue()));
       bw.write(builder.toString());
+      builder.reset();
       bw.newLine();
     }
     bw.write(DIVIDER);
     bw.newLine();
+    bw.flush();
+  }
+  
+  @Override
+  public <T extends SimpleSerializable> void serialize(Iterable<T> iterable) throws IOException {
+    ObjectSerializer serializer = null;
+    for (T write : iterable) {
+      if (serializer == null) {
+        serializer = prepareStream(write.getClass());
+      }
+      bw.write(serializer.serialize(write));
+      bw.newLine();
+    }
+    bw.write(DIVIDER);
+    bw.newLine();
+    bw.flush();
   }
 
   @Override
   public <T extends SimpleSerializable> EntryWriter<T> getEntryWriter(final Class<T> klass) throws IOException {
     return new EntryWriter<T>() {
       private boolean closed = false;
-      private Collection<ObjectSerializer> serializers = prepareStream(klass);
-      private LineBuilder builder = new LineBuilder();
+      private ObjectSerializer serializer = prepareStream(klass);
           
       @Override
       public void write(T write) throws IOException {
         if (closed) {
           throw new IllegalStateException("Cannot write to a closed EntryWriter.");
         }
-        for (ObjectSerializer serializer : serializers) {
-          builder.append(serializer.serialize(write));
-        }
-        bw.write(builder.toString());
-        builder.reset();
+        bw.write(serializer.serialize(write));
         bw.newLine();
       }
       

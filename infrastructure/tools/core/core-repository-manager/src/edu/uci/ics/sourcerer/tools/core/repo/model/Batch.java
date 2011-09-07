@@ -25,12 +25,12 @@ import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface Batch <P extends Project> {
+public interface Batch {
   public static final Argument<String> BATCH_PROPERTIES_FILE = new StringArgument("batch-properties-file", "batch.properties", "File name for batch properties file.").permit();
   
-  public P getProject(Integer checkout);
+  public Project getProject(Integer checkout);
   
-  public Collection<P> getProjects();
+  public Collection<? extends Project> getProjects();
   
   public int getProjectCount();
   

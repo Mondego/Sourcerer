@@ -17,10 +17,23 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo.model;
 
+import java.util.Collection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface ModifiableRepository <P extends ModifiableProject, B extends ModifiableBatch<P>> extends Repository<P, B> {
-  public B createBatch();
+public interface ModifiableRepository extends Repository {
+  @Override
+  public Collection<? extends ModifiableBatch> getBatches();
+  
+  @Override
+  public ModifiableProject getProject(String path);
+  
+  @Override
+  public ModifiableProject getProject(Integer batch, Integer checkout);
+  
+  @Override
+  public Collection<? extends ModifiableProject> getProjects();
+  
+  public ModifiableBatch createBatch();
 }

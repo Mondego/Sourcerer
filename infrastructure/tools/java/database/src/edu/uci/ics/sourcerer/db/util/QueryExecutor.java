@@ -27,8 +27,8 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.db.schema.DatabaseTable;
 import edu.uci.ics.sourcerer.db.util.columns.Column;
+import edu.uci.ics.sourcerer.tools.java.db.schema.DatabaseTable;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
@@ -196,9 +196,9 @@ public class QueryExecutor {
     }
   }
   
-  public void dropTables(DatabaseTable... tables) {
+  public void dropTables(Table... tables) {
     StringBuilder sql = new StringBuilder("DROP TABLE IF EXISTS ");
-    for (DatabaseTable table : tables) {
+    for (Table table : tables) {
       sql.append(table.getName()).append(',');
     }
     sql.setCharAt(sql.length() - 1, ';');

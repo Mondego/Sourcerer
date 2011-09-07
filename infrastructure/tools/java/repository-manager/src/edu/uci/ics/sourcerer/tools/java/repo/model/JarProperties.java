@@ -27,11 +27,11 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarProperties extends AbstractProperties {
-  public Property<JarFile.Type> TYPE = new EnumProperty<JarFile.Type>("type", JarFile.Type.class, this);
   public Property<String> HASH = new StringProperty("hash", this);
   public Property<String> NAME = new StringProperty("name", this);
   public Property<String> GROUP = new StringProperty("group", this);
   public Property<String> VERSION = new StringProperty("version", this);
+  public Property<JarSource> SOURCE = new EnumProperty<JarSource>("source", JarSource.class, this); 
   
   public JarProperties(RepoFile file) {
     super(file.toFile());

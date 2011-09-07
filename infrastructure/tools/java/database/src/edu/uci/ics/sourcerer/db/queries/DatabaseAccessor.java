@@ -19,16 +19,17 @@ package edu.uci.ics.sourcerer.db.queries;
 
 import java.io.Closeable;
 
-import edu.uci.ics.sourcerer.db.schema.CommentsTable;
-import edu.uci.ics.sourcerer.db.schema.EntitiesTable;
-import edu.uci.ics.sourcerer.db.schema.EntityMetricsTable;
-import edu.uci.ics.sourcerer.db.schema.FileMetricsTable;
-import edu.uci.ics.sourcerer.db.schema.FilesTable;
-import edu.uci.ics.sourcerer.db.schema.ImportsTable;
-import edu.uci.ics.sourcerer.db.schema.ProblemsTable;
-import edu.uci.ics.sourcerer.db.schema.ProjectMetricsTable;
-import edu.uci.ics.sourcerer.db.schema.ProjectsTable;
-import edu.uci.ics.sourcerer.db.schema.RelationsTable;
+import edu.uci.ics.sourcerer.tools.java.db.queries.ProjectQueries;
+import edu.uci.ics.sourcerer.tools.java.db.schema.CommentsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.FileMetricsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.ImportsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.ProblemsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 import edu.uci.ics.sourcerer.utils.db.TableLocker;

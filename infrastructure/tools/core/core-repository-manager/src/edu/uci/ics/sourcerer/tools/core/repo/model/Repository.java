@@ -22,14 +22,14 @@ import java.util.Collection;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface Repository <P extends Project, B extends Batch<P>> {
-  public Collection<? extends B> getBatches();
+public interface Repository {
+  public Collection<? extends Batch> getBatches();
   
-  public P getProject(String path);
+  public Project getProject(String path);
   
-  public P getProject(Integer batch, Integer checkout);
+  public Project getProject(Integer batch, Integer checkout);
   
-  public Collection<? extends P> getProjects();
+  public Collection<? extends Project> getProjects();
   
   public int getProjectCount();
 }

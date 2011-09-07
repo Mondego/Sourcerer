@@ -41,7 +41,7 @@ public class IntColumn extends Column<Integer> {
   }
   
   public static IntColumn getInt(String name, String table) {
-    return new IntColumn(name, table, "INT", true, true);
+    return new IntColumn(name, table, "INT", true, false);
   }
   
   public static IntColumn getUnsignedInt(String name, String table) {

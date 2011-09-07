@@ -21,6 +21,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -229,8 +230,9 @@ public final class Subversion {
   public static boolean download(String url, File target) {
     DAVRepositoryFactory.setup();
     
+    SVNRepository repo = null;
     try {
-      SVNRepository repo = SVNRepositoryFactory.create(SVNURL.parseURIDecoded(url));
+      repo = SVNRepositoryFactory.create(SVNURL.parseURIDecoded(url));
       SVNNodeKind nodeKind = repo.checkPath("", -1);
       if (nodeKind == SVNNodeKind.DIR) {
         Collection<String> trunks = findTrunks(repo);
@@ -251,7 +253,9 @@ public final class Subversion {
             String child = path.equals("") ? entry.getName() : path + "/" + entry.getName(); 
             if (entry.getKind() == SVNNodeKind.FILE) {
               dir.mkdirs();
-              repo.getFile(child, -1, null, IOUtils.makeOutputStream(new File(dir, entry.getName())));
+              try (OutputStream os = IOUtils.makeOutputStream(new File(dir, entry.getName()))) {
+                repo.getFile(child, -1, null, os);
+              }
               timer.increment();
             } else if (entry.getKind() == SVNNodeKind.DIR) {
               stack.push(child);
@@ -273,6 +277,10 @@ public final class Subversion {
       logger.log(Level.SEVERE, "Error writing download from " + url, e);
       FileUtils.delete(target);
       return false;
+    } finally {
+      if (repo != null) {
+        repo.closeSession();
+      }
     }
   }
 }

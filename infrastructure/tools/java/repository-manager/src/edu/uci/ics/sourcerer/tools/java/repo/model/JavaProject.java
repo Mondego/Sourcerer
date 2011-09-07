@@ -23,5 +23,6 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProject;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface JavaProject extends SourceProject {
-
+  @Override
+  public JavaFileSet getContent();
 }

@@ -17,17 +17,16 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import edu.uci.ics.sourcerer.extractor.io.IUsedJarWriter;
+import edu.uci.ics.sourcerer.extractor.io.UsedJarWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.UsedJarEX;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyUsedJarWriter implements IUsedJarWriter {
+public class DummyUsedJarWriter implements UsedJarWriter {
   @Override
-  public void writeUsedJar(String hash, String ... missingTypes) {
-  }
+  public void writeUsedJar(UsedJarEX jar) {}
 
   @Override
-  public void close() {
-  }
+  public void close() {}
 }

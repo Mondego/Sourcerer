@@ -23,27 +23,40 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.Deque;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
+import edu.uci.ics.sourcerer.util.io.arguments.RelativeFileArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FileUtils {
+  public static final Argument<File> TEMP_DIR = new RelativeFileArgument("temp-dir", "temp", Arguments.OUTPUT, "Name of temp directory placed into OUTPUT directory");
+  
   public static boolean delete(File dir) {
     boolean success = true;
-    for (File file : dir.listFiles()) {
-      if (file.isDirectory()) {
-        success &= delete(file);
+    if (dir.exists()) {
+      if (dir.isFile()) {
+        success &= dir.delete();
       } else {
-        success &= file.delete();
+        for (File file : dir.listFiles()) {
+          if (file.isDirectory()) {
+            success &= delete(file);
+          } else {
+            success &= file.delete();
+          }
+        }
+        success &= dir.delete();
       }
     }
-    success &= dir.delete();
     return success;
   }
   
@@ -149,6 +162,38 @@ public class FileUtils {
       }
     } else {
       logger.log(Level.SEVERE, "Unable to make temp dir: " + tempDir.getPath());
+      return null;
+    }
+  }
+  
+  public static String computeHash(File file) {
+    try {
+      MessageDigest md5 = MessageDigest.getInstance("MD5");
+
+      byte[] buff = new byte[1024];
+      InputStream is = null;
+      try {
+        is = new FileInputStream(file);
+        int size;
+        while ((size = is.read(buff)) != -1) {
+          md5.update(buff, 0, size);
+        }
+      } finally {
+        IOUtils.close(is);
+      }
+      return new BigInteger(1, md5.digest()).toString(16);
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, "Error getting md5 for " + file.getPath(), e);
+      return null;
+    }
+  }
+  
+  public static File getTempDir() {
+    File tempDir = TEMP_DIR.getValue();
+    tempDir = new File(tempDir, "thread-" + Thread.currentThread().getId());
+    if (tempDir.exists() || tempDir.mkdirs()) {
+      return tempDir;
+    } else {
       return null;
     }
   }

@@ -17,19 +17,17 @@
  */
 package edu.uci.ics.sourcerer.extractor.io;
 
-import edu.uci.ics.sourcerer.model.Location;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.CommentEX;
+import edu.uci.ics.sourcerer.tools.java.model.types.Comment;
+import edu.uci.ics.sourcerer.tools.java.model.types.Location;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class CommentWriter extends IExtractorWriter {
-  public CommentWriter() {}
+public interface CommentWriter extends ExtractorWriter {
+  public void writeComment(CommentEX comment);
   
-  public void writeLineComment(Location loc) {}
-
-  public void writeBlockComment(Location loc) {}
-
-  public void writeJavadocComment(String containingFqn, Location loc) {}
+  public void writeComment(Comment type, Location location);
   
-  public void writeUnassociatedJavadocComment(Location loc) {}
+  public void writeComment(Comment type, String fqn, Location location);
 }

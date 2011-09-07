@@ -30,10 +30,11 @@ import edu.uci.ics.sourcerer.util.Helper;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-final class ContentDirectoryImpl implements ContentDirectory {
+public final class ContentDirectoryImpl implements ContentDirectory {
   private ContentDirectoryImpl parent;
   private Collection<ContentDirectoryImpl> dirs;
-  private Collection<ContentFileImpl> files;
+  private Map<RepoFileImpl, ContentFileImpl> files;
+  private Integer value;
   private final RepoFileImpl file;
   
   private Map<RepoFileImpl, ContentDirectoryImpl> internedDirs;
@@ -58,7 +59,7 @@ final class ContentDirectoryImpl implements ContentDirectory {
     return new ContentDirectoryImpl(file.asRoot());
   }
   
-  protected ContentDirectoryImpl make(RepoFileImpl file) {
+  public ContentDirectoryImpl make(RepoFileImpl file) {
     if (this.file == file) {
       return this;
     } else if (this.file == file.getRoot()) {
@@ -72,12 +73,19 @@ final class ContentDirectoryImpl implements ContentDirectory {
       throw new IllegalArgumentException(file + " must be a subdir of " + this);
     }
   }
-  
-  protected void addFile(ContentFileImpl file) {
+
+  public ContentFileImpl makeFile(RepoFileImpl file) {
+    ContentFileImpl contentFile = null;
     if (files == null) {
-      files = Helper.newLinkedList();
+      files = Helper.newHashMap();
+    } else {
+      contentFile = files.get(file);
     }
-    files.add(file);
+    if (contentFile == null) {
+      contentFile = new ContentFileImpl(this, file);
+      files.put(file, contentFile);
+    }
+    return contentFile;
   }
   
   @Override
@@ -104,7 +112,7 @@ final class ContentDirectoryImpl implements ContentDirectory {
     if (files == null) {
       return Collections.emptyList();
     } else {
-      return files;
+      return Collections.unmodifiableCollection(files.values());
     }
   }
   
@@ -151,6 +159,34 @@ final class ContentDirectoryImpl implements ContentDirectory {
     };
   }
   
+  public int getCount() {
+    ContentDirectoryImpl dir = this;
+    int count = 0;
+    while (dir != null) {
+      count += dir.getValue();
+      dir = dir.parent;
+    }
+    return count;
+  }
+  
+  private int getValue() {
+    if (value == null) {
+      int count = 0;
+      Deque<ContentDirectoryImpl> stack = Helper.newStack();
+      stack.add(this);
+      while (!stack.isEmpty()) {
+        ContentDirectoryImpl dir = stack.pop();
+        count += dir.getFiles().size();
+        stack.addAll(dir.getSubdirectories());
+      }
+      value = count;
+      return count;
+    } else {
+      return value.intValue();
+    }
+  }
+  
+  @Override
   public String toString() {
     return file.toString();
   }

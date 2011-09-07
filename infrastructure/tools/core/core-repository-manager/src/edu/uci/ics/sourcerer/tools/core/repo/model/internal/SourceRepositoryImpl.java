@@ -17,12 +17,12 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 
-
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceRepository;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class SourceRepositoryImpl extends AbstractRepository<SourceProjectImpl> {
+public final class SourceRepositoryImpl extends AbstractRepository<SourceProjectImpl, SourceBatchImpl<SourceProjectImpl>> implements ModifiableSourceRepository {
   public SourceRepositoryImpl(RepoFileImpl repoRoot) {
     super(repoRoot);
   }
@@ -30,5 +30,10 @@ public final class SourceRepositoryImpl extends AbstractRepository<SourceProject
   @Override
   protected SourceProjectImpl createProject(ProjectLocationImpl loc) {
     return new SourceProjectImpl(this, loc);
+  }
+  
+  @Override
+  public SourceBatchImpl<SourceProjectImpl> newBatch(RepoFileImpl dir, Integer batch) {
+    return new SourceBatchImpl<SourceProjectImpl>(this, dir, batch);
   }
 }

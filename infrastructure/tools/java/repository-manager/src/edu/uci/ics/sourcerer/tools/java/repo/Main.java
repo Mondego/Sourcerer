@@ -17,9 +17,30 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo;
 
+import edu.uci.ics.sourcerer.tools.java.repo.maven.MavenImporter;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
+import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
+import edu.uci.ics.sourcerer.util.io.arguments.Command;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
-
+  public static final Command AGGREGATE_JAR_FILES =
+    new Command("aggregate-jar-files", "Collects all the project jar files into the jars directory.") {
+      protected void action() {
+        JavaRepositoryFactory.INSTANCE.loadModifiableJavaRepository(JavaRepositoryFactory.INPUT_REPO).aggregateJarFiles();
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO);
+    
+  public static final Command IMPORT_MAVEN_TO_REPOSITORY =
+    new Command("import-maven-to-repo", "Imports a copy of the Maven2 central repository into the Sourcerer repository.") {
+      protected void action() {
+        MavenImporter.importMavenToRepository();
+      }
+    }.setProperties(Arguments.INPUT, JavaRepositoryFactory.OUTPUT_REPO);
+  
+  public static void main(String[] args) {
+    Command.execute(args, Main.class);
+  }
 }

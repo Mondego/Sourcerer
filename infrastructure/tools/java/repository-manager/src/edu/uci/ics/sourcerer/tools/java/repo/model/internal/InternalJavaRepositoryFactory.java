@@ -19,18 +19,37 @@ package edu.uci.ics.sourcerer.tools.java.repo.model.internal;
 
 import java.io.File;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.internal.BatchImpl;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.InternalRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepository;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
+import edu.uci.ics.sourcerer.tools.java.repo.model.ModifiableJavaRepository;
+import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaRepository;
+import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaRepository;
+import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.internal.ExtractedJavaRepositoryImpl;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class InternalJavaRepositoryFactory extends JavaRepositoryFactory {
+public class InternalJavaRepositoryFactory extends InternalRepositoryFactory implements JavaRepositoryFactory {
   @Override
-  public JavaRepository<JavaProjectImpl, BatchImpl<JavaProjectImpl>> loadJavaRepository(Argument<File> root) {
+  public JavaRepository loadJavaRepository(Argument<File> root) {
     return new JavaRepositoryImpl(RepoFileImpl.makeRoot(root));
+  }
+  
+  @Override
+  public ModifiableJavaRepository loadModifiableJavaRepository(Argument<File> root) {
+    return new JavaRepositoryImpl(RepoFileImpl.makeRoot(root));
+  }
+
+  @Override
+  public ExtractedJavaRepository loadExtractedJavaRepository(Argument<File> root) {
+    return new ExtractedJavaRepositoryImpl(RepoFileImpl.makeRoot(root));
+  }
+
+  @Override
+  public ModifiableExtractedJavaRepository loadModifiableExtractedJavaRepository(Argument<File> root) {
+    return new ExtractedJavaRepositoryImpl(RepoFileImpl.makeRoot(root));
   }
 }

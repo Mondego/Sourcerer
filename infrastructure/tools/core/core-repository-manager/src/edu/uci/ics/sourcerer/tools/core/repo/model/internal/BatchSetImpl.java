@@ -28,37 +28,37 @@ import edu.uci.ics.sourcerer.util.Helper;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-final class BatchSetImpl <Project extends RepoProjectImpl<? extends AbstractRepository<Project>>> extends AbstractCollection<Project> {
-  private AbstractRepository<Project> repo;
+final class BatchSetImpl<Project extends RepoProjectImpl<? extends AbstractRepository<Project, Batch>>, Batch extends BatchImpl<Project>> extends AbstractCollection<Project> {
+  private AbstractRepository<Project, Batch> repo;
   
-  private TreeMap<Integer, BatchImpl<Project>> batches;
+  private TreeMap<Integer, Batch> batches;
   private int size;
   
-  protected BatchSetImpl(AbstractRepository<Project> repo) {
+  protected BatchSetImpl(AbstractRepository<Project, Batch> repo) {
     this.repo = repo;
     batches = Helper.newTreeMap();
     size = 0;
   }
   
   protected Project add(Integer batch, Integer checkout) {
-    BatchImpl<Project> b = batches.get(batch);
+    Batch b = batches.get(batch);
     if (b == null) {
       RepoFileImpl dir = repo.repoRoot.getChild(batch.toString());
-      b = new BatchImpl<Project>(repo, dir, batch);
+      b = repo.newBatch(dir, batch);
       batches.put(batch, b);
     }
     size++;
     return b.add(checkout);
   }
   
-  protected BatchImpl<Project> createBatch() {
+  protected Batch createBatch() {
     Integer batch = null;
     if (batches.isEmpty()) {
       batch = Integer.valueOf(0);
     } else {
       batch = batches.lastKey() + 1;
     }
-    BatchImpl<Project> b = new BatchImpl<Project>(repo, repo.repoRoot.getChild(batch.toString()), batch);
+    Batch b = repo.newBatch(repo.repoRoot.getChild(batch.toString()), batch);
     batches.put(batch, b);
     return b;
   }
@@ -67,14 +67,14 @@ final class BatchSetImpl <Project extends RepoProjectImpl<? extends AbstractRepo
     return batches.get(batch);
   }
   
-  protected Collection<BatchImpl<Project>> getBatches() {
+  protected Collection<Batch> getBatches() {
     return batches.values();
   }
   
   @Override
   public Iterator<Project> iterator() {
     return new Iterator<Project>() {
-      Iterator<BatchImpl<Project>> batchIter = batches.values().iterator();
+      Iterator<Batch> batchIter = batches.values().iterator();
       Iterator<Project> projectIter = null;
       Project next = null;
       

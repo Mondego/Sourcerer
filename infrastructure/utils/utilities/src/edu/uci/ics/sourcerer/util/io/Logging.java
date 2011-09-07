@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DateFormat;
@@ -31,6 +32,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -77,6 +79,17 @@ public final class Logging {
   private static Map<Long, Handler> threadHandlerMap = Helper.newHashMap();
   private static Command command;
   
+  private static class FlushingStreamHandler extends StreamHandler {
+    public FlushingStreamHandler(OutputStream out) {
+      setOutputStream(out);
+    }
+    
+    public void publish(LogRecord record) {
+      super.publish(record);
+      flush();
+    }
+  }
+  
   static {
     logger = Logger.getLogger("edu.uci.ics.sourcerer.util.io");
     logger.setUseParentHandlers(false);
@@ -84,11 +97,11 @@ public final class Logging {
     Formatter formatter = new Formatter() {
       @Override
       public String format(LogRecord record) {
-        System.out.print(Logging.formatError(record));
-        return "";
+        return Logging.formatError(record);
       }
     };
-    defaultHandler = new StreamHandler(System.out, formatter);
+    defaultHandler = new FlushingStreamHandler(System.out);
+    defaultHandler.setFormatter(formatter);
     defaultHandler.setLevel(Level.INFO);
     logger.addHandler(defaultHandler);
     
@@ -174,6 +187,7 @@ public final class Logging {
       boolean suppressFileLogging = SUPPRESS_FILE_LOGGING.getValue();
       
       if (suppressFileLogging && !REPORT_TO_CONSOLE.getValue()) {
+        logger.removeHandler(defaultHandler);
         return;
       }
       
@@ -194,12 +208,12 @@ public final class Logging {
             if (record.getLevel() == RESUME || Thread.currentThread().getId() != mainThread) {
               return "";
             } else {
-              System.out.println(Logging.formatError(record));
-              return "";
+              return Logging.formatError(record);
             }
           }
         };
-        errorHandler = new StreamHandler(System.out, errorFormatter);
+        errorHandler = new FlushingStreamHandler(System.out);
+        errorHandler.setFormatter(errorFormatter);
       } else {
         Formatter errorFormatter = new Formatter() {
           @Override
@@ -269,9 +283,9 @@ public final class Logging {
         @Override
         public String format(LogRecord record) {
           if (Thread.currentThread().getId() == id) {
-            if (record.getLevel() == RESUME) {
+            if (record.getLevel() == RESUME || record.getLevel() == THREAD_INFO) {
               return "";
-            } else if (record.getLevel() == Level.INFO || record.getLevel() == THREAD_INFO) {
+            } else if (record.getLevel() == Level.INFO) {
               return Logging.formatInfo(record);
             } else {
               return Logging.formatError(record);

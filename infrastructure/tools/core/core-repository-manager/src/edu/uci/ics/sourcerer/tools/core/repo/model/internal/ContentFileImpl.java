@@ -23,14 +23,13 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.ContentFile;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-final class ContentFileImpl implements ContentFile {
+public final class ContentFileImpl implements ContentFile {
   private ContentDirectoryImpl parent;
   private RepoFileImpl file;
   
   protected ContentFileImpl(ContentDirectoryImpl parent, RepoFileImpl file) {
     this.parent = parent;
     this.file = file;
-    parent.addFile(this);
   }
   
   @Override
@@ -41,5 +40,10 @@ final class ContentFileImpl implements ContentFile {
   @Override
   public ContentDirectoryImpl getParentDirectory() {
     return parent;
+  }
+  
+  @Override
+  public String toString() {
+    return file.toString();
   }
 }

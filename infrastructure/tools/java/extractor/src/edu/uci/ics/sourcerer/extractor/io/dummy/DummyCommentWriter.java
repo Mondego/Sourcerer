@@ -18,28 +18,23 @@
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
 import edu.uci.ics.sourcerer.extractor.io.CommentWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.CommentEX;
+import edu.uci.ics.sourcerer.tools.java.model.types.Comment;
+import edu.uci.ics.sourcerer.tools.java.model.types.Location;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class DummyCommentWriter implements CommentWriter {
   @Override
-  public void writeBlockComment(String containingFile, int startPos, int length) {
-  }
-
+  public void writeComment(CommentEX comment) {}
+  
   @Override
-  public void writeJavadocComment(String containingFqn, String containingFile, int startPos, int length) {
-  }
-
+  public void writeComment(Comment type, Location location) {}
+  
   @Override
-  public void writeLineComment(String containingFile, int startPos, int length) {
-  }
-
+  public void writeComment(Comment type, String fqn, Location location) {}
+  
   @Override
-  public void writeUnassociatedJavadocComment(String containingFile, int startPos, int length) {
-  }
-
-  @Override
-  public void close() {
-  }
+  public void close() {}
 }

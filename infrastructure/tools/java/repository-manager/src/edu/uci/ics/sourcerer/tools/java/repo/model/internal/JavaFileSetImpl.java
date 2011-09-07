@@ -17,66 +17,173 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.model.internal;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.ContentFile;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractFileSet;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ContentFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFileSet;
 import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.io.EntryWriter;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
+import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
+import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JavaFileSetImpl extends AbstractFileSet implements JavaFileSet {
-  private JavaRepositoryImpl repo;
-  private Collection<ContentFile> javaFiles;
-  private Collection<ContentFile> jarFiles;
+  private final JavaRepositoryImpl repo;
+  private Collection<ContentFileImpl> javaFiles;
+  private Collection<JavaFileImpl> filteredJavaFiles;
+  private Collection<JarFileImpl> jarFiles;
   
   protected JavaFileSetImpl(JavaProjectImpl project) {
     super(project);
     this.repo = project.getRepository();
-    replaceJarFiles();
   }
   
   @Override
-  protected void init() {
-    if (javaFiles == null) {
-      javaFiles = Helper.newArrayList();
+  protected void initHelper(boolean reloadNow) {
+    if (reloadNow) {
+      if (javaFiles == null) {
+        javaFiles = Helper.newArrayList();
+      } else {
+        javaFiles.clear();
+      }
+      if (filteredJavaFiles == null) {
+        filteredJavaFiles = Helper.newArrayList();
+      } else {
+        filteredJavaFiles.clear();
+      }
+      if (jarFiles == null) {
+        jarFiles = Helper.newArrayList();
+      } else {
+        jarFiles.clear();
+      }
     } else {
-      javaFiles.clear();
-    }
-    if (jarFiles == null) {
-      jarFiles = Helper.newArrayList();
-    } else {
-      jarFiles.clear();
+      javaFiles = null;
+      filteredJavaFiles = null;
+      jarFiles = null;
     }
   }
   
   @Override
-  protected void fileAdded(ContentFile file) {
+  protected void populateFileSetHelper() {
+    Map<String, Collection<JavaFileImpl>> map = Helper.newHashMap();
+    for (ContentFileImpl file : javaFiles) {
+      String pkg = null;
+      BufferedReader br = null;
+      try {
+        br = IOUtils.makeBufferedReader(file.getFile().toFile());
+        String line = null;
+        while ((line = br.readLine()) != null) {
+          line = line.trim();
+          if (line.startsWith("package")) {
+            int semi = line.indexOf(';');
+            while (semi == -1) {
+              String newLine = br.readLine();
+              if (newLine == null) {
+                newLine = ";";
+              }
+              line += newLine.trim();
+              semi = line.indexOf(';');
+            }
+            pkg = line.substring(8, line.indexOf(';')).trim();
+            break;
+          }
+        }
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to extract package for file!", e);
+      } finally {
+        IOUtils.close(br);
+      }
+      if (pkg != null) {
+        String key = pkg + file.getFile().getName();
+        Collection<JavaFileImpl> files = map.get(key);
+        if (files == null) {
+          files = Helper.newLinkedList();
+          map.put(key, files);
+        }
+        files.add(new JavaFileImpl(pkg, file));
+      } else {
+//        logger.info("skipping " + file);
+      }
+    }
+    
+    for (Collection<JavaFileImpl> files : map.values()) {
+      if (files.size() == 1) {
+        filteredJavaFiles.addAll(files);
+      } else {
+        JavaFileImpl best = null;
+        for (JavaFileImpl file : files) {
+          if (best == null || file.morePopularThan(best)) {
+            best = file;
+          }
+        }
+        filteredJavaFiles.add(best);
+      }
+    }
+  }
+  
+  @Override
+  protected void writeExtendedCache(SimpleSerializer serializer) throws IOException {
+    EntryWriter<JavaFileImpl> writer = serializer.getEntryWriter(JavaFileImpl.class);
+    for (JavaFileImpl file : filteredJavaFiles) {
+      writer.write(file);
+    }
+    writer.close();
+  }
+
+  @Override
+  protected void readExtendedCache(SimpleDeserializer deserializer) throws IOException {
+    filteredJavaFiles = deserializer.deserializeToCollection(JavaFileImpl.makeDeserializer(getRoot()));
+  }
+  
+  @Override
+  protected void fileAdded(ContentFileImpl file) {
     if (file.getFile().getName().endsWith(".java")) {
       javaFiles.add(file);
     } else if (file.getFile().getName().endsWith(".jar")) {
-      jarFiles.add(file);
-    }
-  }
-  
-  private void replaceJarFiles() {
-    for (ContentFile file : jarFiles) {
-      file.
+      JarFileImpl jar = repo.getJarFile(file);
+      if (jar != null) {
+        jarFiles.add(jar);
+      } else {
+//        logger.log(Level.SEVERE, "Jar not aggregated: " + file);
+      }
     }
   }
   
   @Override
   public Collection<? extends ContentFile> getJavaFiles() {
+    if (javaFiles == null) {
+      init(true, false);
+    }
     return Collections.unmodifiableCollection(javaFiles);
+  }
+  
+  @Override
+  public Collection<? extends JavaFile> getFilteredJavaFiles() {
+    if (filteredJavaFiles == null) {
+      init(true, false);
+    }
+    return Collections.unmodifiableCollection(filteredJavaFiles);
   }
 
   @Override
-  public Collection<? extends ContentFile> getJarFiles() {
-//    return Collections.unmodifiableCollection(jarFiles);
-    return null;
+  public Collection<? extends JarFile> getJarFiles() {
+    if (jarFiles == null) {
+      init(true, false);
+    }
+    return Collections.unmodifiableCollection(jarFiles);
   }
 }

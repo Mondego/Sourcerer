@@ -95,6 +95,10 @@ public final class TimeCounter {
     logger.info(SPACES.substring(0, spaces) + action + " in " + formatTime(lapTime));
   }
   
+  public void logTimeAndCount() {
+    logTimeAndCount(progressIndent, progressAction);
+  }
+  
   public void logTimeAndCount(int spaces, String action) {
     logger.info(SPACES.substring(0, spaces) + count + " " + action + " in " + formatTime(lapTime));
   }

@@ -17,61 +17,21 @@
  */
 package edu.uci.ics.sourcerer.extractor.io.dummy;
 
-import edu.uci.ics.sourcerer.extractor.io.IRelationWriter;
-import edu.uci.ics.sourcerer.model.Location;
+import edu.uci.ics.sourcerer.extractor.io.RelationWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.RelationEX;
+import edu.uci.ics.sourcerer.tools.java.model.types.Location;
+import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DummyRelationWriter implements IRelationWriter {
+public class DummyRelationWriter implements RelationWriter {
+  @Override
+  public void writeRelation(Relation type, String lhs, String rhs, Location location) {}
+  
+  @Override
+  public void writeRelation(RelationEX relation) {}
+  
   @Override
   public void close() {}
-
-  @Override
-  public void writeAnnotatedBy(String entity, String annotation, Location location) {}
-
-  @Override
-  public void writeCalls(String caller, String called, Location location) {}
-
-  @Override
-  public void writeCasts(String fqn, String newType, Location location) {}
-
-  @Override
-  public void writeChecks(String fqn, String checkedType, Location location) {}
-
-  @Override
-  public void writeExtends(String subTypeFqn, String superTypeFqn, Location location) {}
-
-  @Override
-  public void writeHolds(String fqn, String type, Location location) {}
-
-  @Override
-  public void writeImplements(String subTypeFqn, String superTypeFqn, Location loclocation) {}
-
-  @Override
-  public void writeInside(String innerFqn, String outerFqn, Location location) {}
-
-  @Override
-  public void writeInstantiates(String creator, String created, Location location) {}
-
-  @Override
-  public void writeParametrizedBy(String fqn, String typeVariable, int pos, Location location) {}
-
-  @Override
-  public void writeReads(String reader, String field, Location location) {}
-
-  @Override
-  public void writeReturns(String fqn, String returnType, Location location) {}
-
-  @Override
-  public void writeThrows(String fqn, String exceptionType, Location location) {}
-
-  @Override
-  public void writeUses(String fqn, String type, Location location) {}
-
-  @Override
-  public void writeWrites(String writer, String field, Location location) {}
-
-  @Override
-  public void writeOverrides(String fqn, String overriddenFqn, Location location) {}
 }

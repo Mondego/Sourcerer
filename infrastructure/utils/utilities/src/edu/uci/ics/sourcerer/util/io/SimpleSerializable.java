@@ -23,7 +23,7 @@ package edu.uci.ics.sourcerer.util.io;
  * 
  * If a field should not be included, annotate it with {@link Ignore}.
  * 
- * If you wish to override the default behavior, use {@link CustomSimpleSerializable}.
+ * If you wish to override the default behavior, use {@link CustomSerializable}.
  * 
  * @author Joel Ossher (jossher@uci.edu)
  */

@@ -22,7 +22,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
-import edu.uci.ics.sourcerer.utils.db.IDatabaseConnection;
+import edu.uci.ics.sourcerer.utils.db.DatabaseConnection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -37,7 +37,7 @@ public class InternalDatabaseConnectionFactory extends DatabaseConnectionFactory
   }
   
   @Override
-  public IDatabaseConnection make() {
-    return new DatabaseConnection();
+  public DatabaseConnection make() {
+    return new DatabaseConnectionImpl();
   }
 }

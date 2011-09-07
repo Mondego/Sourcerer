@@ -30,7 +30,7 @@ import edu.uci.ics.sourcerer.util.io.FileUtils;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class AbstractSourceProject<Repo extends AbstractRepository<?>, FileSet extends AbstractFileSet> extends RepoProjectImpl<Repo> implements ModifiableSourceProject {
+public abstract class AbstractSourceProject<Repo extends AbstractRepository<?, ?>, FileSet extends AbstractFileSet> extends RepoProjectImpl<Repo> implements ModifiableSourceProject {
   private RepoFileImpl contentFile;
   private SoftReference<FileSet> files; 
   
@@ -66,7 +66,7 @@ public abstract class AbstractSourceProject<Repo extends AbstractRepository<?>, 
       if (files != null) {
         AbstractFileSet fileSet = files.get();
         if (fileSet != null) {
-          fileSet.reset();
+          fileSet.init(false, true);
         }
       }
       return true;
@@ -82,7 +82,7 @@ public abstract class AbstractSourceProject<Repo extends AbstractRepository<?>, 
       if (files != null) {
         AbstractFileSet fileSet = files.get();
         if (fileSet != null) {
-          fileSet.reset();
+          fileSet.init(false, true);
         }
       }
       return true;

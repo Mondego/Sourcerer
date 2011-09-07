@@ -25,27 +25,29 @@ import java.util.Collection;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableRepository;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class AbstractRepository<Project extends RepoProjectImpl<? extends AbstractRepository<Project>>> implements ModifiableRepository<Project, BatchImpl<Project>> {
+public abstract class AbstractRepository<Project extends RepoProjectImpl<? extends AbstractRepository<Project, Batch>>, Batch extends BatchImpl<Project>> {
   public static final Argument<String> REPO_PROPERTIES = new StringArgument("repo-properties-file", "File name for repo properties file.").permit();
   public static final Argument<String> PROJECT_CACHE = new StringArgument("project-cache-file", "project-cache.txt", "File containing a cached list of the projects.").permit();
+  public static final Argument<Boolean> CLEAR_CACHES = new BooleanArgument("clear-caches", false, "Clear all repository caches.").permit();
   
   protected RepoFileImpl repoRoot;
   
   private RepoFileImpl cache;
-  private BatchSetImpl<Project> batchSet;
+  private BatchSetImpl<Project, Batch> batchSet;
   
   protected AbstractRepository(RepoFileImpl repoRoot) {
     this.repoRoot = repoRoot.asRoot();
+    repoRoot.makeDirs();
   }
   
   protected void clearCache() {
@@ -60,10 +62,10 @@ public abstract class AbstractRepository<Project extends RepoProjectImpl<? exten
   
   private final void populateProjects() {
     if (batchSet == null) {
-      batchSet = new BatchSetImpl<Project>(this);
+      batchSet = new BatchSetImpl<Project, Batch>(this);
       cache = repoRoot.getChild(PROJECT_CACHE.getValue());
       if (repoRoot.exists()) {
-        if (cache.exists()) {
+        if (cache.exists() && !CLEAR_CACHES.getValue()) {
           try {
             for (ProjectLocationImpl loc : IOUtils.deserialize(ProjectLocationImpl.class, cache.toFile(), true)) {
               batchSet.add(loc.getBatchNumber(), loc.getCheckoutNumber());
@@ -101,16 +103,17 @@ public abstract class AbstractRepository<Project extends RepoProjectImpl<? exten
     }
   }
   
-  @Override
-  public BatchImpl<Project> createBatch() {
+  
+  public Batch createBatch() {
     if (batchSet == null) {
       populateProjects();
     }
     return batchSet.createBatch();
   }
+  
+  public abstract Batch newBatch(RepoFileImpl dir, Integer batch);
  
-  @Override
-  public Collection<BatchImpl<Project>> getBatches() {
+  public Collection<Batch> getBatches() {
     if (batchSet == null) {
       populateProjects();
      }

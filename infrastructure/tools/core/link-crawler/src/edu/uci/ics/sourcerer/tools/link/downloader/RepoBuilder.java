@@ -25,10 +25,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableBatch;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceBatch;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceProject;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceProject.ContentAdder;
-import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableRepository;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceRepository;
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
 import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProjectProperties;
 import edu.uci.ics.sourcerer.tools.link.model.Project;
@@ -43,9 +43,9 @@ public final class RepoBuilder {
   private RepoBuilder() {}
   
   public static void addProjectsToRepository(DualFileArgument projectList, String description) {
-    ModifiableRepository<? extends ModifiableSourceProject, ? extends ModifiableBatch<? extends ModifiableSourceProject>> repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.OUTPUT_REPO);
+    ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.OUTPUT_REPO);
     
-    ModifiableBatch<? extends ModifiableSourceProject> batch = null;
+    ModifiableSourceBatch batch = null;
     char starting = 'A';
     try {
       logger.info("Adding projects from " + projectList.toString() + " to repository");
@@ -70,7 +70,6 @@ public final class RepoBuilder {
         SourceProjectProperties props = newProject.getProperties();
         props.NAME.setValue(project.getName());
         props.URL.setValue(project.getUrl());
-        System.out.println(project.getUrl());
         props.SOURCE.setValue(project.getSource().getName());
         props.save();
         timer.increment();
@@ -82,7 +81,7 @@ public final class RepoBuilder {
   }
   
   public static void downloadProjectContent() {
-    ModifiableRepository<? extends ModifiableSourceProject, ? extends ModifiableBatch<? extends ModifiableSourceProject>> repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
+    ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
     
     logger.info("Downloading project content...");
     
@@ -94,6 +93,9 @@ public final class RepoBuilder {
     for (final ModifiableSourceProject project : repo.getProjects()) {
       if (!project.hasContent() || project.getProperties().DOWNLOAD_DATE.getValue() == null) {
         logger.info("Downloading content for " + project.getProperties().NAME.getValue() + " (" + project.getLocation() + ") from " + project.getProperties().URL.getValue());
+        if (project.hasContent()) {
+          project.deleteContent();
+        }
         ContentAdder adder = new ContentAdder() {
           @Override
           public boolean addContent(File file) {

@@ -26,6 +26,7 @@
   <property name="build" location="build" />
   <property name="build-link-crawler" location="${build}/link-crawler" />
   
+  <property name="build-comparison-test" location="${build}/comparison-test" />
   <property name="build-java-tools-core" location="${build}/java-tools-core" />
   <property name="build-search-eval" location="${build}/search-eval" />
   <property name="build-search-server" location="${build}/search-server" />
@@ -36,16 +37,25 @@
 
   <property name="dist" location="dist" />
 
+  <!-- Utilities -->
   <property name="utilities" location="../infrastructure/utils/utilities/src" />
   <property name="database-utilities" location="../infrastructure/utils/database-utilities/src" />
   
+  <!-- Core Tools -->
   <property name="core-repository-manager" location="../infrastructure/tools/core/core-repository-manager/src" />
-    
   <property name="link-crawler" location="../infrastructure/tools/core/link-crawler/src" />
   
-	<property name="component-clusterer" location="../infrastructure/tools/java/component-clusterer/src" />
+  <!-- Java Tools -->
   <property name="repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
   <property name="model" location="../infrastructure/tools/java/model/src" />
+  <property name="extractor" location="../infrastructure/tools/java/extractor" />
+
+  <!-- Test Repository -->
+  <property name="test-repo" location="../infrastructure/tools/java/extractor/test-repo" />
+  <property name="comparison-test" location="${test-repo}/0/2/content/src" />
+    
+	<property name="component-clusterer" location="../infrastructure/tools/java/component-clusterer/src" />
+  
 	<property name="syntax-highlighter" location="../infrastructure/tools/java/syntax-highlighter/src" />
   <property name="database" location="../infrastructure/tools/java/database/src" />
   <property name="search-eval" location="../infrastructure/apps/codesearch/src" />
@@ -57,7 +67,6 @@
 	<property name="famix-server" location="../infrastructure/services/famix-server/src" />
 	<property name="code-browser" location="../infrastructure/apps/code-browser/src" />
   <property name="similarity-server" location="../infrastructure/services/similarity-server/src" />
-  <property name="test-repo" location="../infrastructure/tools/java/extractor/test-repo" />
   <property name="lib" location="../lib" />
   <property name="extractor-bin" location="../infrastructure/tools/java/extractor/bin" />
   <property name="machine-learning" location="../infrastructure/tools/core/machine-learning/src" />
@@ -75,7 +84,7 @@
     
   <target name="compile-link-crawler" depends="init-link-crawler">
     <!-- Compile everything -->
-    <javac destdir="${build-link-crawler}" debug="on">
+    <javac destdir="${build-link-crawler}" debug="on" includeantruntime="false">
       <classpath>
         <pathelement path="${classpath}" />
         <fileset dir="${lib}">
@@ -120,7 +129,7 @@
 
   <target name="compile-java-tools-core" depends="init-java-tools-core">
     <!-- Compile everything -->
-    <javac destdir="${build-java-tools-core}" debug="on">
+    <javac destdir="${build-java-tools-core}" debug="on" includeantruntime="false">
       <classpath>
         <pathelement path="${classpath}" />
         <fileset dir="${lib}">
@@ -128,14 +137,15 @@
         </fileset>
       </classpath>
       <src path="${utilities}" />
+      <src path="${core-repository-manager}" />
       <src path="${repository-manager}" />
       <src path="${model}" />
-    	<src path="${syntax-highlighter}" />
+    	<!--<src path="${syntax-highlighter}" />
       <src path="${database}" />
       <src path="${file-server}" />
     	<src path="${famix-server}" />
     	<src path="${code-browser}" />
-      <src path="${component-clusterer}" />
+      <src path="${component-clusterer}" />-->
     </javac>
 
     <!-- Copy the source -->
@@ -143,12 +153,15 @@
       <fileset dir="${utilities}" includes="**/*.java" />
     </copy>
     <copy todir="${build-java-tools-core}">
+      <fileset dir="${core-repository-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-java-tools-core}">
       <fileset dir="${repository-manager}" includes="**/*.java" />
     </copy>
     <copy todir="${build-java-tools-core}">
       <fileset dir="${model}" includes="**/*.java" />
     </copy>
-  	<copy todir="${build-java-tools-core}">
+  	<!--<copy todir="${build-java-tools-core}">
       <fileset dir="${syntax-highlighter}" includes="**/*.java" />
     </copy>
     <copy todir="${build-java-tools-core}">
@@ -166,7 +179,7 @@
   	<copy todir="${component-clusterer}">
   	  <fileset dir="${component-clusterer}" includes="**/*.java" />
   	</copy>
-    <unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-java-tools-core}" />
+    <unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-java-tools-core}" />-->
   </target>
 
   <!-- Package the individual jars -->
@@ -177,7 +190,7 @@
   <target name="repo-tools" depends="compile-java-tools-core">
     <jar destfile="${dist}/repo-tools.jar" basedir="${build-java-tools-core}">
       <manifest>
-        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.repo.Main" />
+        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.repo.Main" />
       </manifest>
     </jar>
   </target>
@@ -258,6 +271,12 @@
     </delete>
   </target>
 
+  <!-- Populate the extractor's lib directory -->
+  <target name="extractor-lib" depends="sourcerer-lib" description="Populate the Extractor's lib directory">
+    <copy file="${dist}/sourcerer-lib.jar" todir="${extractor}/lib/" />
+    <copy file="${lib}/asm-3.3.1.jar" todir="${extractor}/lib/" />
+  </target>
+  
   <!-- Build the extractor plugin - is asynchronous -->
   <target name="extractor">
     <pde.exportPlugins destination="${build}" exportSource="true" exportType="directory" plugins="Extractor" useJARFormat="true" />
@@ -300,7 +319,7 @@
   </target>
 
   <target name="compile-search-eval" depends="init-search-eval">
-    <javac destdir="${build-search-eval}" debug="on" excludes="**/sourcerer/db/**/*.java,**/sourcerer/scs/**/*.java,**/sourcerer/eval/client/**/*.java,**/sourcerer/eval/server/**/*.java">
+    <javac destdir="${build-search-eval}" debug="on" excludes="**/sourcerer/db/**/*.java,**/sourcerer/scs/**/*.java,**/sourcerer/eval/client/**/*.java,**/sourcerer/eval/server/**/*.java" includeantruntime="false">
       <src path="${utilities}" />
       <src path="${repository-manager}" />
       <src path="${model}" />
@@ -342,7 +361,7 @@
   </target>
 
   <target name="compile-search-server" depends="init-search-server, sourcerer-db">
-    <javac destdir="${build-search-server}" debug="on">
+    <javac destdir="${build-search-server}" debug="on" includeantruntime="false">
       <classpath>
         <pathelement path="${classpath}" />
         <fileset dir="${lib}">
@@ -400,7 +419,7 @@
   </target>
 
   <target name="compile-core-repomanager" depends="init-core-repomanager">
-    <javac destdir="${build-core-repomanager}" debug="on">
+    <javac destdir="${build-core-repomanager}" debug="on" includeantruntime="false">
       <classpath>
         <pathelement path="${classpath}" />
         <fileset dir="${lib}">
@@ -439,7 +458,7 @@
   </target>
 
   <target name="compile-codecrawler" depends="init-codecrawler">
-    <javac destdir="${build-codecrawler}" debug="on" source="1.5">
+    <javac destdir="${build-codecrawler}" debug="on" source="1.5" includeantruntime="false">
       <classpath>
         <pathelement path="${classpath}" />
         <fileset dir="${lib}">
@@ -482,32 +501,37 @@
   </target>
 
   <!-- Construct the test repository -->
-  <target name="create-test-repo" depends="compile-java-tools-core,sourcerer-lib,repo-tools">
+  <target name="create-test-repo" depends="init,compile-java-tools-core,sourcerer-lib,repo-tools" description="Construct the test repository.">
     <!-- Clear 0/1 -->
-    <delete dir="${test-repo}/0/1/content/src" />
+    <delete dir="${test-repo}/0/1/content" />
 
-    <!-- Setup 0/1 with sourcerer-lib -->
-    <copy todir="${test-repo}/0/1/content/src">
-      <fileset dir="${utilities}" includes="**/*.java" />
+    <!-- Setup 0/1 with the extractor -->
+    <copy todir="${test-repo}/0/1/content">
+      <fileset dir="${extractor}" includes="**/*.java" excludes="**/test-repo/**"/>
     </copy>
-    <copy todir="${test-repo}/0/1/content/src">
-      <fileset dir="${repository-manager}" includes="**/*.java" />
-    </copy>
-    <copy todir="${test-repo}/0/1/content/src">
-      <fileset dir="${model}" includes="**/*.java" />
-    </copy>
-    <copy todir="${test-repo}/0/1/content/src">
-      <fileset dir="${database}" includes="**/*.java" />
-    </copy>
-    <copy todir="${test-repo}/0/1/content/src">
-      <fileset dir="${file-server}" includes="**/*.java" />
-    </copy>
-    <copy todir="${test-repo}/0/1/content/lib">
-      <fileset dir="${lib}">
-        <include name="servlet-api.jar" />
-      </fileset>
+    <copy todir="${test-repo}/0/1/content">
+      <fileset dir="${dist}" includes="sourcerer-lib.jar" />      
     </copy>
 
+    <!-- Build the comparison test jar -->
+    <mkdir dir="${build-comparison-test}" />
+    <javac destdir="${build-comparison-test}" debug="on" includeantruntime="false">
+      <!--<classpath>
+        <pathelement path="${classpath}" />
+      </classpath>-->
+      <src path="${comparison-test}" />
+    </javac>
+    
+    <copy todir="${build-comparison-test}">
+      <fileset dir="${comparison-test}" includes="**/*.java" />
+    </copy>
+
+    <jar destfile="${dist}/comparison-test.jar" basedir="${build-comparison-test}" />
+    
+    <copy todir="${test-repo}/0/2/content">
+      <fileset dir="${dist}" includes="comparison-test.jar" />
+    </copy>
+        
     <!-- Clear the old output -->
     <delete dir="${test-repo}/output" />
     <delete dir="${test-repo}/jars" />
@@ -518,16 +542,8 @@
       <arg value="--input-repo" />
       <arg value="${test-repo}" />
       <arg value="--output" />
-      <arg value="${test-repo}/output/agg" />
-    </java>
-
-    <!-- Create jar index -->
-    <java jar="${dist}/repo-tools.jar" fork="true">
-      <arg value="--create-jar-index" />
-      <arg value="--input-repo" />
-      <arg value="${test-repo}" />
-      <arg value="--output" />
-      <arg value="${test-repo}/output/index" />
+      <arg value="${test-repo}/output" />
+      <arg value="--clear-caches" />
     </java>
   </target>
 
@@ -541,7 +557,7 @@
   </target>
 
   <target name="compile-machine-learning" depends="init-machine-learning, sourcerer-db">
-    <javac destdir="${build-machine-learning}" debug="on">
+    <javac destdir="${build-machine-learning}" debug="on" includeantruntime="false">
       <src path="${machine-learning}" />
       <src path="${similarity-server}" />
       <src path="${utilities}" />

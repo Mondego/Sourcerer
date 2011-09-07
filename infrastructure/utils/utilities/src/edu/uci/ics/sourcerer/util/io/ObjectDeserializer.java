@@ -37,28 +37,28 @@ public abstract class ObjectDeserializer<T> {
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static ObjectDeserializer<?> makeDeserializer(Class<?> klass) {
-    if (CustomSimpleSerializable.class.isAssignableFrom(klass)) {
+    if (CustomSerializable.class.isAssignableFrom(klass)) {
       try {
-        Method method = klass.getMethod("deserialize", Scanner.class);
+        Method method = klass.getDeclaredMethod("deserialize", Scanner.class);
         return new CustomDeserializer(method);
       } catch (SecurityException e) {
-        logger.log(Level.SEVERE, "JVM does not have sufficient permissions for custom deserialization.", e);
+        throw new IllegalStateException("JVM does not have sufficient permissions for custom deserialization.", e);
       } catch (NoSuchMethodException e) {
-        logger.log(Level.SEVERE, klass.getName() + " is missing the readFromString method.", e);
+        throw new IllegalStateException(klass.getName() + " is missing the deserialize method.", e);
       }
-      return null;
     } else {
       if (klass.isArray()) {
         return new ArrayDeserializer(klass.getComponentType());
       } else if (klass.isEnum()) {
         return new EnumDeserializer(klass);
+      } else if (SimpleSerializable.class.isAssignableFrom(klass))  {
+        throw new IllegalStateException("Nested SimpleSerializables are not supported.");
       } else {
         ObjectDeserializer<?> deserializer = deserializers.get(klass);
         if (deserializer != null) {
           return deserializer;
         } else {
-          logger.log(Level.SEVERE, "No deserializer for " + klass.getName());
-          return null;
+          throw new IllegalStateException("No deserializer for " + klass.getName());
         }
       }
     }
@@ -122,11 +122,19 @@ public abstract class ObjectDeserializer<T> {
   private static ObjectDeserializer<?> stringDeserializer = new ObjectDeserializer<String>() {
     @Override
     public String deserialize(Scanner scanner) {
-      String next = scanner.next();
-      if ("null".equals(next)) {
-        return null;
+      if (scanner.hasNextInt()) {
+        LineBuilder result = new LineBuilder();
+        for (int i = scanner.nextInt(); i > 0; i--) {
+          result.append(scanner.next());
+        }
+        return result.toString();
       } else {
-        return next.replace('*', ' ');
+        String next = scanner.next();
+        if ("null".equals(next)) {
+          return null;
+        } else {
+          return next;
+        }
       }
     }
   };
@@ -188,6 +196,7 @@ public abstract class ObjectDeserializer<T> {
     
     private CustomDeserializer(Method method) {
       this.method = method;
+      method.setAccessible(true);
     }
     
     @Override

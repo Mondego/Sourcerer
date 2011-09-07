@@ -42,11 +42,11 @@ public final class ProjectLocationImpl implements ProjectLocation, SimpleSeriali
     return projectRoot;
   }
   
-  protected Integer getBatchNumber() {
+  public Integer getBatchNumber() {
     return batch;
   }
   
-  protected Integer getCheckoutNumber() {
+  public Integer getCheckoutNumber() {
     return checkout;
   }
   
