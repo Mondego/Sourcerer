@@ -96,15 +96,15 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
     try (SelectQuery query = exec.makeSelectQuery(ProjectsTable.TABLE)) {
       // Get the Java Library projectIDs
       query.addSelect(ProjectsTable.PROJECT_ID);
-      query.addWhere(ProjectsTable.PROJECT_TYPE.compareEquals(), Project.JAVA_LIBRARY);
+      query.andWhere(ProjectsTable.PROJECT_TYPE.compareEquals().setValue(Project.JAVA_LIBRARY));
       
       libraryProjects = query.select().toCollection(ProjectsTable.PROJECT_ID);
       
       // Get the primitives projectID
       query.clearWhere();
 
-      query.addWhere(ProjectsTable.NAME.compareEquals(), ProjectsTable.PRIMITIVES_PROJECT);
-      query.addWhere(ProjectsTable.PROJECT_TYPE.compareEquals(), Project.SYSTEM);
+      query.andWhere(ProjectsTable.NAME.compareEquals().setValue(ProjectsTable.PRIMITIVES_PROJECT));
+      query.andWhere(ProjectsTable.PROJECT_TYPE.compareEquals().setValue(Project.SYSTEM));
       
       libraryProjects.add(query.select().toSingleton(ProjectsTable.PROJECT_ID));
     }
@@ -125,28 +125,28 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
     externalEntitiesQuery = exec.makeSelectQuery(EntitiesTable.TABLE);
     externalEntitiesQuery.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.PROJECT_ID);
     externalEntitiesQueryFqn = EntitiesTable.FQN.compareEquals();
-    externalEntitiesQuery.addWhere(externalEntitiesQueryFqn);
-    externalEntitiesQuery.addWhere(EntitiesTable.PROJECT_ID.compareIn(projectIDs));
+    externalEntitiesQuery.andWhere(externalEntitiesQueryFqn);
+    externalEntitiesQuery.andWhere(EntitiesTable.PROJECT_ID.compareIn(projectIDs));
     
     externalErasedEntitiesQuery = exec.makeSelectQuery(EntitiesTable.TABLE);
     externalErasedEntitiesQuery.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.PROJECT_ID, EntitiesTable.FQN);
     externalErasedEntitiesQueryFqn = EntitiesTable.FQN.compareLike();
-    externalErasedEntitiesQuery.addWhere(externalErasedEntitiesQueryFqn);
-    externalErasedEntitiesQuery.addWhere(EntitiesTable.PROJECT_ID.compareIn(projectIDs));
-    externalErasedEntitiesQuery.addWhere(EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.CONSTRUCTOR, Entity.METHOD)));
+    externalErasedEntitiesQuery.andWhere(externalErasedEntitiesQueryFqn);
+    externalErasedEntitiesQuery.andWhere(EntitiesTable.PROJECT_ID.compareIn(projectIDs));
+    externalErasedEntitiesQuery.andWhere(EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.CONSTRUCTOR, Entity.METHOD)));
     
     newEntitiesQuery = exec.makeSelectQuery(EntitiesTable.TABLE);
     newEntitiesQuery.addSelects(EntitiesTable.FQN, EntitiesTable.ENTITY_ID, EntitiesTable.ENTITY_TYPE);
     newEntitiesQueryProjectID = EntitiesTable.PROJECT_ID.compareEquals();
-    newEntitiesQuery.addWhere(newEntitiesQueryProjectID);
-    newEntitiesQuery.addWhere(EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.ARRAY, Entity.WILDCARD, Entity.TYPE_VARIABLE, Entity.PARAMETERIZED_TYPE, Entity.DUPLICATE)));
+    newEntitiesQuery.andWhere(newEntitiesQueryProjectID);
+    newEntitiesQuery.andWhere(EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.ARRAY, Entity.WILDCARD, Entity.TYPE_VARIABLE, Entity.PARAMETERIZED_TYPE, Entity.DUPLICATE)));
     
     localVariablesQuery = exec.makeSelectQuery(EntitiesTable.TABLE);
     localVariablesQuery.addSelects(EntitiesTable.ENTITY_ID);
     localVariablesQueryProjectID = EntitiesTable.PROJECT_ID.compareEquals();
-    localVariablesQuery.addWhere(localVariablesQueryProjectID);
-    localVariablesQuery.addWhere(EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.PARAMETER, Entity.LOCAL_VARIABLE)));
-    localVariablesQuery.addOrderBy(EntitiesTable.ENTITY_ID, true);
+    localVariablesQuery.andWhere(localVariablesQueryProjectID);
+    localVariablesQuery.andWhere(EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.PARAMETER, Entity.LOCAL_VARIABLE)));
+    localVariablesQuery.orderBy(EntitiesTable.ENTITY_ID, true);
   }
   
   protected void clearMaps() {
@@ -178,8 +178,8 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
     
     SelectQuery query = exec.makeSelectQuery(FilesTable.TABLE);
     query.addSelects(FilesTable.FILE_ID, FilesTable.PATH);
-    query.addWhere(FilesTable.FILE_TYPE.compareNotEquals(), File.JAR);
-    query.addWhere(FilesTable.PROJECT_ID.compareEquals(), projectID);
+    query.andWhere(FilesTable.FILE_TYPE.compareNotEquals().setValue(File.JAR));
+    query.andWhere(FilesTable.PROJECT_ID.compareEquals().setValue(projectID));
     
     TypedQueryResult result = query.select();
     while (result.next()) {
@@ -347,7 +347,7 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
     
     try (SelectQuery query = exec.makeSelectQuery(EntitiesTable.TABLE)) {
       query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN);
-      query.addWhere(EntitiesTable.PROJECT_ID.compareEquals(), projectID);
+      query.andWhere(EntitiesTable.PROJECT_ID.compareEquals().setValue(projectID));
   
       TypedQueryResult result = query.select();
       
@@ -504,7 +504,7 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
     }
 
     // Some external reference?
-    externalEntitiesQuery.updateWhere(externalEntitiesQueryFqn, fqn);
+    externalEntitiesQueryFqn.setValue(fqn);
     try (TypedQueryResult result = externalEntitiesQuery.select()) {
       if (result.hasNext()) {
         DuplicatedDatabaseEntity entity = new DuplicatedDatabaseEntity();
@@ -525,7 +525,7 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
     
     // External reference that's been erased?
     if (TypeUtils.isMethod(fqn)) {
-      externalErasedEntitiesQuery.updateWhere(externalErasedEntitiesQueryFqn, TypeUtils.getMethodName(fqn) + "(%");
+      externalErasedEntitiesQueryFqn.setValue(TypeUtils.getMethodName(fqn) + "(%");
       try (TypedQueryResult result = externalErasedEntitiesQuery.select()) {
         if (result.hasNext()) {
           DuplicatedDatabaseEntity entity = new DuplicatedDatabaseEntity();
@@ -563,7 +563,7 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
     BatchInserter inserter = exec.makeInFileInserter(tempDir, RelationsTable.TABLE);
     
     task.start("Processing new entities", "new entities processed");
-    newEntitiesQuery.updateWhere(newEntitiesQueryProjectID, projectID);
+    newEntitiesQueryProjectID.setValue(projectID);
     TypedQueryResult result = newEntitiesQuery.selectStreamed();
     while (result.next()) {
       String fqn = result.getResult(EntitiesTable.FQN);
@@ -602,7 +602,7 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
     BatchInserter inserter = exec.makeInFileInserter(tempDir, RelationsTable.TABLE);
     
     task.start("Processing local variables & parameters", "variables processed");
-    localVariablesQuery.updateWhere(localVariablesQueryProjectID, projectID);
+    localVariablesQueryProjectID.setValue(projectID);
     try (TypedQueryResult result = localVariablesQuery.selectStreamed()) {
       for (LocalVariableEX var : reader.getTransientLocalVariables()) {
         if (result.next()) {

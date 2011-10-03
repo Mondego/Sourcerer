@@ -24,7 +24,6 @@ import edu.uci.ics.sourcerer.tools.java.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.Location;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metrics;
-import edu.uci.ics.sourcerer.tools.java.model.types.Modifiers;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -42,6 +41,11 @@ public final class EntityWriterImpl extends AbstractExtractorWriter<EntityEX> im
   private EntityEX trans = new EntityEX();
   @Override
   public void writeEntity(Entity type, String fqn, int modifiers, Metrics metrics, Location location) {
-    write(trans.update(type, fqn, modifiers, metrics, location));
+    write(trans.update(type, fqn, null, null, modifiers, metrics, location));
+  }
+  
+  @Override
+  public void writeEntity(Entity type, String fqn, String signature, String rawSignature, int modifiers, Metrics metrics, Location location) {
+    write(trans.update(type, fqn, signature, rawSignature, modifiers, metrics, location));
   }
 }

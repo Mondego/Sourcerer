@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.utils.db.internal;
 
+import edu.uci.ics.sourcerer.util.ArrayUtils;
 import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 import edu.uci.ics.sourcerer.utils.db.sql.Table;
@@ -24,7 +25,7 @@ import edu.uci.ics.sourcerer.utils.db.sql.Table;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-class ComparisonConditionImpl implements ComparisonCondition {
+class ComparisonConditionImpl extends ConditionImpl implements ComparisonCondition {
   private Selectable<?> left;
   private Selectable<?> right;
   
@@ -32,7 +33,7 @@ class ComparisonConditionImpl implements ComparisonCondition {
     this.left = left;
     this.right = right;
   }
-  
+
   @Override
   public Table getLeftTable() {
     return left.getTable();
@@ -44,7 +45,19 @@ class ComparisonConditionImpl implements ComparisonCondition {
   }
   
   @Override
-  public String toSql() {
-    return left.toSql() + "=" + right.toSql();
+  public void verifyTables(Table ... tables) {
+    if (!ArrayUtils.containsReference(tables, left.getTable())) {
+      throw new IllegalStateException("Missing " + left.getTable());
+    }
+    if (!ArrayUtils.containsReference(tables, right.getTable())) {
+      throw new IllegalStateException("Missing " + right.getTable());
+    }
+  }
+  
+  @Override
+  public void toSql(StringBuilder builder) {
+    left.toSql(builder);
+    builder.append("=");
+    right.toSql(builder);
   }
 }

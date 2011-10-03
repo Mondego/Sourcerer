@@ -21,13 +21,11 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import edu.uci.ics.sourcerer.utils.db.sql.BindVariable;
-
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class EnumColumn<T extends Enum<T>> extends ColumnImpl<T> {
+class EnumColumn<T extends Enum<T>> extends ColumnImpl<T> {
   private Class<T> klass;
   
   EnumColumn(DatabaseTableImpl table, String name, T[] values, boolean nullable) {
@@ -49,13 +47,8 @@ public class EnumColumn<T extends Enum<T>> extends ColumnImpl<T> {
   }
   
   @Override
-  public BindVariable bindHelper(final T value) {
-    return new BindVariable() {
-      @Override
-      public void bind(PreparedStatement statement, int index) throws SQLException {
-        statement.setString(index, value.name());
-      }
-    };
+  protected void bindHelper(T value, PreparedStatement statement, int index) throws SQLException {
+    statement.setString(index, value.name());
   }
   
   @Override

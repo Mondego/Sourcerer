@@ -26,6 +26,7 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
+import edu.uci.ics.sourcerer.tools.java.model.types.RelationClass;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
@@ -35,11 +36,11 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class SynchronizedUnknownsMap  {
+class SynchronizedUnknownsMap  {
   private Integer unknownsProject;
   private volatile Map<String, DatabaseEntity> unknowns;
   
-  public SynchronizedUnknownsMap(TaskProgressLogger task) {
+  SynchronizedUnknownsMap(TaskProgressLogger task) {
     populateMap(task);
   }
   
@@ -50,17 +51,17 @@ public class SynchronizedUnknownsMap  {
         task.start("Loading unknown entities", "unknown entities loaded");
         try (SelectQuery query = exec.makeSelectQuery(ProjectsTable.TABLE)) {
           query.addSelect(ProjectsTable.PROJECT_ID);
-          query.addWhere(ProjectsTable.NAME.compareEquals(), ProjectsTable.UNKNOWNS_PROJECT);
+          query.andWhere(ProjectsTable.NAME.compareEquals(ProjectsTable.UNKNOWNS_PROJECT));
           unknownsProject = query.select().toSingleton(ProjectsTable.PROJECT_ID);
         }
         
         unknowns = new HashMap<>();
         try (SelectQuery query = exec.makeSelectQuery(EntitiesTable.TABLE)) {
           query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN);
-          query.addWhere(EntitiesTable.PROJECT_ID.compareEquals(), unknownsProject);
+          query.andWhere(EntitiesTable.PROJECT_ID.compareEquals(unknownsProject));
           TypedQueryResult result = query.selectStreamed();
           while (result.next()) {
-            unknowns.put(result.getResult(EntitiesTable.FQN), DatabaseEntity.makeUnknown(result.getResult(EntitiesTable.ENTITY_ID)));
+            unknowns.put(result.getResult(EntitiesTable.FQN), DatabaseEntity.make(result.getResult(EntitiesTable.ENTITY_ID), RelationClass.UNKNOWN));
             task.progress();
           }
         }
@@ -69,27 +70,27 @@ public class SynchronizedUnknownsMap  {
     }.run(); 
   }
   
-  protected synchronized void add(QueryExecutor exec, String fqn) {
+  synchronized void add(QueryExecutor exec, String fqn) {
     if (!contains(fqn)) {
       Integer eid = exec.insertWithKey(EntitiesTable.makeInsert(Entity.UNKNOWN, fqn, unknownsProject));
       if (eid == null) {
         logger.log(Level.SEVERE, "Missing eid for unknown: " + fqn);
       } else {
-        unknowns.put(fqn, DatabaseEntity.makeUnknown(eid));
+        unknowns.put(fqn, DatabaseEntity.make(eid, RelationClass.UNKNOWN));
       }
     }
   }
   
-  protected synchronized boolean contains(String fqn) {
+  synchronized boolean contains(String fqn) {
     return unknowns.containsKey(fqn);
   }
   
-  protected synchronized DatabaseEntity getUnknown(String fqn) {
-    DatabaseEntity eid = unknowns.get(fqn);
-    if (eid == null) {
+  synchronized DatabaseEntity getUnknown(String fqn) {
+    DatabaseEntity entity = unknowns.get(fqn);
+    if (entity == null) {
       return null;
     } else {
-      return eid;
+      return entity;
     }
   }
 }

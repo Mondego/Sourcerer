@@ -34,26 +34,30 @@ import edu.uci.ics.sourcerer.utils.db.sql.StringColumn;
 public final class EntitiesTable extends DatabaseTable {
   /*  
    *                  entities table
-   *  +-------------+-----------------+-------+--------+
-   *  | Column name | Type            | Null? | Index? |
-   *  +-------------+-----------------+-------+--------+
-   *  | entity_id   | SERIAL          | No    | Yes    |
-   *  | entity_type | ENUM(values)    | No    | Yes    |
-   *  | fqn         | VARCHAR(8192)   | No    | Yes    |
-   *  | modifiers   | INT UNSIGNED    | Yes   | No     |
-   *  | multi       | INT UNSIGNED    | Yes   | No     |
-   *  | project_id  | BIGINT UNSIGNED | No    | Yes    |
-   *  | file_id     | BIGINT UNSIGNED | Yes   | Yes    |
-   *  | offset      | INT UNSIGNED    | Yes   | No     |
-   *  | length      | INT UNSIGNED    | Yes   | No     |
-   *  +-------------+-----------------+-------+--------+
+   *  +---------------+-----------------+-------+--------+
+   *  | Column name   | Type            | Null? | Index? |
+   *  +---------------+-----------------+-------+--------+
+   *  | entity_id     | SERIAL          | No    | Yes    |
+   *  | entity_type   | ENUM(values)    | No    | Yes    |
+   *  | modifiers     | INT UNSIGNED    | Yes   | No     |
+   *  | fqn           | VARCHAR(8192)   | No    | Yes    |
+   *  | signature     | VARCHAR(8192)   | Yes   | Yes    |
+   *  | raw_signature | VARCHAR(8192)   | Yes   | Yes    |
+   *  | multi         | INT UNSIGNED    | Yes   | No     |
+   *  | project_id    | BIGINT UNSIGNED | No    | Yes    |
+   *  | file_id       | BIGINT UNSIGNED | Yes   | Yes    |
+   *  | offset        | INT UNSIGNED    | Yes   | No     |
+   *  | length        | INT UNSIGNED    | Yes   | No     |
+   *  +---------------+-----------------+-------+--------+
    */
   public static final EntitiesTable TABLE = new EntitiesTable();
 
   public static final Column<Integer> ENTITY_ID = TABLE.addSerialColumn("entity_id");
   public static final Column<Entity> ENTITY_TYPE = TABLE.addEnumColumn("entity_type", Entity.values(), false).addIndex();
-  public static final StringColumn FQN = TABLE.addVarcharColumn("fqn", 8192, false).addIndex(48);
   public static final Column<Modifiers> MODIFIERS = TABLE.addSetColumn("modifiers", Modifier.values(), Modifiers.getFactory(), true);
+  public static final StringColumn FQN = TABLE.addVarcharColumn("fqn", 8192, false).addIndex(48);
+  public static final StringColumn SIGNATURE = TABLE.addVarcharColumn("signature", 8192, true).addIndex(48);
+  public static final StringColumn RAW_SIGNATURE = TABLE.addVarcharColumn("raw_signature", 8192, true).addIndex(48);
   public static final Column<Integer> MULTI = TABLE.addIntColumn("multi", true, true);
   public static final Column<Integer> PROJECT_ID = TABLE.addIDColumn("project_id", false).addIndex();
   public static final Column<Integer> FILE_ID = TABLE.addIDColumn("file_id", true).addIndex();
@@ -65,11 +69,13 @@ public final class EntitiesTable extends DatabaseTable {
   }
   
   // ---- INSERT ----
-  private static Insert makeInsert(Entity type, String fqn, Modifiers modifiers, Integer multi, Integer projectID, Integer fileID, Integer offset, Integer length) {
+  private static Insert makeInsert(Entity type, String fqn, String signature, String rawSignature, Modifiers modifiers, Integer multi, Integer projectID, Integer fileID, Integer offset, Integer length) {
     return TABLE.makeInsert(
         ENTITY_TYPE.to(type),
-        FQN.to(fqn),
         MODIFIERS.to(modifiers),
+        FQN.to(fqn),
+        SIGNATURE.to(signature),
+        RAW_SIGNATURE.to(rawSignature),
         MULTI.to(multi),
         PROJECT_ID.to(projectID),
         FILE_ID.to(fileID),
@@ -78,18 +84,18 @@ public final class EntitiesTable extends DatabaseTable {
   }
   
   public static Insert makeInsert(Entity type, String fqn, Integer projectID) {
-    return makeInsert(type, fqn, null, null, projectID, null, null, null);
+    return makeInsert(type, fqn, null, null, null, null, projectID, null, null, null);
   }
   
   public static Insert makeInsert(Entity type, String fqn, Integer multi, Integer projectID) {
-    return makeInsert(type, fqn, null, multi, projectID, null, null, null);
+    return makeInsert(type, fqn, null, null, null, multi, projectID, null, null, null);
   }
   
   public static Insert makeInsert(EntityEX entity, Integer projectID, Integer fileID) {
     if (fileID == null) {
-      return makeInsert(entity.getType(), entity.getFqn(), entity.getModifiers(), null, projectID, null, null, null);
+      return makeInsert(entity.getType(), entity.getFqn(), entity.getSignature(), entity.getRawSignature(), entity.getModifiers(), null, projectID, null, null, null);
     } else {
-      return makeInsert(entity.getType(), entity.getFqn(), entity.getModifiers(), null, projectID, fileID, entity.getLocation().getOffset(), entity.getLocation().getOffset());
+      return makeInsert(entity.getType(), entity.getFqn(), entity.getSignature(), entity.getRawSignature(), entity.getModifiers(), null, projectID, fileID, entity.getLocation().getOffset(), entity.getLocation().getLength());
     }
   }
 //  private RowInsert makeRowInsert(EntityEX entity, Integer projectID, Integer fileID) {
@@ -126,7 +132,7 @@ public final class EntitiesTable extends DatabaseTable {
 //    if (fileID == null) {
 //      return makeInsert(type, var.getName(), var.getModifiers(), var.getPosition(), projectID, null, null, null);
 //    } else {
-      return makeInsert(type, var.getName(), var.getModifiers(), var.getPosition(), projectID, fileID, var.getLocation().getOffset(), var.getLocation().getLength());
+      return makeInsert(type, var.getName(), null, null, var.getModifiers(), var.getPosition(), projectID, fileID, var.getLocation().getOffset(), var.getLocation().getLength());
 //    }
   }
   

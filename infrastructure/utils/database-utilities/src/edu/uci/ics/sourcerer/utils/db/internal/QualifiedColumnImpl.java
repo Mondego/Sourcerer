@@ -17,10 +17,11 @@
  */
 package edu.uci.ics.sourcerer.utils.db.internal;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Collection;
 
 import edu.uci.ics.sourcerer.utils.db.internal.ConstantConditionImpl.Type;
-import edu.uci.ics.sourcerer.utils.db.sql.BindVariable;
 import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.InConstantCondition;
@@ -31,7 +32,7 @@ import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-class QualifiedColumnImpl<T> implements QualifiedColumn<T> {
+final class QualifiedColumnImpl<T> implements QualifiedColumn<T> {
   private ColumnImpl<T> column;
   private QualifiedTable table;
   
@@ -47,7 +48,9 @@ class QualifiedColumnImpl<T> implements QualifiedColumn<T> {
   
   @Override
   public String toString() {
-    return toSql();
+    StringBuilder builder = new StringBuilder();
+    toSql(builder);
+    return builder.toString();
   }
 
   @Override
@@ -57,22 +60,37 @@ class QualifiedColumnImpl<T> implements QualifiedColumn<T> {
   
   @Override
   public ConstantCondition<T> compareEquals() {
-    return new ConstantConditionImpl<>(this, Type.EQUALS);
+    return column.createConstantCondition(this, Type.EQUALS);
+  }
+  
+  @Override
+  public ConstantCondition<T> compareEquals(T value) {
+    return column.createConstantCondition(this, Type.EQUALS).setValue(value);
   }
   
   @Override
   public ConstantCondition<T> compareNotEquals() {
-    return new ConstantConditionImpl<>(this, Type.NOT_EQUALS);
+    return column.createConstantCondition(this, Type.NOT_EQUALS);
+  }
+  
+  @Override
+  public ConstantCondition<T> compareNotEquals(T value) {
+    return column.createConstantCondition(this, Type.NOT_EQUALS).setValue(value);
   }
   
   @Override
   public InConstantCondition<T> compareIn(Collection<T> values) {
     return new InConstantConditionImpl<T>(this, InConstantConditionImpl.Type.IN, values);
   }
+  
+  @Override
+  public InConstantCondition<T> compareNotIn(Collection<T> values) {
+    return new InConstantConditionImpl<T>(this, InConstantConditionImpl.Type.NOT_IN, values);
+  }
 
   @Override
-  public String toSql() {
-    return table.getQualifier() + "." + column.getName();
+  public void toSql(StringBuilder builder) {
+    builder.append(table.getQualifier()).append(".").append(column.getName());
   }
   
   @Override
@@ -85,9 +103,8 @@ class QualifiedColumnImpl<T> implements QualifiedColumn<T> {
     return column.from(value);
   }
 
-
   @Override
-  public BindVariable bind(T value) {
-    return column.bind(value);
+  public void bind(T value, PreparedStatement statement, int index) throws SQLException {
+    column.bind(value, statement, index);
   }
 }

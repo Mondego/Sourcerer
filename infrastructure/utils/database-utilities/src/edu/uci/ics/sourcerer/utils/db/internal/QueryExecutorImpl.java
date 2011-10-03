@@ -33,6 +33,7 @@ import edu.uci.ics.sourcerer.utils.db.TableLocker;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
+import edu.uci.ics.sourcerer.utils.db.sql.DeleteStatement;
 import edu.uci.ics.sourcerer.utils.db.sql.QueryResult;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 import edu.uci.ics.sourcerer.utils.db.sql.SetStatement;
@@ -355,6 +356,11 @@ class QueryExecutorImpl implements QueryExecutor {
   @Override
   public SetStatement makeSetStatement(DatabaseTable table) {
     return new SetStatementImpl(this, table);
+  }
+  
+  @Override
+  public DeleteStatement makeDeleteStatement(DatabaseTable table) {
+    return new DeleteStatementImpl(this, table);
   }
 
   @Override

@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.tools.java.repo;
 
 import edu.uci.ics.sourcerer.tools.java.repo.maven.MavenImporter;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
+import edu.uci.ics.sourcerer.tools.java.repo.stats.RepositoryStatisticsCalculator;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
@@ -40,6 +41,13 @@ public class Main {
       }
     }.setProperties(Arguments.INPUT, JavaRepositoryFactory.OUTPUT_REPO);
   
+  public static final Command CALCULATE_REPOSITORY_STATISTICS =
+    new Command("calculate-repo-stats", "Calculates a variety of statistics about the repository.") {
+      protected void action() {
+        RepositoryStatisticsCalculator.calculateRepositoryStatistics();
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO);
+    
   public static void main(String[] args) {
     Command.execute(args, Main.class);
   }

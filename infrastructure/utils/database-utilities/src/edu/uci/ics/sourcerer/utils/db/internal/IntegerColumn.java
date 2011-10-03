@@ -20,13 +20,11 @@ package edu.uci.ics.sourcerer.utils.db.internal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import edu.uci.ics.sourcerer.utils.db.sql.BindVariable;
-
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class IntegerColumn extends ColumnImpl<Integer> {
+class IntegerColumn extends ColumnImpl<Integer> {
   private boolean unsigned;
   
   IntegerColumn(DatabaseTableImpl table, String name, String type, boolean nullable, boolean unsigned, int sqlType) {
@@ -35,16 +33,11 @@ public class IntegerColumn extends ColumnImpl<Integer> {
   }
   
   @Override
-  public BindVariable bindHelper(final Integer value) {
+  protected void bindHelper(Integer value, PreparedStatement statement, int index) throws SQLException {
     if (unsigned && value < 0) {
       throw new IllegalArgumentException(getName() + " does not accept negative values, such as " + value);
     } else {
-      return new BindVariable() {
-        @Override
-        public void bind(PreparedStatement statement, int index) throws SQLException {
-          statement.setInt(index, value);
-        }
-      };
+      statement.setInt(index, value);
     }
   }
   

@@ -23,7 +23,5 @@ package edu.uci.ics.sourcerer.utils.db.sql;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface ConstantCondition<T> extends Condition {
-  public Table getTable();
-  
-  public BindVariable bind(T value);
+  public ConstantCondition<T> setValue(T value);
 }

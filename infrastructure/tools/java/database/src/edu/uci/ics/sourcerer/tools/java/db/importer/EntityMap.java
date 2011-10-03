@@ -17,29 +17,37 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import edu.uci.ics.sourcerer.tools.java.model.types.RelationClass;
+import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-class DatabaseEntity {
-  protected Integer entityID;
-  protected RelationClass rClass;
+public class EntityMap {
+  private SynchronizedEntityMap libraries;
+  private Map<String, DatabaseEntity> entities;
   
-  protected DatabaseEntity() {}
-  
-  static DatabaseEntity make(Integer entityID, RelationClass rClass) {
-    DatabaseEntity entity = new DatabaseEntity();
-    entity.entityID = entityID;
-    entity.rClass = rClass;
-    return entity;
+  EntityMap(SynchronizedEntityMap libraries) {
+    this.libraries = libraries;
+    entities = Collections.emptyMap();
   }
   
-  public Integer getEntityID() {
-    return entityID;
+  void populate(TaskProgressLogger task, Collection<Integer> projects) {
+    entities = new HashMap<>();
+    SynchronizedEntityMap.populateMap(entities, task, projects, RelationClass.EXTERNAL);
   }
   
-  public RelationClass getRelationClass() {
-    return rClass;
+  DatabaseEntity getEntity(String fqn) {
+    DatabaseEntity entity = entities.get(fqn);
+    if (entity == null) {
+      return libraries.getEntity(fqn);
+    } else {
+      return entity;
+    }
   }
 }

@@ -22,7 +22,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import edu.uci.ics.sourcerer.utils.db.internal.ConstantConditionImpl.Type;
-import edu.uci.ics.sourcerer.utils.db.sql.BindVariable;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.StringColumn;
 
@@ -42,13 +41,8 @@ class StringColumnImpl extends ColumnImpl<String> implements StringColumn {
   }
   
   @Override
-  protected BindVariable bindHelper(final String value) {
-    return new BindVariable() {
-      @Override
-      public void bind(PreparedStatement statement, int index) throws SQLException {
-        statement.setString(index, value);
-      }
-    };
+  protected void bindHelper(String value, PreparedStatement statement, int index) throws SQLException {
+    statement.setString(index, value);
   }
   
   @Override

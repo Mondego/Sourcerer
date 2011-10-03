@@ -23,13 +23,15 @@ import java.sql.Types;
 
 import edu.uci.ics.sourcerer.util.BitEnumSet;
 import edu.uci.ics.sourcerer.util.BitEnumSetFactory;
-import edu.uci.ics.sourcerer.utils.db.sql.BindVariable;
+import edu.uci.ics.sourcerer.utils.db.internal.ConstantConditionImpl.Type;
+import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
+import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class SetColumn<T extends Enum<T>, S extends BitEnumSet<T>> extends ColumnImpl<S> {
+class SetColumn<T extends Enum<T>, S extends BitEnumSet<T>> extends ColumnImpl<S> {
   private BitEnumSetFactory<T, S> factory;
   
   SetColumn(DatabaseTableImpl table, String name, T[] values, BitEnumSetFactory<T, S> factory, boolean nullable) {
@@ -51,18 +53,18 @@ public class SetColumn<T extends Enum<T>, S extends BitEnumSet<T>> extends Colum
   }
   
   @Override
-  public BindVariable bindHelper(final S value) {
-    return new BindVariable() {
-      @Override
-      public void bind(PreparedStatement statement, int index) throws SQLException {
-        StringBuilder builder = new StringBuilder('\'');
-        for (T val : value) {
-          builder.append(val.name()).append(',');
-        }
-        builder.setCharAt(builder.length() - 1, ')');
-        statement.setString(index, builder.toString());
-      }
-    };
+  protected ConstantCondition<S> createConstantCondition(Selectable<S> sel, Type type) {
+    return new SetConstantConditionImpl<>(sel, type);
+  }
+  
+  @Override
+  protected void bindHelper(S value, PreparedStatement statement, int index) throws SQLException {
+    StringBuilder builder = new StringBuilder('\'');
+    for (T val : value) {
+      builder.append(val.name()).append(',');
+    }
+    builder.setCharAt(builder.length() - 1, '\'');
+    statement.setString(index, builder.toString());
   }
   
   @Override

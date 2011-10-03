@@ -20,38 +20,22 @@ package edu.uci.ics.sourcerer.utils.db.internal;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.utils.db.sql.Assignment;
-import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.Condition;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
-import edu.uci.ics.sourcerer.utils.db.sql.SetStatement;
+import edu.uci.ics.sourcerer.utils.db.sql.DeleteStatement;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-final class SetStatementImpl extends StatementImpl implements SetStatement {
+final class DeleteStatementImpl extends StatementImpl implements DeleteStatement {
   private final DatabaseTable table;
-  private final ArrayList<AssignmentImpl<?>> assignments;
   private Condition whereCondition;
   
-  SetStatementImpl(QueryExecutorImpl executor, DatabaseTable table) {
+  DeleteStatementImpl(QueryExecutorImpl executor, DatabaseTable table) {
     super(executor);
     this.table = table;
-    this.assignments = new ArrayList<>();
-  }
-  
-  @Override
-  public <T> Assignment<T> addAssignment(Column<T> column, T value) {
-    if (column.getTable() != table) {
-      throw new IllegalArgumentException("Column " + column.getName() + " is not from table " + table.getName());
-    } else {
-      AssignmentImpl<T> ass = new AssignmentImpl<T>(column, value);
-      assignments.add(ass);
-      return ass;
-    }
   }
   
   @Override
@@ -63,36 +47,22 @@ final class SetStatementImpl extends StatementImpl implements SetStatement {
       whereCondition = whereCondition.and(condition);
     }
   }
-  
+
   @Override
   public void execute() {
     if (statement == null) {
-      StringBuilder sql = new StringBuilder("UPDATE ");
-      sql.append(table.toSql()).append(" SET ");
-      boolean comma = false;
-      for (AssignmentImpl<?> assignment : assignments) {
-        if (comma) {
-          sql.append(", ");
-        } else {
-          comma = true;
-        }
-        assignment.toSql(sql);
-      }
+      StringBuilder sql = new StringBuilder("DELETE FROM ");
+      sql.append(table.toSql());
       if (whereCondition != null) {
         sql.append(" WHERE ");
-        comma = false;
         whereCondition.toSql(sql);
       }
       sql.append(";");
       prepareStatement(sql.toString());
     }
     try {
-      int i = 1;
-      for (AssignmentImpl<?> assignment : assignments) {
-        i = assignment.bind(statement, i);
-      }
       if (whereCondition != null) {
-        whereCondition.bind(statement, i);
+        whereCondition.bind(statement, 1);
       }
       
       statement.executeUpdate();

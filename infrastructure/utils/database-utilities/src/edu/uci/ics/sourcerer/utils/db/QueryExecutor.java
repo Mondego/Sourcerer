@@ -22,6 +22,7 @@ import java.io.File;
 
 import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
+import edu.uci.ics.sourcerer.utils.db.sql.DeleteStatement;
 import edu.uci.ics.sourcerer.utils.db.sql.QueryResult;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 import edu.uci.ics.sourcerer.utils.db.sql.SetStatement;
@@ -49,6 +50,7 @@ public interface QueryExecutor extends Closeable {
   public void insert(Insert insert);
   public Integer insertWithKey(Insert insert);
   public SetStatement makeSetStatement(DatabaseTable table);
+  public DeleteStatement makeDeleteStatement(DatabaseTable table);
   
   // Typed Executes
   public SelectQuery makeSelectQuery(DatabaseTable fromTable);

@@ -15,14 +15,40 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.utils.db.sql;
+package edu.uci.ics.sourcerer.utils.db.internal;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import edu.uci.ics.sourcerer.utils.db.internal.CompoundConditionImpl.Type;
+import edu.uci.ics.sourcerer.utils.db.sql.CompoundCondition;
+import edu.uci.ics.sourcerer.utils.db.sql.Condition;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface BindVariable {
-  public void bind(PreparedStatement statement, int index) throws SQLException;
+abstract class ConditionImpl implements Condition {
+  @Override
+  public CompoundCondition and(Condition condition) {
+    return new CompoundConditionImpl(this, condition, Type.AND);
+  }
+  
+  @Override
+  public CompoundCondition or(Condition condition) {
+    return new CompoundConditionImpl(this, condition, Type.OR);
+  }
+  
+  @Override
+  public int bind(PreparedStatement statement, int index) throws SQLException {
+    return index;
+  }
+  
+//  @Override
+//  public final String toSql() {
+//    StringBuilder builder = new StringBuilder();
+//    toSql(builder);
+//    return builder.toString();
+//  }
+  
+//  protected abstract void toSql(StringBuilder builder);
 }

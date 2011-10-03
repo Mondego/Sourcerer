@@ -22,6 +22,6 @@ package edu.uci.ics.sourcerer.utils.db.sql;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface SetStatement extends Statement {
-  public <T> void addAssignment(Column<T> column, T value);
-  public <T> void addWhere(ConstantCondition<T> condition, T value);
+  public <T> Assignment<T> addAssignment(Column<T> column, T value);
+  public void andWhere(Condition condition);
 }

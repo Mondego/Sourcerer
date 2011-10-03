@@ -378,8 +378,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         for (IMethodBinding method : binding.getDeclaredMethods()) {
           if (method.isDefaultConstructor()) {
             // Write the entity
-            String constructorFqn = getMethodFqn(method, true);
-            entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
+            String constructorFqn = getMethodName(method, true) + "()";
+            entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, "()", null, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
 
             // Write the inside relation
             relationWriter.writeRelation(Relation.INSIDE, constructorFqn, fqn, getUnknownLocation());
@@ -477,8 +477,15 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         for (IMethodBinding method : binding.getDeclaredMethods()) {
           if (method.isConstructor()) {
             // Write the entity
-            String constructorFqn = getAnonymousConstructorFqn(fqn, method);
-            entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
+            String args = getMethodArgs(method);
+            String rawArgs = getErasedMethodArgs(method);
+            String constructorFqn = fqn + ".<init>" + args;
+            if (args.equals(rawArgs)) {
+              entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, args, null, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
+            } else {
+              entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, args, rawArgs, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
+            }
+            
 
             // Write the inside relation
             relationWriter.writeRelation(Relation.INSIDE, constructorFqn, fqn, getUnknownLocation());
@@ -502,7 +509,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
             }
             if (superClassBinding != null) {
               String superFqn = getTypeFqn(superClassBinding);
-              String superConstructorFqn = getAnonymousConstructorFqn(superFqn, method);
+              String superConstructorFqn = superFqn + ".<init>" + args;
               relationWriter.writeRelation(Relation.CALLS, constructorFqn, superConstructorFqn, getUnknownLocation());
             }
           }
@@ -583,8 +590,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       for (IMethodBinding method : binding.getDeclaredMethods()) {
         if (method.isDefaultConstructor()) {
           // Write the entity
-          String constructorFqn = getMethodFqn(method, true);
-          entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, method.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), unknown);
+          String constructorFqn = getMethodName(method, true) + "()";
+          entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, "()", null, method.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), unknown);
 
           // Write the inside relation
           relationWriter.writeRelation(Relation.INSIDE, constructorFqn, fqn, unknown);
@@ -659,7 +666,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       String methodFqn = fqnStack.getFqn() + ".<init>" + getFuzzyMethodArgs(node.arguments());
       relationWriter.writeRelation(Relation.CALLS, fqn, methodFqn, getLocation(node.getName()));
     } else {
-      relationWriter.writeRelation(Relation.CALLS, fqn, getMethodFqn(methodBinding, false), getLocation(node.getName()));
+      relationWriter.writeRelation(Relation.CALLS, fqn, getMethodName(methodBinding, false) + getMethodArgs(methodBinding), getLocation(node.getName()));
     }
     
     // Write the instantiates relation
@@ -886,18 +893,30 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     // Build the fqn and type
     String fqn = null;
     Entity type = null;
+    
+    String signature = getMethodParams(node.parameters());
+    String rawSignature = getErasedMethodParams(node.parameters());
     if (node.isConstructor()) {
       type = Entity.CONSTRUCTOR;
-      fqn = getFuzzyConstructorFqn(node);
+      fqn = fqnStack.getFqn() + ".<init>" + signature;
+//      fqn = getFuzzyConstructorFqn(node);
 
       // Write the entity
-      entityWriter.writeEntity(Entity.CONSTRUCTOR, fqn, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+      if (signature.equals(rawSignature)) {
+        entityWriter.writeEntity(Entity.CONSTRUCTOR, fqn, signature, null, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+      } else {
+        entityWriter.writeEntity(Entity.CONSTRUCTOR, fqn, signature, rawSignature, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+      }
     } else {
       type = Entity.METHOD;
-      fqn = getFuzzyMethodFqn(node);
+      fqn = fqnStack.getFqn() + '.' + node.getName().getIdentifier();
       
       // Write the entity
-      entityWriter.writeEntity(Entity.METHOD, fqn, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+      if (signature.equals(rawSignature)) {
+        entityWriter.writeEntity(Entity.METHOD, fqn, signature, null, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+      } else {
+        entityWriter.writeEntity(Entity.METHOD, fqn, signature, rawSignature, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+      }
       
       // Write the returns relation
       Type returnType = node.getReturnType2();
@@ -936,7 +955,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         ITypeBinding top = bindingStack.pop();
         for (IMethodBinding methodBinding : top.getDeclaredMethods()) {
           if (method.overrides(methodBinding)) {
-            relationWriter.writeRelation(Relation.OVERRIDES, fqn, getMethodFqn(methodBinding, false), getLocation(node));
+            relationWriter.writeRelation(Relation.OVERRIDES, fqn, getMethodName(methodBinding, false) + getMethodArgs(methodBinding), getLocation(node));
           }
         }
         ITypeBinding superType = top.getSuperclass();
@@ -990,15 +1009,16 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
    *  <li>Calls relation to <code>IRelationWriter</code>.</li>
    *</ul>
    */
+  @SuppressWarnings("unchecked")
   @Override
   public boolean visit(MethodInvocation node) {
     // Get the fqn
     String fqn = null;
     IMethodBinding binding = node.resolveMethodBinding();
     if (binding == null) {
-      fqn = getFuzzyMethodFqn(node);
+      fqn = UNKNOWN + "." + node.getName().getFullyQualifiedName() + getFuzzyMethodArgs(node.arguments());
     } else {
-      fqn = getMethodFqn(binding, false);
+      fqn = getMethodName(binding, false) + getMethodArgs(binding);
     }
 
     // Write the calls relation
@@ -1022,7 +1042,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     if (binding == null) {
       fqn = getUnknownSuperFqn(node.getName().getIdentifier()) + getFuzzyMethodArgs(node.arguments());
     } else {
-      fqn = getMethodFqn(binding, false);
+      fqn = getMethodName(binding, false) + getMethodArgs(binding);
       
     } 
     
@@ -1041,6 +1061,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
    *  </ul></li>
    *</ul>
    */
+  @SuppressWarnings("unchecked")
   @Override
   public boolean visit(ClassInstanceCreation node) {
     if (node.getAnonymousClassDeclaration() == null) {
@@ -1049,9 +1070,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         String fqn = null;
         IMethodBinding binding = node.resolveConstructorBinding();
         if (binding == null) {
-          fqn = getFuzzyConstructorFqn(node);
+          fqn = getTypeFqn(node.getType()) + ".<init>" + getFuzzyMethodArgs(node.arguments());
         } else {
-          fqn = getMethodFqn(binding, false);
+          fqn = getMethodName(binding, false) + getMethodArgs(binding);
         }
   
         // Write the calls relation
@@ -1081,7 +1102,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     if (binding == null) {
       fqn = fqnStack.getFqn() + ".<init>" + getFuzzyMethodArgs(node.arguments()); 
     } else {
-      fqn = getMethodFqn(binding, false);
+      fqn = getMethodName(binding, false) + getMethodArgs(binding);
     }
 
     // Write the calls relation
@@ -1108,7 +1129,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     if (binding == null) {
       fqn = getUnknownSuperFqn("<init>") + getFuzzyMethodArgs(node.arguments());
     } else {
-      fqn = getMethodFqn(binding, false);
+      fqn = getMethodName(binding, false) + getMethodArgs(binding);
     }
 
     // Write the call relation
@@ -1981,44 +2002,91 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       return compilationUnitSource.substring(node.getStartPosition(), node.getStartPosition() + node.getLength());
     }
   }
-  @SuppressWarnings("unchecked")
-  private String getFuzzyConstructorFqn(ClassInstanceCreation creation) {
-    StringBuilder fqnBuilder = new StringBuilder();
-    fqnBuilder.append(getTypeFqn(creation.getType())).append(".<init>");
-    getFuzzyMethodArgs(fqnBuilder, creation.arguments());
-    return fqnBuilder.toString();
+  
+//  @SuppressWarnings("unchecked")
+//  private String getFuzzyConstructorFqn(ClassInstanceCreation creation) {
+//    StringBuilder fqnBuilder = new StringBuilder();
+//    fqnBuilder.append(getTypeFqn(creation.getType())).append(".<init>");
+//    getFuzzyMethodArgs(fqnBuilder, creation.arguments());
+//    return fqnBuilder.toString();
+//  }
+  
+//  @SuppressWarnings("unchecked")
+//  private String getFuzzyConstructorFqn(MethodDeclaration declaration) {
+//    StringBuilder fqnBuilder = new StringBuilder();
+//    fqnBuilder.append(fqnStack.getFqn()).append(".<init>");
+//    getMethodParams(fqnBuilder, declaration.parameters());
+//    return fqnBuilder.toString();
+//  }
+
+//  @SuppressWarnings("unchecked")
+//  private String getFuzzyMethodFqn(MethodInvocation invocation) {
+//    StringBuilder fqnBuilder = new StringBuilder();
+//    fqnBuilder.append(UNKNOWN).append(".").append(invocation.getName().getFullyQualifiedName());
+//    getFuzzyMethodArgs(fqnBuilder, invocation.arguments());
+//    return fqnBuilder.toString();
+//  }
+  
+//  @SuppressWarnings("unchecked")
+//  private String getFuzzyMethodFqn(MethodDeclaration declaration) {
+//    StringBuilder fqnBuilder = new StringBuilder();
+//    fqnBuilder.append(fqnStack.getFqn()).append('.').append(declaration.getName().getIdentifier());
+//    getMethodParams(fqnBuilder, declaration.parameters());
+//    return fqnBuilder.toString();
+//  }
+
+//  private String getFuzzyMethodArgs(Iterable<Expression> arguments) {
+//    StringBuilder argBuilder = new StringBuilder();
+//    getFuzzyMethodArgs(argBuilder, arguments);
+//    return argBuilder.toString();
+//  }
+
+  private String getMethodArgs(IMethodBinding binding) {
+    StringBuilder builder = new StringBuilder();
+    getMethodArgs(builder, binding);
+    return builder.toString();
   }
   
-  @SuppressWarnings("unchecked")
-  private String getFuzzyConstructorFqn(MethodDeclaration declaration) {
-    StringBuilder fqnBuilder = new StringBuilder();
-    fqnBuilder.append(fqnStack.getFqn()).append(".<init>");
-    getFuzzyMethodParams(fqnBuilder, declaration.parameters());
-    return fqnBuilder.toString();
-  }
-
-  @SuppressWarnings("unchecked")
-  private String getFuzzyMethodFqn(MethodInvocation invocation) {
-    StringBuilder fqnBuilder = new StringBuilder();
-    fqnBuilder.append(UNKNOWN).append(".").append(invocation.getName().getFullyQualifiedName());
-    getFuzzyMethodArgs(fqnBuilder, invocation.arguments());
-    return fqnBuilder.toString();
+  private void getMethodArgs(StringBuilder argBuilder, IMethodBinding binding) {
+    argBuilder.append('(');
+    boolean first = true;
+    for (ITypeBinding paramType : binding.getParameterTypes()) {
+      if (first) {
+        first = false;
+      } else {
+        argBuilder.append(',');
+      }
+      argBuilder.append(getTypeFqn(paramType));
+    }
+    argBuilder.append(')');
   }
   
-  @SuppressWarnings("unchecked")
-  private String getFuzzyMethodFqn(MethodDeclaration declaration) {
-    StringBuilder fqnBuilder = new StringBuilder();
-    fqnBuilder.append(fqnStack.getFqn()).append('.').append(declaration.getName().getIdentifier());
-    getFuzzyMethodParams(fqnBuilder, declaration.parameters());
-    return fqnBuilder.toString();
+  private String getErasedMethodArgs(IMethodBinding binding) {
+    StringBuilder builder = new StringBuilder();
+    getErasedMethodArgs(builder, binding);
+    return builder.toString();
   }
-
+  
+  private void getErasedMethodArgs(StringBuilder argBuilder, IMethodBinding binding) {
+    argBuilder.append('(');
+    boolean first = true;
+    for (ITypeBinding paramType : binding.getParameterTypes()) {
+      if (first) {
+        first = false;
+      } else {
+        argBuilder.append(',');
+      }
+      argBuilder.append(getErasedTypeFqn(paramType));
+    }
+    argBuilder.append(')');
+  }
+  
   private String getFuzzyMethodArgs(Iterable<Expression> arguments) {
-    StringBuilder argBuilder = new StringBuilder();
-    getFuzzyMethodArgs(argBuilder, arguments);
-    return argBuilder.toString();
+    StringBuilder builder = new StringBuilder();
+    getFuzzyMethodArgs(builder, arguments);
+    return builder.toString();
   }
-
+  
   private void getFuzzyMethodArgs(StringBuilder argBuilder, Iterable<Expression> arguments) {
     boolean first = true;
     argBuilder.append('(');
@@ -2038,7 +2106,13 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     argBuilder.append(')');
   }
   
-  private void getFuzzyMethodParams(StringBuilder argBuilder, Iterable<SingleVariableDeclaration> parameters) {
+  private String getMethodParams(Iterable<SingleVariableDeclaration> parameters) {
+    StringBuilder builder = new StringBuilder();
+    getMethodParams(builder, parameters);
+    return builder.toString();
+  }
+  
+  private void getMethodParams(StringBuilder argBuilder, Iterable<SingleVariableDeclaration> parameters) {
     boolean first = true;
     argBuilder.append('(');
     for (SingleVariableDeclaration param : parameters) {
@@ -2056,15 +2130,40 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     }
     argBuilder.append(')');
   }
-
-  private String getAnonymousConstructorFqn(String classFqn, IMethodBinding binding) {
-    StringBuilder fqnBuilder = new StringBuilder(classFqn);
-    fqnBuilder.append(".<init>");
-    getMethodArgs(fqnBuilder, binding);
-    return fqnBuilder.toString();
+  
+  private String getErasedMethodParams(Iterable<SingleVariableDeclaration> parameters) {
+    StringBuilder builder = new StringBuilder();
+    getErasedMethodParams(builder, parameters);
+    return builder.toString();
   }
   
-  private String getMethodFqn(IMethodBinding binding, boolean declaration) {
+  private void getErasedMethodParams(StringBuilder argBuilder, Iterable<SingleVariableDeclaration> parameters) {
+    boolean first = true;
+    argBuilder.append('(');
+    for (SingleVariableDeclaration param : parameters) {
+      if (first) {
+        first = false;
+      } else {
+        argBuilder.append(',');
+      }
+      argBuilder.append(getErasedTypeFqn(param.getType()));
+      if (param.isVarargs()) {
+        argBuilder.append("[]");
+      } else if (param.getExtraDimensions() != 0) {
+        argBuilder.append(BRACKETS.substring(0, 2 * param.getExtraDimensions()));
+      }
+    }
+    argBuilder.append(')');
+  }
+
+//  private String getAnonymousConstructorFqn(String classFqn, IMethodBinding binding) {
+//    StringBuilder fqnBuilder = new StringBuilder(classFqn);
+//    fqnBuilder.append(".<init>");
+//    getMethodArgs(fqnBuilder, binding);
+//    return fqnBuilder.toString();
+//  }
+  
+  private String getMethodName(IMethodBinding binding, boolean declaration) {
     binding = binding.getMethodDeclaration();
     StringBuilder fqnBuilder = new StringBuilder();
     ITypeBinding declaringClass = binding.getDeclaringClass();
@@ -2078,22 +2177,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       }
       fqnBuilder.append('.').append(binding.isConstructor() ? "<init>" : binding.getName());
     }
-    getMethodArgs(fqnBuilder, binding);
     return fqnBuilder.toString();
-  }
-
-  private void getMethodArgs(StringBuilder argBuilder, IMethodBinding binding) {
-    argBuilder.append('(');
-    boolean first = true;
-    for (ITypeBinding paramType : binding.getParameterTypes()) {
-      if (first) {
-        first = false;
-      } else {
-        argBuilder.append(',');
-      }
-      argBuilder.append(getTypeFqn(paramType));
-    }
-    argBuilder.append(')');
   }
 
   private static final String BRACKETS = "[][][][][][][][][][][][][][][][][][][][]";
@@ -2104,6 +2188,37 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   
   private String getUnknownSuperFqn(String name) {
     return "(1SUPER)" + name;
+  }
+  
+  private String getErasedTypeFqn(Type type) {
+    if (type == null) {
+      logger.log(Level.SEVERE, "Attempt to get type fqn of null type!");
+      throw new NullPointerException("Attempt to get type fqn of null type!");
+    }
+    ITypeBinding binding = type.resolveBinding();
+    if (binding == null) {
+      if (type.isPrimitiveType()) {
+        return ((PrimitiveType)type).getPrimitiveTypeCode().toString();
+      } else if (type.isSimpleType()) {
+        return getUnknownFqn(((SimpleType)type).getName().getFullyQualifiedName());
+      } else if (type.isArrayType()) {
+        ArrayType arrayType = (ArrayType) type;
+        Type elementType = arrayType.getElementType();
+        if (elementType == null) {
+          return getUnknownFqn(BRACKETS.substring(0, 2 * arrayType.getDimensions()));
+        } else {
+          return getErasedTypeFqn(elementType) + BRACKETS.substring(0, 2 * arrayType.getDimensions());
+        }
+      } else if (type.isParameterizedType()) {
+        ParameterizedType pType = (ParameterizedType)type;
+        return getErasedTypeFqn(pType.getType());
+      } else {
+        logger.log(Level.SEVERE, "Unexpected node type for unresolved type!" + type.toString());
+        return UNKNOWN;
+      }
+    } else {
+      return getErasedTypeFqn(binding);
+    }
   }
   
   @SuppressWarnings("unchecked")
@@ -2168,6 +2283,15 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       return binding.getErasure();
     } else {
       return binding;
+    }
+  }
+  
+  private String getErasedTypeFqn(ITypeBinding binding) {
+    if (binding == null) {
+      logger.log(Level.SEVERE, "Null type binding", new NullPointerException());
+      return UNKNOWN;
+    } else {
+      return getTypeFqn(binding.getErasure());
     }
   }
   

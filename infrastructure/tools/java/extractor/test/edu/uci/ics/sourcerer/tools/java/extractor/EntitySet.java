@@ -65,7 +65,7 @@ class EntitySet {
           String fqn = matcher.group(1) + ".<clinit>()";
           if (!initializers.contains(fqn)) {
             initializers.add(fqn);
-            list.add(new EntityEX(Entity.INITIALIZER, fqn, entity.getModifiers(), null, entity.getLocation()));
+            list.add(new EntityEX(Entity.INITIALIZER, fqn, null, null, entity.getModifiers(), null, entity.getLocation()));
           }
         }
       } else {

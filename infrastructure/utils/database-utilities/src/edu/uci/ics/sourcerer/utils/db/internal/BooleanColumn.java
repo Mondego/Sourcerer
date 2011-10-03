@@ -21,8 +21,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import edu.uci.ics.sourcerer.utils.db.sql.BindVariable;
-
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
@@ -32,13 +30,8 @@ class BooleanColumn extends ColumnImpl<Boolean> {
   }
   
   @Override
-  protected BindVariable bindHelper(final Boolean value) {
-    return new BindVariable() {
-      @Override
-      public void bind(PreparedStatement statement, int index) throws SQLException {
-        statement.setString(index, value.toString());
-      }
-    };
+  protected void bindHelper(Boolean value, PreparedStatement statement, int index) throws SQLException {
+    statement.setString(index, value.toString());
   }
   
   @Override

@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.utils.db.internal;
 
 import java.util.Collection;
 
+import edu.uci.ics.sourcerer.util.ArrayUtils;
 import edu.uci.ics.sourcerer.utils.db.sql.InConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 import edu.uci.ics.sourcerer.utils.db.sql.Table;
@@ -26,7 +27,7 @@ import edu.uci.ics.sourcerer.utils.db.sql.Table;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class InConstantConditionImpl<T> implements InConstantCondition<T> {
+public class InConstantConditionImpl<T> extends ConditionImpl implements InConstantCondition<T> {
   enum Type {
     IN,
     NOT_IN;
@@ -43,8 +44,10 @@ public class InConstantConditionImpl<T> implements InConstantCondition<T> {
   }
   
   @Override 
-  public Table getTable() {
-    return sel.getTable();
+  public void verifyTables(Table ... tables) {
+    if (!ArrayUtils.containsReference(tables, sel.getTable())) {
+      throw new IllegalStateException("Missing " + sel.getTable());
+    }
   }
   
   @Override
@@ -53,9 +56,8 @@ public class InConstantConditionImpl<T> implements InConstantCondition<T> {
   }
   
   @Override
-  public String toSql() {
-    StringBuilder builder = new StringBuilder();
-    builder.append(sel.toSql());
+  public void toSql(StringBuilder builder) {
+    sel.toSql(builder);
     switch (type) {
       case IN: builder.append(" IN ("); break;
       case NOT_IN: builder.append(" NOT IN ("); break;
@@ -64,6 +66,5 @@ public class InConstantConditionImpl<T> implements InConstantCondition<T> {
       builder.append(sel.to(value)).append(',');
     }
     builder.setCharAt(builder.length() - 1, ')');
-    return builder.toString();
   }
 }

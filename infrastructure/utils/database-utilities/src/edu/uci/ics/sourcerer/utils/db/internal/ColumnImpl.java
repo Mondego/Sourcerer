@@ -22,7 +22,6 @@ import java.sql.SQLException;
 import java.util.Collection;
 
 import edu.uci.ics.sourcerer.utils.db.internal.ConstantConditionImpl.Type;
-import edu.uci.ics.sourcerer.utils.db.sql.BindVariable;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
@@ -81,24 +80,19 @@ abstract class ColumnImpl<T> implements Column<T> {
   }
 
   @Override
-  public final BindVariable bind(T value) {
+  public final void bind(T value, PreparedStatement statement, int index) throws SQLException {
     if (value == null) {
       if (nullable) {
-        return new BindVariable() {
-          @Override
-          public void bind(PreparedStatement statement, int index) throws SQLException {
-            statement.setNull(index, sqlType);
-          }
-        };
+        statement.setNull(index, sqlType);
       } else {
         throw new IllegalArgumentException(name + " does not accept null values.");
       }
     } else {
-      return bindHelper(value);
+      bindHelper(value, statement, index);
     }
   }
   
-  protected abstract BindVariable bindHelper(T value);
+  protected abstract void bindHelper(T value, PreparedStatement statement, int index) throws SQLException;
   
   @Override
   public final T from(String value) {
@@ -115,7 +109,7 @@ abstract class ColumnImpl<T> implements Column<T> {
   public final String to(T value) {
     if (value == null) {
       if (nullable) {
-        return null;
+        return "NULL";
       } else {
         throw new IllegalArgumentException(name + " is not nullable");
       }
@@ -140,18 +134,32 @@ abstract class ColumnImpl<T> implements Column<T> {
   }
   
   @Override
-  public ComparisonCondition compareEquals(Selectable<T> other) {
+  public final ComparisonCondition compareEquals(Selectable<T> other) {
     return new ComparisonConditionImpl(this, other);
   }
   
-  @Override 
-  public ConstantCondition<T> compareEquals() {
-    return new ConstantConditionImpl<>(this, Type.EQUALS);
+  protected ConstantCondition<T> createConstantCondition(Selectable<T> sel, Type type) {
+    return new ConstantConditionImpl<>(sel, type);
   }
   
   @Override 
-  public ConstantCondition<T> compareNotEquals() {
-    return new ConstantConditionImpl<>(this, Type.NOT_EQUALS);
+  public final ConstantCondition<T> compareEquals() {
+    return createConstantCondition(this, Type.EQUALS);
+  }
+  
+  @Override
+  public final ConstantCondition<T> compareEquals(T value) {
+    return createConstantCondition(this, Type.EQUALS).setValue(value);
+  }
+  
+  @Override 
+  public final ConstantCondition<T> compareNotEquals() {
+    return createConstantCondition(this, Type.NOT_EQUALS);
+  }
+  
+  @Override 
+  public final ConstantCondition<T> compareNotEquals(T value) {
+    return createConstantCondition(this, Type.NOT_EQUALS).setValue(value);
   }
   
   @Override
@@ -160,12 +168,19 @@ abstract class ColumnImpl<T> implements Column<T> {
   }
   
   @Override
-  public String toSql() {
-    return table.getName() + "." + name;
+  public InConstantCondition<T> compareNotIn(Collection<T> values) {
+    return new InConstantConditionImpl<>(this, InConstantConditionImpl.Type.NOT_IN, values);
+  }
+  
+  @Override
+  public final void toSql(StringBuilder builder) {
+    builder.append(table.getName()).append(".").append(name);
   }
   
   @Override
   public String toString() {
-    return toSql();
+    StringBuilder builder = new StringBuilder();
+    toSql(builder);
+    return builder.toString();
   }
 }

@@ -17,20 +17,9 @@
  */
 package edu.uci.ics.sourcerer.utils.db.sql;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface Condition {
-  public CompoundCondition and(Condition condition);
-  
-  public CompoundCondition or(Condition condition);
-  
-  public void verifyTables(Table ... tables);
-  
-  public int bind(PreparedStatement statement, int index) throws SQLException;
-  
-  public void toSql(StringBuilder builder);
+public interface CompoundCondition extends Condition {
 }

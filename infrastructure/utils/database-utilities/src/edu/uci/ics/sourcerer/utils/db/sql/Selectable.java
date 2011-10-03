@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.utils.db.sql;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Collection;
 
 /**
@@ -27,12 +29,15 @@ public interface Selectable<T> {
   
   public ComparisonCondition compareEquals(Selectable<T> other);
   public ConstantCondition<T> compareEquals();
+  public ConstantCondition<T> compareEquals(T value);
   public ConstantCondition<T> compareNotEquals();
+  public ConstantCondition<T> compareNotEquals(T value);
   public InConstantCondition<T> compareIn(Collection<T> values);
+  public InConstantCondition<T> compareNotIn(Collection<T> values);
   
-  public String toSql();
+  public void toSql(StringBuilder builder);
   
   public String to(T value);
   public T from(String value);
-  public BindVariable bind(T value);
+  public void bind(T value, PreparedStatement statement, int index) throws SQLException;
 }

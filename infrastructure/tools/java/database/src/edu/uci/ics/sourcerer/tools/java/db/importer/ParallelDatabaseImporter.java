@@ -36,6 +36,7 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
+import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaRepository;
@@ -44,6 +45,7 @@ import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
+import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -122,11 +124,11 @@ public final class ParallelDatabaseImporter {
     int numThreads = THREAD_COUNT.getValue();
     
     Iterable<? extends ExtractedJarFile> iterable = createSynchronizedIterable(task, libs.iterator());
-    task.start("Performing import stage one with " + numThreads + " threads");
+    task.start("Performing entity import with " + numThreads + " threads");
     Collection<Thread> threads = new ArrayList<>(numThreads);
     for (int i = 0; i < numThreads; i++) {
-      ImportJavaLibrariesStageOne importJavaLibraries = new ImportJavaLibrariesStageOne(iterable);
-      threads.add(importJavaLibraries.start());
+      JavaLibraryEntitiesImporter importer = new JavaLibraryEntitiesImporter(iterable);
+      threads.add(importer.start());
     }
     
     for (Thread t : threads) {
@@ -141,12 +143,54 @@ public final class ParallelDatabaseImporter {
     SynchronizedUnknownsMap unknowns = new SynchronizedUnknownsMap(task);
     
     iterable = createSynchronizedIterable(task, libs.iterator());
-    task.start("Performing import stage two with " + numThreads + " threads");
+    task.start("Performing structural relation import with " + numThreads + " threads");
 
     threads.clear();
     for (int i = 0; i < numThreads; i++) {
-      ImportJavaLibrariesStageTwo importJavaLibraries = new ImportJavaLibrariesStageTwo(iterable, unknowns);
-      threads.add(importJavaLibraries.start());
+      JavaLibraryStructuralRelationsImporter importer = new JavaLibraryStructuralRelationsImporter(iterable, unknowns);
+      threads.add(importer.start());
+    }
+    
+    for (Thread t : threads) {
+      try {
+        t.join();
+      } catch (InterruptedException e) {
+        logger.log(Level.SEVERE, "Thread interrupted", e);
+      }
+    }
+    task.finish();
+    
+    final Collection<Integer> libraryProjects = new ArrayList<>();
+    new DatabaseRunnable() {
+      @Override
+      public void action() {
+        try (SelectQuery query = exec.makeSelectQuery(ProjectsTable.TABLE)) {
+          // Get the Java Library projectIDs
+          query.addSelect(ProjectsTable.PROJECT_ID);
+          query.andWhere(ProjectsTable.PROJECT_TYPE.compareEquals(Project.JAVA_LIBRARY));
+          
+          libraryProjects.addAll(query.select().toCollection(ProjectsTable.PROJECT_ID));
+          
+          // Get the primitives projectID
+          query.clearWhere();
+  
+          query.andWhere(ProjectsTable.NAME.compareEquals(ProjectsTable.PRIMITIVES_PROJECT).and(
+              ProjectsTable.PROJECT_TYPE.compareEquals(Project.SYSTEM)));
+          
+          libraryProjects.add(query.select().toSingleton(ProjectsTable.PROJECT_ID));
+        }
+      }
+    }.run();
+    
+    SynchronizedEntityMap libraries = new SynchronizedEntityMap(task, libraryProjects, unknowns);
+    
+    iterable = createSynchronizedIterable(task, libs.iterator());
+    task.start("Performing referential relation import with " + numThreads + " threads");
+
+    threads.clear();
+    for (int i = 0; i < numThreads; i++) {
+      JavaLibraryReferentialRelationsImporter importer = new JavaLibraryReferentialRelationsImporter(iterable, libraries);
+      threads.add(importer.start());
     }
     
     for (Thread t : threads) {

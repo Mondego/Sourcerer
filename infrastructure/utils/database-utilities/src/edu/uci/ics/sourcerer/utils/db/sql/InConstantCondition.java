@@ -23,6 +23,5 @@ import java.util.Collection;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface InConstantCondition<T> extends Condition {
-  public Table getTable();
   public Collection<T> getValues();
 }

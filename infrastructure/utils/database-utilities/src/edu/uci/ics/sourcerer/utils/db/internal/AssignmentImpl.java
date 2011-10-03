@@ -15,11 +15,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.utils.db.sql;
+package edu.uci.ics.sourcerer.utils.db.internal;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import edu.uci.ics.sourcerer.utils.db.sql.Assignment;
+import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface DeleteQuery {
+class AssignmentImpl <T> implements Assignment<T> {
+  private Selectable<T> sel;
+  private T value;
 
+  AssignmentImpl(Selectable<T> sel, T value) {
+    this.sel = sel;
+    this.value = value;
+  }
+  
+  @Override
+  public void setValue(T value) {
+    this.value = value;
+  }
+
+  public int bind(PreparedStatement statement, int index) throws SQLException {
+    sel.bind(value, statement, index);
+    return index + 1;
+  }
+
+  public void toSql(StringBuilder builder) {
+    sel.toSql(builder);
+    builder.append("=?");
+  }
 }

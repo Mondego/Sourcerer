@@ -46,7 +46,7 @@ public class ProjectMetricQueries extends Queries {
   }
 
   public Collection<ProjectMetricDB> getMetrics() {
-    return executor.select(PROJECT_METRIC_TRANSLATOR);
+    return executor.addSelect(PROJECT_METRIC_TRANSLATOR);
   }
   
   public Collection<ProjectMetricDB> getMetricsByProjectID(Integer projectID) {

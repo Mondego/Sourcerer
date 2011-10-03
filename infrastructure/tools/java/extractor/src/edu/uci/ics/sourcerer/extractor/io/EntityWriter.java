@@ -29,4 +29,6 @@ public interface EntityWriter extends ExtractorWriter {
   public void writeEntity(EntityEX entity);
   
   public void writeEntity(Entity type, String fqn, int modifiers, Metrics metrics, Location location);
+  
+  public void writeEntity(Entity type, String fqn, String signature, String rawSignature, int modifiers, Metrics metrics, Location location);
 }

@@ -25,12 +25,9 @@ public interface SelectQuery extends Query {
   public void addSelect(Selectable<?> select);
   public void addSelects(Selectable<?> ... selects);
   public void clearSelect();
-  public void addWhere(InConstantCondition<?> condition);
-  public void addWhere(ConstantCondition<?> condition);
-  public <T> void addWhere(ConstantCondition<T> condition, T value);
-  public <T> void updateWhere(ConstantCondition<T> condition, T value);
+  public void andWhere(Condition condition);
   public void clearWhere();
-  public void addOrderBy(Selectable<?> select, boolean ascending);
+  public void orderBy(Selectable<?> select, boolean ascending);
   
   public TypedQueryResult select();
   public TypedQueryResult selectStreamed();

@@ -44,12 +44,12 @@ public class ImportJavaLibrariesStageTwo extends DatabaseImporter {
     try (SelectQuery query = exec.makeSelectQuery(ProjectsTable.TABLE)) {
       query.addSelect(ProjectsTable.PROJECT_ID);
       ConstantCondition<String> nameCond = ProjectsTable.NAME.compareEquals();
-      query.addWhere(nameCond, ProjectsTable.PRIMITIVES_PROJECT);
-      query.addWhere(ProjectsTable.PROJECT_TYPE.compareEquals(), Project.JAVA_LIBRARY);
+      query.andWhere(nameCond, ProjectsTable.PRIMITIVES_PROJECT);
+      query.andWhere(ProjectsTable.PROJECT_TYPE.compareEquals(), Project.JAVA_LIBRARY);
         
       for (ExtractedJarFile library : libraries) {
         task.start("Importing " + library.getProperties().NAME.getValue());
-        query.updateWhere(nameCond, library.getProperties().NAME.getValue());
+        query.setWhereValue(nameCond, library.getProperties().NAME.getValue());
         Integer projectID = query.select().toSingleton(ProjectsTable.PROJECT_ID);
         
         loadEntityMap(projectID);

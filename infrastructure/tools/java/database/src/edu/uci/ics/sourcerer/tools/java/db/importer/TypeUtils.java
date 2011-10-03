@@ -81,7 +81,15 @@ public final class TypeUtils {
   }
   
   private static String eraseParameter(String var) {
-    if (isParametrizedType(var)) {
+    if (isArray(var)) {
+      Pair<String, Integer> arr = breakArray(var);
+      StringBuilder result = new StringBuilder();
+      result.append(eraseParameter(arr.getFirst()));
+      for (int i = 0, max = arr.getSecond(); i < max; i++) {
+        result.append("[]");
+      }
+      return result.toString();
+    } else if (isParametrizedType(var)) {
       return getBaseType(var);
     } else if (isTypeVariable(var)) {
       Collection<String> bounds = breakTypeVariable(var);
@@ -101,10 +109,48 @@ public final class TypeUtils {
   }
   
   public static Pair<String, Integer> breakArray(String fqn) {
-    int arrIndex = fqn.indexOf("[]");
-    String elementFqn = fqn.substring(0, arrIndex);
-    int dimensions = (fqn.length() - arrIndex) / 2;
-    return new Pair<String, Integer>(elementFqn, dimensions);
+    StringBuilder builder = new StringBuilder();
+    int depth = 0;
+    int dim = 0;
+    boolean expectingClose = false;
+    for (char c : fqn.toCharArray()) {
+      if (depth == 0) {
+        if (dim == 0) {
+          if (c == '<') {
+            depth++;
+            builder.append(c);
+          } else if (c == '[') {
+            dim++;
+            expectingClose = true;
+          } else {
+            builder.append(c);
+          }
+        } else {
+          if (expectingClose) {
+            if (c == ']') {
+              expectingClose = false;
+            } else {
+              throw new IllegalArgumentException(fqn + " is not a valid array type");
+            }
+          } else {
+            if (c == '[') {
+              dim++;
+              expectingClose = true;
+            } else {
+              throw new IllegalArgumentException(fqn + " is not a valid array type");
+            }
+          }
+        }
+      } else {
+        if (c == '<') {
+          depth++;
+        } else if (c == '>') {
+          depth--;
+        }
+        builder.append(c);
+      }
+    }
+    return new Pair<String, Integer>(builder.toString(), dim);
   }
   
   public static boolean isWildcard(String fqn) {

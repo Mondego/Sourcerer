@@ -32,10 +32,8 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.util.ArrayUtils;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
-import edu.uci.ics.sourcerer.utils.db.sql.BindVariable;
 import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
-import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
-import edu.uci.ics.sourcerer.utils.db.sql.InConstantCondition;
+import edu.uci.ics.sourcerer.utils.db.sql.Condition;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 import edu.uci.ics.sourcerer.utils.db.sql.Table;
@@ -51,18 +49,13 @@ class SelectQueryImpl implements SelectQuery {
   private Table[] tables;
   private ComparisonCondition[] joinConditions;
   private Map<Selectable<?>, Integer> selects;
-  private ArrayList<ConstantCondition<?>> constantConditions;
-  private ArrayList<BindVariable> constantConditionValues;
-  private ArrayList<InConstantCondition<?>> inConstants;
+  private Condition whereCondition;
   private ArrayList<Pair<Selectable<?>, Boolean>> orderBy;
   
   SelectQueryImpl(QueryExecutorImpl executor) {
     this.executor = executor;
     
     selects = new LinkedHashMap<>();
-    constantConditions = new ArrayList<>();
-    constantConditionValues = new ArrayList<>();
-    inConstants = new ArrayList<>();
     orderBy = new ArrayList<>();
   }
   
@@ -150,67 +143,24 @@ class SelectQueryImpl implements SelectQuery {
   }
   
   @Override
-  public void addWhere(InConstantCondition<?> condition) {
+  public void andWhere(Condition condition) {
     verifyFresh();
-    inConstants.add(condition);
-  }
-  
-  @Override
-  public void addWhere(ConstantCondition<?> condition) {
-    if (!ArrayUtils.contains(tables, condition.getTable())) {
-      throw new IllegalStateException("Cannot add " + condition + " as its table is not in the from clause");
-    }
-    
-    int ind = constantConditions.indexOf(condition);
-    if (ind == -1) {
-      verifyFresh();
-      constantConditions.add(condition);
-      constantConditionValues.add(null);
+    condition.verifyTables(tables);
+    if (whereCondition == null) {
+      whereCondition = condition;
     } else {
-      throw new IllegalArgumentException("Condition already added, use updateWhere instead.");
-    }
-  }
-  
-  @Override
-  public <T> void addWhere(ConstantCondition<T> condition, T value) {
-    if (!ArrayUtils.contains(tables, condition.getTable())) {
-      throw new IllegalStateException("Cannot add " + condition + " as its table is not in the from clause");
-    }
-    
-    int ind = constantConditions.indexOf(condition);
-    if (ind == -1) {
-      verifyFresh();
-      constantConditions.add(condition);
-      constantConditionValues.add(condition.bind(value));
-    } else {
-      throw new IllegalArgumentException("Condition already added, use updateWhere instead.");
-    }
-  }
-  
-  @Override 
-  public <T> void updateWhere(ConstantCondition<T> condition, T value) {
-    if (!ArrayUtils.contains(tables, condition.getTable())) {
-      throw new IllegalStateException("Cannot add " + condition + " as its table is not in the from clause");
-    }
-    
-    int ind = constantConditions.indexOf(condition);
-    if (ind == -1) {
-      throw new IllegalArgumentException("Condition not added, use addWhere instead.");
-    } else {
-      constantConditionValues.set(ind, condition.bind(value));
+      whereCondition = whereCondition.and(condition);
     }
   }
   
   @Override
   public void clearWhere() {
     close();
-    constantConditions.clear();
-    constantConditionValues.clear();
-    inConstants.clear();
+    whereCondition = null;
   }
   
   @Override
-  public void addOrderBy(Selectable<?> select, boolean ascending) {
+  public void orderBy(Selectable<?> select, boolean ascending) {
     orderBy.add(new Pair<Selectable<?>, Boolean>(select, ascending));
   }
   
@@ -235,7 +185,7 @@ class SelectQueryImpl implements SelectQuery {
         } else {
           comma = true;
         }
-        sql.append(select.toSql());
+        select.toSql(sql);
       }
       
       sql.append(" FROM ");
@@ -260,30 +210,15 @@ class SelectQueryImpl implements SelectQuery {
           } else {
             rest = true;
           }
-          sql.append(cond.toSql());
+          cond.toSql(sql);
         }
       }
       
-      if (!constantConditions.isEmpty()) {
+      if (whereCondition != null) {
         sql.append(" WHERE ");
-        boolean rest = false;
-        for (ConstantCondition<?> cond : constantConditions) {
-          if (rest) {
-            sql.append(" AND ");
-          } else {
-            rest = true;
-          }
-          sql.append(cond.toSql());
-        }
-        for (InConstantCondition<?> cond : inConstants) {
-          if (rest) {
-            sql.append(" AND ");
-          } else {
-            rest = true;
-          }
-          sql.append(cond.toSql());
-        }
+        whereCondition.toSql(sql);
       }
+      
       if (!orderBy.isEmpty()) {
         sql.append(" ORDER BY ");
         boolean rest = false;
@@ -293,7 +228,7 @@ class SelectQueryImpl implements SelectQuery {
           } else {
             rest = true;
           }
-          sql.append(pair.getFirst().toSql());
+          pair.getFirst().toSql(sql);
           sql.append(pair.getSecond() ? " ASC" : " DESC");
         }
       }
@@ -301,10 +236,9 @@ class SelectQueryImpl implements SelectQuery {
       statement = executor.prepareStatement(sql.toString());
     }
     
-    int i = 1;
     try {
-      for (BindVariable bind : constantConditionValues) {
-        bind.bind(statement, i++);
+      if (whereCondition != null) {
+        whereCondition.bind(statement, 1);
       }
       
       statement.execute();

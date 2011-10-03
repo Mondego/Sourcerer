@@ -39,15 +39,27 @@ public class Modifiers extends AbstractSet<Modifier> implements BitEnumSet<Modif
     this.value = value;
   }
   
+  private Modifiers(Modifier[] modifiers) {
+    for (Modifier mod : modifiers) {
+      add(mod);
+    }
+  }
+  
   public static Modifiers make(int value) {
     return new Modifiers(value);
   }
   
+  public static Modifiers make(Modifier ... modifiers) {
+    return new Modifiers(modifiers);
+  }
+  
   private void initialize() {
     modifiers = EnumSet.noneOf(Modifier.class);
-    for (Modifier mod : Modifier.values()) {
-      if (mod.is(value)) {
-        modifiers.add(mod);
+    if (value != 0) {
+      for (Modifier mod : Modifier.values()) {
+        if (mod.is(value)) {
+          modifiers.add(mod);
+        }
       }
     }
   }
