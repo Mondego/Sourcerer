@@ -32,7 +32,7 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 public class JavaLibraryReferentialRelationsImporter extends ReferentialRelationsImporter {
   private Iterable<? extends ExtractedJarFile> libraries;
   
-  protected JavaLibraryReferentialRelationsImporter(Iterable<? extends ExtractedJarFile> libraries, SynchronizedEntityMap libraryEntities) {
+  protected JavaLibraryReferentialRelationsImporter(Iterable<? extends ExtractedJarFile> libraries, LibraryEntityMap libraryEntities) {
     super("Importing Java Library Referential Relations", libraryEntities);
     this.libraries = libraries;
   }

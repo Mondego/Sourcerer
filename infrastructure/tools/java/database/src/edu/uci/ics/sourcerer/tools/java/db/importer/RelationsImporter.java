@@ -44,7 +44,7 @@ public abstract class RelationsImporter extends NewDatabaseImporter {
     task.start("Populating entity map", "entities loaded");
     
     try (SelectQuery query = exec.makeSelectQuery(EntitiesTable.TABLE)) {
-      query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.RAW_SIGNATURE);
+      query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.RAW_PARAMS);
       query.andWhere(EntitiesTable.PROJECT_ID.compareEquals(projectID).and(
           EntitiesTable.ENTITY_TYPE.compareNotIn(EnumSet.of(Entity.PARAMETER, Entity.LOCAL_VARIABLE))));
   
@@ -55,7 +55,7 @@ public abstract class RelationsImporter extends NewDatabaseImporter {
         DatabaseEntity entity = entityMap.get(fqn);
         if (entity == null) {
           entity = DatabaseEntity.make(result.getResult(EntitiesTable.ENTITY_ID), RelationClass.INTERNAL);
-          String rawSignature = result.getResult(EntitiesTable.RAW_SIGNATURE);
+          String rawSignature = result.getResult(EntitiesTable.RAW_PARAMS);
           if (rawSignature != null) {
             entityMap.put(TypeUtils.getMethodName(fqn) + rawSignature, entity);
           }

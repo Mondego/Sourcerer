@@ -28,10 +28,10 @@ import edu.uci.ics.sourcerer.tools.java.model.types.Metrics;
  */
 public class DummyEntityWriter implements EntityWriter {
   @Override
-  public void writeEntity(Entity type, String fqn, int modifiers, Metrics metrics, Location location) {}
+  public void writeEntity(Entity type, String fqn, String name, int modifiers, Metrics metrics, Location location) {}
   
   @Override
-  public void writeEntity(Entity type, String fqn, String signature, String rawSignature, int modifiers, Metrics metrics, Location location) {}
+  public void writeEntity(Entity type, String fqn, String name, String signature, String rawSignature, int modifiers, Metrics metrics, Location location) {}
   
   @Override
   public void writeEntity(EntityEX entity) {}

@@ -40,12 +40,12 @@ public final class EntityWriterImpl extends AbstractExtractorWriter<EntityEX> im
 
   private EntityEX trans = new EntityEX();
   @Override
-  public void writeEntity(Entity type, String fqn, int modifiers, Metrics metrics, Location location) {
-    write(trans.update(type, fqn, null, null, modifiers, metrics, location));
+  public void writeEntity(Entity type, String fqn, String name, int modifiers, Metrics metrics, Location location) {
+    write(trans.update(type, fqn, name, null, null, modifiers, metrics, location));
   }
   
   @Override
-  public void writeEntity(Entity type, String fqn, String signature, String rawSignature, int modifiers, Metrics metrics, Location location) {
-    write(trans.update(type, fqn, signature, rawSignature, modifiers, metrics, location));
+  public void writeEntity(Entity type, String fqn, String name, String signature, String rawSignature, int modifiers, Metrics metrics, Location location) {
+    write(trans.update(type, fqn, name, signature, rawSignature, modifiers, metrics, location));
   }
 }

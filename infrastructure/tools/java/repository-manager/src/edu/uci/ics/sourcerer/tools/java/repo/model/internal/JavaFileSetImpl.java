@@ -34,7 +34,9 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFileSet;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
+import edu.uci.ics.sourcerer.util.io.PackageExtractor;
 import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 
@@ -81,32 +83,7 @@ public class JavaFileSetImpl extends AbstractFileSet implements JavaFileSet {
   protected void populateFileSetHelper() {
     Map<String, Collection<JavaFileImpl>> map = Helper.newHashMap();
     for (ContentFileImpl file : javaFiles) {
-      String pkg = null;
-      BufferedReader br = null;
-      try {
-        br = IOUtils.makeBufferedReader(file.getFile().toFile());
-        String line = null;
-        while ((line = br.readLine()) != null) {
-          line = line.trim();
-          if (line.startsWith("package")) {
-            int semi = line.indexOf(';');
-            while (semi == -1) {
-              String newLine = br.readLine();
-              if (newLine == null) {
-                newLine = ";";
-              }
-              line += newLine.trim();
-              semi = line.indexOf(';');
-            }
-            pkg = line.substring(8, line.indexOf(';')).trim();
-            break;
-          }
-        }
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Unable to extract package for file!", e);
-      } finally {
-        IOUtils.close(br);
-      }
+      String pkg = PackageExtractor.extractPackage(file.getFile().toFile());
       if (pkg != null) {
         String key = pkg + file.getFile().getName();
         Collection<JavaFileImpl> files = map.get(key);

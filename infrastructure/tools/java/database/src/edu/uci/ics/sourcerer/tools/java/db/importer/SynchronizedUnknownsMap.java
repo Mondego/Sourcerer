@@ -72,7 +72,7 @@ class SynchronizedUnknownsMap  {
   
   synchronized void add(QueryExecutor exec, String fqn) {
     if (!contains(fqn)) {
-      Integer eid = exec.insertWithKey(EntitiesTable.makeInsert(Entity.UNKNOWN, fqn, unknownsProject));
+      Integer eid = exec.insertWithKey(EntitiesTable.makeInsert(Entity.UNKNOWN, fqn, null, unknownsProject));
       if (eid == null) {
         logger.log(Level.SEVERE, "Missing eid for unknown: " + fqn);
       } else {

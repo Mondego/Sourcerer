@@ -18,46 +18,36 @@
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 
 import edu.uci.ics.sourcerer.tools.java.model.types.RelationClass;
+import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-class EntityMap extends AbstractEntityMap {
-  private LibraryEntityMap libraries;
-  private QueryExecutor exec;
-  
-  public EntityMap(QueryExecutor exec, LibraryEntityMap libraries) {
-    super(Collections.<Integer>emptySet());
-    this.libraries = libraries;
-    this.exec = exec;
-    entities = Collections.emptyMap();
-  }
-  
-  public EntityMap(QueryExecutor exec, LibraryEntityMap libraries, Collection<Integer> projects) {
+class LibraryEntityMap extends AbstractEntityMap {
+  private SynchronizedUnknownsMap unknowns;
+
+  public LibraryEntityMap(TaskProgressLogger task, Collection<Integer> projects, SynchronizedUnknownsMap unknowns) {
     super(projects);
-    this.libraries = libraries;
-    this.exec = exec;
+    this.unknowns = unknowns;
     entities = new HashMap<>();
+    populateMap(task);
   }
-  
+
   @Override
   protected DatabaseEntity makeEntity(Integer entityID) {
-    return DatabaseEntity.make(entityID, RelationClass.EXTERNAL);
+    return DatabaseEntity.make(entityID, RelationClass.JAVA_LIBRARY);
   }
   
-  public DatabaseEntity getEntity(String fqn) {
+  public synchronized DatabaseEntity getEntity(QueryExecutor exec, String fqn) {
     DatabaseEntity entity = entities.get(fqn);
     if (entity == null) {
-      if (!projects.isEmpty()) {
-        entity = checkVirtualBinding(exec, fqn);
-      }
+      entity = checkVirtualBinding(exec, fqn);
       if (entity == null) {
-        entity = libraries.getEntity(exec, fqn);
+        entity = unknowns.getUnknown(fqn);
       }
     }
     return entity;

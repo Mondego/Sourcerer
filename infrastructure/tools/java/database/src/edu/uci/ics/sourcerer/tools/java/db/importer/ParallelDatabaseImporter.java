@@ -90,15 +90,15 @@ public final class ParallelDatabaseImporter {
         
         task.start("Adding the primitive types");
         Integer projectID = exec.insertWithKey(ProjectsTable.TABLE.makePrimitivesInsert());
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "boolean", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "char", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "byte", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "short", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "int", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "long", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "float", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "double", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "void", projectID));
+        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "boolean", null, projectID));
+        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "char", null, projectID));
+        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "byte", null, projectID));
+        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "short", null, projectID));
+        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "int", null, projectID));
+        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "long", null, projectID));
+        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "float", null, projectID));
+        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "double", null, projectID));
+        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "void", null, projectID));
         task.finish();
         
         task.start("Adding the unknowns project");
@@ -182,7 +182,7 @@ public final class ParallelDatabaseImporter {
       }
     }.run();
     
-    SynchronizedEntityMap libraries = new SynchronizedEntityMap(task, libraryProjects, unknowns);
+    LibraryEntityMap libraries = new LibraryEntityMap(task, libraryProjects, unknowns);
     
     iterable = createSynchronizedIterable(task, libs.iterator());
     task.start("Performing referential relation import with " + numThreads + " threads");

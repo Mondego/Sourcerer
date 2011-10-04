@@ -106,7 +106,7 @@ public class ASMExtractor implements Closeable {
           String name = pkgFqn.substring(last + 1);
           pkgFqn = pkgFqn.substring(0, last);
           
-          entityWriter.writeEntity(Entity.PACKAGE, pkgFqn, 0, null, null);
+          entityWriter.writeEntity(Entity.PACKAGE, pkgFqn, null, 0, null, null);
           
           fqnStack.push(pkgFqn, Entity.PACKAGE);
           
@@ -180,6 +180,20 @@ public class ASMExtractor implements Closeable {
     }
   }
   
+  private String convertNameToName(String name) {
+    if (name.charAt(0) == '[') {
+      logger.log(Level.SEVERE, "Unable to convert name to name: " + name);
+      return null;
+    } else {
+      int slash = name.lastIndexOf('/');
+      if (slash == -1) {
+        return name;
+      } else {
+        return name.substring(slash + 1);
+      }
+    }
+  }
+    
   private String convertBaseType(char type) {
     switch (type) {
       case 'B':
@@ -234,7 +248,7 @@ public class ASMExtractor implements Closeable {
       if (type == null) {
         fqnStack.push(fqn, null);
       } else {
-        entityWriter.writeEntity(type, fqn, access, null, location);
+        entityWriter.writeEntity(type, fqn, convertNameToName(name), access, null, location);
       
         fqnStack.push(fqn, type);
         
@@ -270,7 +284,7 @@ public class ASMExtractor implements Closeable {
         parentFqn = convertNameToFqn(owner);
       } else {
         new SignatureReader(desc).accept(methodSignatureVisitor.init(owner, name));
-        parentFqn = methodSignatureVisitor.getFqn();
+        parentFqn = methodSignatureVisitor.getReferenceFqn();
       }
       relationWriter.writeRelation(Relation.INSIDE, fqnStack.getFqn(), parentFqn, location);
       fqnStack.outputInside();
@@ -314,7 +328,7 @@ public class ASMExtractor implements Closeable {
       String fqn = fqnStack.getFqn() + "." + name;
       
       // Write the entity
-      entityWriter.writeEntity(type, fqn, access, null, location);
+      entityWriter.writeEntity(type, fqn, name, access, null, location);
       
       // Write the inside relation
       relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), location);
@@ -363,12 +377,12 @@ public class ASMExtractor implements Closeable {
         }
         
         // Write the entity
-        entityWriter.writeEntity(type, fqnStack.getFqn(), methodSignatureVisitor.getSignature(), null, access, null, location);
+        entityWriter.writeEntity(type, methodSignatureVisitor.getFqn(), name, methodSignatureVisitor.getSignature(), null, access, null, location);
       } else {
         new SignatureReader(signature).accept(methodSignatureVisitor.init(type, name));
         String sig = methodSignatureVisitor.getSignature();
         new SignatureReader(desc).accept(methodSignatureVisitor.init());
-        entityWriter.writeEntity(type, fqnStack.getFqn(), sig, methodSignatureVisitor.getSignature(), access, null, location);
+        entityWriter.writeEntity(type, methodSignatureVisitor.getFqn(), name, sig, methodSignatureVisitor.getSignature(), access, null, location);
       }
 
       return methodVisitor;
@@ -522,7 +536,7 @@ public class ASMExtractor implements Closeable {
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
       new SignatureReader(desc).accept(methodSignatureVisitor.init(owner, name));
-      String fqn = methodSignatureVisitor.getFqn();
+      String fqn = methodSignatureVisitor.getReferenceFqn();
       relationWriter.writeRelation(Relation.CALLS, fqnStack.getFqn(), fqn, location);
     }
 
@@ -708,7 +722,7 @@ public class ASMExtractor implements Closeable {
 
   private class MethodSignatureVisitorImpl extends SignatureVisitorAdapter {
     private Entity type;
-    private StringBuilder fqn;
+    private String fqn;
     private StringBuilder signature;
     private Map<String, Collection<String>> bounds = Helper.newHashMap();
     private Collection<String> currentBound;
@@ -726,8 +740,7 @@ public class ASMExtractor implements Closeable {
     
     public MethodSignatureVisitorImpl init(String owner, String name) {
       this.type = null;
-      fqn = new StringBuilder();
-      fqn.append(convertNameToFqn(owner)).append('.').append(name);
+      fqn = convertNameToFqn(owner) + '.' + name;
       signature = new StringBuilder();
       signature.append("(");
       return this;
@@ -735,8 +748,7 @@ public class ASMExtractor implements Closeable {
     
     public MethodSignatureVisitorImpl init(Entity type, String name) {
       this.type = type;
-      fqn = new StringBuilder();
-      fqn.append(fqnStack.getFqn()).append('.').append(name);
+      fqn = fqnStack.getFqn() + '.' + name;
       signature = new StringBuilder();
       signature.append("(");
       return this;
@@ -764,7 +776,11 @@ public class ASMExtractor implements Closeable {
     }
     
     public String getFqn() {
-      return fqn.toString();
+      return fqn;
+    }
+    
+    public String getReferenceFqn() {
+      return fqn + signature.toString();
     }
     
     public String getSignature() {
@@ -819,10 +835,9 @@ public class ASMExtractor implements Closeable {
         signature.setCharAt(signature.length() - 1, ')');
       }
       if (fqn != null) {
-        fqn.append(signature);
         if (type != null) {
-          relationWriter.writeRelation(Relation.INSIDE, fqn.toString(), fqnStack.getFqn(), location);
-          fqnStack.push(fqn.toString(), type);
+          relationWriter.writeRelation(Relation.INSIDE, getReferenceFqn(), fqnStack.getFqn(), location);
+          fqnStack.push(getReferenceFqn(), type);
           int i = 0;
           for (String param : paramTypes) {
             parameterWriter.writeLocalVariable(LocalVariable.PARAM, "arg" + i, 0, param, location, fqnStack.getFqn(), i, location);

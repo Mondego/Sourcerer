@@ -33,6 +33,7 @@ public final class EntityEX implements SimpleSerializable {
   
   private Entity type;
   private String fqn;
+  private String name;
   private String signature;
   private String rawSignature;
   private Modifiers modifiers;
@@ -44,6 +45,7 @@ public final class EntityEX implements SimpleSerializable {
   public EntityEX(EntityEX entity) {
     type = entity.type;
     fqn = entity.fqn;
+    name = entity.name;
     signature = entity.signature;
     rawSignature = entity.rawSignature;
     modifiers = entity.modifiers;
@@ -51,9 +53,10 @@ public final class EntityEX implements SimpleSerializable {
     location = entity.location;
   }
 
-  public EntityEX(Entity type, String fqn, String signature, String rawSignature, Modifiers modifiers, Metrics metrics, Location location) {
+  public EntityEX(Entity type, String fqn, String name, String signature, String rawSignature, Modifiers modifiers, Metrics metrics, Location location) {
     this.type = type;
     this.fqn = fqn;
+    this.name = name;
     this.signature = signature;
     this.rawSignature = rawSignature;
     this.modifiers = modifiers;
@@ -61,9 +64,10 @@ public final class EntityEX implements SimpleSerializable {
     this.location = location;
   }
   
-  public EntityEX update(Entity type, String fqn, String signature, String rawSignature, int modifiers, Metrics metrics, Location location) {
+  public EntityEX update(Entity type, String fqn, String name, String signature, String rawSignature, int modifiers, Metrics metrics, Location location) {
     this.type = type;
     this.fqn = fqn;
+    this.name = name;
     this.signature = signature;
     this.rawSignature = rawSignature;
     this.modifiers = Modifiers.make(modifiers);
@@ -78,6 +82,10 @@ public final class EntityEX implements SimpleSerializable {
 
   public String getFqn() {
     return fqn;
+  }
+  
+  public String getName() {
+    return name;
   }
   
   public String getSignature() {

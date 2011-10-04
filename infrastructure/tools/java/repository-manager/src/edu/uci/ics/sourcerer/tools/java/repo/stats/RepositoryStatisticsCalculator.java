@@ -54,7 +54,6 @@ public class RepositoryStatisticsCalculator {
       if (!project.getContent().getFiles().isEmpty()) {
         projectsWithFiles++;
       }
-    
       
       for (ContentFile file : project.getContent().getFiles()) {
         RepoFile rFile = file.getFile();
@@ -71,7 +70,7 @@ public class RepositoryStatisticsCalculator {
         }
         files.get(extension).add(length);
       }
-      task.progress();
+      task.progress("%d projects analyzed, " + SizeCounter.formatSize(Runtime.getRuntime().freeMemory()) + " of " + SizeCounter.formatSize(Runtime.getRuntime().totalMemory()) + " free");
     }
     task.finish();
     

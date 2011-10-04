@@ -26,8 +26,6 @@ import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface FileSet {
-  public static final Argument<Boolean> CLEAR_FILE_CACHE = new BooleanArgument("clear-file-cache", false, "Clears the file caches.").permit();
-  
   public Collection<? extends ContentFile> getFiles();
   
   public ContentDirectory getRoot();

@@ -20,6 +20,8 @@ package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -272,25 +274,33 @@ public class RepoFileImpl implements RepoFile, CustomSerializable {
     return new ObjectDeserializer<RepoFileImpl>() {
       @Override
       public RepoFileImpl deserialize(Scanner scanner) {
-        String value = scanner.next();
-        RepoFileImpl root = getOirignalRoot();
-        int sep = -1;
-        int prevSep = sep + 1;
-        while ((sep = value.indexOf(';', prevSep)) >= 0) {
-          root = root.getChildRoot(RelativePathImpl.makeFromWriteable(value.substring(prevSep, sep)));
-          prevSep = sep + 1;
+        if (scanner.hasNextInt()) {
+          RepoFileImpl root = getOirignalRoot();
+          for (int count = scanner.nextInt(); count > 1; count--) {
+            root = root.getChildRoot(RelativePathImpl.makeFromWriteable(scanner.next()));
+          }
+          return root.getChild(RelativePathImpl.makeFromWriteable(scanner.next()));
+        } else {
+          throw new IllegalArgumentException("RepoFile expects an int.");
         }
-        return root.getChild(RelativePathImpl.makeFromWriteable(value.substring(prevSep)));
       }
     };
   }
   
   @Override
   public String serialize() {
-    if (root.root == null) {
-      return relativePath.toWriteableString();
-    } else {
-      return root.serialize() + ";" + relativePath.toWriteableString();
+    RepoFileImpl file = this;
+    Deque<String> paths = new LinkedList<>();
+    while (file.root != null) {
+      paths.push(file.relativePath.toWriteableString());
+      file = file.root;
     }
+    
+    StringBuilder result = new StringBuilder();
+    result.append(paths.size());
+    for (String path : paths) {
+      result.append(' ').append(path);
+    }
+    return result.toString();
   }
 }

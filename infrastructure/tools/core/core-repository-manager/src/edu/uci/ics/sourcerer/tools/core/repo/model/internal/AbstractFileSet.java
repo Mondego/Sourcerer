@@ -74,7 +74,7 @@ public abstract class AbstractFileSet implements FileSet {
   protected abstract void initHelper(boolean loadNow);
   
   private final void populateFileSet() {
-    if (CLEAR_FILE_CACHE.getValue() || !cache.exists() || !readCache()) {
+    if (AbstractRepository.CLEAR_CACHES.getValue() || !cache.exists() || !readCache()) {
       Deque<RepoFileImpl> stack = Helper.newStack();
       stack.push(getRoot().getFile());
         

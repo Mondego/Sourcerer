@@ -348,7 +348,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
           Pair<String, Integer> arrayInfo = TypeUtils.breakArray(fqn);
           
           // Insert the array entity
-          inserter.addInsert(EntitiesTable.makeInsert(Entity.ARRAY, fqn, arrayInfo.getSecond(), projectID));
+          inserter.addInsert(EntitiesTable.makeInsert(Entity.ARRAY, fqn, null, arrayInfo.getSecond(), projectID));
           pendingEntities.add(fqn);
           task.progress();
           
@@ -361,7 +361,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
         
         if (TypeUtils.isWildcard(fqn)) {
           // Insert the wildcard entity
-          inserter.addInsert(EntitiesTable.makeInsert(Entity.WILDCARD, fqn, projectID));
+          inserter.addInsert(EntitiesTable.makeInsert(Entity.WILDCARD, fqn, null, projectID));
           pendingEntities.add(fqn);
           task.progress();
         
@@ -381,7 +381,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
         
         if (TypeUtils.isTypeVariable(fqn)) {
           // Insert the type variable entity
-          inserter.addInsert(EntitiesTable.makeInsert(Entity.TYPE_VARIABLE, fqn, projectID));
+          inserter.addInsert(EntitiesTable.makeInsert(Entity.TYPE_VARIABLE, fqn, null, projectID));
           pendingEntities.add(fqn);
           task.progress();
           
@@ -396,7 +396,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
         
         if (TypeUtils.isParametrizedType(fqn)) {
           // Insert the parametrized type entity
-          inserter.addInsert(EntitiesTable.makeInsert(Entity.PARAMETERIZED_TYPE, fqn, projectID));
+          inserter.addInsert(EntitiesTable.makeInsert(Entity.PARAMETERIZED_TYPE, fqn, null, projectID));
           pendingEntities.add(fqn);
           task.progress();
           
@@ -425,7 +425,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
           }
           if (entity.hasMultipleInstances()) {
             // Insert the duplicate entity
-            inserter.addInsert(EntitiesTable.makeInsert(Entity.DUPLICATE, fqn, projectID));
+            inserter.addInsert(EntitiesTable.makeInsert(Entity.DUPLICATE, fqn, null, projectID));
           }
           entityMap.put(fqn, entity);
           pendingEntities.add(fqn);

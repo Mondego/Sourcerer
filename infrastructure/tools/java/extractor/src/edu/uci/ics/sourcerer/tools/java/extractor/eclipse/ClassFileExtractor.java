@@ -144,7 +144,7 @@ public class ClassFileExtractor {
             relationWriter.writeRelation(Relation.INSIDE, classFile.getType().getFullyQualifiedName(), containingFqn, new Location(classFile.getType().getFullyQualifiedName(), path, null, null));
           } else {
             relationWriter.writeRelation(Relation.INSIDE, classFile.getType().getFullyQualifiedName(), parent.getElementName(), new Location(classFile.getType().getFullyQualifiedName(), path, null, null));
-            entityWriter.writeEntity(Entity.PACKAGE, parent.getElementName(), 0, null, null);
+            entityWriter.writeEntity(Entity.PACKAGE, parent.getElementName(), null, 0, null, null);
           }
         } catch (JavaModelException e) {
           logger.log(Level.SEVERE, "Error in extracting class file", e);
@@ -166,7 +166,7 @@ public class ClassFileExtractor {
       Location location = new Location(fqn, path, null, null);
       // Write the entity
       if (type.isClass()) {
-        entityWriter.writeEntity(Entity.CLASS, fqn, type.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.CLASS, fqn, type.getElementName(), type.getFlags(), null, location);
         
         // Write the superclass
         String superSig = type.getSuperclassTypeSignature();
@@ -174,11 +174,11 @@ public class ClassFileExtractor {
           relationWriter.writeRelation(Relation.EXTENDS, fqn, typeSignatureToFqn(superSig), location);
         }
       } else if (type.isAnnotation()) {
-        entityWriter.writeEntity(Entity.ANNOTATION, fqn, type.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.ANNOTATION, fqn, type.getElementName(), type.getFlags(), null, location);
       } else if (type.isInterface()) {
-        entityWriter.writeEntity(Entity.INTERFACE, fqn, type.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.INTERFACE, fqn, type.getElementName(), type.getFlags(), null, location);
       }  else if (type.isEnum()) {
-        entityWriter.writeEntity(Entity.ENUM, fqn, type.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.ENUM, fqn, type.getElementName(), type.getFlags(), null, location);
       }
       
       // Write the superinterfaces
@@ -224,9 +224,9 @@ public class ClassFileExtractor {
       String fqn = fqnStack.peek() + "." + field.getElementName();
       // Write the entity
       if (field.isEnumConstant()) {
-        entityWriter.writeEntity(Entity.ENUM_CONSTANT, fqn, field.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.ENUM_CONSTANT, fqn, field.getElementName(), field.getFlags(), null, location);
       } else {
-        entityWriter.writeEntity(Entity.FIELD, fqn, field.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.FIELD, fqn, field.getElementName(), field.getFlags(), null, location);
       }
       
       // Write the inside relation
@@ -243,11 +243,15 @@ public class ClassFileExtractor {
     try {
       Location location = new Location(fqnStack.peek(), path, null, null);
       StringBuilder fqnBuilder = new StringBuilder(fqnStack.peek());
+      String name = null;
       if (method.isConstructor()) {
-        fqnBuilder.append('.').append("<init>");
+        name = "<init>";
+        
       } else {
-        fqnBuilder.append('.').append(method.getElementName());
+        name = method.getElementName();
       }
+      fqnBuilder.append('.').append(name);
+      String basicFqn = fqnBuilder.toString();
       fqnBuilder.append('(');
       boolean first = true;
       for (String param : method.getParameterTypes()) {
@@ -261,34 +265,35 @@ public class ClassFileExtractor {
       }
       fqnBuilder.append(')');
       
-      String fqn = fqnBuilder.toString();
+      String referentialFqn = fqnBuilder.toString();
+      String params = referentialFqn.substring(basicFqn.length() + 1);
       
       // Write the entity
       if (annotationElement) {
-        entityWriter.writeEntity(Entity.ANNOTATION_ELEMENT, fqn, method.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.ANNOTATION_ELEMENT, basicFqn, name, params, null, method.getFlags(), null, location);
       } else if (method.isConstructor()) {
-        entityWriter.writeEntity(Entity.CONSTRUCTOR, fqn, method.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.CONSTRUCTOR, basicFqn, name, params, null, method.getFlags(), null, location);
       } else if (method.getElementName().equals("<clinit>()")) {
-        entityWriter.writeEntity(Entity.INITIALIZER, fqn, method.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.INITIALIZER, basicFqn, name, params, null, method.getFlags(), null, location);
       } else {
-        entityWriter.writeEntity(Entity.METHOD, fqn, method.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.METHOD, basicFqn, name, params, null, method.getFlags(), null, location);
       }
       
       // Write the inside relation
-      relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.peek(), location);
+      relationWriter.writeRelation(Relation.INSIDE, referentialFqn, fqnStack.peek(), location);
       
       // Write the returns relation
-      relationWriter.writeRelation(Relation.RETURNS, fqn, typeSignatureToFqn(method.getReturnType()), location);
+      relationWriter.writeRelation(Relation.RETURNS, referentialFqn, typeSignatureToFqn(method.getReturnType()), location);
       
       // Write the receives relation
       String[] paramTypes = method.getParameterTypes();
       for (int i = 0; i < paramTypes.length; i++) {
-        localVariableWriter.writeLocalVariable(LocalVariable.PARAM, "arg" + i, 0, typeSignatureToFqn(paramTypes[i]), location, fqn, i, location);
+        localVariableWriter.writeLocalVariable(LocalVariable.PARAM, "arg" + i, 0, typeSignatureToFqn(paramTypes[i]), location, referentialFqn, i, location);
 //        relationWriter.writeReceives(fqn, typeSignatureToFqn(paramTypes[i]), "arg" + i, i);
       }
       
       for (ITypeParameter param : method.getTypeParameters()) {
-        relationWriter.writeRelation(Relation.PARAMETRIZED_BY, fqn, getTypeParam(param), location);
+        relationWriter.writeRelation(Relation.PARAMETRIZED_BY, referentialFqn, getTypeParam(param), location);
       }
     } catch(JavaModelException e) {
       logger.log(Level.SEVERE, "Error in extracting class file", e);

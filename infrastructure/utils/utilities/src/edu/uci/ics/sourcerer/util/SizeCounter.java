@@ -23,7 +23,23 @@ import java.text.NumberFormat;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class SizeCounter implements Comparable<SizeCounter> {
-  private NumberFormat format;
+  private static NumberFormat format;
+  
+  private static final long KB = 1024l;
+  private static final long MB = 1024l * KB;
+  private static final long GB = 1024l * MB;
+  public static String formatSize(long value) {
+    if (value >= GB) {
+      return format.format((double) value / GB) + "G";
+    } else if (value >= MB) {
+      return format.format((double) value / MB) + "M";
+    } else if (value >= KB) {
+      return format.format((double) value / KB) + "K";
+    } else {
+      return value + "B";
+    }
+  }
+  
   private int count;
   private long bytes;
   
@@ -43,19 +59,9 @@ public class SizeCounter implements Comparable<SizeCounter> {
     return Integer.toString(count);
   }
   
-  private static final long KB = 1024l;
-  private static final long MB = 1024l * KB;
-  private static final long GB = 1024l * MB;
+  
   public String getSizeString() {
-    if (bytes >= GB) {
-      return format.format((double) bytes / GB) + "G";
-    } else if (bytes >= MB) {
-      return format.format((double) bytes / MB) + "M";
-    } else if (bytes >= KB) {
-      return format.format((double) bytes / KB) + "K";
-    } else {
-      return bytes + "B";
-    }
+    return formatSize(bytes);
   }
 
   @Override

@@ -73,10 +73,10 @@ final class RelativePathImpl implements RelativePath {
   }
   
   RelativePathImpl append(String path) {
-    if (path.equals("")) {
+    path = path.replace('\\', '/');
+    if (path.equals("") || path.equals("/")) {
       return this;
     } else {
-      path = path.replace('\\', '/');
       if (path.charAt(path.length() - 1) == '/') {
         path = path.substring(0, path.length() - 1);
       }

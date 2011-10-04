@@ -30,9 +30,9 @@ import edu.uci.ics.sourcerer.utils.db.BatchInserter;
 public abstract class ReferentialRelationsImporter extends RelationsImporter {
   private EntityMap external;
   
-  protected ReferentialRelationsImporter(String taskName, SynchronizedEntityMap libraries) {
+  protected ReferentialRelationsImporter(String taskName, LibraryEntityMap libraries) {
     super(taskName);
-    this.external = new EntityMap(libraries);
+    this.external = new EntityMap(exec, libraries);
   }
   
   protected final void insert(ReaderBundle reader, Integer projectID) {
