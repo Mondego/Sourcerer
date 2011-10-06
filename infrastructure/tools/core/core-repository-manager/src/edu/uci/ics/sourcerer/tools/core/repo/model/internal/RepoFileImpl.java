@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -247,7 +248,7 @@ public class RepoFileImpl implements RepoFile, CustomSerializable {
       return Collections.emptyList();
     } else {
       String[] names = file.list();
-      Collection<RepoFileImpl> children = Helper.newArrayList(names.length);
+      Collection<RepoFileImpl> children = new ArrayList<>(names.length);
       for (String name : names) {
         children.add(getChild(name));
       }

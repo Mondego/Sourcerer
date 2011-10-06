@@ -45,6 +45,8 @@ public class PackageExtractor {
         if (state == State.START) {
           if (next == '/') {
             state = State.SLASH;
+          } else if (next == '{') {
+            return "";
           } else if (Character.isLetterOrDigit(next)) {
             word.append((char) next);
           } else if (word.length() > 0) {

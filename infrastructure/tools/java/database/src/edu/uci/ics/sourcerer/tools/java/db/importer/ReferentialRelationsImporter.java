@@ -17,7 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import java.util.Collection;
+
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
@@ -28,21 +29,18 @@ import edu.uci.ics.sourcerer.utils.db.BatchInserter;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class ReferentialRelationsImporter extends RelationsImporter {
-  private EntityMap external;
-  
   protected ReferentialRelationsImporter(String taskName, LibraryEntityMap libraries) {
-    super(taskName);
-    this.external = new EntityMap(exec, libraries);
+    super(taskName, libraries);
   }
   
-  protected final void insert(ReaderBundle reader, Integer projectID) {
+  protected final void insert(ReaderBundle reader, Integer projectID, Collection<Integer> externalProjects) {
     loadFileMap(projectID);
-    loadEntityMap(projectID);
+    loadEntityMap(projectID, externalProjects);
     
     insertReferentialRelations(reader, projectID);
     
     fileMap.clear();
-    entityMap.clear();
+    entities = null;
   }
   
   private void insertReferentialRelations(ReaderBundle reader, Integer projectID) {
@@ -58,7 +56,7 @@ public abstract class ReferentialRelationsImporter extends RelationsImporter {
         Integer fileID = getFileID(relation.getLocation());
         
         Integer lhs = getLHS(relation.getLhs());
-        DatabaseEntity rhs = getRHS(relation.getRhs());
+        DatabaseEntity rhs = entities.getEntity(relation.getRhs());
         
         if (lhs != null && rhs != null) {
           if (fileID == null) {
@@ -77,20 +75,5 @@ public abstract class ReferentialRelationsImporter extends RelationsImporter {
     task.finish();
     
     task.finish();
-  }
-  
-  private DatabaseEntity getRHS(String fqn) {
-    DatabaseEntity entity = entityMap.get(fqn);
-    if (entity == null) {
-      entity = external.getEntity(fqn);
-      if (entity == null) {
-        logger.severe("Unknown entity: " + fqn);
-        return null;
-      } else {
-        return entity;
-      }
-    } else {
-      return entity;
-    }
   }
 }

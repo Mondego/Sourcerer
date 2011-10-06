@@ -19,58 +19,30 @@ package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
-
-import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
-import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
-import edu.uci.ics.sourcerer.tools.java.model.types.RelationClass;
-import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
-import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
+import java.util.Collection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class RelationsImporter extends NewDatabaseImporter {
-  protected Map<String, DatabaseEntity> entityMap;
+  private LibraryEntityMap libraries;
+  protected EntityMap entities;
   
-  protected RelationsImporter(String taskName) {
+  protected RelationsImporter(String taskName, LibraryEntityMap libraries) {
     super(taskName);
-    entityMap = new HashMap<>();
+    this.libraries = libraries;
   }
   
-  protected final void loadEntityMap(Integer projectID) {
+  protected final void loadEntityMap(Integer projectID, Collection<Integer> externalProjects) {
     task.start("Populating entity map", "entities loaded");
     
-    try (SelectQuery query = exec.makeSelectQuery(EntitiesTable.TABLE)) {
-      query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.RAW_PARAMS);
-      query.andWhere(EntitiesTable.PROJECT_ID.compareEquals(projectID).and(
-          EntitiesTable.ENTITY_TYPE.compareNotIn(EnumSet.of(Entity.PARAMETER, Entity.LOCAL_VARIABLE))));
-  
-      TypedQueryResult result = query.select();
-      
-      while (result.next()) {
-        String fqn = result.getResult(EntitiesTable.FQN);
-        DatabaseEntity entity = entityMap.get(fqn);
-        if (entity == null) {
-          entity = DatabaseEntity.make(result.getResult(EntitiesTable.ENTITY_ID), RelationClass.INTERNAL);
-          String rawSignature = result.getResult(EntitiesTable.RAW_PARAMS);
-          if (rawSignature != null) {
-            entityMap.put(TypeUtils.getMethodName(fqn) + rawSignature, entity);
-          }
-          entityMap.put(fqn, entity);
-        } else {
-          logger.severe("FQN conflict: " + fqn);
-        }
-        task.progress();
-      }
-    }
+    entities = new EntityMap(task, exec, projectID, externalProjects, libraries);
+
     task.finish();
   }
   
   protected Integer getLHS(String fqn) {
-    DatabaseEntity entity = entityMap.get(fqn);
+    DatabaseEntity entity = entities.getEntity(fqn);
     if (entity == null) {
       logger.severe("Missing lhs entity: " + fqn);
       return null;

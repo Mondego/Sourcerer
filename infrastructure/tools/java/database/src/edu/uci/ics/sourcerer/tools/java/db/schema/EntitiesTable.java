@@ -76,6 +76,7 @@ public final class EntitiesTable extends DatabaseTable {
         ENTITY_TYPE.to(type),
         MODIFIERS.to(modifiers),
         FQN.to(fqn),
+        NAME.to(name),
         PARAMS.to(signature),
         RAW_PARAMS.to(rawSignature),
         MULTI.to(multi),

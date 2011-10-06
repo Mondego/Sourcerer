@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.File;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -73,8 +74,8 @@ final class RelativePathImpl implements RelativePath {
   }
   
   RelativePathImpl append(String path) {
-    path = path.replace('\\', '/');
-    if (path.equals("") || path.equals("/")) {
+    path = path.replace(File.separatorChar, '/');
+    if (path.equals("")) {
       return this;
     } else {
       if (path.charAt(path.length() - 1) == '/') {

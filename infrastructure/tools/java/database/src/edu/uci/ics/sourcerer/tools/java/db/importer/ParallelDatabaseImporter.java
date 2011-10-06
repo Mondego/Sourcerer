@@ -140,14 +140,14 @@ public final class ParallelDatabaseImporter {
     }
     task.finish();
     
-    SynchronizedUnknownsMap unknowns = new SynchronizedUnknownsMap(task);
+    LibraryEntityMap libraries = new LibraryEntityMap(task, new SynchronizedUnknownsMap(task));
     
     iterable = createSynchronizedIterable(task, libs.iterator());
     task.start("Performing structural relation import with " + numThreads + " threads");
 
     threads.clear();
     for (int i = 0; i < numThreads; i++) {
-      JavaLibraryStructuralRelationsImporter importer = new JavaLibraryStructuralRelationsImporter(iterable, unknowns);
+      JavaLibraryStructuralRelationsImporter importer = new JavaLibraryStructuralRelationsImporter(iterable, libraries);
       threads.add(importer.start());
     }
     
@@ -160,47 +160,23 @@ public final class ParallelDatabaseImporter {
     }
     task.finish();
     
-    final Collection<Integer> libraryProjects = new ArrayList<>();
-    new DatabaseRunnable() {
-      @Override
-      public void action() {
-        try (SelectQuery query = exec.makeSelectQuery(ProjectsTable.TABLE)) {
-          // Get the Java Library projectIDs
-          query.addSelect(ProjectsTable.PROJECT_ID);
-          query.andWhere(ProjectsTable.PROJECT_TYPE.compareEquals(Project.JAVA_LIBRARY));
-          
-          libraryProjects.addAll(query.select().toCollection(ProjectsTable.PROJECT_ID));
-          
-          // Get the primitives projectID
-          query.clearWhere();
-  
-          query.andWhere(ProjectsTable.NAME.compareEquals(ProjectsTable.PRIMITIVES_PROJECT).and(
-              ProjectsTable.PROJECT_TYPE.compareEquals(Project.SYSTEM)));
-          
-          libraryProjects.add(query.select().toSingleton(ProjectsTable.PROJECT_ID));
-        }
-      }
-    }.run();
-    
-    LibraryEntityMap libraries = new LibraryEntityMap(task, libraryProjects, unknowns);
-    
-    iterable = createSynchronizedIterable(task, libs.iterator());
-    task.start("Performing referential relation import with " + numThreads + " threads");
-
-    threads.clear();
-    for (int i = 0; i < numThreads; i++) {
-      JavaLibraryReferentialRelationsImporter importer = new JavaLibraryReferentialRelationsImporter(iterable, libraries);
-      threads.add(importer.start());
-    }
-    
-    for (Thread t : threads) {
-      try {
-        t.join();
-      } catch (InterruptedException e) {
-        logger.log(Level.SEVERE, "Thread interrupted", e);
-      }
-    }
-    task.finish();
+//    iterable = createSynchronizedIterable(task, libs.iterator());
+//    task.start("Performing referential relation import with " + numThreads + " threads");
+//
+//    threads.clear();
+//    for (int i = 0; i < numThreads; i++) {
+//      JavaLibraryReferentialRelationsImporter importer = new JavaLibraryReferentialRelationsImporter(iterable, libraries);
+//      threads.add(importer.start());
+//    }
+//    
+//    for (Thread t : threads) {
+//      try {
+//        t.join();
+//      } catch (InterruptedException e) {
+//        logger.log(Level.SEVERE, "Thread interrupted", e);
+//      }
+//    }
+//    task.finish();
     
     task.finish();
   }

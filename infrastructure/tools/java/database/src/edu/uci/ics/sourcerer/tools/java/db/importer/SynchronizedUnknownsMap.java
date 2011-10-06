@@ -40,7 +40,7 @@ class SynchronizedUnknownsMap  {
   private Integer unknownsProject;
   private volatile Map<String, DatabaseEntity> unknowns;
   
-  SynchronizedUnknownsMap(TaskProgressLogger task) {
+  public SynchronizedUnknownsMap(TaskProgressLogger task) {
     populateMap(task);
   }
   
@@ -70,25 +70,33 @@ class SynchronizedUnknownsMap  {
     }.run(); 
   }
   
-  synchronized void add(QueryExecutor exec, String fqn) {
-    if (!contains(fqn)) {
-      Integer eid = exec.insertWithKey(EntitiesTable.makeInsert(Entity.UNKNOWN, fqn, null, unknownsProject));
-      if (eid == null) {
-        logger.log(Level.SEVERE, "Missing eid for unknown: " + fqn);
-      } else {
-        unknowns.put(fqn, DatabaseEntity.make(eid, RelationClass.UNKNOWN));
-      }
-    }
-  }
+//  public synchronized void add(QueryExecutor exec, String fqn) {
+//    if (!contains(fqn)) {
+//      Integer eid = exec.insertWithKey(EntitiesTable.makeInsert(Entity.UNKNOWN, fqn, null, unknownsProject));
+//      if (eid == null) {
+//        logger.log(Level.SEVERE, "Missing eid for unknown: " + fqn);
+//      } else {
+//        unknowns.put(fqn, DatabaseEntity.make(eid, RelationClass.UNKNOWN));
+//      }
+//    }
+//  }
   
-  synchronized boolean contains(String fqn) {
+  public synchronized boolean contains(String fqn) {
     return unknowns.containsKey(fqn);
   }
   
-  synchronized DatabaseEntity getUnknown(String fqn) {
+  public synchronized DatabaseEntity getUnknown(QueryExecutor exec, String fqn) {
     DatabaseEntity entity = unknowns.get(fqn);
     if (entity == null) {
-      return null;
+      Integer eid = exec.insertWithKey(EntitiesTable.makeInsert(Entity.UNKNOWN, fqn, null, unknownsProject));
+      if (eid == null) {
+        logger.log(Level.SEVERE, "Missing eid for unknown: " + fqn);
+        return null;
+      } else {
+        entity = DatabaseEntity.make(eid, RelationClass.UNKNOWN);
+        unknowns.put(fqn, entity);
+        return entity;
+      }
     } else {
       return entity;
     }

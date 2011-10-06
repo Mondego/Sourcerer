@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
+import java.util.Collections;
+
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
@@ -76,7 +78,7 @@ public class JavaLibraryReferentialRelationsImporter extends ReferentialRelation
         
         if (projectID != null) {
           ReaderBundle reader = new ReaderBundle(lib.getExtractionDir().toFile());
-          insert(reader, projectID);
+          insert(reader, projectID, Collections.<Integer>emptySet());
           
           equalsID.setValue(projectID);
           updateState.execute();

@@ -42,8 +42,10 @@ public class RepositoryStatisticsCalculator {
     
     int projects = 0;
     int projectsWithFiles = 0;
+    int filteredFiles = 0;
     
-    TaskProgressLogger task = new TaskProgressLogger("Calculating project statistics");
+    TaskProgressLogger task = new TaskProgressLogger();
+    
     task.start("Analyzing projects", "projects analyzed", 100);
     
     SizeCounter total = new SizeCounter();
@@ -53,6 +55,7 @@ public class RepositoryStatisticsCalculator {
       projects++;
       if (!project.getContent().getFiles().isEmpty()) {
         projectsWithFiles++;
+        filteredFiles += project.getContent().getFilteredJavaFiles().size();
       }
       
       for (ContentFile file : project.getContent().getFiles()) {
@@ -99,10 +102,14 @@ public class RepositoryStatisticsCalculator {
       printer.addCell("Files");
       printer.addCell(total.getCountString(), Alignment.RIGHT);
       printer.addCell(total.getSizeString(), Alignment.RIGHT);
+      printer.beginRow();
+      printer.addCell("Filtered files");
+      printer.addCell(Integer.toString(filteredFiles), Alignment.RIGHT);
+      printer.addCell("");
       printer.addDividerRow();
       for (Map.Entry<SizeCounter, String> entry : sortedFiles.descendingMap().entrySet()) {
         printer.beginRow();
-        printer.addCell(entry.getValue() + " Files");
+        printer.addCell(entry.getValue() + " files");
         printer.addCell(entry.getKey().getCountString(), Alignment.RIGHT);
         printer.addCell(entry.getKey().getSizeString(), Alignment.RIGHT);
         

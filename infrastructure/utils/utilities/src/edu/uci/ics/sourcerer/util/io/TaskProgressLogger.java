@@ -37,14 +37,21 @@ public class TaskProgressLogger {
   
   private final Deque<TaskInfo> tasks;
   
-  public TaskProgressLogger(String taskName) {
+  public TaskProgressLogger() {
     tasks = new LinkedList<>();
-    start(taskName, 0, taskName.toLowerCase(), -1);
   }
   
   private TaskProgressLogger(int startingIndent) {
     tasks = new LinkedList<>();
     tasks.add(new TaskInfo(null, startingIndent, -1));
+  }
+  
+  private int getIndent() {
+    if (tasks.isEmpty()) {
+      return 0;
+    } else {
+      return tasks.peek().indent + 2;
+    }
   }
   
   public TaskProgressLogger spawnChild() {
@@ -57,23 +64,23 @@ public class TaskProgressLogger {
   }
   
   public void start(String taskName) {
-    start(taskName, tasks.peek().indent + 2, taskName.toLowerCase(), -1);
+    start(taskName, getIndent(), taskName.toLowerCase(), -1);
   }
   
   public void start(String taskName, String finishedText) {
-    start(taskName, tasks.peek().indent + 2, finishedText, 0);
+    start(taskName, getIndent(), finishedText, 0);
   }
   
   public void start(String taskName, String finishedText, int progressInterval) {
-    start(taskName, tasks.peek().indent + 2, finishedText, progressInterval);
+    start(taskName, getIndent(), finishedText, progressInterval);
   }
   
   public void report(Level level, String text) {
-    logger.log(level, SPACES.substring(0, tasks.peek().indent + 2) + text);
+    logger.log(level, SPACES.substring(0, getIndent()) + text);
   }
   
   public void report(String text) {
-    logger.info(SPACES.substring(0, tasks.peek().indent + 2) + text);
+    logger.info(SPACES.substring(0, getIndent()) + text);
   }
   
   public void progress() {

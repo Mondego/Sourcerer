@@ -380,9 +380,15 @@ public class ASMExtractor implements Closeable {
         entityWriter.writeEntity(type, methodSignatureVisitor.getFqn(), name, methodSignatureVisitor.getSignature(), null, access, null, location);
       } else {
         new SignatureReader(signature).accept(methodSignatureVisitor.init(type, name));
+        String fqn = methodSignatureVisitor.getFqn();
         String sig = methodSignatureVisitor.getSignature();
         new SignatureReader(desc).accept(methodSignatureVisitor.init());
-        entityWriter.writeEntity(type, methodSignatureVisitor.getFqn(), name, sig, methodSignatureVisitor.getSignature(), access, null, location);
+        String rawSig = methodSignatureVisitor.getSignature();
+        if (sig.equals(rawSig)) {
+          entityWriter.writeEntity(type, fqn, name, sig, null, access, null, location);
+        } else {
+          entityWriter.writeEntity(type, fqn, name, sig, methodSignatureVisitor.getSignature(), access, null, location);
+        }
       }
 
       return methodVisitor;

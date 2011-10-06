@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.tools.link.downloader;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -30,10 +31,14 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceProject;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceProject.ContentAdder;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceRepository;
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
+import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProject;
 import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProjectProperties;
+import edu.uci.ics.sourcerer.tools.core.repo.model.SourceRepository;
 import edu.uci.ics.sourcerer.tools.link.model.Project;
+import edu.uci.ics.sourcerer.util.LetterCounter;
 import edu.uci.ics.sourcerer.util.TimeCounter;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
+import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
 
 /**
@@ -42,11 +47,56 @@ import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
 public final class RepoBuilder {
   private RepoBuilder() {}
   
+  public static void interactiveRepositoryAdder() {
+    ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.OUTPUT_REPO);
+    
+    Console console = System.console();
+    if (console == null) {
+      throw new IllegalStateException("The interactive repository adder may only be run from a console.");
+    }
+    String description = console.readLine("Batch description: ");
+    String source = console.readLine("Source: ");
+    
+    ModifiableSourceBatch batch = null;
+    LetterCounter counter = new LetterCounter();
+    
+    while (true) {
+      if (batch == null) {
+        batch = repo.createBatch();
+        batch.getProperties().DESCRIPTION.setValue(description);
+        batch.getProperties().save();
+      } else if (batch.getProjectCount() >= 1000) {
+        if (counter.getCount() == 0) {
+          batch.getProperties().DESCRIPTION.setValue(description + ", Part " + counter.getNext());
+          batch.getProperties().save();
+        }
+        batch = repo.createBatch();
+        batch.getProperties().DESCRIPTION.setValue(description + ", Part " + counter.getNext());
+        batch.getProperties().save();
+      }
+      ModifiableSourceProject newProject = batch.createProject();
+      SourceProjectProperties props = newProject.getProperties();
+      while (true) {
+        props.NAME.setValue(console.readLine("Name: "));
+        props.SOURCE.setValue(source);
+        props.PROJECT_URL.setValue(console.readLine("Project URL: "));
+        props.SVN_URL.setValue(console.readLine("SVN URL: "));
+        if (console.readLine("OK? (enter to continue): ").equals("")) {
+          break;
+        }
+      }
+      props.save();
+      if (!console.readLine("Add another project? (enter to continue): ").equals("")) {
+        break;
+      }
+    }
+  }
+  
   public static void addProjectsToRepository(DualFileArgument projectList, String description) {
     ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.OUTPUT_REPO);
     
     ModifiableSourceBatch batch = null;
-    char starting = 'A';
+    LetterCounter counter = new LetterCounter();
     try {
       logger.info("Adding projects from " + projectList.toString() + " to repository");
       TimeCounter timer = new TimeCounter(100, 2, "projects added");
@@ -56,20 +106,18 @@ public final class RepoBuilder {
           batch.getProperties().DESCRIPTION.setValue(description);
           batch.getProperties().save();
         } else if (batch.getProjectCount() >= 1000) {
-          if (starting == 'A') {
-            batch.getProperties().DESCRIPTION.setValue(description + ", Part A");
+          if (counter.getCount() == 0) {
+            batch.getProperties().DESCRIPTION.setValue(description + ", Part " + counter.getNext());
             batch.getProperties().save();
-            starting++;
           }
           batch = repo.createBatch();
-          batch.getProperties().DESCRIPTION.setValue(description + ", Part " + starting);
+          batch.getProperties().DESCRIPTION.setValue(description + ", Part " + counter.getNext());
           batch.getProperties().save();
-          starting++;
         }
         ModifiableSourceProject newProject = batch.createProject();
         SourceProjectProperties props = newProject.getProperties();
         props.NAME.setValue(project.getName());
-        props.URL.setValue(project.getUrl());
+//        props.URL.setValue(project.getUrl());
         props.SOURCE.setValue(project.getSource().getName());
         props.save();
         timer.increment();
@@ -83,32 +131,58 @@ public final class RepoBuilder {
   public static void downloadProjectContent() {
     ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
     
-    logger.info("Downloading project content...");
+    TaskProgressLogger task = new TaskProgressLogger();
+    task.start("Downloading projects", "projects downloaded");
     
     SimpleDateFormat format = new SimpleDateFormat("MMM-dd-yyyy");
-    String day = format.format(new Date()).toLowerCase();
-    
-    TimeCounter timer = new TimeCounter();
-    
+
     for (final ModifiableSourceProject project : repo.getProjects()) {
       if (!project.hasContent() || project.getProperties().DOWNLOAD_DATE.getValue() == null) {
-        logger.info("Downloading content for " + project.getProperties().NAME.getValue() + " (" + project.getLocation() + ") from " + project.getProperties().URL.getValue());
+        task.start("Downloading content for " + project.getProperties().NAME.getValue() + " (" + project.getLocation() + ")");
         if (project.hasContent()) {
           project.deleteContent();
         }
         ContentAdder adder = new ContentAdder() {
           @Override
           public boolean addContent(File file) {
-            return Downloader.download(project.getProperties().URL.getValue(), file);
+            String url = project.getProperties().SVN_URL.getValue(); 
+            if (url != null) {
+              return Downloader.download(Downloader.Type.SVN, url, file);
+            } else {
+              logger.log(Level.SEVERE, "No url");
+              return false;
+            }
           }
         };
         if (project.addContent(adder)) {
-          project.getProperties().DOWNLOAD_DATE.setValue(day);
+          project.getProperties().DOWNLOAD_DATE.setValue(format.format(new Date()).toLowerCase());
           project.getProperties().save();
         }
-        timer.increment();
+        task.finish();
       }
+      task.progress();
     }
-    timer.logTotalTimeAndCount(0, "projects downloaded");
+    task.finish();
+  }
+  
+  public static void fixProjectProperties() {
+    SourceRepository repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
+    
+    TaskProgressLogger task = new TaskProgressLogger();
+    
+    task.start("Fixing project properties", "projects fixed", 100);
+    
+    for (SourceProject project : repo.getProjects()) {
+      SourceProjectProperties properties = project.getProperties();
+      if (properties.DOWNLOAD_DATE.getValue() != null) {
+        if (properties.SVN_URL.getValue() != null) {
+          properties.CONTENT_URL.setValue(null);
+          properties.save();
+        }
+      }
+      task.progress();
+    }
+    
+    task.finish();
   }
 }

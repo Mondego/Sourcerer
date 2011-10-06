@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
+import java.util.Collections;
+
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
@@ -32,14 +34,14 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 public class JavaLibraryStructuralRelationsImporter extends StructuralRelationsImporter {
   private Iterable<? extends ExtractedJarFile> libraries;
   
-  protected JavaLibraryStructuralRelationsImporter(Iterable<? extends ExtractedJarFile> libraries, SynchronizedUnknownsMap unknowns) {
-    super("Importing Java Library Structural Relations", unknowns);
+  protected JavaLibraryStructuralRelationsImporter(Iterable<? extends ExtractedJarFile> libraries, LibraryEntityMap libraryMap) {
+    super("Importing Java Library Structural Relations", libraryMap);
     this.libraries = libraries;
   }
   
   @Override
   public void doImport() {
-    initializeQueries(libraryProjects);
+    initializeQueries();
     try (SelectQuery projectState = exec.makeSelectQuery(ProjectsTable.TABLE)) {
       projectState.addSelect(ProjectsTable.PATH);
       projectState.addSelect(ProjectsTable.PROJECT_ID);
@@ -77,7 +79,7 @@ public class JavaLibraryStructuralRelationsImporter extends StructuralRelationsI
         
         if (projectID != null) {
           ReaderBundle reader = new ReaderBundle(lib.getExtractionDir().toFile());
-          insert(reader, projectID);
+          insert(reader, projectID, Collections.<Integer>emptyList());
           
           equalsID.setValue(projectID);
           updateState.execute();

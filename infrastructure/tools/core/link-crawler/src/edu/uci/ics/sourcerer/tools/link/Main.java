@@ -60,6 +60,20 @@ public class Main {
     }
   }.setProperties(RepositoryFactory.INPUT_REPO);
   
+  public static final Command INTERACTIVE_REPO_ADDER = new Command("interactive-repo-adder", "Tool for manually adding projects to the repository.") {
+    @Override
+    protected void action() {
+      RepoBuilder.interactiveRepositoryAdder();
+    }
+  }.setProperties(RepositoryFactory.OUTPUT_REPO);
+  
+  public static final Command FIX_PROJECT_PROPERTIES = new Command("fix-project-properties", "") {
+    @Override
+    protected void action() {
+      RepoBuilder.fixProjectProperties();
+    }
+  }.setProperties(RepositoryFactory.INPUT_REPO);
+  
   public static void main(String[] args) {
     Command.execute(args, Main.class);
   }

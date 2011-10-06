@@ -26,9 +26,14 @@ import java.util.logging.Level;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Downloader {
-  public static boolean download(String url, File file) {
-    if (url.endsWith("svn")) {
-      return Subversion.download(url, file);
+  public enum Type {
+    SVN;
+  }
+  
+  public static boolean download(Type type, String url, File file) {
+    if (type == Type.SVN) {
+//      return Subversion.download(url, file);
+      return Subversion.checkout(url, file);
     } else {
       logger.log(Level.SEVERE, "Unable to identify form of url: " + url);
       return false;

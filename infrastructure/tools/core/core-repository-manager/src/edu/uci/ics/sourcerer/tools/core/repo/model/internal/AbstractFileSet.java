@@ -88,7 +88,6 @@ public abstract class AbstractFileSet implements FileSet {
           }
         }
       }
-      
       populateFileSetHelper();
       
       SimpleSerializer writer = null;

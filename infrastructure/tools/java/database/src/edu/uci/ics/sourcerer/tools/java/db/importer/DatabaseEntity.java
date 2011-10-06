@@ -23,12 +23,12 @@ import edu.uci.ics.sourcerer.tools.java.model.types.RelationClass;
  * @author Joel Ossher (jossher@uci.edu)
  */
 class DatabaseEntity {
-  protected Integer entityID;
-  protected RelationClass rClass;
+  private Integer entityID;
+  private RelationClass rClass;
   
-  protected DatabaseEntity() {}
+  private DatabaseEntity() {}
   
-  static DatabaseEntity make(Integer entityID, RelationClass rClass) {
+  public static DatabaseEntity make(Integer entityID, RelationClass rClass) {
     DatabaseEntity entity = new DatabaseEntity();
     entity.entityID = entityID;
     entity.rClass = rClass;

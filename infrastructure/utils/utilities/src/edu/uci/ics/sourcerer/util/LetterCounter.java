@@ -15,20 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.link.crawler.flossmole;
-
-import edu.uci.ics.sourcerer.utils.db.sql.Column;
-import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
+package edu.uci.ics.sourcerer.util;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public final class GoogleCodeProjects extends DatabaseTable {
-  public static final DatabaseTable TABLE = new GoogleCodeProjects();
+public final class LetterCounter {
+  private int count = 0;
   
-  public static final Column<String> PROJECT_NAME = TABLE.addVarcharColumn("proj_name", 100, false); 
+  public int getCount() {
+    return count;
+  }
   
-  private GoogleCodeProjects() {
-    super("gc_projects");
+  public String getNext() {
+    StringBuilder result = new StringBuilder();
+    int val = count++;
+    while (val >= 0) {
+      result.insert(0, 'A' + val % 26);
+      val = val / 26 - 1;
+    }
+    return result.toString();
   }
 }

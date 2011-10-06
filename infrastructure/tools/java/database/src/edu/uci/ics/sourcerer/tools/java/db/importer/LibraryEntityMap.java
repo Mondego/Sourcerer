@@ -17,39 +17,118 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
-import java.util.Collection;
-import java.util.HashMap;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+
+import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
+import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
+import edu.uci.ics.sourcerer.tools.java.model.types.Modifier;
+import edu.uci.ics.sourcerer.tools.java.model.types.Modifiers;
+import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.model.types.RelationClass;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
+import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
+import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
+import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-class LibraryEntityMap extends AbstractEntityMap {
+final class LibraryEntityMap {
   private SynchronizedUnknownsMap unknowns;
+  private Map<String, DatabaseEntity> entities;
 
-  public LibraryEntityMap(TaskProgressLogger task, Collection<Integer> projects, SynchronizedUnknownsMap unknowns) {
-    super(projects);
+  public LibraryEntityMap(TaskProgressLogger task, SynchronizedUnknownsMap unknowns) {
     this.unknowns = unknowns;
     entities = new HashMap<>();
-    populateMap(task);
+    addLibraryEntities(task);
   }
+  
+  private final void addUnique(String fqn, DatabaseEntity entity) {
+    if (entities.containsKey(fqn)) {
+      logger.severe("Duplicate FQN: " + fqn);
+    } else {
+      entities.put(fqn, entity);
+    }
+  }
+  
+  private void addLibraryEntities(final TaskProgressLogger task) {
+    new DatabaseRunnable() {
+      @Override
+      public void action() {
+        task.start("Loading entities", "entities loaded");
+        
+        try (SelectQuery query = exec.makeSelectQuery(EntitiesTable.TABLE)) {
+          query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN);
+          query.andWhere(EntitiesTable.ENTITY_TYPE.compareEquals(Entity.PRIMITIVE));
+          TypedQueryResult result = query.selectStreamed();
+          while (result.next()) {
+            DatabaseEntity entity = DatabaseEntity.make(result.getResult(EntitiesTable.ENTITY_ID), RelationClass.JAVA_LIBRARY);
+            addUnique(result.getResult(EntitiesTable.FQN), entity);
+          }
+        }
+        
+        Collection<Integer> libraries = new ArrayList<>();
+        try (SelectQuery query = exec.makeSelectQuery(ProjectsTable.TABLE)) {
+          // Get the Java Library projectIDs
+          query.addSelect(ProjectsTable.PROJECT_ID);
+          query.andWhere(ProjectsTable.PROJECT_TYPE.compareEquals(Project.JAVA_LIBRARY));
+          
+          libraries.addAll(query.select().toCollection(ProjectsTable.PROJECT_ID));
+        }
+        
+        try (SelectQuery query = exec.makeSelectQuery(EntitiesTable.TABLE)) {
+          query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.PARAMS, EntitiesTable.RAW_PARAMS);
+          query.andWhere(
+              EntitiesTable.PROJECT_ID.compareIn(libraries).and(
+              EntitiesTable.ENTITY_TYPE.compareNotIn(EnumSet.of(Entity.PACKAGE, Entity.PARAMETER, Entity.LOCAL_VARIABLE))).and(
+              EntitiesTable.MODIFIERS.compareNotEquals(Modifiers.make(Modifier.PRIVATE))));
 
-  @Override
-  protected DatabaseEntity makeEntity(Integer entityID) {
-    return DatabaseEntity.make(entityID, RelationClass.JAVA_LIBRARY);
+          TypedQueryResult result = query.selectStreamed();
+          while (result.next()) {
+            DatabaseEntity entity = DatabaseEntity.make(result.getResult(EntitiesTable.ENTITY_ID), RelationClass.JAVA_LIBRARY);
+            String fqn = result.getResult(EntitiesTable.FQN);
+            String params = result.getResult(EntitiesTable.PARAMS);
+            if (params == null) {
+              addUnique(fqn, entity);
+            } else {
+              String rawParams = result.getResult(EntitiesTable.RAW_PARAMS);
+              if (rawParams != null) {
+                addUnique(fqn + rawParams, entity);
+              }
+              addUnique(fqn + params, entity);
+            }
+            task.progress();
+          }
+        }
+        task.finish();
+      }
+    }.run(); 
   }
   
   public synchronized DatabaseEntity getEntity(QueryExecutor exec, String fqn) {
     DatabaseEntity entity = entities.get(fqn);
     if (entity == null) {
-      entity = checkVirtualBinding(exec, fqn);
-      if (entity == null) {
-        entity = unknowns.getUnknown(fqn);
-      }
+      return unknowns.getUnknown(exec, fqn);
+    } else {
+      return entity;
     }
-    return entity;
+  }
+  
+  //TODO Make this actually do the virtual resolution
+  public synchronized DatabaseEntity getVirtualEntity(QueryExecutor exec, String fqn) {
+    DatabaseEntity entity = entities.get(fqn);
+    if (entity == null) {
+      return unknowns.getUnknown(exec, fqn);
+    } else {
+      return entity;
+    }
   }
 }

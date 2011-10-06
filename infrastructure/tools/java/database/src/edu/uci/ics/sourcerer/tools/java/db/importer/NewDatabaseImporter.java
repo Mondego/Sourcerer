@@ -82,17 +82,18 @@ public abstract class NewDatabaseImporter extends ParallelDatabaseRunnable {
   protected final void loadFileMap(Integer projectID) {
     task.start("Populating file map", "files loaded");
     
-    SelectQuery query = exec.makeSelectQuery(FilesTable.TABLE);
-    query.addSelects(FilesTable.FILE_ID, FilesTable.PATH);
-    query.andWhere(
-        FilesTable.FILE_TYPE.compareNotEquals(edu.uci.ics.sourcerer.tools.java.model.types.File.JAR).and(
-        FilesTable.PROJECT_ID.compareEquals(projectID)));
-    
-    TypedQueryResult result = query.select();
-    fileMap = new HashMap<>();
-    while (result.next()) {
-      fileMap.put(result.getResult(FilesTable.PATH), result.getResult(FilesTable.FILE_ID));
-      task.progress();
+    try (SelectQuery query = exec.makeSelectQuery(FilesTable.TABLE)) {
+      query.addSelects(FilesTable.FILE_ID, FilesTable.PATH);
+      query.andWhere(
+          FilesTable.FILE_TYPE.compareNotEquals(edu.uci.ics.sourcerer.tools.java.model.types.File.JAR).and(
+          FilesTable.PROJECT_ID.compareEquals(projectID)));
+      
+      TypedQueryResult result = query.select();
+      fileMap = new HashMap<>();
+      while (result.next()) {
+        fileMap.put(result.getResult(FilesTable.PATH), result.getResult(FilesTable.FILE_ID));
+        task.progress();
+      }
     }
     task.finish();
   }

@@ -41,6 +41,9 @@ public class InConstantConditionImpl<T> extends ConditionImpl implements InConst
     this.sel = sel;
     this.type = type;
     this.values = values;
+    if (values.isEmpty()) {
+      throw new IllegalArgumentException("Has to be in/not in something!");
+    }
   }
   
   @Override 

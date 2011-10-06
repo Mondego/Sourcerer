@@ -28,6 +28,7 @@ import java.util.Deque;
 import java.util.Set;
 import java.util.logging.Level;
 
+import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNNodeKind;
@@ -35,6 +36,9 @@ import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
+import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 
 import edu.uci.ics.sourcerer.tools.link.model.Project;
 import edu.uci.ics.sourcerer.util.Helper;
@@ -282,5 +286,22 @@ public final class Subversion {
         repo.closeSession();
       }
     }
+  }
+  
+  public static boolean checkout(String url, File target) {
+    DAVRepositoryFactory.setup();
+    
+    SVNClientManager manager = SVNClientManager.newInstance();
+    try {
+      SVNUpdateClient client = manager.getUpdateClient();
+      SVNURL svnURL = SVNURL.parseURIDecoded(url);
+      client.doCheckout(svnURL, target, SVNRevision.HEAD, SVNRevision.HEAD, SVNDepth.INFINITY, true);
+      return true;
+    } catch (SVNException e) {
+      logger.log(Level.SEVERE, "Error checking out project.", e);
+    } finally {
+      manager.dispose();
+    }
+    return false;
   }
 }
