@@ -117,10 +117,10 @@ public class EclipseUtils {
     counter.logTimeAndCount();
   }
   
-  public static void initializeLibraryProject(Iterable<? extends JarFile> jars) {
+  public static void initializeLibraryProject(Collection<? extends JarFile> jars) {
     initializeProject();
     try {
-      List<IClasspathEntry> entries = Helper.newArrayList();//new IClasspathEntry[locations.length + jarFiles.size() + 1];
+      List<IClasspathEntry> entries = new ArrayList<>(jars.size());//new IClasspathEntry[locations.length + jarFiles.size() + 1];
       for (JarFile jar : jars) {
         IPath sourcePath = null;
         RepoFile sourceFile = jar.getSourceFile();
@@ -139,11 +139,11 @@ public class EclipseUtils {
     initializeJarProject(Arrays.asList(jars));
   }
   
-  public static void initializeJarProject(Iterable<? extends JarFile> jars) {
+  public static void initializeJarProject(Collection<? extends JarFile> jars) {
     initializeProject();
     try {
       IVMInstall vmInstall = JavaRuntime.getDefaultVMInstall();
-      List<IClasspathEntry> entries = Helper.newArrayList();//new IClasspathEntry[locations.length + jarFiles.size() + 1];
+      List<IClasspathEntry> entries = new ArrayList<>();//new IClasspathEntry[locations.length + jarFiles.size() + 1];
       for (LibraryLocation location : JavaRuntime.getLibraryLocations(vmInstall)) {
         entries.add(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), location.getSystemLibrarySourcePath(), null));
       }

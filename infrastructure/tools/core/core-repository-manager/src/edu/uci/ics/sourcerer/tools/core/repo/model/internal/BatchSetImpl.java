@@ -28,7 +28,7 @@ import edu.uci.ics.sourcerer.util.Helper;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-final class BatchSetImpl<Project extends RepoProjectImpl<? extends AbstractRepository<Project, Batch>>, Batch extends BatchImpl<Project>> extends AbstractCollection<Project> {
+final class BatchSetImpl<Project extends AbstractRepoProject<? extends AbstractRepository<Project, Batch>, ?>, Batch extends BatchImpl<Project>> extends AbstractCollection<Project> {
   private AbstractRepository<Project, Batch> repo;
   
   private TreeMap<Integer, Batch> batches;

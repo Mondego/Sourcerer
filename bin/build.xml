@@ -274,7 +274,7 @@
   <!-- Populate the extractor's lib directory -->
   <target name="extractor-lib" depends="sourcerer-lib" description="Populate the Extractor's lib directory">
     <copy file="${dist}/sourcerer-lib.jar" todir="${extractor}/lib/" />
-    <copy file="${lib}/asm-3.3.1.jar" todir="${extractor}/lib/" />
+    <copy file="${lib}/asm-4.0_RC2.jar" todir="${extractor}/lib/" />
   </target>
   
   <!-- Build the extractor plugin - is asynchronous -->

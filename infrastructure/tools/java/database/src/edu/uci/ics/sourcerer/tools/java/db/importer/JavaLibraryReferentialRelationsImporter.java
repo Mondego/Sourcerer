@@ -19,6 +19,8 @@ package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import java.util.Collections;
 
+import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
@@ -34,8 +36,8 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 public class JavaLibraryReferentialRelationsImporter extends ReferentialRelationsImporter {
   private Iterable<? extends ExtractedJarFile> libraries;
   
-  protected JavaLibraryReferentialRelationsImporter(Iterable<? extends ExtractedJarFile> libraries, LibraryEntityMap libraryEntities) {
-    super("Importing Java Library Referential Relations", libraryEntities);
+  protected JavaLibraryReferentialRelationsImporter(Iterable<? extends ExtractedJarFile> libraries, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
+    super("Importing Java Library Referential Relations", javaModel, unknowns);
     this.libraries = libraries;
   }
   
@@ -54,14 +56,14 @@ public class JavaLibraryReferentialRelationsImporter extends ReferentialRelation
       
       for (ExtractedJarFile lib : libraries) {
         String name = lib.getProperties().NAME.getValue();
-        task.start("Importing " + name + "'s structural relations");
+        task.start("Importing " + name + "'s referential relations");
         
         task.start("Verifying import suitability");
         Integer projectID = null;
         if (lib.getProperties().EXTRACTED.getValue()) {
           equalsName.setValue(name);
           TypedQueryResult result = projectState.select();
-          if (result.hasNext()) {
+          if (result.next()) {
             String state = result.getResult(ProjectsTable.PATH);
             if (state == null) {
               task.report("Entity import already completed... skipping");

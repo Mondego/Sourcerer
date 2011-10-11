@@ -19,9 +19,6 @@ package edu.uci.ics.sourcerer.tools.core.repo.model;
 
 import java.util.Collection;
 
-import edu.uci.ics.sourcerer.util.io.arguments.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
-
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */

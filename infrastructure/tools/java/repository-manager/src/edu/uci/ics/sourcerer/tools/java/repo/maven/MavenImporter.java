@@ -132,4 +132,102 @@ public class MavenImporter {
       }
     }
   }
+  
+  public static void importLatestMavenToRepository() {
+    ModifiableJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadModifiableJavaRepository(JavaRepositoryFactory.OUTPUT_REPO);
+
+    SAXParser parser = null;
+    try {
+      SAXParserFactory fact = SAXParserFactory.newInstance();
+      parser = fact.newSAXParser();
+    } catch (ParserConfigurationException | SAXException e) {
+      logger.log(Level.SEVERE, "Unable to create sax parser.", e);
+    }
+    
+    class Handler extends DefaultHandler {
+      private boolean inGroupID;
+      private boolean inArtifactID;
+      private boolean inVersion;
+      public String groupID;
+      public String artifactID;
+      public String latestVersion;
+
+      @Override
+      public void startElement(String uri, String localName, String qName, Attributes attributes) {
+        switch (qName) {
+          case "groupId": inGroupID = true;
+          case "artifactId": inArtifactID = true;
+          case "version": inVersion = true;
+        }
+      }
+
+      @Override
+      public void characters(char[] ch, int start, int length) {
+        if (inGroupID) {
+          groupID = new String(ch, start, length);
+          inGroupID = false;
+        } else if (inArtifactID) {
+          artifactID = new String(ch, start, length);
+          inArtifactID = false;
+        } else if (inVersion) {
+          latestVersion = new String(ch, start, length);
+          inVersion = false;
+        }
+      }
+    };
+    Handler handler = new Handler();
+    
+    File root = Arguments.INPUT.getValue();
+    Deque<File> stack = new LinkedList<>();
+    stack.add(root);
+    
+    mainLoop:
+    while (!stack.isEmpty()) {
+      File next = stack.pop();
+      if (next.isDirectory()) {
+        // Look for maven-metadata.xml
+        for (File child : next.listFiles()) {
+          if (child.getName().equals("maven-metadata.xml")) {
+            try {
+              parser.parse(child, handler);
+            } catch (SAXException | IOException e) {
+              logger.log(Level.SEVERE, "Error reading maven metadata.", e);
+            }
+            // Look up the latest version
+            File version = new File(next, handler.latestVersion);
+            if (version.isDirectory()) {
+              String jarSuffix = version.getName() + ".jar";
+              String sourceSuffix = version.getName() + "-sources.jar";
+              File jar = null;
+              File source = null;
+              for (File file : version.listFiles()) {
+                if (file.getName().endsWith(jarSuffix)) {
+                  if (jar == null) {
+                    jar = file;
+                  } else {
+                    logger.info("Multiple jar files for " + version.getAbsolutePath());
+                  }
+                } else if (file.getName().endsWith(sourceSuffix)) {
+                  if (source == null) {
+                    source = file;
+                  } else {
+                    logger.info("Multiple source files for " + version.getAbsolutePath());
+                  }
+                }
+              }
+              if (jar == null) {
+                logger.info("Unable to find jar for " + version.getAbsolutePath());
+              } else {
+                repo.addMavenJarFile(jar, source, handler.groupID, handler.artifactID, version.getName());
+              }
+            }
+            continue mainLoop;
+          }
+        }
+        for (File child : next.listFiles()) {
+          stack.add(child);
+        }
+      }
+    }
+  }
 }

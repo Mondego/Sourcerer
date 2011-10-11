@@ -24,13 +24,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.ArrayUtils;
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.Condition;
@@ -70,7 +70,7 @@ class SelectQueryImpl implements SelectQuery {
   
   Table[] fromJoin(ComparisonCondition ... conditions) {
     if (tables == null) {
-      Map<Table, Boolean> dupTables = Helper.newHashMap();
+      Map<Table, Boolean> dupTables = new HashMap<>();
       for (int i = 0; i < conditions.length; i++) {
         if (i == 0) {
           Table table = conditions[i].getLeftTable();
@@ -98,14 +98,14 @@ class SelectQueryImpl implements SelectQuery {
       for (int i = 0; i < conditions.length; i++) {
         if (i == 0) {
           Table table = conditions[i].getLeftTable();
-          if (dupTables.containsKey(table)) {
+          if (dupTables.containsKey(table) && dupTables.get(table).booleanValue()) {
             tables[0] = new QualifiedTableImpl(table, "t");
           } else {
             tables[0] = table;
           }
         }
         Table table = conditions[i].getRightTable();
-        if (dupTables.containsKey(table)) {
+        if (dupTables.containsKey(table) && dupTables.get(table).booleanValue()) {
           tables[i + 1] = new QualifiedTableImpl(table, "t" + i);
         } else {
           tables[i + 1] = table;
@@ -150,6 +150,13 @@ class SelectQueryImpl implements SelectQuery {
       whereCondition = condition;
     } else {
       whereCondition = whereCondition.and(condition);
+    }
+  }
+  
+  @Override
+  public void andWhere(Condition ... conditions) {
+    for (Condition condition : conditions) {
+      andWhere(condition);
     }
   }
   
@@ -260,7 +267,6 @@ class SelectQueryImpl implements SelectQuery {
   }
   
   private class QueryResult implements TypedQueryResult {
-    private boolean skipNextNext = false;
     private ResultSet result = null;
     
     QueryResult(ResultSet result) {
@@ -272,22 +278,17 @@ class SelectQueryImpl implements SelectQuery {
       if (result == null) {
         return false;
       } else {
-        if (skipNextNext) {
-          skipNextNext = false;
-          return true;
-        } else {
-          try {
-            boolean val = result.next();
-            if (!val) {
-              result.close();
-              result = null;
-            }
-            return val;
-          } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error getting next result.", e);
+        try {
+          boolean val = result.next();
+          if (!val) {
+            result.close();
             result = null;
-            return false;
           }
+          return val;
+        } catch (SQLException e) {
+          logger.log(Level.SEVERE, "Error getting next result.", e);
+          result = null;
+          return false;
         }
       }
     }
@@ -317,7 +318,7 @@ class SelectQueryImpl implements SelectQuery {
     }
     
     @Override
-    public <T> T toSingleton(Selectable<T> selectable) {
+    public <T> T toSingleton(Selectable<T> selectable, boolean permitMissing) {
       if (next()) {
         T val = getResult(selectable);
         if (next()) {
@@ -331,21 +332,11 @@ class SelectQueryImpl implements SelectQuery {
         }
         return val;
       } else {
-        throw new NoSuchElementException();
-      }
-    }
-
-    @Override
-    public boolean hasNext() {
-      try {
-        boolean val = result.next();
-        if (val) {
-          skipNextNext = true;
+        if (permitMissing) {
+          return null;
+        } else {
+          throw new NoSuchElementException();
         }
-        return val;
-      } catch (SQLException e) {
-        logger.log(Level.SEVERE, "Error reading results.", e);
-        return false;
       }
     }
     

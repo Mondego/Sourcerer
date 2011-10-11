@@ -34,6 +34,12 @@ public final class TypeUtils {
     return fqn.contains("(") && fqn.endsWith(")");
   }
   
+  public static Pair<String, String> breakMethod(String fqn) {
+    int paren = fqn.indexOf('(');
+    int dot = fqn.lastIndexOf('.', paren);
+    return new Pair<>(fqn.substring(0, dot), fqn.substring(dot + 1));
+  }
+  
   public static String getMethodName(String fqn) {
     return fqn.substring(0, fqn.indexOf('('));
   }

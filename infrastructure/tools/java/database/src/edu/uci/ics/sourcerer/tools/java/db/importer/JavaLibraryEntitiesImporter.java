@@ -60,9 +60,9 @@ public class JavaLibraryEntitiesImporter extends EntitiesImporter {
         if (lib.getProperties().EXTRACTED.getValue()) {
           equalsName.setValue(name);
           TypedQueryResult result = projectState.select();
-          if (result.hasNext()) {
+          if (result.next()) {
             String state = result.getResult(ProjectsTable.PATH);
-            if ("END_ENTITY".equals(state) || state == null) {
+            if ("END_ENTITY".equals(state) || "END_STRUCTURAL".equals(state) || state == null) {
               task.report("Entity import already completed... skipping");
               shouldImport = false;
             } else {

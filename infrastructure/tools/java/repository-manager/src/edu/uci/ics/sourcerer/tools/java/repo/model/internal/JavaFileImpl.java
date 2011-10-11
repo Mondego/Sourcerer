@@ -34,7 +34,11 @@ public class JavaFileImpl implements JavaFile, CustomSerializable {
   private ContentFileImpl file;
 
   protected JavaFileImpl(String pkg, ContentFileImpl file) {
-    this.pkg = pkg;
+    if (pkg.equals("")) {
+      this.pkg = null;
+    } else {
+      this.pkg = pkg;
+    }
     this.file = file;
   }
   

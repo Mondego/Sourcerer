@@ -67,10 +67,10 @@ public class Main {
     }
   }.setProperties(RepositoryFactory.OUTPUT_REPO);
   
-  public static final Command FIX_PROJECT_PROPERTIES = new Command("fix-project-properties", "") {
+  public static final Command CLEAN_SUBVERSION_CONTENT = new Command("clean-svn-content", "Removes all the .svn directories.") {
     @Override
     protected void action() {
-      RepoBuilder.fixProjectProperties();
+      RepoBuilder.cleanSubversionContent();
     }
   }.setProperties(RepositoryFactory.INPUT_REPO);
   

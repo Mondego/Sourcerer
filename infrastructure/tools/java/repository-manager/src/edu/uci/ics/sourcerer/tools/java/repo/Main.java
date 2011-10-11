@@ -34,10 +34,10 @@ public class Main {
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO);
     
-  public static final Command IMPORT_MAVEN_TO_REPOSITORY =
-    new Command("import-maven-to-repo", "Imports a copy of the Maven2 central repository into the Sourcerer repository.") {
+  public static final Command IMPORT_LATEST_MAVEN_TO_REPOSITORY =
+    new Command("import-latest-maven-to-repo", "Imports the latest copy of the Maven2 central repository into the Sourcerer repository.") {
       protected void action() {
-        MavenImporter.importMavenToRepository();
+        MavenImporter.importLatestMavenToRepository();
       }
     }.setProperties(Arguments.INPUT, JavaRepositoryFactory.OUTPUT_REPO);
   
@@ -45,6 +45,13 @@ public class Main {
     new Command("calculate-repo-stats", "Calculates a variety of statistics about the repository.") {
       protected void action() {
         RepositoryStatisticsCalculator.calculateRepositoryStatistics();
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO);
+    
+  public static final Command TEST_FOR_MEMORY_LEAKS =
+    new Command("test-for-memory-leaks", "Tests for memory leaks.") {
+      protected void action() {
+        RepositoryStatisticsCalculator.testForMemoryLeaks();
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO);
     

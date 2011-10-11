@@ -20,21 +20,24 @@ package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.File;
-import java.lang.ref.SoftReference;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceProject;
 import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProjectProperties;
+import edu.uci.ics.sourcerer.util.CachedReference;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class AbstractSourceProject<Repo extends AbstractRepository<?, ?>, FileSet extends AbstractFileSet> extends RepoProjectImpl<Repo> implements ModifiableSourceProject {
+public abstract class AbstractSourceProject<Repo extends AbstractRepository<?, ?>, FileSet extends AbstractFileSet> extends AbstractRepoProject<Repo, SourceProjectProperties> implements ModifiableSourceProject {
   private RepoFileImpl contentFile;
-  private SoftReference<FileSet> files; 
-  
-  private SourceProjectProperties properties;
+  private CachedReference<FileSet> files = new CachedReference<FileSet>() {
+    @Override
+    protected FileSet make() {
+      return makeFileSet();
+    }
+  }; 
   
   protected AbstractSourceProject(Repo repo, ProjectLocationImpl loc) {
     super(repo, loc);
@@ -48,16 +51,18 @@ public abstract class AbstractSourceProject<Repo extends AbstractRepository<?, ?
   }
   
   @Override
-  public SourceProjectProperties getProperties() {
-    if (properties == null) {
-      properties = new SourceProjectProperties(propFile);
-    }
-    return properties;
+  protected SourceProjectProperties makeProperties(RepoFileImpl propFile) {
+    return new SourceProjectProperties(propFile);
   }
   
   @Override
   public boolean deleteContent() {
     return contentFile.delete();
+  }
+
+  @Override
+  public void delete(DeletionFilter filter) {
+    getContent().delete(filter);
   }
 
   @Override
@@ -101,15 +106,7 @@ public abstract class AbstractSourceProject<Repo extends AbstractRepository<?, ?
   
   @Override
   public FileSet getContent() {
-    FileSet ret = null;
-    if (files != null) {
-      ret = files.get();
-    }
-    if (ret == null) {
-      ret = makeFileSet();
-      files = new SoftReference<FileSet>(ret);
-    }
-    return ret;
+    return files.get();
   }
   
   protected RepoFileImpl getContentFile() {

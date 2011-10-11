@@ -35,7 +35,7 @@ import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class AbstractRepository<Project extends RepoProjectImpl<? extends AbstractRepository<Project, Batch>>, Batch extends BatchImpl<Project>> {
+public abstract class AbstractRepository<Project extends AbstractRepoProject<? extends AbstractRepository<Project, Batch>, ?>, Batch extends BatchImpl<Project>> {
   public static final Argument<String> REPO_PROPERTIES = new StringArgument("repo-properties-file", "File name for repo properties file.").permit();
   public static final Argument<String> PROJECT_CACHE = new StringArgument("project-cache-file", "project-cache.txt", "File containing a cached list of the projects.").permit();
   public static final Argument<Boolean> CLEAR_CACHES = new BooleanArgument("clear-caches", false, "Clear all repository caches.").permit();
@@ -102,7 +102,6 @@ public abstract class AbstractRepository<Project extends RepoProjectImpl<? exten
       }
     }
   }
-  
   
   public Batch createBatch() {
     if (batchSet == null) {

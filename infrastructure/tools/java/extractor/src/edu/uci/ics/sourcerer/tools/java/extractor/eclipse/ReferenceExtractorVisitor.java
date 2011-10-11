@@ -121,14 +121,14 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.jdt.core.dom.WildcardType;
 
-import edu.uci.ics.sourcerer.extractor.io.CommentWriter;
-import edu.uci.ics.sourcerer.extractor.io.EntityWriter;
-import edu.uci.ics.sourcerer.extractor.io.FileWriter;
-import edu.uci.ics.sourcerer.extractor.io.ImportWriter;
-import edu.uci.ics.sourcerer.extractor.io.LocalVariableWriter;
-import edu.uci.ics.sourcerer.extractor.io.ProblemWriter;
-import edu.uci.ics.sourcerer.extractor.io.RelationWriter;
-import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.CommentWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.EntityWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.FileWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.ImportWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.LocalVariableWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.ProblemWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.RelationWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Comment;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.File;
@@ -206,10 +206,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     
     // Get the package fqn
     if (node.getPackage() == null) {
-      entityWriter.writeEntity(Entity.PACKAGE, "default", null, 0, null, null);
+      entityWriter.writeEntity(Entity.PACKAGE, "default", 0, null, null);
       fqnStack.push("default", Entity.PACKAGE);
     } else {
-      entityWriter.writeEntity(Entity.PACKAGE, node.getPackage().getName().getFullyQualifiedName(), null, 0, null, null);
+      entityWriter.writeEntity(Entity.PACKAGE, node.getPackage().getName().getFullyQualifiedName(), 0, null, null);
       fqnStack.push(node.getPackage().getName().getFullyQualifiedName(), Entity.PACKAGE);
     }
     
@@ -343,7 +343,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     // Write the inside relation
     relationWriter.writeRelation(Relation.INSIDE, fqn, parent, getUnknownLocation());
     
-    entityWriter.writeEntity(type, fqn, node.getName().getIdentifier(), node.getModifiers(), metrics, getLocation(node));
+    entityWriter.writeEntity(type, fqn, node.getModifiers(), metrics, getLocation(node));
     
     
     // Write the extends relation
@@ -379,7 +379,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
           if (method.isDefaultConstructor()) {
             // Write the entity
             String constructorFqn = getMethodName(method, true);
-            entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, "<init>", "()", null, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
+            entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, "()", null, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
             constructorFqn += "()";
             // Write the inside relation
             relationWriter.writeRelation(Relation.INSIDE, constructorFqn, fqn, getUnknownLocation());
@@ -445,7 +445,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       fqnStack.push(fqn, Entity.CLASS);
       
       // Write the entity
-      entityWriter.writeEntity(Entity.CLASS, fqn, getNameFromTypeFqn(fqn), 0, MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+      entityWriter.writeEntity(Entity.CLASS, fqn, 0, MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
     
       // Write the inside relation
       relationWriter.writeRelation(Relation.INSIDE, fqn, parentFqn, getUnknownLocation());
@@ -482,9 +482,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
             String basicFqn = fqn + ".<init>";
             String constructorFqn = basicFqn + args;
             if (args.equals(rawArgs)) {
-              entityWriter.writeEntity(Entity.CONSTRUCTOR, basicFqn, "<init>", args, null, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
+              entityWriter.writeEntity(Entity.CONSTRUCTOR, basicFqn, args, null, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
             } else {
-              entityWriter.writeEntity(Entity.CONSTRUCTOR, basicFqn, "<init>", args, rawArgs, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
+              entityWriter.writeEntity(Entity.CONSTRUCTOR, basicFqn, args, rawArgs, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
             }
             
 
@@ -572,7 +572,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     Location unknown = getUnknownLocation();
     
     // Write the entity
-    entityWriter.writeEntity(Entity.ENUM, fqn, getNameFromTypeFqn(fqn), node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+    entityWriter.writeEntity(Entity.ENUM, fqn, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
     
     // Write the inside relation
     relationWriter.writeRelation(Relation.INSIDE, fqn, parent, unknown);
@@ -592,7 +592,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         if (method.isDefaultConstructor()) {
           // Write the entity
           String constructorFqn = getMethodName(method, true);
-          entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, "<init>", "()", null, method.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), unknown);
+          entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, "()", null, method.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), unknown);
           constructorFqn += "()";
 
           // Write the inside relation
@@ -607,7 +607,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     // Write the values method
     {
       String methodFqn = fqn + ".values";
-      entityWriter.writeEntity(Entity.METHOD, methodFqn, "values", "()", null, 9, null, unknown);
+      entityWriter.writeEntity(Entity.METHOD, methodFqn, "()", null, 9, null, unknown);
       methodFqn += "()";
       relationWriter.writeRelation(Relation.INSIDE, methodFqn, fqn, unknown);
       relationWriter.writeRelation(Relation.RETURNS, methodFqn, fqn + "[]", unknown);
@@ -616,7 +616,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     // Write the valueOf method
     {
       String methodFqn = fqn + ".valueOf";
-      entityWriter.writeEntity(Entity.METHOD, methodFqn, "valueOf", "(java.lang.String)", null, 9, null, unknown);
+      entityWriter.writeEntity(Entity.METHOD, methodFqn, "(java.lang.String)", null, 9, null, unknown);
       relationWriter.writeRelation(Relation.INSIDE, methodFqn, fqn, unknown);
       relationWriter.writeRelation(Relation.RETURNS, methodFqn, fqn, unknown);
       localVariableWriter.writeLocalVariable(LocalVariable.PARAM, "name", 0, "java.lang.String", unknown, methodFqn, 0, unknown);
@@ -655,7 +655,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     String fqn = fqnStack.getTypeFqn(node.getName().getIdentifier());
     
     // Write the entity
-    entityWriter.writeEntity(Entity.ENUM_CONSTANT, fqn, node.getName().getIdentifier(), 0, MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+    entityWriter.writeEntity(Entity.ENUM_CONSTANT, fqn, 0, MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
     
     // Write the inside relation
     relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), getUnknownLocation());
@@ -704,7 +704,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     String fqn = fqnStack.getInitializerFqn();
 
     // Write the entity
-    entityWriter.writeEntity(Entity.INITIALIZER, fqn, getNameFromTypeFqn(fqn), node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+    entityWriter.writeEntity(Entity.INITIALIZER, fqn, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
 
     // Write the inside relation
     relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), getUnknownLocation());
@@ -806,7 +806,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       String fqn = fqnStack.getTypeFqn(node.getName().getIdentifier());
       
       // Write the entity
-      entityWriter.writeEntity(Entity.FIELD, fqn, node.getName().getIdentifier(), parent.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+      entityWriter.writeEntity(Entity.FIELD, fqn, parent.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
       
       // Write the inside relation
       relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), getUnknownLocation());
@@ -906,9 +906,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
 
       // Write the entity
       if (signature.equals(rawSignature)) {
-        entityWriter.writeEntity(Entity.CONSTRUCTOR, fqn, "<init>", signature, null, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+        entityWriter.writeEntity(Entity.CONSTRUCTOR, fqn, signature, null, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
       } else {
-        entityWriter.writeEntity(Entity.CONSTRUCTOR, fqn, "<init>", signature, rawSignature, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+        entityWriter.writeEntity(Entity.CONSTRUCTOR, fqn, signature, rawSignature, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
       }
       fqn += signature;
     } else {
@@ -917,9 +917,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       
       // Write the entity
       if (signature.equals(rawSignature)) {
-        entityWriter.writeEntity(Entity.METHOD, fqn, node.getName().getIdentifier(), signature, null, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+        entityWriter.writeEntity(Entity.METHOD, fqn, signature, null, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
       } else {
-        entityWriter.writeEntity(Entity.METHOD, fqn, node.getName().getIdentifier(), signature, rawSignature, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+        entityWriter.writeEntity(Entity.METHOD, fqn, signature, rawSignature, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
       }
       fqn += signature;
       
@@ -1598,7 +1598,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     fqnStack.push(fqn, Entity.ANNOTATION);
     
     // Write the entity
-    entityWriter.writeEntity(Entity.ANNOTATION, fqn, node.getName().getIdentifier(), node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+    entityWriter.writeEntity(Entity.ANNOTATION, fqn, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
 
     // Write the inside relation
     relationWriter.writeRelation(Relation.INSIDE, fqn, parent, getUnknownLocation());
@@ -1638,7 +1638,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     String fqn = fqnStack.getFqn() + "." + node.getName().getIdentifier();
 
     // Write the entity
-    entityWriter.writeEntity(Entity.ANNOTATION_ELEMENT, fqn, node.getName().getIdentifier(), node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+    entityWriter.writeEntity(Entity.ANNOTATION_ELEMENT, fqn, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
     fqn += "()";
 
     // Write the inside relation
@@ -2185,16 +2185,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     }
     return fqnBuilder.toString();
   }
-
-  private static String getNameFromTypeFqn(String fqn) {
-    int dot = fqn.lastIndexOf('.');
-    if (dot == -1) {
-      return fqn;
-    } else {
-      return fqn.substring(dot + 1);
-    }
-  }
-  
+ 
   private static final String BRACKETS = "[][][][][][][][][][][][][][][][][][][][]";
  
   private String getUnknownFqn(String name) {

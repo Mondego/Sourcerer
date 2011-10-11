@@ -24,10 +24,9 @@ import java.util.Collection;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface TypedQueryResult extends Closeable {
-  public boolean hasNext();
   public boolean next();
   public <T> T getResult(Selectable<T> selectable);
   public <T> Collection<T> toCollection(Selectable<T> selectable);
-  public <T> T toSingleton(Selectable<T> selectable);
+  public <T> T toSingleton(Selectable<T> selectable, boolean permitMissing);
   public void close();
 }

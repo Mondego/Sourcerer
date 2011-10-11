@@ -29,11 +29,11 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceBatch;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceProject;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceProject.ContentAdder;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceProject.DeletionFilter;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceRepository;
+import edu.uci.ics.sourcerer.tools.core.repo.model.RepoFile;
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
-import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProject;
 import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProjectProperties;
-import edu.uci.ics.sourcerer.tools.core.repo.model.SourceRepository;
 import edu.uci.ics.sourcerer.tools.link.model.Project;
 import edu.uci.ics.sourcerer.util.LetterCounter;
 import edu.uci.ics.sourcerer.util.TimeCounter;
@@ -165,24 +165,48 @@ public final class RepoBuilder {
     task.finish();
   }
   
-  public static void fixProjectProperties() {
-    SourceRepository repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
-    
+  public static void cleanSubversionContent() {
     TaskProgressLogger task = new TaskProgressLogger();
+    task.start("Cleaning SVN content");
+    ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
     
-    task.start("Fixing project properties", "projects fixed", 100);
-    
-    for (SourceProject project : repo.getProjects()) {
-      SourceProjectProperties properties = project.getProperties();
-      if (properties.DOWNLOAD_DATE.getValue() != null) {
-        if (properties.SVN_URL.getValue() != null) {
-          properties.CONTENT_URL.setValue(null);
-          properties.save();
-        }
+    DeletionFilter filter = new DeletionFilter() {
+      @Override
+      public boolean shouldDelete(RepoFile file) {
+        return file.getName().equals(".svn");
       }
-      task.progress();
+    };
+    
+    task.start("Cleaning projects", "projects cleaned");
+    for (ModifiableSourceProject project : repo.getProjects()) {
+      task.progress("Examining project %d, " + project);
+      task.start("Cleaning");
+      project.delete(filter);
+      task.finish();
     }
+    task.finish();
     
     task.finish();
   }
+//  
+//  public static void fixProjectProperties() {
+//    SourceRepository repo = RepositoryFactory.INSTANCE.loadSourceRepository(RepositoryFactory.INPUT_REPO);
+//    
+//    TaskProgressLogger task = new TaskProgressLogger();
+//    
+//    task.start("Fixing project properties", "projects fixed", 100);
+//    
+//    for (SourceProject project : repo.getProjects()) {
+//      SourceProjectProperties properties = project.getProperties();
+//      if (properties.DOWNLOAD_DATE.getValue() != null) {
+//        if (properties.SVN_URL.getValue() != null) {
+//          properties.CONTENT_URL.setValue(null);
+//          properties.save();
+//        }
+//      }
+//      task.progress();
+//    }
+//    
+//    task.finish();
+//  }
 }

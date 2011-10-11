@@ -19,8 +19,9 @@ package edu.uci.ics.sourcerer.tools.java.repo.model.internal;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -28,6 +29,7 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.ContentFile;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractFileSet;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractRepository;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ContentFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
@@ -39,36 +41,44 @@ import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.PackageExtractor;
 import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JavaFileSetImpl extends AbstractFileSet implements JavaFileSet {
+  public static final Argument<String> JAVA_FILE_CACHE = new StringArgument("java-file-cache-file", "java-file-cache.txt", "Cache of the file set's java files.").permit();
+  
   private final JavaRepositoryImpl repo;
   private Collection<ContentFileImpl> javaFiles;
   private Collection<JavaFileImpl> filteredJavaFiles;
   private Collection<JarFileImpl> jarFiles;
   
+  private final File cache;
+  
   protected JavaFileSetImpl(JavaProjectImpl project) {
     super(project);
     this.repo = project.getRepository();
+    cache = new File(cacheDir, JAVA_FILE_CACHE.getValue());
+    new File(project.getLocation().getProjectRoot().toFile(), JAVA_FILE_CACHE.getValue()).delete();
   }
   
   @Override
-  protected void initHelper(boolean reloadNow) {
-    if (reloadNow) {
+  public void init(boolean loadNow, boolean clearCache) {
+    if (loadNow) {
       if (javaFiles == null) {
-        javaFiles = Helper.newArrayList();
+        javaFiles = new ArrayList<>();
       } else {
         javaFiles.clear();
       }
       if (filteredJavaFiles == null) {
-        filteredJavaFiles = Helper.newArrayList();
+        filteredJavaFiles = new ArrayList<>();
       } else {
         filteredJavaFiles.clear();
       }
       if (jarFiles == null) {
-        jarFiles = Helper.newArrayList();
+        jarFiles = new ArrayList<>();
       } else {
         jarFiles.clear();
       }
@@ -77,53 +87,63 @@ public class JavaFileSetImpl extends AbstractFileSet implements JavaFileSet {
       filteredJavaFiles = null;
       jarFiles = null;
     }
+    super.init(loadNow, clearCache);
   }
   
   @Override
-  protected void populateFileSetHelper() {
-    Map<String, Collection<JavaFileImpl>> map = Helper.newHashMap();
-    for (ContentFileImpl file : javaFiles) {
-      String pkg = PackageExtractor.extractPackage(file.getFile().toFile());
-      if (pkg != null) {
-        String key = pkg + file.getFile().getName();
-        Collection<JavaFileImpl> files = map.get(key);
-        if (files == null) {
-          files = Helper.newLinkedList();
-          map.put(key, files);
-        }
-        files.add(new JavaFileImpl(pkg, file));
-      } else {
-//        logger.info("skipping " + file);
-      }
-    }
-    
-    for (Collection<JavaFileImpl> files : map.values()) {
-      if (files.size() == 1) {
-        filteredJavaFiles.addAll(files);
-      } else {
-        JavaFileImpl best = null;
-        for (JavaFileImpl file : files) {
-          if (best == null || file.morePopularThan(best)) {
-            best = file;
+  protected void populateFileSet() {
+    super.populateFileSet();
+    if (AbstractRepository.CLEAR_CACHES.getValue() || !cache.exists() || !readCache()) {
+      Map<String, Collection<JavaFileImpl>> map = Helper.newHashMap();
+      for (ContentFileImpl file : javaFiles) {
+        String pkg = PackageExtractor.extractPackage(file.getFile().toFile());
+        if (pkg != null) {
+          String key = pkg + file.getFile().getName();
+          Collection<JavaFileImpl> files = map.get(key);
+          if (files == null) {
+            files = Helper.newLinkedList();
+            map.put(key, files);
           }
+          files.add(new JavaFileImpl(pkg, file));
         }
-        filteredJavaFiles.add(best);
       }
+    
+      for (Collection<JavaFileImpl> files : map.values()) {
+        if (files.size() == 1) {
+          filteredJavaFiles.addAll(files);
+        } else {
+          JavaFileImpl best = null;
+          for (JavaFileImpl file : files) {
+            if (best == null || file.morePopularThan(best)) {
+              best = file;
+            }
+          }
+          filteredJavaFiles.add(best);
+        }
+      }
+      
+      try (SimpleSerializer writer = IOUtils.makeSimpleSerializer(cache)) {
+        EntryWriter<JavaFileImpl> er = writer.getEntryWriter(JavaFileImpl.class);
+        for (JavaFileImpl file : filteredJavaFiles) {
+          er.write(file);
+        }
+        er.close();
+        return;
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Unable to write file cache", e);
+      }
+      FileUtils.delete(cache);
     }
   }
   
-  @Override
-  protected void writeExtendedCache(SimpleSerializer serializer) throws IOException {
-    EntryWriter<JavaFileImpl> writer = serializer.getEntryWriter(JavaFileImpl.class);
-    for (JavaFileImpl file : filteredJavaFiles) {
-      writer.write(file);
+  private boolean readCache() {
+    try (SimpleDeserializer reader = IOUtils.makeSimpleDeserializer(cache)) {
+      filteredJavaFiles = reader.deserializeToCollection(JavaFileImpl.makeDeserializer(getRoot()));
+      return true;
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, "Unable to load java file cache: " + getRoot(), e);
+      return false;
     }
-    writer.close();
-  }
-
-  @Override
-  protected void readExtendedCache(SimpleDeserializer deserializer) throws IOException {
-    filteredJavaFiles = deserializer.deserializeToCollection(JavaFileImpl.makeDeserializer(getRoot()));
   }
   
   @Override

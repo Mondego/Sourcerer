@@ -20,17 +20,17 @@ package edu.uci.ics.sourcerer.tools.java.extractor;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 
-import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
-import edu.uci.ics.sourcerer.extractor.io.internal.CommentWriterImpl;
-import edu.uci.ics.sourcerer.extractor.io.internal.EntityWriterImpl;
-import edu.uci.ics.sourcerer.extractor.io.internal.FileWriterImpl;
-import edu.uci.ics.sourcerer.extractor.io.internal.ImportWriterImpl;
-import edu.uci.ics.sourcerer.extractor.io.internal.LocalVariableWriterImpl;
-import edu.uci.ics.sourcerer.extractor.io.internal.MissingTypeWriterImpl;
-import edu.uci.ics.sourcerer.extractor.io.internal.ProblemWriterImpl;
-import edu.uci.ics.sourcerer.extractor.io.internal.RelationWriterImpl;
-import edu.uci.ics.sourcerer.extractor.io.internal.UsedJarWriterImpl;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.CommentWriterImpl;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.EntityWriterImpl;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.FileWriterImpl;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.ImportWriterImpl;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.LocalVariableWriterImpl;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.MissingTypeWriterImpl;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.ProblemWriterImpl;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.RelationWriterImpl;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.UsedJarWriterImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
@@ -106,6 +106,13 @@ public class Main implements IApplication {
         Extractor.extractLibrariesWithASM();
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
+    
+  public static final Command EXTRACT_LIBRARIES =
+    new ExtractorCommand("extract-libraries", "Extract the libraries using Eclipse and Asm.") {
+      protected void action() {
+        Extractor.extractLibraries();
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
   
   public static final Command EXTRACT_JARS_ECLIPSE =
     new ExtractorCommand("extract-jars-eclipse", "Extract the jars using Eclipse.") {
@@ -115,12 +122,19 @@ public class Main implements IApplication {
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
     
   public static final Command EXTRACT_JARS_ASM =
-      new ExtractorCommand("extract-jars-asm", "Extract the jars using Asm.") {
-        protected void action() {
-          Extractor.extractProjectJarsWithASM();
-        }
-      }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
+    new ExtractorCommand("extract-jars-asm", "Extract the jars using Asm.") {
+      protected void action() {
+        Extractor.extractProjectJarsWithASM();
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
   
+  public static final Command EXTRACT_JARS =
+    new ExtractorCommand("extract-jars", "Extract the jars using Eclipse and Asm.") {
+      protected void action() {
+        Extractor.extractProjectJars();
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
+    
   public static final Command EXTRACT_PROJECTS = 
     new ExtractorCommand("extract-projects", "Extract the projects.") {
       protected void action() {

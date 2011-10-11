@@ -23,11 +23,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Scanner;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepoFile;
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.CustomSerializable;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
@@ -39,65 +37,54 @@ import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 public class RepoFileImpl implements RepoFile, CustomSerializable {
   private final RepoFileImpl root;
   private final RelativePathImpl relativePath;
-  private final File file;
+  private File file;
   private final boolean isRoot;
-  
-  private final Map<RelativePathImpl, RepoFileImpl> internedChildren;
-  private final Map<RelativePathImpl, RepoFileImpl> internedRoots;
   
   private RepoFileImpl(File file) {
     this.root = null;
     this.isRoot = true;
     this.relativePath = RelativePathImpl.makeEmpty();
     this.file = file;
-    this.internedChildren = Helper.newHashMap();
-    this.internedRoots = Helper.newHashMap();
   }
 
   private RepoFileImpl(RepoFileImpl root, boolean isRoot, RelativePathImpl relativePath) {
     this.root = root;
     this.isRoot = isRoot;
     this.relativePath = relativePath;
-    this.file = new File(root.file, relativePath.toString());
-    this.internedRoots = root.internedRoots;
-    if (isRoot) {
-      this.internedChildren = Helper.newHashMap();
-    } else {
-      this.internedChildren = root.internedChildren;
-    }
+    this.file = null;
   }
   
   public static RepoFileImpl makeRoot(Argument<File> root) {
     return new RepoFileImpl(root.getValue());
   }
   
-  private RepoFileImpl internRoot(RelativePathImpl path) {
-    RepoFileImpl newRoot = internedRoots.get(path);
-    if (newRoot == null) {
-      newRoot = new RepoFileImpl(getOirignalRoot(), true, path);
-      internedRoots.put(path, newRoot);
-    }
-    return newRoot;
-  }
+//  private RepoFileImpl internRoot(RelativePathImpl path) {
+//    RepoFileImpl newRoot = internedRoots.get(path);
+//    if (newRoot == null) {
+//      newRoot = new RepoFileImpl(getOirignalRoot(), true, path);
+//      internedRoots.put(path, newRoot);
+//    }
+//    return newRoot;
+//  }
   
-  private RepoFileImpl internChild(RelativePathImpl path) {
-    if (path.isEmpty()) {
-      return root;
-    } else {
-      RepoFileImpl newChild = internedChildren.get(path);
-      if (newChild == null) {
-        newChild = new RepoFileImpl(isRoot ? this : root, false, path);
-        internedChildren.put(path, newChild);
-      }
-      return newChild;
-    }
-  }
+//  private RepoFileImpl internChild(RelativePathImpl path) {
+//    if (path.isEmpty()) {
+//      return root;
+//    } else {
+//      RepoFileImpl newChild = internedChildren.get(path);
+//      if (newChild == null) {
+//        newChild = new RepoFileImpl(isRoot ? this : root, false, path);
+//        internedChildren.put(path, newChild);
+//      }
+//      return newChild;
+//    }
+//  }
   
   public RepoFileImpl reroot(RepoFileImpl newRoot) {
     if (isRoot) {
-      return newRoot.internRoot(relativePath);
+      return new RepoFileImpl(newRoot.getOirignalRoot(), true, relativePath);
     } else {
-      return newRoot.internRoot(root.relativePath).internChild(relativePath);
+      return new RepoFileImpl(root, false, relativePath);
     }
   }
   
@@ -126,36 +113,44 @@ public class RepoFileImpl implements RepoFile, CustomSerializable {
     if (isRoot) {
       return this;
     } else {
-      return internRoot(root.relativePath.append(relativePath));
+      return new RepoFileImpl(root.getOirignalRoot(), true, root.relativePath.append(relativePath));
     }
+  }
+
+  private File ensureFile() {
+    if (file == null) {
+      file = new File(root.ensureFile(), relativePath.toString());
+    }
+    return file;
   }
   
   @Override
   public boolean isDirectory() {
-    return file.isDirectory();
+    return ensureFile().isDirectory();
   }
   
   @Override
   public boolean exists() {
-    if (file.exists()) {
-      if (file.isDirectory()) {
-        // make sure it's not empty
-        if (file.list().length == 0) {
-          file.delete();
-          return false;
-        } else {
-          return true;
-        }
-      } else {
-        return true;
-      }
-    } else {
-      return false;
-    }
+    return ensureFile().exists();
+//    if (ensureFile.exists()) {
+//      if (file.isDirectory()) {
+//        // make sure it's not empty
+//        if (file.list().length == 0) {
+//          file.delete();
+//          return false;
+//        } else {
+//          return true;
+//        }
+//      } else {
+//        return true;
+//      }
+//    } else {
+//      return false;
+//    }
   }
   
   public boolean delete() {
-    if (file.exists()) {
+    if (ensureFile().exists()) {
       if (file.isDirectory()) {
         return FileUtils.delete(file);
       } else {
@@ -168,21 +163,21 @@ public class RepoFileImpl implements RepoFile, CustomSerializable {
   
   @Override
   public File toFile() {
-    return file;
+    return ensureFile();
   }
 
   @Override
   public boolean makeDirs() {
-    return file.mkdirs();
+    return ensureFile().mkdirs();
   }
   
   @Override
   public boolean makeParentDirs() {
-    return file.getParentFile().mkdirs();
+    return ensureFile().getParentFile().mkdirs();
   }
     
   public File getChildFile(String child) {
-    if (file.isFile()) {
+    if (ensureFile().isFile()) {
       throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
     } else {
       return new File(file, child);
@@ -194,42 +189,34 @@ public class RepoFileImpl implements RepoFile, CustomSerializable {
   }
   
   public RepoFileImpl getChild(String child) {
-    if (file.isFile()) {
-      throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
-    } else if (isRoot) {
-      return internChild(RelativePathImpl.make(child));
+    if (isRoot) {
+      return new RepoFileImpl(this, false, RelativePathImpl.make(child));
     } else {
-      return internChild(relativePath.append(child));
+      return new RepoFileImpl(root, false, relativePath.append(child));
     }
   }
   
   private RepoFileImpl getChild(RelativePathImpl relativePath) {
-    if (file.isFile()) {
-      throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
-    } else if (isRoot) {
-      return internChild(relativePath);
+    if (isRoot) {
+      return new RepoFileImpl(this, false, relativePath);
     } else {
-      return internChild(this.relativePath.append(relativePath));
+      return new RepoFileImpl(root, false, this.relativePath.append(relativePath));
     }
   }
   
   public RepoFileImpl getChildRoot(String child) {
-    if (file.isFile()) {
-      throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + child);
-    } else if (isRoot) {
-      return internRoot(relativePath.append(child));
+    if (isRoot) {
+      return new RepoFileImpl(getOirignalRoot(), true, relativePath.append(child));
     } else {
-      return internRoot(root.relativePath.append(relativePath).append(child));
+      return new RepoFileImpl(getOirignalRoot(), true, root.relativePath.append(relativePath).append(child));
     }
   }
   
   private RepoFileImpl getChildRoot(RelativePathImpl relativePath) {
-    if (file.isFile()) {
-      throw new IllegalStateException("Cannot get a child of a file: " + file.getPath() + " " + relativePath);
-    } else if (isRoot) {
-      return internRoot(this.relativePath.append(relativePath));
+    if (isRoot) {
+      return new RepoFileImpl(getOirignalRoot(), true, this.relativePath.append(relativePath));
     } else {
-      return internRoot(root.relativePath.append(this.relativePath).append(relativePath));
+      return new RepoFileImpl(getOirignalRoot(), true, root.relativePath.append(this.relativePath).append(relativePath));
     }
   }
   
@@ -237,12 +224,17 @@ public class RepoFileImpl implements RepoFile, CustomSerializable {
     if (isRoot) {
       throw new IllegalStateException("May not get parent of root.");
     } else {
-      return internChild(relativePath.getParent());
+      RelativePathImpl parentPath = relativePath.getParent();
+      if (parentPath.isEmpty()) {
+        return root;
+      } else {
+        return new RepoFileImpl(root, false, parentPath);
+      }
     }
   }
   
   public Collection<RepoFileImpl> getChildren() {
-    if (file.isFile()) {
+    if (ensureFile().isFile()) {
       throw new IllegalStateException("Cannot get children of a file: " + file.getPath());
     } else if (!file.exists()) {
       return Collections.emptyList();
@@ -258,7 +250,7 @@ public class RepoFileImpl implements RepoFile, CustomSerializable {
   
   @Override
   public String getName() {
-    return file.getName();
+    return relativePath.getName();
   }
   
   @Override
@@ -303,5 +295,28 @@ public class RepoFileImpl implements RepoFile, CustomSerializable {
       result.append(' ').append(path);
     }
     return result.toString();
+  }
+  
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    } else if (o instanceof RepoFileImpl) {
+      RepoFileImpl other = (RepoFileImpl) o;
+      if (root == null && other.root == null) {
+        return file.equals(other.file);
+      } else if (root != null && other.root != null) {
+        return root.equals(other.root) && relativePath.equals(other.relativePath);
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+  
+  @Override
+  public int hashCode() {
+    return relativePath.hashCode();
   }
 }

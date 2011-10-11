@@ -23,6 +23,10 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.ModeledEntity;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.ProjectTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.LocalVariableEX;
@@ -31,7 +35,6 @@ import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.LocalVariable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
-import edu.uci.ics.sourcerer.tools.java.model.types.RelationClass;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.BatchInserter;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
@@ -53,8 +56,8 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
   private SelectQuery localVariablesQuery;
   private ConstantCondition<Integer> localVariablesQueryProjectID;
   
-  protected StructuralRelationsImporter(String taskName, LibraryEntityMap libraries) {
-    super(taskName, libraries);
+  protected StructuralRelationsImporter(String taskName, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
+    super(taskName, javaModel, unknowns);
   }
   
 //  @Override
@@ -100,13 +103,13 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
   
   protected final void insert(ReaderBundle reader, Integer projectID, Collection<Integer> externalProjects) {
     loadFileMap(projectID);
-    loadEntityMap(projectID, externalProjects);
+    projectModel = ProjectTypeModel.makeProjectTypeModel(task, exec, projectID, externalProjects, javaModel, unknowns);
     
     insertRemainingEntities(reader, projectID);
     insertStructuralRelations(reader, projectID);
     
     fileMap.clear();
-    entities = null;
+    projectModel = null;
   }
   
   private void insertRemainingEntities(ReaderBundle reader, Integer projectID) {
@@ -218,11 +221,11 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
           Integer fileID = getFileID(var.getLocation());
           
           if (var.getType() == LocalVariable.PARAM) {
-            entities.addUnique(var.getParent() + "#" + var.getPosition(), DatabaseEntity.make(entityID, RelationClass.INTERNAL));
+            projectModel.add(var.getParent() + "#" + var.getPosition(), entityID);
           }
           
           // Add the holds relation
-          DatabaseEntity type = entities.getEntity(var.getTypeFqn());
+          ModeledEntity type = projectModel.getEntity(var.getTypeFqn());
           if (type != null) {
             if (fileID == null) {
               inserter.addInsert(RelationsTable.makeInsert(Relation.HOLDS, type.getRelationClass(), entityID, type.getEntityID(), projectID));
@@ -232,7 +235,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
           }
           
           // Add the inside relation
-          DatabaseEntity parent = entities.getEntity(var.getParent());
+          ModeledEntity parent = projectModel.getEntity(var.getParent());
           if (parent != null) {
             inserter.addInsert(RelationsTable.makeInsert(Relation.INSIDE, parent.getRelationClass(), entityID, parent.getEntityID(), projectID, fileID));
           }
@@ -265,7 +268,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
         Integer fileID = getFileID(relation.getLocation());
         
         Integer lhs = getLHS(relation.getLhs());
-        DatabaseEntity rhs = entities.getEntity(relation.getRhs());
+        ModeledEntity rhs = projectModel.getEntity(relation.getRhs());
         
         if (lhs != null && rhs != null) {
           if (fileID == null) {

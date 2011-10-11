@@ -17,9 +17,9 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.model.extracted.internal;
 
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractRepoProject;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ProjectLocationImpl;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
-import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoProjectImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaProject;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProjectProperties;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaProject;
@@ -27,9 +27,7 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtracted
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-class ExtractedJavaProjectImpl extends RepoProjectImpl<ExtractedJavaRepositoryImpl> implements ModifiableExtractedJavaProject {
-  private ExtractedJavaProjectProperties properties;
-  
+class ExtractedJavaProjectImpl extends AbstractRepoProject<ExtractedJavaRepositoryImpl, ExtractedJavaProjectProperties> implements ModifiableExtractedJavaProject {
   private ExtractedJavaProjectImpl(ExtractedJavaRepositoryImpl repo, ProjectLocationImpl loc) {
     super(repo, loc);
   }
@@ -46,17 +44,15 @@ class ExtractedJavaProjectImpl extends RepoProjectImpl<ExtractedJavaRepositoryIm
   public void reset(JavaProject project) {
     loc.getProjectRoot().delete();
     loc.getProjectRoot().makeDirs();
-    getProperties().clear();
-    properties.copy(project.getProperties());
-    properties.save();
+    ExtractedJavaProjectProperties props = getProperties();
+    props.clear();
+    props.copy(project.getProperties());
+    props.save();
   }
-
+  
   @Override
-  public ExtractedJavaProjectProperties getProperties() {
-    if (properties == null) {
-      properties = new ExtractedJavaProjectProperties(propFile);
-    }
-    return properties;
+  protected ExtractedJavaProjectProperties makeProperties(RepoFileImpl propFile) {
+    return new ExtractedJavaProjectProperties(propFile);
   }
   
   @Override

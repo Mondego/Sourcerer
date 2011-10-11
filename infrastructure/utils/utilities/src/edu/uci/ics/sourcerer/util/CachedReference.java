@@ -19,24 +19,32 @@ package edu.uci.ics.sourcerer.util;
 
 import java.lang.ref.SoftReference;
 
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class CachedReference<T> {
+  public static final Argument<Boolean> DISABLE_REF_CACHING = new BooleanArgument("disable-ref-caching", false, "Forces cached references to never cache.").permit();
   private SoftReference<T> ref;
   
   protected abstract T make();
   
   public T get() {
-    T result = null;
-    if (ref != null) {
-      result = ref.get();
+    if (DISABLE_REF_CACHING.getValue()) {
+      return make();
+    } else {
+      T result = null;
+      if (ref != null) {
+        result = ref.get();
+      }
+      if (result == null) {
+        result = make();
+        ref = new SoftReference<>(result);
+      }
+      return result;
     }
-    if (result == null) {
-      result = make();
-      ref = new SoftReference<>(result);
-    }
-    return result;
   }
   
   public T getIfCached() {

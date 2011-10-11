@@ -26,6 +26,7 @@ public interface SelectQuery extends Query {
   public void addSelects(Selectable<?> ... selects);
   public void clearSelect();
   public void andWhere(Condition condition);
+  public void andWhere(Condition ... conditions);
   public void clearWhere();
   public void orderBy(Selectable<?> select, boolean ascending);
   

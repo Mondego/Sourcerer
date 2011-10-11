@@ -24,20 +24,21 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.RelativePath;
-import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.util.InterningMap;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 final class RelativePathImpl implements RelativePath {
   private final String relativePath;
-  private static final Map<String, RelativePathImpl> interned = Helper.newHashMap();
+  private static final Map<String, RelativePathImpl> interned = new InterningMap<>();
   
   private RelativePathImpl(String relativePath) {
     this.relativePath = relativePath;
   }
   
   private static RelativePathImpl intern(String relativePath) {
+    relativePath = relativePath.intern();
     RelativePathImpl path = interned.get(relativePath);
     if (path == null) {
       path = new RelativePathImpl(relativePath);
@@ -124,8 +125,17 @@ final class RelativePathImpl implements RelativePath {
     }
   }
   
+  String getName() {
+    return relativePath.substring(relativePath.lastIndexOf('/') + 1);
+  }
+  
   @Override
   public String toString() {
     return relativePath;
+  }
+  
+  @Override
+  public int hashCode() {
+    return relativePath.hashCode();
   }
 }

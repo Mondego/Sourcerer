@@ -25,7 +25,7 @@ import edu.uci.ics.sourcerer.model.Project;
 import edu.uci.ics.sourcerer.model.db.SmallProjectDB;
 import edu.uci.ics.sourcerer.repo.extracted.Extracted;
 import edu.uci.ics.sourcerer.tools.java.db.importer.DatabaseImporter;
-import edu.uci.ics.sourcerer.tools.java.db.importer.SynchronizedUnknownsMap;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.TimeCounter;
 import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
@@ -36,7 +36,7 @@ import edu.uci.ics.sourcerer.util.db.DatabaseConnection;
 public class ImportStageTwo extends DatabaseImporter {
   private Iterable<Extracted> extracted;
   
-  protected ImportStageTwo(DatabaseConnection connection, SynchronizedUnknownsMap unknowns, Iterable<Extracted> extracted) {
+  protected ImportStageTwo(DatabaseConnection connection, UnknownEntityCache unknowns, Iterable<Extracted> extracted) {
     super(connection, unknowns);
     this.extracted = extracted;
   }

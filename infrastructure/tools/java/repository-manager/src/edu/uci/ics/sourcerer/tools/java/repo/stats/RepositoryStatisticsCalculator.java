@@ -17,19 +17,22 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.stats;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.ContentFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.FileSet;
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepoFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaProject;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepository;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.CreationistMap;
+import edu.uci.ics.sourcerer.util.MemoryStatsReporter;
 import edu.uci.ics.sourcerer.util.SizeCounter;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
-import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
+import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -73,7 +76,7 @@ public class RepositoryStatisticsCalculator {
         }
         files.get(extension).add(length);
       }
-      task.progress("%d projects analyzed, " + SizeCounter.formatSize(Runtime.getRuntime().freeMemory()) + " of " + SizeCounter.formatSize(Runtime.getRuntime().totalMemory()) + " free");
+      task.progress("%d projects analyzed, " + files.entrySet().size() + " extensions, and "+ SizeCounter.formatSize(Runtime.getRuntime().freeMemory()) + " of " + SizeCounter.formatSize(Runtime.getRuntime().totalMemory()) + " free");
     }
     task.finish();
     
@@ -117,5 +120,84 @@ public class RepositoryStatisticsCalculator {
       printer.addDividerRow();
       printer.endTable();
     }
+  }
+  
+  public static void testForMemoryLeaks() {
+    TaskProgressLogger task = new TaskProgressLogger();
+    task.start("Testing repository memory usage");
+    
+    task.start("Loading repository");
+    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+    task.finish();
+//    
+//    task.start("Reporting memory usage");
+//    MemoryStatsReporter.reportMemoryStats(task);
+//    task.finish();
+//    
+//    task.start("Iterating through projects", "projects viewed", 10000);
+//    for (JavaProject project : repo.getProjects()) {
+//      project.getLocation();
+//      task.progress();
+//    }
+//    task.finish();
+//    
+//    task.start("Reporting memory usage");
+//    MemoryStatsReporter.reportMemoryStats(task);
+//    task.finish();
+//    
+//    task.start("Iterating through project properties", "projects viewed", 10000);
+//    for (JavaProject project : repo.getProjects()) {
+//      project.getProperties();
+//      task.progress();
+//    }
+//    task.finish();
+//    
+//    task.start("Reporting memory usage");
+//    MemoryStatsReporter.reportMemoryStats(task);
+//    task.finish();
+//    
+//    task.start("Iterating through project contents", "projects viewed", 10000);
+//    for (JavaProject project : repo.getProjects()) {
+//      project.getContent();
+//      task.progress();
+//    }
+//    task.finish();
+//    
+//    task.start("Reporting memory usage");
+//    MemoryStatsReporter.reportMemoryStats(task);
+//    task.finish();
+    
+    task.start("Iterating through projects", "projects viewed", 100);
+    for (JavaProject project : repo.getProjects()) {
+      task.start("Loading project contents " + project);
+      FileSet contents = project.getContent();
+      task.finish();
+      
+      task.start("Getting files");
+      Collection<? extends ContentFile> files = contents.getFiles();
+      task.finish();
+      
+      task.start("Iterating through files", "files iterated", 1000);
+      for (ContentFile file : files) {
+        file.getFile();
+        task.progress();
+      }
+      task.finish();
+      
+      task.progress();
+//      task.start("Reporting memory usage");
+//      MemoryStatsReporter.reportMemoryStats(task);
+//      task.finish();
+    }
+    task.finish();
+    
+    task.report("Heap dump time!");
+    
+    while (true) {}
+//    task.start("Reporting memory usage");
+//    MemoryStatsReporter.reportMemoryStats(task);
+//    task.finish();
+    
+//    task.finish();
   }
 }

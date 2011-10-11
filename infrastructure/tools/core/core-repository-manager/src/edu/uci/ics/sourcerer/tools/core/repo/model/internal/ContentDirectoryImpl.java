@@ -20,7 +20,9 @@ package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -41,7 +43,7 @@ public final class ContentDirectoryImpl implements ContentDirectory {
   
   private ContentDirectoryImpl(RepoFileImpl file) {
     this.file = file;
-    internedDirs = Helper.newHashMap();
+    internedDirs = new HashMap<>();
     internedDirs.put(file, this);
   }
   
@@ -50,7 +52,7 @@ public final class ContentDirectoryImpl implements ContentDirectory {
     this.parent = parent;
     this.internedDirs = parent.internedDirs;
     if (parent.dirs == null) {
-      parent.dirs = Helper.newLinkedList();
+      parent.dirs = new LinkedList<>();
     }
     parent.dirs.add(this);
   }
@@ -60,9 +62,9 @@ public final class ContentDirectoryImpl implements ContentDirectory {
   }
   
   public ContentDirectoryImpl make(RepoFileImpl file) {
-    if (this.file == file) {
+    if (this.file.equals(file)) {
       return this;
-    } else if (this.file == file.getRoot()) {
+    } else if (this.file.equals(file.getRoot())) {
       ContentDirectoryImpl dir = internedDirs.get(file);
       if (dir == null) {
         dir = new ContentDirectoryImpl(make(file.getParent()), file);
@@ -70,14 +72,14 @@ public final class ContentDirectoryImpl implements ContentDirectory {
       }
       return dir;
     } else {
-      throw new IllegalArgumentException(file + " must be a subdir of " + this);
+      throw new IllegalArgumentException(file + " must be a subdir of " + this + ", not " + file.getRoot());
     }
   }
 
   public ContentFileImpl makeFile(RepoFileImpl file) {
     ContentFileImpl contentFile = null;
     if (files == null) {
-      files = Helper.newHashMap();
+      files = new HashMap<>();
     } else {
       contentFile = files.get(file);
     }

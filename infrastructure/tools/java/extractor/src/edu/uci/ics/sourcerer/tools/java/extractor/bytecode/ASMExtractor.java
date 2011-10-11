@@ -37,14 +37,15 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
-import edu.uci.ics.sourcerer.extractor.io.EntityWriter;
-import edu.uci.ics.sourcerer.extractor.io.FileWriter;
-import edu.uci.ics.sourcerer.extractor.io.LocalVariableWriter;
-import edu.uci.ics.sourcerer.extractor.io.RelationWriter;
-import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.EntityWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.FileWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.LocalVariableWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.RelationWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.model.types.LocalVariable;
@@ -106,7 +107,7 @@ public class ASMExtractor implements Closeable {
           String name = pkgFqn.substring(last + 1);
           pkgFqn = pkgFqn.substring(0, last);
           
-          entityWriter.writeEntity(Entity.PACKAGE, pkgFqn, null, 0, null, null);
+          entityWriter.writeEntity(Entity.PACKAGE, pkgFqn, 0, null, null);
           
           fqnStack.push(pkgFqn, Entity.PACKAGE);
           
@@ -124,6 +125,19 @@ public class ASMExtractor implements Closeable {
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error reading jar file.", e);
     }
+  }
+  
+  public void extract(String pkg, String name, byte[] bytes) {
+    entityWriter.writeEntity(Entity.PACKAGE, pkg, 0, null, null);
+    
+    fqnStack.push(pkg, Entity.PACKAGE);
+    
+    ClassReader reader = new ClassReader(bytes);
+    reader.accept(classVisitor, 0);
+    
+    fileWriter.writeFile(File.CLASS, name, null, location.getClassFile());
+    
+    fqnStack.pop();
   }
 
   private class FqnStack {
@@ -179,20 +193,6 @@ public class ASMExtractor implements Closeable {
       return name.replace('/', '.');
     }
   }
-  
-  private String convertNameToName(String name) {
-    if (name.charAt(0) == '[') {
-      logger.log(Level.SEVERE, "Unable to convert name to name: " + name);
-      return null;
-    } else {
-      int slash = name.lastIndexOf('/');
-      if (slash == -1) {
-        return name;
-      } else {
-        return name.substring(slash + 1);
-      }
-    }
-  }
     
   private String convertBaseType(char type) {
     switch (type) {
@@ -219,22 +219,31 @@ public class ASMExtractor implements Closeable {
         return "" + type;
     }
   }
-  
-  private class ClassVisitorImpl implements ClassVisitor {
+
+  private static final int CLASS_ACCESS_MASK = Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL | Opcodes.ACC_ABSTRACT | Opcodes.ACC_SYNTHETIC;
+  private static final int FIELD_ACCESS_MASK = Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL | Opcodes.ACC_VOLATILE | Opcodes.ACC_TRANSIENT | Opcodes.ACC_SYNTHETIC;
+  private static final int METHOD_ACCESS_MASK = Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL | Opcodes.ACC_SYNCHRONIZED | Opcodes.ACC_NATIVE | Opcodes.ACC_ABSTRACT | Opcodes.ACC_STRICT | Opcodes.ACC_SYNTHETIC;
+  private class ClassVisitorImpl extends ClassVisitor {
+    private int access;
+    
+    private ClassVisitorImpl() {
+      super(Opcodes.V1_7);
+    }
+    
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
       // Get the type
       Entity type = null;
       if (access == 0x1600) {
         // package-info file
-      } else if ((access & 0x0200) != 0) {
-        if ((access & 0x2000) != 0) {
+      } else if ((access & Opcodes.ACC_INTERFACE) != 0) {
+        if ((access & Opcodes.ACC_ANNOTATION) != 0) {
           type = Entity.ANNOTATION;
         } else {
           type = Entity.INTERFACE;
         }
       } else {
-        if ((access & 0x4000) != 0) {
+        if ((access & Opcodes.ACC_ENUM) != 0) {
           type = Entity.ENUM;
         } else {
           type = Entity.CLASS;
@@ -248,8 +257,7 @@ public class ASMExtractor implements Closeable {
       if (type == null) {
         fqnStack.push(fqn, null);
       } else {
-        entityWriter.writeEntity(type, fqn, convertNameToName(name), access, null, location);
-      
+        this.access = access;
         fqnStack.push(fqn, type);
         
         // Write the type variables
@@ -309,16 +317,18 @@ public class ASMExtractor implements Closeable {
     
     @Override
     public void visitInnerClass(String name, String outerName, String innerName, int access) {
-//      logger.info(name + " : " + outerName + " : " + innerName);
+      if (outerName == null && innerName == null) {
+        this.access = access;
+      }
     }
     
     @Override
     public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
       Entity type = null;
       // Drop the synthetic fields
-      if ((access & 0x1000) != 0) {
+      if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
         return null;
-      } else if ((access & 0x4000) != 0) {
+      } else if ((access & Opcodes.ACC_ENUM) != 0) {
         type = Entity.ENUM_CONSTANT;
       } else {
         type = Entity.FIELD;
@@ -328,7 +338,7 @@ public class ASMExtractor implements Closeable {
       String fqn = fqnStack.getFqn() + "." + name;
       
       // Write the entity
-      entityWriter.writeEntity(type, fqn, name, access, null, location);
+      entityWriter.writeEntity(type, fqn, access & FIELD_ACCESS_MASK, null, location);
       
       // Write the inside relation
       relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), location);
@@ -353,7 +363,7 @@ public class ASMExtractor implements Closeable {
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
       // Get the type
       Entity type = null;
-      if ((access & 0x1040) == 0x1040) {
+      if ((access & (Opcodes.ACC_BRIDGE | Opcodes.ACC_SYNTHETIC)) == (Opcodes.ACC_BRIDGE | Opcodes.ACC_SYNTHETIC)) {
         // ignore bridge method
         return null;
       } else if ("<clinit>".equals(name)) {
@@ -377,7 +387,7 @@ public class ASMExtractor implements Closeable {
         }
         
         // Write the entity
-        entityWriter.writeEntity(type, methodSignatureVisitor.getFqn(), name, methodSignatureVisitor.getSignature(), null, access, null, location);
+        entityWriter.writeEntity(type, methodSignatureVisitor.getFqn(), methodSignatureVisitor.getSignature(), null, access & METHOD_ACCESS_MASK, null, location);
       } else {
         new SignatureReader(signature).accept(methodSignatureVisitor.init(type, name));
         String fqn = methodSignatureVisitor.getFqn();
@@ -385,9 +395,9 @@ public class ASMExtractor implements Closeable {
         new SignatureReader(desc).accept(methodSignatureVisitor.init());
         String rawSig = methodSignatureVisitor.getSignature();
         if (sig.equals(rawSig)) {
-          entityWriter.writeEntity(type, fqn, name, sig, null, access, null, location);
+          entityWriter.writeEntity(type, fqn, sig, null, access & METHOD_ACCESS_MASK, null, location);
         } else {
-          entityWriter.writeEntity(type, fqn, name, sig, methodSignatureVisitor.getSignature(), access, null, location);
+          entityWriter.writeEntity(type, fqn, sig, methodSignatureVisitor.getSignature(), access & METHOD_ACCESS_MASK, null, location);
         }
       }
 
@@ -398,34 +408,31 @@ public class ASMExtractor implements Closeable {
     public void visitEnd() {
       if (fqnStack.getType() == null) {
         fqnStack.pop();
-      } else if (fqnStack.insideOutput()) {
-        fqnStack.pop();
       } else {
-        String fqn = fqnStack.getFqn();
-        fqnStack.pop();
-  
-        // Write the inside relation
-        int dot = fqn.lastIndexOf('.');
-        String parentFqn = fqn.substring(0, dot);
-        if (!parentFqn.equals(fqnStack.getFqn())) {
-          logger.log(Level.SEVERE, "Mismatch between " + parentFqn + " and " + fqnStack.getFqn());
+        entityWriter.writeEntity(fqnStack.getType(), fqnStack.getFqn(), access & CLASS_ACCESS_MASK, null, location);
+        if (fqnStack.insideOutput()) {
+          fqnStack.pop();
+        } else {
+          String fqn = fqnStack.getFqn();
+          fqnStack.pop();
+    
+          // Write the inside relation
+          int dot = fqn.lastIndexOf('.');
+          String parentFqn = fqn.substring(0, dot);
+          if (!parentFqn.equals(fqnStack.getFqn())) {
+            logger.log(Level.SEVERE, "Mismatch between " + parentFqn + " and " + fqnStack.getFqn());
+          }
+          relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), location);
         }
-        relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), location);
-//        int dollar = fqn.lastIndexOf('$'); 
-//        if (dollar > dot) {
-//          String parent = fqn.substring(0, dollar);
-//          relationWriter.writeRelation(Relation.INSIDE, fqn, parent, location);
-//  //        if (!parent.equals(outerFqn)) {
-//  //          logger.info(outerFqn + " vs " + parent);
-//  //        }
-//        } else {
-//          relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), location); 
-//        }
       }
     }
   }
   
-  private class AnnotationVisitorImpl implements AnnotationVisitor {
+  private class AnnotationVisitorImpl extends AnnotationVisitor {
+    public AnnotationVisitorImpl() {
+      super(Opcodes.V1_7);
+    }
+
     @Override
     public void visit(String name, Object value) {
     }
@@ -453,7 +460,11 @@ public class ASMExtractor implements Closeable {
     }
   }
   
-  private class MethodVisitorImpl implements MethodVisitor {
+  private class MethodVisitorImpl extends MethodVisitor {
+    public MethodVisitorImpl() {
+      super(Opcodes.V1_7);
+    }
+
     @Override
     public AnnotationVisitor visitAnnotationDefault() {
       logger.info("foo");
@@ -551,7 +562,7 @@ public class ASMExtractor implements Closeable {
     }
 
     @Override
-    public void visitTableSwitchInsn(int min, int max, Label dflt, Label[] label) {
+    public void visitTableSwitchInsn(int min, int max, Label dflt, Label ... label) {
     }
 
     @Override
@@ -581,97 +592,19 @@ public class ASMExtractor implements Closeable {
     }
   }
   
-  private abstract class SignatureVisitorAdapter implements SignatureVisitor {
-    public SignatureVisitorAdapter() {}
-
+  private abstract class AbstractSignatureVisitor extends SignatureVisitor {
+    public AbstractSignatureVisitor() {
+      super(Opcodes.V1_7);
+    }
+    
     public abstract void add(String type);
-    
-    @Override
-    public void visitFormalTypeParameter(String name) {
-      throw new UnsupportedOperationException();
-    }
-    
-    @Override
-    public SignatureVisitor visitClassBound() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public SignatureVisitor visitInterfaceBound() {
-      throw new UnsupportedOperationException();
-    }
-    
-    @Override
-    public SignatureVisitor visitSuperclass() {
-      throw new UnsupportedOperationException();
-    }
-    
-    @Override
-    public SignatureVisitor visitInterface() {
-      throw new UnsupportedOperationException();
-    }
-    
-    @Override
-    public SignatureVisitor visitParameterType() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public SignatureVisitor visitReturnType() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public SignatureVisitor visitExceptionType() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void visitBaseType(char descriptor) {
-      throw new UnsupportedOperationException();
-    }
-    
-    @Override
-    public void visitTypeVariable(String name) {
-      throw new UnsupportedOperationException();
-    }
-    
-    @Override
-    public SignatureVisitor visitArrayType() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void visitClassType(String name) {
-      throw new UnsupportedOperationException();
-    }
-    
-    @Override
-    public void visitTypeArgument() {
-      throw new UnsupportedOperationException();
-    }
-    
-    @Override
-    public SignatureVisitor visitTypeArgument(char wildcard) {
-      throw new UnsupportedOperationException();
-    }
-    
-    @Override
-    public void visitInnerClassType(String name) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void visitEnd() {
-      throw new UnsupportedOperationException();
-    }
   }
   
-  private class ClassSignatureVisitorImpl extends SignatureVisitorAdapter {
+  private class ClassSignatureVisitorImpl extends AbstractSignatureVisitor {
     private Map<String, Collection<String>> bounds = Helper.newHashMap();
     private Collection<String> currentBound;
     private Relation currentType;
-
+    
     @Override
     public void add(String type) {
       if (currentType == Relation.EXTENDS || currentType == Relation.IMPLEMENTS) {
@@ -726,7 +659,7 @@ public class ASMExtractor implements Closeable {
     }
   }
 
-  private class MethodSignatureVisitorImpl extends SignatureVisitorAdapter {
+  private class MethodSignatureVisitorImpl extends AbstractSignatureVisitor {
     private Entity type;
     private String fqn;
     private StringBuilder signature;
@@ -759,7 +692,7 @@ public class ASMExtractor implements Closeable {
       signature.append("(");
       return this;
     }
-        
+
     @Override
     public void add(String type) {
       if (currentType == null) {
@@ -869,8 +802,8 @@ public class ASMExtractor implements Closeable {
     }
   }
   
-  private class TypeSignatureVisitorImpl extends SignatureVisitorAdapter {
-    private SignatureVisitorAdapter parent;
+  private class TypeSignatureVisitorImpl extends AbstractSignatureVisitor {
+    private AbstractSignatureVisitor parent;
     private StringBuilder result;
     private Collection<String> args;
     private String wildcard;
@@ -881,13 +814,12 @@ public class ASMExtractor implements Closeable {
       args = new LinkedList<>();
     }
     
-    public TypeSignatureVisitorImpl(SignatureVisitorAdapter parent) {
+    public TypeSignatureVisitorImpl(AbstractSignatureVisitor parent) {
       this.parent = parent;
       result = new StringBuilder();
       args = new LinkedList<>();
     }
     
-    @Override
     public void add(String type) {
       if (wildcard == null) {
         args.add(type);

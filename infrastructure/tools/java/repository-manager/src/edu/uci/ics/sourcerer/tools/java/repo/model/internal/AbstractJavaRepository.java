@@ -28,7 +28,7 @@ import java.util.logging.Level;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractRepository;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.BatchImpl;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
-import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoProjectImpl;
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractRepoProject;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
@@ -40,7 +40,7 @@ import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class AbstractJavaRepository<Project extends RepoProjectImpl<? extends AbstractRepository<Project, Batch>>, Batch extends BatchImpl<Project>, Jar extends IJar> extends AbstractRepository<Project, Batch> {
+public abstract class AbstractJavaRepository<Project extends AbstractRepoProject<? extends AbstractRepository<Project, Batch>, ?>, Batch extends BatchImpl<Project>, Jar extends IJar> extends AbstractRepository<Project, Batch> {
   public static final Argument<String> JARS_DIRECTORY = new StringArgument("jars-dir", "jars", "Repository subdirectory containing jar files.").permit();
   public static final Argument<String> PROJECT_JARS_DIRECTORY = new StringArgument("project-jars-dir", "project", "Directory containing project jars.").permit();
   public static final Argument<String> PROJECT_JAR_INDEX = new StringArgument("maven-jar-index", "maven-index.txt", "Maven jar index file.").permit();

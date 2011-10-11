@@ -63,7 +63,8 @@ public abstract class NewDatabaseImporter extends ParallelDatabaseRunnable {
   @Override
   public final void action() {
     init();
-    task = new TaskProgressLogger(taskName);
+    task = new TaskProgressLogger();
+    task.start(taskName);
     doImport();
     task.finish();
     cleanup();
@@ -136,7 +137,7 @@ public abstract class NewDatabaseImporter extends ParallelDatabaseRunnable {
     delete.execute(); 
     
     delete = exec.makeDeleteStatement(EntitiesTable.TABLE);
-    delete.andWhere(EntitiesTable.ENTITY_ID.compareEquals(projectID));
+    delete.andWhere(EntitiesTable.PROJECT_ID.compareEquals(projectID));
     delete.execute();
     
     delete = exec.makeDeleteStatement(EntityMetricsTable.TABLE);

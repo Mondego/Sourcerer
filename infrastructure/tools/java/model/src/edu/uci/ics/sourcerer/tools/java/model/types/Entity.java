@@ -40,6 +40,7 @@ public enum Entity {
     WILDCARD,
     PARAMETERIZED_TYPE,
     DUPLICATE,
+    VIRTUAL_DUPLICATE,
     UNKNOWN,
     ;
     

@@ -21,13 +21,15 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.LinkedList;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.FileSet;
-import edu.uci.ics.sourcerer.util.Helper;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceProject.DeletionFilter;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
@@ -40,100 +42,118 @@ import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractFileSet implements FileSet {
+  public static final Argument<String> CACHE_DIR = new StringArgument("cache-dir", "cache", "Directory containing project cache files.").permit();
   public static final Argument<String> FILE_CACHE = new StringArgument("file-cache-file", "file-cache.txt", "Cache of the file set's files.").permit();
   
+  protected final File cacheDir;
   private final File cache;
   private ContentDirectoryImpl root;
   private Collection<ContentFileImpl> files;
   
   protected AbstractFileSet(AbstractSourceProject<?, ?> project) {
-    cache = project.getLocation().getProjectRoot().getChildFile(FILE_CACHE.getValue());
+    cacheDir = project.getLocation().getProjectRoot().getChildFile(CACHE_DIR.getValue());
+    cache = new File(cacheDir, FILE_CACHE.getValue());
     root = ContentDirectoryImpl.makeRoot(project.getContentFile());
-    
+  }
+  
+  public void delete(DeletionFilter filter) {
+    init(false, false);
+    Deque<RepoFileImpl> stack = new LinkedList<>();
+    stack.push(root.getFile());
+    boolean deleted = false;
+    while (!stack.isEmpty()) {
+      RepoFileImpl dir = stack.pop();
+      if (dir.getName().equals(".svn")) {
+        dir.delete();
+        deleted = true;
+      } else {
+        for (RepoFileImpl child : dir.getChildren()) {
+          if (child.isDirectory()) {
+            stack.push(child);
+          }
+        }
+      }
+    }
+    if (deleted) {
+      init(false, true);
+    }
   }
 
-  public final void init(boolean loadNow, boolean clearCache) {
+  public void init(boolean loadNow, boolean clearCache) {
     if (clearCache) {
-      cache.delete();
+      FileUtils.delete(cacheDir);
     }
     root = ContentDirectoryImpl.makeRoot(root.getFile());
     if (loadNow) {
       if (files == null) {
-        files = Helper.newArrayList();
+        files = new ArrayList<>();
       } else {
         files.clear();
       }
-      initHelper(loadNow);
       populateFileSet();
     } else {
       files = null;
-      initHelper(loadNow);
     }
   }
-  
-  protected abstract void initHelper(boolean loadNow);
-  
-  private final void populateFileSet() {
+
+  protected void populateFileSet() {
     if (AbstractRepository.CLEAR_CACHES.getValue() || !cache.exists() || !readCache()) {
-      Deque<RepoFileImpl> stack = Helper.newStack();
-      stack.push(getRoot().getFile());
-        
+      Deque<RepoFileImpl> stack = new LinkedList<>();
+      stack.add(root.getFile());
       while (!stack.isEmpty()) {
         RepoFileImpl dir = stack.pop();
-        for (RepoFileImpl child : dir.getChildren()) {
-          if (child.isDirectory()) {
-            stack.push(child);
-          } else {
-            addFile(child);
+        Collection<RepoFileImpl> children = dir.getChildren();
+        // See if this directory has a "trunk"
+        RepoFileImpl trunk = null;
+        for (RepoFileImpl child : children) {
+          if (child.isDirectory() && child.getName().equals("trunk")) {
+            trunk = child;
+            break;
+          }
+        }
+        // If there's a trunk, follow only that
+        if (trunk != null) {
+          stack.push(trunk);
+        } else {
+          for (RepoFileImpl child : children) {          
+            if (child.isDirectory()) {
+              stack.push(child);
+            } else {
+              addFile(child);
+            }
           }
         }
       }
-      populateFileSetHelper();
       
-      SimpleSerializer writer = null;
-      try {
-        cache.getParentFile().mkdirs();
-        writer = IOUtils.makeSimpleSerializer(cache);
+      
+      cache.getParentFile().mkdirs();
+      try (SimpleSerializer writer = IOUtils.makeSimpleSerializer(cache)) {
         EntryWriter<RepoFileImpl> ew = writer.getEntryWriter(RepoFileImpl.class);
         for (ContentFileImpl file : files) {
           ew.write(file.getFile());
         }
         ew.close();
-        writeExtendedCache(writer);
         return;
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Unable to write file cache", e);
-      } finally {
-        IOUtils.close(writer);
       }
       FileUtils.delete(cache);
     }
   }
-  
-  protected abstract void populateFileSetHelper();
-  
-  protected abstract void writeExtendedCache(SimpleSerializer serializer) throws IOException;
-  
-  private final boolean readCache() {
-    SimpleDeserializer reader = null;
-    try {
-      reader = IOUtils.makeSimpleDeserializer(cache);
+ 
+  private boolean readCache() {
+    try (SimpleDeserializer reader = IOUtils.makeSimpleDeserializer(cache)) {
       for (RepoFileImpl file : reader.deserializeToIterable(root.getFile().makeDeserializer(), false)) {
         addFile(file);
       }
-      readExtendedCache(reader);
       return true;
     } catch (Exception e) {
-      logger.log(Level.SEVERE, "Unable to load file cache", e);
+      logger.log(Level.SEVERE, "Unable to load file cache: " + getRoot(), e);
       root = ContentDirectoryImpl.makeRoot(root.getFile());
       files.clear();
       return false;
-    } finally {
-      IOUtils.close(reader);
     }
   }
-  
-  protected abstract void readExtendedCache(SimpleDeserializer deserializer) throws IOException;
   
   private final void addFile(RepoFileImpl file) {
     ContentFileImpl cFile = getRoot().make(file.getParent()).makeFile(file);
@@ -142,14 +162,6 @@ public abstract class AbstractFileSet implements FileSet {
   }
   
   protected abstract void fileAdded(ContentFileImpl file);
-
-//  protected ContentDirectoryImpl makeRoot(RepoFileImpl file) {
-//    return ContentDirectoryImpl.makeRoot(file);
-//  }
-  
-//  protected ContentFileImpl createFile(RepoFileImpl file) {
-//    return new ContentFileImpl(getRoot().make(file.getParent()), file);
-//  }
   
   public Collection<ContentFileImpl> getFiles() {
     if (files == null) {

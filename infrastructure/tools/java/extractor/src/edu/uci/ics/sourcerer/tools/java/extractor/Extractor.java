@@ -24,11 +24,11 @@ import java.util.Collection;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IClassFile;
 
-import edu.uci.ics.sourcerer.extractor.io.FileWriter;
-import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.extractor.bytecode.ASMExtractor;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseExtractor;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.FileWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
@@ -41,6 +41,7 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProjec
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaProject;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaRepository;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 
@@ -58,69 +59,65 @@ public class Extractor {
     // Load the input repository
     repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
     // Load the output repository
-    extracted = JavaRepositoryFactory.INSTANCE.loadModifiableExtractedJavaRepository(JavaRepositoryFactory.OUTPUT_REPO);    
+    extracted = JavaRepositoryFactory.INSTANCE.loadModifiableExtractedJavaRepository(JavaRepositoryFactory.OUTPUT_REPO);
+    
+    task = new TaskProgressLogger();
   }
   
   public static void extractLibrariesWithASM() {
     Extractor extractor = new Extractor();
     
-    extractor.task = new TaskProgressLogger("Performing library extraction with ASM");
-    
-    extractor.task.start("Loading library jar files");
-    Collection<? extends JarFile> jars = extractor.repo.getLibraryJarFiles();
-    extractor.task.finish();
-    
-    extractor.extractJarsWithASM(jars);
-    
+    extractor.task.start("Performing library extraction with ASM");
+    extractor.extractJars(false, true, true);
     extractor.task.finish();
   }
   
   public static void extractLibrariesWithEclipse() {
     Extractor extractor = new Extractor();
     
-    extractor.task = new TaskProgressLogger("Performing library extraction with Eclipse");
-    
-    extractor.task.start("Loading library jar files");
-    Collection<? extends JarFile> jars = extractor.repo.getLibraryJarFiles();
-    extractor.task.finish();
-    
-    extractor.extractJarsWithEclipse(jars, true);
-    
+    extractor.task.start("Performing library extraction with Eclipse");
+    extractor.extractJars(true, false, true);
     extractor.task.finish();
   }
+  
+  public static void extractLibraries() {
+    Extractor extractor = new Extractor();
+    
+    extractor.task.start("Performing library extraction with Eclipse and ASM");
+    extractor.extractJars(true, true, true);
+    extractor.task.finish();
+  }
+
   
   public static void extractProjectJarsWithASM() {
     Extractor extractor = new Extractor();
     
-    extractor.task = new TaskProgressLogger("Performing project jar extraction with ASM");
-    
-    extractor.task.start("Loading project jar files");
-    Collection<? extends JarFile> jars = extractor.repo.getProjectJarFiles();
-    extractor.task.finish();
-    
-    extractor.extractJarsWithASM(jars);
-    
+    extractor.task.start("Performing project jar extraction with ASM");
+    extractor.extractJars(false, true, false);
     extractor.task.finish();
   }
   
   public static void extractProjectJarsWithEclipse() {
     Extractor extractor = new Extractor();
     
-    extractor.task = new TaskProgressLogger("Performing project jar extraction with Eclipse");
-    
-    extractor.task.start("Loading project jar files");
-    Collection<? extends JarFile> jars = extractor.repo.getProjectJarFiles();
+    extractor.task.start("Performing project jar extraction with Eclipse");
+    extractor.extractJars(true, false, false);
     extractor.task.finish();
+  }
+  
+  public static void extractProjectJars() {
+    Extractor extractor = new Extractor();
     
-    extractor.extractJarsWithEclipse(jars, false);
-    
+    extractor.task.start("Performing project jar extraction with Eclipse");
+    extractor.extractJars(true, true, false);
     extractor.task.finish();
   }
   
   public static void extractProjectsWithEclipse() {
     Extractor extractor = new Extractor();
     
-    extractor.task = new TaskProgressLogger("Performing project extraction with Eclipse");
+    extractor.task = new TaskProgressLogger();
+    extractor.task.start("Performing project extraction with Eclipse");
     
     extractor.task.start("Loading projects");
     Collection<? extends JavaProject> projects = extractor.repo.getProjects();
@@ -131,47 +128,22 @@ public class Extractor {
     extractor.task.finish();
   }
   
-  private void extractJarsWithASM(Collection<? extends JarFile> jars) {
-    task.start("Extracting " + jars.size() + " jar files", "jar files extracted");
-    for (JarFile jar : jars) {
-      task.progress("Extracting " + jar + " (%d of " + jars.size() + ")");
-      ModifiableExtractedJarFile extractedJar = extracted.getMatchingJarFile(jar);
-      if (Boolean.TRUE.equals(extractedJar.getProperties().EXTRACTED.getValue())) {
-        if (Main.FORCE_REDO.getValue()) {
-          extractedJar.reset(jar);
-        } else {
-          task.report("Library already extracted");
-          continue;
-        }
-      } 
-      // Set up logging
-      Logging.addFileLogger(extractedJar.getExtractionDir().toFile());
-      
-      // Set up the writer bundle
-      WriterBundle bundle = new WriterBundle(extractedJar.getExtractionDir().toFile());
-      
-      // Extract
-      try (ASMExtractor extractor = new ASMExtractor(task, bundle)) {
-        extractor.extractJar(jar.getFile().toFile());
-      }
-      
-      // Write the properties files
-      ExtractedJarProperties properties = extractedJar.getProperties();
-      properties.EXTRACTED.setValue(true);
-      properties.HAS_SOURCE.setValue(false);
-      properties.save();
-
-      // End the error logging
-      Logging.removeFileLogger(extractedJar.getExtractionDir().toFile());
+  private void extractJars(boolean withEclipse, boolean withASM, boolean lib) {
+    Collection<? extends JarFile> jars = null;
+    task.start("Loading jar files");
+    if (lib) {
+      jars = repo.getLibraryJarFiles();
+    } else {
+      jars = repo.getProjectJarFiles();
     }
-    
     task.finish();
-  }
-  
-  private void extractJarsWithEclipse(Collection<? extends JarFile> jars, boolean lib) {
     task.start("Extracting " + jars.size() + "jar files", "jar files extracted");
     
-    if (lib) {
+    if (!(withEclipse || withASM)) {
+      throw new IllegalStateException("Must choose either Eclipse or ASM.");
+    }
+    
+    if (withEclipse && lib) {
       task.start("Initializing eclipse project");
       EclipseUtils.initializeLibraryProject(jars);
       task.finish();
@@ -192,23 +164,33 @@ public class Extractor {
       // Set up logging
       Logging.addFileLogger(extractedJar.getExtractionDir().toFile());
 
-      if (!lib) {
+      if (withEclipse && !lib) {
         task.start("Initializing eclipse project");
         EclipseUtils.initializeJarProject(jars);
         task.finish();
       }
-      task.start("Getting class files");
-      Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(jar);
-      task.finish();
-        
+
       // Set up the writer bundle
-      WriterBundle bundle = new WriterBundle(extractedJar.getExtractionDir().toFile());
-        
-      // Extract
-      boolean hasSource = false;
-      try (EclipseExtractor extractor = new EclipseExtractor(task, bundle)) {
-        hasSource = extractor.extractClassFiles(classFiles);
+      WriterBundle writers = new WriterBundle(extractedJar.getExtractionDir().toFile());
+    
+      ASMExtractor asmExtractor = null;
+      if (withASM) {
+        asmExtractor = new ASMExtractor(task, writers);
       }
+      boolean hasSource = false;
+      if (withEclipse) {
+        task.start("Getting class files");
+        Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(jar);
+        task.finish();
+
+        // Extract
+        try (EclipseExtractor extractor = new EclipseExtractor(task, writers, asmExtractor)) {
+          hasSource = extractor.extractClassFiles(classFiles);
+        }
+      } else {
+        asmExtractor.extractJar(jar.getFile().toFile());
+      }
+      IOUtils.close(asmExtractor);
         
       // Write the properties files
       ExtractedJarProperties properties = extractedJar.getProperties();

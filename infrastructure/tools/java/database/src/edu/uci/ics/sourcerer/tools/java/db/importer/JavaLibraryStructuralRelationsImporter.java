@@ -19,6 +19,8 @@ package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import java.util.Collections;
 
+import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
@@ -34,8 +36,8 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 public class JavaLibraryStructuralRelationsImporter extends StructuralRelationsImporter {
   private Iterable<? extends ExtractedJarFile> libraries;
   
-  protected JavaLibraryStructuralRelationsImporter(Iterable<? extends ExtractedJarFile> libraries, LibraryEntityMap libraryMap) {
-    super("Importing Java Library Structural Relations", libraryMap);
+  protected JavaLibraryStructuralRelationsImporter(Iterable<? extends ExtractedJarFile> libraries, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
+    super("Importing Java Library Structural Relations", javaModel, unknowns);
     this.libraries = libraries;
   }
   
@@ -62,7 +64,7 @@ public class JavaLibraryStructuralRelationsImporter extends StructuralRelationsI
         if (lib.getProperties().EXTRACTED.getValue()) {
           equalsName.setValue(name);
           TypedQueryResult result = projectState.select();
-          if (result.hasNext()) {
+          if (result.next()) {
             String state = result.getResult(ProjectsTable.PATH);
             if ("END_STRUCTURAL".equals(state) || state == null) {
               task.report("Entity import already completed... skipping");

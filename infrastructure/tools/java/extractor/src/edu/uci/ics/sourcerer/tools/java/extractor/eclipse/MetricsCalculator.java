@@ -29,11 +29,10 @@ public class MetricsCalculator {
   private static final Pattern linePattern = Pattern.compile("\\r?\\n");
   private static final Pattern pureWhitespace = Pattern.compile("\\s*");
   public static Metrics computeLinesOfCode(String source) {
-    Metrics metrics = new Metrics();
     if (source == null) {
-      metrics.addMetric(Metric.LINES_OF_CODE, 0);
-      metrics.addMetric(Metric.NON_WHITESPACE_LINES_OF_CODE, 0);
+      return null;
     } else {
+      Metrics metrics = new Metrics();
       String[] lines = linePattern.split(source);
       int nwLoc = 0; 
       for (String line : lines) {
@@ -43,7 +42,7 @@ public class MetricsCalculator {
       }
       metrics.addMetric(Metric.LINES_OF_CODE, lines.length);
       metrics.addMetric(Metric.NON_WHITESPACE_LINES_OF_CODE, nwLoc);
+      return metrics;
     }
-    return metrics;
   }
 }

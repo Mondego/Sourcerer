@@ -19,6 +19,10 @@ package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import java.util.Collection;
 
+import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.ModeledEntity;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.ProjectTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
@@ -29,18 +33,18 @@ import edu.uci.ics.sourcerer.utils.db.BatchInserter;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class ReferentialRelationsImporter extends RelationsImporter {
-  protected ReferentialRelationsImporter(String taskName, LibraryEntityMap libraries) {
-    super(taskName, libraries);
+  protected ReferentialRelationsImporter(String taskName, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
+    super(taskName, javaModel, unknowns);
   }
   
   protected final void insert(ReaderBundle reader, Integer projectID, Collection<Integer> externalProjects) {
     loadFileMap(projectID);
-    loadEntityMap(projectID, externalProjects);
+    projectModel = ProjectTypeModel.makeVirtualProjectTypeModel(task, exec, projectID, externalProjects, javaModel, unknowns);
     
     insertReferentialRelations(reader, projectID);
     
     fileMap.clear();
-    entities = null;
+    projectModel = null;
   }
   
   private void insertReferentialRelations(ReaderBundle reader, Integer projectID) {
@@ -56,13 +60,13 @@ public abstract class ReferentialRelationsImporter extends RelationsImporter {
         Integer fileID = getFileID(relation.getLocation());
         
         Integer lhs = getLHS(relation.getLhs());
-        DatabaseEntity rhs = entities.getEntity(relation.getRhs());
+        ModeledEntity rhs = projectModel.getVirtualEntity(relation.getRhs());
         
         if (lhs != null && rhs != null) {
           if (fileID == null) {
-            inserter.addInsert(RelationsTable.makeInsert(relation.getType(), rhs.getRelationClass(), lhs, rhs.getEntityID(), projectID));
+            inserter.addInsert(RelationsTable.makeInsert(relation.getType(), rhs.getRelationClass(), lhs, rhs.getEntityID(exec, projectID), projectID));
           } else {
-            inserter.addInsert(RelationsTable.makeInsert(relation.getType(), rhs.getRelationClass(), lhs, rhs.getEntityID(), projectID, fileID, relation.getLocation()));
+            inserter.addInsert(RelationsTable.makeInsert(relation.getType(), rhs.getRelationClass(), lhs, rhs.getEntityID(exec, projectID), projectID, fileID, relation.getLocation()));
           }
           task.progress();
         }

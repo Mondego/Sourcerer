@@ -30,6 +30,12 @@ public interface ModifiableSourceProject extends ModifiableProject, SourceProjec
    */
   public boolean deleteContent();
   
+  public void delete(DeletionFilter deleter);
+  
+  public interface DeletionFilter {
+    public boolean shouldDelete(RepoFile dir);
+  }
+  
   /**
    * Copies the contents of <tt>file</tt> into the
    * project's <tt>content</tt>> directory. Will

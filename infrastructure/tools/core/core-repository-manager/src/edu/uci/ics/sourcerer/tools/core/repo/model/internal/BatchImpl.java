@@ -27,7 +27,7 @@ import edu.uci.ics.sourcerer.util.Helper;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class BatchImpl<Project extends RepoProjectImpl<? extends AbstractRepository<Project, ? extends BatchImpl<Project>>>> implements ModifiableBatch {
+public class BatchImpl<Project extends AbstractRepoProject<? extends AbstractRepository<Project, ? extends BatchImpl<Project>>, ?>> implements ModifiableBatch {
   private final AbstractRepository<Project, ?> repo;
   private final RepoFileImpl dir;
   private final Integer batch;

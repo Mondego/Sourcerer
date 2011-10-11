@@ -24,6 +24,10 @@ import java.text.NumberFormat;
  */
 public class SizeCounter implements Comparable<SizeCounter> {
   private static NumberFormat format;
+  static {
+    format = NumberFormat.getNumberInstance();
+    format.setMaximumFractionDigits(2);
+  }
   
   private static final long KB = 1024l;
   private static final long MB = 1024l * KB;
@@ -46,8 +50,6 @@ public class SizeCounter implements Comparable<SizeCounter> {
   public SizeCounter() {
     count = 0;
     bytes = 0;
-    format = NumberFormat.getNumberInstance();
-    format.setMaximumFractionDigits(2);
   }
   
   public void add(long value) {

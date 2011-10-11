@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.CommentsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
@@ -36,7 +38,6 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
-import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaRepository;
@@ -45,7 +46,6 @@ import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
-import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -59,7 +59,8 @@ public final class ParallelDatabaseImporter {
     new DatabaseRunnable() {
       @Override
       public void action() {
-        TaskProgressLogger task = new TaskProgressLogger("Initializing database");
+        TaskProgressLogger task = new TaskProgressLogger();
+        task.start("Initializing database");
         
         task.start("Dropping old tables");
         exec.dropTables(
@@ -111,7 +112,8 @@ public final class ParallelDatabaseImporter {
   }
   
   public static void importJavaLibraries() {
-    TaskProgressLogger task = new TaskProgressLogger("Importing Java libraries");
+    TaskProgressLogger task = new TaskProgressLogger();
+    task.start("Importing Java libraries");
     
     task.start("Loading extracted repository");
     ExtractedJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(JavaRepositoryFactory.INPUT_REPO);
@@ -140,14 +142,15 @@ public final class ParallelDatabaseImporter {
     }
     task.finish();
     
-    LibraryEntityMap libraries = new LibraryEntityMap(task, new SynchronizedUnknownsMap(task));
+    JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.makeJavaLibraryTypeModel(task);
+    UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
     
     iterable = createSynchronizedIterable(task, libs.iterator());
     task.start("Performing structural relation import with " + numThreads + " threads");
 
     threads.clear();
     for (int i = 0; i < numThreads; i++) {
-      JavaLibraryStructuralRelationsImporter importer = new JavaLibraryStructuralRelationsImporter(iterable, libraries);
+      JavaLibraryStructuralRelationsImporter importer = new JavaLibraryStructuralRelationsImporter(iterable, javaModel, unknowns);
       threads.add(importer.start());
     }
     
@@ -160,23 +163,25 @@ public final class ParallelDatabaseImporter {
     }
     task.finish();
     
-//    iterable = createSynchronizedIterable(task, libs.iterator());
-//    task.start("Performing referential relation import with " + numThreads + " threads");
-//
-//    threads.clear();
-//    for (int i = 0; i < numThreads; i++) {
-//      JavaLibraryReferentialRelationsImporter importer = new JavaLibraryReferentialRelationsImporter(iterable, libraries);
-//      threads.add(importer.start());
-//    }
-//    
-//    for (Thread t : threads) {
-//      try {
-//        t.join();
-//      } catch (InterruptedException e) {
-//        logger.log(Level.SEVERE, "Thread interrupted", e);
-//      }
-//    }
-//    task.finish();
+    javaModel = JavaLibraryTypeModel.makeJavaLibraryTypeModel(task);
+    
+    iterable = createSynchronizedIterable(task, libs.iterator());
+    task.start("Performing referential relation import with " + numThreads + " threads");
+
+    threads.clear();
+    for (int i = 0; i < numThreads; i++) {
+      JavaLibraryReferentialRelationsImporter importer = new JavaLibraryReferentialRelationsImporter(iterable, javaModel, unknowns);
+      threads.add(importer.start());
+    }
+    
+    for (Thread t : threads) {
+      try {
+        t.join();
+      } catch (InterruptedException e) {
+        logger.log(Level.SEVERE, "Thread interrupted", e);
+      }
+    }
+    task.finish();
     
     task.finish();
   }

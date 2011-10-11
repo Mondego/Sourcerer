@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.tools.java.extractor.eclipse;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Deque;
+import java.util.LinkedList;
 import java.util.logging.Level;
 
 import org.eclipse.jdt.core.Flags;
@@ -32,11 +33,11 @@ import org.eclipse.jdt.core.ITypeParameter;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 
-import edu.uci.ics.sourcerer.extractor.io.EntityWriter;
-import edu.uci.ics.sourcerer.extractor.io.FileWriter;
-import edu.uci.ics.sourcerer.extractor.io.LocalVariableWriter;
-import edu.uci.ics.sourcerer.extractor.io.RelationWriter;
-import edu.uci.ics.sourcerer.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.EntityWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.FileWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.LocalVariableWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.RelationWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.model.types.LocalVariable;
@@ -63,7 +64,7 @@ public class ClassFileExtractor {
     entityWriter = writers.getEntityWriter();
     localVariableWriter = writers.getLocalVariableWriter();
     relationWriter = writers.getRelationWriter();
-    fqnStack = Helper.newStack();
+    fqnStack = new LinkedList<>();
   }
   
   public static boolean isTopLevelOrAnonymous(IClassFile classFile) {
@@ -144,7 +145,7 @@ public class ClassFileExtractor {
             relationWriter.writeRelation(Relation.INSIDE, classFile.getType().getFullyQualifiedName(), containingFqn, new Location(classFile.getType().getFullyQualifiedName(), path, null, null));
           } else {
             relationWriter.writeRelation(Relation.INSIDE, classFile.getType().getFullyQualifiedName(), parent.getElementName(), new Location(classFile.getType().getFullyQualifiedName(), path, null, null));
-            entityWriter.writeEntity(Entity.PACKAGE, parent.getElementName(), null, 0, null, null);
+            entityWriter.writeEntity(Entity.PACKAGE, parent.getElementName(), 0, null, null);
           }
         } catch (JavaModelException e) {
           logger.log(Level.SEVERE, "Error in extracting class file", e);
@@ -166,7 +167,7 @@ public class ClassFileExtractor {
       Location location = new Location(fqn, path, null, null);
       // Write the entity
       if (type.isClass()) {
-        entityWriter.writeEntity(Entity.CLASS, fqn, type.getElementName(), type.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.CLASS, fqn, type.getFlags(), null, location);
         
         // Write the superclass
         String superSig = type.getSuperclassTypeSignature();
@@ -174,11 +175,11 @@ public class ClassFileExtractor {
           relationWriter.writeRelation(Relation.EXTENDS, fqn, typeSignatureToFqn(superSig), location);
         }
       } else if (type.isAnnotation()) {
-        entityWriter.writeEntity(Entity.ANNOTATION, fqn, type.getElementName(), type.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.ANNOTATION, fqn, type.getFlags(), null, location);
       } else if (type.isInterface()) {
-        entityWriter.writeEntity(Entity.INTERFACE, fqn, type.getElementName(), type.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.INTERFACE, fqn, type.getFlags(), null, location);
       }  else if (type.isEnum()) {
-        entityWriter.writeEntity(Entity.ENUM, fqn, type.getElementName(), type.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.ENUM, fqn, type.getFlags(), null, location);
       }
       
       // Write the superinterfaces
@@ -192,9 +193,9 @@ public class ClassFileExtractor {
       
       fqnStack.push(type.getFullyQualifiedName());
       
-      for (IType child : type.getTypes()) {
-        extractIType(child);
-      }
+//      for (IType child : type.getTypes()) {
+//        extractIType(child);
+//      }
       
       for (IField field : type.getFields()) {
         if (!Flags.isSynthetic(field.getFlags())) {
@@ -224,9 +225,9 @@ public class ClassFileExtractor {
       String fqn = fqnStack.peek() + "." + field.getElementName();
       // Write the entity
       if (field.isEnumConstant()) {
-        entityWriter.writeEntity(Entity.ENUM_CONSTANT, fqn, field.getElementName(), field.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.ENUM_CONSTANT, fqn, field.getFlags(), null, location);
       } else {
-        entityWriter.writeEntity(Entity.FIELD, fqn, field.getElementName(), field.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.FIELD, fqn, field.getFlags(), null, location);
       }
       
       // Write the inside relation
@@ -270,13 +271,13 @@ public class ClassFileExtractor {
       
       // Write the entity
       if (annotationElement) {
-        entityWriter.writeEntity(Entity.ANNOTATION_ELEMENT, basicFqn, name, params, null, method.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.ANNOTATION_ELEMENT, basicFqn, params, null, method.getFlags(), null, location);
       } else if (method.isConstructor()) {
-        entityWriter.writeEntity(Entity.CONSTRUCTOR, basicFqn, name, params, null, method.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.CONSTRUCTOR, basicFqn, params, null, method.getFlags(), null, location);
       } else if (method.getElementName().equals("<clinit>()")) {
-        entityWriter.writeEntity(Entity.INITIALIZER, basicFqn, name, params, null, method.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.INITIALIZER, basicFqn, params, null, method.getFlags(), null, location);
       } else {
-        entityWriter.writeEntity(Entity.METHOD, basicFqn, name, params, null, method.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.METHOD, basicFqn, params, null, method.getFlags(), null, location);
       }
       
       // Write the inside relation

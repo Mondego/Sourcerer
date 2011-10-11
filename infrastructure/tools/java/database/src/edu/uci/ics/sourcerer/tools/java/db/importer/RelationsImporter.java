@@ -18,33 +18,30 @@
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
-import java.util.Collection;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.ModeledEntity;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.ProjectTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
+import edu.uci.ics.sourcerer.tools.java.model.types.RelationClass;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class RelationsImporter extends NewDatabaseImporter {
-  private LibraryEntityMap libraries;
-  protected EntityMap entities;
+  protected JavaLibraryTypeModel javaModel;
+  protected ProjectTypeModel projectModel;
+  protected UnknownEntityCache unknowns;
   
-  protected RelationsImporter(String taskName, LibraryEntityMap libraries) {
+  protected RelationsImporter(String taskName, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
     super(taskName);
-    this.libraries = libraries;
+    this.javaModel = javaModel;
+    this.unknowns = unknowns;
   }
-  
-  protected final void loadEntityMap(Integer projectID, Collection<Integer> externalProjects) {
-    task.start("Populating entity map", "entities loaded");
     
-    entities = new EntityMap(task, exec, projectID, externalProjects, libraries);
-
-    task.finish();
-  }
-  
   protected Integer getLHS(String fqn) {
-    DatabaseEntity entity = entities.getEntity(fqn);
-    if (entity == null) {
-      logger.severe("Missing lhs entity: " + fqn);
+    ModeledEntity entity = projectModel.getEntity(fqn);
+    if (entity.getRelationClass() != RelationClass.INTERNAL) {
+      logger.severe("Invalid lhs entity: " + entity);
       return null;
     } else {
       return entity.getEntityID();
