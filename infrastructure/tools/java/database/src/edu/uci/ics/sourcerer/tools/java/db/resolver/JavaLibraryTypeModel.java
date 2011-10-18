@@ -151,12 +151,12 @@ public class JavaLibraryTypeModel {
             }
             ModeledEntity child = model.reverseMap.get(lhsEID);
             if (child == null) {
-              logger.severe("Missing child from map: " + lhsEID);
+//              logger.severe("Missing child from map: " + lhsEID);
               continue;
             }
             ModeledEntity parent = model.reverseMap.get(rhsEID);
             if (parent == null) {
-              logger.severe("Missing parent from map: " + rhsEID);
+//              logger.severe("Missing parent from map: " + rhsEID);
               continue;
             }
             child.addParent(parent);

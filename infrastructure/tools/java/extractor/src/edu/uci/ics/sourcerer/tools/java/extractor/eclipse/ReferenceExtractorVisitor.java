@@ -143,7 +143,7 @@ import edu.uci.ics.sourcerer.util.Helper;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ReferenceExtractorVisitor extends ASTVisitor {
-  private static final String UNKNOWN = "(1UNKNOWN)";
+  private static final String UNKNOWN = "1_UNKNOWN_";
   
   private FileWriter fileWriter;
   private ProblemWriter problemWriter;
@@ -350,8 +350,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     Type superType = node.getSuperclassType();
     String superFqn = null;
     if (superType == null) {
-      superFqn = "java.lang.Object";
-      relationWriter.writeRelation(Relation.EXTENDS, fqn, superFqn, getUnknownLocation());
+      if (!fqn.equals("java.lang.Object")) {
+        superFqn = "java.lang.Object";
+        relationWriter.writeRelation(Relation.EXTENDS, fqn, superFqn, getUnknownLocation());
+      }
     } else {
       superFqn = getTypeFqn(superType);
       relationWriter.writeRelation(Relation.EXTENDS, fqn, superFqn, getLocation(superType));
@@ -388,7 +390,11 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
             if (superFqn == null) {
               relationWriter.writeRelation(Relation.CALLS, constructorFqn, "java.lang.Object.<init>()", getUnknownLocation());
             } else {
-              relationWriter.writeRelation(Relation.CALLS, constructorFqn, superFqn + ".<init>()", getUnknownLocation());
+              if (superType == null) {
+                relationWriter.writeRelation(Relation.CALLS, constructorFqn, superFqn + ".<init>()", getUnknownLocation());
+              } else {
+                relationWriter.writeRelation(Relation.CALLS, constructorFqn, getErasedTypeFqn(superType)+ ".<init>()", getUnknownLocation());
+              }
             }
           }
         }
@@ -438,8 +444,15 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     if (node.getParent() instanceof ClassInstanceCreation) {
       ClassInstanceCreation parent = (ClassInstanceCreation) node.getParent();
       
+      ITypeBinding binding = node.resolveBinding();
+      
       // Get the fqn
-      String fqn = fqnStack.getAnonymousClassFqn();
+      String fqn = null;
+      if (binding == null) {
+        fqn = fqnStack.getAnonymousClassFqn();
+      } else {
+        fqn = getTypeFqn(binding);
+      }
       String parentFqn = fqnStack.getFqn();
       Location parentLocation = getLocation(parent);
       fqnStack.push(fqn, Entity.CLASS);
@@ -470,7 +483,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         }
       }
       
-      ITypeBinding binding = node.resolveBinding();
+      
       
       if (binding != null) {
         // Write out the synthesized constructors
@@ -510,6 +523,73 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
             }
             if (superClassBinding != null) {
               String superFqn = getTypeFqn(superClassBinding);
+              String superConstructorFqn = superFqn + ".<init>" + rawArgs;
+              relationWriter.writeRelation(Relation.CALLS, constructorFqn, superConstructorFqn, getUnknownLocation());
+            }
+          }
+        }
+      }
+    } else if (node.getParent() instanceof EnumConstantDeclaration) {
+      ITypeBinding binding = node.resolveBinding();
+      
+      // Get the fqn
+      String fqn = null;
+      if (binding == null) {
+        fqn = fqnStack.getAnonymousClassFqn();
+      } else {
+        fqn = getTypeFqn(binding);
+      }
+      String parentFqn = fqnStack.getFqn();
+      fqnStack.push(fqn, Entity.CLASS);
+      
+      // Write the entity
+      entityWriter.writeEntity(Entity.CLASS, fqn, 0, MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+    
+      // Write the inside relation
+      relationWriter.writeRelation(Relation.INSIDE, fqn, parentFqn, getUnknownLocation());
+    
+      
+      // Write the extends relation
+      relationWriter.writeRelation(Relation.EXTENDS, fqn, parentFqn, getUnknownLocation());
+      
+      if (binding != null) {
+        // Write out the synthesized constructors
+        for (IMethodBinding method : binding.getDeclaredMethods()) {
+          if (method.isConstructor()) {
+            // Write the entity
+            String args = getMethodArgs(method);
+            String rawArgs = getErasedMethodArgs(method);
+            String basicFqn = fqn + ".<init>";
+            String constructorFqn = basicFqn + args;
+            if (args.equals(rawArgs)) {
+              entityWriter.writeEntity(Entity.CONSTRUCTOR, basicFqn, args, null, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
+            } else {
+              entityWriter.writeEntity(Entity.CONSTRUCTOR, basicFqn, args, rawArgs, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
+            }
+            
+
+            // Write the inside relation
+            relationWriter.writeRelation(Relation.INSIDE, constructorFqn, fqn, getUnknownLocation());
+
+//            // Write the instantiates relation
+//            relationWriter.writeRelation(Relation.INSTANTIATES, parentFqn, fqn, parentLocation);
+//            
+//            // Write the calls relation            
+//            relationWriter.writeRelation(Relation.CALLS, parentFqn, constructorFqn, parentLocation);
+
+            // Write the parameters
+            int count = 0;
+            for (ITypeBinding param : method.getParameterTypes()) {
+              localVariableWriter.writeLocalVariable(LocalVariable.PARAM, "(ANONYMOUS)", 0, getTypeFqn(param), getUnknownLocation(), constructorFqn, count++, getUnknownLocation());
+            }
+            
+            // Reference the superconstructor
+            ITypeBinding superClassBinding = binding.getSuperclass();
+            if (superClassBinding != null) {
+              superClassBinding = superClassBinding.getErasure();
+            }
+            if (superClassBinding != null) {
+              String superFqn = getTypeFqn(superClassBinding);
               String superConstructorFqn = superFqn + ".<init>" + args;
               relationWriter.writeRelation(Relation.CALLS, constructorFqn, superConstructorFqn, getUnknownLocation());
             }
@@ -523,7 +603,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
 
   @Override
   public void endVisit(AnonymousClassDeclaration node) {
-    if (node.getParent() instanceof ClassInstanceCreation) {
+    if (node.getParent() instanceof ClassInstanceCreation || node.getParent() instanceof EnumConstantDeclaration) {
       fqnStack.pop();
     }
   }
@@ -617,6 +697,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     {
       String methodFqn = fqn + ".valueOf";
       entityWriter.writeEntity(Entity.METHOD, methodFqn, "(java.lang.String)", null, 9, null, unknown);
+      methodFqn += "(java.lang.String)";
       relationWriter.writeRelation(Relation.INSIDE, methodFqn, fqn, unknown);
       relationWriter.writeRelation(Relation.RETURNS, methodFqn, fqn, unknown);
       localVariableWriter.writeLocalVariable(LocalVariable.PARAM, "name", 0, "java.lang.String", unknown, methodFqn, 0, unknown);
@@ -945,33 +1026,33 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       }
     }
     
-    // Attempt to determine overrides relations
-    Deque<ITypeBinding> bindingStack = Helper.newStack();
-    IMethodBinding method = node.resolveBinding();
-    if (method != null) {
-      ITypeBinding declaringClass = method.getDeclaringClass();
-      if (declaringClass != null && declaringClass.getSuperclass() != null) {
-        bindingStack.add(declaringClass.getSuperclass());
-      }
-      for (ITypeBinding interfaceBinding : declaringClass.getInterfaces()) {
-        bindingStack.add(interfaceBinding);
-      }
-      while (!bindingStack.isEmpty()) {
-        ITypeBinding top = bindingStack.pop();
-        for (IMethodBinding methodBinding : top.getDeclaredMethods()) {
-          if (method.overrides(methodBinding)) {
-            relationWriter.writeRelation(Relation.OVERRIDES, fqn, getMethodName(methodBinding, false) + getMethodArgs(methodBinding), getLocation(node));
-          }
-        }
-        ITypeBinding superType = top.getSuperclass();
-        if (superType != null) {
-          bindingStack.add(superType);
-        }
-        for (ITypeBinding interfaceBinding : top.getInterfaces()) {
-          bindingStack.add(interfaceBinding);
-        }
-      }
-    }
+//    // Attempt to determine overrides relations
+//    Deque<ITypeBinding> bindingStack = Helper.newStack();
+//    IMethodBinding method = node.resolveBinding();
+//    if (method != null) {
+//      ITypeBinding declaringClass = method.getDeclaringClass();
+//      if (declaringClass != null && declaringClass.getSuperclass() != null) {
+//        bindingStack.add(declaringClass.getSuperclass());
+//      }
+//      for (ITypeBinding interfaceBinding : declaringClass.getInterfaces()) {
+//        bindingStack.add(interfaceBinding);
+//      }
+//      while (!bindingStack.isEmpty()) {
+//        ITypeBinding top = bindingStack.pop();
+//        for (IMethodBinding methodBinding : top.getDeclaredMethods()) {
+//          if (method.overrides(methodBinding)) {
+//            relationWriter.writeRelation(Relation.OVERRIDES, fqn, getMethodName(methodBinding, false) + getMethodArgs(methodBinding), getLocation(node));
+//          }
+//        }
+//        ITypeBinding superType = top.getSuperclass();
+//        if (superType != null) {
+//          bindingStack.add(superType);
+//        }
+//        for (ITypeBinding interfaceBinding : top.getInterfaces()) {
+//          bindingStack.add(interfaceBinding);
+//        }
+//      }
+//    }
       
     fqnStack.push(fqn, type);
 
@@ -999,7 +1080,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
             if (parent == null) {
               relationWriter.writeRelation(Relation.CALLS, fqnStack.getFqn(), "java.lang.Object.<init>()", getUnknownLocation());
             } else {
-              relationWriter.writeRelation(Relation.CALLS, fqnStack.getFqn(), getTypeFqn(getBaseType(parent)) + ".<init>()", getUnknownLocation());
+              relationWriter.writeRelation(Relation.CALLS, fqnStack.getFqn(), getErasedTypeFqn(parent) + ".<init>()", getUnknownLocation());
             }
           }
         }
@@ -1558,7 +1639,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     } else {
       commentWriter.writeComment(Comment.JAVADOC, fqnStack.getFqn(), getLocation(node));
     }
-    return true;
+    return false;
   }
 
   /**
@@ -1638,7 +1719,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     String fqn = fqnStack.getFqn() + "." + node.getName().getIdentifier();
 
     // Write the entity
-    entityWriter.writeEntity(Entity.ANNOTATION_ELEMENT, fqn, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
+    entityWriter.writeEntity(Entity.ANNOTATION_ELEMENT, fqn, "()", null, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
     fqn += "()";
 
     // Write the inside relation
@@ -2049,7 +2130,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
 
   private String getMethodArgs(IMethodBinding binding) {
     StringBuilder builder = new StringBuilder();
-    getMethodArgs(builder, binding);
+    getMethodArgs(builder, binding.getMethodDeclaration());
     return builder.toString();
   }
   
@@ -2069,7 +2150,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   
   private String getErasedMethodArgs(IMethodBinding binding) {
     StringBuilder builder = new StringBuilder();
-    getErasedMethodArgs(builder, binding);
+    getErasedMethodArgs(builder, binding.getMethodDeclaration());
     return builder.toString();
   }
   
@@ -2189,11 +2270,11 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private static final String BRACKETS = "[][][][][][][][][][][][][][][][][][][][]";
  
   private String getUnknownFqn(String name) {
-    return UNKNOWN + name;
+    return UNKNOWN + "." + name;
   }
   
   private String getUnknownSuperFqn(String name) {
-    return "(1SUPER)" + name;
+    return "1_SUPER_UNKNOWN_." + name;
   }
   
   private String getErasedTypeFqn(Type type) {
@@ -2518,10 +2599,6 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       return stack.peek().getNextParameterPos();
     }
     
-    public int getNextTypeParameterPos() {
-      return stack.peek().getNextTypeParameterPos();
-    }
-    
     public String getEnclosingClass() {
       for (Enclosing item : stack) {
         if (item.isDeclaredType()) {
@@ -2538,7 +2615,6 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     private int initializerCount;
     private int anonymousClassCount;
     private int parameterCount;
-    private int typeParameterCount;
     private boolean superInvoked;
     
     private Map<String, String> localClassMap;
@@ -2578,8 +2654,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     }
 
     public String getAnonymousClassFqn() {
-//      return fqn + "$anonymous-" + ++anonymousClassCount;
-      return fqn + "$" + ++anonymousClassCount;
+      return fqn + "$anonymous-" + ++anonymousClassCount;
+//      return fqn + "$" + ++anonymousClassCount;
     }
     
     public String createLocalClassFqn(String name, String uniqueID) {
@@ -2604,10 +2680,6 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
 
     public int getNextParameterPos() {
       return parameterCount++;
-    }
-    
-    public int getNextTypeParameterPos() {
-      return typeParameterCount++;
     }
   }
   

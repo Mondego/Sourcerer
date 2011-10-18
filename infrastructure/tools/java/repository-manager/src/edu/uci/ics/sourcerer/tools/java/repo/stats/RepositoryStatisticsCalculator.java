@@ -28,7 +28,6 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.JavaProject;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepository;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.CreationistMap;
-import edu.uci.ics.sourcerer.util.MemoryStatsReporter;
 import edu.uci.ics.sourcerer.util.SizeCounter;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;

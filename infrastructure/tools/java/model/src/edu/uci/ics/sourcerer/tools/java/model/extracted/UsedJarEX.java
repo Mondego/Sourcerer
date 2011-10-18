@@ -30,11 +30,17 @@ public final class UsedJarEX implements SimpleSerializable {
   private String hash;
   private String[] missingTypes;
   
-  protected UsedJarEX() {}
+  public UsedJarEX() {}
   
   public UsedJarEX(String hash, String ... missingTypes) {
     this.hash = hash;
     this.missingTypes = missingTypes;
+  }
+  
+  public UsedJarEX update(String hash, String ... missingTypes) {
+    this.hash = hash;
+    this.missingTypes = missingTypes;
+    return this;
   }
   
   public String getHash() {

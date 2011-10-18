@@ -25,6 +25,7 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
+import edu.uci.ics.sourcerer.util.Nullerator;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 import edu.uci.ics.sourcerer.utils.db.sql.SetStatement;
@@ -33,10 +34,10 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JavaLibraryReferentialRelationsImporter extends ReferentialRelationsImporter {
-  private Iterable<? extends ExtractedJarFile> libraries;
+class JavaLibraryReferentialRelationsImporter extends ReferentialRelationsImporter {
+  private Nullerator<ExtractedJarFile> libraries;
   
-  protected JavaLibraryReferentialRelationsImporter(Iterable<? extends ExtractedJarFile> libraries, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
+  protected JavaLibraryReferentialRelationsImporter(Nullerator<ExtractedJarFile> libraries, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
     super("Importing Java Library Referential Relations", javaModel, unknowns);
     this.libraries = libraries;
   }
@@ -54,7 +55,8 @@ public class JavaLibraryReferentialRelationsImporter extends ReferentialRelation
       ConstantCondition<Integer> equalsID = ProjectsTable.PROJECT_ID.compareEquals();
       updateState.andWhere(equalsID);
       
-      for (ExtractedJarFile lib : libraries) {
+      ExtractedJarFile lib; 
+      while ((lib = libraries.next()) != null) {
         String name = lib.getProperties().NAME.getValue();
         task.start("Importing " + name + "'s referential relations");
         

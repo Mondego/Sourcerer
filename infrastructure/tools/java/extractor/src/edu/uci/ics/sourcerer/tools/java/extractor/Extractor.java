@@ -28,6 +28,7 @@ import edu.uci.ics.sourcerer.tools.java.extractor.bytecode.ASMExtractor;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseExtractor;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.FileWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.UsedJarWriter;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
@@ -123,7 +124,7 @@ public class Extractor {
     Collection<? extends JavaProject> projects = extractor.repo.getProjects();
     extractor.task.finish();
     
-    extractor.extractProjectsWithEclipse(projects);
+    extractor.extractProjects(projects);
     
     extractor.task.finish();
   }
@@ -137,7 +138,7 @@ public class Extractor {
       jars = repo.getProjectJarFiles();
     }
     task.finish();
-    task.start("Extracting " + jars.size() + "jar files", "jar files extracted");
+    task.start("Extracting " + jars.size() + " jar files", "jar files extracted");
     
     if (!(withEclipse || withASM)) {
       throw new IllegalStateException("Must choose either Eclipse or ASM.");
@@ -204,7 +205,7 @@ public class Extractor {
     task.finish();
   }
   
-  private void extractProjectsWithEclipse(Collection<? extends JavaProject> projects) {
+  private void extractProjects(Collection<? extends JavaProject> projects) {
     task.start("Extracting " + projects.size() + " projects", "projects extracted");
     for (JavaProject project : projects) {
       task.progress("Extracting " + project + " (%d of " + projects.size() + ")");
@@ -236,10 +237,13 @@ public class Extractor {
       WriterBundle bundle = new WriterBundle(extractedProject.getExtractionDir().toFile());
 
       // Write out the jars
+      // Write out the used jars
       FileWriter fileWriter = bundle.getFileWriter();
+      UsedJarWriter jarWriter = bundle.getUsedJarWriter();
       for (JarFile jar : files.getJarFiles()) {
         JarProperties props = jar.getProperties();
         fileWriter.writeFile(File.JAR, props.NAME.getValue(), null, props.HASH.getValue());
+        jarWriter.writeUsedJar(props.HASH.getValue());
       }
 
       // Extract

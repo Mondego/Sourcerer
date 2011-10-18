@@ -22,6 +22,9 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -68,7 +71,7 @@ public abstract class AbstractJavaRepository<Project extends AbstractRepoProject
   
   protected abstract ObjectDeserializer<Jar> makeDeserializer();
   
-  protected abstract Jar makeJar(RepoFileImpl dir);
+  protected abstract Jar loadJar(RepoFileImpl dir);
   
   protected void reset() {
     mavenJarIndex = null;
@@ -106,17 +109,21 @@ public abstract class AbstractJavaRepository<Project extends AbstractRepoProject
   }
   
   private void createMavenJarIndex() {
-    mavenJarIndex = Helper.newHashMap();
+    mavenJarIndex = new HashMap<>();
     
-    RepoFileImpl mavenDir = repoRoot.getChild(JARS_DIRECTORY).getChild(MAVEN_JARS_DIRECTORY);
-    for (RepoFileImpl a : mavenDir.getChildren()) {
-      if (a.isDirectory()) {
-        for (RepoFileImpl b : a.getChildren()) {
-          Jar jar = makeJar(b);
-          if (jar != null) {
-            mavenJarIndex.put(jar.getProperties().HASH.getValue(), jar);
+    Deque<RepoFileImpl> stack = new LinkedList<>();
+    stack.push(repoRoot.getChild(JARS_DIRECTORY).getChild(MAVEN_JARS_DIRECTORY));
+    while (!stack.isEmpty()) {
+      RepoFileImpl dir = stack.pop();
+      Jar jar = loadJar(dir);
+      if (jar == null) {
+        for (RepoFileImpl child : dir.getChildren()) {
+          if (child.isDirectory()) {
+            stack.add(child);
           }
         }
+      } else {
+        mavenJarIndex.put(jar.getProperties().HASH.getValue(), jar);
       }
     }
     
@@ -159,7 +166,7 @@ public abstract class AbstractJavaRepository<Project extends AbstractRepoProject
     for (RepoFileImpl a : projectDir.getChildren()) {
       if (a.isDirectory()) {
         for (RepoFileImpl b : a.getChildren()) {
-          Jar jar = makeJar(b);
+          Jar jar = loadJar(b);
           if (jar != null) {
             projectJarIndex.put(jar.getProperties().HASH.getValue(), jar);
           }
@@ -205,7 +212,7 @@ public abstract class AbstractJavaRepository<Project extends AbstractRepoProject
     RepoFileImpl dir = repoRoot.getChild(JARS_DIRECTORY).getChild(LIBRARY_JARS_DIRECTORY);
     for (RepoFileImpl child : dir.getChildren()) {
       if (child.isDirectory()) {
-        Jar jar = makeJar(child);
+        Jar jar = loadJar(child);
         if (jar != null) {
           libraryJarIndex.put(jar.getProperties().HASH.getValue(), jar);
         }

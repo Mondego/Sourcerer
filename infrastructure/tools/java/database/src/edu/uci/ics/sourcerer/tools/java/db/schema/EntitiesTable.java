@@ -91,6 +91,10 @@ public final class EntitiesTable extends DatabaseTable {
     return makeInsert(type, fqn, null, null, null, multi, projectID, null, null, null);
   }
   
+  public static Insert makeInsert(Entity type, String fqn, String params, Integer projectID) {
+    return makeInsert(type, fqn, params, null, null, null, projectID, null, null, null);
+  }
+  
   public static Insert makeInsert(EntityEX entity, Integer projectID, Integer fileID) {
     if (fileID == null) {
       return makeInsert(entity.getType(), entity.getFqn(), entity.getSignature(), entity.getRawSignature(), entity.getModifiers(), null, projectID, null, null, null);

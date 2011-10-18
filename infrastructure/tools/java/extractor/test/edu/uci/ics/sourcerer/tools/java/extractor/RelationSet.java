@@ -19,7 +19,6 @@ package edu.uci.ics.sourcerer.tools.java.extractor;
 
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,8 +26,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.management.relation.RelationException;
 
 import edu.uci.ics.sourcerer.tools.java.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;

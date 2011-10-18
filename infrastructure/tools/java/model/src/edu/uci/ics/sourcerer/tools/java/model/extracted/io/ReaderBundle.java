@@ -31,6 +31,7 @@ import edu.uci.ics.sourcerer.tools.java.model.extracted.ImportEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.RelationEX;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.UsedJarEX;
 import edu.uci.ics.sourcerer.util.CachedReference;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializable;
@@ -75,6 +76,12 @@ public class ReaderBundle {
     @Override
     protected Collection<ImportEX> make() {
       return ReaderBundle.this.get(ImportEX.class, new File(input, ImportEX.IMPORT_FILE.getValue()));
+    }
+  };
+  private CachedReference<Collection<UsedJarEX>> usedJars = new CachedReference<Collection<UsedJarEX>>() {
+    @Override
+    protected Collection<UsedJarEX> make() {
+      return ReaderBundle.this.get(UsedJarEX.class, new File(input, UsedJarEX.USED_JAR_FILE.getValue()));
     }
   };
   
@@ -176,6 +183,18 @@ public class ReaderBundle {
     Iterable<ImportEX> result = imports.getIfCached();
     if (result == null) {
       result = getTransient(ImportEX.class, new File(input, ImportEX.IMPORT_FILE.getValue()));
+    }
+    return result;
+  }
+  
+  public Collection<UsedJarEX> getUsedJars() {
+    return usedJars.get();
+  }
+  
+  public Iterable<UsedJarEX> getTransientUsedJars() {
+    Iterable<UsedJarEX> result = usedJars.getIfCached();
+    if (result == null) {
+      result = getTransient(UsedJarEX.class, new File(input, UsedJarEX.USED_JAR_FILE.getValue()));
     }
     return result;
   }

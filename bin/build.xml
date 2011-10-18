@@ -25,30 +25,38 @@
        so that the jars don't contain unneeded files -->
   <property name="build" location="build" />
   <property name="build-link-crawler" location="${build}/link-crawler" />
+  <property name="build-utilization" location="${build}/utilization" />
+  <property name="build-java-repo-tools" location="${build}/java-repo-tools" />
+  <property name="build-extractor-lib" location="${build}/extractor-lib" />
+  <property name="build-extractor" location="${build}/extractor" />
+  <property name="build-database" location="${build}/database" />
   
   <property name="build-comparison-test" location="${build}/comparison-test" />
-  <property name="build-java-tools-core" location="${build}/java-tools-core" />
+  
   <property name="build-search-eval" location="${build}/search-eval" />
   <property name="build-search-server" location="${build}/search-server" />
   <property name="build-core-repomanager" location="${build}/core-repomanager" />
   <property name="build-codecrawler" location="${build}/codecrawler" />
-  <property name="build-extractor" location="${build}/extractor" />
+  
   <property name="build-machine-learning" location="${build}/machine-learning" />
 
   <property name="dist" location="dist" />
 
   <!-- Utilities -->
+  <property name="lib" location="../lib" />
   <property name="utilities" location="../infrastructure/utils/utilities/src" />
   <property name="database-utilities" location="../infrastructure/utils/database-utilities/src" />
   
   <!-- Core Tools -->
-  <property name="core-repository-manager" location="../infrastructure/tools/core/core-repository-manager/src" />
+  <property name="core-repository-manager" location="../infrastructure/tools/core/repository-manager/src" />
   <property name="link-crawler" location="../infrastructure/tools/core/link-crawler/src" />
   
   <!-- Java Tools -->
-  <property name="repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
+  <property name="java-repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
   <property name="model" location="../infrastructure/tools/java/model/src" />
   <property name="extractor" location="../infrastructure/tools/java/extractor" />
+  <property name="utilization" location="../infrastructure/tools/java/utilization" />
+  <property name="database" location="../infrastructure/tools/java/database/src" />
 
   <!-- Test Repository -->
   <property name="test-repo" location="../infrastructure/tools/java/extractor/test-repo" />
@@ -57,9 +65,8 @@
 	<property name="component-clusterer" location="../infrastructure/tools/java/component-clusterer/src" />
   
 	<property name="syntax-highlighter" location="../infrastructure/tools/java/syntax-highlighter/src" />
-  <property name="database" location="../infrastructure/tools/java/database/src" />
-  <property name="search-eval" location="../infrastructure/apps/codesearch/src" />
   
+  <property name="search-eval" location="../infrastructure/apps/codesearch/src" />
   <property name="search-server" location="../infrastructure/services/search-server/src" />
   <property name="solr-root" location="../infrastructure/services/solr-1.3-patched" />
   <property name="codecrawler" location="../infrastructure/tools/core/codecrawler/src" />
@@ -67,7 +74,7 @@
 	<property name="famix-server" location="../infrastructure/services/famix-server/src" />
 	<property name="code-browser" location="../infrastructure/apps/code-browser/src" />
   <property name="similarity-server" location="../infrastructure/services/similarity-server/src" />
-  <property name="lib" location="../lib" />
+  
   <property name="extractor-bin" location="../infrastructure/tools/java/extractor/bin" />
   <property name="machine-learning" location="../infrastructure/tools/core/machine-learning/src" />
 	<property name="website" location="../website" />
@@ -122,87 +129,118 @@
     </jar>
   </target>
   
-  <!-- Sourcerer java core -->
-  <target name="init-java-tools-core" depends="init">
-    <mkdir dir="${build-java-tools-core}" />
+  <!-- Java Repo Tools -->
+  <target name="init-java-repo-tools" depends="init">
+    <mkdir dir="${build-java-repo-tools}" />
   </target>
-
-  <target name="compile-java-tools-core" depends="init-java-tools-core">
+  
+  <target name="compile-java-repo-tools" depends="init-java-repo-tools">
     <!-- Compile everything -->
-    <javac destdir="${build-java-tools-core}" debug="on" includeantruntime="false">
-      <classpath>
-        <pathelement path="${classpath}" />
-        <fileset dir="${lib}">
-          <include name="**/servlet-api.jar" />
-        </fileset>
-      </classpath>
+    <javac destdir="${build-java-repo-tools}" debug="on" includeantruntime="false">
       <src path="${utilities}" />
       <src path="${core-repository-manager}" />
-      <src path="${repository-manager}" />
-      <src path="${model}" />
-    	<!--<src path="${syntax-highlighter}" />
-      <src path="${database}" />
-      <src path="${file-server}" />
-    	<src path="${famix-server}" />
-    	<src path="${code-browser}" />
-      <src path="${component-clusterer}" />-->
+      <src path="${java-repository-manager}" />
     </javac>
 
     <!-- Copy the source -->
-    <copy todir="${build-java-tools-core}">
+    <copy todir="${build-java-repo-tools}">
       <fileset dir="${utilities}" includes="**/*.java" />
     </copy>
-    <copy todir="${build-java-tools-core}">
+    <copy todir="${build-java-repo-tools}">
       <fileset dir="${core-repository-manager}" includes="**/*.java" />
     </copy>
-    <copy todir="${build-java-tools-core}">
-      <fileset dir="${repository-manager}" includes="**/*.java" />
+    <copy todir="${build-java-repo-tools}">
+      <fileset dir="${java-repository-manager}" includes="**/*.java" />
     </copy>
-    <copy todir="${build-java-tools-core}">
-      <fileset dir="${model}" includes="**/*.java" />
-    </copy>
-  	<!--<copy todir="${build-java-tools-core}">
-      <fileset dir="${syntax-highlighter}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-java-tools-core}">
-      <fileset dir="${database}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-java-tools-core}">
-      <fileset dir="${file-server}" includes="**/*.java" />
-    </copy>
-  	<copy todir="${build-java-tools-core}">
-      <fileset dir="${famix-server}" includes="**/*.java" />
-    </copy>
-  	<copy todir="${build-java-tools-core}">
-      <fileset dir="${code-browser}" includes="**/*.java" />
-    </copy>
-  	<copy todir="${component-clusterer}">
-  	  <fileset dir="${component-clusterer}" includes="**/*.java" />
-  	</copy>
-    <unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-java-tools-core}" />-->
   </target>
-
-  <!-- Package the individual jars -->
-  <target name="sourcerer-lib" depends="compile-java-tools-core">
-    <jar destfile="${dist}/sourcerer-lib.jar" basedir="${build-java-tools-core}" />
-  </target>
-
-  <target name="repo-tools" depends="compile-java-tools-core">
-    <jar destfile="${dist}/repo-tools.jar" basedir="${build-java-tools-core}">
+  
+  <target name="java-repo-tools" depends="compile-java-repo-tools" description="Build java repository tools executable jar. (repo-tools.jar)">
+    <jar destfile="${dist}/repo-tools.jar" basedir="${build-java-repo-tools}">
       <manifest>
         <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.repo.Main" />
       </manifest>
     </jar>
   </target>
+  
+  <!-- Database Tools -->
+  <target name="init-database" depends="init">
+    <mkdir dir="${build-database}" />
+  </target>
+  
+  <target name="compile-database" depends="init-database">
+    <!-- Compile everything -->
+    <javac destdir="${build-database}" debug="on" includeantruntime="false">
+      <src path="${utilities}" />
+      <src path="${database-utilities}" />
+      <src path="${core-repository-manager}" />
+      <src path="${java-repository-manager}" />
+      <src path="${database}" />
+    </javac>
 
-  <target name="sourcerer-db" depends="compile-java-tools-core">
-    <jar destfile="${dist}/sourcerer-db.jar" basedir="${build-java-tools-core}">
+    <!-- Copy the source -->
+    <copy todir="${build-database}">
+      <fileset dir="${utilities}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-database}">
+      <fileset dir="${database-utilities}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-database}">
+      <fileset dir="${core-repository-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-database}">
+      <fileset dir="${java-repository-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-database}">
+      <fileset dir="${database}" includes="**/*.java" />
+    </copy>
+  </target>
+  
+  <target name="sourcerer-db" depends="compile-database" description="Build database tools executable jar. (sourcerer-db.jar)">
+    <jar destfile="${dist}/sourcerer-db.jar" basedir="${build-database}">
       <manifest>
-        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.db.tools.Main" />
+        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.db.Main" />
       </manifest>
     </jar>
   </target>
+  
+  <!-- Utilization -->
+  <target name="init-utilization" depends="init">
+    <mkdir dir="${build-utilization}" />
+  </target>
+      
+  <target name="compile-utilization" depends="init-utilization">
+    <!-- Compile everything -->
+    <javac destdir="${build-utilization}" debug="on" includeantruntime="false">
+      <src path="${utilities}" />
+      <src path="${core-repository-manager}" />
+      <src path="${java-repository-manager}" />
+      <src path="${utilization}" />
+    </javac>
 
+    <!-- Copy the source -->
+    <copy todir="${build-utilization}">
+      <fileset dir="${utilities}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-utilization}">
+      <fileset dir="${core-repository-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-utilization}">
+      <fileset dir="${java-repository-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-utilization}">
+      <fileset dir="${utilization}" includes="**/*.java" />
+    </copy>
+  </target>
+    
+  <target name="utilization" depends="compile-utilization" description="Build utilization executable jar. (utilization.jar)">
+    <jar destfile="${dist}/utilization.jar" basedir="${build-utilization}">
+      <manifest>
+        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.utilization.Main" />
+      </manifest>
+    </jar>
+  </target>
+  
+  <!--
   <target name="file-server" depends="compile-java-tools-core">
     <war destfile="${dist}/file-server.war" webxml="${file-server}/edu/uci/ics/sourcerer/server/file/web.xml">
       <lib dir="${file-server}/edu/uci/ics/sourcerer/server/file">
@@ -237,7 +275,20 @@
 			</manifest>
 		</jar>
 	</target>
-
+	
+	  <target name="clean-java-tools">
+    <delete dir="${build-java-tools-core}" />
+    <delete>
+      <fileset dir="${dist}">
+        <include name="sourcerer-lib.jar" />
+        <include name="repo-tools.jar" />
+        <include name="sourcerer-db.jar" />
+        <include name="file-server.war" />
+        <include name="famix-server.war" />
+      </fileset>
+    </delete>
+  </target>
+-->
   <!-- Talk to sushil about how this works -->
   <target name="similarity-server" depends="compile-machine-learning">
     <war destfile="${dist}/similarity-server.war" webxml="${similarity-server}/edu/uci/ics/sourcerer/server/similarity/web.xml">
@@ -258,47 +309,52 @@
     </war>
   </target>
 
-  <target name="clean-java-tools">
-    <delete dir="${build-java-tools-core}" />
-    <delete>
-      <fileset dir="${dist}">
-        <include name="sourcerer-lib.jar" />
-        <include name="repo-tools.jar" />
-        <include name="sourcerer-db.jar" />
-        <include name="file-server.war" />
-      	<include name="famix-server.war" />
-      </fileset>
-    </delete>
-  </target>
-
   <!-- Populate the extractor's lib directory -->
-  <target name="extractor-lib" depends="sourcerer-lib" description="Populate the Extractor's lib directory">
-    <copy file="${dist}/sourcerer-lib.jar" todir="${extractor}/lib/" />
+  <target name="init-extractor-lib" depends="init">
+    <mkdir dir="${build-extractor-lib}" />
+  </target>
+    
+  <target name="compile-extractor-lib" depends="init-extractor-lib">
+    <!-- Compile everything -->
+    <javac destdir="${build-extractor-lib}" debug="on" includeantruntime="false">
+      <src path="${utilities}" />
+      <src path="${core-repository-manager}" />
+      <src path="${java-repository-manager}" />
+      <src path="${model}" />
+    </javac>
+
+    <!-- Copy the source -->
+    <copy todir="${build-extractor-lib}">
+      <fileset dir="${utilities}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-extractor-lib}">
+      <fileset dir="${core-repository-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-extractor-lib}">
+      <fileset dir="${java-repository-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-extractor-lib}">
+      <fileset dir="${model}" includes="**/*.java" />
+    </copy>
+  </target>
+  
+  <target name="extractor-lib" depends="compile-extractor-lib" description="Populate the Extractor's lib directory">
+    <jar destfile="${extractor}/lib/sourcerer-lib.jar" basedir="${build-extractor-lib}" />
     <copy file="${lib}/asm-4.0_RC2.jar" todir="${extractor}/lib/" />
   </target>
   
   <!-- Build the extractor plugin - is asynchronous -->
-  <target name="extractor">
+  <target name="extractor" description="Build the extractor plugin.">
     <pde.exportPlugins destination="${build}" exportSource="true" exportType="directory" plugins="Extractor" useJARFormat="true" />
   </target>
 
   <!-- Repackage the plugin jar file - run after the extractor target -->
-  <target name="repackage-extractor" depends="compile-java-tools-core">
+  <target name="repackage-extractor" depends="compile-extractor-lib">
     <unjar src="${build}/plugins/Extractor_1.0.0.jar" dest="${build-extractor}" />
     <copy todir="${build-extractor}">
-      <fileset dir="${build-java-tools-core}" includes="**/*" />
+      <fileset dir="${build-extractor-lib}" includes="**/*" />
     </copy>
     <zip destfile="${dist}/Extractor_1.0.0.jar" basedir="${build-extractor}" />
-  </target>
-
-  <target name="clean-extractor">
-    <delete dir="${build}/plugins" />
-    <delete dir="${build-extractor}" />
-    <delete>
-      <fileset dir="${dist}">
-        <include name="Extractor_1.0.0.jar" />
-      </fileset>
-    </delete>
   </target>
 
   <target name="scs">
@@ -501,7 +557,7 @@
   </target>
 
   <!-- Construct the test repository -->
-  <target name="create-test-repo" depends="init,compile-java-tools-core,sourcerer-lib,repo-tools" description="Construct the test repository.">
+  <target name="create-test-repo" depends="compile-extractor-lib, java-repo-tools" description="Construct the test repository.">
     <!-- Clear 0/1 -->
     <delete dir="${test-repo}/0/1/content" />
 
@@ -510,15 +566,12 @@
       <fileset dir="${extractor}" includes="**/*.java" excludes="**/test-repo/**"/>
     </copy>
     <copy todir="${test-repo}/0/1/content">
-      <fileset dir="${dist}" includes="sourcerer-lib.jar" />      
+      <fileset dir="${extractor}/lib" includes="sourcerer-lib.jar" />      
     </copy>
 
     <!-- Build the comparison test jar -->
     <mkdir dir="${build-comparison-test}" />
     <javac destdir="${build-comparison-test}" debug="on" includeantruntime="false">
-      <!--<classpath>
-        <pathelement path="${classpath}" />
-      </classpath>-->
       <src path="${comparison-test}" />
     </javac>
     

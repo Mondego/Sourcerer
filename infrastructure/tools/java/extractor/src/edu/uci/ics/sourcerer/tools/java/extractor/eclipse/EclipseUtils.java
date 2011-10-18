@@ -25,7 +25,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import org.eclipse.core.resources.IFile;
@@ -70,6 +72,10 @@ public class EclipseUtils {
   private static IJavaProject javaProject = null;
  
   private static void initializeProject() {
+    Hashtable options = JavaCore.getOptions();
+    JavaCore.setComplianceOptions("1.7", options);
+    JavaCore.setOptions(options);
+    
     IWorkspace workspace = ResourcesPlugin.getWorkspace();
     IWorkspaceDescription desc = workspace.getDescription();
     desc.setAutoBuilding(false);

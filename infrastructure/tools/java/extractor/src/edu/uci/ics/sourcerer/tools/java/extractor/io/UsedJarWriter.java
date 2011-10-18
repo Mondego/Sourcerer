@@ -24,4 +24,6 @@ import edu.uci.ics.sourcerer.tools.java.model.extracted.UsedJarEX;
  */
 public interface UsedJarWriter extends ExtractorWriter {
   public void writeUsedJar(UsedJarEX jar);
+  
+  public void writeUsedJar(String hash, String ... missingTypes);
 }

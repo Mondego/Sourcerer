@@ -132,7 +132,7 @@ public class ProjectTypeModel {
         }
         ModeledEntity child = reverseMap.get(lhsEID);
         if (child == null) {
-          logger.severe("Missing child from map: " + lhsEID);
+//          logger.severe("Missing child from map: " + lhsEID);
           continue;
         }
         ModeledEntity parent = reverseMap.get(rhsEID);
@@ -141,7 +141,7 @@ public class ProjectTypeModel {
           parent = libraryModel.getEntity(rhsEID);
         }
         if (parent == null) {
-          logger.severe("Missing parent from map: " + rhsEID);
+//          logger.severe("Missing parent from map: " + rhsEID);
           continue;
         }
         child.addParent(parent);
@@ -202,8 +202,9 @@ public class ProjectTypeModel {
     
     if (TypeUtils.isWildcard(fqn)) {
       // Insert the wildcard entity
-      Integer entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.WILDCARD, fqn, null, projectID));
+      Integer entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.WILDCARD, fqn, projectID));
       ModeledEntity entity = new ModeledEntity(fqn, Entity.WILDCARD, entityID, RelationClass.NOT_APPLICABLE);
+      add(fqn, entity);
       
       // If it's bounded, add the bound relation
       if (!TypeUtils.isUnboundedWildcard(fqn)) {
@@ -220,8 +221,9 @@ public class ProjectTypeModel {
     
     if (TypeUtils.isTypeVariable(fqn)) {
       // Insert the type variable entity
-      Integer entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.TYPE_VARIABLE, fqn, null, projectID));
+      Integer entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.TYPE_VARIABLE, fqn, projectID));
       ModeledEntity entity = new ModeledEntity(fqn, Entity.TYPE_VARIABLE, entityID, RelationClass.NOT_APPLICABLE);
+      add(fqn, entity);
       
       // Insert the bound relations
       for (String bound : TypeUtils.breakTypeVariable(fqn)) {
@@ -234,8 +236,9 @@ public class ProjectTypeModel {
     
     if (TypeUtils.isParametrizedType(fqn)) {
       // Insert the parametrized type entity
-      Integer entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.PARAMETERIZED_TYPE, fqn, null, projectID));
+      Integer entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.PARAMETERIZED_TYPE, fqn, projectID));
       ModeledEntity entity = new ModeledEntity(fqn, Entity.PARAMETERIZED_TYPE, entityID, RelationClass.NOT_APPLICABLE);
+      add(fqn, entity);
       
       // Add the has base type relation
       ModeledEntity baseType = getEntity(TypeUtils.getBaseType(fqn));

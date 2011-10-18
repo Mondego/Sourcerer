@@ -18,17 +18,22 @@
 package edu.uci.ics.sourcerer.tools.java.utilization;
 
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
+import edu.uci.ics.sourcerer.tools.java.utilization.fqn.FqnUsageStatistics;
 import edu.uci.ics.sourcerer.tools.java.utilization.fqn.FqnUsageTreeBuilder;
+import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
-  public Command BUILD_MAVEN_FQN_USAGE_TREE = new Command("build-maven-fqn-usage-tree", "Builds an FQN usage tree from the Maven jar files.") {
+  public static final Command COMPUTE_MAVEN_FQN_USAGE_STATS = new Command("compute-maven-fqn-usage-stats", "Computes some statistics on FQN usage in Maven.") {
     @Override
     protected void action() {
-      FqnUsageTreeBuilder.buildWithMaven();
+      TaskProgressLogger task = new TaskProgressLogger();
+      task.start("Computing maven fqn usage statistics");
+      FqnUsageStatistics.printFqnUsageStatistics(task, FqnUsageTreeBuilder.buildWithMaven(task));
+      task.finish();
     }
   }.setProperties(JavaRepositoryFactory.INPUT_REPO);
   

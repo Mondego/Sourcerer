@@ -26,6 +26,9 @@ import edu.uci.ics.sourcerer.tools.java.model.extracted.UsedJarEX;
 public class DummyUsedJarWriter implements UsedJarWriter {
   @Override
   public void writeUsedJar(UsedJarEX jar) {}
+  
+  @Override
+  public void writeUsedJar(String hash, String ... missingTypes) {}
 
   @Override
   public void close() {}

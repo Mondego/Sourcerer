@@ -21,6 +21,7 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
+import edu.uci.ics.sourcerer.util.Nullerator;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 import edu.uci.ics.sourcerer.utils.db.sql.SetStatement;
@@ -30,10 +31,10 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JavaLibraryEntitiesImporter extends EntitiesImporter {
-  private Iterable<? extends ExtractedJarFile> libraries;
+class JavaLibraryEntitiesImporter extends EntitiesImporter {
+  private Nullerator<ExtractedJarFile> libraries;
   
-  protected JavaLibraryEntitiesImporter(Iterable<? extends ExtractedJarFile> libraries) {
+  protected JavaLibraryEntitiesImporter(Nullerator<ExtractedJarFile> libraries) {
     super("Importing Java Library Entities");
     this.libraries = libraries;
   }
@@ -51,7 +52,8 @@ public class JavaLibraryEntitiesImporter extends EntitiesImporter {
       ConstantCondition<Integer> equalsID = ProjectsTable.PROJECT_ID.compareEquals();
       updateState.andWhere(equalsID);
       
-      for (ExtractedJarFile lib : libraries) {
+      ExtractedJarFile lib;
+      while ((lib = libraries.next()) != null) {
         String name = lib.getProperties().NAME.getValue();
         task.start("Importing " + name + "'s entities");
         

@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.tools.java.repo.model.internal;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Scanner;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
@@ -47,27 +48,53 @@ public final class JarFileImpl implements JarFile, IJar {
     this.sourceFile = sourceFile;
   }
   
-  static JarFileImpl make(RepoFileImpl dir) {
+  static JarFileImpl load(RepoFileImpl dir) {
     RepoFileImpl root = dir.asRoot();
-    JarProperties properties = new JarProperties(root.getChild(JAR_PROPERTIES.getValue()));
-    RepoFileImpl file = root.getChild(JAR_NAME.getValue());
-    RepoFileImpl sourceFile = root.getChild(SOURCE_JAR_NAME.getValue());
-    if (file.exists()) {
-      // Verify the hash exists
-      String hash = properties.HASH.getValue();
-      if (hash == null) {
-        hash = FileUtils.computeHash(file.toFile());
-        properties.HASH.setValue(hash);
-        properties.save();
-      }
-      if (sourceFile.exists()) {
-        return new JarFileImpl(properties, file, sourceFile);
+    RepoFileImpl propFile = root.getChild(JAR_PROPERTIES.getValue());
+    if (propFile.exists()) {
+      JarProperties properties = new JarProperties(propFile);
+      RepoFileImpl file = root.getChild(JAR_NAME.getValue());
+      RepoFileImpl sourceFile = root.getChild(SOURCE_JAR_NAME.getValue());
+      if (file.exists()) {
+        // Verify the hash exists
+        String hash = properties.HASH.getValue();
+        if (hash == null) {
+          hash = FileUtils.computeHash(file.toFile());
+          properties.HASH.setValue(hash);
+          properties.save();
+        }
+        if (sourceFile.exists()) {
+          return new JarFileImpl(properties, file, sourceFile);
+        } else {
+          return new JarFileImpl(properties, file, null);
+        }
       } else {
-        return new JarFileImpl(properties, file, null);
+        return null;
       }
     } else {
-      logger.severe("Unable to find jar in " + root);
       return null;
+    }
+  }
+  
+  static JarFileImpl make(RepoFileImpl dir) {
+    RepoFileImpl root = dir.asRoot();
+    RepoFileImpl propFile = root.getChild(JAR_PROPERTIES.getValue());
+    if (propFile.exists()) {
+      logger.log(Level.SEVERE, "Cannot make a JarFileImpl where one already exists: " + dir);
+      return null;
+    } else {
+      JarProperties properties = new JarProperties(propFile);
+      RepoFileImpl file = root.getChild(JAR_NAME.getValue());
+      RepoFileImpl sourceFile = root.getChild(SOURCE_JAR_NAME.getValue());
+      if (file.exists()) {
+        if (sourceFile.exists()) {
+          return new JarFileImpl(properties, file, sourceFile);
+        } else {
+          return new JarFileImpl(properties, file, null);
+        }
+      } else {
+        return null;
+      }
     }
   }
 
@@ -103,7 +130,7 @@ public final class JarFileImpl implements JarFile, IJar {
     return new ObjectDeserializer<JarFileImpl>() {
       @Override
       public JarFileImpl deserialize(Scanner scanner) {
-        return make(dirDeserializer.deserialize(scanner));
+        return load(dirDeserializer.deserialize(scanner));
       }
     };
   }

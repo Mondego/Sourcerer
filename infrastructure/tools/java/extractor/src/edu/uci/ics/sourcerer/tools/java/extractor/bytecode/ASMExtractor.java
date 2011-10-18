@@ -93,17 +93,15 @@ public class ASMExtractor implements Closeable {
   }
   
   public void extractJar(java.io.File file) {
-    try {
-      JarFile jar = new JarFile(file);
+    try (JarFile jar = new JarFile(file)) {
       task.start("Extracting class files", "class files extracted", 500);
       Enumeration<JarEntry> en = jar.entries();
       while (en.hasMoreElements()) {
         JarEntry entry = en.nextElement();
         if (entry.getName().endsWith(".class")) {
           String pkgFqn = convertNameToFqn(entry.getName());
-          pkgFqn = pkgFqn.substring(0, pkgFqn.lastIndexOf('.'));
           location = new Location(pkgFqn, null, null, null);
-          int last = pkgFqn.lastIndexOf('.');
+          int last = pkgFqn.lastIndexOf('.', pkgFqn.lastIndexOf('.') - 1);
           String name = pkgFqn.substring(last + 1);
           pkgFqn = pkgFqn.substring(0, last);
           
@@ -128,6 +126,7 @@ public class ASMExtractor implements Closeable {
   }
   
   public void extract(String pkg, String name, byte[] bytes) {
+    location = new Location(pkg + "." + name, null, null, null);
     entityWriter.writeEntity(Entity.PACKAGE, pkg, 0, null, null);
     
     fqnStack.push(pkg, Entity.PACKAGE);
@@ -317,7 +316,7 @@ public class ASMExtractor implements Closeable {
     
     @Override
     public void visitInnerClass(String name, String outerName, String innerName, int access) {
-      if (outerName == null && innerName == null) {
+      if (innerName != null && fqnStack.getFqn().equals(convertNameToFqn(name))) {
         this.access = access;
       }
     }
@@ -825,6 +824,7 @@ public class ASMExtractor implements Closeable {
         args.add(type);
       } else {
         args.add(wildcard + type + ">");
+        wildcard = null;
       }
     }
     
@@ -868,17 +868,11 @@ public class ASMExtractor implements Closeable {
 
     @Override
     public void visitInnerClassType(String name) {
+      addArgs();
       result.append("$").append(name);
     }
-
-    private void addArray() {
-      while (arrayCount-- > 0) {
-        result.append("[]");
-      }
-    }
     
-    @Override
-    public void visitEnd() {
+    private void addArgs() {
       if (args.size() != 0) {
         result.append("<");
         for (String arg : args) {
@@ -886,6 +880,19 @@ public class ASMExtractor implements Closeable {
         }
         result.setCharAt(result.length() - 1, '>');
       }
+      args.clear();
+    }
+    
+    private void addArray() {
+      while (arrayCount-- > 0) {
+        result.append("[]");
+      }
+    }
+
+    
+    @Override
+    public void visitEnd() {
+      addArgs();
       addArray();
       if (parent != null) {
         parent.add(result.toString());

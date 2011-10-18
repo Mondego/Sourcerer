@@ -43,7 +43,6 @@ import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.model.types.LocalVariable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Location;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
-import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -243,7 +242,7 @@ public class ClassFileExtractor {
   private void extractIMethod(IMethod method, boolean annotationElement) {
     try {
       Location location = new Location(fqnStack.peek(), path, null, null);
-      StringBuilder fqnBuilder = new StringBuilder(fqnStack.peek());
+      StringBuilder basicFqnBuilder = new StringBuilder(fqnStack.peek());
       String name = null;
       if (method.isConstructor()) {
         name = "<init>";
@@ -251,33 +250,38 @@ public class ClassFileExtractor {
       } else {
         name = method.getElementName();
       }
-      fqnBuilder.append('.').append(name);
-      String basicFqn = fqnBuilder.toString();
-      fqnBuilder.append('(');
+      basicFqnBuilder.append('.').append(name);
+      StringBuilder paramsBuilder = new StringBuilder("(");
+      StringBuilder rawParamsBuilder = new StringBuilder("(");
       boolean first = true;
       for (String param : method.getParameterTypes()) {
         if (first) {
           first = false;
         } else {
-          fqnBuilder.append(',');
+          paramsBuilder.append(',');
+          rawParamsBuilder.append(',');
         }
-        String sig = typeSignatureToFqn(param);
-        fqnBuilder.append(sig);
+        paramsBuilder.append(typeSignatureToFqn(param));
+        rawParamsBuilder.append(erasedTypeSignatureToFqn(param));
       }
-      fqnBuilder.append(')');
+      paramsBuilder.append(')');
+      rawParamsBuilder.append(')');
       
-      String referentialFqn = fqnBuilder.toString();
-      String params = referentialFqn.substring(basicFqn.length() + 1);
-      
+      String referentialFqn = basicFqnBuilder.toString() + paramsBuilder.toString();
+      String params = paramsBuilder.toString();
+      String rawParams = rawParamsBuilder.toString();
+      if (params.equals(rawParams)) {
+        rawParams = null;
+      }
       // Write the entity
       if (annotationElement) {
-        entityWriter.writeEntity(Entity.ANNOTATION_ELEMENT, basicFqn, params, null, method.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.ANNOTATION_ELEMENT, basicFqnBuilder.toString(), params, rawParams, method.getFlags(), null, location);
       } else if (method.isConstructor()) {
-        entityWriter.writeEntity(Entity.CONSTRUCTOR, basicFqn, params, null, method.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.CONSTRUCTOR, basicFqnBuilder.toString(), params, rawParams, method.getFlags(), null, location);
       } else if (method.getElementName().equals("<clinit>()")) {
-        entityWriter.writeEntity(Entity.INITIALIZER, basicFqn, params, null, method.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.INITIALIZER, basicFqnBuilder.toString(), params, rawParams, method.getFlags(), null, location);
       } else {
-        entityWriter.writeEntity(Entity.METHOD, basicFqn, params, null, method.getFlags(), null, location);
+        entityWriter.writeEntity(Entity.METHOD, basicFqnBuilder.toString(), params, rawParams, method.getFlags(), null, location);
       }
       
       // Write the inside relation
@@ -308,8 +312,7 @@ public class ClassFileExtractor {
         case Signature.ARRAY_TYPE_SIGNATURE:
           return typeSignatureToFqn(Signature.getElementType(signature)) + brackets.substring(0, 2 * Signature.getArrayCount(signature)); 
         case Signature.CLASS_TYPE_SIGNATURE:
-          String args[] = Signature.getTypeArguments(signature);
-          if (args.length == 0) {
+          if (signature.indexOf('<') == -1) {
             int firstDollar = signature.indexOf('$');
             if (firstDollar == -1) {
               return Signature.getSignatureQualifier(signature) + "." + Signature.getSignatureSimpleName(signature);
@@ -318,18 +321,55 @@ public class ClassFileExtractor {
               return Signature.getSignatureQualifier(shortSig) + "." + Signature.getSignatureSimpleName(shortSig) + signature.substring(firstDollar, signature.length() - 1);
             }
           } else {
-            StringBuilder fqnBuilder = new StringBuilder(typeSignatureToFqn(Signature.getTypeErasure(signature)));
-            fqnBuilder.append('<');
-            boolean first = true;
-            for (String arg : args) {
-              if (first) {
-                first = false;
-              } else {
-                fqnBuilder.append(',');
+            StringBuilder fqnBuilder = new StringBuilder();
+            StringBuilder current = new StringBuilder();
+            int depth = 0;
+            boolean dollar = false;
+            for (char c : signature.toCharArray()) {
+              switch (c) {
+                case '<':
+                  if (fqnBuilder.length() == 0) {
+                    current.append(';');
+                    fqnBuilder.append(typeSignatureToFqn(current.toString()));
+                    current.setLength(current.length() - 1);
+                  }
+                  current.append(c);
+                  depth++;
+                  break;
+                case '>':
+                  current.append(c);
+                  if (--depth == 0) {
+                    dollar = true;
+                    fqnBuilder.append('<');
+                    boolean first = true;
+                    current.append(";");
+                    for (String arg : Signature.getTypeArguments(current.toString())) {
+                      if (first) {
+                        first = false;
+                      } else {
+                        fqnBuilder.append(',');
+                      }
+                      fqnBuilder.append(typeSignatureToFqn(arg));
+                    }
+                    current.setLength(current.length() - 1);
+                    fqnBuilder.append('>');
+                  }
+                  break;
+                case '.':
+                  if (dollar && depth == 0) {
+                    fqnBuilder.append('$');
+                  }
+                  current.append(c);
+                  break;
+                default:
+                  if (dollar && depth == 0) {
+                    fqnBuilder.append(c);
+                  }
+                  current.append(c);
+                  break;
               }
-              fqnBuilder.append(typeSignatureToFqn(arg));
             }
-            fqnBuilder.append('>');
+            fqnBuilder.setLength(fqnBuilder.length() - 1);
             return fqnBuilder.toString();
           }
         case Signature.BASE_TYPE_SIGNATURE:
@@ -357,20 +397,24 @@ public class ClassFileExtractor {
     }
    }
   
+  private static String erasedTypeSignatureToFqn(String signature) {
+    return typeSignatureToFqn(Signature.getTypeErasure(signature));
+  }
+  
   private String getTypeParam(ITypeParameter typeParam) {
     try {
       StringBuilder builder = new StringBuilder();
       builder.append('<').append(typeParam.getElementName());
       boolean first = true;
       
-      for (String bound : typeParam.getBounds()) {
+      for (String bound : typeParam.getBoundsSignatures()) {
         if (first) {
           first = false;
           builder.append('+');
         } else {
           builder.append('&');
         }
-        builder.append(bound.replace(" extends ", "+"));
+        builder.append(typeSignatureToFqn(bound));
       }
       
       builder.append('>');

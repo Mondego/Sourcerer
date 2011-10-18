@@ -70,7 +70,7 @@ class LibraryTypeModel {
     task.start("Loading library entities", "entities loaded");
 
     try (SelectQuery query = exec.makeSelectQuery(EntitiesTable.TABLE)) {
-      query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.PARAMS, EntitiesTable.RAW_PARAMS);
+      query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.ENTITY_TYPE, EntitiesTable.PARAMS, EntitiesTable.RAW_PARAMS);
       query.andWhere(
           EntitiesTable.PROJECT_ID.compareIn(libraries),
           EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION, Entity.CONSTRUCTOR, Entity.METHOD, Entity.ANNOTATION_ELEMENT, Entity.ENUM_CONSTANT, Entity.FIELD)),
@@ -107,7 +107,7 @@ class LibraryTypeModel {
     task.start("Loading extends relations", "extends relations loaded");
     try (SelectQuery query = exec.makeSelectQuery(RelationsTable.TABLE)) {
       query.addSelects(RelationsTable.LHS_EID, RelationsTable.RHS_EID);
-      query.andWhere(EntitiesTable.PROJECT_ID.compareIn(libraries), RelationsTable.RELATION_TYPE.compareEquals(Relation.HAS_BASE_TYPE));
+      query.andWhere(RelationsTable.PROJECT_ID.compareIn(libraries), RelationsTable.RELATION_TYPE.compareEquals(Relation.HAS_BASE_TYPE));
       
       Map<Integer, Integer> pMapping = new HashMap<>();
       
@@ -121,7 +121,7 @@ class LibraryTypeModel {
       
       task.start("Loading extends/implements relations", "relations loaded");
       query.clearWhere();
-      query.andWhere(EntitiesTable.PROJECT_ID.compareIn(libraries), RelationsTable.RELATION_TYPE.compareIn(EnumSet.of(Relation.EXTENDS, Relation.IMPLEMENTS)));
+      query.andWhere(RelationsTable.PROJECT_ID.compareIn(libraries), RelationsTable.RELATION_TYPE.compareIn(EnumSet.of(Relation.EXTENDS, Relation.IMPLEMENTS)));
       
       result = query.selectStreamed();
       while (result.next()) {
@@ -133,7 +133,7 @@ class LibraryTypeModel {
         }
         ModeledEntity child = reverseMap.get(lhsEID);
         if (child == null) {
-          logger.severe("Missing child from map: " + lhsEID);
+//          logger.severe("Missing child from map: " + lhsEID);
           continue;
         }
         ModeledEntity parent = reverseMap.get(rhsEID);
@@ -142,7 +142,7 @@ class LibraryTypeModel {
           parent = javaModel.getEntity(rhsEID);
         }
         if (parent == null) {
-          logger.severe("Missing parent from map: " + rhsEID);
+//          logger.severe("Missing parent from map: " + rhsEID);
           continue;
         }
         child.addParent(parent);
@@ -270,6 +270,10 @@ class LibraryTypeModel {
       }
     } else {
       int dot = fqn.lastIndexOf('.');
+      if (dot == -1) {
+        return null;
+      }
+      
       String receiverFQN = fqn.substring(0, dot);
       String fieldName = fqn.substring(dot + 1);
       

@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.tools.java.db.importer.TypeUtils;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
@@ -59,12 +60,16 @@ public class UnknownEntityCache  {
         }
         
         try (SelectQuery query = exec.makeSelectQuery(EntitiesTable.TABLE)) {
-          query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN);
+          query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.PARAMS);
           query.andWhere(EntitiesTable.PROJECT_ID.compareEquals(cache.unknownsProject));
           TypedQueryResult result = query.selectStreamed();
           while (result.next()) {
             String fqn = result.getResult(EntitiesTable.FQN);
+            String params = result.getResult(EntitiesTable.PARAMS);
             Integer entityID = result.getResult(EntitiesTable.ENTITY_ID);
+            if (params != null) {
+              fqn += params;
+            } 
             cache.unknowns.put(fqn, new ModeledEntity(fqn, Entity.UNKNOWN, entityID, RelationClass.UNKNOWN));
             task.progress();
           }
@@ -80,7 +85,13 @@ public class UnknownEntityCache  {
   synchronized ModeledEntity getUnknown(QueryExecutor exec, String fqn) {
     ModeledEntity entity = unknowns.get(fqn);
     if (entity == null) {
-      Integer entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.UNKNOWN, fqn, null, unknownsProject));
+      Integer entityID = null;
+      if (TypeUtils.isMethod(fqn)) {
+        String name = TypeUtils.getMethodName(fqn);
+        entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.UNKNOWN, name, fqn.substring(name.length()), unknownsProject));
+      } else {
+        entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.UNKNOWN, fqn, unknownsProject));
+      }
       if (entityID == null) {
         logger.log(Level.SEVERE, "Error inserting unknown: " + fqn);
         return null;

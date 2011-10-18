@@ -17,21 +17,46 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.fqn;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepository;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
+import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class FqnUsageTreeBuilder {
-  public static FqnUsageTree buildWithMaven() {
+  public static FqnUsageTree<JarFile> buildWithMaven(TaskProgressLogger task) {
+    task.start("Loading repository");
     JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+    task.finish();
     
-    FqnUsageTree tree = new FqnUsageTree();
+    task.start("Extracting FQNs from jar files", "jar files extracted", 500);
+    FqnUsageTree<JarFile> tree = new FqnUsageTree<>();
     for (JarFile jar : repo.getMavenJarFiles()) {
+      task.progress();
       // Extract the class file names and add them to the tree
+      try (ZipInputStream zis = new ZipInputStream(new FileInputStream(jar.getFile().toFile()))) {
+        for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
+          if (entry.getName().endsWith(".class")) {
+            String fqn = entry.getName();
+            fqn = fqn.substring(0, fqn.lastIndexOf('.'));
+            tree.addSlashFqn(fqn, jar);
+          }
+        }
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Error reading jar file: " + jar, e);
+      }
     }
+    task.finish();
     
     return tree;
   }

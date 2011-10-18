@@ -30,7 +30,14 @@ public final class UsedJarWriterImpl extends AbstractExtractorWriter<UsedJarEX> 
     super(new File(output, UsedJarEX.USED_JAR_FILE.getValue()), UsedJarEX.class);
   }
   
+  @Override
   public void writeUsedJar(UsedJarEX jar) {
     write(jar);
+  }
+  
+  private UsedJarEX trans = new UsedJarEX();
+  @Override
+  public void writeUsedJar(String hash, String ... missingTypes) {
+    write(trans.update(hash, missingTypes));
   }
 }

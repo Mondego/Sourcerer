@@ -41,7 +41,7 @@ public final class ExtractedJavaRepositoryImpl extends AbstractJavaRepository<Ex
   }
   
   @Override
-  protected ExtractedJarFileImpl makeJar(RepoFileImpl dir) {
+  protected ExtractedJarFileImpl loadJar(RepoFileImpl dir) {
     return ExtractedJarFileImpl.make(dir);
   }
   
@@ -61,6 +61,7 @@ public final class ExtractedJavaRepositoryImpl extends AbstractJavaRepository<Ex
     ProjectLocationImpl loc = cast.getLocation();
     ExtractedJavaProjectImpl result = getProject(loc.getBatchNumber(), loc.getCheckoutNumber());
     if (result == null) {
+      clearCache();
       result = addProject(loc.getBatchNumber(), loc.getCheckoutNumber());
       result.getProperties().copy(project.getProperties());
       result.getProperties().save();

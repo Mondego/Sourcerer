@@ -20,6 +20,8 @@ package edu.uci.ics.sourcerer.tools.java.db.schema;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarProperties;
+import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProject;
+import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProjectProperties;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
@@ -111,134 +113,23 @@ public final class ProjectsTable extends DatabaseTable {
         null, 
         props.VERSION.getValue(), 
         props.GROUP.getValue(), 
-        null, // no path 
+        "BEGIN_ENTITY", // no path 
         props.HASH.getValue(), 
         props.HAS_SOURCE.getValue());
 
   }
-//  public Integer insert(Extracted item) {
-//    if (item instanceof ExtractedLibrary) {
-//      return executor.insertSingleWithKey(table, 
-//          getInsertValue(Project.JAVA_LIBRARY,
-//              item.getName(),
-//              null, // no description
-//              null, // no version
-//              null, // no group
-//              item.getRelativePath(),
-//              null, // no hash
-//              item.hasSource()));
-//    } else if (item instanceof ExtractedJar) {
-//      if (item.getGroup() == null) {
-//        return executor.insertSingleWithKey(table, 
-//            getInsertValue(
-//                Project.JAR, 
-//                item.getName(),
-//                null, // no description
-//                null, // no version
-//                null, // no group 
-//                "INVALID", // no path 
-//                item.getHash(), 
-//                item.hasSource()));
-//      } else {
-//        return executor.insertSingleWithKey(table,
-//            getInsertValue(
-//                Project.MAVEN,
-//                item.getName(),
-//                null, // no description
-//                item.getVersion(),
-//                item.getGroup(), 
-//                "INVALID", // no path
-//                item.getHash(),
-//                item.hasSource()));
-//      }
-//    } else if (item instanceof ExtractedProject) {
-//      return executor.insertSingleWithKey(table, 
-//          getInsertValue(
-//              Project.CRAWLED,
-//              item.getName(),
-//              item.getDescription(),
-//              null, // no version
-//              null, // no group
-//              item.getRelativePath(),
-//              "INVALID", // no hash
-//              true));
-//    } else {
-//      logger.log(Level.SEVERE, "Import failed: " + item);
-//      return null;
-//    }
-//  }
-//  
-//  public void endFirstStageCrawledProjectInsert(Integer projectID) {
-//    executor.executeUpdate(table, HASH.getEquals("END_FIRST"), PROJECT_ID.getEquals(projectID));
-//  }
-//  
-//  public void endFirstStageJarProjectInsert(Integer projectID) {
-//    executor.executeUpdate(table, PATH.getEquals("END_FIRST"), PROJECT_ID.getEquals(projectID)); 
-//  }
-//  
-//  public void beginSecondStageCrawledProjectInsert(Integer projectID) {
-//    executor.executeUpdate(table, HASH.getEquals("BEGIN_SECOND"), PROJECT_ID.getEquals(projectID));
-//  }
-//  
-//  public void beginSecondStageJarProjectInsert(Integer projectID) {
-//    executor.executeUpdate(table, PATH.getEquals("BEGIN_SECOND"), PROJECT_ID.getEquals(projectID)); 
-//  }
-//  
-//  public void completeCrawledProjectInsert(Integer projectID) {
-//    executor.executeUpdate(table, HASH.setNull(), PROJECT_ID.getEquals(projectID));
-//  }
-//  
-//  public void completeJarProjectInsert(Integer projectID) {
-//    executor.executeUpdate(table, PATH.setNull(), PROJECT_ID.getEquals(projectID)); 
-//  }
-//  
-//  // ---- DELETE ----
-//  public void deleteProject(Integer projectID) {
-//    executor.delete(table, PROJECT_ID.getEquals(projectID));
-//  }
   
-  // ---- SELECT ----
-//  public String getProjectCount() {
-//    return executor.getRowCount(name);
-//  }
-//  
-//  public SmallProjectDB getLimitedProjectByPath(String path) {
-//    return executor.selectSingle(name, LIMITED_PROJECT_TRANSLATOR.getSelect(), "path='" + path + "'", LIMITED_PROJECT_TRANSLATOR);
-//  }
-//  
-//  public SmallProjectDB getLimitedProjectByHash(String hash) {
-//    return executor.selectSingle(name, LIMITED_PROJECT_TRANSLATOR.getSelect(), "hash='" + hash + "'", LIMITED_PROJECT_TRANSLATOR);
-//  }
-//  
-//  public LargeProjectDB getProjectByProjectID(String projectID) {
-//    return executor.selectSingle(name, PROJECT_TRANSLATOR.getSelect(), "project_id=" + projectID, PROJECT_TRANSLATOR);
-//  }
-//  
-//  public String getProjectIDByPath(String path) {
-//    return executor.selectSingle(name, "project_id", "path='" + path + "'");
-//  }
-//  
-//  public String getProjectIDByName(String project) {
-//    return executor.selectSingle(name, "project_id", "name='" + project + "'");
-//  }
-//  
-//  public String getHashByProjectID(String projectID) {
-//    return executor.selectSingle(name, "hash", "project_id=" + projectID);
-//  }
-//  
-//  public String getProjectIDByHash(String hash) {
-//    return executor.selectSingle(name, "project_id", "hash='" + hash + "'");
-//  }
-//  
-//  public String getUnknownsProject() {
-//    return executor.selectSingle(name, "project_id", "name='unknowns'");
-//  }
-//  
-//  public String getPrimitiveProject() {
-//    return executor.selectSingle(name, "project_id", "name='primitives'");
-//  }
-//  
-//  public Collection<String> getJavaLibraryProjects() {
-//    return executor.select(name, "project_id", "project_type='" + Project.JAVA_LIBRARY + "'");
-//  }
+  public Insert makeInsert(ExtractedJavaProject project) {
+    ExtractedJavaProjectProperties props = project.getProperties();
+    return makeRowInsert(
+        Project.CRAWLED,
+        props.NAME.getValue(), 
+        null, // no description 
+        null, // no version
+        null, // no group 
+        project.getLocation().toString(), 
+        "BEGIN_ENTITY", 
+        true);
+
+  }
 }

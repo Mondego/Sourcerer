@@ -17,14 +17,17 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
-import java.util.Collections;
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
 import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.UsedJarEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
-import edu.uci.ics.sourcerer.tools.java.model.types.Project;
-import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
+import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProject;
 import edu.uci.ics.sourcerer.util.Nullerator;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
@@ -34,40 +37,45 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-class JavaLibraryStructuralRelationsImporter extends StructuralRelationsImporter {
-  private Nullerator<ExtractedJarFile> libraries;
+class ProjectStructuralRelationsImporter extends StructuralRelationsImporter {
+  private Nullerator<ExtractedJavaProject> projects;
   
-  protected JavaLibraryStructuralRelationsImporter(Nullerator<ExtractedJarFile> libraries, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
-    super("Importing Java Library Structural Relations", javaModel, unknowns);
-    this.libraries = libraries;
+  protected ProjectStructuralRelationsImporter(Nullerator<ExtractedJavaProject> projects, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
+    super("Importing Project Structural Relations", javaModel, unknowns);
+    this.projects = projects;
   }
   
   @Override
   public void doImport() {
     initializeQueries();
-    try (SelectQuery projectState = exec.makeSelectQuery(ProjectsTable.TABLE)) {
-      projectState.addSelect(ProjectsTable.PATH);
+    try (SelectQuery projectState = exec.makeSelectQuery(ProjectsTable.TABLE);
+         SelectQuery findUsedJar = exec.makeSelectQuery(ProjectsTable.TABLE)) {
+      projectState.addSelect(ProjectsTable.HASH);
       projectState.addSelect(ProjectsTable.PROJECT_ID);
-      ConstantCondition<String> equalsName = ProjectsTable.NAME.compareEquals();
-      projectState.andWhere(equalsName.and(ProjectsTable.PROJECT_TYPE.compareEquals(Project.JAVA_LIBRARY)));
+      ConstantCondition<String> equalsPath = ProjectsTable.PATH.compareEquals();
+      projectState.andWhere(equalsPath);
+      
+      findUsedJar.addSelect(ProjectsTable.PROJECT_ID);
+      ConstantCondition<String> equalsHash = ProjectsTable.HASH.compareEquals();
+      findUsedJar.andWhere(equalsHash);
       
       SetStatement updateState = exec.makeSetStatement(ProjectsTable.TABLE);
-      updateState.addAssignment(ProjectsTable.PATH, "END_STRUCTURAL");
+      updateState.addAssignment(ProjectsTable.HASH, "END_STRUCTURAL");
       ConstantCondition<Integer> equalsID = ProjectsTable.PROJECT_ID.compareEquals();
       updateState.andWhere(equalsID);
       
-      ExtractedJarFile lib;
-      while ((lib = libraries.next()) != null) {
-        String name = lib.getProperties().NAME.getValue();
+      ExtractedJavaProject project;
+      while ((project = projects.next()) != null) {
+        String name = project.getProperties().NAME.getValue();
         task.start("Importing " + name + "'s structural relations");
         
         task.start("Verifying import suitability");
         Integer projectID = null;
-        if (lib.getProperties().EXTRACTED.getValue()) {
-          equalsName.setValue(name);
+        if (project.getProperties().EXTRACTED.getValue()) {
+          equalsPath.setValue(project.getLocation().toString());
           TypedQueryResult result = projectState.select();
           if (result.next()) {
-            String state = result.getResult(ProjectsTable.PATH);
+            String state = result.getResult(ProjectsTable.HASH);
             if ("END_STRUCTURAL".equals(state) || state == null) {
               task.report("Entity import already completed... skipping");
             } else if ("END_ENTITY".equals(state)) {
@@ -82,8 +90,19 @@ class JavaLibraryStructuralRelationsImporter extends StructuralRelationsImporter
         task.finish();
         
         if (projectID != null) {
-          ReaderBundle reader = new ReaderBundle(lib.getExtractionDir().toFile());
-          insert(reader, projectID, Collections.<Integer>emptyList());
+          ReaderBundle reader = new ReaderBundle(project.getExtractionDir().toFile());
+          
+          Collection<Integer> usedJars = new HashSet<>();
+          for (UsedJarEX used : reader.getTransientUsedJars()) {
+            equalsHash.setValue(used.getHash());
+            Integer jarID = findUsedJar.select().toSingleton(ProjectsTable.PROJECT_ID, true);
+            if (jarID == null) {
+              logger.severe("Missing project for jar: " + used.getHash());
+            } else {
+              usedJars.add(jarID);
+            }
+          }
+          insert(reader, projectID, usedJars);
           
           equalsID.setValue(projectID);
           updateState.execute();

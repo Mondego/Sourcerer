@@ -17,9 +17,104 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.fqn;
 
+import java.util.Collection;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.PriorityQueue;
+
+import edu.uci.ics.sourcerer.util.Pair;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FqnUsageTree {
+public class FqnUsageTree<Source> {
+  private FqnUsageTreeNode<Source> root;
+  
+  public FqnUsageTree() {
+    root = new FqnUsageTreeNode<>();
+  }
+  
+  void addSlashFqn(String fqn, Source source) {
+    FqnUsageTreeNode<Source> node = root;
+    int start = 0;
+    int slash = fqn.indexOf('/');
+    while (slash != -1) {
+      node = node.getChild(fqn.substring(start, slash));
+      start = slash + 1;
+      slash = fqn.indexOf('/', start);
+    }
+    node.getChild(fqn.substring(start)).addSource(source);
+  }
+  
+  public Pair<Integer, Integer> getFqnCounts() {
+    int fqns = 0;
+    int uniqueFqns = 0;
+    Deque<FqnUsageTreeNode<Source>> stack = new LinkedList<>();
+    stack.push(root);
+    while (!stack.isEmpty()) {
+      FqnUsageTreeNode<Source> node = stack.pop();
+      int sources = node.getSources().size();
+      fqns += sources;
+      if (sources > 0) {
+        uniqueFqns++;
+      }
+      stack.addAll(node.getChildren());
+    }
+    return new Pair<>(fqns, uniqueFqns);
+  }
+  
+  public Collection<FqnUsageTreeNode<Source>> getTopFragments(int count) {
+    PriorityQueue<FqnUsageTreeNode<Source>> queue = new PriorityQueue<>(count, FqnUsageTreeNode.<Source>makeTopFragmentComparator());
+    
+    Deque<FqnUsageTreeNode<Source>> stack = new LinkedList<>();
+    stack.push(root);
+    while (!stack.isEmpty()) {
+      FqnUsageTreeNode<Source> node = stack.pop();
+      for (FqnUsageTreeNode<Source> child : node.getChildren()) {
+        if (queue.size() == count) {
+          if (queue.comparator().compare(child, queue.element()) > 0) {
+            queue.poll();
+            queue.offer(child);
+            stack.push(child);
+          }
+        } else {
+          queue.offer(child);
+          stack.push(child);
+        }
+      }
+    }
+    
+    LinkedList<FqnUsageTreeNode<Source>> result = new LinkedList<>();
+    while (!queue.isEmpty()) {
+      result.addFirst(queue.poll());
+    }
+    return result;
+  }
+  
+  public Collection<FqnUsageTreeNode<Source>> getTopFqns(int count) {
+    PriorityQueue<FqnUsageTreeNode<Source>> queue = new PriorityQueue<>(count, FqnUsageTreeNode.<Source>makeTopFqnComparator());
+    
+    Deque<FqnUsageTreeNode<Source>> stack = new LinkedList<>();
+    stack.push(root);
+    while (!stack.isEmpty()) {
+      FqnUsageTreeNode<Source> node = stack.pop();
+      for (FqnUsageTreeNode<Source> child : node.getChildren()) {
+        if (queue.size() == count) {
+          if (queue.comparator().compare(child, queue.element()) > 0) {
+            queue.poll();
+            queue.offer(child);
+          }
+        } else {
+          queue.offer(child);
+        }
+        stack.push(child);
+      }
+    }
 
+    LinkedList<FqnUsageTreeNode<Source>> result = new LinkedList<>();
+    while (!queue.isEmpty()) {
+      result.addFirst(queue.poll());
+    }
+    return result;
+  }
 }

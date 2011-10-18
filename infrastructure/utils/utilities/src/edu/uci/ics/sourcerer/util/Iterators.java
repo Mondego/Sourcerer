@@ -24,7 +24,7 @@ import java.util.NoSuchElementException;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Iterators {
-  public static <T> Iterable<T> conact(final Iterable<T> ... iterables) {
+  public static <T> Iterable<T> concat(final Iterable<T> ... iterables) {
     return new Iterable<T>() {
       @Override
       public Iterator<T> iterator() {

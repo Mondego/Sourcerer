@@ -30,7 +30,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IOpenable;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -48,6 +47,7 @@ import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
+@SuppressWarnings("restriction")
 public class EclipseExtractor implements Closeable {
   private final TaskProgressLogger task;
   private final ASTParser parser;
@@ -90,15 +90,13 @@ public class EclipseExtractor implements Closeable {
       }
     }
   }
-  @SuppressWarnings("restriction")
+
   public boolean extractClassFiles(Collection<IClassFile> classFiles) {
     task.start("Extracting " + classFiles.size() + " class files", "class files extracted", 500);
     boolean oneWithSource = false;
     
-    
-    
-    Map<IOpenable, Collection<IClassFile>> memberMap = new HashMap<>();;
-    Collection<IOpenable> sourceFailed = new LinkedList<>();
+    Map<String, Collection<IClassFile>> memberMap = new HashMap<>();;
+    Collection<String> sourceFailed = new LinkedList<>();
     
     for (IClassFile classFile : classFiles) {
       task.progress();
@@ -109,17 +107,25 @@ public class EclipseExtractor implements Closeable {
         } else {
           IType type = classFile.getType();
           if (type.isMember() || type.isAnonymous() || type.isLocal()) {
-            IOpenable owner = buffer.getOwner();
-            Collection<IClassFile> members = memberMap.get(owner);
+            // Shouldn't happen! But weird issues with GSSUtil$1
+            String key = classFile.getElementName();
+            int dollar = key.indexOf('$');
+            if (dollar == -1) {
+              logger.log(Level.SEVERE, "Should have a dollar: " + key);
+            } else {
+              key = key.substring(0, dollar) + ".class";
+            }
+            Collection<IClassFile> members = memberMap.get(key);
             if (members == null) {
               members = new LinkedList<>();
-              memberMap.put(owner, members);
+              memberMap.put(key, members);
             }
             members.add(classFile);
           } else {
             // Handle Eclipse issue with GSSUtil
             if ("sun.security.jgss.GSSUtil".equals(type.getFullyQualifiedName())) {
               extractClassFile(classFile);
+              sourceFailed.add(classFile.getElementName());
               continue;
             }
             // Handle multiple top-level types
@@ -152,7 +158,7 @@ public class EclipseExtractor implements Closeable {
               
             boolean trouble = checkForMissingTypes(unit);
             if (trouble) {
-              sourceFailed.add(classFile);
+              sourceFailed.add(classFile.getElementName());
               extractClassFile(classFile);
             } else {
               try {
@@ -165,19 +171,19 @@ public class EclipseExtractor implements Closeable {
                     logger.log(Level.SEVERE, "Error in source for class file (" + classFile.getElementName() + "): " + problem.getMessage());
                   }
                 }
-                sourceFailed.add(classFile);
+                sourceFailed.add(classFile.getElementName());
                 extractClassFile(classFile);
               }
             }
           }
         }
       } catch (JavaModelException e) {
-        sourceFailed.add(classFile);
+        sourceFailed.add(classFile.getElementName());
         extractClassFile(classFile);
       }
     }
     
-    for (IOpenable failed : sourceFailed) {
+    for (String failed : sourceFailed) {
       Collection<IClassFile> members = memberMap.get(failed);
       if (members != null) {
         for (IClassFile classFile : members) {

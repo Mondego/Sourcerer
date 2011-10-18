@@ -21,6 +21,8 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.ContentFile;
@@ -30,9 +32,9 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarSource;
 import edu.uci.ics.sourcerer.tools.java.repo.model.ModifiableJavaRepository;
 import edu.uci.ics.sourcerer.util.CounterSet;
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
+import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -48,8 +50,8 @@ public class JavaRepositoryImpl extends AbstractJavaRepository<JavaProjectImpl, 
   }
   
   @Override
-  protected JarFileImpl makeJar(RepoFileImpl dir) {
-    return JarFileImpl.make(dir);
+  protected JarFileImpl loadJar(RepoFileImpl dir) {
+    return JarFileImpl.load(dir);
   }
   
   @Override
@@ -79,7 +81,7 @@ public class JavaRepositoryImpl extends AbstractJavaRepository<JavaProjectImpl, 
         if (jar == null && aggregating) {
           Collection<ContentFile> files = aggregationMap.get(hash);
           if (files == null) {
-            files = Helper.newLinkedList();
+            files = new LinkedList<>();
             aggregationMap.put(hash, files);
           }
           files.add(file);
@@ -91,40 +93,60 @@ public class JavaRepositoryImpl extends AbstractJavaRepository<JavaProjectImpl, 
 
   @Override
   public void aggregateJarFiles() {
+    TaskProgressLogger task = new TaskProgressLogger();
+    task.start("Aggregating jar files");
+    
     aggregating = true;
-    aggregationMap = Helper.newHashMap();
+    aggregationMap = new HashMap<>();
+    
+    task.start("Processing projects", "projects processed", 500);
     for (JavaProjectImpl project : getProjects()) {
+      task.progress();
       project.getContent().init(true, false);
     }
+    task.finish();
     
     RepoFileImpl projectDir = repoRoot.getChild(JARS_DIRECTORY).getChild(PROJECT_JARS_DIRECTORY);
-    int biggestA = 0;
-    int biggestB = 0;
+    
+    task.start("Finding next project jar path");
+    RepoFileImpl biggestA = null;
+    int biggestAVal = -1;
+    
     for (RepoFileImpl a : projectDir.getChildren()) {
       if (a.isDirectory()) {
         try {
-          biggestA = Math.max(biggestA, Integer.parseInt(a.getName()));
-        } catch (NumberFormatException e) {}
-        biggestB = 0;
-        for (RepoFileImpl b : a.getChildren()) {
-          try {
-            biggestB = Math.max(biggestB, Integer.parseInt(b.getName()));
-          } catch (NumberFormatException e) {}
-          JarFileImpl jar = JarFileImpl.make(b);
-          if (jar != null) {
-            projectJarIndex.put(jar.getProperties().HASH.getValue(), jar);
+          int aVal = Integer.parseInt(a.getName());
+          if (aVal > biggestAVal) {
+            biggestAVal = aVal;
+            biggestA = a;
           }
-        }
+        } catch (NumberFormatException e) {}
       }
     }
     
-    RepoFileImpl aDir = projectDir.getChild(Integer.toString(biggestA));
-    for (Map.Entry<String, Collection<ContentFile>> entry : aggregationMap.entrySet()) {
-      if (biggestB >= 999) {
-        aDir = projectDir.getChild(Integer.toString(biggestA++));
-        biggestB = 0;
+    int biggestBVal = -1;
+    if (biggestA == null) {
+      biggestA = projectDir.getChild("0");
+      biggestAVal = 0;
+    } else {
+      for (RepoFileImpl b : biggestA.getChildren()) {
+        try {
+          biggestBVal = Math.max(biggestBVal, Integer.parseInt(b.getName()));
+        } catch (NumberFormatException e) {}
       }
-      RepoFileImpl dir = aDir.getChild(Integer.toString(biggestB++));
+    }
+    task.report("Found " + biggestAVal + "/" + biggestBVal);
+    task.finish();
+
+    task.start("Aggregating " + aggregationMap.size() + " jars", "jars aggregated", 100);
+    int total = 0;
+    for (Map.Entry<String, Collection<ContentFile>> entry : aggregationMap.entrySet()) {
+      task.progress();
+      if (biggestBVal >= 999) {
+        biggestA = projectDir.getChild(Integer.toString(++biggestAVal));
+        biggestBVal = -1;
+      }
+      RepoFileImpl dir = biggestA.getChild(Integer.toString(++biggestBVal));
       
       // Make the directory
       dir.makeDirs();
@@ -140,6 +162,7 @@ public class JavaRepositoryImpl extends AbstractJavaRepository<JavaProjectImpl, 
       // Find the most popular name
       CounterSet<String> bestName = new CounterSet<String>();
       for (ContentFile file : entry.getValue()) {
+        total++;
         bestName.increment(file.getFile().getName());
       }
       properties.NAME.setValue(bestName.getMax().getObject());
@@ -147,6 +170,8 @@ public class JavaRepositoryImpl extends AbstractJavaRepository<JavaProjectImpl, 
       properties.SOURCE.setValue(JarSource.PROJECT);
       properties.save();
     }
+    task.report(total + " jars encountered");
+    task.finish();
     aggregating = false;
     aggregationMap = null;
     reset();
@@ -154,6 +179,7 @@ public class JavaRepositoryImpl extends AbstractJavaRepository<JavaProjectImpl, 
     for (JavaProjectImpl project : getProjects()) {
       project.getContent().init(false, true);
     }
+    task.finish();
   }
 
   // TODO: make this handle overwriting

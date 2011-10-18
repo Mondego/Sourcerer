@@ -54,26 +54,28 @@ public class Main {
   public static final Command ADD_JARS = 
     new Command("add-jars", "Adds extracted jars to the database.") {
       protected void action() {
-//        ParallelDatabaseImporter.importJarFiles();
+        ParallelDatabaseImporter.importJarFiles();
       }
     }.setProperties(
         DatabaseConnectionFactory.DATABASE_URL, 
         DatabaseConnectionFactory.DATABASE_USER, 
         DatabaseConnectionFactory.DATABASE_PASSWORD, 
         JavaRepositoryFactory.INPUT_REPO,
-        ParallelDatabaseImporter.THREAD_COUNT);
+        ParallelDatabaseImporter.THREAD_COUNT,
+        FileUtils.TEMP_DIR);
   
   public static final Command ADD_PROJECTS = 
     new Command("add-projects", "Adds extracted projects to the database.") {
       protected void action() {
-//        ParallelDatabaseImporter.importProjects();
+        ParallelDatabaseImporter.importProjects();
       }
     }.setProperties(
         DatabaseConnectionFactory.DATABASE_URL, 
         DatabaseConnectionFactory.DATABASE_USER, 
         DatabaseConnectionFactory.DATABASE_PASSWORD, 
         JavaRepositoryFactory.INPUT_REPO,
-        ParallelDatabaseImporter.THREAD_COUNT);
+        ParallelDatabaseImporter.THREAD_COUNT,
+        FileUtils.TEMP_DIR);
   
   public static final Command INTERACTIVE_FILE_ACCESSOR = 
     new Command("interactive-file-accessor", "Interactive test of the file accessor.") {
