@@ -15,15 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.fqn;
-
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+package edu.uci.ics.sourcerer.tools.java.utilization.entropy;
 
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepository;
@@ -33,40 +25,21 @@ import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FqnUsageTreeBuilder {
-  public static FqnUsageTree<JarFile> buildWithMaven(TaskProgressLogger task) {
+public class JarEntropyCalculator {
+  public static FullyQualifiedNameMap computeMavenJarEntropy(TaskProgressLogger task) {
     task.start("Loading repository");
     JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
     task.finish();
     
-    task.start("Extracting FQNs from jar files", "jar files extracted", 500);
-    FqnUsageTree<JarFile> tree = new FqnUsageTree<>();
+    FullyQualifiedNameMap fqnMap = new FullyQualifiedNameMap();
+    
+    task.start("Calculating entropy for jar files", "jar files processed", 500);
     for (JarFile jar : repo.getMavenJarFiles()) {
       task.progress();
-      addToTree(tree, jar);
+      EntropicJar.calculateEntropy(fqnMap, jar);
     }
     task.finish();
     
-    return tree;
-  }
-  
-  private static void addToTree(FqnUsageTree<JarFile> tree, JarFile jar) {
-    try (ZipInputStream zis = new ZipInputStream(new FileInputStream(jar.getFile().toFile()))) {
-      for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
-        if (entry.getName().endsWith(".class")) {
-          String fqn = entry.getName();
-          fqn = fqn.substring(0, fqn.lastIndexOf('.'));
-          tree.addSlashFqn(fqn, jar);
-        }
-      }
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error reading jar file: " + jar, e);
-    }
-  }
-  
-  public static FqnUsageTree<JarFile> build(JarFile jar) {
-    FqnUsageTree<JarFile> tree = new FqnUsageTree<>();
-    addToTree(tree, jar);
-    return tree;
+    return fqnMap;
   }
 }

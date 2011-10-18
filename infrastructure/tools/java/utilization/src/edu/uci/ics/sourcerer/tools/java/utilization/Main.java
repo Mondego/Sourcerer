@@ -18,6 +18,8 @@
 package edu.uci.ics.sourcerer.tools.java.utilization;
 
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
+import edu.uci.ics.sourcerer.tools.java.utilization.entropy.JarEntropyCalculator;
+import edu.uci.ics.sourcerer.tools.java.utilization.entropy.JarEntropyClassifier;
 import edu.uci.ics.sourcerer.tools.java.utilization.fqn.FqnUsageStatistics;
 import edu.uci.ics.sourcerer.tools.java.utilization.fqn.FqnUsageTreeBuilder;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
@@ -33,6 +35,16 @@ public class Main {
       TaskProgressLogger task = new TaskProgressLogger();
       task.start("Computing maven fqn usage statistics");
       FqnUsageStatistics.printFqnUsageStatistics(task, FqnUsageTreeBuilder.buildWithMaven(task));
+      task.finish();
+    }
+  }.setProperties(JavaRepositoryFactory.INPUT_REPO);
+  
+  public static final Command COMPUTE_MAVEN_JAR_ENTROPY = new Command("compute-maven-jar-entropy", "Computes entropy of Maven jars.") {
+    @Override
+    protected void action() {
+      TaskProgressLogger task = new TaskProgressLogger();
+      task.start("Computing maven jar entropy");
+      JarEntropyClassifier.classify(task, JarEntropyCalculator.computeMavenJarEntropy(task));
       task.finish();
     }
   }.setProperties(JavaRepositoryFactory.INPUT_REPO);

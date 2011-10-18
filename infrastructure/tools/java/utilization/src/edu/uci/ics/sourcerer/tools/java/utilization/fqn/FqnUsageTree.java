@@ -30,7 +30,7 @@ import edu.uci.ics.sourcerer.util.Pair;
 public class FqnUsageTree<Source> {
   private FqnUsageTreeNode<Source> root;
   
-  public FqnUsageTree() {
+  FqnUsageTree() {
     root = new FqnUsageTreeNode<>();
   }
   
@@ -46,6 +46,10 @@ public class FqnUsageTree<Source> {
     node.getChild(fqn.substring(start)).addSource(source);
   }
   
+  public FqnUsageTreeNode<Source> getRoot() {
+    return root;
+  }
+    
   public Pair<Integer, Integer> getFqnCounts() {
     int fqns = 0;
     int uniqueFqns = 0;

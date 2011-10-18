@@ -417,9 +417,11 @@ public class ASMExtractor implements Closeable {
     
           // Write the inside relation
           int dot = fqn.lastIndexOf('.');
-          String parentFqn = fqn.substring(0, dot);
-          if (!parentFqn.equals(fqnStack.getFqn())) {
-            logger.log(Level.SEVERE, "Mismatch between " + parentFqn + " and " + fqnStack.getFqn());
+          if (dot != -1) {
+            String parentFqn = fqn.substring(0, dot);
+            if (!parentFqn.equals(fqnStack.getFqn())) {
+              logger.log(Level.SEVERE, "Mismatch between " + parentFqn + " and " + fqnStack.getFqn());
+            }
           }
           relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), location);
         }
