@@ -68,7 +68,7 @@ public final class CommentEX implements SimpleSerializable {
     return fqn;
   }
 
-  public Location location() {
+  public Location getLocation() {
     return location;
   }
   

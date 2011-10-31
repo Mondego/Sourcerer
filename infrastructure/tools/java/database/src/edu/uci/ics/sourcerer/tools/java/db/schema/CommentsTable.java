@@ -41,7 +41,7 @@ public final class CommentsTable extends DatabaseTable {
    *  | length         | INT UNSIGNED    | No    | No     |
    *  +----------------+-----------------+-------+--------+
    */
-  public static final DatabaseTable TABLE = new CommentsTable();
+  public static final CommentsTable TABLE = new CommentsTable();
   
   public static final Column<Integer> COMMENT_ID = TABLE.addSerialColumn("comment_id");
   public static final Column<Comment> COMMENT_TYPE = TABLE.addEnumColumn("comment_type", Comment.getValues(), false);
@@ -57,8 +57,8 @@ public final class CommentsTable extends DatabaseTable {
   }
 
   // ---- INSERT ----
-  private Insert makeRowInsert(Comment type, Integer containing, Integer following, Integer projectID, Integer fileID, Integer offset, Integer length) {
-    return makeInsert(
+  private static Insert makeRowInsert(Comment type, Integer containing, Integer following, Integer projectID, Integer fileID, Integer offset, Integer length) {
+    return TABLE.makeInsert(
         COMMENT_TYPE.to(type),
         CONTAINING_EID.to(containing),
         FOLLOWING_EID.to(following),
@@ -68,15 +68,11 @@ public final class CommentsTable extends DatabaseTable {
         LENGTH.to(length));
    }
   
-  public Insert makeJavadocInsert(Integer eid, Integer projectID, Integer fileID, Integer offset, Integer length) {
+  public static Insert makeJavadocInsert(Integer eid, Integer projectID, Integer fileID, Integer offset, Integer length) {
     return makeRowInsert(Comment.JAVADOC, null, eid, projectID, fileID, offset, length);
   }
   
-  public Insert makeUnassociatedJavadocInsert(Integer projectID, Integer fileID, Integer offset, Integer length) {
-    return makeRowInsert(Comment.JAVADOC, null, null, projectID, fileID, offset, length);
-  }
-  
-  public Insert makeCommentInsert(Comment type, Integer projectID, Integer fileID, Integer offset, Integer length) {
+  public static Insert makeCommentInsert(Comment type, Integer projectID, Integer fileID, Integer offset, Integer length) {
     return makeRowInsert(type, null, null, projectID, fileID, offset, length);
   }
   

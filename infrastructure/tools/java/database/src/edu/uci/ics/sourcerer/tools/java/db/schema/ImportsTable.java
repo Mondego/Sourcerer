@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.schema;
 
+import edu.uci.ics.sourcerer.tools.java.model.types.Location;
+import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
 
@@ -38,7 +40,7 @@ public final class ImportsTable extends DatabaseTable {
    *  | length      | INT UNSIGNED      | No    | No     |
    *  +-------------+-------------------+-------+--------+
    */
-  public static final DatabaseTable TABLE = new ImportsTable();
+  public static final ImportsTable TABLE = new ImportsTable();
   
   public static final Column<Boolean> STATIC = TABLE.addBooleanColumn("static", false);
   public static final Column<Boolean> ON_DEMAND = TABLE.addBooleanColumn("on_demand", false);
@@ -51,24 +53,24 @@ public final class ImportsTable extends DatabaseTable {
   private ImportsTable() {
     super("imports");
   }
-//  // ---- INSERT ----
-//  private String getInsertValue(boolean isStatic, boolean onDemand, Integer eid, Integer projectID, Integer fileID, Integer offset, Integer length) {
-//    return buildInsertValue(
-//        STATIC.convertToDB(isStatic),
-//        ON_DEMAND.convertToDB(onDemand),
-//        EID.convertToDB(eid),
-//        PROJECT_ID.convertToDB(projectID),
-//        FILE_ID.convertToDB(fileID),
-//        OFFSET.convertToDB(offset),
-//        LENGTH.convertToDB(length));
-//  }
-//  
-//  public void insert(boolean isStatic, boolean onDemand, Integer eid, Integer projectID, Integer fileID, Integer offset, Integer length) {
-//    inserter.addValue(getInsertValue(isStatic, onDemand, eid, projectID, fileID, offset, length));
-//  }
-//  
-//  // ---- DELETE ----
-//  public void deleteByProjectID(Integer projectID) {
-//    executor.delete(table, PROJECT_ID.getEquals(projectID));
-//  }
+  
+  // ---- INSERT ----
+  private static Insert makeInsert(boolean isStatic, boolean onDemand, Integer eid, Integer projectID, Integer fileID, Integer offset, Integer length) {
+    return TABLE.makeInsert(
+        STATIC.to(isStatic),
+        ON_DEMAND.to(onDemand),
+        EID.to(eid),
+        PROJECT_ID.to(projectID),
+        FILE_ID.to(fileID),
+        OFFSET.to(offset),
+        LENGTH.to(length));
+  }
+  
+  public static Insert makeInsert(boolean isStatic, boolean onDemand, Integer eid, Integer projectID) {
+    return makeInsert(isStatic, onDemand, eid, projectID, null, null, null);
+  }
+  
+  public static Insert makeInsert(boolean isStatic, boolean onDemand, Integer eid, Integer projectID, Integer fileID, Location loc) {
+    return makeInsert(isStatic, onDemand, eid, projectID, fileID, loc.getOffset(), loc.getLength());
+  }
 }

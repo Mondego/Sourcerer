@@ -87,6 +87,8 @@ public class EclipseExtractor implements Closeable {
         asmExtractor.extract(classFile.getParent().getElementName(), classFile.getElementName(), classFile.getBytes());
       } catch (JavaModelException e) {
         logger.log(Level.SEVERE, "Unable to get bytecode for " + classFile.getElementName(), e);
+      } catch (Exception e) {
+        logger.log(Level.SEVERE, "Error extracting bytecode for " + classFile.getElementName(), e);
       }
     }
   }

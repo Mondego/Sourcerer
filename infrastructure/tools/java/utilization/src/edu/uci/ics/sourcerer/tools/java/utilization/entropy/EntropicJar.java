@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.entropy;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
@@ -66,7 +68,87 @@ public class EntropicJar {
         current = next;
         next = temp;
       }
+      level++;
     }
+    
+    return entropic;
+  }
+  
+  static EntropicJar calculateEntropy2(FullyQualifiedNameMap fqnMap, JarFile jar) {
+    EntropicJar entropic = new EntropicJar(jar);
+    FqnUsageTree<?> tree = FqnUsageTreeBuilder.build(jar);
+    
+    class Fragment {
+      Fragment parent;
+      FqnUsageTreeNode<?> node;
+      int level;
+      int fqnCount;
+      double entropy;
+      
+      Fragment(FqnUsageTreeNode<?> node) {
+        this.parent = null;
+        this.node = node;
+        level = 0;
+        fqnCount = 0;
+        entropy = 0;
+      }
+      
+      Fragment(Fragment parent, FqnUsageTreeNode<?> node) {
+        this.parent = parent;
+        this.node = node;
+        level = parent.level + 1;
+        fqnCount = 0;
+        entropy = 0;
+      }
+    }
+    
+    Deque<Fragment> deferredStack = new LinkedList<>();
+    Deque<Fragment> stack = new LinkedList<>();
+    Fragment rootFragment = new Fragment(tree.getRoot());
+    stack.push(rootFragment);
+    
+    while (!stack.isEmpty()) {
+      Fragment next = stack.pop();
+      for (FqnUsageTreeNode<?> child : next.node.getChildren()) {
+        if (!child.getSources().isEmpty()) {
+          entropic.fqns.add(fqnMap.makeFQN(child.getFQN(), entropic));
+        }
+        Fragment childFragment = new Fragment(next, child);
+        stack.push(childFragment );
+        deferredStack.push(childFragment);
+      }
+    }
+    
+    double fqnCount = entropic.fqns.size();
+    while (!deferredStack.isEmpty()) {
+      Fragment next = deferredStack.pop();
+      // If it's a terminal fqn
+      if (!next.node.getSources().isEmpty()) {
+        // fqnCount should be 0
+        if (next.fqnCount > 0) {
+          logger.severe("Terminal fqn that has children! " + next.node.getFQN() + " in " + jar);
+        } else {
+          next.parent.fqnCount++;
+        }
+      } else {
+        if (next.fqnCount == 0) {
+          throw new IllegalStateException("Non-terminal fqn that has no (" + next.node.getChildren().size() + ") children! " + next.node.getFQN());
+        } else {
+          // Fraction of FQNs in this subtree
+          double frac = next.fqnCount / fqnCount;
+          // Entropy is -frac * log frac
+          next.entropy = -frac * Math.log(frac);
+          // Scale by geometric series
+          // Add to parent
+          if (next.parent != null) {
+            next.parent.entropy += next.entropy;
+            next.parent.fqnCount += next.fqnCount;
+          }
+        }
+      }
+    }
+    
+    entropic.entropy = rootFragment.entropy;
     
     return entropic;
   }

@@ -88,18 +88,22 @@ public class FqnUsageTreeNode<Source> {
   }
   
   public String getFQN() {
-    Deque<FqnUsageTreeNode<Source>> stack = new LinkedList<>();
-    FqnUsageTreeNode<Source> node = parent;
-    while (node.parent != null) {
-      stack.push(node);
-      node = node.parent;
+    if (parent == null) {
+      return null;
+    } else {
+      Deque<FqnUsageTreeNode<Source>> stack = new LinkedList<>();
+      FqnUsageTreeNode<Source> node = parent;
+      while (node.parent != null) {
+        stack.push(node);
+        node = node.parent;
+      }
+      StringBuilder fqn = new StringBuilder();
+      while (!stack.isEmpty()) {
+        fqn.append(stack.pop().name).append(".");
+      }
+      fqn.append(name);
+      return fqn.toString();
     }
-    StringBuilder fqn = new StringBuilder();
-    while (!stack.isEmpty()) {
-      fqn.append(stack.pop().name).append(".");
-    }
-    fqn.append(name);
-    return fqn.toString();
   }
   
   public Set<? extends Source> getSources() {

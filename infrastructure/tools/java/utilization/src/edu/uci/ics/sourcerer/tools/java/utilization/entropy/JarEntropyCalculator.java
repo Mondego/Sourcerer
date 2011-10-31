@@ -36,7 +36,7 @@ public class JarEntropyCalculator {
     task.start("Calculating entropy for jar files", "jar files processed", 500);
     for (JarFile jar : repo.getMavenJarFiles()) {
       task.progress();
-      EntropicJar.calculateEntropy(fqnMap, jar);
+      EntropicJar.calculateEntropy2(fqnMap, jar);
     }
     task.finish();
     

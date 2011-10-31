@@ -37,7 +37,7 @@ import edu.uci.ics.sourcerer.utils.db.BatchInserter;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class EntitiesImporter extends NewDatabaseImporter {
+public abstract class EntitiesImporter extends DatabaseImporter {
   protected EntitiesImporter(String taskName) {
     super(taskName);
     fileMap = new HashMap<>();

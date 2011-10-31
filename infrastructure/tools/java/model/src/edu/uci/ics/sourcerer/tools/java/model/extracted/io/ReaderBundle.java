@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.tools.java.model.extracted.CommentEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.FileEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.ImportEX;
@@ -76,6 +77,12 @@ public class ReaderBundle {
     @Override
     protected Collection<ImportEX> make() {
       return ReaderBundle.this.get(ImportEX.class, new File(input, ImportEX.IMPORT_FILE.getValue()));
+    }
+  };
+  private CachedReference<Collection<CommentEX>> comments = new CachedReference<Collection<CommentEX>>() {
+    @Override
+    protected Collection<CommentEX> make() {
+      return ReaderBundle.this.get(CommentEX.class, new File(input, CommentEX.COMMENT_FILE.getValue()));
     }
   };
   private CachedReference<Collection<UsedJarEX>> usedJars = new CachedReference<Collection<UsedJarEX>>() {
@@ -183,6 +190,18 @@ public class ReaderBundle {
     Iterable<ImportEX> result = imports.getIfCached();
     if (result == null) {
       result = getTransient(ImportEX.class, new File(input, ImportEX.IMPORT_FILE.getValue()));
+    }
+    return result;
+  }
+  
+  public Collection<CommentEX> getComments() {
+    return comments.get();
+  }
+  
+  public Iterable<CommentEX> getTransientComments() {
+    Iterable<CommentEX> result = comments.getIfCached();
+    if (result == null) {
+      result = getTransient(CommentEX.class, new File(input, CommentEX.COMMENT_FILE.getValue()));
     }
     return result;
   }

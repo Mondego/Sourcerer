@@ -27,7 +27,7 @@ import edu.uci.ics.sourcerer.tools.java.model.types.RelationClass;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class RelationsImporter extends NewDatabaseImporter {
+public abstract class RelationsImporter extends DatabaseImporter {
   protected JavaLibraryTypeModel javaModel;
   protected ProjectTypeModel projectModel;
   protected UnknownEntityCache unknowns;

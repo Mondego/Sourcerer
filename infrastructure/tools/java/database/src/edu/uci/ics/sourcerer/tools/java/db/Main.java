@@ -17,7 +17,6 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db;
 
-import edu.uci.ics.sourcerer.db.tools.FamixExporter;
 import edu.uci.ics.sourcerer.tools.java.db.importer.ParallelDatabaseImporter;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
@@ -91,7 +90,7 @@ public class Main {
   public static final Command MOOSE_EXPORTER =
     new Command("moose-exporter", "Moose exporter!") {
       protected void action() {
-        FamixExporter.writeFamixModelToFile();
+//        FamixExporter.writeFamixModelToFile();
     }
   }.setProperties(
       DatabaseConnectionFactory.DATABASE_URL, 
