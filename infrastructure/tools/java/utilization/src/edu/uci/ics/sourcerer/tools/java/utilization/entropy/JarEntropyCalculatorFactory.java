@@ -17,9 +17,12 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.entropy;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -32,24 +35,32 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.Jar;
 public class JarEntropyCalculatorFactory {
   public static JarEntopyCalculator makeCalculator() {
     return new JarEntopyCalculator() {
-      class FragmentEntropy {
-        FragmentEntropy parent;
+      class PackageFragmentEntropy {
+        PackageFragmentEntropy parent;
+        Collection<PackageFragmentEntropy> children;
         FqnFragment fragment;
         int level;
         int fqnCount;
+        double entropy;
         
-        FragmentEntropy(FqnFragment fragment) {
+        PackageFragmentEntropy(FqnFragment fragment) {
           this.parent = null;
           this.fragment = fragment;
           this.level = 0;
           this.fqnCount = 0;
+          this.entropy = 0;
         }
         
-        FragmentEntropy(FragmentEntropy parent, FqnFragment fragment) {
+        PackageFragmentEntropy(PackageFragmentEntropy parent, FqnFragment fragment) {
           this.parent = parent;
+          if (parent.children == null) {
+            parent.children = new ArrayList<>();
+          }
+          parent.children.add(this);
           this.fragment = fragment;
           this.level = parent.level + 1;
           this.fqnCount = 0;
+          this.entropy = 0;
         }
         
         void addFqn() {
@@ -60,32 +71,27 @@ public class JarEntropyCalculatorFactory {
         }
       }
 
-      Map<FqnFragment, FragmentEntropy> entropies = new HashMap<>();
-      TreeMap<Integer, Collection<FragmentEntropy>> levelMap = new TreeMap<>();
+      PackageFragmentEntropy root;
+      Map<FqnFragment, PackageFragmentEntropy> entropies = new HashMap<>();
       
-      private FragmentEntropy getFragmentEntropy(FqnFragment fragment) {
-        FragmentEntropy entropy = entropies.get(fragment);
+      private PackageFragmentEntropy getFragmentEntropy(FqnFragment fragment) {
+        PackageFragmentEntropy entropy = entropies.get(fragment);
         if (entropy == null) {
           if (fragment.getParent() == null) {
-            entropy = new FragmentEntropy(fragment);
+            entropy = new PackageFragmentEntropy(fragment);
+            root = entropy;
           } else {
-            entropy = new FragmentEntropy(getFragmentEntropy(fragment.getParent()), fragment);
+            entropy = new PackageFragmentEntropy(getFragmentEntropy(fragment.getParent()), fragment);
           }
           entropies.put(fragment, entropy);
-          Collection<FragmentEntropy> level = levelMap.get(entropy.level);
-          if (level == null) {
-            level = new ArrayList<>();
-            levelMap.put(entropy.level, level);
-          }
-          level.add(entropy);
         }
         return entropy;
       }
       
       @Override
       public double compute(Jar jar) {
+        root = null;
         entropies.clear();
-        levelMap.clear();
         
         // Build up the jar-specific tree so we can compute the entropy
         for (FqnFragment fqn : jar.getFqns()) {
@@ -94,22 +100,51 @@ public class JarEntropyCalculatorFactory {
           getFragmentEntropy(fqn.getParent()).addFqn();
         }
         
-        double fqnCount = jar.getFqns().size();
-        double entropy = 0;
-        // Compute the entropy, starting from the root
-        for (Map.Entry<Integer, Collection<FragmentEntropy>> entry : levelMap.entrySet()) {
-          for (FragmentEntropy fragmentEntropy : entry.getValue()) {
-            // Fraction of the FQNs in this subtree
-            double ent = fragmentEntropy.fqnCount / fqnCount; 
-            // Entropy is -frac * log frac
-            ent = -ent * Math.log(ent);
-            // Scale by geometric series
-            ent /= Math.pow(2, fragmentEntropy.level);
-            entropy += ent;
-          }
-        }
+        Deque<PackageFragmentEntropy> reverseOrder = new LinkedList<>();
+        Deque<PackageFragmentEntropy> queue = new LinkedList<>();
         
-        return entropy;
+        if (root == null) {
+          return 0;
+        } else {
+          queue.offer(root);
+          while (!queue.isEmpty()) {
+            PackageFragmentEntropy entropy = queue.poll();
+            reverseOrder.push(entropy);
+            if (entropy.children != null) {
+              for (PackageFragmentEntropy child : entropy.children) {
+                queue.offer(child);
+              }
+            }
+          }
+          
+          // Compute the entropy, starting from the root
+          while (!reverseOrder.isEmpty()) {
+            PackageFragmentEntropy fragment = reverseOrder.pop();
+            // A fragment with no children has entropy 0, the default
+            // A fragment with children has entropy equal to half the sum of the entropies of its children
+            // plus the entropy of the node itself (computed by taking the factions of fqns coming from each child)
+            if (fragment.children != null) {
+              double fqnCount = fragment.fqnCount;
+              int remaining = fragment.fqnCount;
+              for (PackageFragmentEntropy child : fragment.children) {
+                // Fraction of the FQNs in this child
+                fragment.entropy += child.entropy / 2.;
+                remaining -= child.fqnCount;
+                double ent = child.fqnCount / fqnCount;
+                // Entropy is -frac * log frac
+                ent = -ent * Math.log(ent);
+                fragment.entropy += ent;
+              }
+              if (remaining > 0) {
+                double ent = remaining / fqnCount;
+                // Entropy is -frac * log frac
+                ent = -ent * Math.log(ent);
+                fragment.entropy += ent;
+              }
+            }
+          }
+          return root.entropy;
+        }
       }
     };
   }

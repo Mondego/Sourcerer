@@ -18,15 +18,10 @@
 package edu.uci.ics.sourcerer.tools.java.highlighter;
 
 
-import java.io.File;
-import java.io.IOException;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.uci.ics.sourcerer.util.io.Command;
-import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
+import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -40,7 +35,7 @@ public class SyntaxHighlighterTest {
   
   @BeforeClass
   public static void setUpBeforeClass() {
-    PropertyManager.executeCommand(new String[] { "--test" }, SyntaxHighlighterTest.class);
+    Command.execute(new String[] { "--test" }, SyntaxHighlighterTest.class);
   }
 
   @Test
