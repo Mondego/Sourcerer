@@ -15,32 +15,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.entropy;
+package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.Jar;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FullyQualifiedName {
-  private final String fqn;
-  private final Collection<EntropicJar> jars;
+public class Library {
+  private final Set<Jar> jars;
+  private final Set<FqnFragment> fqns;
   
-  FullyQualifiedName(String fqn) {
-    this.fqn = fqn;
-    this.jars = new ArrayList<>();
+  Library() {
+    this.jars = new HashSet<>();
+    this.fqns = new HashSet<>();
   }
   
-  void addJar(EntropicJar jar) {
+  void addJar(Jar jar) {
     jars.add(jar);
   }
   
-  public String getFQN() {
-    return fqn;
+  void addFqn(FqnFragment fqn) {
+    fqns.add(fqn);
   }
   
-  public Collection<EntropicJar> getJars() {
+  public Set<Jar> getJars() {
     return jars;
+  }
+  
+  public Set<FqnFragment> getFqns(){ 
+    return fqns;
   }
 }

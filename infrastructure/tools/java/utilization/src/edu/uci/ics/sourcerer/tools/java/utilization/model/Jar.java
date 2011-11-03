@@ -15,31 +15,46 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.entropy;
+package edu.uci.ics.sourcerer.tools.java.utilization.model;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
-import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepository;
-import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
-import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarEntropyCalculator {
-  public static FullyQualifiedNameMap computeMavenJarEntropy(TaskProgressLogger task) {
-    task.start("Loading repository");
-    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
-    task.finish();
-    
-    FullyQualifiedNameMap fqnMap = new FullyQualifiedNameMap();
-    
-    task.start("Calculating entropy for jar files", "jar files processed", 500);
-    for (JarFile jar : repo.getMavenJarFiles()) {
-      task.progress();
-      EntropicJar.calculateEntropy2(fqnMap, jar);
+public class Jar {
+  private final JarFile jar;
+  private final Collection<FqnFragment> fqns;
+  
+  Jar(JarFile jar) {
+    this.jar = jar;
+    fqns = new ArrayList<>();
+  }
+  
+  void addFqn(FqnFragment fqn) {
+    fqns.add(fqn);
+    fqn.addJar(this);
+  }
+  
+  void delete() {
+    for (FqnFragment fragment : fqns) {
+      fragment.deleteJar(this);
     }
-    task.finish();
-    
-    return fqnMap;
+  }
+  
+  public JarFile getJar() {
+    return jar;
+  }
+  
+  public Collection<FqnFragment> getFqns() {
+    return fqns;
+  }
+  
+  @Override
+  public String toString() {
+    return jar.toString();
   }
 }

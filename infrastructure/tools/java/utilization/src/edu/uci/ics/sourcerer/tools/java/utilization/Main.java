@@ -17,11 +17,12 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
-import edu.uci.ics.sourcerer.tools.java.utilization.entropy.JarEntropyCalculator;
-import edu.uci.ics.sourcerer.tools.java.utilization.entropy.JarEntropyClassifier;
-import edu.uci.ics.sourcerer.tools.java.utilization.fqn.FqnUsageStatistics;
-import edu.uci.ics.sourcerer.tools.java.utilization.fqn.FqnUsageTreeBuilder;
+import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Identifier;
+import edu.uci.ics.sourcerer.tools.java.utilization.identifier.LibraryCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.JarCollection;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
@@ -29,25 +30,34 @@ import edu.uci.ics.sourcerer.util.io.arguments.Command;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
-  public static final Command COMPUTE_MAVEN_FQN_USAGE_STATS = new Command("compute-maven-fqn-usage-stats", "Computes some statistics on FQN usage in Maven.") {
+  public static final Command IDENTIFY_LIBRARIES = new Command("identify-libraries", "Cluster and identify the libraries.") {
+    
     @Override
     protected void action() {
       TaskProgressLogger task = new TaskProgressLogger();
-      task.start("Computing maven fqn usage statistics");
-      FqnUsageStatistics.printFqnUsageStatistics(task, FqnUsageTreeBuilder.buildWithMaven(task));
-      task.finish();
+      LibraryCollection libraries = Identifier.identifyLibraries(task, JarCollection.make(task));
+      libraries.printStatistics(task);
     }
   }.setProperties(JavaRepositoryFactory.INPUT_REPO);
-  
-  public static final Command COMPUTE_MAVEN_JAR_ENTROPY = new Command("compute-maven-jar-entropy", "Computes entropy of Maven jars.") {
-    @Override
-    protected void action() {
-      TaskProgressLogger task = new TaskProgressLogger();
-      task.start("Computing maven jar entropy");
-      JarEntropyClassifier.classify(task, JarEntropyCalculator.computeMavenJarEntropy(task));
-      task.finish();
-    }
-  }.setProperties(JavaRepositoryFactory.INPUT_REPO);
+//  public static final Command COMPUTE_MAVEN_FQN_USAGE_STATS = new Command("compute-maven-fqn-usage-stats", "Computes some statistics on FQN usage in Maven.") {
+//    @Override
+//    protected void action() {
+//      TaskProgressLogger task = new TaskProgressLogger();
+//      task.start("Computing maven fqn usage statistics");
+//      FqnUsageStatistics.printFqnUsageStatistics(task, FqnUsageTreeBuilder.buildWithMaven(task));
+//      task.finish();
+//    }
+//  }.setProperties(JavaRepositoryFactory.INPUT_REPO);
+//  
+//  public static final Command COMPUTE_MAVEN_JAR_ENTROPY = new Command("compute-maven-jar-entropy", "Computes entropy of Maven jars.") {
+//    @Override
+//    protected void action() {
+//      TaskProgressLogger task = new TaskProgressLogger();
+//      task.start("Computing maven jar entropy");
+//      JarEntropyClassifier.classify(task, JarEntropyCalculator.computeMavenJarEntropy(task));
+//      task.finish();
+//    }
+//  }.setProperties(JavaRepositoryFactory.INPUT_REPO);
   
   public static void main(String[] args) {
     Command.execute(args, Main.class);

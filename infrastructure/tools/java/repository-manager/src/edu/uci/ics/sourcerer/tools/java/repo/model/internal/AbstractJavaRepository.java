@@ -46,9 +46,9 @@ import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 public abstract class AbstractJavaRepository<Project extends AbstractRepoProject<? extends AbstractRepository<Project, Batch>, ?>, Batch extends BatchImpl<Project>, Jar extends IJar> extends AbstractRepository<Project, Batch> {
   public static final Argument<String> JARS_DIRECTORY = new StringArgument("jars-dir", "jars", "Repository subdirectory containing jar files.").permit();
   public static final Argument<String> PROJECT_JARS_DIRECTORY = new StringArgument("project-jars-dir", "project", "Directory containing project jars.").permit();
-  public static final Argument<String> PROJECT_JAR_INDEX = new StringArgument("maven-jar-index", "maven-index.txt", "Maven jar index file.").permit();
+  public static final Argument<String> PROJECT_JAR_INDEX = new StringArgument("project-jar-index", "project-index.txt", "Project jar index file.").permit();
   public static final Argument<String> MAVEN_JARS_DIRECTORY = new StringArgument("maven-jars-dir", "maven", "Directory containing maven jars.").permit();
-  public static final Argument<String> MAVEN_JAR_INDEX = new StringArgument("project-jar-index", "project-index.txt", "Project jar index file.").permit();
+  public static final Argument<String> MAVEN_JAR_INDEX = new StringArgument("maven-jar-index", "maven-index.txt", "Maven jar index file.").permit();
   public static final Argument<String> LIBRARY_JARS_DIRECTORY = new StringArgument("library-jars-dir", "lib", "Directory containing Java library jars.").permit();
   public static final Argument<String> LIBRARY_JAR_INDEX = new StringArgument("library-jar-index", "library-index.txt", "Library jar index file.").permit();
   
