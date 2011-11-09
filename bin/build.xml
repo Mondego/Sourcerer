@@ -220,6 +220,12 @@
       <src path="${core-repository-manager}" />
       <src path="${java-repository-manager}" />
       <src path="${utilization}" />
+    	<classpath>
+        <pathelement path="${classpath}" />
+	        <fileset dir="${lib}">
+	        	<include name="**/guava*.jar" />
+	        </fileset>
+      </classpath>
     </javac>
 
     <!-- Copy the source -->
@@ -235,6 +241,7 @@
     <copy todir="${build-utilization}">
       <fileset dir="${utilization}" includes="**/*.java" />
     </copy>
+  	<unjar src="${lib}/guava-10.0.1.jar" dest="${build-utilization}" />
   </target>
     
   <target name="utilization" depends="compile-utilization" description="Build utilization executable jar. (utilization.jar)">

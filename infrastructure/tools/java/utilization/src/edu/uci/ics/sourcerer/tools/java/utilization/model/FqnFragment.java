@@ -17,10 +17,10 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.model;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -30,11 +30,12 @@ public class FqnFragment {
   private final String name;
   private final FqnFragment parent;
   private TreeMap<String, FqnFragment> children;
-  private Set<Jar> jars;
+  private JarSet jars;
   
   private FqnFragment(String name, FqnFragment parent) {
     this.name = name;
-    this.parent = parent;    
+    this.parent = parent;
+    this.jars = JarSet.makeEmpty();
   }
   
   static FqnFragment makeRoot() {
@@ -56,36 +57,26 @@ public class FqnFragment {
   }
   
   void addJar(Jar jar) {
-    if (jars == null) {
-      jars = new HashSet<>();
-    }
-    jars.add(jar);
-  }
-  
-  void deleteJar(Jar jar) {
-    jars.remove(jar);
-    // Delete this fragment
-    if (jars.isEmpty() && (children == null || children.isEmpty())) {
-      parent.deleteChild(name);
-    }
-  }
-  
-  private void deleteChild(String name) {
-    children.remove(name);
-    if (parent != null && jars.isEmpty() && children.isEmpty()) {
-      parent.deleteChild(name);
-    }
+    jars = jars.add(jar);
   }
   
   public FqnFragment getParent() {
     return parent;
   }
   
+  public Collection<FqnFragment> getChildren() {
+    if (children == null) {
+      return Collections.emptyList();
+    } else {
+      return children.values();
+    }
+  }
+  
   public String getName() {
     return name;
   }
   
-  public Set<Jar> getJars() {
+  public JarSet getJars() {
     return jars;
   }
   
@@ -106,6 +97,20 @@ public class FqnFragment {
       fqn.append(name);
       return fqn.toString();
     }
+  }
+  
+  public Iterable<FqnFragment> getPostOrderIterable() {
+    Deque<FqnFragment> order = new LinkedList<>();
+    Deque<FqnFragment> stack = new LinkedList<>();
+    stack.push(this);
+    while (!stack.isEmpty()) {
+      FqnFragment next = stack.pop();
+      order.push(next);
+      for (FqnFragment child : getChildren()) {
+        stack.push(child);
+      }
+    }
+    return order;
   }
   
   @Override

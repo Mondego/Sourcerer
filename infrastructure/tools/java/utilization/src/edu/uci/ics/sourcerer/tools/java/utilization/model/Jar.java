@@ -39,12 +39,6 @@ public class Jar {
     fqn.addJar(this);
   }
   
-  void delete() {
-    for (FqnFragment fragment : fqns) {
-      fragment.deleteJar(this);
-    }
-  }
-  
   public JarFile getJar() {
     return jar;
   }

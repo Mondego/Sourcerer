@@ -36,6 +36,7 @@ public class Main {
     protected void action() {
       TaskProgressLogger task = new TaskProgressLogger();
       LibraryCollection libraries = Identifier.identifyLibraries(task, JarCollection.make(task));
+//      LibraryCollection libraries = Identifier.identifyLibrariesWithEntropy(task, JarCollection.make(task));
       libraries.printStatistics(task);
     }
   }.setProperties(JavaRepositoryFactory.INPUT_REPO);

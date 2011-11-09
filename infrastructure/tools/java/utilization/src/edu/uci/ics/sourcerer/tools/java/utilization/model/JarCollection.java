@@ -22,7 +22,6 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
@@ -37,7 +36,7 @@ import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarCollection implements Iterable<Jar> {
-  private final Collection<Jar> jars;
+  private final ArrayList<Jar> jars;
   private final FqnFragment rootFragment;
   
   private JarCollection() {
@@ -103,5 +102,9 @@ public class JarCollection implements Iterable<Jar> {
 
   public int size() {
     return jars.size();
+  }
+  
+  public FqnFragment getRoot() {
+    return rootFragment;
   }
 }

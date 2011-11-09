@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.util;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -27,7 +28,7 @@ public class CounterSet <T> {
   private Map<T, Counter<T>> counters;
   
   public CounterSet() {
-    counters = Helper.newHashMap();
+    counters = new HashMap<>();
   }
   
   public void increment(T key) {
@@ -41,6 +42,10 @@ public class CounterSet <T> {
   
   public void clear() {
     counters.clear();
+  }
+  
+  public Counter<T> getCounter(T key) {
+    return counters.get(key);
   }
   
   public Collection<Counter<T>> getCounters() {

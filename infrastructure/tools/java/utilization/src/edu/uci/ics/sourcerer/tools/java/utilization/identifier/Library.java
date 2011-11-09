@@ -21,33 +21,57 @@ import java.util.HashSet;
 import java.util.Set;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.Jar;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.JarSet;
+import edu.uci.ics.sourcerer.util.Averager;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Library {
-  private final Set<Jar> jars;
+  public static final Argument<Double> COMPATIBILITY_THRESHOLD = new DoubleArgument("compatibility-threshold", 1., "");
+  private JarSet jars;
   private final Set<FqnFragment> fqns;
   
   Library() {
-    this.jars = new HashSet<>();
     this.fqns = new HashSet<>();
-  }
-  
-  void addJar(Jar jar) {
-    jars.add(jar);
+    jars = JarSet.makeEmpty();
   }
   
   void addFqn(FqnFragment fqn) {
     fqns.add(fqn);
+    jars = jars.merge(fqn.getJars());
   }
   
-  public Set<Jar> getJars() {
+  public Set<FqnFragment> getFqns() {
+    return fqns;
+  }
+  
+  public JarSet getJars() {
     return jars;
   }
   
-  public Set<FqnFragment> getFqns(){ 
-    return fqns;
+  public boolean isCompatible(Library other) {
+    // Do a pairwise comparison of every FQN. Calculate the conditional
+    // probability of each FQN in B appearing given each FQN in A and average.
+    // Then compute the reverse. Both values must be above the threshold.
+    double threshold = COMPATIBILITY_THRESHOLD.getValue();
+    Averager<Double> otherGivenThis = new Averager<>();
+    Averager<Double> thisGivenOther = new Averager<>();
+    
+    for (FqnFragment fqn : fqns) {
+      for (FqnFragment otherFqn : other.fqns) {
+        JarSet fqnJars = fqn.getJars();
+        JarSet otherFqnJars = otherFqn.getJars();
+        // Conditional probability of other given this
+        // # shared jars / total jars in this
+        otherGivenThis.addValue((double) fqnJars.getIntersectionSize(otherFqnJars) / fqnJars.size());
+        // Conditional probabilty for this given other
+        // # shared jars / total jars in other
+        thisGivenOther.addValue((double) otherFqnJars.getIntersectionSize(fqnJars) / otherFqnJars.size());
+      }
+    }
+    return otherGivenThis.getMean() > threshold && thisGivenOther.getMean() > threshold;
   }
 }
