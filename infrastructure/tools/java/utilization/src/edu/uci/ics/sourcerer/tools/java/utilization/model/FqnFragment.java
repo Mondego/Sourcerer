@@ -17,11 +17,10 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.model;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.TreeMap;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -29,7 +28,8 @@ import java.util.TreeMap;
 public class FqnFragment {
   private final String name;
   private final FqnFragment parent;
-  private TreeMap<String, FqnFragment> children;
+  private FqnFragment sibling;
+  private FqnFragment firstChild;
   private JarSet jars;
   
   private FqnFragment(String name, FqnFragment parent) {
@@ -43,17 +43,30 @@ public class FqnFragment {
   }
   
   FqnFragment getChild(String name) {
-    FqnFragment child = null;
-    if (children == null) {
-      children = new TreeMap<>();
+    FqnFragment previousChild = null;
+    for (FqnFragment child = firstChild; child != null; child = child.sibling) {
+      int cmp = child.name.compareTo(name);
+      if (cmp == 0) {
+        return child;
+      } else if (cmp > 0) {
+        FqnFragment newChild = new FqnFragment(name, this);
+        newChild.sibling = child;
+        if (previousChild == null) {
+          firstChild = newChild;
+        } else {
+          previousChild.sibling = newChild;
+        }
+        return newChild;
+      }
+      previousChild = child;
+    }
+    FqnFragment newChild = new FqnFragment(name, this);
+    if (previousChild == null) {
+      firstChild = newChild;
     } else {
-      child = children.get(name);
+      previousChild.sibling = newChild;
     }
-    if (child == null) {
-      child = new FqnFragment(name, this);
-      children.put(name, child);
-    }
-    return child;
+    return newChild;
   }
   
   void addJar(Jar jar) {
@@ -64,11 +77,38 @@ public class FqnFragment {
     return parent;
   }
   
-  public Collection<FqnFragment> getChildren() {
-    if (children == null) {
+  public boolean hasChildren() {
+    return firstChild != null;
+  }
+  
+  public Iterable<FqnFragment> getChildren() {
+    if (firstChild == null) {
       return Collections.emptyList();
     } else {
-      return children.values();
+      return new Iterable<FqnFragment>() {
+        @Override
+        public Iterator<FqnFragment> iterator() {
+          return new Iterator<FqnFragment>() {
+            FqnFragment child = firstChild;
+            @Override
+            public boolean hasNext() {
+              return child != null;
+            }
+
+            @Override
+            public FqnFragment next() {
+              FqnFragment next = child;
+              child = child.sibling;
+              return next;
+            }
+
+            @Override
+            public void remove() {
+              throw new UnsupportedOperationException();
+            }
+          };
+        }
+      };
     }
   }
   
@@ -100,17 +140,40 @@ public class FqnFragment {
   }
   
   public Iterable<FqnFragment> getPostOrderIterable() {
-    Deque<FqnFragment> order = new LinkedList<>();
-    Deque<FqnFragment> stack = new LinkedList<>();
-    stack.push(this);
-    while (!stack.isEmpty()) {
-      FqnFragment next = stack.pop();
-      order.push(next);
-      for (FqnFragment child : getChildren()) {
-        stack.push(child);
+    return new Iterable<FqnFragment>() {
+      @Override
+      public Iterator<FqnFragment> iterator() {
+        return new Iterator<FqnFragment>() {
+          FqnFragment node = null;
+          {
+            for (node = FqnFragment.this; node.firstChild != null; node = node.firstChild);
+          }
+          
+          @Override
+          public boolean hasNext() {
+            return node != null;
+          }
+
+          @Override
+          public FqnFragment next() {
+            FqnFragment next = node;
+            if (node == FqnFragment.this) {
+              node = null;
+            } else if (node.sibling != null) {
+              for (node = node.sibling; node.firstChild != null; node = node.firstChild);
+            } else {
+              node = node.parent;
+            }
+            return next;
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
       }
-    }
-    return order;
+    };
   }
   
   @Override

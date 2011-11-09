@@ -30,7 +30,7 @@ import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Library {
-  public static final Argument<Double> COMPATIBILITY_THRESHOLD = new DoubleArgument("compatibility-threshold", 1., "");
+  public static final Argument<Double> COMPATIBILITY_THRESHOLD = new DoubleArgument("compatibility-threshold", 1., "").permit();
   private JarSet jars;
   private final Set<FqnFragment> fqns;
   
@@ -72,6 +72,10 @@ public class Library {
         thisGivenOther.addValue((double) otherFqnJars.getIntersectionSize(fqnJars) / otherFqnJars.size());
       }
     }
-    return otherGivenThis.getMean() > threshold && thisGivenOther.getMean() > threshold;
+    return otherGivenThis.getMean() >= threshold && thisGivenOther.getMean() >= threshold;
+  }
+  
+  public String toString() {
+    return fqns.toString();
   }
 }

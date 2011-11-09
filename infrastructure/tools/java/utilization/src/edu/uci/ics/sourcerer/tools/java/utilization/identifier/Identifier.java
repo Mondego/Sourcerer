@@ -17,7 +17,6 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
-import java.util.Collection;
 import java.util.LinkedList;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -42,11 +41,12 @@ public class Identifier {
     LibraryCollection libraries = new LibraryCollection();
     Multimap<FqnFragment, Library> tempLibMap = ArrayListMultimap.create();
     
+    task.start("Performing post-order traversal of FQN suffix tree", "FQN fragments visited", 500);
     // Explore the tree in post-order
     for (FqnFragment fragment : jars.getRoot().getPostOrderIterable()) {
-      Collection<FqnFragment> children = fragment.getChildren();
+      task.progress();
       // If there are no children, then make it its own single-fqn library
-      if (children.isEmpty()) {
+      if (!fragment.hasChildren()) {
         Library library = new Library();
         // Add the fqn
         library.addFqn(fragment);
@@ -54,7 +54,7 @@ public class Identifier {
         tempLibMap.put(fragment, library);
       } else {
         // Start merging children
-        for (FqnFragment child : children) {
+        for (FqnFragment child : fragment.getChildren()) {
           for (Library childLib : tempLibMap.get(child)) {
             LinkedList<Library> candidates = new LinkedList<>();
             
@@ -85,6 +85,13 @@ public class Identifier {
         }
       }
     }
+    task.finish();
+    
+    for (Library lib : tempLibMap.get(jars.getRoot())) {
+      libraries.addLibrary(lib);
+    }
+    
+    task.finish();
     
     return libraries;
   }
