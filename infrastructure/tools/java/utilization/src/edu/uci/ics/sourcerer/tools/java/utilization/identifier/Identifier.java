@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.util.LinkedList;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -41,7 +43,7 @@ public class Identifier {
     LibraryCollection libraries = new LibraryCollection();
     Multimap<FqnFragment, Library> tempLibMap = ArrayListMultimap.create();
     
-    task.start("Performing post-order traversal of FQN suffix tree", "FQN fragments visited", 5);
+    task.start("Performing post-order traversal of FQN suffix tree", "FQN fragments visited", 500);
     int libCount = 0;
     // Explore the tree in post-order
     for (FqnFragment fragment : jars.getRoot().getPostOrderIterable()) {
@@ -54,48 +56,42 @@ public class Identifier {
         // Store it in the map for processing with the parent
         tempLibMap.put(fragment, library);
         libCount++;
+        if (tempLibMap.size() != libCount) {
+          logger.severe("Disagreement between libcount (" + libCount + ") and size (" + tempLibMap.size() + ")");
+        }
       } else {
-        int childCount = 0;
-        task.start("Merging children");
         // Start merging children
         for (FqnFragment child : fragment.getChildren()) {
-          task.start("Child " + ++childCount);
           for (Library childLib : tempLibMap.get(child)) {
             LinkedList<Library> candidates = new LinkedList<>();
             
             // Check to see if it can be merged with any of the libraries
-            task.start("Checking merge for " + childLib.getFqns().size() + " FQNs", "libraries checked");
             for (Library merge : tempLibMap.get(fragment)) {
-              task.progress();
               if (merge.isCompatible(childLib)) {
                 candidates.add(merge);
               }
             }
-            task.finish();
             if (candidates.size() == 0) {
               // If nothing was found, promote the library
               tempLibMap.put(fragment, childLib);
             } else if (candidates.size() == 1) {
-              task.start("Merging");
               // If one was found, merge in the child
               Library candidate = candidates.getFirst();
               for (FqnFragment fqn : childLib.getFqns()) {
                 candidate.addFqn(fqn);
               }
               libCount--;
-              task.finish();
             } else {
-              // If more than one were found, keep them separate and promote them all
-              for (Library candidate : candidates) {
-                tempLibMap.put(fragment, candidate);
-              }
+              // If more than one was found, promote the library
+              tempLibMap.put(fragment, childLib);
             }
           }
           // Clear the entry for this child fragment
           tempLibMap.removeAll(child);
-          task.finish();
+          if (tempLibMap.size() != libCount) {
+            logger.severe("Disagreement between libcount (" + libCount + ") and size (" + tempLibMap.size() + ")");
+          }
         }
-        task.finish();
       }
     }
     task.finish();

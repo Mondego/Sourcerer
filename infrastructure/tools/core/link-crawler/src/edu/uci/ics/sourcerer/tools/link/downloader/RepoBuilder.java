@@ -19,7 +19,6 @@ package edu.uci.ics.sourcerer.tools.link.downloader;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -37,6 +36,7 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProjectProperties;
 import edu.uci.ics.sourcerer.tools.link.model.Project;
 import edu.uci.ics.sourcerer.util.LetterCounter;
 import edu.uci.ics.sourcerer.util.TimeCounter;
+import edu.uci.ics.sourcerer.util.io.Console;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
@@ -50,10 +50,7 @@ public final class RepoBuilder {
   public static void interactiveRepositoryAdder() {
     ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.OUTPUT_REPO);
     
-    Console console = System.console();
-    if (console == null) {
-      throw new IllegalStateException("The interactive repository adder may only be run from a console.");
-    }
+    Console console = Console.create();
     String description = console.readLine("Batch description: ");
     String source = console.readLine("Source: ");
     

@@ -57,22 +57,40 @@ public class Library {
     // probability of each FQN in B appearing given each FQN in A and average.
     // Then compute the reverse. Both values must be above the threshold.
     double threshold = COMPATIBILITY_THRESHOLD.getValue();
-    Averager<Double> otherGivenThis = new Averager<>();
-    Averager<Double> thisGivenOther = new Averager<>();
-    
-    for (FqnFragment fqn : fqns) {
-      for (FqnFragment otherFqn : other.fqns) {
-        JarSet fqnJars = fqn.getJars();
-        JarSet otherFqnJars = otherFqn.getJars();
-        // Conditional probability of other given this
-        // # shared jars / total jars in this
-        otherGivenThis.addValue((double) fqnJars.getIntersectionSize(otherFqnJars) / fqnJars.size());
-        // Conditional probabilty for this given other
-        // # shared jars / total jars in other
-        thisGivenOther.addValue((double) otherFqnJars.getIntersectionSize(fqnJars) / otherFqnJars.size());
+    // If the threshold is greater than 1, no match is possible
+    if (threshold > 1) {
+      return false;
+    }
+    // If the threshold is 1, we can short-circuit this comparison
+    // The jars must match exactly (can do == because JarSet is interned)
+    else if (threshold == 1.) {
+      return jars == other.jars;
+    }
+    // Now we have to actually do the comparison
+    else {
+      // If there's no intersection between the JarSet, return false
+      // There may be other optimizations that can be done to cut out cases where the full comparison has to be done
+      if (jars.getIntersectionSize(other.jars) == 0) {
+        return false;
+      } else {
+        Averager<Double> otherGivenThis = new Averager<>();
+        Averager<Double> thisGivenOther = new Averager<>();
+      
+        for (FqnFragment fqn : fqns) {
+          for (FqnFragment otherFqn : other.fqns) {
+            JarSet fqnJars = fqn.getJars();
+            JarSet otherFqnJars = otherFqn.getJars();
+            // Conditional probability of other given this
+            // # shared jars / total jars in this
+            otherGivenThis.addValue((double) fqnJars.getIntersectionSize(otherFqnJars) / fqnJars.size());
+            // Conditional probabilty for this given other
+            // # shared jars / total jars in other
+            thisGivenOther.addValue((double) otherFqnJars.getIntersectionSize(fqnJars) / otherFqnJars.size());
+          }
+        }
+        return otherGivenThis.getMean() >= threshold && thisGivenOther.getMean() >= threshold;
       }
     }
-    return otherGivenThis.getMean() >= threshold && thisGivenOther.getMean() >= threshold;
   }
   
   public String toString() {
