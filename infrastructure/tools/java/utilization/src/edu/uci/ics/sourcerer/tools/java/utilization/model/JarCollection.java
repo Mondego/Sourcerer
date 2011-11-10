@@ -107,4 +107,27 @@ public class JarCollection implements Iterable<Jar> {
   public FqnFragment getRoot() {
     return rootFragment;
   }
+  
+  public void printStatistics(TaskProgressLogger task) {
+    task.start("Printing jar collection statistics");
+    
+    task.report("Collection contains " + jars.size() + " jars");
+    
+    task.start("Printing FQN suffix tree statistics");
+    
+    int fragmentCount = 0;
+    int fqnCount = 0;
+    for (FqnFragment fragment : rootFragment.getPostOrderIterable()) {
+      fragmentCount++;
+      if (fragment.getJars().size() > 0) {
+        fqnCount++;
+      }
+    }
+    task.report("Suffix tree contains " + fragmentCount + " nodes");
+    task.report("Suffix tree cotnains " + fqnCount + " leaves (FQNs)");
+    
+    task.finish();
+    
+    task.finish();
+  }
 }

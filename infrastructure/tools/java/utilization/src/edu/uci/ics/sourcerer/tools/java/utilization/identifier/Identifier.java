@@ -41,10 +41,11 @@ public class Identifier {
     LibraryCollection libraries = new LibraryCollection();
     Multimap<FqnFragment, Library> tempLibMap = ArrayListMultimap.create();
     
-    task.start("Performing post-order traversal of FQN suffix tree", "FQN fragments visited", 500);
+    task.start("Performing post-order traversal of FQN suffix tree", "FQN fragments visited", 5);
+    int libCount = 0;
     // Explore the tree in post-order
     for (FqnFragment fragment : jars.getRoot().getPostOrderIterable()) {
-      task.progress();
+      task.progress("%d FQN fragments visited (" + libCount + " libraries) in %s");
       // If there are no children, then make it its own single-fqn library
       if (!fragment.hasChildren()) {
         Library library = new Library();
@@ -52,27 +53,37 @@ public class Identifier {
         library.addFqn(fragment);
         // Store it in the map for processing with the parent
         tempLibMap.put(fragment, library);
+        libCount++;
       } else {
+        int childCount = 0;
+        task.start("Merging children");
         // Start merging children
         for (FqnFragment child : fragment.getChildren()) {
+          task.start("Child " + ++childCount);
           for (Library childLib : tempLibMap.get(child)) {
             LinkedList<Library> candidates = new LinkedList<>();
             
             // Check to see if it can be merged with any of the libraries
+            task.start("Checking merge for " + childLib.getFqns().size() + " FQNs", "libraries checked");
             for (Library merge : tempLibMap.get(fragment)) {
+              task.progress();
               if (merge.isCompatible(childLib)) {
                 candidates.add(merge);
               }
             }
+            task.finish();
             if (candidates.size() == 0) {
               // If nothing was found, promote the library
               tempLibMap.put(fragment, childLib);
             } else if (candidates.size() == 1) {
+              task.start("Merging");
               // If one was found, merge in the child
               Library candidate = candidates.getFirst();
               for (FqnFragment fqn : childLib.getFqns()) {
                 candidate.addFqn(fqn);
               }
+              libCount--;
+              task.finish();
             } else {
               // If more than one were found, keep them separate and promote them all
               for (Library candidate : candidates) {
@@ -82,7 +93,9 @@ public class Identifier {
           }
           // Clear the entry for this child fragment
           tempLibMap.removeAll(child);
+          task.finish();
         }
+        task.finish();
       }
     }
     task.finish();
@@ -90,6 +103,8 @@ public class Identifier {
     for (Library lib : tempLibMap.get(jars.getRoot())) {
       libraries.addLibrary(lib);
     }
+    
+    task.report(libraries.getLibraries().size() + " libraries identified");
     
     task.finish();
     

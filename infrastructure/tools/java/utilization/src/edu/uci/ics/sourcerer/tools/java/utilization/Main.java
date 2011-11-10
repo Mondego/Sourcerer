@@ -17,8 +17,6 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Identifier;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.LibraryCollection;
@@ -35,7 +33,9 @@ public class Main {
     @Override
     protected void action() {
       TaskProgressLogger task = new TaskProgressLogger();
-      LibraryCollection libraries = Identifier.identifyLibraries(task, JarCollection.make(task));
+      JarCollection jars = JarCollection.make(task);
+      jars.printStatistics(task);
+      LibraryCollection libraries = Identifier.identifyLibraries(task, jars);
 //      LibraryCollection libraries = Identifier.identifyLibrariesWithEntropy(task, JarCollection.make(task));
       libraries.printStatistics(task);
     }

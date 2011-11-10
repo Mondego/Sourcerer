@@ -98,7 +98,15 @@ public class TaskProgressLogger {
   
   public void progress(String message) {
     TaskInfo info = tasks.peek();
-    logger.info(SPACES.substring(0, info.indent + 1) + String.format(message, ++info.count));
+    if (info.progressInterval == -1) {
+      throw new IllegalStateException("May not progress this task.");
+    } else if (info.progressInterval == 0) {
+      info.count++;
+    } else {
+      if (++info.count % info.progressInterval == 0) {
+        logger.info(SPACES.substring(0, info.indent + 1) + String.format(message, info.count, formatTime(info.startTime)));
+      }
+    }
   }
   
   public void finish() {
