@@ -47,6 +47,23 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
+  enum Stage {
+    BEGIN_ENTITY,
+    END_ENTITY,
+    BEGIN_STRUCTURAL,
+    END_STRUCTURAL,
+    BEGIN_REFERENTIAL,
+    ;
+    
+    public static Stage parse(String value) {
+      if (value == null) {
+        return null;
+      } else {
+        return valueOf(value);
+      }
+    }
+  }
+  
   private String taskName;
   
   protected File tempDir;

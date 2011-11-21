@@ -26,6 +26,7 @@ import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
 import edu.uci.ics.sourcerer.util.Nullerator;
+import edu.uci.ics.sourcerer.utils.db.sql.Assignment;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 import edu.uci.ics.sourcerer.utils.db.sql.SetStatement;
@@ -51,7 +52,7 @@ class JavaLibraryReferentialRelationsImporter extends ReferentialRelationsImport
       projectState.andWhere(equalsName.and(ProjectsTable.PROJECT_TYPE.compareEquals(Project.JAVA_LIBRARY)));
       
       SetStatement updateState = exec.makeSetStatement(ProjectsTable.TABLE);
-      updateState.addAssignment(ProjectsTable.PATH, null);
+      Assignment<String> stateValue = updateState.addAssignment(ProjectsTable.PATH);
       ConstantCondition<Integer> equalsID = ProjectsTable.PROJECT_ID.compareEquals();
       updateState.andWhere(equalsID);
       
@@ -66,10 +67,10 @@ class JavaLibraryReferentialRelationsImporter extends ReferentialRelationsImport
           equalsName.setValue(name);
           TypedQueryResult result = projectState.select();
           if (result.next()) {
-            String state = result.getResult(ProjectsTable.PATH);
+            Stage state = Stage.parse(result.getResult(ProjectsTable.PATH));
             if (state == null) {
               task.report("Entity import already completed... skipping");
-            } else if ("END_STRUCTURAL".equals(state)) {
+            } else if (state == Stage.END_STRUCTURAL) {
               projectID = result.getResult(ProjectsTable.PROJECT_ID);
             } else {
               task.report("Project not in correct state (" + state + ")... skipping");
@@ -81,10 +82,14 @@ class JavaLibraryReferentialRelationsImporter extends ReferentialRelationsImport
         task.finish();
         
         if (projectID != null) {
+          equalsID.setValue(projectID);
+          stateValue.setValue(Stage.BEGIN_REFERENTIAL.name());
+          updateState.execute();
+          
           ReaderBundle reader = new ReaderBundle(lib.getExtractionDir().toFile());
           insert(reader, projectID, Collections.<Integer>emptySet());
           
-          equalsID.setValue(projectID);
+          stateValue.setValue(null);
           updateState.execute();
         }
         

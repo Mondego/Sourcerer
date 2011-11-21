@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -53,7 +54,7 @@ public class JavaFileSetImpl extends AbstractFileSet implements JavaFileSet {
   private final JavaRepositoryImpl repo;
   private Collection<ContentFileImpl> javaFiles;
   private Collection<JavaFileImpl> filteredJavaFiles;
-  private Collection<JarFileImpl> jarFiles;
+  private Map<String, JarFileImpl> jarFiles;
   
   private final File cache;
   
@@ -78,7 +79,7 @@ public class JavaFileSetImpl extends AbstractFileSet implements JavaFileSet {
         filteredJavaFiles.clear();
       }
       if (jarFiles == null) {
-        jarFiles = new ArrayList<>();
+        jarFiles = new HashMap<>();
       } else {
         jarFiles.clear();
       }
@@ -153,7 +154,10 @@ public class JavaFileSetImpl extends AbstractFileSet implements JavaFileSet {
     } else if (file.getFile().getName().endsWith(".jar")) {
       JarFileImpl jar = repo.getJarFile(file);
       if (jar != null) {
-        jarFiles.add(jar);
+        String hash = jar.getProperties().HASH.getValue();
+        if (!jarFiles.containsKey(hash)) {
+          jarFiles.put(hash, jar);
+        }
       } else {
 //        logger.log(Level.SEVERE, "Jar not aggregated: " + file);
       }
@@ -181,6 +185,6 @@ public class JavaFileSetImpl extends AbstractFileSet implements JavaFileSet {
     if (jarFiles == null) {
       init(true, false);
     }
-    return Collections.unmodifiableCollection(jarFiles);
+    return Collections.unmodifiableCollection(jarFiles.values());
   }
 }

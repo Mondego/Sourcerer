@@ -137,6 +137,7 @@ import edu.uci.ics.sourcerer.tools.java.model.types.Location;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metrics;
 import edu.uci.ics.sourcerer.tools.java.model.types.Problem;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
 import edu.uci.ics.sourcerer.util.Helper;
 
 /**
@@ -156,6 +157,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private String compilationUnitName = null;
   private String compilationUnitPath = null;
   private String compilationUnitSource = null;
+  private JavaFile javaFile = null;
 
   private boolean inLhsAssignment = false;
   
@@ -181,6 +183,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     this.compilationUnitSource = source;
   }
   
+  public void setJavaFile(JavaFile file) {
+    this.javaFile = file;
+  }
+  
   /**
    * This method writes:
    * <ul>
@@ -194,14 +200,14 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     fqnStack.clear();
     // Get the file path
     compilationUnitName = node.getJavaElement().getElementName();
-    if (node.getJavaElement().getResource() == null) {
+    if (javaFile == null) {
       if (node.getPackage() == null) {
         compilationUnitPath = compilationUnitName;
       } else {
         compilationUnitPath = node.getPackage().getName() + "." + compilationUnitName;
       }
     } else {
-      compilationUnitPath = node.getJavaElement().getResource().getRawLocation().toString();
+      compilationUnitPath = javaFile.getFile().getRelativePath().toString();
     } 
     
     // Get the package fqn
@@ -2187,7 +2193,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       if (binding == null) {
         argBuilder.append(UNKNOWN);
       } else {
-        argBuilder.append(getTypeFqn(binding));
+        argBuilder.append(getErasedTypeFqn(binding));
       }
     }
     argBuilder.append(')');

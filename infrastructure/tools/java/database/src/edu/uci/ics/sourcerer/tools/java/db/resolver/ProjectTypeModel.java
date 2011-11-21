@@ -75,7 +75,7 @@ public class ProjectTypeModel {
     task.start("Loading library entities", "entities loaded");
     try (SelectQuery query = exec.makeSelectQuery(EntitiesTable.TABLE)) {
       query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.ENTITY_TYPE, EntitiesTable.PARAMS, EntitiesTable.RAW_PARAMS);
-      query.andWhere(EntitiesTable.PROJECT_ID.compareEquals(projectID), EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION, Entity.CONSTRUCTOR, Entity.METHOD, Entity.ANNOTATION_ELEMENT, Entity.ENUM_CONSTANT, Entity.FIELD, Entity.PACKAGE, Entity.INITIALIZER)));
+      query.andWhere(EntitiesTable.PROJECT_ID.compareEquals(projectID), EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.PACKAGE, Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION, Entity.CONSTRUCTOR, Entity.METHOD, Entity.ANNOTATION_ELEMENT, Entity.ENUM_CONSTANT, Entity.FIELD, Entity.PACKAGE, Entity.INITIALIZER)));
 
       TypedQueryResult result = query.selectStreamed();
       while (result.next()) {

@@ -17,8 +17,6 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
 import java.util.LinkedList;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -43,7 +41,7 @@ public class Identifier {
     LibraryCollection libraries = new LibraryCollection();
     Multimap<FqnFragment, Library> tempLibMap = ArrayListMultimap.create();
     
-    task.start("Performing post-order traversal of FQN suffix tree", "FQN fragments visited", 500);
+    task.start("Performing post-order traversal of FQN suffix tree", "FQN fragments visited", 10000);
     int libCount = 0;
     // Explore the tree in post-order
     for (FqnFragment fragment : jars.getRoot().getPostOrderIterable()) {
@@ -56,9 +54,6 @@ public class Identifier {
         // Store it in the map for processing with the parent
         tempLibMap.put(fragment, library);
         libCount++;
-        if (tempLibMap.size() != libCount) {
-          logger.severe("Disagreement between libcount (" + libCount + ") and size (" + tempLibMap.size() + ")");
-        }
       } else {
         // Start merging children
         for (FqnFragment child : fragment.getChildren()) {
@@ -88,9 +83,6 @@ public class Identifier {
           }
           // Clear the entry for this child fragment
           tempLibMap.removeAll(child);
-          if (tempLibMap.size() != libCount) {
-            logger.severe("Disagreement between libcount (" + libCount + ") and size (" + tempLibMap.size() + ")");
-          }
         }
       }
     }

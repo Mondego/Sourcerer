@@ -34,7 +34,7 @@ public class JavaFileImpl implements JavaFile, CustomSerializable {
   private ContentFileImpl file;
 
   protected JavaFileImpl(String pkg, ContentFileImpl file) {
-    if (pkg.equals("")) {
+    if (pkg == null || pkg.equals("")) {
       this.pkg = null;
     } else {
       this.pkg = pkg;
@@ -65,9 +65,12 @@ public class JavaFileImpl implements JavaFile, CustomSerializable {
   public static ObjectDeserializer<JavaFileImpl> makeDeserializer(final ContentDirectoryImpl root) {
     final ObjectDeserializer<RepoFileImpl> fileDeserializer = root.getFile().makeDeserializer();
     return new ObjectDeserializer<JavaFileImpl>() {
+      @SuppressWarnings("unchecked")
+      ObjectDeserializer<String> stringDeserializer = (ObjectDeserializer<String>) ObjectDeserializer.makeDeserializer(String.class);
+      
       @Override
       public JavaFileImpl deserialize(Scanner scanner) {
-        String pkg = scanner.next();
+        String pkg = stringDeserializer.deserialize(scanner);
         RepoFileImpl file = fileDeserializer.deserialize(scanner);
         ContentFileImpl contentFile = root.make(file.getParent()).makeFile(file);
         return new JavaFileImpl(pkg, contentFile);

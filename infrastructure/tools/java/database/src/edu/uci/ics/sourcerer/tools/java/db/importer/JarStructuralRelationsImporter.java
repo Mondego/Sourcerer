@@ -25,6 +25,7 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
 import edu.uci.ics.sourcerer.util.Nullerator;
+import edu.uci.ics.sourcerer.utils.db.sql.Assignment;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 import edu.uci.ics.sourcerer.utils.db.sql.SetStatement;
@@ -51,7 +52,7 @@ class JarStructuralRelationsImporter extends StructuralRelationsImporter {
       projectState.andWhere(equalsHash);
       
       SetStatement updateState = exec.makeSetStatement(ProjectsTable.TABLE);
-      updateState.addAssignment(ProjectsTable.PATH, "END_STRUCTURAL");
+      Assignment<String> stateValue = updateState.addAssignment(ProjectsTable.PATH);
       ConstantCondition<Integer> equalsID = ProjectsTable.PROJECT_ID.compareEquals();
       updateState.andWhere(equalsID);
       
@@ -66,10 +67,10 @@ class JarStructuralRelationsImporter extends StructuralRelationsImporter {
           equalsHash.setValue(jar.getProperties().HASH.getValue());
           TypedQueryResult result = projectState.select();
           if (result.next()) {
-            String state = result.getResult(ProjectsTable.PATH);
-            if ("END_STRUCTURAL".equals(state) || state == null) {
+            Stage state = Stage.parse(result.getResult(ProjectsTable.PATH));
+            if (state == null || state == Stage.END_STRUCTURAL) {
               task.report("Entity import already completed... skipping");
-            } else if ("END_ENTITY".equals(state)) {
+            } else if (state == Stage.END_ENTITY) {
               projectID = result.getResult(ProjectsTable.PROJECT_ID);
             } else {
               task.report("Project not in correct state (" + state + ")... skipping");
@@ -81,10 +82,14 @@ class JarStructuralRelationsImporter extends StructuralRelationsImporter {
         task.finish();
         
         if (projectID != null) {
+          equalsID.setValue(projectID);
+          stateValue.setValue(Stage.BEGIN_STRUCTURAL.name());
+          updateState.execute();
+          
           ReaderBundle reader = new ReaderBundle(jar.getExtractionDir().toFile());
           insert(reader, projectID, Collections.<Integer>emptyList());
           
-          equalsID.setValue(projectID);
+          stateValue.setValue(Stage.END_STRUCTURAL.name());
           updateState.execute();
         }
         

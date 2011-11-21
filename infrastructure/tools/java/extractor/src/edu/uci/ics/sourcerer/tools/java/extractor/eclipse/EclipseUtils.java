@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -226,20 +227,22 @@ public class EclipseUtils {
 ////    }
 ////  }
 //  
-  public static Collection<IFile> loadFilesIntoProject(Collection<? extends JavaFile> files) {
-    Collection<IFile> set = new ArrayList<>(files.size());
+  public static Map<JavaFile, IFile> loadFilesIntoProject(Collection<? extends JavaFile> files) {
+    Map<JavaFile, IFile> map = new HashMap<>();
     TimeCounter counter = new TimeCounter(1000, 4, "files loaded");
     for (JavaFile file : files) {
-      IFile iFile = loadFileIntoProject(file, false);
-      if (iFile != null) {
-        counter.increment();
-        set.add(iFile);
-      } else {
-        logger.log(Level.SEVERE, "Unable to load: " + file);
+      if (!file.getFile().getName().equals("package-info.java")) {
+        IFile iFile = loadFileIntoProject(file, false);
+        if (iFile != null) {
+          counter.increment();
+          map.put(file, iFile);
+        } else {
+          logger.log(Level.SEVERE, "Unable to load: " + file);
+        }
       }
     }
     counter.logTimeAndCount();
-    return set;
+    return map;
   }
   
   public static IFile loadFileIntoProject(JavaFile file, boolean replace) {

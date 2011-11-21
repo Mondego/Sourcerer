@@ -46,7 +46,7 @@ class JarEntitiesImporter extends EntitiesImporter {
       projectState.andWhere(equalsHash);
       
       SetStatement updateState = exec.makeSetStatement(ProjectsTable.TABLE);
-      updateState.addAssignment(ProjectsTable.PATH, "END_ENTITY");
+      updateState.addAssignment(ProjectsTable.PATH, Stage.END_ENTITY.name());
       ConstantCondition<Integer> equalsID = ProjectsTable.PROJECT_ID.compareEquals();
       updateState.andWhere(equalsID);
       
@@ -61,8 +61,8 @@ class JarEntitiesImporter extends EntitiesImporter {
           equalsHash.setValue(jar.getProperties().HASH.getValue());
           TypedQueryResult result = projectState.select();
           if (result.next()) {
-            String state = result.getResult(ProjectsTable.PATH);
-            if ("END_ENTITY".equals(state) || "END_STRUCTURAL".equals(state) || state == null) {
+            Stage state = Stage.parse(result.getResult(ProjectsTable.PATH));
+            if (state == null || state == Stage.END_ENTITY || state == Stage.END_STRUCTURAL) {
               task.report("Entity import already completed... skipping");
               shouldImport = false;
             } else {

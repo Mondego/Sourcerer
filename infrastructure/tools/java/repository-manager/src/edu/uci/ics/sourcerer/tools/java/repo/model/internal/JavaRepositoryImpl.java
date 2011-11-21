@@ -135,7 +135,11 @@ public class JavaRepositoryImpl extends AbstractJavaRepository<JavaProjectImpl, 
         } catch (NumberFormatException e) {}
       }
     }
-    task.report("Found " + biggestAVal + "/" + biggestBVal);
+    if (biggestAVal == 0 && biggestBVal == -1) {
+      task.report("None found, starting at 0/0)");
+    } else {
+      task.report("Found " + biggestAVal + "/" + biggestBVal);
+    }
     task.finish();
 
     task.start("Aggregating " + aggregationMap.size() + " jars", "jars aggregated", 100);

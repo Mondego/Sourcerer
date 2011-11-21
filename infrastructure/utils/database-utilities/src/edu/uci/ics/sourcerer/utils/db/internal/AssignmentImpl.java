@@ -27,12 +27,11 @@ import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
  * @author Joel Ossher (jossher@uci.edu)
  */
 class AssignmentImpl <T> implements Assignment<T> {
-  private Selectable<T> sel;
+  private final Selectable<T> sel;
   private T value;
 
-  AssignmentImpl(Selectable<T> sel, T value) {
+  AssignmentImpl(Selectable<T> sel) {
     this.sel = sel;
-    this.value = value;
   }
   
   @Override

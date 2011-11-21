@@ -41,6 +41,7 @@ import org.eclipse.jdt.internal.core.BinaryType;
 
 import edu.uci.ics.sourcerer.tools.java.extractor.bytecode.ASMExtractor;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 
@@ -197,13 +198,13 @@ public class EclipseExtractor implements Closeable {
     return oneWithSource;
   }
   
-  public void extractSourceFiles(Collection<IFile> sourceFiles) {
+  public void extractSourceFiles(Map<JavaFile, IFile> sourceFiles) {
     task.start("Extracting " + sourceFiles.size() + " source files", "sources files extracted", 500);
 
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(writers);
-    for (IFile source : sourceFiles) {
+    for (Map.Entry<JavaFile, IFile> entry : sourceFiles.entrySet()) {
       task.progress();
-      ICompilationUnit icu = JavaCore.createCompilationUnitFrom(source);
+      ICompilationUnit icu = JavaCore.createCompilationUnitFrom(entry.getValue());
 
       parser.setStatementsRecovery(true);
       parser.setResolveBindings(true);
@@ -214,7 +215,7 @@ public class EclipseExtractor implements Closeable {
       try {
         unit = (CompilationUnit)parser.createAST(null);
       } catch (Exception e) {
-        logger.log(Level.SEVERE, "Error in creating AST for " + source.getName(), e);
+        logger.log(Level.SEVERE, "Error in creating AST for " + entry.getKey(), e);
         continue;
       }
   
@@ -222,9 +223,10 @@ public class EclipseExtractor implements Closeable {
       
       try {
         visitor.setCompilationUnitSource(icu.getSource());
+        visitor.setJavaFile(entry.getKey());
         unit.accept(visitor);
       } catch (Exception e) {
-        logger.log(Level.SEVERE, "Error in extracting " + source.getName(), e);
+        logger.log(Level.SEVERE, "Error in extracting " + entry.getKey(), e);
       }
     }
     task.finish();

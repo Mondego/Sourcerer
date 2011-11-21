@@ -73,7 +73,7 @@ class LibraryTypeModel {
       query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.ENTITY_TYPE, EntitiesTable.PARAMS, EntitiesTable.RAW_PARAMS);
       query.andWhere(
           EntitiesTable.PROJECT_ID.compareIn(libraries),
-          EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION, Entity.CONSTRUCTOR, Entity.METHOD, Entity.ANNOTATION_ELEMENT, Entity.ENUM_CONSTANT, Entity.FIELD)),
+          EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.PACKAGE, Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION, Entity.CONSTRUCTOR, Entity.METHOD, Entity.ANNOTATION_ELEMENT, Entity.ENUM_CONSTANT, Entity.FIELD)),
           EntitiesTable.MODIFIERS.compareNotEquals(Modifiers.make(Modifier.PRIVATE)));
 
       TypedQueryResult result = query.selectStreamed();

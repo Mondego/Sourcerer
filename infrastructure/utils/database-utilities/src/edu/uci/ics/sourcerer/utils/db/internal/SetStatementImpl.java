@@ -44,18 +44,27 @@ final class SetStatementImpl extends StatementImpl implements SetStatement {
   }
   
   @Override
-  public <T> Assignment<T> addAssignment(Column<T> column, T value) {
+  public <T> Assignment<T> addAssignment(Column<T> column) {
     if (column.getTable() != table) {
       throw new IllegalArgumentException("Column " + column.getName() + " is not from table " + table.getName());
     } else {
-      AssignmentImpl<T> ass = new AssignmentImpl<T>(column, value);
+      reset();
+      AssignmentImpl<T> ass = new AssignmentImpl<T>(column);
       assignments.add(ass);
       return ass;
     }
   }
   
   @Override
+  public <T> Assignment<T> addAssignment(Column<T> column, T value) {
+    Assignment<T> ass = addAssignment(column);
+    ass.setValue(value);
+    return ass;
+  }
+  
+  @Override
   public void andWhere(Condition condition) {
+    reset();
     condition.verifyTables(table);
     if (whereCondition == null) {
       whereCondition = condition;
