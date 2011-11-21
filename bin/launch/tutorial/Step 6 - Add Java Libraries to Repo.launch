@@ -10,11 +10,11 @@
 <booleanAttribute key="clearConfig" value="false"/>
 <booleanAttribute key="clearws" value="false"/>
 <booleanAttribute key="clearwslog" value="false"/>
-<stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/Step 6 - Extract Libraries (1)"/>
+<stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/Step 6 - Add Java Libraries to Repo"/>
 <booleanAttribute key="default" value="true"/>
 <booleanAttribute key="includeOptional" value="true"/>
-<stringAttribute key="location" value="${workspace_loc:bin/launch/tutorial/ws}"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--properties-file ${project_loc:bin}/launch/tutorial/tutorial-extraction.properties --extract-projects"/>
+<stringAttribute key="location" value="${workspace_loc:test-repo/output}/ws"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--properties-file ${project_loc:bin}/launch/tutorial/tutorial-repo.properties --add-libraries-to-repo"/>
 <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.pde.ui.workbenchClasspathProvider"/>
 <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xms40m -Xmx256m"/>
 <stringAttribute key="pde.version" value="3.3"/>
