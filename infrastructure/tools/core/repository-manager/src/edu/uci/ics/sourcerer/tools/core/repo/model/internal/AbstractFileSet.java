@@ -125,7 +125,6 @@ public abstract class AbstractFileSet implements FileSet {
         }
       }
       
-      
       cache.getParentFile().mkdirs();
       try (SimpleSerializer writer = IOUtils.makeSimpleSerializer(cache)) {
         EntryWriter<RepoFileImpl> ew = writer.getEntryWriter(RepoFileImpl.class);
@@ -175,5 +174,10 @@ public abstract class AbstractFileSet implements FileSet {
       init(true, false);
     }
     return root;
+  }
+  
+  public ContentFileImpl getFile(String path) {
+    RepoFileImpl file = root.getFile().getChild(path);
+    return getRoot().make(file.getParent()).makeFile(file);
   }
 }

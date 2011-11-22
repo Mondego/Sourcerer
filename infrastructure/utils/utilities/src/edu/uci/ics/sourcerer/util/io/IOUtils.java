@@ -21,8 +21,10 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -30,9 +32,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
@@ -71,64 +70,6 @@ public final class IOUtils {
         } catch (IOException e) {}
       }
     }
-  }
-  
-  /**
-   * File remains open until iterator is exhausted.
-   */
-  public static Iterable<String> getFileAsIterable(final File file) {
-    return new Iterable<String>() {
-      @Override
-      public Iterator<String> iterator() {
-        if (file.exists()) {
-          try {
-            final BufferedReader br = makeBufferedReader(file);
-            return new Iterator<String>() {
-              BufferedReader reader = br;
-              String nextLine = null;
-              
-              @Override
-              public boolean hasNext() {
-                if (nextLine == null && reader != null) {
-                  try {
-                    nextLine = reader.readLine();
-                  } catch (IOException e) {
-                    logger.log(Level.SEVERE, "Error trying to read: " + file.getPath(), e);
-                    nextLine = null;
-                  }
-                  if (nextLine == null) {
-                    close(reader);
-                    reader = null;
-                  }
-                }
-                return nextLine != null;
-              }
-              
-              @Override
-              public String next() {
-                if (hasNext()) {
-                  String next = nextLine;
-                  nextLine = null;
-                  return next;
-                } else {
-                  throw new NoSuchElementException();
-                }
-              }
-              
-              @Override
-              public void remove() {
-                throw new UnsupportedOperationException();
-              }
-            };
-          } catch (IOException e) {
-            logger.log(Level.SEVERE, "Unable to read file: " + file.getPath(), e);
-            return Collections.<String>emptyList().iterator();
-          }
-        } else {
-          return Collections.<String>emptyList().iterator();
-        }
-      }
-    };
   }
   
   public static SimpleSerializer makeSimpleSerializer(DualFileArgument file) throws IOException {
@@ -185,6 +126,23 @@ public final class IOUtils {
     byte[] buff = new byte[1024];
     for (int read = in.read(buff); read > 0; read = in.read(buff)) {
       out.write(buff, 0, read);
+    }
+  }
+  
+  public static byte[] getInputStreamAsByteArray(InputStream is, int estimated) {
+    ByteArrayOutputStream bos = new ByteArrayOutputStream(estimated);
+    try {
+      byte[] buff = new byte[1024];
+      int read = 0;
+      while ((read = is.read(buff)) > 0) {
+        bos.write(buff, 0, read);
+      }
+      return bos.toByteArray();
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error reading from stream", e);
+      return null;
+    } finally {
+      close(is);
     }
   }
 }

@@ -240,6 +240,11 @@ public class JavaLibraryTypeModel {
       }
     } else {
       int dot = fqn.lastIndexOf('.');
+      if (dot == -1) {
+        logger.warning("Field with no receiver: " + fqn);
+        return null;
+      }
+      
       String receiverFQN = fqn.substring(0, dot);
       String fieldName = fqn.substring(dot + 1);
       

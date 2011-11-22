@@ -31,4 +31,6 @@ public interface JavaFileSet extends FileSet {
   public Collection<? extends JavaFile> getFilteredJavaFiles();
   
   public Collection<? extends JarFile> getJarFiles();
+  
+  public ContentFile getFile(String path);
 }

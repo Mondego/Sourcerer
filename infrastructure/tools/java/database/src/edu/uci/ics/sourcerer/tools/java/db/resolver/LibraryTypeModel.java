@@ -271,6 +271,7 @@ class LibraryTypeModel {
     } else {
       int dot = fqn.lastIndexOf('.');
       if (dot == -1) {
+        logger.warning("Field with no receiver: " + fqn);
         return null;
       }
       

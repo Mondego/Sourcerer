@@ -365,6 +365,12 @@ public class ProjectTypeModel {
       }
     } else {
       int dot = fqn.lastIndexOf('.');
+      if (dot == -1) {
+        logger.warning("Field with no receiver: " + fqn);
+        entity = unknowns.getUnknown(exec, fqn);
+        entities.put(fqn, entity);
+        return entity;
+      }
       String receiverFQN = fqn.substring(0, dot);
       String fieldName = fqn.substring(dot + 1);
       

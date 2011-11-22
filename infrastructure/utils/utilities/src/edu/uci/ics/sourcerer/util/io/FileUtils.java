@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.util.io;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -26,7 +27,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.Collections;
 import java.util.Deque;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
@@ -195,6 +199,94 @@ public class FileUtils {
       return tempDir;
     } else {
       return null;
+    }
+  }
+  
+  /**
+   * File remains open until iterator is exhausted.
+   */
+  public static Iterable<String> getFileAsIterable(final File file) {
+    return new Iterable<String>() {
+      @Override
+      public Iterator<String> iterator() {
+        if (file.exists()) {
+          try {
+            final BufferedReader br = IOUtils.makeBufferedReader(file);
+            return new Iterator<String>() {
+              BufferedReader reader = br;
+              String nextLine = null;
+              
+              @Override
+              public boolean hasNext() {
+                if (nextLine == null && reader != null) {
+                  try {
+                    nextLine = reader.readLine();
+                  } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Error trying to read: " + file.getPath(), e);
+                    nextLine = null;
+                  }
+                  if (nextLine == null) {
+                    IOUtils.close(reader);
+                    reader = null;
+                  }
+                }
+                return nextLine != null;
+              }
+              
+              @Override
+              public String next() {
+                if (hasNext()) {
+                  String next = nextLine;
+                  nextLine = null;
+                  return next;
+                } else {
+                  throw new NoSuchElementException();
+                }
+              }
+              
+              @Override
+              public void remove() {
+                throw new UnsupportedOperationException();
+              }
+            };
+          } catch (IOException e) {
+            logger.log(Level.SEVERE, "Unable to read file: " + file.getPath(), e);
+            return Collections.<String>emptyList().iterator();
+          }
+        } else {
+          return Collections.<String>emptyList().iterator();
+        }
+      }
+    };
+  }
+  
+  public static byte[] getFileAsByteArray(File file) {
+    if (file == null) {
+      return null;
+    }
+    InputStream is = null;
+    try {
+      long length = file.length();
+      if (length > Integer.MAX_VALUE) {
+        logger.log(Level.SEVERE, file.getPath() + " too big to read");
+        return null;
+      }
+      byte[] retval = new byte[(int) length];
+      is = new FileInputStream(file);
+      int off = 0;
+      for (int read = is.read(retval, off, retval.length - off); read > 0; read = is.read(retval, off, retval.length - off)) {
+        off += read;
+      }
+      if (off < retval.length) {
+        logger.log(Level.SEVERE, "Unable to completely read file " + file.getPath());
+        return null;
+      }
+      return retval;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to read file.", e);
+      return null;
+    } finally {
+      IOUtils.close(is);
     }
   }
 }

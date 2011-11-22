@@ -27,18 +27,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import edu.uci.ics.sourcerer.db.tools.FileAccessor;
-import edu.uci.ics.sourcerer.db.tools.FileAccessor.Result;
-import edu.uci.ics.sourcerer.model.Entity;
-import edu.uci.ics.sourcerer.model.Relation;
-import edu.uci.ics.sourcerer.model.db.EntityDB;
-import edu.uci.ics.sourcerer.model.db.ImportDB;
-import edu.uci.ics.sourcerer.model.db.RelationEntityDB;
+import edu.uci.ics.sourcerer.tools.java.db.exported.FileAccessor;
+import edu.uci.ics.sourcerer.tools.java.db.exported.FileAccessor.Link;
+import edu.uci.ics.sourcerer.tools.java.db.exported.FileAccessor.Result;
 import edu.uci.ics.sourcerer.tools.java.highlighter.TagInfo;
 import edu.uci.ics.sourcerer.tools.java.highlighter.TagType;
 import edu.uci.ics.sourcerer.tools.java.highlighter.SyntaxHighlighter;
-import edu.uci.ics.sourcerer.util.io.PropertyManager;
-import edu.uci.ics.sourcerer.util.server.ServletUtils;
+import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
+import edu.uci.ics.sourcerer.utils.servlet.ServletUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -47,15 +43,15 @@ import edu.uci.ics.sourcerer.util.server.ServletUtils;
 public class CodeBrowser extends HttpServlet {
   @Override
   public void init() throws ServletException {
-    PropertyManager.PROPERTIES_STREAM.setValue(getServletContext().getResourceAsStream("/WEB-INF/lib/code-browser.properties"));
-    PropertyManager.initializeProperties();
+    ArgumentManager.PROPERTIES_STREAM.setValue(getServletContext().getResourceAsStream("/WEB-INF/lib/code-browser.properties"));
+    ArgumentManager.initializeProperties();
   }
   
   @Override
   public void destroy() {
-    logger.log(Level.INFO, "Destroying");
-    FileAccessor.destroy();
-    logger.log(Level.INFO, "Done Destroying");
+//    logger.log(Level.INFO, "Destroying");
+//    FileAccessor.destroy();
+//    logger.log(Level.INFO, "Done Destroying");
   }
   
   private Integer getIntValue(HttpServletRequest request, String name) {
@@ -113,8 +109,8 @@ public class CodeBrowser extends HttpServlet {
       
       TagInfo links = TagInfo.make();
       
-      for (ImportDB imp : FileAccessor.getImportsByFileID(fileID)) {
-        links.addLinkLocation(TagType.IMPORT_LINK, imp.getOffset(), imp.getLength(), "link", "?entityID=" + imp.getEid(), null);
+      for (Link link : FileAccessor.getImportsByFileID(fileID)) {
+        links.addLinkLocation(TagType.IMPORT_LINK, link.getOffset(), link.getLength(), "link", "?entityID=" + link.getEntityID(), null);
       }
       
       for (EntityDB ent : FileAccessor.getFieldsByFileID(fileID)) {
