@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
+import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryProperties;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
@@ -36,11 +37,12 @@ import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractRepository<Project extends AbstractRepoProject<? extends AbstractRepository<Project, Batch>, ?>, Batch extends BatchImpl<Project>> {
-  public static final Argument<String> REPO_PROPERTIES = new StringArgument("repo-properties-file", "File name for repo properties file.").permit();
+  public static final Argument<String> REPO_PROPERTIES = new StringArgument("repo-properties-file", "repo.properties", "File name for repo properties file.").permit();
   public static final Argument<String> PROJECT_CACHE = new StringArgument("project-cache-file", "project-cache.txt", "File containing a cached list of the projects.").permit();
   public static final Argument<Boolean> CLEAR_CACHES = new BooleanArgument("clear-caches", false, "Clear all repository caches.").permit();
   
   protected RepoFileImpl repoRoot;
+  protected RepositoryProperties properties;
   
   private RepoFileImpl cache;
   private BatchSetImpl<Project, Batch> batchSet;
@@ -48,6 +50,7 @@ public abstract class AbstractRepository<Project extends AbstractRepoProject<? e
   protected AbstractRepository(RepoFileImpl repoRoot) {
     this.repoRoot = repoRoot.asRoot();
     repoRoot.makeDirs();
+    properties = new RepositoryProperties(repoRoot.getChild(REPO_PROPERTIES));
   }
   
   protected void clearCache() {

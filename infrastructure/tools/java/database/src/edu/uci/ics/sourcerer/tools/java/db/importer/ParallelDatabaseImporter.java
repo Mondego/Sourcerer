@@ -118,10 +118,21 @@ public final class ParallelDatabaseImporter {
     ExtractedJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(JavaRepositoryFactory.INPUT_REPO);
     task.finish();
     
+    if (repo == null) {
+      task.finish();
+      return;
+    }
+    
     task.start("Loading extracted Java libraries");
     Collection<? extends ExtractedJarFile> libs = repo.getLibraryJarFiles();
     task.finish();
 
+    if (libs.isEmpty()) {
+      task.report("No libraries to import");
+      task.finish();
+      return;
+    }
+    
     int numThreads = THREAD_COUNT.getValue();
     
     Nullerator<ExtractedJarFile> nullerator = Nullerator.makeNullerator(libs, task, "Thread %s now processing: %s");

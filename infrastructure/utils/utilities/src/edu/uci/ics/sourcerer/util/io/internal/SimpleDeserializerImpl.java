@@ -368,17 +368,23 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     private Map<K, V> map;
     private EntryReader<K> keyReader;
     private EntryReader<V> valueReader;
+    private final boolean allowNullValues;
     
-    public MapBuilder(Map<K, V> map, EntryReader<K> keyReader, EntryReader<V> valueReader) {
+    public MapBuilder(Map<K, V> map, EntryReader<K> keyReader, EntryReader<V> valueReader, boolean allowNullValues) {
       this.map = map;
       this.keyReader = keyReader;
       this.valueReader = valueReader;
+      this.allowNullValues = allowNullValues;
     }
     
     public void add(String line) {
       Scanner scanner = LineBuilder.getScanner(line);
       try {
-        map.put(keyReader.create(scanner), valueReader.create(scanner));
+        K key = keyReader.create(scanner);
+        V value = valueReader.create(scanner);
+        if (allowNullValues || value != null) {
+          map.put(key, value);
+        }
       } catch (InstantiationException e) {
         logger.log(Level.SEVERE, "Unable to deserialize: " + line, e);
       } catch (IllegalAccessException e) {
@@ -411,7 +417,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     return (Map<K, V>)loadedClass.newInstance();
   }
   
-  private <K, V> MapBuilder<K, V> positionForNext(Class<K> key, Class<V> value) throws IOException {
+  private <K, V> MapBuilder<K, V> positionForNext(Class<K> key, Class<V> value, boolean allowNullValues) throws IOException {
     if (br == null) {
       logger.log(Level.SEVERE, "File already closed, unable to deserialize map.");
       return null;
@@ -463,7 +469,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
           valueReader = new BasicEntryReader<V>(value, fields, deserializers);
         }
         
-        return new MapBuilder<K, V>(map, keyReader, valueReader);
+        return new MapBuilder<K, V>(map, keyReader, valueReader, allowNullValues);
       } catch (ClassNotFoundException e) {
         logger.log(Level.SEVERE, "Unable to load class for deserialization.", e);
       } catch (SecurityException e) {
@@ -481,7 +487,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     }
   }
   
-  private <K, V> MapBuilder<K, V> positionForNext(ObjectDeserializer<K> keyDeserializer, Class<V> value) throws IOException {
+  private <K, V> MapBuilder<K, V> positionForNext(ObjectDeserializer<K> keyDeserializer, Class<V> value, boolean allowNullValues) throws IOException {
     if (br == null) {
       logger.log(Level.SEVERE, "File already closed, unable to deserialize map.");
       return null;
@@ -516,7 +522,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
           valueReader = new BasicEntryReader<V>(value, fields, deserializers);
         }
         
-        return new MapBuilder<K, V>(map, keyReader, valueReader);
+        return new MapBuilder<K, V>(map, keyReader, valueReader, allowNullValues);
       } catch (ClassNotFoundException e) {
         throw new IllegalStateException("Unable to load class for deserialization.", e);
       } catch (SecurityException e) {
@@ -533,7 +539,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     }
   }
   
-  private <K, V> MapBuilder<K, V> positionForNext(Class<K> key, ObjectDeserializer<V> valueDeserializer) throws IOException {
+  private <K, V> MapBuilder<K, V> positionForNext(Class<K> key, ObjectDeserializer<V> valueDeserializer, boolean allowNullValues) throws IOException {
     if (br == null) {
       logger.log(Level.SEVERE, "File already closed, unable to deserialize map.");
       return null;
@@ -566,7 +572,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
         
         EntryReader<V> valueReader = new CustomEntryReader<V>(valueDeserializer);
         
-        return new MapBuilder<K, V>(map, keyReader, valueReader);
+        return new MapBuilder<K, V>(map, keyReader, valueReader, allowNullValues);
       } catch (ClassNotFoundException e) {
         throw new IllegalStateException("Unable to load class for deserialization.", e);
       } catch (SecurityException e) {
@@ -583,7 +589,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     }
   }
   
-  private <K, V> MapBuilder<K, V> positionForNext(ObjectDeserializer<K> keyDeserializer, ObjectDeserializer<V> valueDeserializer) throws IOException {
+  private <K, V> MapBuilder<K, V> positionForNext(ObjectDeserializer<K> keyDeserializer, ObjectDeserializer<V> valueDeserializer, boolean allowNullValues) throws IOException {
     if (br == null) {
       logger.log(Level.SEVERE, "File already closed, unable to deserialize map.");
       return null;
@@ -596,7 +602,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
         // Read in the fields
         br.readLine();
         
-        return new MapBuilder<K, V>(map, new CustomEntryReader<K>(keyDeserializer), new CustomEntryReader<V>(valueDeserializer));
+        return new MapBuilder<K, V>(map, new CustomEntryReader<K>(keyDeserializer), new CustomEntryReader<V>(valueDeserializer), allowNullValues);
       } catch (ClassNotFoundException e) {
         throw new IllegalStateException("Unable to load class for deserialization.", e);
       } catch (InstantiationException e) {
@@ -619,22 +625,22 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
   }
   
   @Override
-  public <K, V> Map<K, V> deserializeMap(Class<K> key, Class<V> value) throws IOException {
-    return buildMap(positionForNext(key, value));
+  public <K, V> Map<K, V> deserializeMap(Class<K> key, Class<V> value, boolean allowNullValues) throws IOException {
+    return buildMap(positionForNext(key, value, allowNullValues));
   }
   
   @Override
-  public <K, V> Map<K, V> deserializeMap(ObjectDeserializer<K> keyDeserializer, Class<V> value) throws IOException {
-    return buildMap(positionForNext(keyDeserializer, value));
+  public <K, V> Map<K, V> deserializeMap(ObjectDeserializer<K> keyDeserializer, Class<V> value, boolean allowNullValues) throws IOException {
+    return buildMap(positionForNext(keyDeserializer, value, allowNullValues));
   }
   
   @Override
-  public <K, V> Map<K, V> deserializeMap(Class<K> key, ObjectDeserializer<V> valueDeserializer) throws IOException {
-    return buildMap(positionForNext(key, valueDeserializer));
+  public <K, V> Map<K, V> deserializeMap(Class<K> key, ObjectDeserializer<V> valueDeserializer, boolean allowNullValues) throws IOException {
+    return buildMap(positionForNext(key, valueDeserializer, allowNullValues));
   }
   
   @Override
-  public <K, V> Map<K, V> deserializeMap(ObjectDeserializer<K> keyDeserializer, ObjectDeserializer<V> valueDeserializer) throws IOException {
-    return buildMap(positionForNext(keyDeserializer, valueDeserializer));
+  public <K, V> Map<K, V> deserializeMap(ObjectDeserializer<K> keyDeserializer, ObjectDeserializer<V> valueDeserializer, boolean allowNullValues) throws IOException {
+    return buildMap(positionForNext(keyDeserializer, valueDeserializer, allowNullValues));
   }
 }

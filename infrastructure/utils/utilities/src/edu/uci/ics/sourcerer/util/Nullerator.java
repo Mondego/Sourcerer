@@ -44,7 +44,7 @@ public class Nullerator<T> {
     } else if (iterator.hasNext()) {
       T next = iterator.next();
       if (message != null) {
-        task.report(Logging.THREAD_INFO, String.format(message, Thread.currentThread().getName(), next.toString()));
+        task.report(Logging.THREAD_INFO, String.format(message, Thread.currentThread().getName(), next == null ? "null" : next.toString()));
       }
       return next;
     } else {

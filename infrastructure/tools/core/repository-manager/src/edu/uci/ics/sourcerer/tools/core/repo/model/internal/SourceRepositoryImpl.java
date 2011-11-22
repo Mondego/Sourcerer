@@ -17,15 +17,35 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceRepository;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class SourceRepositoryImpl extends AbstractRepository<SourceProjectImpl, SourceBatchImpl<SourceProjectImpl>> implements ModifiableSourceRepository {
-  public SourceRepositoryImpl(RepoFileImpl repoRoot) {
+  private SourceRepositoryImpl(RepoFileImpl repoRoot) {
     super(repoRoot);
   }
+  
+  public static SourceRepositoryImpl load(RepoFileImpl repoRoot) {
+    SourceRepositoryImpl repo = new SourceRepositoryImpl(repoRoot);
+    // Verify the repository type
+    String type = repo.properties.REPOSITORY_TYPE.getValue();
+    // If it's a new repo
+    if (type == null) {
+      repo.properties.REPOSITORY_TYPE.setValue(ModifiableSourceRepository.class.getName());
+      repo.properties.save();
+      return repo;
+    } else if (type.equals(ModifiableSourceRepository.class.getName())) {
+      return repo;
+    } else {
+      logger.severe("Invalid repository type: " + type);
+      return null;
+    }
+  }
+  
 
   @Override
   protected SourceProjectImpl createProject(ProjectLocationImpl loc) {

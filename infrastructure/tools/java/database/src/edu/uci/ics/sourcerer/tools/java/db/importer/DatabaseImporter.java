@@ -73,13 +73,14 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
   
   protected DatabaseImporter(String taskName) {
     this.taskName = taskName;
-    tempDir = FileUtils.getTempDir();
+    
     fileMap = new HashMap<>();
   }
   
   @Override
   public final void action() {
     init();
+    
     task = new TaskProgressLogger();
     task.start(taskName);
     doImport();
@@ -89,10 +90,12 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
   
   protected void init() {
     Logging.addThreadLogger();
+    tempDir = FileUtils.getTempDir();
   }
   
   protected void cleanup() {
     Logging.removeThreadLogger();
+    tempDir.delete();
   }
   
   protected abstract void doImport();

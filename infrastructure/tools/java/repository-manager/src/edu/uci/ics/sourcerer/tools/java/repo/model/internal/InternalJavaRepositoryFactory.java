@@ -35,21 +35,21 @@ import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 public class InternalJavaRepositoryFactory extends InternalRepositoryFactory implements JavaRepositoryFactory {
   @Override
   public JavaRepository loadJavaRepository(Argument<File> root) {
-    return new JavaRepositoryImpl(RepoFileImpl.makeRoot(root));
+    return JavaRepositoryImpl.load(RepoFileImpl.makeRoot(root));
   }
   
   @Override
   public ModifiableJavaRepository loadModifiableJavaRepository(Argument<File> root) {
-    return new JavaRepositoryImpl(RepoFileImpl.makeRoot(root));
+    return JavaRepositoryImpl.load(RepoFileImpl.makeRoot(root));
   }
 
   @Override
   public ExtractedJavaRepository loadExtractedJavaRepository(Argument<File> root) {
-    return new ExtractedJavaRepositoryImpl(RepoFileImpl.makeRoot(root));
+    return ExtractedJavaRepositoryImpl.load(RepoFileImpl.makeRoot(root));
   }
 
   @Override
   public ModifiableExtractedJavaRepository loadModifiableExtractedJavaRepository(Argument<File> root) {
-    return new ExtractedJavaRepositoryImpl(RepoFileImpl.makeRoot(root));
+    return ExtractedJavaRepositoryImpl.load(RepoFileImpl.makeRoot(root));
   }
 }

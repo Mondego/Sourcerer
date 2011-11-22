@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.ContentFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceRepository;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ProjectLocationImpl;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
@@ -39,9 +40,26 @@ import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JavaRepositoryImpl extends AbstractJavaRepository<JavaProjectImpl, JavaBatchImpl, JarFileImpl> implements ModifiableJavaRepository {
-  protected JavaRepositoryImpl(RepoFileImpl repoRoot) {
+public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProjectImpl, JavaBatchImpl, JarFileImpl> implements ModifiableJavaRepository {
+  private JavaRepositoryImpl(RepoFileImpl repoRoot) {
     super(repoRoot);
+  }
+  
+  protected static JavaRepositoryImpl load(RepoFileImpl repoRoot) {
+    JavaRepositoryImpl repo = new JavaRepositoryImpl(repoRoot);
+    // Verify the repository type
+    String type = repo.properties.REPOSITORY_TYPE.getValue();
+    // If it's a new repo
+    if (type == null) {
+      repo.properties.REPOSITORY_TYPE.setValue(ModifiableSourceRepository.class.getName());
+      repo.properties.save();
+      return repo;
+    } else if (type.equals(ModifiableSourceRepository.class.getName())) {
+      return repo;
+    } else {
+      logger.severe("Invalid repository type: " + type);
+      return null;
+    }
   }
   
   @Override

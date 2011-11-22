@@ -28,10 +28,10 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractRepoProject;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractRepository;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.BatchImpl;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
-import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractRepoProject;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
@@ -96,7 +96,7 @@ public abstract class AbstractJavaRepository<Project extends AbstractRepoProject
       SimpleDeserializer deserializer = null;
       try {
         deserializer = IOUtils.makeSimpleDeserializer(mavenJarIndexFile.toFile());
-        mavenJarIndex = deserializer.deserializeMap(String.class, makeDeserializer());
+        mavenJarIndex = deserializer.deserializeMap(String.class, makeDeserializer(), false);
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Error loading jar index.", e);
         createMavenJarIndex();
@@ -147,7 +147,7 @@ public abstract class AbstractJavaRepository<Project extends AbstractRepoProject
       SimpleDeserializer deserializer = null;
       try {
         deserializer = IOUtils.makeSimpleDeserializer(projectJarIndexFile.toFile());
-        projectJarIndex = deserializer.deserializeMap(String.class, makeDeserializer());
+        projectJarIndex = deserializer.deserializeMap(String.class, makeDeserializer(), false);
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Error loading jar index.", e);
         createProjectJarIndex();
@@ -194,7 +194,7 @@ public abstract class AbstractJavaRepository<Project extends AbstractRepoProject
       SimpleDeserializer deserializer = null;
       try {
         deserializer = IOUtils.makeSimpleDeserializer(libraryJarIndexFile.toFile());
-        libraryJarIndex = deserializer.deserializeMap(String.class, makeDeserializer());
+        libraryJarIndex = deserializer.deserializeMap(String.class, makeDeserializer(), false);
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Error loading library jars.", e);
         createLibraryJarIndex();

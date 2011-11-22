@@ -33,12 +33,12 @@ public class InternalRepositoryFactory implements RepositoryFactory {
   @Override
   public SourceRepository loadSourceRepository(Argument<File> root) {
     logger.info("Loading source repository at: " + root.getValue().getPath());
-    return new SourceRepositoryImpl(RepoFileImpl.makeRoot(root));
+    return SourceRepositoryImpl.load(RepoFileImpl.makeRoot(root));
   }
 
   @Override
   public ModifiableSourceRepository loadModifiableSourceRepository(Argument<File> root) {
     logger.info("Loading modifiable source repository at: " + root.getValue().getPath());
-    return new SourceRepositoryImpl(RepoFileImpl.makeRoot(root));
+    return SourceRepositoryImpl.load(RepoFileImpl.makeRoot(root));
   }
 }

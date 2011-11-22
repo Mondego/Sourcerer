@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.model.extracted.internal;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ProjectLocationImpl;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
@@ -31,8 +32,25 @@ import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class ExtractedJavaRepositoryImpl extends AbstractJavaRepository<ExtractedJavaProjectImpl, ExtractedJavaBatchImpl, ExtractedJarFileImpl> implements ModifiableExtractedJavaRepository {
-  public ExtractedJavaRepositoryImpl(RepoFileImpl repoRoot) {
+  private ExtractedJavaRepositoryImpl(RepoFileImpl repoRoot) {
     super(repoRoot);
+  }
+  
+  public static ExtractedJavaRepositoryImpl load(RepoFileImpl repoRoot) {
+    ExtractedJavaRepositoryImpl repo = new ExtractedJavaRepositoryImpl(repoRoot);
+    // Verify the repository type
+    String type = repo.properties.REPOSITORY_TYPE.getValue();
+    // If it's a new repo
+    if (type == null) {
+      repo.properties.REPOSITORY_TYPE.setValue(ModifiableExtractedJavaRepository.class.getName());
+      repo.properties.save();
+      return repo;
+    } else if (type.equals(ModifiableExtractedJavaRepository.class.getName())) {
+      return repo;
+    } else {
+      logger.severe("Invalid repository type: " + type);
+      return null;
+    }
   }
   
   @Override

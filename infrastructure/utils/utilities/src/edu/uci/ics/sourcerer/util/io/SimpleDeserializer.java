@@ -31,8 +31,8 @@ public interface SimpleDeserializer extends Closeable {
   public <T extends SimpleSerializable> Collection<T> deserializeToCollection(Class<T> klass) throws IOException;
   public <T extends CustomSerializable> Iterable<T> deserializeToIterable(ObjectDeserializer<T> deserializer, boolean closeOnCompletion) throws IOException;
   public <T extends CustomSerializable> Collection<T> deserializeToCollection(ObjectDeserializer<T> deserializer) throws IOException;
-  public <K, V> Map<K, V> deserializeMap(Class<K> key, Class<V> value) throws IOException;
-  public <K, V> Map<K, V> deserializeMap(ObjectDeserializer<K> keyDeserializer, Class<V> value) throws IOException;
-  public <K, V> Map<K, V> deserializeMap(Class<K> key, ObjectDeserializer<V> valueDeserializer) throws IOException;
-  public <K, V> Map<K, V> deserializeMap(ObjectDeserializer<K> keyDeserializer, ObjectDeserializer<V> valueDeserializer) throws IOException;
+  public <K, V> Map<K, V> deserializeMap(Class<K> key, Class<V> value, boolean allowNullValues) throws IOException;
+  public <K, V> Map<K, V> deserializeMap(ObjectDeserializer<K> keyDeserializer, Class<V> value, boolean allowNullValues) throws IOException;
+  public <K, V> Map<K, V> deserializeMap(Class<K> key, ObjectDeserializer<V> valueDeserializer, boolean allowNullValues) throws IOException;
+  public <K, V> Map<K, V> deserializeMap(ObjectDeserializer<K> keyDeserializer, ObjectDeserializer<V> valueDeserializer, boolean allowNullValues) throws IOException;
 }
