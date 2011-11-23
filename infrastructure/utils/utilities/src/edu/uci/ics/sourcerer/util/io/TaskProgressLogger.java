@@ -28,11 +28,21 @@ import java.util.logging.Level;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class TaskProgressLogger {
-  private static final String SPACES;
+  private static String SPACES;
   static {
-    char[] arr = new char[20];
+    char[] arr = new char[10];
     Arrays.fill(arr, ' ');
     SPACES = new String(arr); 
+  }
+  
+  private static String getSpaces(int count) {
+    if (count > SPACES.length()) {
+      int newSize = 10 + Math.max(count, SPACES.length());
+      char[] arr = new char[newSize];
+      Arrays.fill(arr, ' ');
+      SPACES = new String(arr);
+    }
+    return SPACES.substring(0, count);
   }
   
   private final Deque<TaskInfo> tasks;
@@ -59,7 +69,7 @@ public class TaskProgressLogger {
   }
   
   private void start(String taskName, int indent, String finishedText, int progressInterval) {
-    logger.info(SPACES.substring(0, indent) + taskName + "...");
+    logger.info(getSpaces(indent) + taskName + "...");
     tasks.push(new TaskInfo(finishedText, indent, progressInterval));
   }
   
@@ -76,11 +86,11 @@ public class TaskProgressLogger {
   }
   
   public void report(Level level, String text) {
-    logger.log(level, SPACES.substring(0, getIndent()) + text);
+    logger.log(level, getSpaces(getIndent()) + text);
   }
   
   public void report(String text) {
-    logger.info(SPACES.substring(0, getIndent()) + text);
+    logger.info(getSpaces(getIndent()) + text);
   }
   
   public void progress() {
@@ -91,7 +101,7 @@ public class TaskProgressLogger {
       info.count++;
     } else {
       if (++info.count % info.progressInterval == 0) {
-        logger.info(SPACES.substring(0, info.indent + 1) + info.count + " " + info.finishedText + " in " + formatTime(info.startTime));
+        logger.info(getSpaces(info.indent + 1) + info.count + " " + info.finishedText + " in " + formatTime(info.startTime));
       }
     }
   }
@@ -104,7 +114,7 @@ public class TaskProgressLogger {
       info.count++;
     } else {
       if (++info.count % info.progressInterval == 0) {
-        logger.info(SPACES.substring(0, info.indent + 1) + String.format(message, info.count, formatTime(info.startTime)));
+        logger.info(getSpaces(info.indent + 1) + String.format(message, info.count, formatTime(info.startTime)));
       }
     }
   }
@@ -115,9 +125,9 @@ public class TaskProgressLogger {
     } else {
       TaskInfo info = tasks.pop();
       if (info.progressInterval == -1) {
-        logger.info(SPACES.substring(0, info.indent + 1) + "Finished " + info.finishedText + " in " + formatTime(info.startTime));
+        logger.info(getSpaces(info.indent + 1) + "Finished " + info.finishedText + " in " + formatTime(info.startTime));
       } else {
-        logger.info(SPACES.substring(0, info.indent + 1) + info.count + " " + info.finishedText + " in " + formatTime(info.startTime));
+        logger.info(getSpaces(info.indent + 1) + info.count + " " + info.finishedText + " in " + formatTime(info.startTime));
       }
     }
   }

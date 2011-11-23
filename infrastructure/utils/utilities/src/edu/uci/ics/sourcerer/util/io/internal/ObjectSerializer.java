@@ -75,7 +75,12 @@ abstract class ObjectSerializer {
           } else {
             result.append(val.substring(idx, next));
           }
-          idx = next + 1;
+          idx = next;
+          while (idx > 0 && val.charAt(idx) == ' ') {
+            if (++idx >= val.length()) {
+              idx = -1;
+            }
+          }
         }
         return parts + " " + result.toString();
       }

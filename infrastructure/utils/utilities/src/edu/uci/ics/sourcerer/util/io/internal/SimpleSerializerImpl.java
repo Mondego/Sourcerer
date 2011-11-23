@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.util.io.internal;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.util.io.CustomSerializable;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.Ignore;
 import edu.uci.ics.sourcerer.util.io.LineBuilder;
@@ -64,7 +66,7 @@ final class SimpleSerializerImpl implements SimpleSerializer {
     if (file.exists()) {
       String klass = null;
       String fields = null;
-      for (String line : IOUtils.getFileAsIterable(file)) {
+      for (String line : FileUtils.getFileAsIterable(file)) {
         if (DIVIDER.equals(line)) {
           klass = null;
           fields = null;

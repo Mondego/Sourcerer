@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
@@ -37,8 +38,10 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ImportsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
+import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
+import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFileSet;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaProject;
@@ -152,9 +155,31 @@ public class FileAccessor {
       return selectImportLinks.select();
     }
     
-    private SelectQuery selectFieldLinks = null;
+    private SelectQuery selectFields = null;
     private ConstantCondition<Integer> fieldFileID = null;
+    public TypedQueryResult selectFields(Integer fileID) {
+      if (selectFields == null) {
+        selectFields = conn.getExecutor().makeSelectQuery(EntitiesTable.TABLE);
+        selectFields.addSelects(EntitiesTable.OFFSET, EntitiesTable.LENGTH);
+        fieldFileID = EntitiesTable.FILE_ID.compareEquals();
+        selectFields.andWhere(fieldFileID.and(EntitiesTable.ENTITY_TYPE.compareEquals(Entity.FIELD)));
+      }
+      fieldFileID.setValue(fileID);
+      return selectFields.select();
+    }
     
+    private SelectQuery selectRelationLinks = null;
+    private ConstantCondition<Integer> relationFileID = null;
+    public TypedQueryResult selectRelationLinks(Integer fileID) {
+      if (selectRelationLinks == null) {
+        selectRelationLinks = conn.getExecutor().makeSelectQuery(RelationsTable.RHS_EID.compareEquals(EntitiesTable.ENTITY_ID));
+        selectRelationLinks.addSelects(RelationsTable.RELATION_TYPE, RelationsTable.OFFSET, RelationsTable.LENGTH, EntitiesTable.ENTITY_ID, EntitiesTable.FQN);
+        relationFileID = RelationsTable.FILE_ID.compareEquals();
+        selectRelationLinks.andWhere(relationFileID.and(RelationsTable.RELATION_TYPE.compareIn(EnumSet.of(Relation.USES, Relation.READS, Relation.WRITES, Relation.CALLS))));
+      }
+      relationFileID.setValue(fileID);
+      return selectRelationLinks.select();
+    }
     
     public void close() {
       IOUtils.close(conn);
@@ -364,20 +389,28 @@ public class FileAccessor {
     return links;
   }
   
-//  public static Collection<Link> getFieldsByFileID(Integer fileID) {
-//    FileDatabaseAccessor db = accessorManager.get();
-//    
-//    
-//  }
+  public static Collection<Link> getFieldsByFileID(Integer fileID) {
+    FileDatabaseAccessor db = accessorManager.get();
+    
+    ArrayList<Link> links = new ArrayList<>();
+    TypedQueryResult result = db.selectFields(fileID);
+    while (result.next()) {
+      links.add(new Link(result.getResult(EntitiesTable.OFFSET), result.getResult(EntitiesTable.LENGTH)));
+    }
+    return links;
+  }
   
-//  public static Collection<ImportDB> getImportsByFileID(Integer fileID) {
-//    return accessorManager.get().getImportsByFileID(fileID);
-//  }
-  
-//  public static Collection<EntityDB> getFieldsByFileID(Integer fileID) {
-//    return accessorManager.get().getFieldsByFileID(fileID);
-//  }
-  
+  public static Collection<Link> getRelationLinksByFileID(Integer fileID) {
+    FileDatabaseAccessor db = accessorManager.get();
+    
+    ArrayList<Link> links = new ArrayList<>();
+    TypedQueryResult result = db.selectRelationLinks(fileID);
+    while (result.next()) {
+      links.add(new Link(result.getResult(EntitiesTable.ENTITY_ID), result.getResult(EntitiesTable.FQN), result.getResult(RelationsTable.OFFSET), result.getResult(RelationsTable.LENGTH), result.getResult(RelationsTable.RELATION_TYPE)));
+    }
+    return links;
+  }
+
   public static void testConsole() {
     try {
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -516,13 +549,36 @@ public class FileAccessor {
   
   public static class Link {
     private Integer entityID;
+    private String fqn;
     private Integer offset;
     private Integer length;
+    private Relation type;
+    
+    private Link(Integer offset, Integer length) {
+      this.offset = offset;
+      this.length = length;
+    }
     
     private Link(Integer entityID, Integer offset, Integer length) {
       this.entityID = entityID;
       this.offset = offset;
       this.length = length;
+    }
+    
+    private Link(Integer entityID, String fqn, Integer offset, Integer length, Relation type) {
+      this.entityID = entityID;
+      this.fqn = fqn;
+      this.offset = offset;
+      this.length = length;
+      this.type = type;
+    }
+    
+    public Integer getEntityID() {
+      return entityID;
+    }
+    
+    public String getFqn() {
+      return fqn;
     }
     
     public Integer getOffset() {
@@ -533,8 +589,8 @@ public class FileAccessor {
       return length;
     }
     
-    public Integer getEntityID() {
-      return entityID;
+    public Relation getType() {
+      return type;
     }
   }
 }

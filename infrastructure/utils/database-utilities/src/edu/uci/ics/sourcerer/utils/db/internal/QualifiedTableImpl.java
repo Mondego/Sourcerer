@@ -46,4 +46,9 @@ class QualifiedTableImpl implements QualifiedTable {
   public String toSql() {
     return table.toSql() + " as " + id;
   }
+  
+  @Override
+  public QualifiedTable qualify(String qualifier) {
+    return new QualifiedTableImpl(table, qualifier);
+  }
 }

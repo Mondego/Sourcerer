@@ -24,10 +24,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.ArrayUtils;
@@ -68,16 +69,16 @@ class SelectQueryImpl implements SelectQuery {
     }
   }
   
-  Table[] fromJoin(ComparisonCondition ... conditions) {
+  void fromJoin(ComparisonCondition ... conditions) {
     if (tables == null) {
-      Map<Table, Boolean> dupTables = new HashMap<>();
+      Set<Table> usedTables = new HashSet<>();
       for (int i = 0; i < conditions.length; i++) {
         if (i == 0) {
           Table table = conditions[i].getLeftTable();
-          if (dupTables.containsKey(table)) {
-            dupTables.put(table, Boolean.TRUE);
+          if (usedTables.contains(table)) {
+            throw new IllegalArgumentException("Duplicate tables must be qualified: " + table.toSql());
           } else {
-            dupTables.put(table, Boolean.FALSE);
+            usedTables.add(table);
           }
         } else {
           Table past = conditions[i - 1].getRightTable();
@@ -87,33 +88,22 @@ class SelectQueryImpl implements SelectQuery {
           }
         }
         Table table = conditions[i].getRightTable();
-        if (dupTables.containsKey(table)) {
-          dupTables.put(table, Boolean.TRUE);
+        if (usedTables.contains(table)) {
+          throw new IllegalArgumentException("Duplicate tables must be qualified: " + table.toSql());
         } else {
-          dupTables.put(table, Boolean.FALSE);
+          usedTables.add(table);
         }
       }
       
       tables = new Table[conditions.length + 1];
       for (int i = 0; i < conditions.length; i++) {
         if (i == 0) {
-          Table table = conditions[i].getLeftTable();
-          if (dupTables.containsKey(table) && dupTables.get(table).booleanValue()) {
-            tables[0] = new QualifiedTableImpl(table, "t");
-          } else {
-            tables[0] = table;
-          }
+          tables[0] = conditions[i].getLeftTable();
         }
-        Table table = conditions[i].getRightTable();
-        if (dupTables.containsKey(table) && dupTables.get(table).booleanValue()) {
-          tables[i + 1] = new QualifiedTableImpl(table, "t" + i);
-        } else {
-          tables[i + 1] = table;
-        }
+        tables[i + 1] = conditions[i].getRightTable();
       }
       
       joinConditions = conditions;
-      return tables;
     } else {
       throw new IllegalStateException("Cannot set from twice");
     }

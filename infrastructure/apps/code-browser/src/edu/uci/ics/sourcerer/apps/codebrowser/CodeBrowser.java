@@ -20,6 +20,8 @@ package edu.uci.ics.sourcerer.apps.codebrowser;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 import javax.servlet.ServletException;
@@ -33,6 +35,7 @@ import edu.uci.ics.sourcerer.tools.java.db.exported.FileAccessor.Result;
 import edu.uci.ics.sourcerer.tools.java.highlighter.TagInfo;
 import edu.uci.ics.sourcerer.tools.java.highlighter.TagType;
 import edu.uci.ics.sourcerer.tools.java.highlighter.SyntaxHighlighter;
+import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
 import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
 import edu.uci.ics.sourcerer.utils.servlet.ServletUtils;
 
@@ -113,29 +116,33 @@ public class CodeBrowser extends HttpServlet {
         links.addLinkLocation(TagType.IMPORT_LINK, link.getOffset(), link.getLength(), "link", "?entityID=" + link.getEntityID(), null);
       }
       
-      for (EntityDB ent : FileAccessor.getFieldsByFileID(fileID)) {
-        links.addColorLocation(ent.getOffset(), ent.getLength(), "field");
+      Map<Integer, Integer> declaredFields = new HashMap<>();
+      
+      for (Link field : FileAccessor.getFieldsByFileID(fileID)) {
+        links.addColorLocation(field.getOffset(), field.getLength(), "field");
+        declaredFields.put(field.getOffset(), field.getLength());
       }
       
-      for (RelationEntityDB join : FileAccessor.getLinksByFileID(fileID)) {
-        if (join.getRelation().getOffset() != null) {
-          if (join.getRelation().getRelationType() == Relation.USES) {
-            if (join.getEntity().getType().isInternalMeaningful()) {
-              links.addLinkLocation(TagType.TYPE_LINK, join.getRelation().getOffset(), join.getRelation().getLength(), "link", "?entityID=" + join.getEntity().getEntityID(), join.getEntity().getFqn());
+      for (Link link : FileAccessor.getRelationLinksByFileID(fileID)) {
+        if (link.getOffset() != null) {
+          if (link.getType() == Relation.USES) {
+//            if (join.getEntity().getType().isInternalMeaningful()) {
+            links.addLinkLocation(TagType.TYPE_LINK, link.getOffset(), link.getLength(), "link", "?entityID=" + link.getEntityID(), link.getFqn());
+//            }
+          } else if (link.getType() == Relation.READS) {
+            links.addLinkLocation(TagType.FIELD_LINK, link.getOffset(), link.getLength(), "field", "?entityID=" + link.getEntityID(), link.getFqn());
+          } else if (link.getType() == Relation.WRITES) {
+            Integer len = declaredFields.get(link.getOffset());
+            if (len == null || !len.equals(link.getLength())) {
+              links.addLinkLocation(TagType.FIELD_LINK, link.getOffset(), link.getLength(), "field", "?entityID=" + link.getEntityID(), link.getFqn());
             }
-          } else if (join.getRelation().getRelationType() == Relation.READS) {
-            links.addLinkLocation(TagType.FIELD_LINK, join.getRelation().getOffset(), join.getRelation().getLength(), "field", "?entityID=" + join.getEntity().getEntityID(), join.getEntity().getFqn());
-          } else if (join.getRelation().getRelationType() == Relation.WRITES) {
-            if (!(join.getRelation().getFileID().equals(join.getEntity().getFileID()) && join.getRelation().getOffset().equals(join.getEntity().getOffset()))) {
-              links.addLinkLocation(TagType.FIELD_LINK, join.getRelation().getOffset(), join.getRelation().getLength(), "field", "?entityID=" + join.getEntity().getEntityID(), join.getEntity().getFqn());
-            }
-          } else if (join.getRelation().getRelationType() == Relation.CALLS) {
-            int off = join.getRelation().getOffset();
+          } else if (link.getType() == Relation.CALLS) {
+            int off = link.getOffset();
             while (!Character.isJavaIdentifierPart(code.charAt(off))) {
               off++;
             }
             int paren = code.indexOf(')', off);
-            links.addLinkLocation(TagType.METHOD_LINK, off, paren - off, "method", "?entityID=" + join.getEntity().getEntityID(), join.getEntity().getFqn());
+            links.addLinkLocation(TagType.METHOD_LINK, off, paren - off, "method", "?entityID=" + link.getEntityID(), link.getFqn());
           }
         }
       }

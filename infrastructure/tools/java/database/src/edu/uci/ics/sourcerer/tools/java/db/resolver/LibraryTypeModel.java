@@ -104,7 +104,7 @@ class LibraryTypeModel {
   
   private void loadStructure(TaskProgressLogger task, Collection<Integer> libraries) {
     task.start("Loading library structure");
-    task.start("Loading extends relations", "extends relations loaded");
+    
     try (SelectQuery query = exec.makeSelectQuery(RelationsTable.TABLE)) {
       query.addSelects(RelationsTable.LHS_EID, RelationsTable.RHS_EID);
       query.andWhere(RelationsTable.PROJECT_ID.compareIn(libraries), RelationsTable.RELATION_TYPE.compareEquals(Relation.HAS_BASE_TYPE));

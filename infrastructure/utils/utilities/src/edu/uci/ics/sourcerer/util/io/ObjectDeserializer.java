@@ -125,7 +125,11 @@ public abstract class ObjectDeserializer<T> {
       if (scanner.hasNextInt()) {
         LineBuilder result = new LineBuilder();
         for (int i = scanner.nextInt(); i > 0; i--) {
-          result.append(scanner.next());
+          if (scanner.hasNext()) {
+            result.append(scanner.next());
+          } else {
+            logger.severe("More input expected for: " + result.toString());
+          }
         }
         return result.toString();
       } else {

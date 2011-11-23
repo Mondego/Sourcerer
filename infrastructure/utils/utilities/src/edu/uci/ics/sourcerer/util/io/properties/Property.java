@@ -69,4 +69,9 @@ public abstract class Property<T> {
     this.value = value;
     this.initialized = true;
   }
+  
+  protected void reset() {
+    this.value = null;
+    initialized = false;
+  }
 }

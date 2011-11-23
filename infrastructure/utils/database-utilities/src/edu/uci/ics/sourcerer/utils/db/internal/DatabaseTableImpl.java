@@ -27,6 +27,7 @@ import edu.uci.ics.sourcerer.util.BitEnumSetFactory;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
+import edu.uci.ics.sourcerer.utils.db.sql.QualifiedTable;
 import edu.uci.ics.sourcerer.utils.db.sql.StringColumn;
 import edu.uci.ics.sourcerer.utils.db.sql.Table;
 
@@ -115,5 +116,10 @@ public class DatabaseTableImpl implements Table {
   @Override
   public final String toSql() {
     return name;
+  }
+  
+  @Override
+  public final QualifiedTable qualify(String qualifier) {
+    return new QualifiedTableImpl(this, qualifier);
   }
 }

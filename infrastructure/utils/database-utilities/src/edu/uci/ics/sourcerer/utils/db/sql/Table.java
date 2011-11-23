@@ -22,4 +22,5 @@ package edu.uci.ics.sourcerer.utils.db.sql;
  */
 public interface Table {
   public String toSql();
+  public QualifiedTable qualify(String qualifier);
 }

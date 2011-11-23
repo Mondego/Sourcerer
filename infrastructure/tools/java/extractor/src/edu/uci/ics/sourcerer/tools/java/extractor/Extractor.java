@@ -20,7 +20,6 @@ package edu.uci.ics.sourcerer.tools.java.extractor;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
@@ -141,7 +140,7 @@ public class Extractor {
       jars = repo.getProjectJarFiles();
     }
     task.finish();
-    task.start("Extracting " + jars.size() + " jar files", "jar files extracted");
+    task.start("Extracting " + jars.size() + " jar files", "jar files extracted", 1);
     
     if (!(withEclipse || withASM)) {
       throw new IllegalStateException("Must choose either Eclipse or ASM.");
@@ -209,7 +208,7 @@ public class Extractor {
   }
   
   private void extractProjects(Collection<? extends JavaProject> projects) {
-    task.start("Extracting " + projects.size() + " projects", "projects extracted");
+    task.start("Extracting " + projects.size() + " projects", "projects extracted", 1);
     for (JavaProject project : projects) {
       task.progress("Extracting " + project + " (%d of " + projects.size() + ")");
       ModifiableExtractedJavaProject extractedProject = extracted.getMatchingProject(project);
@@ -232,7 +231,7 @@ public class Extractor {
       EclipseUtils.initializeProject(files.getJarFiles());
       task.finish();
       
-      task.start("  Loading " + files.getFilteredJavaFiles().size() + " java files into project");
+      task.start("Loading " + files.getFilteredJavaFiles().size() + " java files into project");
       Map<JavaFile, IFile> sourceFiles = EclipseUtils.loadFilesIntoProject(files.getFilteredJavaFiles());
       task.finish();
       

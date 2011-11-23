@@ -72,7 +72,10 @@ public abstract class AbstractProperties {
   }
   
   public void clear() {
-    props.clear();
+    properties.clear();
+    for (Property<?> prop : props.values()) {
+      prop.reset();
+    }
   }
   
   public void copy(AbstractProperties other) {
