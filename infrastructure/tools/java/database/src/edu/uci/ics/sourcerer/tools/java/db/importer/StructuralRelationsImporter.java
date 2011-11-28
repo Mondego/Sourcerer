@@ -208,7 +208,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
       
       if (imported != null) {
         if (fileID == null) {
-          inserter.addInsert(ImportsTable.makeInsert(imp.isStatic(), imp.isOnDemand(), imported.getEntityID(), projectID));
+          logger.severe("Missing fileID for: " + imp.getLocation());
         } else {
           inserter.addInsert(ImportsTable.makeInsert(imp.isStatic(), imp.isOnDemand(), imported.getEntityID(), projectID, fileID, imp.getLocation()));
         }

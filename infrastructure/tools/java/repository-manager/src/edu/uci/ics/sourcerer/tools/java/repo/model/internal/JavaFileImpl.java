@@ -82,4 +82,9 @@ public class JavaFileImpl implements JavaFile, CustomSerializable {
   public String serialize() {
     return pkg + " " + file.getFile().serialize();
   }
+  
+  @Override
+  public String toString() {
+    return file.toString();
+  }
 }

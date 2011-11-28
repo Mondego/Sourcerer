@@ -17,7 +17,9 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 
 import edu.uci.ics.sourcerer.util.Helper;
@@ -89,6 +91,9 @@ public final class TypeUtils {
   private static String eraseParameter(String var) {
     if (isArray(var)) {
       Pair<String, Integer> arr = breakArray(var);
+      if (arr == null) {
+        return null;
+      }
       StringBuilder result = new StringBuilder();
       result.append(eraseParameter(arr.getFirst()));
       for (int i = 0, max = arr.getSecond(); i < max; i++) {
@@ -136,14 +141,16 @@ public final class TypeUtils {
             if (c == ']') {
               expectingClose = false;
             } else {
-              throw new IllegalArgumentException(fqn + " is not a valid array type");
+              logger.severe(fqn + " is not a valid array type");
+              return null;
             }
           } else {
             if (c == '[') {
               dim++;
               expectingClose = true;
             } else {
-              throw new IllegalArgumentException(fqn + " is not a valid array type");
+              logger.severe(fqn + " is not a valid array type");
+              return null;
             }
           }
         }
@@ -195,7 +202,8 @@ public final class TypeUtils {
         if (c == '<') {
           depth++;
         } else {
-          throw new IllegalArgumentException(typeVariable + " is not a valid type variable");
+          logger.severe(typeVariable + " is not a valid type variable");
+          return Collections.emptyList();
         }
       } else if (depth == 1) {
         if (afterPlus) {

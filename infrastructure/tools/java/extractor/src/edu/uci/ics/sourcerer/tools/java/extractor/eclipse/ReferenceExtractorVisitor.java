@@ -471,7 +471,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     
       
       Type superType = parent.getType();
-      ITypeBinding superBinding = superType.resolveBinding();
+      ITypeBinding superBinding = safeResolve(superType);
       
       if (superBinding == null) {
         // Write the uses relation
@@ -2288,7 +2288,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       logger.log(Level.SEVERE, "Attempt to get type fqn of null type!");
       throw new NullPointerException("Attempt to get type fqn of null type!");
     }
-    ITypeBinding binding = type.resolveBinding();
+    ITypeBinding binding = safeResolve(type);
     if (binding == null) {
       if (type.isPrimitiveType()) {
         return ((PrimitiveType)type).getPrimitiveTypeCode().toString();
@@ -2320,7 +2320,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       logger.log(Level.SEVERE, "Attempt to get type fqn of null type!");
       throw new NullPointerException("Attempt to get type fqn of null type!");
     }
-    ITypeBinding binding = type.resolveBinding();
+    ITypeBinding binding = safeResolve(type);
     if (binding == null) {
       if (type.isPrimitiveType()) {
         return ((PrimitiveType)type).getPrimitiveTypeCode().toString();
@@ -2692,6 +2692,15 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private void accept(ASTNode child) {
     if (child != null) {
       child.accept(this);
+    }
+  }
+  
+  private ITypeBinding safeResolve(Type type) {
+    try {
+      return type.resolveBinding();
+    } catch (ClassCastException e) {
+      logger.log(Level.WARNING, "Eclipse resolve binding bug", e);
+      return null;
     }
   }
   

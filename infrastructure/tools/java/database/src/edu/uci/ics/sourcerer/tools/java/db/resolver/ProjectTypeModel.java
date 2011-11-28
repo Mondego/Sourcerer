@@ -186,6 +186,10 @@ public class ProjectTypeModel {
     if (TypeUtils.isArray(fqn)) {
       Pair<String, Integer> arrayInfo = TypeUtils.breakArray(fqn);
       
+      if (arrayInfo == null) {
+        return null;
+      }
+      
       // Insert the array entity
       Integer entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.ARRAY, fqn, arrayInfo.getSecond(), projectID));
       ModeledEntity entity = new ModeledEntity(fqn, Entity.ARRAY, entityID, RelationClass.NOT_APPLICABLE);
