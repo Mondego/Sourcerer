@@ -25,12 +25,13 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.JarSet;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Library {
-  public static final Argument<Double> COMPATIBILITY_THRESHOLD = new DoubleArgument("compatibility-threshold", 1., "").permit();
+  public static final Argument<Integer> COMPATIBILITY_THRESHOLD = new IntegerArgument("compatibility-threshold", 100, "Think percent.").permit();
   private JarSet jars;
   private final Set<FqnFragment> fqns;
   
@@ -56,7 +57,7 @@ public class Library {
     // Do a pairwise comparison of every FQN. Calculate the conditional
     // probability of each FQN in B appearing given each FQN in A and average.
     // Then compute the reverse. Both values must be above the threshold.
-    double threshold = COMPATIBILITY_THRESHOLD.getValue();
+    double threshold = COMPATIBILITY_THRESHOLD.getValue() / 100.;
     // If the threshold is greater than 1, no match is possible
     if (threshold > 1) {
       return false;

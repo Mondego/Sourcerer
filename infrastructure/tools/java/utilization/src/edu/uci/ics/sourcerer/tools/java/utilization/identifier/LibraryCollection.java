@@ -17,14 +17,24 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.JarSet;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -56,7 +66,6 @@ public class LibraryCollection implements Iterable<Library> {
   public void printStatistics(TaskProgressLogger task) {
     task.start("Printing library statistics");
     task.report(libraries.size() + " libraries identified");
-    int noFQNs = 0;
     int trivial = 0;
     TreeSet<Library> nonTrivial = new TreeSet<>(new Comparator<Library>() {
       @Override
@@ -69,15 +78,12 @@ public class LibraryCollection implements Iterable<Library> {
         }
       }});
     for (Library library : libraries) {
-      if (library.getFqns().isEmpty()) {
-        noFQNs++;
-      } else if (library.getJars().size() > 1) {
+      if (library.getJars().size() > 1) {
         nonTrivial.add(library);
       } else {
         trivial++;
       }
     }
-    task.report(noFQNs + " empty 'libraries'");
     task.report(trivial + " unique libraries");
     task.report(nonTrivial.size() + " compound libraries");
     task.start("Examining compound libraries");
@@ -90,6 +96,54 @@ public class LibraryCollection implements Iterable<Library> {
       task.finish();
     }
     task.finish();
+    task.finish();
+  }
+  
+  public void printStatistics(TaskProgressLogger task, String name) {
+    NumberFormat format = NumberFormat.getPercentInstance();
+    format.setMinimumFractionDigits(2);
+    format.setMaximumFractionDigits(2);
+    task.start("Printing library statistics");
+    try (BufferedWriter bw = IOUtils.makeBufferedWriter(new File(Arguments.OUTPUT.getValue(), name))) {
+      bw.write(libraries.size() + " libraries identified");
+      bw.newLine();
+      
+      int trivial = 0;
+      TreeSet<Library> nonTrivial = new TreeSet<>(new Comparator<Library>() {
+        @Override
+        public int compare(Library o1, Library o2) {
+          int cmp = Integer.compare(o1.getJars().size(), o2.getJars().size());
+          if (cmp == 0) {
+            return Integer.compare(o1.hashCode(), o2.hashCode());
+          } else {
+            return cmp;
+          }
+        }});
+      for (Library library : libraries) {
+        if (library.getJars().size() > 1) {
+          nonTrivial.add(library);
+        } else {
+          trivial++;
+        }
+      }
+      bw.write(trivial + " unique libraries");
+      bw.newLine();
+      bw.write(nonTrivial.size() + " compound libraries");
+      bw.newLine();
+      while (!nonTrivial.isEmpty()) {
+        Library biggest = nonTrivial.pollLast();
+        JarSet mainSet = biggest.getJars();
+        bw.write("Listing FQNs for library found in " + mainSet.size() + " jars");
+        bw.newLine();
+        for (FqnFragment fqn : biggest.getFqns()) {
+          double percent = (double) fqn.getJars().getIntersectionSize(mainSet) / (double) mainSet.size();
+          bw.write("  " + fqn.getFqn() + " " + format.format(percent));
+          bw.newLine();
+        }
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error printing statistics", e);
+    }
     task.finish();
   }
 }

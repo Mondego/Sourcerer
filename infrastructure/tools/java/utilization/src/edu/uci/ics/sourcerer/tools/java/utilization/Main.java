@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.tools.java.utilization;
 
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Identifier;
+import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Library;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.LibraryCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.JarCollection;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
@@ -35,9 +36,11 @@ public class Main {
       TaskProgressLogger task = new TaskProgressLogger();
       JarCollection jars = JarCollection.make(task);
       jars.printStatistics(task);
-      LibraryCollection libraries = Identifier.identifyLibraries(task, jars);
-//      LibraryCollection libraries = Identifier.identifyLibrariesWithEntropy(task, JarCollection.make(task));
-      libraries.printStatistics(task);
+      for (int threshold = 100; threshold >= 25; threshold -= 5) {
+        Library.COMPATIBILITY_THRESHOLD.setValue(threshold);
+        LibraryCollection libraries = Identifier.identifyLibraries(task, jars);
+        libraries.printStatistics(task, "rate-" + threshold);
+      }
     }
   }.setProperties(JavaRepositoryFactory.INPUT_REPO);
 //  public static final Command COMPUTE_MAVEN_FQN_USAGE_STATS = new Command("compute-maven-fqn-usage-stats", "Computes some statistics on FQN usage in Maven.") {

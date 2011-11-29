@@ -37,6 +37,7 @@ public class Identifier {
   
   public static LibraryCollection identifyLibraries(TaskProgressLogger task, JarCollection jars) {
     task.start("Identifying libraries in " + jars.size() + " jar files using tree clustering method");
+    task.report("Compatibility threshold set to " + Library.COMPATIBILITY_THRESHOLD.getValue());
     
     LibraryCollection libraries = new LibraryCollection();
     Multimap<FqnFragment, Library> tempLibMap = ArrayListMultimap.create();

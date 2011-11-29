@@ -42,7 +42,19 @@ public class FqnFragment {
     return new FqnFragment(null, null);
   }
   
-  FqnFragment getChild(String name) {
+  FqnFragment getFragment(String fqn, char sep) {
+    FqnFragment fragment = this;
+    int start = 0;
+    int sepIdx = fqn.indexOf(sep);
+    while (sepIdx != -1) {
+      fragment = fragment.getChild(fqn.substring(start, sepIdx));
+      start = sepIdx + 1;
+      sepIdx = fqn.indexOf(sep, start);
+    }
+    return fragment.getChild(fqn.substring(start));
+  }
+  
+  private FqnFragment getChild(String name) {
     FqnFragment previousChild = null;
     for (FqnFragment child = firstChild; child != null; child = child.sibling) {
       int cmp = child.name.compareTo(name);

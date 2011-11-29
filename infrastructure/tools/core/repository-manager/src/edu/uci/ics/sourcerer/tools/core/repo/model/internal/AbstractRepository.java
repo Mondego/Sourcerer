@@ -155,4 +155,9 @@ public abstract class AbstractRepository<Project extends AbstractRepoProject<? e
   public int getProjectCount() {
     return getProjects().size();
   }
+  
+  @Override
+  public String toString() {
+    return repoRoot.getRelativePath().toString();
+  }
 }

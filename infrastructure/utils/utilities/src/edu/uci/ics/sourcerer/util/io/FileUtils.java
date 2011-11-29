@@ -45,6 +45,14 @@ import edu.uci.ics.sourcerer.util.io.arguments.RelativeFileArgument;
 public class FileUtils {
   public static final Argument<File> TEMP_DIR = new RelativeFileArgument("temp-dir", "temp", Arguments.OUTPUT, "Name of temp directory placed into OUTPUT directory");
   
+  public static File ensureWriteable(File file) {
+    File parentFile = file.getParentFile();
+    if (!parentFile.exists()) {
+      parentFile.mkdirs();
+    }
+    return file;
+  }
+  
   public static boolean delete(File dir) {
     boolean success = true;
     if (dir.exists()) {

@@ -28,4 +28,5 @@ public final class Arguments {
   
   public static final Argument<File> OUTPUT = new FileArgument("output", "General purpose output directory.").permit();
   public static final Argument<File> INPUT = new FileArgument("input", "General purpose input file/directory.");
+  public static final Argument<File> CACHE = new RelativeFileArgument("cache-dir", "cache", OUTPUT, "General purpose directory for caching computations. Always subdirectory of 'output'").permit();
 }

@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.tools.java.utilization.model;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,12 +31,21 @@ import java.util.zip.ZipInputStream;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepository;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
+import edu.uci.ics.sourcerer.util.io.EntryWriter;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
+import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
+import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
+import edu.uci.ics.sourcerer.util.io.arguments.RelativeFileArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarCollection implements Iterable<Jar> {
+  public static Argument<File> JAR_COLLECTION_CACHE = new RelativeFileArgument("jar-collection-cache", "jar.cache", Arguments.CACHE, "Cache for jar collection.").permit();
   private final ArrayList<Jar> jars;
   private final FqnFragment rootFragment;
   
@@ -51,17 +61,7 @@ public class JarCollection implements Iterable<Jar> {
         if (entry.getName().endsWith(".class")) {
           String fqn = entry.getName();
           fqn = fqn.substring(0, fqn.lastIndexOf('.'));
-          
-          FqnFragment fragment = rootFragment;
-          int start = 0;
-          int slash = fqn.indexOf('/');
-          while (slash != -1) {
-            fragment = fragment.getChild(fqn.substring(start, slash));
-            start = slash + 1;
-            slash = fqn.indexOf('/', start);
-          }
-          fragment = fragment.getChild(fqn.substring(start));
-          newJar.addFqn(fragment);
+          newJar.addFqn(rootFragment.getFragment(fqn, '/'));
         }
       }
     } catch (IOException e) {
@@ -72,9 +72,28 @@ public class JarCollection implements Iterable<Jar> {
   
   public static JarCollection make(TaskProgressLogger task) {
     task.start("Building jar collection");
-    JarCollection jars = new JarCollection();
     
+    JarCollection jars = new JarCollection();
     JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+    
+    task.report("Checking for cache...");
+    File cache = JAR_COLLECTION_CACHE.getValue();
+    if (cache.exists()) {
+      task.start("Cache found, loading");
+      try (SimpleDeserializer deserializer = IOUtils.makeSimpleDeserializer(cache)) {
+        for (Jar jar : deserializer.deserializeToIterable(Jar.makeDeserializer(jars.rootFragment, repo), true)) {
+          jars.jars.add(jar);
+        }
+        return jars;
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Error loading jar collection cache", e);
+        jars = new JarCollection();
+      } finally {
+        task.finish();
+      }
+    } else {
+      task.report("Cache not found, loading...");
+    }
     
     task.start("Adding maven jars", "jars added", 500);
     for (JarFile jar : repo.getMavenJarFiles()) {
@@ -92,9 +111,19 @@ public class JarCollection implements Iterable<Jar> {
     
     task.report(jars.size() + " jars added to collection");
     task.finish();
+    
+    task.start("Saving cache");
+    try (SimpleSerializer serializer = IOUtils.makeSimpleSerializer(FileUtils.ensureWriteable(cache));
+         EntryWriter<Jar> writer = serializer.getEntryWriter(Jar.class)) {
+      for (Jar jar : jars) {
+        writer.write(jar);
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error writing jar collection cache", e);
+    }
     return jars;
   }
-
+  
   @Override
   public Iterator<Jar> iterator() {
     return jars.iterator();
