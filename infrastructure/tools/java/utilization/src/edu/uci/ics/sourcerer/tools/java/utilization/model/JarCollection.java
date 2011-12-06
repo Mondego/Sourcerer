@@ -61,10 +61,11 @@ public class JarCollection implements Iterable<Jar> {
         if (entry.getName().endsWith(".class")) {
           String fqn = entry.getName();
           fqn = fqn.substring(0, fqn.lastIndexOf('.'));
-          newJar.addFqn(rootFragment.getFragment(fqn, '/'));
+          newJar.addFqn(rootFragment.getFragment(fqn, '/'), Fingerprint.make(zis, entry.getSize()));
+          
         }
       }
-    } catch (IOException e) {
+    } catch (IOException | IllegalArgumentException e) {
       logger.log(Level.SEVERE, "Error reading jar file: " + jar, e);
     }
     jars.add(newJar);

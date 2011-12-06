@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
@@ -179,23 +180,26 @@ public class FileUtils {
   }
   
   public static String computeHash(File file) {
+    try (InputStream is = new FileInputStream(file)) {
+      return computeHash(is);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error getting md5 for " + file.getPath(), e);
+      return null;
+    }
+  }
+  
+  public static String computeHash(InputStream is) throws IOException {
     try {
       MessageDigest md5 = MessageDigest.getInstance("MD5");
-
+  
       byte[] buff = new byte[1024];
-      InputStream is = null;
-      try {
-        is = new FileInputStream(file);
-        int size;
-        while ((size = is.read(buff)) != -1) {
-          md5.update(buff, 0, size);
-        }
-      } finally {
-        IOUtils.close(is);
+      int size;
+      while ((size = is.read(buff)) != -1) {
+        md5.update(buff, 0, size);
       }
       return new BigInteger(1, md5.digest()).toString(16);
-    } catch (Exception e) {
-      logger.log(Level.SEVERE, "Error getting md5 for " + file.getPath(), e);
+    } catch (NoSuchAlgorithmException e) {
+      logger.log(Level.SEVERE, "Error getting md5", e);
       return null;
     }
   }

@@ -17,14 +17,19 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.util.HashSet;
 import java.util.Set;
 
+import edu.uci.ics.sourcerer.tools.java.utilization.entropy.LibraryEntopyCalculator;
+import edu.uci.ics.sourcerer.tools.java.utilization.entropy.LibraryEntropyCalculatorFactory;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.JarSet;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.JarSetMap;
 import edu.uci.ics.sourcerer.util.Averager;
+import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.EnumArgument;
 import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 
 /**
@@ -32,12 +37,14 @@ import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
  */
 public class Library {
   public static final Argument<Integer> COMPATIBILITY_THRESHOLD = new IntegerArgument("compatibility-threshold", 100, "Think percent.").permit();
-  private JarSet jars;
+  public static final Argument<MergeMethod> MERGE_METHOD = new EnumArgument<>("merge-method", MergeMethod.class, "Method for performing second stage merge.").makeOptional();
+  
+  private JarSetMap jars;
   private final Set<FqnFragment> fqns;
   
   Library() {
     this.fqns = new HashSet<>();
-    jars = JarSet.makeEmpty();
+    jars = JarSetMap.makeEmpty();
   }
   
   void addFqn(FqnFragment fqn) {
@@ -45,11 +52,15 @@ public class Library {
     jars = jars.merge(fqn.getJars());
   }
   
+  void addSecondaryFqn(FqnFragment fqn) {
+    fqns.add(fqn);
+  }
+  
   public Set<FqnFragment> getFqns() {
     return fqns;
   }
   
-  public JarSet getJars() {
+  public JarSetMap getJars() {
     return jars;
   }
   
@@ -79,8 +90,8 @@ public class Library {
       
         for (FqnFragment fqn : fqns) {
           for (FqnFragment otherFqn : other.fqns) {
-            JarSet fqnJars = fqn.getJars();
-            JarSet otherFqnJars = otherFqn.getJars();
+            JarSetMap fqnJars = fqn.getJars();
+            JarSetMap otherFqnJars = otherFqn.getJars();
             // Conditional probability of other given this
             // # shared jars / total jars in this
             otherGivenThis.addValue((double) fqnJars.getIntersectionSize(otherFqnJars) / fqnJars.size());
@@ -94,6 +105,82 @@ public class Library {
     }
   }
   
+  public boolean isSecondStageCompatible(TaskProgressLogger task, Library other) {
+    // Is every jar from this library also in the other library?
+    if (jars.getIntersectionSize(other.jars) == jars.size()) {
+      MergeMethod method = MERGE_METHOD.getValue();
+      if (method == MergeMethod.RELATED_PACKAGE) {
+        // Is every package from other also in this?
+        Set<FqnFragment> packages = new HashSet<>();
+        for (FqnFragment fqn : fqns) {
+          packages.add(fqn.getParent());
+        }
+        for (FqnFragment fqn : other.fqns) {
+          if (!packages.contains(fqn.getParent())) {
+            return false;
+          }
+        }
+        return true;
+      } else if (method == MergeMethod.RELATED_SUBPACKAGE) {
+        // Is every package from other either in this, or a subpackage of this?
+        Set<FqnFragment> packages = new HashSet<>();
+        for (FqnFragment fqn : fqns) {
+          packages.add(fqn.getParent());
+        }
+        for (FqnFragment fqn : other.fqns) {
+          boolean found = false;
+          while (fqn != null) {
+            if (packages.contains(fqn)) {
+              found = true;
+              fqn = null;
+            } else {
+              fqn = fqn.getParent();
+            }
+          }
+          if (!found) {
+            return false;
+          }
+        }
+        return true;
+      } else if (method == MergeMethod.ENTROPY) {
+        task.start("Considering merging two libraries");
+        task.start("Smaller Library");
+        for (FqnFragment fqn : fqns) {
+          task.report(fqn.getFqn());
+        }
+        task.finish();
+        task.start("Larger Library");
+        for (FqnFragment fqn : other.fqns) {
+          task.report(fqn.getFqn());
+        }
+        task.finish();
+        LibraryEntopyCalculator calc = LibraryEntropyCalculatorFactory.getCalculator();
+        double myEntropy = calc.compute(this);
+        double otherEntropy = calc.compute(other);
+        double jointEntropy = calc.compute(this, other);
+        task.start("Results");
+        task.report("Smaller entropy: " + myEntropy);
+        task.report("Larger entropy: " + otherEntropy);
+        task.report("Joint entropy: " + jointEntropy);
+        double minDelta = jointEntropy - Math.max(myEntropy, otherEntropy);
+        double maxDelta = jointEntropy - Math.min(myEntropy, otherEntropy);
+        task.report("Max Entropy Delta: " + maxDelta);
+        task.report("Min Entropy Delta: " + minDelta);
+        boolean doMerge = maxDelta <= .5 && minDelta < .05;
+        task.report("Do merge? " + (doMerge ? "yes" : "no"));
+        task.finish();
+        task.finish();
+        return doMerge; 
+      } else {
+        logger.severe("Invalid merge method: " + method);
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+  
+  @Override
   public String toString() {
     return fqns.toString();
   }

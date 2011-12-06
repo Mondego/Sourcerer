@@ -15,11 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.model;
+package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarSet extends JarSetMap<Object> {
-
+public enum MergeMethod {
+  RELATED_PACKAGE,
+  RELATED_SUBPACKAGE,
+  ENTROPY;
 }

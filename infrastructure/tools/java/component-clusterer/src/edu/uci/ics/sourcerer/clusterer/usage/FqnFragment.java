@@ -45,7 +45,7 @@ public class FqnFragment {
     return new FqnFragment();
   }
 
-  protected FqnFragment addChild(String name) {
+  protected FqnFragment getChild(String name) {
     if (children == null) {
       children = new FqnFragment[1];
       children[0] = new FqnFragment(name, this);
@@ -71,7 +71,7 @@ public class FqnFragment {
   }
   
   protected FqnFragment addChild(String name, int id) {
-    FqnFragment child = addChild(name);
+    FqnFragment child = getChild(name);
     child.addID(id);
     return child;
   }

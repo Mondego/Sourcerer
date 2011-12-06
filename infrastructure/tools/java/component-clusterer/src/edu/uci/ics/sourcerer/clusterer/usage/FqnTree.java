@@ -88,7 +88,7 @@ public class FqnTree {
           parent = parent.getParent();
         } else {
           String[] parts = line.split(" ");
-          last = parent.addChild(parts[0]);
+          last = parent.getChild(parts[0]);
           paren = parts[0].indexOf('(') != -1;
           for (int i = 2; i < parts.length; i++) {
             last.addID(Integer.parseInt(parts[i]));

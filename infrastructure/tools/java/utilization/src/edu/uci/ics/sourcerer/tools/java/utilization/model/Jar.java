@@ -40,9 +40,9 @@ public class Jar implements CustomSerializable {
     fqns = new ArrayList<>();
   }
   
-  void addFqn(FqnFragment fqn) {
+  void addFqn(FqnFragment fqn, Fingerprint fingerprint) {
     fqns.add(fqn);
-    fqn.addJar(this);
+    fqn.addJar(this, fingerprint);
   }
   
   public JarFile getJar() {
@@ -64,12 +64,14 @@ public class Jar implements CustomSerializable {
     builder.append(jar.getProperties().HASH.getValue());
     for (FqnFragment fqn : fqns) {
       builder.append(fqn.getFqn());
+      
     }
     return builder.toString();
   }
   
   public static ObjectDeserializer<Jar> makeDeserializer(final FqnFragment rootFragment, final JavaRepository repo) {
     return new ObjectDeserializer<Jar>() {
+      ObjectDeserializer<Fingerprint> fingerprintDeserializer = Fingerprint.makeDeserializer();
       @Override
       public Jar deserialize(Scanner scanner) {
         if (scanner.hasNext()) {
@@ -81,7 +83,7 @@ public class Jar implements CustomSerializable {
           } else {
             Jar jar = new Jar(jarFile);
             while (scanner.hasNext()) {
-              jar.addFqn(rootFragment.getFragment(scanner.next(), '.'));
+              jar.addFqn(rootFragment.getFragment(scanner.next(), '.'), fingerprintDeserializer.deserialize(scanner));
             }
             return jar;
           }

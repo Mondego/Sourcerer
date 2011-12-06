@@ -17,7 +17,12 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.TreeSet;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -39,10 +44,9 @@ public class Identifier {
     task.start("Identifying libraries in " + jars.size() + " jar files using tree clustering method");
     task.report("Compatibility threshold set to " + Library.COMPATIBILITY_THRESHOLD.getValue());
     
-    LibraryCollection libraries = new LibraryCollection();
     Multimap<FqnFragment, Library> tempLibMap = ArrayListMultimap.create();
     
-    task.start("Performing post-order traversal of FQN suffix tree", "FQN fragments visited", 10000);
+    task.start("Identification Stage One: performing post-order traversal of FQN suffix tree", "FQN fragments visited", 10000);
     int libCount = 0;
     // Explore the tree in post-order
     for (FqnFragment fragment : jars.getRoot().getPostOrderIterable()) {
@@ -89,149 +93,58 @@ public class Identifier {
     }
     task.finish();
     
+    task.report("Stage One identified " + libCount + " libraries");
+    
+    task.start("Identification Stage Two: merging similar libraries");
+    // Second stage
+    TreeSet<Library> sortedLibs = new TreeSet<>(new Comparator<Library>() {
+      @Override
+      public int compare(Library o1, Library o2) {
+        int cmp = Integer.compare(o1.getJars().size(), o2.getJars().size());
+        if (cmp == 0) {
+          return Integer.compare(o1.hashCode(), o2.hashCode());
+        } else {
+          return cmp;
+        }
+      }
+    });
+    
+    // Sort all the libraries by the number of jars they contain
     for (Library lib : tempLibMap.get(jars.getRoot())) {
+      sortedLibs.add(lib);
+    }
+    tempLibMap.clear();
+    
+    Collection<Library> processedLibs = new ArrayList<>();
+    // Go from libraries containing the most jars to the least
+    while (!sortedLibs.isEmpty()) {
+      Library biggest = sortedLibs.pollLast();
+      
+      // Find and merge any candidate libraries
+      for (Iterator<Library> processedIter = processedLibs.iterator(); processedIter.hasNext();) {
+        Library processed = processedIter.next();
+        // Check if they should merge
+        if (biggest.isSecondStageCompatible(task, processed)) {
+          for (FqnFragment fqn : processed.getFqns()) {
+            biggest.addSecondaryFqn(fqn);
+          }
+          processedIter.remove();
+        }
+      }
+      
+      processedLibs.add(biggest);
+    }
+    task.finish();
+   
+    LibraryCollection libraries = new LibraryCollection();
+    for (Library lib : processedLibs) {
       libraries.addLibrary(lib);
     }
     
-    task.report(libraries.getLibraries().size() + " libraries identified");
+    task.report("Stage Two reduced the library count to " + libraries.getLibraries().size());
     
     task.finish();
     
     return libraries;
   }
-  
-//  public static LibraryCollection identifyLibrariesWithEntropy(TaskProgressLogger task, JarCollection jars) {
-//    task.start("Identifying libraries in " + jars.size() + " jar files");
-//    
-//    task.start("Computing jar entropies", "jars processed", 500);
-//    JarEntopyCalculator calc = JarEntropyCalculatorFactory.makeCalculator();
-//    final Map<Jar, Double> entropies = new HashMap<>();
-//    for (Jar jar : jars) {
-//      entropies.put(jar, calc.compute(jar));
-//      task.progress();
-//    }
-//    task.finish();
-//    
-//    LibraryCollection libraries = new LibraryCollection();
-//    Set<Jar> processed = new HashSet<>();
-//    
-////    task.start("Dumping entropy information");
-////    TreeSet<Jar> jarEntropies = new TreeSet<>(new Comparator<Jar>() {
-////      @Override
-////      public int compare(Jar o1, Jar o2) {
-////        int cmp = Double.compare(entropies.get(o1), entropies.get(o2));
-////        if (cmp == 0) {
-////          return Integer.compare(o1.hashCode(), o2.hashCode());
-////        } else {
-////          return cmp;
-////        }
-////      }});
-////    for (Jar jar : jars) {
-////      jarEntropies.add(jar);
-////    }
-////    while (!jarEntropies.isEmpty()) {
-////      Jar smallest = jarEntropies.pollFirst();
-////      if (entropies.get(smallest) > 0) {
-////        task.report(smallest + ": " + entropies.get(smallest));
-////        for (FqnFragment fqn : smallest.getFqns()) {
-////          task.report("  " + fqn.getFqn());
-////        }
-////      }
-////    }
-////    task.finish();
-//    
-//    task.start("Identifying jar clusters");
-//    for (Jar jar : jars) {
-//      // Has this jar been processed?
-//      if (!processed.contains(jar)) {
-//        processed.add(jar);
-//        // Find the transitive closure of related FQNs
-//        TreeSet<Jar> relatedJars = new TreeSet<>(new Comparator<Jar>() {
-//          @Override
-//          public int compare(Jar o1, Jar o2) {
-//            int cmp = Double.compare(entropies.get(o1), entropies.get(o2));
-//            if (cmp == 0) {
-//              return Integer.compare(o1.hashCode(), o2.hashCode());
-//            } else {
-//              return cmp;
-//            }
-//          }});
-//        Set<FqnFragment> relatedFqns = new HashSet<>();
-//        
-//        Deque<Jar> stack = new LinkedList<>();
-//        stack.push(jar);
-//        while (!stack.isEmpty()) {
-//          Jar next = stack.pop();
-//          relatedJars.add(next);
-//          for (FqnFragment fqn : next.getFqns()) {
-//            relatedFqns.add(fqn);
-//            for (Jar j : fqn.getJars()) {
-//              if (!processed.contains(j)) {
-//                stack.push(j);
-//                processed.add(j);
-//              }
-//            }
-//          }
-//        }
-//        
-//        Map<FqnFragment, Library> fqnMapping = new HashMap<>();
-//        
-//        // Take the jar with the smallest entropy
-//        // If its FQNs are unique, make it the seed of a library
-//        while (!relatedJars.isEmpty()) {
-//          Jar smallest = relatedJars.pollFirst();
-//          // Are there no libraries yet?
-//          if (fqnMapping.isEmpty()) {
-//            Library library = new Library();
-//            library.addJar(smallest);
-//            for (FqnFragment fqn : smallest.getFqns()) {
-//              library.addFqn(fqn);
-//              fqnMapping.put(fqn, library);
-//            }
-//            libraries.addLibrary(library);
-//          } else {
-//            // Find candidate libraries
-//            Set<Library> candidates = new HashSet<>();
-//            for (FqnFragment fqn : smallest.getFqns()) {
-//              Library library = fqnMapping.get(fqn);
-//              if (library != null) {
-//                candidates.add(library);
-//              }
-//            }
-//            
-//            // Is there no candidate library?
-//            if (candidates.isEmpty()) {
-//              Library library = new Library();
-//              library.addJar(smallest);
-//              for (FqnFragment fqn : smallest.getFqns()) {
-//                library.addFqn(fqn);
-//                fqnMapping.put(fqn, library);
-//              }
-//              libraries.addLibrary(library);
-//            } 
-//            // Is there only one candidate library? 
-//            else if (candidates.size() == 1) {
-//              Library library = candidates.iterator().next();
-//              library.addJar(smallest);
-//              for (FqnFragment fqn : smallest.getFqns()) {
-//                library.addFqn(fqn);
-//                fqnMapping.put(fqn, library);
-//              }
-//            }
-//            // There are multiple candidate libraries
-//            else {
-//              for (Library candidate : candidates) {
-//                candidate.addJar(smallest);
-//              }
-//            }
-//          }
-//        }
-//      }
-//    }
-//    task.finish();
-//    
-//    task.finish();
-//    
-//    return libraries;
-//  }
 }

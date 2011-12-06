@@ -17,9 +17,10 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.model;
 
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class JarSet extends JarSetMap<Object> {
-
+public interface JarMapFactory<E> {
+  public JarSetMap<E> makeEmpty();
 }
