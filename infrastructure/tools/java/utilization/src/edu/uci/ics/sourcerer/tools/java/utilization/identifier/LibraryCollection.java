@@ -26,24 +26,18 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset.Entry;
 
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.Jar;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.JarSetMap;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
@@ -125,17 +119,17 @@ public class LibraryCollection implements Iterable<Library> {
     }
     try (BufferedWriter bw = IOUtils.makeBufferedWriter(new File(Arguments.OUTPUT.getValue(), name))) {
       int trivial = 0;
-      for (Jar jar : libMap.keys()) {
+      for (Jar jar : libMap.keySet()) {
         Collection<Library> libs = libMap.get(jar);
         if (libs.size() == 1) {
           trivial++;
         }
       }
-      bw.write(libMap.size() + " jars");
+      bw.write(libMap.keySet().size() + " jars");
       bw.newLine();
       bw.write(trivial + " jars covered by single library");
       bw.newLine();
-      bw.write((libMap.size() - trivial) + " jars covered by multiple libraries");
+      bw.write((libMap.keySet().size() - trivial) + " jars covered by multiple libraries");
       bw.newLine();
       
       for (Jar jar : libMap.keySet()) {
@@ -146,7 +140,7 @@ public class LibraryCollection implements Iterable<Library> {
           bw.newLine();
           Set<Jar> otherJars = new HashSet<>();
           for (FqnFragment fqn : jar.getFqns()) {
-            for (Jar otherJar : fqn.getJars()) {
+            for (Jar otherJar : fqn.getVersions().getJars()) {
               otherJars.add(otherJar);
             }
           }
@@ -178,7 +172,7 @@ public class LibraryCollection implements Iterable<Library> {
             for (FqnFragment fqn : lib.getFqns()) {
               if (fqns.contains(fqn)) {
                 for (Jar otherJar : otherJars) {
-                  if (fqn.getJars().contains(otherJar)) {
+                  if (fqn.getVersions().getJars().contains(otherJar)) {
                     bw.write("*");
                   } else {
                     bw.write(" ");

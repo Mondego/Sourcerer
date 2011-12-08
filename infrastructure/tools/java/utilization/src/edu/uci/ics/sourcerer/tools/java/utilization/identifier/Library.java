@@ -19,13 +19,15 @@ package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Set;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.entropy.LibraryEntopyCalculator;
 import edu.uci.ics.sourcerer.tools.java.utilization.entropy.LibraryEntropyCalculatorFactory;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.JarSetMap;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.JarSet;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
@@ -39,28 +41,28 @@ public class Library {
   public static final Argument<Integer> COMPATIBILITY_THRESHOLD = new IntegerArgument("compatibility-threshold", 100, "Think percent.").permit();
   public static final Argument<MergeMethod> MERGE_METHOD = new EnumArgument<>("merge-method", MergeMethod.class, "Method for performing second stage merge.").makeOptional();
   
-  private JarSetMap jars;
-  private final Set<FqnFragment> fqns;
+  private JarSet jars;
+  private final Collection<FqnFragment> fqns;
   
   Library() {
-    this.fqns = new HashSet<>();
-    jars = JarSetMap.makeEmpty();
+    this.fqns = new LinkedList<>();
+    jars = JarSet.create();
   }
   
   void addFqn(FqnFragment fqn) {
     fqns.add(fqn);
-    jars = jars.merge(fqn.getJars());
+    jars = jars.merge(fqn.getVersions().getJars());
   }
   
   void addSecondaryFqn(FqnFragment fqn) {
     fqns.add(fqn);
   }
   
-  public Set<FqnFragment> getFqns() {
+  public Collection<FqnFragment> getFqns() {
     return fqns;
   }
   
-  public JarSetMap getJars() {
+  public JarSet getJars() {
     return jars;
   }
   
@@ -90,8 +92,8 @@ public class Library {
       
         for (FqnFragment fqn : fqns) {
           for (FqnFragment otherFqn : other.fqns) {
-            JarSetMap fqnJars = fqn.getJars();
-            JarSetMap otherFqnJars = otherFqn.getJars();
+            JarSet fqnJars = fqn.getVersions().getJars();
+            JarSet otherFqnJars = otherFqn.getVersions().getJars();
             // Conditional probability of other given this
             // # shared jars / total jars in this
             otherGivenThis.addValue((double) fqnJars.getIntersectionSize(otherFqnJars) / fqnJars.size());
@@ -154,7 +156,7 @@ public class Library {
           task.report(fqn.getFqn());
         }
         task.finish();
-        LibraryEntopyCalculator calc = LibraryEntropyCalculatorFactory.getCalculator();
+        LibraryEntopyCalculator calc = LibraryEntropyCalculatorFactory.createCalculator();
         double myEntropy = calc.compute(this);
         double otherEntropy = calc.compute(other);
         double jointEntropy = calc.compute(this, other);
@@ -166,7 +168,7 @@ public class Library {
         double maxDelta = jointEntropy - Math.min(myEntropy, otherEntropy);
         task.report("Max Entropy Delta: " + maxDelta);
         task.report("Min Entropy Delta: " + minDelta);
-        boolean doMerge = maxDelta <= .5 && minDelta < .05;
+        boolean doMerge = maxDelta <= .2 && minDelta < .1;
         task.report("Do merge? " + (doMerge ? "yes" : "no"));
         task.finish();
         task.finish();

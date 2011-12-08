@@ -30,7 +30,7 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
 public class LibraryEntropyCalculatorFactory {
   private static LibraryEntopyCalculator calculator = null;
 
-  public static LibraryEntopyCalculator getCalculator() {
+  public static LibraryEntopyCalculator createCalculator() {
     if (calculator == null) {
       calculator = new LibraryEntopyCalculator() {
         class PackageFragmentEntropy {
@@ -40,6 +40,7 @@ public class LibraryEntropyCalculatorFactory {
           FqnFragment fragment;
           int level;
           int fqnCount;
+          int childCount;
           double entropy;
 
           PackageFragmentEntropy(FqnFragment fragment) {
@@ -47,6 +48,7 @@ public class LibraryEntropyCalculatorFactory {
             this.fragment = fragment;
             this.level = 0;
             this.fqnCount = 0;
+            this.childCount = 0;
             this.entropy = 0;
           }
 
@@ -55,6 +57,7 @@ public class LibraryEntropyCalculatorFactory {
             this.fragment = fragment;
             this.level = parent.level + 1;
             this.fqnCount = 0;
+            this.childCount = 0;
             this.entropy = 0;
           }
 
@@ -66,6 +69,7 @@ public class LibraryEntropyCalculatorFactory {
                 return child;
               } else if (cmp > 0) {
                 PackageFragmentEntropy newChild = new PackageFragmentEntropy(this, fragment);
+                childCount++;
                 newChild.sibling = child;
                 if (previousChild == null) {
                   firstChild = newChild;
@@ -77,6 +81,7 @@ public class LibraryEntropyCalculatorFactory {
               previousChild = child;
             }
             PackageFragmentEntropy newChild = new PackageFragmentEntropy(this, fragment);
+            childCount++;
             if (previousChild == null) {
               firstChild = newChild;
             } else {
@@ -130,6 +135,11 @@ public class LibraryEntropyCalculatorFactory {
               }
             };
           }
+          
+          @Override
+          public String toString() {
+            return fragment.getFqn();
+          }
         }
 
         PackageFragmentEntropy root;
@@ -174,20 +184,25 @@ public class LibraryEntropyCalculatorFactory {
               // fractions of fqns coming from each child)
               if (fragment.firstChild != null) {
                 double fqnCount = fragment.fqnCount;
+                double logBase = fragment.childCount + 1;
                 int remaining = fragment.fqnCount;
                 for (PackageFragmentEntropy child = fragment.firstChild; child != null; child = child.sibling) {
                   // Fraction of the FQNs in this child
-                  fragment.entropy += child.entropy / 2.;
+                  fragment.entropy += (double) child.entropy / fragment.childCount / 2;
                   remaining -= child.fqnCount;
                   double ent = child.fqnCount / fqnCount;
                   // Entropy is -frac * log frac
-                  ent = -ent * Math.log(ent);
+                  // The base of the log is the total number of children
+                  //   which ensures the entropy scales to 1
+                  ent = -ent * Math.log(ent) / Math.log(logBase) / 2;
                   fragment.entropy += ent;
                 }
                 if (remaining > 0) {
                   double ent = remaining / fqnCount;
                   // Entropy is -frac * log frac
-                  ent = -ent * Math.log(ent);
+                  // The base of the log is the total number of children
+                  //   which ensures the entropy scales to 1
+                  ent = -ent * Math.log(ent) / Math.log(logBase) / 2;
                   fragment.entropy += ent;
                 }
               }

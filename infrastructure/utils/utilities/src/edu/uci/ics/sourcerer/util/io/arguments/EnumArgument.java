@@ -15,12 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.model;
-
+package edu.uci.ics.sourcerer.util.io.arguments;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface JarMapFactory<E> {
-  public JarSetMap<E> makeEmpty();
+public class EnumArgument <E extends Enum<E>> extends Argument<E> {
+  private Class<E> enumType;
+  public EnumArgument(String name, Class<E> enumType, String description) {
+    super(name, null, description);
+  }
+  
+  public EnumArgument(String name, Class<E> enumType, E defaultValue, String description) {
+    super(name, defaultValue, description);
+  }
+  
+  @Override
+  public String getType() {
+    return "enum";
+  }
+  
+  @Override
+  protected E parseString(String value) {
+    return Enum.valueOf(enumType, value);
+  }
 }

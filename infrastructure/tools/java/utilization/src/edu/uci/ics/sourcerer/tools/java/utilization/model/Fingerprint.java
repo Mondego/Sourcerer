@@ -27,75 +27,155 @@ import edu.uci.ics.sourcerer.util.io.CustomSerializable;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.EnumArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class Fingerprint implements CustomSerializable {
-  public static final Argument<Boolean> FINGERPRINT_USE_HASH = new BooleanArgument("fingerprint-use-hash", true, "Use hash to determine fingerpint");
-  private long length;
-  private String hash;
+public abstract class Fingerprint implements CustomSerializable {
+  public static final Argument<Mode> FINGERPRINT_MODE = new EnumArgument<>("fingerprint-mode", Mode.class, Mode.NONE, "What fingerprint mode to use");
   
-  private Fingerprint(long length, String hash) {
-    this.length = length;
-    this.hash = hash;
+  public enum Mode {
+    NONE,
+    LENGTH,
+    HASH
+    ;
   }
+
+  private Fingerprint() {}
   
-  protected static Fingerprint make(InputStream is, long length) throws IOException {
-    String hash = null;
-    if (FINGERPRINT_USE_HASH.getValue()) {
-      hash = FileUtils.computeHash(is);
+  private static class LengthFingerprint extends Fingerprint {
+    private final long length;
+    
+    private LengthFingerprint(long length) {
+      this.length = length;
     }
-    return new Fingerprint(length, hash);
-  }
-  
-  @Override
-  public int hashCode() {
-    return hash.hashCode();
-  }
-  
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    } else if (o instanceof Fingerprint) {
-      Fingerprint other = (Fingerprint) o;
-      if (hash == null) {
-        return length == other.length && other.hash == null;
+    
+    @Override
+    public int hashCode() {
+      return (int)(length ^ (length >>> 32));
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      } else if (o instanceof LengthFingerprint) {
+        LengthFingerprint other = (LengthFingerprint) o;
+        return length == other.length;
       } else {
-        return length == other.length && hash.equals(other.hash);
+        return false;
       }
-    } else {
-      return false;
+    }
+    
+    @Override
+    public String serialize() {
+      return Long.toString(length);
     }
   }
   
-  @Override
-  public String serialize() {
-    return length + " " + hash;
+  private static class HashFingerprint extends Fingerprint {
+    private final long length;
+    private final String hash;
+    
+    private HashFingerprint(long length, String hash) {
+      this.length = length;
+      this.hash = hash;
+    }
+    
+    @Override
+    public int hashCode() {
+      return hash.hashCode();
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      } else if (o instanceof HashFingerprint) {
+        HashFingerprint other = (HashFingerprint) o;
+        if (hash == null) {
+          return length == other.length && other.hash == null;
+        } else {
+          return length == other.length && hash.equals(other.hash);
+        }
+      } else {
+        return false;
+      }
+    }
+    
+    @Override
+    public String serialize() {
+      return length + " " + hash;
+    }
+  }
+  
+  private static final Fingerprint BASE_FINGERPRINT = new Fingerprint() {
+    @Override
+    public String serialize() {
+      return "";
+    }
+  };
+  
+  protected static Fingerprint create(InputStream is, long length) throws IOException {
+    switch (FINGERPRINT_MODE.getValue()) {
+      case NONE:
+        return BASE_FINGERPRINT;
+      case LENGTH:
+        return new LengthFingerprint(length);
+      case HASH:
+        return new HashFingerprint(length, FileUtils.computeHash(is));
+      default:
+        logger.severe("Unknown fingerprint mode: " + FINGERPRINT_MODE.getValue());
+        return null;
+    }
   }
   
   public static ObjectDeserializer<Fingerprint> makeDeserializer() {
-    return new ObjectDeserializer<Fingerprint>() {
-      @Override
-      public Fingerprint deserialize(Scanner scanner) {
-        if (scanner.hasNextLong()) {
-          long length = scanner.nextLong();
-          if (scanner.hasNext()) {
-            String hash = scanner.next();
-            if (hash.equals("null")) {
-              hash = null;
-            }
-            return new Fingerprint(length, hash);
-          } else {
-            logger.severe("Fingerprint missing hash");
-            return null;
+    switch (FINGERPRINT_MODE.getValue()) {
+      case NONE:
+        return new ObjectDeserializer<Fingerprint>() {
+          @Override
+          public Fingerprint deserialize(Scanner scanner) {
+            return BASE_FINGERPRINT;
           }
-        } else {
-          logger.severe("Fingerprint missing length");
-          return null;
-        }
-      }};
+        };
+      case LENGTH:
+        return new ObjectDeserializer<Fingerprint>() {
+          @Override
+          public Fingerprint deserialize(Scanner scanner) {
+            if (scanner.hasNextLong()) {
+              return new LengthFingerprint(scanner.nextLong());
+            } else {
+              logger.severe("Fingerprint missing length");
+              return null;
+            }
+          }};
+      case HASH:
+        return new ObjectDeserializer<Fingerprint>() {
+          @Override
+          public Fingerprint deserialize(Scanner scanner) {
+            if (scanner.hasNextLong()) {
+              long length = scanner.nextLong();
+              if (scanner.hasNext()) {
+                String hash = scanner.next();
+                if (hash.equals("null")) {
+                  hash = null;
+                }
+                return new HashFingerprint(length, hash);
+              } else {
+                logger.severe("Fingerprint missing hash");
+                return null;
+              }
+            } else {
+              logger.severe("Fingerprint missing length");
+              return null;
+            }
+          }
+        };
+      default:
+        logger.severe("Unknown fingerprint mode: " + FINGERPRINT_MODE.getValue());
+        return null;
+    }
   }
 }

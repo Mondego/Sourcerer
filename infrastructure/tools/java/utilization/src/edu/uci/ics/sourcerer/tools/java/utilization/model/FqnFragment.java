@@ -30,15 +30,15 @@ public class FqnFragment {
   private final FqnFragment parent;
   private FqnFragment sibling;
   private FqnFragment firstChild;
-  private JarSetMap jars;
+  private VersionMap versions;
   
   private FqnFragment(String name, FqnFragment parent) {
     this.name = name;
     this.parent = parent;
-    this.jars = JarSetMap.makeEmpty();
+    this.versions = VersionMap.make();
   }
   
-  static FqnFragment makeRoot() {
+  static FqnFragment createRoot() {
     return new FqnFragment(null, null);
   }
   
@@ -82,7 +82,7 @@ public class FqnFragment {
   }
   
   void addJar(Jar jar, Fingerprint fingerprint) {
-    jars = jars.add(jar, fingerprint);
+    versions.add(fingerprint, jar);
   }
   
   public FqnFragment getParent() {
@@ -128,8 +128,8 @@ public class FqnFragment {
     return name;
   }
   
-  public JarSetMap getJars() {
-    return jars;
+  public VersionMap getVersions() {
+    return versions;
   }
   
   public String getFqn() {

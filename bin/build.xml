@@ -55,7 +55,7 @@
   <property name="java-repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
   <property name="model" location="../infrastructure/tools/java/model/src" />
   <property name="extractor" location="../infrastructure/tools/java/extractor" />
-  <property name="utilization" location="../infrastructure/tools/java/utilization" />
+  <property name="utilization" location="../infrastructure/tools/java/utilization/src" />
   <property name="database" location="../infrastructure/tools/java/database/src" />
 
   <!-- Test Repository -->

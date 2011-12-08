@@ -45,13 +45,13 @@ import edu.uci.ics.sourcerer.util.io.arguments.RelativeFileArgument;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarCollection implements Iterable<Jar> {
-  public static Argument<File> JAR_COLLECTION_CACHE = new RelativeFileArgument("jar-collection-cache", "jar.cache", Arguments.CACHE, "Cache for jar collection.").permit();
+  public static Argument<File> JAR_COLLECTION_CACHE = new RelativeFileArgument("jar-collection-cache", "jar-collection-cache", Arguments.CACHE, "Cache for jar collection.").permit();
   private final ArrayList<Jar> jars;
   private final FqnFragment rootFragment;
   
   private JarCollection() {
     jars = new ArrayList<>();
-    rootFragment = FqnFragment.makeRoot();
+    rootFragment = FqnFragment.createRoot();
   }
   
   private void add(JarFile jar) {
@@ -61,8 +61,7 @@ public class JarCollection implements Iterable<Jar> {
         if (entry.getName().endsWith(".class")) {
           String fqn = entry.getName();
           fqn = fqn.substring(0, fqn.lastIndexOf('.'));
-          newJar.addFqn(rootFragment.getFragment(fqn, '/'), Fingerprint.make(zis, entry.getSize()));
-          
+          newJar.addFqn(rootFragment.getFragment(fqn, '/'), Fingerprint.create(zis, entry.getSize()));
         }
       }
     } catch (IOException | IllegalArgumentException e) {
@@ -78,11 +77,13 @@ public class JarCollection implements Iterable<Jar> {
     JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
     
     task.report("Checking for cache...");
-    File cache = JAR_COLLECTION_CACHE.getValue();
+    File cacheDir = JAR_COLLECTION_CACHE.getValue();
+    File cache = new File(cacheDir, Fingerprint.FINGERPRINT_MODE.getValue() + ".cache");
     if (cache.exists()) {
-      task.start("Cache found, loading");
+      task.start("Cache found, loading", "jars loaded", 500);
       try (SimpleDeserializer deserializer = IOUtils.makeSimpleDeserializer(cache)) {
         for (Jar jar : deserializer.deserializeToIterable(Jar.makeDeserializer(jars.rootFragment, repo), true)) {
+          task.progress();
           jars.jars.add(jar);
         }
         return jars;
@@ -149,7 +150,7 @@ public class JarCollection implements Iterable<Jar> {
     int fqnCount = 0;
     for (FqnFragment fragment : rootFragment.getPostOrderIterable()) {
       fragmentCount++;
-      if (fragment.getJars().size() > 0) {
+      if (fragment.getVersions().getJars().size() > 0) {
         fqnCount++;
       }
     }

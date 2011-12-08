@@ -22,6 +22,7 @@ import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Identifier;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Library;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.LibraryCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.MergeMethod;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.Fingerprint;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.JarCollection;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
@@ -43,7 +44,7 @@ public class Main {
         libraries.printStatistics(task, "libraries+" + method.name());
       }
     }
-  }.setProperties(JavaRepositoryFactory.INPUT_REPO, Library.MERGE_METHOD);
+  }.setProperties(JavaRepositoryFactory.INPUT_REPO, Library.MERGE_METHOD, Fingerprint.FINGERPRINT_MODE);
 //  public static final Command COMPUTE_MAVEN_FQN_USAGE_STATS = new Command("compute-maven-fqn-usage-stats", "Computes some statistics on FQN usage in Maven.") {
 //    @Override
 //    protected void action() {
