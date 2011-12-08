@@ -8,5 +8,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/utilities"/>
 	<classpathentry kind="lib" path="/lib/guava-10.0.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/model"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

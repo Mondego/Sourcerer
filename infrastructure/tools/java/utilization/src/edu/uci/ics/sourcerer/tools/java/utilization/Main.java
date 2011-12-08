@@ -18,10 +18,10 @@
 package edu.uci.ics.sourcerer.tools.java.utilization;
 
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
+import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster;
+import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster.MergeMethod;
+import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Identifier;
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Library;
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.LibraryCollection;
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.MergeMethod;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.Fingerprint;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.JarCollection;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
@@ -39,12 +39,12 @@ public class Main {
       JarCollection jars = JarCollection.make(task);
       jars.printStatistics(task);
       for (MergeMethod method : MergeMethod.values()) {
-        Library.MERGE_METHOD.setValue(method);
-        LibraryCollection libraries = Identifier.identifyLibraries(task, jars);
-        libraries.printStatistics(task, "libraries+" + method.name());
+        Cluster.MERGE_METHOD.setValue(method);
+        ClusterCollection libraries = Identifier.identifyLibraries(task, jars);
+        libraries.printStatistics(task, "jars+" + method.name(), "clusters+" + method.name());
       }
     }
-  }.setProperties(JavaRepositoryFactory.INPUT_REPO, Library.MERGE_METHOD, Fingerprint.FINGERPRINT_MODE);
+  }.setProperties(JavaRepositoryFactory.INPUT_REPO, Cluster.MERGE_METHOD, Fingerprint.FINGERPRINT_MODE);
 //  public static final Command COMPUTE_MAVEN_FQN_USAGE_STATS = new Command("compute-maven-fqn-usage-stats", "Computes some statistics on FQN usage in Maven.") {
 //    @Override
 //    protected void action() {

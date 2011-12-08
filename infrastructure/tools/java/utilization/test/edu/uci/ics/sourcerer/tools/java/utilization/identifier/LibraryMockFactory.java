@@ -23,11 +23,11 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragmentMockFactory
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class LibraryMockFactory {
-  public static Library create(String ... fqns) {
+  public static Cluster create(String ... fqns) {
     FqnFragmentMockFactory fragmentFactory = FqnFragmentMockFactory.create();
-    Library library = new Library();
+    Cluster library = new Cluster();
     for (String fqn : fqns) {
-      library.addFqn(fragmentFactory.create(fqn));
+      library.addPrimaryFqn(fragmentFactory.create(fqn));
     }
     return library;
   }

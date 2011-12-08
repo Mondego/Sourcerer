@@ -17,11 +17,11 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.entropy;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Library;
+import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface LibraryEntopyCalculator {
-  public double compute(Library ... libraries);  
+public interface ClusterEntopyCalculator {
+  public double compute(Cluster ... libraries);  
 }

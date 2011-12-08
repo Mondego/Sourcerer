@@ -155,7 +155,8 @@ public class JarCollection implements Iterable<Jar> {
       }
     }
     task.report("Suffix tree contains " + fragmentCount + " nodes");
-    task.report("Suffix tree cotnains " + fqnCount + " leaves (FQNs)");
+    task.report("Suffix tree contains " + fqnCount + " leaves (FQNs)");
+    task.report("Suffix tree contains " + (fragmentCount - fqnCount) + " internal nodes (packages)");
     
     task.finish();
     

@@ -21,18 +21,18 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Library;
+import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class LibraryEntropyCalculatorFactory {
-  private static LibraryEntopyCalculator calculator = null;
+public class ClusterEntropyCalculatorFactory {
+  private static transient ClusterEntopyCalculator calculator = null;
 
-  public static LibraryEntopyCalculator createCalculator() {
+  public static ClusterEntopyCalculator createCalculator() {
     if (calculator == null) {
-      calculator = new LibraryEntopyCalculator() {
+      calculator = new ClusterEntopyCalculator() {
         class PackageFragmentEntropy {
           PackageFragmentEntropy parent;
           PackageFragmentEntropy sibling;
@@ -160,13 +160,13 @@ public class LibraryEntropyCalculatorFactory {
         }
 
         @Override
-        public double compute(Library ... libraries) {
+        public double compute(Cluster ... clusters) {
           root = null;
           entropies.clear();
 
           // Build up the library-specific tree so we can compute the entropy
-          for (Library library : libraries) {
-            for (FqnFragment fqn : library.getFqns()) {
+          for (Cluster cluster : clusters) {
+            for (FqnFragment fqn : cluster.getFqns()) {
               // Look for the fragments parent
               // Add to the FQN count for it
               getFragmentEntropy(fqn.getParent()).addFqn();
@@ -205,6 +205,8 @@ public class LibraryEntropyCalculatorFactory {
                   ent = -ent * Math.log(ent) / Math.log(logBase) / 2;
                   fragment.entropy += ent;
                 }
+              } else {
+                fragment.entropy = 0;
               }
             }
             return root.entropy;

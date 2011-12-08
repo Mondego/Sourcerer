@@ -17,7 +17,6 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -40,67 +39,69 @@ public class Identifier {
   private Identifier() {
   }
   
-  public static LibraryCollection identifyLibraries(TaskProgressLogger task, JarCollection jars) {
-    task.start("Identifying libraries in " + jars.size() + " jar files using tree clustering method");
-    task.report("Compatibility threshold set to " + Library.COMPATIBILITY_THRESHOLD.getValue());
+  public static ClusterCollection identifyLibraries(TaskProgressLogger task, JarCollection jars) {
+    task.start("Identifying clusters in " + jars.size() + " jar files using tree clustering method");
+    task.report("Compatibility threshold: " + Cluster.COMPATIBILITY_THRESHOLD.getValue());
+    task.report("Secondary merging method: " + Cluster.MERGE_METHOD.getValue());
     
-    Multimap<FqnFragment, Library> tempLibMap = ArrayListMultimap.create();
+    Multimap<FqnFragment, Cluster> tempClusterMap = ArrayListMultimap.create();
     
-    task.start("Identification Stage One: performing post-order traversal of FQN suffix tree", "FQN fragments visited", 10000);
-    int libCount = 0;
+    task.start("Identification Stage One: performing post-order traversal of FQN suffix tree", "FQN fragments visited", 100000);
+    int clusterCount = 0;
     // Explore the tree in post-order
     for (FqnFragment fragment : jars.getRoot().getPostOrderIterable()) {
-      task.progress("%d FQN fragments visited (" + libCount + " libraries) in %s");
+      task.progress("%d FQN fragments visited (" + clusterCount + " libraries) in %s");
       // If there are no children, then make it its own single-fqn library
       if (!fragment.hasChildren()) {
-        Library library = new Library();
+        Cluster cluster = new Cluster();
         // Add the fqn
-        library.addFqn(fragment);
+        cluster.addPrimaryFqn(fragment);
         // Store it in the map for processing with the parent
-        tempLibMap.put(fragment, library);
-        libCount++;
+        tempClusterMap.put(fragment, cluster);
+        clusterCount++;
       } else {
         // Start merging children
         for (FqnFragment child : fragment.getChildren()) {
-          for (Library childLib : tempLibMap.get(child)) {
-            LinkedList<Library> candidates = new LinkedList<>();
+          for (Cluster childCluster : tempClusterMap.get(child)) {
+            LinkedList<Cluster> candidates = new LinkedList<>();
             
             // Check to see if it can be merged with any of the libraries
-            for (Library merge : tempLibMap.get(fragment)) {
-              if (merge.isCompatible(childLib)) {
+            for (Cluster merge : tempClusterMap.get(fragment)) {
+              if (merge.isCompatible(childCluster)) {
                 candidates.add(merge);
               }
             }
             if (candidates.size() == 0) {
               // If nothing was found, promote the library
-              tempLibMap.put(fragment, childLib);
+              tempClusterMap.put(fragment, childCluster);
             } else if (candidates.size() == 1) {
               // If one was found, merge in the child
-              Library candidate = candidates.getFirst();
-              for (FqnFragment fqn : childLib.getFqns()) {
-                candidate.addFqn(fqn);
+              Cluster candidate = candidates.getFirst();
+              for (FqnFragment fqn : childCluster.getFqns()) {
+                candidate.addPrimaryFqn(fqn);
               }
-              libCount--;
+              clusterCount--;
             } else {
+              // TODO Change this for lower thresholds
               // If more than one was found, promote the library
-              tempLibMap.put(fragment, childLib);
+              tempClusterMap.put(fragment, childCluster);
             }
           }
           // Clear the entry for this child fragment
-          tempLibMap.removeAll(child);
+          tempClusterMap.removeAll(child);
         }
       }
     }
     task.finish();
     
-    task.report("Stage One identified " + libCount + " libraries");
+    task.report("Stage One identified " + clusterCount + " clusters");
     
-    task.start("Identification Stage Two: merging similar libraries");
+    task.start("Identification Stage Two: merging similar clusters");
     // Second stage
-    TreeSet<Library> sortedLibs = new TreeSet<>(new Comparator<Library>() {
+    TreeSet<Cluster> sortedClusters = new TreeSet<>(new Comparator<Cluster>() {
       @Override
-      public int compare(Library o1, Library o2) {
-        int cmp = Integer.compare(o1.getJars().size(), o2.getJars().size());
+      public int compare(Cluster o1, Cluster o2) {
+        int cmp = Integer.compare(o1.getPrimaryJars().size(), o2.getPrimaryJars().size());
         if (cmp == 0) {
           return Integer.compare(o1.hashCode(), o2.hashCode());
         } else {
@@ -109,20 +110,20 @@ public class Identifier {
       }
     });
     
-    // Sort all the libraries by the number of jars they contain
-    for (Library lib : tempLibMap.get(jars.getRoot())) {
-      sortedLibs.add(lib);
+    // Sort all the clusters by the number of primary jars they contain
+    for (Cluster cluster : tempClusterMap.get(jars.getRoot())) {
+      sortedClusters.add(cluster);
     }
-    tempLibMap.clear();
+    tempClusterMap.clear();
     
-    Collection<Library> processedLibs = new ArrayList<>();
-    // Go from libraries containing the most jars to the least
-    while (!sortedLibs.isEmpty()) {
-      Library biggest = sortedLibs.pollLast();
+    Collection<Cluster> processedClusters = new LinkedList<>();
+    // Go from cluster containing the most jars to the least
+    while (!sortedClusters.isEmpty()) {
+      Cluster biggest = sortedClusters.pollLast();
       
-      // Find and merge any candidate libraries
-      for (Iterator<Library> processedIter = processedLibs.iterator(); processedIter.hasNext();) {
-        Library processed = processedIter.next();
+      // Find and merge any candidate clusters
+      for (Iterator<Cluster> processedIter = processedClusters.iterator(); processedIter.hasNext();) {
+        Cluster processed = processedIter.next();
         // Check if they should merge
         if (biggest.isSecondStageCompatible(task, processed)) {
           for (FqnFragment fqn : processed.getFqns()) {
@@ -132,19 +133,19 @@ public class Identifier {
         }
       }
       
-      processedLibs.add(biggest);
+      processedClusters.add(biggest);
     }
     task.finish();
    
-    LibraryCollection libraries = new LibraryCollection();
-    for (Library lib : processedLibs) {
-      libraries.addLibrary(lib);
+    ClusterCollection clusters = new ClusterCollection();
+    for (Cluster cluster : processedClusters) {
+      clusters.addCluster(cluster);
     }
     
-    task.report("Stage Two reduced the library count to " + libraries.getLibraries().size());
+    task.report("Stage Two reduced the cluster count to " + clusters.getClusters().size());
     
     task.finish();
     
-    return libraries;
+    return clusters;
   }
 }
