@@ -17,18 +17,26 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.TreeSet;
+import java.util.logging.Level;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.JarCollection;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
+import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
 
 
 
@@ -39,7 +47,7 @@ public class Identifier {
   private Identifier() {
   }
   
-  public static ClusterCollection identifyLibraries(TaskProgressLogger task, JarCollection jars) {
+  public static ClusterCollection identifyLibraries(TaskProgressLogger task, JarCollection jars, String logFileName) {
     task.start("Identifying clusters in " + jars.size() + " jar files using tree clustering method");
     task.report("Compatibility threshold: " + Cluster.COMPATIBILITY_THRESHOLD.getValue());
     task.report("Secondary merging method: " + Cluster.MERGE_METHOD.getValue());
@@ -118,23 +126,28 @@ public class Identifier {
     
     Collection<Cluster> processedClusters = new LinkedList<>();
     // Go from cluster containing the most jars to the least
-    while (!sortedClusters.isEmpty()) {
-      Cluster biggest = sortedClusters.pollLast();
-      
-      // Find and merge any candidate clusters
-      for (Iterator<Cluster> processedIter = processedClusters.iterator(); processedIter.hasNext();) {
-        Cluster processed = processedIter.next();
-        // Check if they should merge
-        if (biggest.isSecondStageCompatible(task, processed)) {
-          for (FqnFragment fqn : processed.getFqns()) {
-            biggest.addSecondaryFqn(fqn);
+    try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), logFileName))) {
+      while (!sortedClusters.isEmpty()) {
+        Cluster biggest = sortedClusters.pollLast();
+        
+        // Find and merge any candidate clusters
+        for (Iterator<Cluster> processedIter = processedClusters.iterator(); processedIter.hasNext();) {
+          Cluster processed = processedIter.next();
+          // Check if they should merge
+          if (biggest.isSecondStageCompatible(processed, writer)) {
+            for (FqnFragment fqn : processed.getFqns()) {
+              biggest.addSecondaryFqn(fqn);
+            }
+            processedIter.remove();
           }
-          processedIter.remove();
         }
+        
+        processedClusters.add(biggest);
       }
-      
-      processedClusters.add(biggest);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error writing log", e);
     }
+    
     task.finish();
    
     ClusterCollection clusters = new ClusterCollection();

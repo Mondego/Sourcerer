@@ -24,7 +24,6 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -44,6 +43,10 @@ import edu.uci.ics.sourcerer.util.io.internal.IOUtilFactory;
 public final class IOUtils {
   public static OutputStream makeOutputStream(File file) throws IOException {
     return new FileOutputStream(file);
+  }
+  
+  public static LogFileWriter createLogFileWriter(File file) throws IOException {
+    return LogFileWriter.create(makeBufferedWriter(file));
   }
   
   public static BufferedWriter makeBufferedWriter(DualFileArgument arg) throws IOException {

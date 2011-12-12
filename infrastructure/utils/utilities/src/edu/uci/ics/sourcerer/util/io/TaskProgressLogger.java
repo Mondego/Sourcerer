@@ -19,41 +19,34 @@ package edu.uci.ics.sourcerer.util.io;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.logging.Level;
+
+import edu.uci.ics.sourcerer.util.Strings;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class TaskProgressLogger {
-  private static String SPACES;
-  static {
-    char[] arr = new char[10];
-    Arrays.fill(arr, ' ');
-    SPACES = new String(arr); 
-  }
-  
-  private static String getSpaces(int count) {
-    if (count > SPACES.length()) {
-      int newSize = 10 + Math.max(count, SPACES.length());
-      char[] arr = new char[newSize];
-      Arrays.fill(arr, ' ');
-      SPACES = new String(arr);
-    }
-    return SPACES.substring(0, count);
-  }
-  
+  private String SPACES;
   private final Deque<TaskInfo> tasks;
   
   public TaskProgressLogger() {
     tasks = new LinkedList<>();
+    SPACES = Strings.create(' ', 10);
   }
   
   private TaskProgressLogger(int startingIndent) {
-    tasks = new LinkedList<>();
+    this();
     tasks.add(new TaskInfo(null, startingIndent, -1));
+  }
+  
+  private String getSpaces(int count) {
+    if (count > SPACES.length()) {
+      SPACES = Strings.create(' ', 10 + Math.max(count, SPACES.length()));
+    }
+    return SPACES.substring(0, count);
   }
   
   private int getIndent() {

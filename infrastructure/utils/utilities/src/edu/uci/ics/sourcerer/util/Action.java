@@ -15,28 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io.arguments;
-
+package edu.uci.ics.sourcerer.util;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class DoubleArgument extends Argument<Double> {
-  public DoubleArgument(String name, String description) {
-    super(name, null, description);
-  }
-  
-  public DoubleArgument(String name, Double defaultValue, String description) {
-    super(name, defaultValue, description);
-  }
-  
-  @Override
-  public String getType() {
-    return "double";
-  }
-  
-  @Override
-  protected Double parseString(String value) {
-    return Double.parseDouble(value);
-  }
+public interface Action {
+  public void doMe();
 }

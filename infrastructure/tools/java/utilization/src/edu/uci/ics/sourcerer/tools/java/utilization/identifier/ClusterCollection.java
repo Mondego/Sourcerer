@@ -19,7 +19,6 @@ package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
@@ -38,7 +37,9 @@ import com.google.common.collect.Multimap;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.Jar;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.JarSet;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
+import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
 
@@ -111,7 +112,7 @@ public class ClusterCollection implements Iterable<Cluster> {
     format.setMaximumFractionDigits(2);
 
     task.start("Printing jar statistics");
-    try (BufferedWriter bw = IOUtils.makeBufferedWriter(new File(Arguments.OUTPUT.getValue(), jarFileName))) {
+    try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), jarFileName))) {
       Multimap<Jar, Cluster> clusterMap = HashMultimap.create();
       int trivialCluster = 0;
       for (Cluster cluster : clusters) {
@@ -129,77 +130,68 @@ public class ClusterCollection implements Iterable<Cluster> {
           trivialJar++;
         }
       }
-      bw.write(clusterMap.keySet().size() + " jars");
-      bw.newLine();
-      bw.write(clusters.size() + " clusters");
-      bw.newLine();
-      bw.write(trivialJar + " jars covered by single cluster");
-      bw.newLine();
-      bw.write(trivialCluster + " clusters matching a single jar");
-      bw.newLine();
-      bw.write((clusterMap.keySet().size() - trivialJar) + " jars covered by multiple clusters");
-      bw.newLine();
-      bw.write((clusters.size() - trivialCluster) + " clustered matching multiple jars");
-      bw.newLine();
+      writer.write(clusterMap.keySet().size() + " jars");
+      writer.write(clusters.size() + " clusters");
+      writer.write(trivialJar + " jars covered by single cluster");
+      writer.write(trivialCluster + " clusters matching a single jar");
+      writer.write((clusterMap.keySet().size() - trivialJar) + " jars covered by multiple clusters");
+      writer.write((clusters.size() - trivialCluster) + " clustered matching multiple jars");
       
       for (Jar jar : clusterMap.keySet()) {
         Collection<Cluster> clusters = clusterMap.get(jar);
         if (clusters.size() > 1) {
           HashSet<FqnFragment> fqns = new HashSet<>(jar.getFqns());
-          bw.write(jar.getJar().getProperties().NAME.getValue() + " fragmented into " + clusters.size() + " clusters");
-          bw.newLine();
+          writer.writeAndIndent(jar.getJar().getProperties().NAME.getValue() + " fragmented into " + clusters.size() + " clusters");
           Set<Jar> otherJars = new HashSet<>();
           for (FqnFragment fqn : jar.getFqns()) {
             for (Jar otherJar : fqn.getVersions().getJars()) {
               otherJars.add(otherJar);
             }
           }
-          bw.write(" FQNs from this jar appear in " + (otherJars.size() - 1) + " other jars");
-          bw.newLine();
-          bw.write(" Listing jars with overlap");
-          bw.newLine();
+          writer.write("FQNs from this jar appear in " + (otherJars.size() - 1) + " other jars");
+          writer.writeAndIndent("Listing jars with overlap");
           int c = 1;
           for (Jar otherJar : otherJars) {
             JarProperties props = otherJar.getJar().getProperties();
-            bw.write("  " + c++ + ": " + props.NAME.getValue() + ": " + props.HASH.getValue());
-            if (otherJar == jar) {
-              bw.write(" <--");
-            }
-            bw.newLine();
+            writer.write(c++ + ": " + props.NAME.getValue() + ": " + props.HASH.getValue() + (otherJar == jar ? " <--" : ""));
           }
+          writer.unindent();
           
           for (int i = 1, max = otherJars.size(); i <= max; i++) {
-            bw.write(Integer.toString(i % 10));
+            writer.writeFragment(Integer.toString(i % 10));
           }
-          bw.newLine();
+          writer.newLine();
+          
           int clusterCount = 0;
           for (Cluster lib : clusters) {
             for (int i = 0; i < c; i++)
-              bw.write(" ");
-            bw.write(" Cluster " + ++clusterCount + ", from " + lib.getJars().size() + " jars");
-            bw.newLine();
+              writer.writeFragment(" ");
+            writer.writeFragment(" Cluster " + ++clusterCount + ", from " + lib.getJars().size() + " jars");
+            writer.newLine();
             int skipped = 0;
             for (FqnFragment fqn : lib.getFqns()) {
               if (fqns.contains(fqn)) {
                 for (Jar otherJar : otherJars) {
                   if (fqn.getVersions().getJars().contains(otherJar)) {
-                    bw.write("*");
+                    writer.writeFragment("*");
                   } else {
-                    bw.write(" ");
+                    writer.writeFragment(" ");
                   }
                 }
-                bw.write(" " + fqn.getFqn());
-                bw.newLine();
+                writer.writeFragment(" " + fqn.getFqn());
+                writer.newLine();
               } else {
                 skipped++;
               }
             }
             for (int i = 0; i < c; i++)
-              bw.write(" ");
+              writer.writeFragment(" ");
             if (skipped > 0)
-              bw.write(" " + skipped + " FQNS in cluster not in this jar");
-            bw.newLine();
+              writer.writeFragment(" " + skipped + " FQNS in cluster not in this jar");
+            writer.newLine();
           }
+          
+          writer.unindent();
         }
       }
     } catch (IOException e) {
@@ -208,7 +200,7 @@ public class ClusterCollection implements Iterable<Cluster> {
     task.finish();
     
     task.start("Printing cluster statistics");
-    try (BufferedWriter bw = IOUtils.makeBufferedWriter(new File(Arguments.OUTPUT.getValue(), clusterFileName))) {
+    try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), clusterFileName))) {
       TreeSet<Cluster> sortedClusters = new TreeSet<>(new Comparator<Cluster>() {
         @Override
         public int compare(Cluster o1, Cluster o2) {
@@ -225,71 +217,20 @@ public class ClusterCollection implements Iterable<Cluster> {
         }
       }
       
-      bw.write(clusters.size() + " clusters");
-      bw.newLine();
-      bw.write((clusters.size() - sortedClusters.size()) + " clusters matching a single jar");
-      bw.newLine();
-      bw.write(sortedClusters.size() + " clustered matching multiple jars");
-      bw.newLine();
-//    
-//    try (BufferedWriter bw = IOUtils.makeBufferedWriter(new File(Arguments.OUTPUT.getValue(), name))) {
-//      bw.write(libraries.size() + " libraries identified");
-//      bw.newLine();
-//      bw.write(clusters.size() + " clusters identified");
-//      bw.newLine();
-//      
-//      int trivial = 0;
-//      for (Iterator<TreeSet<Library>> iter = clusters.iterator(); iter.hasNext();) {
-//        Set<Library> cluster = iter.next();
-//        if (cluster.size() == 1) {
-//          trivial++;
-//          iter.remove();
-//        }
-//      }
-//      
-//      bw.write(trivial + " trivial clusters");
-//      bw.newLine();
-//      bw.write(clusters.size() + " non-trivial clusters");
-//      bw.newLine();
-//
-//      for (TreeSet<Library> cluster : clusters) {
-//        // Count the number of jars in this cluster
-//        Set<Jar> jars = new HashSet<>();
-//        for (Library lib : cluster) {
-//          for (Jar jar : lib.getJars()) {
-//            jars.add(jar);
-//          }
-//        }
-//        bw.write("Cluster of " + cluster.size() + " libraries");
-//        bw.newLine();
-//        bw.write("Cluster spans " + jars.size() + " jars");
-//        bw.newLine();
-//        int i = 0;
-//        while (!cluster.isEmpty()) {
-//          Library smallest = cluster.pollFirst();
-//          bw.write("  Lib " + ++i);
-//          bw.newLine();
-//          for (FqnFragment fqn : smallest.getFqns()) {
-//            bw.write("    " + fqn.getFqn());
-//            bw.newLine();
-//          }
-//        }
-//      }
-//      bw.write(trivial + " trivial libraries");
-//      bw.newLine();
-//      bw.write(sortedLibs.size() + " compound libraries");
-//      bw.newLine();
-//      while (!sortedLibs.isEmpty()) {
-//        Library biggest = sortedLibs.pollLast();
-//        JarSet mainSet = biggest.getJars();
-//        bw.write("Listing FQNs for library found in " + mainSet.size() + " jars");
-//        bw.newLine();
-//        for (FqnFragment fqn : biggest.getFqns()) {
-//          double percent = (double) fqn.getJars().getIntersectionSize(mainSet) / (double) fqn.getJars().size();
-//          bw.write("  " + fqn.getFqn() + " " + fqn.getJars().size() + " " + format.format(percent));
-//          bw.newLine();
-//        }
-//      }
+      writer.write(clusters.size() + " clusters");
+      writer.write((clusters.size() - sortedClusters.size()) + " clusters matching a single jar");
+      writer.write(sortedClusters.size() + " clustered matching multiple jars");
+
+      while (!sortedClusters.isEmpty()) {
+        Cluster cluster = sortedClusters.pollFirst();
+        writer.writeAndIndent("Cluster of " + cluster.getJars().size() + " jars");
+        JarSet mainSet = cluster.getPrimaryJars();
+        for (FqnFragment fqn : cluster.getFqns()) {
+          double percent = (double) fqn.getVersions().getJars().getIntersectionSize(mainSet) / (double) fqn.getVersions().getJars().size();
+          writer.write("  " + fqn.getFqn() + " " + fqn.getVersions().getJars().size() + " " + format.format(percent));
+        }
+        writer.unindent();
+      }
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error printing statistics", e);
     }

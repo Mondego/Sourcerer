@@ -219,6 +219,7 @@
       <src path="${utilities}" />
       <src path="${core-repository-manager}" />
       <src path="${java-repository-manager}" />
+      <src path="${model}" />
       <src path="${utilization}" />
     	<classpath>
         <pathelement path="${classpath}" />
@@ -237,6 +238,9 @@
     </copy>
     <copy todir="${build-utilization}">
       <fileset dir="${java-repository-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-utilization}">
+      <fileset dir="${model}" includes="**/*.java" />
     </copy>
     <copy todir="${build-utilization}">
       <fileset dir="${utilization}" includes="**/*.java" />

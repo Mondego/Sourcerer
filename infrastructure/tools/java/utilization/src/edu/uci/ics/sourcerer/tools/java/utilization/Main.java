@@ -19,11 +19,12 @@ package edu.uci.ics.sourcerer.tools.java.utilization;
 
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster;
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster.MergeMethod;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterMergeMethod;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Identifier;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.Fingerprint;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.JarCollection;
+import edu.uci.ics.sourcerer.util.Action;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 
@@ -35,13 +36,19 @@ public class Main {
     
     @Override
     protected void action() {
-      TaskProgressLogger task = new TaskProgressLogger();
-      JarCollection jars = JarCollection.make(task);
+      final TaskProgressLogger task = new TaskProgressLogger();
+      final JarCollection jars = JarCollection.make(task);
       jars.printStatistics(task);
-      for (MergeMethod method : MergeMethod.values()) {
-        Cluster.MERGE_METHOD.setValue(method);
-        ClusterCollection libraries = Identifier.identifyLibraries(task, jars);
-        libraries.printStatistics(task, "jars+" + method.name(), "clusters+" + method.name());
+      Action action = new Action() {
+        @Override
+        public void doMe() {
+          ClusterMergeMethod method = Cluster.MERGE_METHOD.getValue();
+          ClusterCollection libraries = Identifier.identifyLibraries(task, jars, method.toString());
+          libraries.printStatistics(task, "jars+" + method, "clusters+" + method);
+        }
+      };
+      for (ClusterMergeMethod method : ClusterMergeMethod.values()) {
+        method.doForEachVersion(action);
       }
     }
   }.setProperties(JavaRepositoryFactory.INPUT_REPO, Cluster.MERGE_METHOD, Fingerprint.FINGERPRINT_MODE);

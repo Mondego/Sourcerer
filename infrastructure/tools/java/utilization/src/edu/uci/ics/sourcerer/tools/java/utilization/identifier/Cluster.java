@@ -17,19 +17,13 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
-
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Set;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.entropy.ClusterEntopyCalculator;
-import edu.uci.ics.sourcerer.tools.java.utilization.entropy.ClusterEntropyCalculatorFactory;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.JarSet;
 import edu.uci.ics.sourcerer.util.Averager;
-import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.EnumArgument;
 import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
@@ -39,14 +33,8 @@ import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
  */
 public class Cluster {
   public static final Argument<Integer> COMPATIBILITY_THRESHOLD = new IntegerArgument("compatibility-threshold", 100, "Think percent.").permit();
-  public static final Argument<MergeMethod> MERGE_METHOD = new EnumArgument<>("merge-method", MergeMethod.class, "Method for performing second stage merge.").makeOptional();
-  
-  public static enum MergeMethod {
-    RELATED_PACKAGE,
-    RELATED_SUBPACKAGE,
-    ENTROPY;
-  }
-  
+  public static final Argument<ClusterMergeMethod> MERGE_METHOD = new EnumArgument<>("merge-method", ClusterMergeMethod.class, "Method for performing second stage merge.").makeOptional();
+
   private JarSet jars;
   private JarSet primaryJars;
   private final Collection<FqnFragment> fqns;
@@ -121,83 +109,8 @@ public class Cluster {
     }
   }
   
-  public boolean isSecondStageCompatible(TaskProgressLogger task, Cluster other) {
-    // Is every primary jar from this cluster also in the other cluster?
-    if (primaryJars.getIntersectionSize(other.primaryJars) == primaryJars.size()) {
-      switch (MERGE_METHOD.getValue()) {
-        case RELATED_PACKAGE:
-          {
-            // Is every package from other also in this?
-            Set<FqnFragment> packages = new HashSet<>();
-            for (FqnFragment fqn : fqns) {
-              packages.add(fqn.getParent());
-            }
-            for (FqnFragment fqn : other.fqns) {
-              if (!packages.contains(fqn.getParent())) {
-                return false;
-              }
-            }
-            return true;
-          }
-        case RELATED_SUBPACKAGE:
-          {
-            //  Is every package from other either in this, or a subpackage of this?
-            Set<FqnFragment> packages = new HashSet<>();
-            for (FqnFragment fqn : fqns) {
-              packages.add(fqn.getParent());
-            }
-            for (FqnFragment fqn : other.fqns) {
-              boolean found = false;
-              while (fqn != null) {
-                if (packages.contains(fqn)) {
-                  found = true;
-                  fqn = null;
-                } else {
-                  fqn = fqn.getParent();
-                }
-              }
-              if (!found) {
-                return false;
-              }
-            }
-            return true;
-          } 
-        case ENTROPY:
-          task.start("Considering merging two clusters");
-          task.start("Less Popular Cluster");
-          for (FqnFragment fqn : fqns) {
-            task.report(fqn.getFqn());
-          }
-          task.finish();
-          task.start("More Popular Cluster");
-          for (FqnFragment fqn : other.fqns) {
-            task.report(fqn.getFqn());
-          }
-          task.finish();
-          ClusterEntopyCalculator calc = ClusterEntropyCalculatorFactory.createCalculator();
-          double myEntropy = calc.compute(this);
-          double otherEntropy = calc.compute(other);
-          double jointEntropy = calc.compute(this, other);
-          task.start("Results");
-          task.report("Smaller entropy: " + myEntropy);
-          task.report("Larger entropy: " + otherEntropy);
-          task.report("Joint entropy: " + jointEntropy);
-          double minDelta = jointEntropy - Math.max(myEntropy, otherEntropy);
-          double maxDelta = jointEntropy - Math.min(myEntropy, otherEntropy);
-          task.report("Max Entropy Delta: " + maxDelta);
-          task.report("Min Entropy Delta: " + minDelta);
-          boolean doMerge = maxDelta <= .2 && minDelta < .1;
-          task.report("Merge more into less? " + (doMerge ? "yes" : "no"));
-          task.finish();
-          task.finish();
-          return doMerge; 
-        default:
-          logger.severe("Invalid merge method: " + MERGE_METHOD.getValue());
-          return false;
-      }
-    } else {
-      return false;
-    }
+  public boolean isSecondStageCompatible(Cluster other, LogFileWriter writer) {
+    return MERGE_METHOD.getValue().shouldMerge(this, other, writer);
   }
   
   @Override
