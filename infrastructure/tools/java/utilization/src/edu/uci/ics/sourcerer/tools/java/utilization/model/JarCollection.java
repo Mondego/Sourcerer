@@ -92,6 +92,7 @@ public class JarCollection implements Iterable<Jar> {
         jars = new JarCollection();
       } finally {
         task.finish();
+        task.finish();
       }
     } else {
       task.report("Cache not found, loading...");
@@ -123,6 +124,9 @@ public class JarCollection implements Iterable<Jar> {
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error writing jar collection cache", e);
     }
+    task.finish();
+    
+    task.finish();
     return jars;
   }
   

@@ -37,6 +37,7 @@ public class Main {
     @Override
     protected void action() {
       final TaskProgressLogger task = new TaskProgressLogger();
+      task.start("Comparing library identification methods");
       final JarCollection jars = JarCollection.make(task);
       jars.printStatistics(task);
       Action action = new Action() {
@@ -50,6 +51,7 @@ public class Main {
       for (ClusterMergeMethod method : ClusterMergeMethod.values()) {
         method.doForEachVersion(action);
       }
+      task.finish();
     }
   }.setProperties(JavaRepositoryFactory.INPUT_REPO, Cluster.MERGE_METHOD, Fingerprint.FINGERPRINT_MODE);
 //  public static final Command COMPUTE_MAVEN_FQN_USAGE_STATS = new Command("compute-maven-fqn-usage-stats", "Computes some statistics on FQN usage in Maven.") {

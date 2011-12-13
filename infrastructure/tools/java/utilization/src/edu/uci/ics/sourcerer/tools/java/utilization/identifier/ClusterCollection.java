@@ -166,7 +166,7 @@ public class ClusterCollection implements Iterable<Cluster> {
           for (Cluster lib : clusters) {
             for (int i = 0; i < c; i++)
               writer.writeFragment(" ");
-            writer.writeFragment(" Cluster " + ++clusterCount + ", from " + lib.getJars().size() + " jars");
+            writer.writeFragment(" Cluster " + ++clusterCount + ", from " + lib.getJars().size() + " (" + lib.getPrimaryJars().size() + ") jars");
             writer.newLine();
             int skipped = 0;
             for (FqnFragment fqn : lib.getFqns()) {
@@ -223,7 +223,7 @@ public class ClusterCollection implements Iterable<Cluster> {
 
       while (!sortedClusters.isEmpty()) {
         Cluster cluster = sortedClusters.pollFirst();
-        writer.writeAndIndent("Cluster of " + cluster.getJars().size() + " jars");
+        writer.writeAndIndent("Cluster of " + cluster.getJars().size() + " (" + cluster.getPrimaryJars().size() + ") jars");
         JarSet mainSet = cluster.getPrimaryJars();
         for (FqnFragment fqn : cluster.getFqns()) {
           double percent = (double) fqn.getVersions().getJars().getIntersectionSize(mainSet) / (double) fqn.getVersions().getJars().size();
