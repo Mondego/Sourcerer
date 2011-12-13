@@ -15,24 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.model;
-
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
+package edu.uci.ics.sourcerer.tools.java.utilization.model.fqn;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FqnFragmentMockFactory {
-  public static FqnFragmentMockFactory create() {
-    return new FqnFragmentMockFactory();
+public class FqnNode extends AbstractFqnNode<FqnNode> {
+
+  protected FqnNode(String name, FqnNode parent) {
+    super(name, parent);
+  }
+
+  @Override
+  protected FqnNode create(String name, AbstractFqnNode<?> parent) {
+    return new FqnNode(name, (FqnNode) parent);
   }
   
-  private final VersionedFqnNode root;
-  private FqnFragmentMockFactory() {
-    root = VersionedFqnNode.createRoot();
-  }
-  
-  public VersionedFqnNode create(String fqn) {
-    return root.getFragment(fqn, '.');
+  public static FqnNode createRoot() {
+    return new FqnNode(null, null);
   }
 }

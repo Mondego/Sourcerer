@@ -22,8 +22,9 @@ import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterMergeMethod;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Identifier;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.Fingerprint;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.JarCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.popularity.ImportPopularityCalculator;
 import edu.uci.ics.sourcerer.util.Action;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
@@ -33,7 +34,6 @@ import edu.uci.ics.sourcerer.util.io.arguments.Command;
  */
 public class Main {
   public static final Command IDENTIFY_LIBRARIES = new Command("compare-library-identification", "Compare methods for clustering and identifying the libraries.") {
-    
     @Override
     protected void action() {
       final TaskProgressLogger task = new TaskProgressLogger();
@@ -54,25 +54,13 @@ public class Main {
       task.finish();
     }
   }.setProperties(JavaRepositoryFactory.INPUT_REPO, Cluster.MERGE_METHOD, Fingerprint.FINGERPRINT_MODE);
-//  public static final Command COMPUTE_MAVEN_FQN_USAGE_STATS = new Command("compute-maven-fqn-usage-stats", "Computes some statistics on FQN usage in Maven.") {
-//    @Override
-//    protected void action() {
-//      TaskProgressLogger task = new TaskProgressLogger();
-//      task.start("Computing maven fqn usage statistics");
-//      FqnUsageStatistics.printFqnUsageStatistics(task, FqnUsageTreeBuilder.buildWithMaven(task));
-//      task.finish();
-//    }
-//  }.setProperties(JavaRepositoryFactory.INPUT_REPO);
-//  
-//  public static final Command COMPUTE_MAVEN_JAR_ENTROPY = new Command("compute-maven-jar-entropy", "Computes entropy of Maven jars.") {
-//    @Override
-//    protected void action() {
-//      TaskProgressLogger task = new TaskProgressLogger();
-//      task.start("Computing maven jar entropy");
-//      JarEntropyClassifier.classify(task, JarEntropyCalculator.computeMavenJarEntropy(task));
-//      task.finish();
-//    }
-//  }.setProperties(JavaRepositoryFactory.INPUT_REPO);
+  
+  public static final Command CALCULATE_IMPORT_POPULARITY = new Command("calculate-import-popularity", "Calculates the popularity of FQNs based on import statements.") {
+    @Override
+    protected void action() {
+      ImportPopularityCalculator.calculateImportPopularity();
+    }
+  }.setProperties(JavaRepositoryFactory.INPUT_REPO);
   
   public static void main(String[] args) {
     Command.execute(args, Main.class);

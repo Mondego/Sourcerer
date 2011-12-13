@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.model;
+package edu.uci.ics.sourcerer.tools.java.utilization.model.jar;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
@@ -33,14 +33,14 @@ import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
  */
 public class Jar implements CustomSerializable {
   private final JarFile jar;
-  private final Collection<FqnFragment> fqns;
+  private final Collection<VersionedFqnNode> fqns;
   
   Jar(JarFile jar) {
     this.jar = jar;
     fqns = new ArrayList<>();
   }
   
-  void addFqn(FqnFragment fqn, Fingerprint fingerprint) {
+  void addFqn(VersionedFqnNode fqn, Fingerprint fingerprint) {
     fqns.add(fqn);
     fqn.addJar(this, fingerprint);
   }
@@ -49,7 +49,7 @@ public class Jar implements CustomSerializable {
     return jar;
   }
   
-  public Collection<FqnFragment> getFqns() {
+  public Collection<VersionedFqnNode> getFqns() {
     return fqns;
   }
   
@@ -62,14 +62,14 @@ public class Jar implements CustomSerializable {
   public String serialize() {
     LineBuilder builder = new LineBuilder();
     builder.append(jar.getProperties().HASH.getValue());
-    for (FqnFragment fqn : fqns) {
+    for (VersionedFqnNode fqn : fqns) {
       builder.append(fqn.getFqn());
       
     }
     return builder.toString();
   }
   
-  public static ObjectDeserializer<Jar> makeDeserializer(final FqnFragment rootFragment, final JavaRepository repo) {
+  public static ObjectDeserializer<Jar> makeDeserializer(final VersionedFqnNode rootFragment, final JavaRepository repo) {
     return new ObjectDeserializer<Jar>() {
       ObjectDeserializer<Fingerprint> fingerprintDeserializer = Fingerprint.makeDeserializer();
       @Override
@@ -83,7 +83,7 @@ public class Jar implements CustomSerializable {
           } else {
             Jar jar = new Jar(jarFile);
             while (scanner.hasNext()) {
-              jar.addFqn(rootFragment.getFragment(scanner.next(), '.'), fingerprintDeserializer.deserialize(scanner));
+              jar.addFqn(rootFragment.getChild(scanner.next(), '.'), fingerprintDeserializer.deserialize(scanner));
             }
             return jar;
           }

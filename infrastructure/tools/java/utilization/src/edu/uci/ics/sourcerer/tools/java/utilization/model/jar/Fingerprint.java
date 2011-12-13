@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.model;
+package edu.uci.ics.sourcerer.tools.java.utilization.model.jar;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 

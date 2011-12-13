@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.model;
+package edu.uci.ics.sourcerer.tools.java.utilization.model.jar;
 
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
@@ -47,11 +47,11 @@ import edu.uci.ics.sourcerer.util.io.arguments.RelativeFileArgument;
 public class JarCollection implements Iterable<Jar> {
   public static Argument<File> JAR_COLLECTION_CACHE = new RelativeFileArgument("jar-collection-cache", "jar-collection-cache", Arguments.CACHE, "Cache for jar collection.").permit();
   private final ArrayList<Jar> jars;
-  private final FqnFragment rootFragment;
+  private final VersionedFqnNode rootFragment;
   
   private JarCollection() {
     jars = new ArrayList<>();
-    rootFragment = FqnFragment.createRoot();
+    rootFragment = VersionedFqnNode.createRoot();
   }
   
   private void add(JarFile jar) {
@@ -61,7 +61,7 @@ public class JarCollection implements Iterable<Jar> {
         if (entry.getName().endsWith(".class")) {
           String fqn = entry.getName();
           fqn = fqn.substring(0, fqn.lastIndexOf('.'));
-          newJar.addFqn(rootFragment.getFragment(fqn, '/'), Fingerprint.create(zis, entry.getSize()));
+          newJar.addFqn(rootFragment.getChild(fqn, '/'), Fingerprint.create(zis, entry.getSize()));
         }
       }
     } catch (IOException | IllegalArgumentException e) {
@@ -126,7 +126,6 @@ public class JarCollection implements Iterable<Jar> {
     }
     task.finish();
     
-    task.finish();
     return jars;
   }
   
@@ -139,7 +138,7 @@ public class JarCollection implements Iterable<Jar> {
     return jars.size();
   }
   
-  public FqnFragment getRoot() {
+  public VersionedFqnNode getRoot() {
     return rootFragment;
   }
   
@@ -152,7 +151,7 @@ public class JarCollection implements Iterable<Jar> {
     
     int fragmentCount = 0;
     int fqnCount = 0;
-    for (FqnFragment fragment : rootFragment.getPostOrderIterable()) {
+    for (VersionedFqnNode fragment : rootFragment.getPostOrderIterable()) {
       fragmentCount++;
       if (fragment.getVersions().getJars().size() > 0) {
         fqnCount++;

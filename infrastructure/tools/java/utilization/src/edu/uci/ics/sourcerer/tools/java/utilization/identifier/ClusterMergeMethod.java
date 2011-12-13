@@ -25,7 +25,7 @@ import java.util.Set;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.entropy.ClusterEntopyCalculator;
 import edu.uci.ics.sourcerer.tools.java.utilization.entropy.ClusterEntropyCalculatorFactory;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.Action;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
@@ -41,11 +41,11 @@ public enum ClusterMergeMethod {
     public boolean shouldMergeHelper(Cluster smaller, Cluster larger, LogFileWriter writer) {
       // Is every package in larger cluster either in the smaller cluster
       //   or a subpackage of a package in the smaller cluster
-      Set<FqnFragment> smallerPackages = new HashSet<>();
-      for (FqnFragment fqn : smaller.getFqns()) {
+      Set<VersionedFqnNode> smallerPackages = new HashSet<>();
+      for (VersionedFqnNode fqn : smaller.getFqns()) {
         smallerPackages.add(fqn.getParent());
       }
-      for (FqnFragment fqn : larger.getFqns()) {
+      for (VersionedFqnNode fqn : larger.getFqns()) {
         boolean found = false;
         while (fqn != null) {
           if (smallerPackages.contains(fqn)) {
@@ -88,17 +88,17 @@ public enum ClusterMergeMethod {
     @Override
     public boolean shouldMergeHelper(Cluster smaller, Cluster larger, LogFileWriter writer) {
       // Size of package intersection over size of package union
-      Set<FqnFragment> smallerPackages = new HashSet<>();
-      for (FqnFragment fqn : smaller.getFqns()) {
+      Set<VersionedFqnNode> smallerPackages = new HashSet<>();
+      for (VersionedFqnNode fqn : smaller.getFqns()) {
         smallerPackages.add(fqn.getParent());
       }
-      Set<FqnFragment> largerPackages = new HashSet<>();
-      for (FqnFragment fqn : larger.getFqns()) {
+      Set<VersionedFqnNode> largerPackages = new HashSet<>();
+      for (VersionedFqnNode fqn : larger.getFqns()) {
         largerPackages.add(fqn.getParent());
       }
       int intersectionSize = 0;
       int unionSize = 0;
-      for (FqnFragment fqn : largerPackages) {
+      for (VersionedFqnNode fqn : largerPackages) {
         if (smallerPackages.contains(fqn)) {
           intersectionSize++;
         } else {
@@ -135,7 +135,7 @@ public enum ClusterMergeMethod {
       return name() + "-" + format.format(PATH_SIMILARITY_THRESHOLD.getValue());
     }
     
-    private void breakFqn(FqnFragment fqn, LinkedList<FqnFragment> fragments) {
+    private void breakFqn(VersionedFqnNode fqn, LinkedList<VersionedFqnNode> fragments) {
       while (fqn.getName() != null) {
         fragments.addFirst(fqn);
         fqn = fqn.getParent();
@@ -146,23 +146,23 @@ public enum ClusterMergeMethod {
     public boolean shouldMergeHelper(Cluster smaller, Cluster larger, LogFileWriter writer) {
       Averager<Double> averager = new Averager<>();
       
-      LinkedList<FqnFragment> largerFragments = new LinkedList<>();
-      LinkedList<FqnFragment> smallerFragments = new LinkedList<>();
-      for (FqnFragment largerFqn : larger.getFqns()) {
+      LinkedList<VersionedFqnNode> largerFragments = new LinkedList<>();
+      LinkedList<VersionedFqnNode> smallerFragments = new LinkedList<>();
+      for (VersionedFqnNode largerFqn : larger.getFqns()) {
         // Break the package into fragments
         breakFqn(largerFqn.getParent(), largerFragments);
         
         // Find the FQN in the smaller cluster that matches best
         double bestMatch = 0;
-        for (FqnFragment smallerFqn : smaller.getFqns()) {
+        for (VersionedFqnNode smallerFqn : smaller.getFqns()) {
           breakFqn(smallerFqn.getParent(), smallerFragments);
           if (largerFragments.isEmpty()) {
             if (smallerFragments.isEmpty()) {
               bestMatch = 1.;
             }
           } else {
-            Iterator<FqnFragment> largerIter = largerFragments.iterator();
-            Iterator<FqnFragment> smallerIter = smallerFragments.iterator();
+            Iterator<VersionedFqnNode> largerIter = largerFragments.iterator();
+            Iterator<VersionedFqnNode> smallerIter = smallerFragments.iterator();
             int overlap = 0;
             while (largerIter.hasNext() && smallerIter.hasNext()) {
               if (largerIter.next() == smallerIter.next()) {
@@ -205,7 +205,7 @@ public enum ClusterMergeMethod {
       return name() + "-" + format.format(PATH_SIMILARITY_THRESHOLD.getValue());
     }
     
-    private void breakFqn(FqnFragment fqn, LinkedList<FqnFragment> fragments) {
+    private void breakFqn(VersionedFqnNode fqn, LinkedList<VersionedFqnNode> fragments) {
       while (fqn.getName() != null) {
         fragments.addFirst(fqn);
         fqn = fqn.getParent();
@@ -216,16 +216,16 @@ public enum ClusterMergeMethod {
     public boolean shouldMergeHelper(Cluster smaller, Cluster larger, LogFileWriter writer) {
       Averager<Double> averager = new Averager<>();
       
-      LinkedList<FqnFragment> largerFragments = new LinkedList<>();
-      LinkedList<FqnFragment> smallerFragments = new LinkedList<>();
-      for (FqnFragment largerFqn : larger.getFqns()) {
+      LinkedList<VersionedFqnNode> largerFragments = new LinkedList<>();
+      LinkedList<VersionedFqnNode> smallerFragments = new LinkedList<>();
+      for (VersionedFqnNode largerFqn : larger.getFqns()) {
         // Break the package into fragments
         breakFqn(largerFqn.getParent(), largerFragments);
         
         // Does the fqn not have a package?
         // Find the FQN in the smaller cluster that matches best
         Averager<Double> averageMatch = new Averager<>();
-        for (FqnFragment smallerFqn : smaller.getFqns()) {
+        for (VersionedFqnNode smallerFqn : smaller.getFqns()) {
           breakFqn(smallerFqn.getParent(), smallerFragments);
           if (largerFragments.isEmpty()) {
             if (smallerFragments.isEmpty()) {
@@ -234,8 +234,8 @@ public enum ClusterMergeMethod {
               averageMatch.addValue(0.);
             }
           } else {
-            Iterator<FqnFragment> largerIter = largerFragments.iterator();
-            Iterator<FqnFragment> smallerIter = smallerFragments.iterator();
+            Iterator<VersionedFqnNode> largerIter = largerFragments.iterator();
+            Iterator<VersionedFqnNode> smallerIter = smallerFragments.iterator();
             int overlap = 0;
             while (largerIter.hasNext() && smallerIter.hasNext()) {
               if (largerIter.next() == smallerIter.next()) {
@@ -301,14 +301,14 @@ public enum ClusterMergeMethod {
     if (smaller.getPrimaryJars().getIntersectionSize(larger.getPrimaryJars()) == smaller.getPrimaryJars().size()) {
       writer.writeAndIndent("Considering merging two clusters");
       
-      writer.writeAndIndent("Smaller Cluster");
-      for (FqnFragment fqn : smaller.getFqns()) {
+      writer.writeAndIndent("Smaller Cluster (" + smaller.getPrimaryJars().size() + ")");
+      for (VersionedFqnNode fqn : smaller.getFqns()) {
         writer.write(fqn.getFqn());
       }
       writer.unindent();
       
-      writer.writeAndIndent("Larger Cluster");
-      for (FqnFragment fqn : larger.getFqns()) {
+      writer.writeAndIndent("Larger Cluster (" + larger.getPrimaryJars().size() + ")");
+      for (VersionedFqnNode fqn : larger.getFqns()) {
         writer.write(fqn.getFqn());
       }
       writer.unindent();

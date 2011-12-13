@@ -20,8 +20,8 @@ package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.JarSet;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
@@ -37,7 +37,7 @@ public class Cluster {
 
   private JarSet jars;
   private JarSet primaryJars;
-  private final Collection<FqnFragment> fqns;
+  private final Collection<VersionedFqnNode> fqns;
   
   Cluster() {
     this.fqns = new LinkedList<>();
@@ -45,18 +45,18 @@ public class Cluster {
     primaryJars = JarSet.create();
   }
   
-  void addPrimaryFqn(FqnFragment fqn) {
+  void addPrimaryFqn(VersionedFqnNode fqn) {
     fqns.add(fqn);
     primaryJars = primaryJars.merge(fqn.getVersions().getJars());
     jars = jars.merge(fqn.getVersions().getJars());
   }
   
-  void addSecondaryFqn(FqnFragment fqn) {
+  void addSecondaryFqn(VersionedFqnNode fqn) {
     fqns.add(fqn);
     jars = jars.merge(fqn.getVersions().getJars());
   }
   
-  public Collection<FqnFragment> getFqns() {
+  public Collection<VersionedFqnNode> getFqns() {
     return fqns;
   }
   
@@ -92,8 +92,8 @@ public class Cluster {
         Averager<Double> otherGivenThis = new Averager<>();
         Averager<Double> thisGivenOther = new Averager<>();
       
-        for (FqnFragment fqn : fqns) {
-          for (FqnFragment otherFqn : other.fqns) {
+        for (VersionedFqnNode fqn : fqns) {
+          for (VersionedFqnNode otherFqn : other.fqns) {
             JarSet fqnJars = fqn.getVersions().getJars();
             JarSet otherFqnJars = otherFqn.getVersions().getJars();
             // Conditional probability of other given this

@@ -35,9 +35,9 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.Jar;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.JarSet;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
@@ -140,10 +140,10 @@ public class ClusterCollection implements Iterable<Cluster> {
       for (Jar jar : clusterMap.keySet()) {
         Collection<Cluster> clusters = clusterMap.get(jar);
         if (clusters.size() > 1) {
-          HashSet<FqnFragment> fqns = new HashSet<>(jar.getFqns());
+          HashSet<VersionedFqnNode> fqns = new HashSet<>(jar.getFqns());
           writer.writeAndIndent(jar.getJar().getProperties().NAME.getValue() + " fragmented into " + clusters.size() + " clusters");
           Set<Jar> otherJars = new HashSet<>();
-          for (FqnFragment fqn : jar.getFqns()) {
+          for (VersionedFqnNode fqn : jar.getFqns()) {
             for (Jar otherJar : fqn.getVersions().getJars()) {
               otherJars.add(otherJar);
             }
@@ -169,7 +169,7 @@ public class ClusterCollection implements Iterable<Cluster> {
             writer.writeFragment(" Cluster " + ++clusterCount + ", from " + lib.getJars().size() + " (" + lib.getPrimaryJars().size() + ") jars");
             writer.newLine();
             int skipped = 0;
-            for (FqnFragment fqn : lib.getFqns()) {
+            for (VersionedFqnNode fqn : lib.getFqns()) {
               if (fqns.contains(fqn)) {
                 for (Jar otherJar : otherJars) {
                   if (fqn.getVersions().getJars().contains(otherJar)) {
@@ -219,13 +219,13 @@ public class ClusterCollection implements Iterable<Cluster> {
       
       writer.write(clusters.size() + " clusters");
       writer.write((clusters.size() - sortedClusters.size()) + " clusters matching a single jar");
-      writer.write(sortedClusters.size() + " clustered matching multiple jars");
+      writer.write(sortedClusters.size() + " clusters matching multiple jars");
 
       while (!sortedClusters.isEmpty()) {
         Cluster cluster = sortedClusters.pollFirst();
         writer.writeAndIndent("Cluster of " + cluster.getJars().size() + " (" + cluster.getPrimaryJars().size() + ") jars");
         JarSet mainSet = cluster.getPrimaryJars();
-        for (FqnFragment fqn : cluster.getFqns()) {
+        for (VersionedFqnNode fqn : cluster.getFqns()) {
           double percent = (double) fqn.getVersions().getJars().getIntersectionSize(mainSet) / (double) fqn.getVersions().getJars().size();
           writer.write("  " + fqn.getFqn() + " " + fqn.getVersions().getJars().size() + " " + format.format(percent));
         }

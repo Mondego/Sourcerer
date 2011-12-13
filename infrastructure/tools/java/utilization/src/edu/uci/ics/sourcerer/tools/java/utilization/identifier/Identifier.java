@@ -31,8 +31,8 @@ import java.util.logging.Level;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.JarCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
@@ -52,12 +52,12 @@ public class Identifier {
     task.report("Compatibility threshold: " + Cluster.COMPATIBILITY_THRESHOLD.getValue());
     task.report("Secondary merging method: " + Cluster.MERGE_METHOD.getValue());
     
-    Multimap<FqnFragment, Cluster> tempClusterMap = ArrayListMultimap.create();
+    Multimap<VersionedFqnNode, Cluster> tempClusterMap = ArrayListMultimap.create();
     
     task.start("Identification Stage One: performing post-order traversal of FQN suffix tree", "FQN fragments visited", 100000);
     int clusterCount = 0;
     // Explore the tree in post-order
-    for (FqnFragment fragment : jars.getRoot().getPostOrderIterable()) {
+    for (VersionedFqnNode fragment : jars.getRoot().getPostOrderIterable()) {
       task.progress("%d FQN fragments visited (" + clusterCount + " libraries) in %s");
       // If there are no children, then make it its own single-fqn library
       if (!fragment.hasChildren()) {
@@ -69,7 +69,7 @@ public class Identifier {
         clusterCount++;
       } else {
         // Start merging children
-        for (FqnFragment child : fragment.getChildren()) {
+        for (VersionedFqnNode child : fragment.getChildren()) {
           for (Cluster childCluster : tempClusterMap.get(child)) {
             LinkedList<Cluster> candidates = new LinkedList<>();
             
@@ -85,7 +85,7 @@ public class Identifier {
             } else if (candidates.size() == 1) {
               // If one was found, merge in the child
               Cluster candidate = candidates.getFirst();
-              for (FqnFragment fqn : childCluster.getFqns()) {
+              for (VersionedFqnNode fqn : childCluster.getFqns()) {
                 candidate.addPrimaryFqn(fqn);
               }
               clusterCount--;
@@ -135,7 +135,7 @@ public class Identifier {
           Cluster processed = processedIter.next();
           // Check if they should merge
           if (biggest.isSecondStageCompatible(processed, writer)) {
-            for (FqnFragment fqn : processed.getFqns()) {
+            for (VersionedFqnNode fqn : processed.getFqns()) {
               biggest.addSecondaryFqn(fqn);
             }
             processedIter.remove();

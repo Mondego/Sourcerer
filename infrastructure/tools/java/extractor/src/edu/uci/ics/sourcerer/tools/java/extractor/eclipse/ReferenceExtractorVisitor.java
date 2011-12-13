@@ -257,27 +257,28 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
    */
   @Override
   public boolean visit(ImportDeclaration node) {
-    IBinding binding = node.resolveBinding();
-    if (binding == null) {
-      if (bindingFree) {
-        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
-      } else {
-//        throw new IllegalStateException("Binding resolution appears to have failed!");
-        logger.info("Binding resolution appears to have failed!");
-        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
-      }
-    } else {
-      try {
-        if (binding instanceof ITypeBinding) {
-          importWriter.writeImport(getTypeFqn((ITypeBinding)binding), node.isStatic(), node.isOnDemand(), getLocation(node));
-        } else {
-          importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
-        }
-      } catch (NullPointerException e) {
-        logger.log(Level.WARNING, "Eclipse NPE bug in import");
-        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
-      }
-    }
+    importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
+//    IBinding binding = node.resolveBinding();
+//    if (binding == null) {
+//      if (bindingFree) {
+//        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
+//      } else {
+////        throw new IllegalStateException("Binding resolution appears to have failed!");
+//        logger.info("Binding resolution appears to have failed!");
+//        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
+//      }
+//    } else {
+//      try {
+//        if (binding instanceof ITypeBinding) {
+//          importWriter.writeImport(getTypeFqn((ITypeBinding)binding), node.isStatic(), node.isOnDemand(), getLocation(node));
+//        } else {
+//          importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
+//        }
+//      } catch (NullPointerException e) {
+//        logger.log(Level.WARNING, "Eclipse NPE bug in import");
+//        importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), getLocation(node));
+//      }
+//    }
     return false;
   }
 

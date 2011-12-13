@@ -23,7 +23,7 @@ import org.junit.Test;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.LibraryMockFactory;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -235,7 +235,7 @@ public class EntropyTest {
   
   private void printEntropy(Cluster library, double entropy) {
     System.out.println("Entropy: " + entropy);
-    for (FqnFragment fqn : library.getFqns()) {
+    for (VersionedFqnNode fqn : library.getFqns()) {
       System.out.println("  " + fqn.getFqn());
     }
     System.out.println();

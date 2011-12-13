@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragment;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -37,13 +37,13 @@ public class ClusterEntropyCalculatorFactory {
           PackageFragmentEntropy parent;
           PackageFragmentEntropy sibling;
           PackageFragmentEntropy firstChild;
-          FqnFragment fragment;
+          VersionedFqnNode fragment;
           int level;
           int fqnCount;
           int childCount;
           double entropy;
 
-          PackageFragmentEntropy(FqnFragment fragment) {
+          PackageFragmentEntropy(VersionedFqnNode fragment) {
             this.parent = null;
             this.fragment = fragment;
             this.level = 0;
@@ -52,7 +52,7 @@ public class ClusterEntropyCalculatorFactory {
             this.entropy = 0;
           }
 
-          PackageFragmentEntropy(PackageFragmentEntropy parent, FqnFragment fragment) {
+          PackageFragmentEntropy(PackageFragmentEntropy parent, VersionedFqnNode fragment) {
             this.parent = parent;
             this.fragment = fragment;
             this.level = parent.level + 1;
@@ -61,7 +61,7 @@ public class ClusterEntropyCalculatorFactory {
             this.entropy = 0;
           }
 
-          PackageFragmentEntropy addChild(FqnFragment fragment) {
+          PackageFragmentEntropy addChild(VersionedFqnNode fragment) {
             PackageFragmentEntropy previousChild = null;
             for (PackageFragmentEntropy child = firstChild; child != null; child = child.sibling) {
               int cmp = child.fragment.getName().compareTo(fragment.getName());
@@ -143,9 +143,9 @@ public class ClusterEntropyCalculatorFactory {
         }
 
         PackageFragmentEntropy root;
-        Map<FqnFragment, PackageFragmentEntropy> entropies = new HashMap<>();
+        Map<VersionedFqnNode, PackageFragmentEntropy> entropies = new HashMap<>();
 
-        private PackageFragmentEntropy getFragmentEntropy(FqnFragment fragment) {
+        private PackageFragmentEntropy getFragmentEntropy(VersionedFqnNode fragment) {
           PackageFragmentEntropy entropy = entropies.get(fragment);
           if (entropy == null) {
             if (fragment.getParent() == null) {
@@ -166,7 +166,7 @@ public class ClusterEntropyCalculatorFactory {
 
           // Build up the library-specific tree so we can compute the entropy
           for (Cluster cluster : clusters) {
-            for (FqnFragment fqn : cluster.getFqns()) {
+            for (VersionedFqnNode fqn : cluster.getFqns()) {
               // Look for the fragments parent
               // Add to the FQN count for it
               getFragmentEntropy(fqn.getParent()).addFqn();
