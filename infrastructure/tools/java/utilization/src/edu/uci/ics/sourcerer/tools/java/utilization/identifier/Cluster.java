@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
+import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -35,40 +37,37 @@ public class Cluster {
   public static final Argument<Double> COMPATIBILITY_THRESHOLD = new DoubleArgument("compatibility-threshold", 1., "").permit();
   public static final Argument<ClusterMergeMethod> MERGE_METHOD = new EnumArgument<>("merge-method", ClusterMergeMethod.class, "Method for performing second stage merge.").makeOptional();
 
-  private JarSet coreJars;
   private JarSet jars;
   private final Collection<VersionedFqnNode> coreFqns;
-  private final Collection<VersionedFqnNode> fqns;
+  private final Collection<VersionedFqnNode> extraFqns;
   
   Cluster() {
     this.coreFqns = new LinkedList<>();
-    this.fqns = new LinkedList<>();
-    coreJars = JarSet.create();
+    this.extraFqns = new LinkedList<>();
     jars = JarSet.create();
   }
   
   void addCoreFqn(VersionedFqnNode fqn) {
     coreFqns.add(fqn);
-    fqns.add(fqn);
-    coreJars = coreJars.merge(fqn.getVersions().getJars());
     jars = jars.merge(fqn.getVersions().getJars());
   }
   
   void mergeCluster(Cluster cluster) {
-    jars = jars.merge(cluster.jars);
-    fqns.addAll(cluster.fqns);
+    if (cluster.jars.getIntersectionSize(jars) < cluster.jars.size()) {
+      logger.severe("Unexpected: merge should only be permitted with full overlap.");
+    }
+    if (!cluster.extraFqns.isEmpty()) {
+      logger.severe("Unexpected: merge target should not have any extra fqns.");
+    }
+    extraFqns.addAll(cluster.coreFqns);
   }
   
   public Collection<VersionedFqnNode> getCoreFqns() {
     return coreFqns;
   }
   
-  public Collection<VersionedFqnNode> getFqns() {
-    return fqns;
-  }
-  
-  public JarSet getCoreJars() {
-    return coreJars;
+  public Collection<VersionedFqnNode> getExtraFqns() {
+    return extraFqns;
   }
   
   public JarSet getJars() {
@@ -87,13 +86,13 @@ public class Cluster {
     // If the threshold is 1, we can short-circuit this comparison
     // The primary jars must match exactly (can do == because JarSet is interned)
     else if (threshold >= 1.) {
-      return coreJars == other.coreJars;
+      return jars == other.jars;
     }
     // Now we have to actually do the comparison
     else {
       // If there's no intersection between the JarSet, return false
       // There may be other optimizations that can be done to cut out cases where the full comparison has to be done
-      if (coreJars.getIntersectionSize(other.coreJars) == 0) {
+      if (jars.getIntersectionSize(other.jars) == 0) {
         return false;
       } else {
         Averager<Double> otherGivenThis = new Averager<>();
@@ -122,6 +121,6 @@ public class Cluster {
   
   @Override
   public String toString() {
-    return fqns.toString();
+    return "core:{" + coreFqns.toString() + "} extra:{" + extraFqns.toString() +"}";
   }
 }

@@ -31,6 +31,7 @@ import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -38,42 +39,10 @@ import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
 public enum ClusterMergeMethod {
   RELATED_SUBPACKAGE {
     @Override
-    public boolean shouldMergeHelper(Cluster smaller, Cluster larger, LogFileWriter writer) {
-      // Is every package in larger cluster either in the smaller cluster
-      //   or a subpackage of a package in the smaller cluster
-      Set<VersionedFqnNode> smallerPackages = new HashSet<>();
-      for (VersionedFqnNode fqn : smaller.getFqns()) {
-        smallerPackages.add(fqn.getParent());
-      }
-      for (VersionedFqnNode fqn : larger.getFqns()) {
-        boolean found = false;
-        while (fqn != null) {
-          if (smallerPackages.contains(fqn)) {
-            found = true;
-            fqn = null;
-          } else {
-            fqn = fqn.getParent();
-          }
-        }
-        if (!found) {
-          writer.writeAndIndent("Result");
-          writer.write("Merge? No");
-          writer.unindent();
-          return false;
-        }
-      }
-      writer.writeAndIndent("Result");
-      writer.write("Merge? Yes");
-      writer.unindent();
-      return true;
-    }
-  },
-  JACCARD_PACKAGE {
-    @Override
     public void doForEachVersion(Action action) {
       Cluster.MERGE_METHOD.setValue(this);
-      for (int threshold = 100; threshold > 75; threshold -= 5) {
-        JACCARD_THRESHOLD.setValue(threshold / 100.);
+      for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
+        MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
       }
     }
@@ -82,35 +51,89 @@ public enum ClusterMergeMethod {
     public String toString() {
       NumberFormat format = NumberFormat.getInstance();
       format.setMaximumFractionDigits(2);
-      return name() + "-" + format.format(JACCARD_THRESHOLD.getValue());
+      return name() + "-" + format.format(MERGE_THRESHOLD.getValue());
     }
     
     @Override
-    public boolean shouldMergeHelper(Cluster smaller, Cluster larger, LogFileWriter writer) {
-      // Size of package intersection over size of package union
-      Set<VersionedFqnNode> smallerPackages = new HashSet<>();
-      for (VersionedFqnNode fqn : smaller.getFqns()) {
-        smallerPackages.add(fqn.getParent());
+    public boolean shouldMergeHelper(Cluster core, Cluster other, LogFileWriter writer) {
+      // What percentage of packages in other cluster are either in the core cluster
+      //   or a subpackage of a package in the core cluster
+      Set<VersionedFqnNode> corePackages = new HashSet<>();
+      for (VersionedFqnNode fqn : core.getCoreFqns()) {
+        corePackages.add(fqn.getParent());
       }
-      Set<VersionedFqnNode> largerPackages = new HashSet<>();
-      for (VersionedFqnNode fqn : larger.getFqns()) {
-        largerPackages.add(fqn.getParent());
+      Set<VersionedFqnNode> otherPackages = new HashSet<>();
+      for (VersionedFqnNode fqn : other.getCoreFqns()) {
+        otherPackages.add(fqn.getParent());
+      }
+      int validPackages = 0;
+      for (VersionedFqnNode pkg : otherPackages) {
+        while (pkg != null) {
+          if (corePackages.contains(pkg)) {
+            validPackages++;
+            pkg = null;
+          } else {
+            pkg = pkg.getParent();
+          }
+        }
+      }
+      
+      double validRate = (double) validPackages / otherPackages.size();
+      
+      writer.writeAndIndent("Results");
+      writer.write("Valid rate: " + validRate);
+      boolean doMerge = validRate >= MERGE_THRESHOLD.getValue();
+      writer.write("Merge? " + (doMerge ? "yes" : " no"));
+      writer.unindent();
+      writer.writeAndIndent("Result");
+      writer.write("Merge? Yes");
+      writer.unindent();
+    
+      return true;
+    }
+  },
+  JACCARD_PACKAGE {
+    @Override
+    public void doForEachVersion(Action action) {
+      Cluster.MERGE_METHOD.setValue(this);
+      for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
+        MERGE_THRESHOLD.setValue(threshold / 100.);
+        action.doMe();
+      }
+    }
+    
+    @Override
+    public String toString() {
+      NumberFormat format = NumberFormat.getInstance();
+      format.setMaximumFractionDigits(2);
+      return name() + "-" + format.format(MERGE_THRESHOLD.getValue());
+    }
+    
+    @Override
+    public boolean shouldMergeHelper(Cluster core, Cluster other, LogFileWriter writer) {
+      // Size of package intersection over size of package union
+      Set<VersionedFqnNode> corePackages = new HashSet<>();
+      for (VersionedFqnNode fqn : core.getCoreFqns()) {
+        corePackages.add(fqn.getParent());
+      }
+      Set<VersionedFqnNode> otherPackages = new HashSet<>();
+      for (VersionedFqnNode fqn : other.getCoreFqns()) {
+        otherPackages.add(fqn.getParent());
       }
       int intersectionSize = 0;
-      int unionSize = 0;
-      for (VersionedFqnNode fqn : largerPackages) {
-        if (smallerPackages.contains(fqn)) {
+      int unionSize = corePackages.size();
+      for (VersionedFqnNode fqn : otherPackages) {
+        if (corePackages.contains(fqn)) {
           intersectionSize++;
         } else {
           unionSize++;
         }
       }
-      unionSize += largerPackages.size() - intersectionSize;
       double jaccardIndex = (double) intersectionSize / unionSize;
       
       writer.writeAndIndent("Results");
       writer.write("Jaccard: " + jaccardIndex);
-      boolean doMerge = jaccardIndex >= JACCARD_THRESHOLD.getValue();
+      boolean doMerge = jaccardIndex >= MERGE_THRESHOLD.getValue();
       writer.write("Merge? " + (doMerge ? "yes" : " no"));
       writer.unindent();
 
@@ -122,8 +145,8 @@ public enum ClusterMergeMethod {
     @Override
     public void doForEachVersion(Action action) {
       Cluster.MERGE_METHOD.setValue(this);
-      for (int threshold = 100; threshold > 75; threshold -= 5) {
-        PATH_SIMILARITY_THRESHOLD.setValue(threshold / 100.);
+      for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
+        MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
       }
     }
@@ -132,7 +155,7 @@ public enum ClusterMergeMethod {
     public String toString() {
       NumberFormat format = NumberFormat.getInstance();
       format.setMaximumFractionDigits(2);
-      return name() + "-" + format.format(PATH_SIMILARITY_THRESHOLD.getValue());
+      return name() + "-" + format.format(MERGE_THRESHOLD.getValue());
     }
     
     private void breakFqn(VersionedFqnNode fqn, LinkedList<VersionedFqnNode> fragments) {
@@ -143,45 +166,45 @@ public enum ClusterMergeMethod {
     }
     
     @Override
-    public boolean shouldMergeHelper(Cluster smaller, Cluster larger, LogFileWriter writer) {
+    public boolean shouldMergeHelper(Cluster core, Cluster other, LogFileWriter writer) {
       Averager<Double> averager = new Averager<>();
       
-      LinkedList<VersionedFqnNode> smallerFragments = new LinkedList<>();
-      LinkedList<VersionedFqnNode> largerFragments = new LinkedList<>();
-      for (VersionedFqnNode smallerFqn : smaller.getFqns()) {
+      LinkedList<VersionedFqnNode> coreFragments = new LinkedList<>();
+      LinkedList<VersionedFqnNode> otherFragments = new LinkedList<>();
+      for (VersionedFqnNode otherFqn : other.getCoreFqns()) {
         // Break the package into fragments
-        breakFqn(smallerFqn.getParent(), smallerFragments);
+        breakFqn(otherFqn.getParent(), otherFragments);
         
-        // Find the FQN in the larger cluster that matches best
+        // Find the FQN in the core cluster that matches best
         double bestMatch = 0;
-        for (VersionedFqnNode largerFqn : larger.getFqns()) {
-          breakFqn(largerFqn.getParent(), largerFragments);
-          if (smallerFragments.isEmpty()) {
-            if (largerFragments.isEmpty()) {
+        for (VersionedFqnNode coreFqn : core.getCoreFqns()) {
+          breakFqn(coreFqn.getParent(), coreFragments);
+          if (coreFragments.isEmpty()) {
+            if (otherFragments.isEmpty()) {
               bestMatch = 1.;
             }
           } else {
-            Iterator<VersionedFqnNode> smallerIter = smallerFragments.iterator();
-            Iterator<VersionedFqnNode> largerIter = largerFragments.iterator();
+            Iterator<VersionedFqnNode> coreIter = coreFragments.iterator();
+            Iterator<VersionedFqnNode> otherIter = otherFragments.iterator();
             int overlap = 0;
-            while (smallerIter.hasNext() && largerIter.hasNext()) {
-              if (smallerIter.next() == largerIter.next()) {
+            while (coreIter.hasNext() && otherIter.hasNext()) {
+              if (coreIter.next() == otherIter.next()) {
                 overlap++;
               } else {
                 break;
               }
             }
-            bestMatch = Math.max(bestMatch, (double) overlap / smallerFragments.size());
+            bestMatch = Math.max(bestMatch, (double) overlap / otherFragments.size());
           }
-          largerFragments.clear();
+          coreFragments.clear();
         }
         averager.addValue(bestMatch);
-        smallerFragments.clear();
+        otherFragments.clear();
       }
       
       writer.writeAndIndent("Results");
       writer.write("Average Max Similarity: " + averager.getMean());
-      boolean doMerge = averager.getMean() >= PATH_SIMILARITY_THRESHOLD.getValue();
+      boolean doMerge = averager.getMean() >= MERGE_THRESHOLD.getValue();
       writer.write("Merge? " + (doMerge ? "yes" : " no"));
       writer.unindent();
       
@@ -192,8 +215,8 @@ public enum ClusterMergeMethod {
     @Override
     public void doForEachVersion(Action action) {
       Cluster.MERGE_METHOD.setValue(this);
-      for (int threshold = 100; threshold > 75; threshold -= 5) {
-        PATH_SIMILARITY_THRESHOLD.setValue(threshold / 100.);
+      for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
+        MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
       }
     }
@@ -202,7 +225,7 @@ public enum ClusterMergeMethod {
     public String toString() {
       NumberFormat format = NumberFormat.getInstance();
       format.setMaximumFractionDigits(2);
-      return name() + "-" + format.format(PATH_SIMILARITY_THRESHOLD.getValue());
+      return name() + "-" + format.format(MERGE_THRESHOLD.getValue());
     }
     
     private void breakFqn(VersionedFqnNode fqn, LinkedList<VersionedFqnNode> fragments) {
@@ -213,49 +236,49 @@ public enum ClusterMergeMethod {
     }
     
     @Override
-    public boolean shouldMergeHelper(Cluster smaller, Cluster larger, LogFileWriter writer) {
+    public boolean shouldMergeHelper(Cluster core, Cluster other, LogFileWriter writer) {
       Averager<Double> averager = new Averager<>();
       
-      LinkedList<VersionedFqnNode> smallerFragments = new LinkedList<>();
-      LinkedList<VersionedFqnNode> largerFragments = new LinkedList<>();
+      LinkedList<VersionedFqnNode> coreFragments = new LinkedList<>();
+      LinkedList<VersionedFqnNode> otherFragments = new LinkedList<>();
       
-      for (VersionedFqnNode smallerFqn : smaller.getFqns()) {
+      for (VersionedFqnNode otherFqn : other.getCoreFqns()) {
         // Break the package into fragments
-        breakFqn(smallerFqn.getParent(), smallerFragments);
+        breakFqn(otherFqn.getParent(), otherFragments);
         
         // Does the fqn not have a package?
-        // Find the FQN in the smaller cluster that matches best
+        // Find the FQN in the core cluster that matches best
         Averager<Double> averageMatch = new Averager<>();
-        for (VersionedFqnNode largerFqn : larger.getFqns()) {
-          breakFqn(largerFqn.getParent(), largerFragments);
-          if (smallerFragments.isEmpty()) {
-            if (largerFragments.isEmpty()) {
+        for (VersionedFqnNode coreFqn : core.getCoreFqns()) {
+          breakFqn(coreFqn.getParent(), coreFragments);
+          if (coreFragments.isEmpty()) {
+            if (otherFragments.isEmpty()) {
               averageMatch.addValue(1.);
             } else {
               averageMatch.addValue(0.);
             }
           } else {
-            Iterator<VersionedFqnNode> smallerIter = smallerFragments.iterator();
-            Iterator<VersionedFqnNode> largerIter = largerFragments.iterator();
+            Iterator<VersionedFqnNode> coreIter = coreFragments.iterator();
+            Iterator<VersionedFqnNode> otherIter = otherFragments.iterator();
             int overlap = 0;
-            while (smallerIter.hasNext() && largerIter.hasNext()) {
-              if (smallerIter.next() == largerIter.next()) {
+            while (coreIter.hasNext() && otherIter.hasNext()) {
+              if (coreIter.next() == otherIter.next()) {
                 overlap++;
               } else {
                 break;
               }
             }
-            averageMatch.addValue((double) overlap / smallerFragments.size());
+            averageMatch.addValue((double) overlap / otherFragments.size());
           }
-          largerFragments.clear();
+          coreFragments.clear();
           averager.addValue(averageMatch.getMean());
         }
-        smallerFragments.clear();
+        otherFragments.clear();
       }
       
       writer.writeAndIndent("Results");
       writer.write("Average Max Similarity: " + averager.getMean());
-      boolean doMerge = averager.getMean() >= PATH_SIMILARITY_THRESHOLD.getValue();
+      boolean doMerge = averager.getMean() >= MERGE_THRESHOLD.getValue();
       writer.write("Merge? " + (doMerge ? "yes" : " no"));
       writer.unindent();
       
@@ -271,8 +294,8 @@ public enum ClusterMergeMethod {
       double jointEntropy = calc.compute(smaller, larger);
       
       writer.writeAndIndent("Results");
-      writer.write("Smaller entropy: " + smaller);
-      writer.write("Larger entropy: " + larger);
+      writer.write("Smaller entropy: " + smallerEntropy);
+      writer.write("Larger entropy: " + largerEntropy);
       writer.write("Joint entropy: " + jointEntropy);
       double minDelta = jointEntropy - Math.max(smallerEntropy, largerEntropy);
       double maxDelta = jointEntropy - Math.min(smallerEntropy, largerEntropy);
@@ -286,35 +309,56 @@ public enum ClusterMergeMethod {
     }
   };
   
-  public static final Argument<Double> JACCARD_THRESHOLD = new DoubleArgument("jaccard-threshold", "Threshold for jaccard package similarity").permit();
-  public static final Argument<Double> PATH_SIMILARITY_THRESHOLD = new DoubleArgument("path-similarity-threshold", "Threshold for path similarity").permit();
+  public static final Argument<Double> MERGE_THRESHOLD = new DoubleArgument("merge-threshold", "Threshold for jaccard package similarity").permit();
+  public static final Argument<Integer> MINIMUM_THRESHOLD = new IntegerArgument("minimum-threshold", 50, "Minimum threshold (out of 100) to test").permit();
+  public static final Argument<Integer> THRESHOLD_DECREMENT = new IntegerArgument("threshold-decrement", 5, "Threshold decrement, starting at 100, to test").permit();
   
   public void doForEachVersion(Action action) {
     Cluster.MERGE_METHOD.setValue(this);
     action.doMe();
   }
   
-  public boolean shouldMerge(Cluster smaller, Cluster larger, LogFileWriter writer) {
-    // Smaller means "has fewer primary jars"
-    // Larger means "has more primary jars"
-    // We want to check if the smaller cluster should subsume the larger cluster
-    // Is every primary jar from the smaller cluster also in the larger cluster?
-    if (smaller.getPrimaryJars().getIntersectionSize(larger.getPrimaryJars()) == smaller.getPrimaryJars().size()) {
+  public boolean shouldMerge(Cluster core, Cluster other, LogFileWriter writer) {
+    // Core means a large cluster of co-occuring FQNs
+    // Other means a smaller cluster of co-occuring FQNs
+    // We want to check if the smaller cluster always occurs with the larger cluster
+    // If it does, then it needs to meet the individual merging criteria
+    if (other.getJars().getIntersectionSize(core.getJars()) == other.getJars().size()) {
       writer.writeAndIndent("Considering merging two clusters");
       
-      writer.writeAndIndent("Smaller Cluster (" + smaller.getPrimaryJars().size() + ")");
-      for (VersionedFqnNode fqn : smaller.getFqns()) {
+      writer.writeAndIndent("Core Cluster (" + core.getJars().size() + ")");
+      
+      writer.writeAndIndent("Core FQNs");
+      for (VersionedFqnNode fqn : core.getCoreFqns()) {
         writer.write(fqn.getFqn());
       }
       writer.unindent();
       
-      writer.writeAndIndent("Larger Cluster (" + larger.getPrimaryJars().size() + ")");
-      for (VersionedFqnNode fqn : larger.getFqns()) {
+      writer.writeAndIndent("Extra FQNs");
+      for (VersionedFqnNode fqn : core.getExtraFqns()) {
         writer.write(fqn.getFqn());
       }
       writer.unindent();
       
-      boolean result = shouldMergeHelper(smaller, larger, writer);
+      writer.unindent();
+      
+      writer.writeAndIndent("Other Cluster (" + other.getJars().size() + ")");
+      
+      writer.writeAndIndent("Core FQNs");
+      for (VersionedFqnNode fqn : other.getCoreFqns()) {
+        writer.write(fqn.getFqn());
+      }
+      writer.unindent();
+      
+      writer.writeAndIndent("Extra FQNs");
+      for (VersionedFqnNode fqn : other.getExtraFqns()) {
+        writer.write(fqn.getFqn());
+      }
+      writer.unindent();
+      
+      writer.unindent();
+      
+      boolean result = shouldMergeHelper(core, other, writer);
       
       writer.unindent();
       

@@ -166,7 +166,7 @@ public class ClusterEntropyCalculatorFactory {
 
           // Build up the library-specific tree so we can compute the entropy
           for (Cluster cluster : clusters) {
-            for (VersionedFqnNode fqn : cluster.getFqns()) {
+            for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
               // Look for the fragments parent
               // Add to the FQN count for it
               getFragmentEntropy(fqn.getParent()).addFqn();

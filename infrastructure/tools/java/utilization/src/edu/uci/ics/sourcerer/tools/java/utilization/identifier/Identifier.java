@@ -84,7 +84,7 @@ public class Identifier {
             } else if (candidates.size() == 1) {
               // If one was found, merge in the child
               Cluster candidate = candidates.getFirst();
-              for (VersionedFqnNode fqn : childCluster.getFqns()) {
+              for (VersionedFqnNode fqn : childCluster.getCoreFqns()) {
                 candidate.addCoreFqn(fqn);
               }
               clusterCount--;
