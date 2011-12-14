@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -31,8 +30,8 @@ import java.util.logging.Level;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
@@ -63,7 +62,7 @@ public class Identifier {
       if (!fragment.hasChildren()) {
         Cluster cluster = new Cluster();
         // Add the fqn
-        cluster.addPrimaryFqn(fragment);
+        cluster.addCoreFqn(fragment);
         // Store it in the map for processing with the parent
         tempClusterMap.put(fragment, cluster);
         clusterCount++;
@@ -86,7 +85,7 @@ public class Identifier {
               // If one was found, merge in the child
               Cluster candidate = candidates.getFirst();
               for (VersionedFqnNode fqn : childCluster.getFqns()) {
-                candidate.addPrimaryFqn(fqn);
+                candidate.addCoreFqn(fqn);
               }
               clusterCount--;
             } else {
@@ -109,7 +108,7 @@ public class Identifier {
     TreeSet<Cluster> sortedClusters = new TreeSet<>(new Comparator<Cluster>() {
       @Override
       public int compare(Cluster o1, Cluster o2) {
-        int cmp = Integer.compare(o1.getPrimaryJars().size(), o2.getPrimaryJars().size());
+        int cmp = Integer.compare(o1.getCoreFqns().size(), o2.getCoreFqns().size());
         if (cmp == 0) {
           return Integer.compare(o1.hashCode(), o2.hashCode());
         } else {
@@ -118,31 +117,29 @@ public class Identifier {
       }
     });
     
-    // Sort all the clusters by the number of primary jars they contain
+    // Sort all the clusters by the number of core fqns they contain
     for (Cluster cluster : tempClusterMap.get(jars.getRoot())) {
       sortedClusters.add(cluster);
     }
     tempClusterMap.clear();
     
-    Collection<Cluster> processedClusters = new LinkedList<>();
+    Collection<Cluster> coreClusters = new LinkedList<>();
     // Go from cluster containing the most jars to the least
     try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), logFileName))) {
-      while (!sortedClusters.isEmpty()) {
-        Cluster biggest = sortedClusters.pollLast();
-        
+      for (Cluster biggest : sortedClusters.descendingSet()) {
+        boolean merged = false;
         // Find and merge any candidate clusters
-        for (Iterator<Cluster> processedIter = processedClusters.iterator(); processedIter.hasNext();) {
-          Cluster processed = processedIter.next();
-          // Check if they should merge
-          if (biggest.isSecondStageCompatible(processed, writer)) {
-            for (VersionedFqnNode fqn : processed.getFqns()) {
-              biggest.addSecondaryFqn(fqn);
-            }
-            processedIter.remove();
+        for (Cluster coreCluster : coreClusters) {
+          // Check if the core cluster should include the next biggest
+          if (coreCluster.isSecondStageCompatible(biggest, writer)) {
+            coreCluster.mergeCluster(biggest);
+            merged = true;
+            break;
           }
         }
-        
-        processedClusters.add(biggest);
+        if (!merged) {
+          coreClusters.add(biggest);
+        }
       }
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error writing log", e);
@@ -151,7 +148,7 @@ public class Identifier {
     task.finish();
    
     ClusterCollection clusters = new ClusterCollection();
-    for (Cluster cluster : processedClusters) {
+    for (Cluster cluster : coreClusters) {
       clusters.addCluster(cluster);
     }
     

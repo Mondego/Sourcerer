@@ -146,37 +146,37 @@ public enum ClusterMergeMethod {
     public boolean shouldMergeHelper(Cluster smaller, Cluster larger, LogFileWriter writer) {
       Averager<Double> averager = new Averager<>();
       
-      LinkedList<VersionedFqnNode> largerFragments = new LinkedList<>();
       LinkedList<VersionedFqnNode> smallerFragments = new LinkedList<>();
-      for (VersionedFqnNode largerFqn : larger.getFqns()) {
+      LinkedList<VersionedFqnNode> largerFragments = new LinkedList<>();
+      for (VersionedFqnNode smallerFqn : smaller.getFqns()) {
         // Break the package into fragments
-        breakFqn(largerFqn.getParent(), largerFragments);
+        breakFqn(smallerFqn.getParent(), smallerFragments);
         
-        // Find the FQN in the smaller cluster that matches best
+        // Find the FQN in the larger cluster that matches best
         double bestMatch = 0;
-        for (VersionedFqnNode smallerFqn : smaller.getFqns()) {
-          breakFqn(smallerFqn.getParent(), smallerFragments);
-          if (largerFragments.isEmpty()) {
-            if (smallerFragments.isEmpty()) {
+        for (VersionedFqnNode largerFqn : larger.getFqns()) {
+          breakFqn(largerFqn.getParent(), largerFragments);
+          if (smallerFragments.isEmpty()) {
+            if (largerFragments.isEmpty()) {
               bestMatch = 1.;
             }
           } else {
-            Iterator<VersionedFqnNode> largerIter = largerFragments.iterator();
             Iterator<VersionedFqnNode> smallerIter = smallerFragments.iterator();
+            Iterator<VersionedFqnNode> largerIter = largerFragments.iterator();
             int overlap = 0;
-            while (largerIter.hasNext() && smallerIter.hasNext()) {
-              if (largerIter.next() == smallerIter.next()) {
+            while (smallerIter.hasNext() && largerIter.hasNext()) {
+              if (smallerIter.next() == largerIter.next()) {
                 overlap++;
               } else {
                 break;
               }
             }
-            bestMatch = Math.max(bestMatch, (double) overlap / largerFragments.size());
+            bestMatch = Math.max(bestMatch, (double) overlap / smallerFragments.size());
           }
-          smallerFragments.clear();
+          largerFragments.clear();
         }
         averager.addValue(bestMatch);
-        largerFragments.clear();
+        smallerFragments.clear();
       }
       
       writer.writeAndIndent("Results");
@@ -216,40 +216,41 @@ public enum ClusterMergeMethod {
     public boolean shouldMergeHelper(Cluster smaller, Cluster larger, LogFileWriter writer) {
       Averager<Double> averager = new Averager<>();
       
-      LinkedList<VersionedFqnNode> largerFragments = new LinkedList<>();
       LinkedList<VersionedFqnNode> smallerFragments = new LinkedList<>();
-      for (VersionedFqnNode largerFqn : larger.getFqns()) {
+      LinkedList<VersionedFqnNode> largerFragments = new LinkedList<>();
+      
+      for (VersionedFqnNode smallerFqn : smaller.getFqns()) {
         // Break the package into fragments
-        breakFqn(largerFqn.getParent(), largerFragments);
+        breakFqn(smallerFqn.getParent(), smallerFragments);
         
         // Does the fqn not have a package?
         // Find the FQN in the smaller cluster that matches best
         Averager<Double> averageMatch = new Averager<>();
-        for (VersionedFqnNode smallerFqn : smaller.getFqns()) {
-          breakFqn(smallerFqn.getParent(), smallerFragments);
-          if (largerFragments.isEmpty()) {
-            if (smallerFragments.isEmpty()) {
+        for (VersionedFqnNode largerFqn : larger.getFqns()) {
+          breakFqn(largerFqn.getParent(), largerFragments);
+          if (smallerFragments.isEmpty()) {
+            if (largerFragments.isEmpty()) {
               averageMatch.addValue(1.);
             } else {
               averageMatch.addValue(0.);
             }
           } else {
-            Iterator<VersionedFqnNode> largerIter = largerFragments.iterator();
             Iterator<VersionedFqnNode> smallerIter = smallerFragments.iterator();
+            Iterator<VersionedFqnNode> largerIter = largerFragments.iterator();
             int overlap = 0;
-            while (largerIter.hasNext() && smallerIter.hasNext()) {
-              if (largerIter.next() == smallerIter.next()) {
+            while (smallerIter.hasNext() && largerIter.hasNext()) {
+              if (smallerIter.next() == largerIter.next()) {
                 overlap++;
               } else {
                 break;
               }
             }
-            averageMatch.addValue((double) overlap / largerFragments.size());
+            averageMatch.addValue((double) overlap / smallerFragments.size());
           }
-          smallerFragments.clear();
+          largerFragments.clear();
           averager.addValue(averageMatch.getMean());
         }
-        largerFragments.clear();
+        smallerFragments.clear();
       }
       
       writer.writeAndIndent("Results");

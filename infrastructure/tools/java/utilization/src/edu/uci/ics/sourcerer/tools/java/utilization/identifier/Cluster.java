@@ -20,48 +20,55 @@ package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
 import edu.uci.ics.sourcerer.util.io.arguments.EnumArgument;
-import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Cluster {
-  public static final Argument<Integer> COMPATIBILITY_THRESHOLD = new IntegerArgument("compatibility-threshold", 100, "Think percent.").permit();
+  public static final Argument<Double> COMPATIBILITY_THRESHOLD = new DoubleArgument("compatibility-threshold", 1., "").permit();
   public static final Argument<ClusterMergeMethod> MERGE_METHOD = new EnumArgument<>("merge-method", ClusterMergeMethod.class, "Method for performing second stage merge.").makeOptional();
 
+  private JarSet coreJars;
   private JarSet jars;
-  private JarSet primaryJars;
+  private final Collection<VersionedFqnNode> coreFqns;
   private final Collection<VersionedFqnNode> fqns;
   
   Cluster() {
+    this.coreFqns = new LinkedList<>();
     this.fqns = new LinkedList<>();
+    coreJars = JarSet.create();
     jars = JarSet.create();
-    primaryJars = JarSet.create();
   }
   
-  void addPrimaryFqn(VersionedFqnNode fqn) {
+  void addCoreFqn(VersionedFqnNode fqn) {
+    coreFqns.add(fqn);
     fqns.add(fqn);
-    primaryJars = primaryJars.merge(fqn.getVersions().getJars());
+    coreJars = coreJars.merge(fqn.getVersions().getJars());
     jars = jars.merge(fqn.getVersions().getJars());
   }
   
-  void addSecondaryFqn(VersionedFqnNode fqn) {
-    fqns.add(fqn);
-    jars = jars.merge(fqn.getVersions().getJars());
+  void mergeCluster(Cluster cluster) {
+    jars = jars.merge(cluster.jars);
+    fqns.addAll(cluster.fqns);
+  }
+  
+  public Collection<VersionedFqnNode> getCoreFqns() {
+    return coreFqns;
   }
   
   public Collection<VersionedFqnNode> getFqns() {
     return fqns;
   }
   
-  public JarSet getPrimaryJars() {
-    return primaryJars;
+  public JarSet getCoreJars() {
+    return coreJars;
   }
   
   public JarSet getJars() {
@@ -72,28 +79,28 @@ public class Cluster {
     // Do a pairwise comparison of every FQN. Calculate the conditional
     // probability of each FQN in B appearing given each FQN in A and average.
     // Then compute the reverse. Both values must be above the threshold.
-    double threshold = COMPATIBILITY_THRESHOLD.getValue() / 100.;
+    double threshold = COMPATIBILITY_THRESHOLD.getValue();
     // If the threshold is greater than 1, no match is possible
     if (threshold > 1) {
       return false;
     }
     // If the threshold is 1, we can short-circuit this comparison
     // The primary jars must match exactly (can do == because JarSet is interned)
-    else if (threshold == 1.) {
-      return primaryJars == other.primaryJars;
+    else if (threshold >= 1.) {
+      return coreJars == other.coreJars;
     }
     // Now we have to actually do the comparison
     else {
       // If there's no intersection between the JarSet, return false
       // There may be other optimizations that can be done to cut out cases where the full comparison has to be done
-      if (jars.getIntersectionSize(other.jars) == 0) {
+      if (coreJars.getIntersectionSize(other.coreJars) == 0) {
         return false;
       } else {
         Averager<Double> otherGivenThis = new Averager<>();
         Averager<Double> thisGivenOther = new Averager<>();
       
-        for (VersionedFqnNode fqn : fqns) {
-          for (VersionedFqnNode otherFqn : other.fqns) {
+        for (VersionedFqnNode fqn : coreFqns) {
+          for (VersionedFqnNode otherFqn : other.coreFqns) {
             JarSet fqnJars = fqn.getVersions().getJars();
             JarSet otherFqnJars = otherFqn.getVersions().getJars();
             // Conditional probability of other given this
