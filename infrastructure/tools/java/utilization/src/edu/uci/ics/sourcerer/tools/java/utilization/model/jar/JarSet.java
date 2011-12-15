@@ -65,15 +65,19 @@ public class JarSet implements Iterable<Jar> {
   }
   
   public JarSet add(Jar jar) {
-    int hashCode = hashCode() + jar.hashCode();
-    for (JarSet set : sets.get(hashCode)) {
-      if (set.jars.size() == jars.size() + 1 && set.jars.contains(jar) && set.jars.containsAll(jars)) {
-        return set;
+    if (jars.contains(jar)) {
+      return this;
+    } else {
+      int hashCode = hashCode() + jar.hashCode();
+      for (JarSet set : sets.get(hashCode)) {
+        if (set.jars.size() == jars.size() + 1 && set.jars.contains(jar) && set.jars.containsAll(jars)) {
+          return set;
+        }
       }
+      JarSet set = new JarSet(jars, jar);
+      sets.put(hashCode, set);
+      return set;
     }
-    JarSet set = new JarSet(jars, jar);
-    sets.put(hashCode, set);
-    return set;
   }
   
   public JarSet merge(JarSet other) {
@@ -114,6 +118,15 @@ public class JarSet implements Iterable<Jar> {
     return count;
   }
   
+  public boolean isSubset(JarSet other) {
+    for (Jar jar : jars) {
+      if (!other.jars.contains(jar)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
   public int size() {
     return jars.size();
   }
@@ -132,5 +145,10 @@ public class JarSet implements Iterable<Jar> {
   @Override
   public Iterator<Jar> iterator() {
     return jars.iterator();
+  }
+  
+  @Override
+  public String toString() {
+    return jars.toString();
   }
 }

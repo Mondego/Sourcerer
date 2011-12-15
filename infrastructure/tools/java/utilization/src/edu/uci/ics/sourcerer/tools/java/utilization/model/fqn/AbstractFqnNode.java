@@ -16,7 +16,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.model.fqn;
-
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
@@ -25,7 +24,7 @@ import java.util.LinkedList;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> {
+public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> implements Comparable<T> {
   protected final String name;
   protected final T parent;
   protected T sibling;
@@ -123,7 +122,7 @@ public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> {
   
   public final String getFqn() {
     if (parent == null) {
-      return null;
+      return "(root)";
     } else {
       Deque<T> stack = new LinkedList<>();
       T node = parent;
@@ -181,5 +180,42 @@ public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> {
   @Override
   public String toString() {
     return getFqn();
+  }
+  
+  @Override
+  @SuppressWarnings("unchecked")
+  public int compareTo(T other) {
+//    return getFqn().compareTo(other.getFqn());
+    // Find the first overlapping parent
+    // Can do this poorly, since the tree is never deep
+    if (this == other) {
+      return 0;
+    } else {
+      T previousMe = null;
+      for (T me = (T) this; me != null; me = me.parent) {
+        T previousHim = null;
+        for (T him = other; him != null; him= him.parent) {
+          if (me == him) {
+            if (previousMe == null) {
+              return -1;
+            } else if (previousHim == null) {
+              return 1;
+            }
+            // Which child comes first in the tree?
+            for (T child = me.firstChild; child != null; child = child.sibling) {
+              if (child == previousMe) {
+                return -1;
+              } else if (child == previousHim) {
+                return 1;
+              }
+            }
+            throw new IllegalStateException("Impossible: " + this + " and " + other);
+          }
+          previousHim = him;
+        }
+        previousMe = me;
+      }
+      throw new IllegalStateException("Uncomparable: " + this + " and " + other);
+    }
   }
 }

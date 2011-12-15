@@ -35,9 +35,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
@@ -135,19 +134,33 @@ public class ClusterCollection implements Iterable<Cluster> {
       writer.write(trivialJar + " jars covered by single cluster");
       writer.write(trivialCluster + " clusters matching a single jar");
       writer.write((clusterMap.keySet().size() - trivialJar) + " jars covered by multiple clusters");
-      writer.write((clusters.size() - trivialCluster) + " clustered matching multiple jars");
+      writer.write((clusters.size() - trivialCluster) + " clusters matching multiple jars");
       
       for (Jar jar : clusterMap.keySet()) {
         Collection<Cluster> clusters = clusterMap.get(jar);
         if (clusters.size() > 1) {
+          writer.newLine();
           HashSet<VersionedFqnNode> fqns = new HashSet<>(jar.getFqns());
-          writer.writeAndIndent(jar.getJar().getProperties().NAME.getValue() + " fragmented into " + clusters.size() + " clusters");
-          Set<Jar> otherJars = new HashSet<>();
-          for (VersionedFqnNode fqn : jar.getFqns()) {
-            for (Jar otherJar : fqn.getVersions().getJars()) {
+          
+          Set<Jar> otherJars = new TreeSet<>(new Comparator<Jar>() {
+            @Override
+            public int compare(Jar o1, Jar o2) {
+              String name1 = o1.getJar().getProperties().NAME.getValue();
+              String name2 = o2.getJar().getProperties().NAME.getValue();
+              int cmp = name1 == null ? (name2 == null ? 0 : -1) : (name2 == null ? 1 : name1.compareTo(name2));
+              if (cmp == 0) {
+                return Integer.compare(o1.hashCode(), o2.hashCode());
+              } else {
+                return cmp;
+              }
+            }});
+          for (Cluster cluster : clusters) {
+            for (Jar otherJar : cluster.getJars()) {
               otherJars.add(otherJar);
             }
           }
+          
+          writer.writeAndIndent(jar.getJar().getProperties().NAME.getValue() + " fragmented into " + clusters.size() + " clusters");
           writer.write("FQNs from this jar appear in " + (otherJars.size() - 1) + " other jars");
           writer.writeAndIndent("Listing jars with overlap");
           int c = 1;
@@ -156,22 +169,17 @@ public class ClusterCollection implements Iterable<Cluster> {
             writer.write(c++ + ": " + props.NAME.getValue() + ": " + props.HASH.getValue() + (otherJar == jar ? " <--" : ""));
           }
           writer.unindent();
-          
-          for (int i = 1, max = otherJars.size(); i <= max; i++) {
-            writer.writeFragment(Integer.toString(i % 10));
-          }
-          writer.newLine();
-          
+          writer.unindent();
           int clusterCount = 0;
           for (Cluster cluster : clusters) {
-            for (int i = 0; i < c; i++)
-              writer.writeFragment(" ");
-            writer.writeFragment(" Cluster " + ++clusterCount + ", from " + cluster.getJars().size() + " jars");
+            writer.write("Cluster " + ++clusterCount + ", from " + cluster.getJars().size() + " jars");
+            for (int i = 1, max = otherJars.size(); i <= max; i++) {
+              writer.writeFragment(Integer.toString(i % 10));
+            }
+            // Write out the core fqns - the table should be totally filled
+            writer.writeFragment(" Core FQNs");
             writer.newLine();
             
-            // Write out the core fqns - the table should be totally filled
-            writer.writeFragment("Core FQNs");
-            writer.newLine();
             int skipped = 0;
             for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
               if (fqns.contains(fqn)) {
@@ -191,37 +199,44 @@ public class ClusterCollection implements Iterable<Cluster> {
             if (skipped > 0) {
               for (int i = 0; i < c; i++)
                 writer.writeFragment(" ");
+              logger.severe("Impossible! Core FQNs skipped.");
               writer.writeFragment(" " + skipped + " core FQNs in cluster not in this jar");
               writer.newLine();
             }
             
-            // write out the extra fqns
-            writer.writeFragment("Extra FQNs");
-            writer.newLine();
-            skipped = 0;
-            for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
-              if (fqns.contains(fqn)) {
-                for (Jar otherJar : otherJars) {
-                  if (fqn.getVersions().getJars().contains(otherJar)) {
-                    writer.writeFragment("*");
-                  } else {
-                    writer.writeFragment(" ");
+            if (!cluster.getExtraFqns().isEmpty()) {
+              for (int i = 1, max = otherJars.size(); i <= max; i++) {
+                writer.writeFragment(Integer.toString(i % 10));
+              }
+              // write out the extra fqns
+              writer.writeFragment(" Extra FQNs");
+              writer.newLine();
+              skipped = 0;
+              for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
+                if (fqns.contains(fqn)) {
+                  for (Jar otherJar : otherJars) {
+                    if (fqn.getVersions().getJars().contains(otherJar)) {
+                      writer.writeFragment("*");
+                    } else {
+                      writer.writeFragment(" ");
+                    }
                   }
+                  writer.writeFragment(" " + fqn.getFqn());
+                  writer.newLine();
+                } else {
+                  skipped++;
                 }
-                writer.writeFragment(" " + fqn.getFqn());
+              }
+              if (skipped > 0) {
+                for (int i = 0; i < c; i++)
+                  writer.writeFragment(" ");
+                writer.writeFragment(" " + skipped + " extra FQNs in cluster not in this jar");
                 writer.newLine();
-              } else {
-                skipped++;
               }
             }
-            for (int i = 0; i < c; i++)
-              writer.writeFragment(" ");
-            if (skipped > 0)
-              writer.writeFragment(" " + skipped + " extra FQNs in cluster not in this jar");
-            writer.newLine();
           }
           
-          writer.unindent();
+          writer.newLine();
         }
       }
     } catch (IOException e) {
@@ -254,23 +269,75 @@ public class ClusterCollection implements Iterable<Cluster> {
       writer.write((sortedClusters.size() - trivial) + " clusters matching multiple jars");
 
       for (Cluster cluster : sortedClusters.descendingSet()) {
+        writer.newLine();
         writer.writeAndIndent("Cluster of " + cluster.getJars().size() + " jars");
-        JarSet mainSet = cluster.getJars();
         
-        writer.writeAndIndent("Core FQNs");
+        Set<Jar> jars = new TreeSet<>(new Comparator<Jar>() {
+          @Override
+          public int compare(Jar o1, Jar o2) {
+            String name1 = o1.getJar().getProperties().NAME.getValue();
+            String name2 = o2.getJar().getProperties().NAME.getValue();
+            int cmp = name1 == null ? (name2 == null ? 0 : -1) : (name2 == null ? 1 : name1.compareTo(name2));
+            if (cmp == 0) {
+              return Integer.compare(o1.hashCode(), o2.hashCode());
+            } else {
+              return cmp;
+            }
+          }});
+        for (Jar jar : cluster.getJars()) {
+          jars.add(jar);
+        }
+        
+        writer.writeAndIndent("Listing jars in cluster");
+        int c = 1;
+        for (Jar jar : jars) {
+          JarProperties props = jar.getJar().getProperties();
+          writer.write(c++ + ": " + props.NAME.getValue() + ": " + props.HASH.getValue());
+        }
+        writer.unindent();
+        
+        for (int i = 1, max = jars.size(); i <= max; i++) {
+          writer.writeFragment(Integer.toString(i % 10));
+        }
+        // Write out the core fqns - the table should be totally filled
+        writer.writeFragment(" Core FQNs");
+        writer.newLine();
+        
         for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
-          writer.write(fqn.getFqn());
+          for (Jar jar : jars) {
+            if (fqn.getVersions().getJars().contains(jar)) {
+              writer.writeFragment("*");
+            } else {
+              writer.writeFragment(" ");
+            }
+          }
+          writer.writeFragment(" " + fqn.getFqn());
+          writer.newLine();
         }
-        writer.unindent();
         
-        
-        writer.writeAndIndent("Extra FQNs");
-        for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
-          double percent = (double) fqn.getVersions().getJars().getIntersectionSize(mainSet) / (double) fqn.getVersions().getJars().size();
-          writer.write(fqn.getFqn() + " " + fqn.getVersions().getJars().size() + " " + format.format(percent));
+        if (!cluster.getExtraFqns().isEmpty()) {
+          for (int i = 1, max = jars.size(); i <= max; i++) {
+            writer.writeFragment(Integer.toString(i % 10));
+          }
+          // write out the extra fqns
+          writer.writeFragment(" Extra FQNs");
+          writer.newLine();
+          for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
+            int count = 0;
+            for (Jar jar : jars) {
+              if (fqn.getVersions().getJars().contains(jar)) {
+                writer.writeFragment("*");
+                count++;
+              } else {
+                writer.writeFragment(" ");
+              }
+            }
+            double percent = (double) count / (double) jars.size();
+            writer.writeFragment(" " + fqn.getFqn() + " " + format.format(percent));
+            writer.newLine();
+          }
         }
-        writer.unindent();
-        
+
         writer.unindent();
       }
     } catch (IOException e) {

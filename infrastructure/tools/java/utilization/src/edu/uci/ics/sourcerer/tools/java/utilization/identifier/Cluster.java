@@ -20,7 +20,10 @@ package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.TreeSet;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
@@ -43,7 +46,7 @@ public class Cluster {
   
   Cluster() {
     this.coreFqns = new LinkedList<>();
-    this.extraFqns = new LinkedList<>();
+    this.extraFqns = new TreeSet<>();
     jars = JarSet.create();
   }
   

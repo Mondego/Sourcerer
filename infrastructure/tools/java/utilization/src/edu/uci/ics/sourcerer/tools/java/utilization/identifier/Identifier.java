@@ -108,7 +108,7 @@ public class Identifier {
     TreeSet<Cluster> sortedClusters = new TreeSet<>(new Comparator<Cluster>() {
       @Override
       public int compare(Cluster o1, Cluster o2) {
-        int cmp = Integer.compare(o1.getCoreFqns().size(), o2.getCoreFqns().size());
+        int cmp = Integer.compare(o1.getJars().size(), o2.getJars().size());
         if (cmp == 0) {
           return Integer.compare(o1.hashCode(), o2.hashCode());
         } else {

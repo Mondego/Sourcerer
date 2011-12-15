@@ -85,11 +85,8 @@ public enum ClusterMergeMethod {
       boolean doMerge = validRate >= MERGE_THRESHOLD.getValue();
       writer.write("Merge? " + (doMerge ? "yes" : " no"));
       writer.unindent();
-      writer.writeAndIndent("Result");
-      writer.write("Merge? Yes");
-      writer.unindent();
-    
-      return true;
+   
+      return doMerge;
     }
   },
   JACCARD_PACKAGE {
@@ -323,7 +320,7 @@ public enum ClusterMergeMethod {
     // Other means a smaller cluster of co-occuring FQNs
     // We want to check if the smaller cluster always occurs with the larger cluster
     // If it does, then it needs to meet the individual merging criteria
-    if (other.getJars().getIntersectionSize(core.getJars()) == other.getJars().size()) {
+    if (other.getJars().isSubset(core.getJars())) {
       writer.writeAndIndent("Considering merging two clusters");
       
       writer.writeAndIndent("Core Cluster (" + core.getJars().size() + ")");
@@ -334,11 +331,13 @@ public enum ClusterMergeMethod {
       }
       writer.unindent();
       
-      writer.writeAndIndent("Extra FQNs");
-      for (VersionedFqnNode fqn : core.getExtraFqns()) {
-        writer.write(fqn.getFqn());
+      if (!core.getExtraFqns().isEmpty()) {
+        writer.writeAndIndent("Extra FQNs");
+        for (VersionedFqnNode fqn : core.getExtraFqns()) {
+          writer.write(fqn.getFqn());
+        }
+        writer.unindent();
       }
-      writer.unindent();
       
       writer.unindent();
       
@@ -350,11 +349,13 @@ public enum ClusterMergeMethod {
       }
       writer.unindent();
       
-      writer.writeAndIndent("Extra FQNs");
-      for (VersionedFqnNode fqn : other.getExtraFqns()) {
-        writer.write(fqn.getFqn());
+      if (!other.getExtraFqns().isEmpty()) {
+        writer.writeAndIndent("Extra FQNs");
+        for (VersionedFqnNode fqn : other.getExtraFqns()) {
+          writer.write(fqn.getFqn());
+        }
+        writer.unindent();
       }
-      writer.unindent();
       
       writer.unindent();
       
