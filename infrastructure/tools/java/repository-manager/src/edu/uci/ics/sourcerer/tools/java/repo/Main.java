@@ -34,6 +34,13 @@ public class Main {
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO);
     
+  public static final Command IMPORT_MAVEN_TO_REPOSITORY =
+      new Command("import-maven-to-repo", "Imports Maven2 central repository into the Sourcerer repository.") {
+        protected void action() {
+          MavenImporter.importMavenToRepository();
+        }
+      }.setProperties(Arguments.INPUT, JavaRepositoryFactory.OUTPUT_REPO);
+      
   public static final Command IMPORT_LATEST_MAVEN_TO_REPOSITORY =
     new Command("import-latest-maven-to-repo", "Imports the latest copy of the Maven2 central repository into the Sourcerer repository.") {
       protected void action() {

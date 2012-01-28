@@ -21,6 +21,7 @@ import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.logging.Level;
@@ -41,6 +42,98 @@ import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class MavenImporter {
+//  public static void importMavenToRepository() {
+//    ModifiableJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadModifiableJavaRepository(JavaRepositoryFactory.OUTPUT_REPO);
+//
+//    SAXParser parser = null;
+//    try {
+//      SAXParserFactory fact = SAXParserFactory.newInstance();
+//      parser = fact.newSAXParser();
+//    } catch (ParserConfigurationException | SAXException e) {
+//      logger.log(Level.SEVERE, "Unable to create sax parser.", e);
+//    }
+//    
+//    class Handler extends DefaultHandler {
+//      private boolean inGroupID;
+//      private boolean inArtifactID;
+//      public String groupID;
+//      public String artifactID;
+//
+//      @Override
+//      public void startElement(String uri, String localName, String qName, Attributes attributes) {
+//        switch (qName) {
+//          case "groupId": inGroupID = true;
+//          case "artifactId": inArtifactID = true;
+//        }
+//      }
+//
+//      @Override
+//      public void characters(char[] ch, int start, int length) {
+//        if (inGroupID) {
+//          groupID = new String(ch, start, length);
+//          inGroupID = false;
+//        } else if (inArtifactID) {
+//          artifactID = new String(ch, start, length);
+//          inArtifactID = false;
+//        }
+//      }
+//    };
+//    Handler handler = new Handler();
+//    
+//    File root = Arguments.INPUT.getValue();
+//    Deque<File> stack = new LinkedList<>();
+//    stack.add(root);
+//    
+//    mainLoop:
+//    while (!stack.isEmpty()) {
+//      File next = stack.pop();
+//      if (next.isDirectory()) {
+//        // Look for maven-metadata.xml
+//        for (File child : next.listFiles()) {
+//          if (child.getName().equals("maven-metadata.xml")) {
+//            try {
+//              parser.parse(child, handler);
+//            } catch (SAXException | IOException e) {
+//              logger.log(Level.SEVERE, "Error reading maven metadata.", e);
+//            }
+//            for (File version : next.listFiles()) {
+//              if (version.isDirectory()) {
+//                String jarSuffix = version.getName() + ".jar";
+//                String sourceSuffix = version.getName() + "-sources.jar";
+//                File jar = null;
+//                File source = null;
+//                for (File file : version.listFiles()) {
+//                  if (file.getName().endsWith(jarSuffix)) {
+//                    if (jar == null) {
+//                      jar = file;
+//                    } else {
+//                      logger.info("Multiple jar files for " + version.getAbsolutePath());
+//                    }
+//                  } else if (file.getName().endsWith(sourceSuffix)) {
+//                    if (source == null) {
+//                      source = file;
+//                    } else {
+//                      logger.info("Multiple source files for " + version.getAbsolutePath());
+//                    }
+//                  }
+//                }
+//                if (jar == null) {
+//                  logger.info("Unable to find jar for " + version.getAbsolutePath());
+//                } else {
+//                  repo.addMavenJarFile(jar, source, handler.groupID, handler.artifactID, version.getName());
+//                }
+//              }
+//            }
+//            continue mainLoop;
+//          }
+//        }
+//        for (File child : next.listFiles()) {
+//          stack.add(child);
+//        }
+//      }
+//    }
+//  }
+  
   public static void importMavenToRepository() {
     ModifiableJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadModifiableJavaRepository(JavaRepositoryFactory.OUTPUT_REPO);
 
@@ -55,16 +148,33 @@ public class MavenImporter {
     class Handler extends DefaultHandler {
       private boolean inGroupID;
       private boolean inArtifactID;
+      private boolean inVersioning;
+      private boolean inVersions;
+      private boolean inVersion;
       public String groupID;
       public String artifactID;
+      public Collection<String> versions = new LinkedList<>();
 
       @Override
       public void startElement(String uri, String localName, String qName, Attributes attributes) {
         switch (qName) {
-          case "groupId": inGroupID = true;
-          case "artifactId": inArtifactID = true;
+          case "groupId": inGroupID = true; break;
+          case "artifactId": inArtifactID = true; break;
+          case "version": inVersion = inVersions; break;
+          case "versioning": inVersioning = true; break;
+          case "versions": inVersions = inVersioning; break;
         }
       }
+      
+      @Override
+      public void endElement(String uri, String localName, String qName) throws SAXException {
+        switch (qName) {
+          case "versioning": inVersioning = false; break;
+          case "versions": inVersions = false; break;
+        }
+      }
+
+
 
       @Override
       public void characters(char[] ch, int start, int length) {
@@ -74,6 +184,9 @@ public class MavenImporter {
         } else if (inArtifactID) {
           artifactID = new String(ch, start, length);
           inArtifactID = false;
+        } else if (inVersion) {
+          versions.add(new String(ch, start, length));
+          inVersion = false;
         }
       }
     };
@@ -95,7 +208,9 @@ public class MavenImporter {
             } catch (SAXException | IOException e) {
               logger.log(Level.SEVERE, "Error reading maven metadata.", e);
             }
-            for (File version : next.listFiles()) {
+            // Look up the all the version
+            for (String v : handler.versions) {
+              File version = new File(next, v);
               if (version.isDirectory()) {
                 String jarSuffix = version.getName() + ".jar";
                 String sourceSuffix = version.getName() + "-sources.jar";
@@ -123,6 +238,7 @@ public class MavenImporter {
                 }
               }
             }
+            handler.versions.clear();
             continue mainLoop;
           }
         }
@@ -155,9 +271,9 @@ public class MavenImporter {
       @Override
       public void startElement(String uri, String localName, String qName, Attributes attributes) {
         switch (qName) {
-          case "groupId": inGroupID = true;
-          case "artifactId": inArtifactID = true;
-          case "version": inVersion = true;
+          case "groupId": inGroupID = true; break;
+          case "artifactId": inArtifactID = true; break;
+          case "version": inVersion = true; break;
         }
       }
 

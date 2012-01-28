@@ -258,12 +258,14 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
       // Populate the properties
       JarFileImpl newJar = JarFileImpl.make(dir);
       
-      JarProperties properties = newJar.getProperties();
-      properties.NAME.setValue(artifact);
-      properties.GROUP.setValue(group);
-      properties.SOURCE.setValue(JarSource.MAVEN);
-      properties.HASH.setValue(hash);
-      properties.save();
+      if (newJar != null) {
+        JarProperties properties = newJar.getProperties();
+        properties.NAME.setValue(artifact);
+        properties.GROUP.setValue(group);
+        properties.SOURCE.setValue(JarSource.MAVEN);
+        properties.HASH.setValue(hash);
+        properties.save();
+      }
     }
   }
   
