@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo.internal;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import edu.uci.ics.sourcerer.tools.core.repo.model.Project;
 import edu.uci.ics.sourcerer.tools.core.repo.model.Repository;
 import edu.uci.ics.sourcerer.util.io.IOUtils;

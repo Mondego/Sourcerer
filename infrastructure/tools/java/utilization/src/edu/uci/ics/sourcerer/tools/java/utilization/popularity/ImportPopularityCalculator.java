@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.popularity;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,15 +32,15 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProjec
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaRepository;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
-import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ImportPopularityCalculator {
   public static void calculateImportPopularity() {
-    TaskProgressLogger task = new TaskProgressLogger();
+    TaskProgressLogger task = TaskProgressLogger.create();
     
     task.start("Loading repository");
     ExtractedJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(JavaRepositoryFactory.INPUT_REPO);

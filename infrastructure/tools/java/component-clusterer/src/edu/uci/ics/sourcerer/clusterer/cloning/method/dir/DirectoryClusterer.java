@@ -18,7 +18,7 @@
 package edu.uci.ics.sourcerer.clusterer.cloning.method.dir;
 
 import static edu.uci.ics.sourcerer.repo.general.AbstractRepository.INPUT_REPO;
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

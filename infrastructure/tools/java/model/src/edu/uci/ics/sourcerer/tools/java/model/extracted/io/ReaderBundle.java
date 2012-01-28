@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.model.extracted.io;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.File;
 import java.io.IOException;

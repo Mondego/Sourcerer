@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.model.internal;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.File;
 import java.util.Collection;
@@ -35,7 +35,7 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.ModifiableJavaRepository;
 import edu.uci.ics.sourcerer.util.CounterSet;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
-import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -45,20 +45,25 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
     super(repoRoot);
   }
   
-  protected static JavaRepositoryImpl load(RepoFileImpl repoRoot) {
-    JavaRepositoryImpl repo = new JavaRepositoryImpl(repoRoot);
-    // Verify the repository type
-    String type = repo.properties.REPOSITORY_TYPE.getValue();
-    // If it's a new repo
-    if (type == null) {
-      repo.properties.REPOSITORY_TYPE.setValue(ModifiableSourceRepository.class.getName());
-      repo.properties.save();
-      return repo;
-    } else if (type.equals(ModifiableSourceRepository.class.getName())) {
-      return repo;
-    } else {
-      logger.severe("Invalid repository type: " + type);
-      return null;
+  protected static JavaRepositoryImpl load(RepoFileImpl repoRoot, TaskProgressLogger task) {
+    task.start("Loading Java repository from: " + repoRoot.toFile().getPath());
+    try {
+      JavaRepositoryImpl repo = new JavaRepositoryImpl(repoRoot);
+      // Verify the repository type
+      String type = repo.properties.REPOSITORY_TYPE.getValue();
+      // If it's a new repo
+      if (type == null) {
+        repo.properties.REPOSITORY_TYPE.setValue(ModifiableSourceRepository.class.getName());
+        repo.properties.save();
+        return repo;
+      } else if (type.equals(ModifiableSourceRepository.class.getName())) {
+        return repo;
+      } else {
+        logger.severe("Invalid repository type: " + type);
+        return null;
+      }
+    } finally {
+      task.finish();
     }
   }
   
@@ -111,7 +116,7 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
 
   @Override
   public void aggregateJarFiles() {
-    TaskProgressLogger task = new TaskProgressLogger();
+    TaskProgressLogger task = TaskProgressLogger.create();
     task.start("Aggregating jar files");
     
     aggregating = true;

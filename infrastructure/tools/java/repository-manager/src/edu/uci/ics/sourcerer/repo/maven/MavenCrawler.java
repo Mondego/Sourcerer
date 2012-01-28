@@ -17,9 +17,9 @@
  */
 package edu.uci.ics.sourcerer.repo.maven;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.RESUME;
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 import static edu.uci.ics.sourcerer.util.io.arguments.Arguments.OUTPUT;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.RESUME;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -36,9 +36,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+import edu.uci.ics.sourcerer.util.io.logging.Logging;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

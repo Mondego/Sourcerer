@@ -17,7 +17,8 @@
  */
 package edu.uci.ics.sourcerer.util.io.internal;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;

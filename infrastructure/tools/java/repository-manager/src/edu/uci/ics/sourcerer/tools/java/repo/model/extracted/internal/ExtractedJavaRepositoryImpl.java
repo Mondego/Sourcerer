@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.model.extracted.internal;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ProjectLocationImpl;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
@@ -27,6 +27,7 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.internal.AbstractJavaReposito
 import edu.uci.ics.sourcerer.tools.java.repo.model.internal.JarFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.internal.JavaProjectImpl;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -36,20 +37,25 @@ public final class ExtractedJavaRepositoryImpl extends AbstractJavaRepository<Ex
     super(repoRoot);
   }
   
-  public static ExtractedJavaRepositoryImpl load(RepoFileImpl repoRoot) {
-    ExtractedJavaRepositoryImpl repo = new ExtractedJavaRepositoryImpl(repoRoot);
-    // Verify the repository type
-    String type = repo.properties.REPOSITORY_TYPE.getValue();
-    // If it's a new repo
-    if (type == null) {
-      repo.properties.REPOSITORY_TYPE.setValue(ModifiableExtractedJavaRepository.class.getName());
-      repo.properties.save();
-      return repo;
-    } else if (type.equals(ModifiableExtractedJavaRepository.class.getName())) {
-      return repo;
-    } else {
-      logger.severe("Invalid repository type: " + type);
-      return null;
+  public static ExtractedJavaRepositoryImpl load(RepoFileImpl repoRoot, TaskProgressLogger task) {
+    task.start("Loading extracted Java repository from: " + repoRoot.toFile().getPath());
+    try {
+      ExtractedJavaRepositoryImpl repo = new ExtractedJavaRepositoryImpl(repoRoot);
+      // Verify the repository type
+      String type = repo.properties.REPOSITORY_TYPE.getValue();
+      // If it's a new repo
+      if (type == null) {
+        repo.properties.REPOSITORY_TYPE.setValue(ModifiableExtractedJavaRepository.class.getName());
+        repo.properties.save();
+        return repo;
+      } else if (type.equals(ModifiableExtractedJavaRepository.class.getName())) {
+        return repo;
+      } else {
+        logger.severe("Invalid repository type: " + type);
+        return null;
+      }
+    } finally {
+      task.finish();
     }
   }
   

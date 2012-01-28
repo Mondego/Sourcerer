@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.util.io.arguments;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,9 +35,9 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.Logging;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
+import edu.uci.ics.sourcerer.util.io.logging.Logging;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.util.io;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;

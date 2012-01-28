@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.resolver;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.util.ArrayList;
 import java.util.Collection;

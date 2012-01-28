@@ -31,7 +31,7 @@ import edu.uci.ics.sourcerer.util.CreationistMap;
 import edu.uci.ics.sourcerer.util.SizeCounter;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter;
 import edu.uci.ics.sourcerer.util.io.TablePrettyPrinter.Alignment;
-import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -46,7 +46,7 @@ public class RepositoryStatisticsCalculator {
     int projectsWithFiles = 0;
     int filteredFiles = 0;
     
-    TaskProgressLogger task = new TaskProgressLogger();
+    TaskProgressLogger task = TaskProgressLogger.create();
     
     task.start("Analyzing projects", "projects analyzed", 100);
     
@@ -122,7 +122,7 @@ public class RepositoryStatisticsCalculator {
   }
   
   public static void testForMemoryLeaks() {
-    TaskProgressLogger task = new TaskProgressLogger();
+    TaskProgressLogger task = TaskProgressLogger.create();
     task.start("Testing repository memory usage");
     
     task.start("Loading repository");
