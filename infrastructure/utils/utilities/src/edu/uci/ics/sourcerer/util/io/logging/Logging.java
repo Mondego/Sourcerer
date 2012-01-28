@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io;
+package edu.uci.ics.sourcerer.util.io.logging;
 
 import static edu.uci.ics.sourcerer.util.io.arguments.Arguments.OUTPUT;
 

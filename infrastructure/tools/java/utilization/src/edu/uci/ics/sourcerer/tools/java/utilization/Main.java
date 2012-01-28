@@ -26,8 +26,8 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.popularity.ImportPopularityCalculator;
 import edu.uci.ics.sourcerer.util.Action;
-import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -36,7 +36,7 @@ public class Main {
   public static final Command IDENTIFY_LIBRARIES = new Command("compare-library-identification", "Compare methods for clustering and identifying the libraries.") {
     @Override
     protected void action() {
-      final TaskProgressLogger task = new TaskProgressLogger();
+      final TaskProgressLogger task = TaskProgressLogger.create();
       task.start("Comparing library identification methods");
       final JarCollection jars = JarCollection.make(task);
       jars.printStatistics(task);

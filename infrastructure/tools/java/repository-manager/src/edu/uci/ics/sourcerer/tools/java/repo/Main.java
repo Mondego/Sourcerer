@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo;
 
+import edu.uci.ics.sourcerer.tools.java.repo.jars.JarIdentifier;
 import edu.uci.ics.sourcerer.tools.java.repo.maven.MavenImporter;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.repo.stats.RepositoryStatisticsCalculator;
@@ -61,6 +62,13 @@ public class Main {
         RepositoryStatisticsCalculator.testForMemoryLeaks();
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO);
+    
+  public static final Command IDENTIFY_JAR_FILES =
+    new Command("identify-jars", "Identify jar files containing a specific FQN.") {
+      protected void action() {
+        JarIdentifier.identifyJarsContainingFqn();
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JarIdentifier.CONTAINING_FQN, JarIdentifier.IDENTIFIED_JARS_FILE.asOutput());
     
   public static void main(String[] args) {
     Command.execute(args, Main.class);

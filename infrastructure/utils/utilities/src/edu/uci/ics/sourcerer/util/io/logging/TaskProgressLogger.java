@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.io;
+package edu.uci.ics.sourcerer.util.io.logging;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -29,24 +29,47 @@ import edu.uci.ics.sourcerer.util.Strings;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class TaskProgressLogger {
-  private String SPACES;
+  private static TaskProgressLogger NULL_LOGGER;
+  private String spaces;
   private final Deque<TaskInfo> tasks;
   
-  public TaskProgressLogger() {
-    tasks = new LinkedList<>();
-    SPACES = Strings.create(' ', 10);
+  private TaskProgressLogger(Deque<TaskInfo> tasks) {
+    this.tasks = tasks;
   }
   
-  private TaskProgressLogger(int startingIndent) {
-    this();
-    tasks.add(new TaskInfo(null, startingIndent, -1));
+  public static TaskProgressLogger create() {
+    return new TaskProgressLogger(new LinkedList<TaskInfo>());
+  }
+  
+  public synchronized static TaskProgressLogger createNull() {
+    if (NULL_LOGGER == null) {
+      NULL_LOGGER = new TaskProgressLogger(null) {
+        @Override
+        protected void start(String taskName, int indent, String finishedText, int progressInterval) {}
+        @Override
+        public void report(Level level, String text) {}
+        @Override
+        public void progress(String message) {}
+        @Override
+        public void finish() {}
+        @Override
+        public void cancel() {}
+      };
+    }
+    return NULL_LOGGER;
+  }
+  
+  public TaskProgressLogger createChild() {
+    TaskProgressLogger child = new TaskProgressLogger(new LinkedList<TaskInfo>());
+    child.tasks.add(new TaskInfo(null, tasks.peek().indent, -1));
+    return child;
   }
   
   private String getSpaces(int count) {
-    if (count > SPACES.length()) {
-      SPACES = Strings.create(' ', 10 + Math.max(count, SPACES.length()));
+    if (spaces == null || count > spaces.length()) {
+      spaces = Strings.create(' ' , 10 + count);
     }
-    return SPACES.substring(0, count);
+    return spaces.substring(0 , count);
   }
   
   private int getIndent() {
@@ -57,11 +80,7 @@ public class TaskProgressLogger {
     }
   }
   
-  public TaskProgressLogger spawnChild() {
-    return new TaskProgressLogger(tasks.peek().indent);
-  }
-  
-  private void start(String taskName, int indent, String finishedText, int progressInterval) {
+  protected void start(String taskName, int indent, String finishedText, int progressInterval) {
     logger.info(getSpaces(indent) + taskName + "...");
     tasks.push(new TaskInfo(finishedText, indent, progressInterval));
   }
@@ -83,20 +102,7 @@ public class TaskProgressLogger {
   }
   
   public void report(String text) {
-    logger.info(getSpaces(getIndent()) + text);
-  }
-  
-  public void progress() {
-    TaskInfo info = tasks.peek();
-    if (info.progressInterval == -1) {
-      throw new IllegalStateException("May not progress this task.");
-    } else if (info.progressInterval == 0) {
-      info.count++;
-    } else {
-      if (++info.count % info.progressInterval == 0) {
-        logger.info(getSpaces(info.indent + 1) + info.count + " " + info.finishedText + " in " + formatTime(info.startTime));
-      }
-    }
+    report(Level.INFO, text);
   }
   
   public void progress(String message) {
@@ -107,9 +113,17 @@ public class TaskProgressLogger {
       info.count++;
     } else {
       if (++info.count % info.progressInterval == 0) {
-        logger.info(getSpaces(info.indent + 1) + String.format(message, info.count, formatTime(info.startTime)));
+        if (message == null) {
+          logger.info(getSpaces(info.indent + 1) + info.count + " " + info.finishedText + " in " + formatTime(info.startTime));
+        } else {
+          logger.info(getSpaces(info.indent + 1) + String.format(message, info.count, formatTime(info.startTime)));
+        }
       }
     }
+  }
+  
+  public void progress() {
+    progress(null);
   }
   
   public void finish() {
@@ -133,22 +147,6 @@ public class TaskProgressLogger {
     }
   }
   
-  private static class TaskInfo {
-    public final String finishedText;
-    public final int indent;
-    public final long startTime;
-    public int count;
-    public int progressInterval;
-    
-    public TaskInfo(String finishedText, int indent, int progressInterval) {
-      this.finishedText = finishedText;
-      this.indent = indent;
-      this.startTime = System.currentTimeMillis();
-      this.count = 0;
-      this.progressInterval = progressInterval;
-    }
-  }
-  
   private static String formatTime(long time) {
     long elapsedTime = System.currentTimeMillis() - time;
     long seconds = elapsedTime / 1000;
@@ -169,5 +167,22 @@ public class TaskProgressLogger {
     }
     result.append(seconds % 60).append(".").append((elapsedTime / 100) % 100).append(" seconds.");
     return result.toString();
+  }
+
+  
+  private static class TaskInfo {
+    public final String finishedText;
+    public final int indent;
+    public final long startTime;
+    public int count;
+    public int progressInterval;
+    
+    public TaskInfo(String finishedText, int indent, int progressInterval) {
+      this.finishedText = finishedText;
+      this.indent = indent;
+      this.startTime = System.currentTimeMillis();
+      this.count = 0;
+      this.progressInterval = progressInterval;
+    }
   }
 }

@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
 import edu.uci.ics.sourcerer.tools.java.db.resolver.ModeledEntity;
 import edu.uci.ics.sourcerer.tools.java.db.resolver.ProjectTypeModel;

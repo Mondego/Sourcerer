@@ -24,6 +24,7 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaReposi
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaRepository;
 import edu.uci.ics.sourcerer.tools.java.repo.model.internal.InternalJavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -33,9 +34,17 @@ public interface JavaRepositoryFactory extends RepositoryFactory {
   
   public JavaRepository loadJavaRepository(Argument<File> root);
   
+  public JavaRepository loadJavaRepository(Argument<File> root, TaskProgressLogger task);
+  
   public ModifiableJavaRepository loadModifiableJavaRepository(Argument<File> root);
+  
+  public ModifiableJavaRepository loadModifiableJavaRepository(Argument<File> root, TaskProgressLogger task);
   
   public ExtractedJavaRepository loadExtractedJavaRepository(Argument<File> root);
   
+  public ExtractedJavaRepository loadExtractedJavaRepository(Argument<File> root, TaskProgressLogger task);
+  
   public ModifiableExtractedJavaRepository loadModifiableExtractedJavaRepository(Argument<File> root);
+  
+  public ModifiableExtractedJavaRepository loadModifiableExtractedJavaRepository(Argument<File> root, TaskProgressLogger task);
 }

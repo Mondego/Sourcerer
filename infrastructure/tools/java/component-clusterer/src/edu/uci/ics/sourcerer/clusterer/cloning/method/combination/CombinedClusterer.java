@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.clusterer.cloning.method.combination;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.ComplexKey;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.Confidence;
 import edu.uci.ics.sourcerer.clusterer.cloning.basic.DetectionMethod;

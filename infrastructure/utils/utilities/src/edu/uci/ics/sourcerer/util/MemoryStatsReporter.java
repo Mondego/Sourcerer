@@ -19,7 +19,7 @@ package edu.uci.ics.sourcerer.util;
 
 import java.text.NumberFormat;
 
-import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

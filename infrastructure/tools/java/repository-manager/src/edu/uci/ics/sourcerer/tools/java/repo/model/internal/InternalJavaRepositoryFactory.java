@@ -28,6 +28,7 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaReposi
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaRepository;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.internal.ExtractedJavaRepositoryImpl;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -35,21 +36,41 @@ import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 public class InternalJavaRepositoryFactory extends InternalRepositoryFactory implements JavaRepositoryFactory {
   @Override
   public JavaRepository loadJavaRepository(Argument<File> root) {
-    return JavaRepositoryImpl.load(RepoFileImpl.makeRoot(root));
+    return JavaRepositoryImpl.load(RepoFileImpl.makeRoot(root), TaskProgressLogger.createNull());
+  }
+  
+  @Override
+  public JavaRepository loadJavaRepository(Argument<File> root, TaskProgressLogger task) {
+    return JavaRepositoryImpl.load(RepoFileImpl.makeRoot(root), task);
   }
   
   @Override
   public ModifiableJavaRepository loadModifiableJavaRepository(Argument<File> root) {
-    return JavaRepositoryImpl.load(RepoFileImpl.makeRoot(root));
+    return JavaRepositoryImpl.load(RepoFileImpl.makeRoot(root), TaskProgressLogger.createNull());
+  }
+  
+  @Override
+  public ModifiableJavaRepository loadModifiableJavaRepository(Argument<File> root, TaskProgressLogger task) {
+    return JavaRepositoryImpl.load(RepoFileImpl.makeRoot(root), task);
   }
 
   @Override
   public ExtractedJavaRepository loadExtractedJavaRepository(Argument<File> root) {
-    return ExtractedJavaRepositoryImpl.load(RepoFileImpl.makeRoot(root));
+    return ExtractedJavaRepositoryImpl.load(RepoFileImpl.makeRoot(root), TaskProgressLogger.createNull());
+  }
+  
+  @Override
+  public ExtractedJavaRepository loadExtractedJavaRepository(Argument<File> root, TaskProgressLogger task) {
+    return ExtractedJavaRepositoryImpl.load(RepoFileImpl.makeRoot(root), task);
   }
 
   @Override
   public ModifiableExtractedJavaRepository loadModifiableExtractedJavaRepository(Argument<File> root) {
-    return ExtractedJavaRepositoryImpl.load(RepoFileImpl.makeRoot(root));
+    return ExtractedJavaRepositoryImpl.load(RepoFileImpl.makeRoot(root), TaskProgressLogger.createNull());
+  }
+  
+  @Override
+  public ModifiableExtractedJavaRepository loadModifiableExtractedJavaRepository(Argument<File> root, TaskProgressLogger task) {
+    return ExtractedJavaRepositoryImpl.load(RepoFileImpl.makeRoot(root), task);
   }
 }

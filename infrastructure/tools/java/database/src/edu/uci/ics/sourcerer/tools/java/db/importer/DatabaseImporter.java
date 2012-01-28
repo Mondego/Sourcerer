@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.File;
 import java.util.HashMap;
@@ -36,8 +36,8 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Location;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
-import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.io.logging.Logging;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.ParallelDatabaseRunnable;
 import edu.uci.ics.sourcerer.utils.db.sql.DeleteStatement;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;

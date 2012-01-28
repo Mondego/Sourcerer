@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import static edu.uci.ics.sourcerer.clusterer.cloning.method.fingerprint.FingerprintClusterer.REQUIRE_FINGERPRINT_NAME_MATCH;
 
 import java.util.Collection;

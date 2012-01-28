@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import edu.uci.ics.sourcerer.util.Helper;
-import edu.uci.ics.sourcerer.util.io.Logging;
+import edu.uci.ics.sourcerer.util.io.logging.Logging;
 
 
 /**
