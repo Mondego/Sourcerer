@@ -81,7 +81,7 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
   public final void action() {
     init();
     
-    task = new TaskProgressLogger();
+    task = TaskProgressLogger.create();
     task.start(taskName);
     doImport();
     task.finish();

@@ -22,8 +22,10 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -46,11 +48,11 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  */
 public class JarCollection implements Iterable<Jar> {
   public static Argument<File> JAR_COLLECTION_CACHE = new RelativeFileArgument("jar-collection-cache", "jar-collection-cache", Arguments.CACHE, "Cache for jar collection.").permit();
-  private final ArrayList<Jar> jars;
+  private final Map<String, Jar> jars;
   private final VersionedFqnNode rootFragment;
   
   private JarCollection() {
-    jars = new ArrayList<>();
+    jars = new HashMap<>();
     rootFragment = VersionedFqnNode.createRoot();
   }
   
@@ -67,7 +69,7 @@ public class JarCollection implements Iterable<Jar> {
     } catch (IOException | IllegalArgumentException e) {
       logger.log(Level.SEVERE, "Error reading jar file: " + jar, e);
     }
-    jars.add(newJar);
+    jars.put(jar.getProperties().HASH.getValue(), newJar);
   }
   
   public static JarCollection make(TaskProgressLogger task) {
@@ -84,7 +86,7 @@ public class JarCollection implements Iterable<Jar> {
       try (SimpleDeserializer deserializer = IOUtils.makeSimpleDeserializer(cache)) {
         for (Jar jar : deserializer.deserializeToIterable(Jar.makeDeserializer(jars.rootFragment, repo), true)) {
           task.progress();
-          jars.jars.add(jar);
+          jars.jars.put(jar.getJar().getProperties().HASH.getValue(), jar);
         }
         return jars;
       } catch (IOException e) {
@@ -129,9 +131,36 @@ public class JarCollection implements Iterable<Jar> {
     return jars;
   }
   
+  public static JarCollection make(TaskProgressLogger task, Collection<String> jarHashes) {
+    task.start("Building jar collection");
+    
+    JarCollection jars = new JarCollection();
+    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+    
+    task.start("Adding jars", "jars added", 500);
+    for (String hash : jarHashes) {
+      JarFile jar = repo.getJarFile(hash);
+      if (jar == null) {
+        logger.warning("Unknown jar: " + hash);
+      } else {
+        task.progress();
+        jars.add(jar);
+      }
+    }
+    task.finish();
+    
+    task.finish();
+    
+    return jars;
+  }
+  
+  public Jar getJar(String hash) {
+    return jars.get(hash);
+  }
+  
   @Override
   public Iterator<Jar> iterator() {
-    return jars.iterator();
+    return jars.values().iterator();
   }
 
   public int size() {

@@ -19,9 +19,13 @@ package edu.uci.ics.sourcerer.tools.java.repo.jars;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -40,7 +44,7 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  */
 public class JarIdentifier {
   public static final Argument<String> CONTAINING_FQN = new StringArgument("containing-fqn", "FQN to be identified.");
-  public static final DualFileArgument IDENTIFIED_JARS_FILE = new DualFileArgument("identified-jars-file", "identified-jars.txt", "Identified jar files.");
+  public static final DualFileArgument IDENTIFIED_JARS_FILE = new DualFileArgument("identified-jar-files", "identified-jars.txt", "Identified jar files.");
   
   private JarIdentifier() {}
   
@@ -104,5 +108,18 @@ public class JarIdentifier {
       logger.log(Level.SEVERE, "Error writing file.", e);
     }
     task.finish();
+  }
+  
+  public static Collection<String> loadIdentifiedJars() {
+    Collection<String> identifiedJars = new ArrayList<>();
+    try (BufferedReader br = IOUtils.makeBufferedReader(IDENTIFIED_JARS_FILE)) {
+      for (String hash = br.readLine(); hash != null; hash = br.readLine()) {
+        identifiedJars.add(hash);
+      }
+      return identifiedJars;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Unable to load identified jars", e);
+      return Collections.emptyList();
+    }
   }
 }

@@ -36,20 +36,55 @@ import com.google.common.collect.Multimap;
 
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
+import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
+import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
+import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ClusterCollection implements Iterable<Cluster> {
+  public static DualFileArgument CLUSTER_COLLECTION = new DualFileArgument("cluster-collection", "cluster-collection.txt", "File for saved cluster collection");
   private final Collection<Cluster> clusters;
   
-  ClusterCollection() {
+  private ClusterCollection() {
     clusters = new ArrayList<>();
+  }
+  
+  static ClusterCollection makeEmpty() {
+    return new ClusterCollection();
+  }
+  
+  public static ClusterCollection load(TaskProgressLogger task, JarCollection jars) {
+    ClusterCollection collection = new ClusterCollection();
+    task.start("Loading cluster collection", "clusters loaded", 500);
+    try (SimpleDeserializer deserializer = IOUtils.makeSimpleDeserializer(CLUSTER_COLLECTION)) {
+      for (Cluster cluster : deserializer.deserializeToIterable(Cluster.makeDeserializer(jars), true)) {
+        task.progress();
+        collection.addCluster(cluster);
+      }
+      // Would use a finally block, but that crashes eclipse!
+      task.finish();
+      return collection;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error loading cluster collection", e);
+      task.finish();
+      return null;
+    }
+  }
+  
+  public void save() {
+    try (SimpleSerializer serializer = IOUtils.makeSimpleSerializer(CLUSTER_COLLECTION)) {
+      serializer.serialize(clusters);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error saving cluster collection", e);
+    }
   }
   
   void addCluster(Cluster library) {
@@ -160,13 +195,13 @@ public class ClusterCollection implements Iterable<Cluster> {
             }
           }
           
-          writer.writeAndIndent(jar.getJar().getProperties().NAME.getValue() + " fragmented into " + clusters.size() + " clusters");
+          writer.writeAndIndent(jar.getJar().getProperties().NAME.getValue() + (jar.getJar().getProperties().VERSION.getValue() == null ? "" : " (" + jar.getJar().getProperties().VERSION.getValue() +")") + " fragmented into " + clusters.size() + " clusters");
           writer.write("FQNs from this jar appear in " + (otherJars.size() - 1) + " other jars");
           writer.writeAndIndent("Listing jars with overlap");
           int c = 1;
           for (Jar otherJar : otherJars) {
             JarProperties props = otherJar.getJar().getProperties();
-            writer.write(c++ + ": " + props.NAME.getValue() + ": " + props.HASH.getValue() + (otherJar == jar ? " <--" : ""));
+            writer.write(c++ + ": " + props.NAME.getValue() + (otherJar.getJar().getProperties().VERSION.getValue() == null ? "" : " (" + otherJar.getJar().getProperties().VERSION.getValue() +")") + ": " + props.HASH.getValue() + (otherJar == jar ? " <--" : ""));
           }
           writer.unindent();
           writer.unindent();
@@ -292,7 +327,7 @@ public class ClusterCollection implements Iterable<Cluster> {
         int c = 1;
         for (Jar jar : jars) {
           JarProperties props = jar.getJar().getProperties();
-          writer.write(c++ + ": " + props.NAME.getValue() + ": " + props.HASH.getValue());
+          writer.write(c++ + ": " + props.NAME.getValue() + (jar.getJar().getProperties().VERSION.getValue() == null ? "" : " (" + jar.getJar().getProperties().VERSION.getValue() +")") + ": " + props.HASH.getValue());
         }
         writer.unindent();
         

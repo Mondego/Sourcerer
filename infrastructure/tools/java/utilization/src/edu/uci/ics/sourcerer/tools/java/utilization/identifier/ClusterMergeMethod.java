@@ -40,7 +40,7 @@ public enum ClusterMergeMethod {
   RELATED_SUBPACKAGE {
     @Override
     public void doForEachVersion(Action action) {
-      Cluster.MERGE_METHOD.setValue(this);
+      Identifier.MERGE_METHOD.setValue(this);
       for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
         MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
@@ -92,7 +92,7 @@ public enum ClusterMergeMethod {
   JACCARD_PACKAGE {
     @Override
     public void doForEachVersion(Action action) {
-      Cluster.MERGE_METHOD.setValue(this);
+      Identifier.MERGE_METHOD.setValue(this);
       for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
         MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
@@ -141,7 +141,7 @@ public enum ClusterMergeMethod {
   MAX_PATH_SIMILARITY {
     @Override
     public void doForEachVersion(Action action) {
-      Cluster.MERGE_METHOD.setValue(this);
+      Identifier.MERGE_METHOD.setValue(this);
       for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
         MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
@@ -211,7 +211,7 @@ public enum ClusterMergeMethod {
   AVG_PATH_SIMILARITY {
     @Override
     public void doForEachVersion(Action action) {
-      Cluster.MERGE_METHOD.setValue(this);
+      Identifier.MERGE_METHOD.setValue(this);
       for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
         MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
@@ -306,12 +306,12 @@ public enum ClusterMergeMethod {
     }
   };
   
-  public static final Argument<Double> MERGE_THRESHOLD = new DoubleArgument("merge-threshold", "Threshold for jaccard package similarity").permit();
+  public static final Argument<Double> MERGE_THRESHOLD = new DoubleArgument("merge-threshold", 0.5, "Threshold for jaccard package similarity").permit();
   public static final Argument<Integer> MINIMUM_THRESHOLD = new IntegerArgument("minimum-threshold", 50, "Minimum threshold (out of 100) to test").permit();
   public static final Argument<Integer> THRESHOLD_DECREMENT = new IntegerArgument("threshold-decrement", 5, "Threshold decrement, starting at 100, to test").permit();
   
   public void doForEachVersion(Action action) {
-    Cluster.MERGE_METHOD.setValue(this);
+    Identifier.MERGE_METHOD.setValue(this);
     action.doMe();
   }
   

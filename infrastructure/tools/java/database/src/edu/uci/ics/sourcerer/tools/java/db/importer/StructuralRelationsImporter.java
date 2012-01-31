@@ -105,7 +105,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
     
     BatchInserter inserter = exec.makeInFileInserter(tempDir, EntitiesTable.TABLE);
     
-    TaskProgressLogger processTask = task.spawnChild();
+    TaskProgressLogger processTask = task.createChild();
     processTask.start("Processing local variables and parameters file", "variables processed");
     for (LocalVariableEX var : reader.getTransientLocalVariables()) {
       // Get the file

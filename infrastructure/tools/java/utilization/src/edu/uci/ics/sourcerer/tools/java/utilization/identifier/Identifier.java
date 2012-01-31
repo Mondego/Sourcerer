@@ -23,21 +23,28 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.TreeSet;
 import java.util.logging.Level;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
+import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
+import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.EnumArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
-
-
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -46,10 +53,54 @@ public class Identifier {
   private Identifier() {
   }
   
-  public static ClusterCollection identifyLibraries(TaskProgressLogger task, JarCollection jars, String logFileName) {
+  public static final Argument<Double> COMPATIBILITY_THRESHOLD = new DoubleArgument("compatibility-threshold", 1., "").permit();
+  public static final Argument<ClusterMergeMethod> MERGE_METHOD = new EnumArgument<>("merge-method", ClusterMergeMethod.class, "Method for performing second stage merge.").makeOptional();
+  
+  private static boolean areCompatible(Cluster one, Cluster two) {
+    // Do a pairwise comparison of every FQN. Calculate the conditional
+    // probability of each FQN in B appearing given each FQN in A and average.
+    // Then compute the reverse. Both values must be above the threshold.
+    double threshold = COMPATIBILITY_THRESHOLD.getValue();
+    // If the threshold is greater than 1, no match is possible
+    if (threshold > 1) {
+      return false;
+    }
+    // If the threshold is 1, we can short-circuit this comparison
+    // The primary jars must match exactly (can do == because JarSet is interned)
+    else if (threshold >= 1.) {
+      return one.getJars() == two.getJars();
+    }
+    // Now we have to actually do the comparison
+    else {
+      // If there's no intersection between the JarSet, return false
+      // There may be other optimizations that can be done to cut out cases where the full comparison has to be done
+      if (one.getJars().getIntersectionSize(two.getJars()) == 0) {
+        return false;
+      } else {
+        Averager<Double> otherGivenThis = new Averager<>();
+        Averager<Double> thisGivenOther = new Averager<>();
+      
+        for (VersionedFqnNode fqn : one.getCoreFqns()) {
+          for (VersionedFqnNode otherFqn : two.getCoreFqns()) {
+            JarSet fqnJars = fqn.getVersions().getJars();
+            JarSet otherFqnJars = otherFqn.getVersions().getJars();
+            // Conditional probability of other given this
+            // # shared jars / total jars in this
+            otherGivenThis.addValue((double) fqnJars.getIntersectionSize(otherFqnJars) / fqnJars.size());
+            // Conditional probabilty for this given other
+            // # shared jars / total jars in other
+            thisGivenOther.addValue((double) otherFqnJars.getIntersectionSize(fqnJars) / otherFqnJars.size());
+          }
+        }
+        return otherGivenThis.getMean() >= threshold && thisGivenOther.getMean() >= threshold;
+      }
+    }
+  }
+  
+  public static ClusterCollection identifyClusters(TaskProgressLogger task, JarCollection jars, String logFileName) {
     task.start("Identifying clusters in " + jars.size() + " jar files using tree clustering method");
-    task.report("Compatibility threshold: " + Cluster.COMPATIBILITY_THRESHOLD.getValue());
-    task.report("Secondary merging method: " + Cluster.MERGE_METHOD.getValue());
+    task.report("Compatibility threshold: " + COMPATIBILITY_THRESHOLD.getValue());
+    task.report("Secondary merging method: " + MERGE_METHOD.getValue());
     
     Multimap<VersionedFqnNode, Cluster> tempClusterMap = ArrayListMultimap.create();
     
@@ -57,7 +108,7 @@ public class Identifier {
     int clusterCount = 0;
     // Explore the tree in post-order
     for (VersionedFqnNode fragment : jars.getRoot().getPostOrderIterable()) {
-      task.progress("%d FQN fragments visited (" + clusterCount + " libraries) in %s");
+      task.progress("%d FQN fragments visited (" + clusterCount + " clusters) in %s");
       // If there are no children, then make it its own single-fqn library
       if (!fragment.hasChildren()) {
         Cluster cluster = new Cluster();
@@ -74,7 +125,7 @@ public class Identifier {
             
             // Check to see if it can be merged with any of the libraries
             for (Cluster merge : tempClusterMap.get(fragment)) {
-              if (merge.isCompatible(childCluster)) {
+              if (areCompatible(merge, childCluster)) {
                 candidates.add(merge);
               }
             }
@@ -131,7 +182,7 @@ public class Identifier {
         // Find and merge any candidate clusters
         for (Cluster coreCluster : coreClusters) {
           // Check if the core cluster should include the next biggest
-          if (coreCluster.isSecondStageCompatible(biggest, writer)) {
+          if (MERGE_METHOD.getValue().shouldMerge(coreCluster, biggest, writer)) {
             coreCluster.mergeCluster(biggest);
             merged = true;
             break;
@@ -147,7 +198,7 @@ public class Identifier {
     
     task.finish();
    
-    ClusterCollection clusters = new ClusterCollection();
+    ClusterCollection clusters = ClusterCollection.makeEmpty();
     for (Cluster cluster : coreClusters) {
       clusters.addCluster(cluster);
     }
@@ -155,7 +206,102 @@ public class Identifier {
     task.report("Stage Two reduced the cluster count to " + clusters.getClusters().size());
     
     task.finish();
-    
+
     return clusters;
+  }
+  
+  public static Argument<Double> EXEMPLAR_THRESHOLD = new DoubleArgument("exemplar-threshold", 0.5, "Threshold for expanding core fqns.").permit();
+  
+  public static void identifyClusterExemplars(TaskProgressLogger task, ClusterCollection clusters, String logFileName) {
+    task.start("Identifying cluster exemplars", "clusters examined", 500);
+    try (LogFileWriter logWriter = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), logFileName))) {
+      for (final Cluster cluster : clusters) {
+        logWriter.writeAndIndent("Identifying cluster exemplars");
+               
+        // All of the core FQNs are exemplar FQNs
+        logWriter.writeAndIndent("Core FQNs (" + cluster.getCoreFqns().size() + ")");
+        for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
+          cluster.addExemplarFqn(fqn);
+          logWriter.write(fqn.getFqn());
+        }
+        logWriter.unindent();
+        
+        // An extra FQN becomes an exmplar FQN if it occurs in >= EXEMPLAR_THRESHOLD of jars
+        logWriter.writeAndIndent("Extra FQNs (" + cluster.getExtraFqns().size() + ")");
+        for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
+          double rate = (double) cluster.getJars().getIntersectionSize(fqn.getVersions().getJars()) / cluster.getJars().size();
+          if (rate >= EXEMPLAR_THRESHOLD.getValue()) {
+            logWriter.write("E  " + fqn.getFqn() + " " + rate);
+            cluster.addExemplarFqn(fqn);
+          } else {
+            logWriter.write("   " + fqn.getFqn() + " " + rate);
+          }
+        }
+        logWriter.unindent();
+        
+        // Now let's try to find exemplar jars
+        class Stats {
+          int exemplarCount = 0;
+          int extraCount = 0;
+          int outsideCount = 0;
+          int score = Integer.MAX_VALUE;
+        }
+        final Map<Jar, Stats> jarInfo = new HashMap<>();
+        for (Jar jar : cluster.getJars()) {
+          Stats stats = new Stats();
+          for (VersionedFqnNode fqn : jar.getFqns()) {
+            if (cluster.getExemplarFqns().contains(fqn)) {
+              stats.exemplarCount++;
+            } else if (cluster.getExtraFqns().contains(fqn)) {
+              stats.extraCount++;
+            } else {
+              stats.outsideCount++;
+            }
+          }
+          
+          // Compute the score, lower is better
+          // 100 points for every missing exemplar
+          stats.score += 100 * (cluster.getExemplarFqns().size() - stats.exemplarCount);
+          // 5 points for every extra
+          stats.score += 5 * stats.extraCount;
+          // 10 points for every outside
+          stats.score += 10 * stats.outsideCount;
+          
+          jarInfo.put(jar, stats);
+        }
+        
+        PriorityQueue<Jar> queue = new PriorityQueue<>(cluster.getJars().size(), new Comparator<Jar>() {
+          @Override
+          public int compare(Jar one, Jar two) {
+            return Integer.compare(jarInfo.get(one).score, jarInfo.get(two).score);
+          }});
+        for (Jar jar : cluster.getJars()) {
+          queue.add(jar);
+        }
+        
+        int bestScore = -1;
+        logWriter.writeAndIndent("Jars (" + cluster.getJars().size() + ")");
+        while (!queue.isEmpty()) {
+          Jar top = queue.poll();
+          int topScore = jarInfo.get(top).score; 
+          if (bestScore == -1) {
+            cluster.addExemplar(top);
+            bestScore = topScore;
+            logWriter.write("E  " + top.toString() + " " + topScore);
+          } else if (topScore == bestScore) {
+            cluster.addExemplar(top);
+            logWriter.write("E  " + top.toString() + " " + topScore);
+          } else {
+            logWriter.write("   " + top.toString() + " " + topScore);
+          }
+        }
+        
+        task.progress();
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error writing log", e);
+    }
+    
+    task.finish();
   }
 }

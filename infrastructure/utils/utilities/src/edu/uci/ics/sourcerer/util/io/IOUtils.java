@@ -65,6 +65,10 @@ public final class IOUtils {
     return new BufferedReader(new FileReader(file));
   }
   
+  public static BufferedReader makeBufferedReader(DualFileArgument arg) throws IOException {
+    return new BufferedReader(new FileReader(arg.asInput().getValue()));
+  }
+  
   public static void close (Closeable ... closeMe) {
     for (Closeable close : closeMe) {
       if (close != null) {

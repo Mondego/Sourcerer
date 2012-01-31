@@ -115,7 +115,11 @@ public final class JarFileImpl implements JarFile, IJar {
   
   @Override
   public String toString() {
-    return properties.NAME.getValue();
+    if (properties.VERSION.getValue() == null) {
+      return properties.NAME.getValue();
+    } else {
+      return properties.NAME.getValue() + " (" + properties.VERSION.getValue() + ")";
+    }
   }
 
   /* Serialization Related Methods */

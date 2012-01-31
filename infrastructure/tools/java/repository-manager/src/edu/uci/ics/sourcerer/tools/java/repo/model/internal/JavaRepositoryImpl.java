@@ -269,6 +269,7 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
         properties.GROUP.setValue(group);
         properties.SOURCE.setValue(JarSource.MAVEN);
         properties.HASH.setValue(hash);
+        properties.VERSION.setValue(version);
         properties.save();
       }
     }

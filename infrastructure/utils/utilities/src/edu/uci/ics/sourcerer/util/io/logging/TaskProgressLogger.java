@@ -73,7 +73,7 @@ public class TaskProgressLogger {
   }
   
   private int getIndent() {
-    if (tasks.isEmpty()) {
+    if (tasks == null || tasks.isEmpty()) {
       return 0;
     } else {
       return tasks.peek().indent + 2;

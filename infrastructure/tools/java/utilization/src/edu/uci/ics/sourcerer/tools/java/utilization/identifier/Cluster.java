@@ -21,33 +21,36 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.Scanner;
 import java.util.TreeSet;
 
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
-import edu.uci.ics.sourcerer.util.Averager;
-import edu.uci.ics.sourcerer.util.io.LogFileWriter;
-import edu.uci.ics.sourcerer.util.io.arguments.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
-import edu.uci.ics.sourcerer.util.io.arguments.EnumArgument;
+import edu.uci.ics.sourcerer.util.io.CustomSerializable;
+import edu.uci.ics.sourcerer.util.io.LineBuilder;
+import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class Cluster {
-  public static final Argument<Double> COMPATIBILITY_THRESHOLD = new DoubleArgument("compatibility-threshold", 1., "").permit();
-  public static final Argument<ClusterMergeMethod> MERGE_METHOD = new EnumArgument<>("merge-method", ClusterMergeMethod.class, "Method for performing second stage merge.").makeOptional();
+public class Cluster implements CustomSerializable {
+  
 
   private JarSet jars;
+  private JarSet exemplars;
   private final Collection<VersionedFqnNode> coreFqns;
   private final Collection<VersionedFqnNode> extraFqns;
+  private Collection<VersionedFqnNode> exemplarFqns;
   
   Cluster() {
-    this.coreFqns = new LinkedList<>();
+    this.coreFqns = new HashSet<>();
     this.extraFqns = new TreeSet<>();
     jars = JarSet.create();
+    exemplars = jars;
+    exemplarFqns = Collections.emptySet();
   }
   
   void addCoreFqn(VersionedFqnNode fqn) {
@@ -65,6 +68,17 @@ public class Cluster {
     extraFqns.addAll(cluster.coreFqns);
   }
   
+  void addExemplarFqn(VersionedFqnNode fqn) {
+    if (exemplarFqns.isEmpty()) {
+      exemplarFqns = new HashSet<>();
+    }
+    exemplarFqns.add(fqn);
+  }
+  
+  void addExemplar(Jar jar) {
+    exemplars.add(jar);
+  }
+  
   public Collection<VersionedFqnNode> getCoreFqns() {
     return coreFqns;
   }
@@ -73,57 +87,93 @@ public class Cluster {
     return extraFqns;
   }
   
+  public Collection<VersionedFqnNode> getExemplarFqns() {
+    return exemplarFqns;
+  }
+  
   public JarSet getJars() {
     return jars;
-  }
-  
-  public boolean isCompatible(Cluster other) {
-    // Do a pairwise comparison of every FQN. Calculate the conditional
-    // probability of each FQN in B appearing given each FQN in A and average.
-    // Then compute the reverse. Both values must be above the threshold.
-    double threshold = COMPATIBILITY_THRESHOLD.getValue();
-    // If the threshold is greater than 1, no match is possible
-    if (threshold > 1) {
-      return false;
-    }
-    // If the threshold is 1, we can short-circuit this comparison
-    // The primary jars must match exactly (can do == because JarSet is interned)
-    else if (threshold >= 1.) {
-      return jars == other.jars;
-    }
-    // Now we have to actually do the comparison
-    else {
-      // If there's no intersection between the JarSet, return false
-      // There may be other optimizations that can be done to cut out cases where the full comparison has to be done
-      if (jars.getIntersectionSize(other.jars) == 0) {
-        return false;
-      } else {
-        Averager<Double> otherGivenThis = new Averager<>();
-        Averager<Double> thisGivenOther = new Averager<>();
-      
-        for (VersionedFqnNode fqn : coreFqns) {
-          for (VersionedFqnNode otherFqn : other.coreFqns) {
-            JarSet fqnJars = fqn.getVersions().getJars();
-            JarSet otherFqnJars = otherFqn.getVersions().getJars();
-            // Conditional probability of other given this
-            // # shared jars / total jars in this
-            otherGivenThis.addValue((double) fqnJars.getIntersectionSize(otherFqnJars) / fqnJars.size());
-            // Conditional probabilty for this given other
-            // # shared jars / total jars in other
-            thisGivenOther.addValue((double) otherFqnJars.getIntersectionSize(fqnJars) / otherFqnJars.size());
-          }
-        }
-        return otherGivenThis.getMean() >= threshold && thisGivenOther.getMean() >= threshold;
-      }
-    }
-  }
-  
-  public boolean isSecondStageCompatible(Cluster other, LogFileWriter writer) {
-    return MERGE_METHOD.getValue().shouldMerge(this, other, writer);
   }
   
   @Override
   public String toString() {
     return "core:{" + coreFqns.toString() + "} extra:{" + extraFqns.toString() +"}";
+  }
+  
+  @Override
+  public String serialize() {
+    LineBuilder builder = new LineBuilder();
+    builder.append(jars.size());
+    for (Jar jar : jars) {
+      builder.append(jar.getJar().getProperties().HASH.getValue());
+    }
+    builder.append(coreFqns.size());
+    for (VersionedFqnNode fqn : coreFqns) {
+      builder.append(fqn.getFqn());
+    }
+    builder.append(extraFqns.size());
+    for (VersionedFqnNode fqn : extraFqns) {
+      builder.append(fqn.getFqn());
+    }
+    return builder.toString();
+  }
+  
+  public static ObjectDeserializer<Cluster> makeDeserializer(final JarCollection jars) {
+    return new ObjectDeserializer<Cluster>() {
+      @Override
+      public Cluster deserialize(Scanner scanner) {
+        if (scanner.hasNextInt()) {
+          Cluster cluster = new Cluster();
+          int jarCount = scanner.nextInt();
+          for (int i = 0; i < jarCount; i++) {
+            if (scanner.hasNext()) {
+              String hash = scanner.next();
+              Jar jar = jars.getJar(hash);
+              if (jar == null) {
+                logger.severe("Unable to locate jar: " + hash);
+              } else {
+                cluster.jars = cluster.jars.add(jar);
+              }
+            } else {
+              logger.severe("Missing expected jar for cluster deserialization");
+              return null;
+            }
+          }
+          
+          if (scanner.hasNextInt()) {
+            int coreCount = scanner.nextInt();
+            for (int i = 0; i < coreCount; i++) {
+              if (scanner.hasNext()) {
+                cluster.coreFqns.add(jars.getRoot().getChild(scanner.next(), '.'));
+              } else {
+                logger.severe("Missing expected core fqn for cluster deserialization");
+                return null;
+              }
+            }            
+          } else {
+            logger.severe("Missing core fqn count for cluster deserialization");
+            return null;
+          }
+          
+          if (scanner.hasNextInt()) {
+            int extraCount = scanner.nextInt();
+            for (int i = 0; i < extraCount; i++) {
+              if (scanner.hasNext()) {
+                cluster.extraFqns.add(jars.getRoot().getChild(scanner.next(), '.'));
+              } else {
+                logger.severe("Missing expected extra fqn for cluster deserialization");
+                return null;
+              }
+            }            
+          } else {
+            logger.severe("Missing core fqn count for cluster deserialization");
+            return null;
+          }
+          return cluster;
+        } else {
+          logger.severe("Missing jar count for cluster deserialization");
+          return null;
+        }
+      }};
   }
 }
