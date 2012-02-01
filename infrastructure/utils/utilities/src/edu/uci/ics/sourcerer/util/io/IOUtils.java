@@ -46,7 +46,11 @@ public final class IOUtils {
   }
   
   public static LogFileWriter createLogFileWriter(File file) throws IOException {
-    return LogFileWriter.create(makeBufferedWriter(file));
+    if (file == null) {
+      return LogFileWriter.createNull();
+    } else {
+      return LogFileWriter.create(makeBufferedWriter(file));
+    }
   }
   
   public static BufferedWriter makeBufferedWriter(DualFileArgument arg) throws IOException {

@@ -28,7 +28,7 @@ public class RelativeFileArgument extends FileArgument {
   private final Argument<File> parent;
   
   public RelativeFileArgument(String name, Argument<File> parent, String description) {
-    super(name, null, description);
+    super(name, description);
     this.parent = parent;
     defaultRelativePath = null;
   }
@@ -39,6 +39,13 @@ public class RelativeFileArgument extends FileArgument {
     this.defaultRelativePath = defaultRelativePath;
   }
   
+  public synchronized void setValue(String value) {
+    if (value == null) {
+      super.setValue(null);
+    } else {
+      super.setValue(parseString(value));
+    }
+  }
   
   @Override
   public String getType() {
@@ -61,7 +68,11 @@ public class RelativeFileArgument extends FileArgument {
   
   @Override
   public String getDefaultString() {
-    return getDefaultValue().getPath();
+    if (defaultRelativePath == null) {
+      return null;
+    } else {
+      return getDefaultValue().getPath();
+    }
   }
   
   @Override

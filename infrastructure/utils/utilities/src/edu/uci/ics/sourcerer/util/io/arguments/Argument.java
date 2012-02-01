@@ -17,12 +17,7 @@
  */
 package edu.uci.ics.sourcerer.util.io.arguments;
 
-import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.Collection;
-import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.Helper;
 
@@ -36,23 +31,27 @@ public abstract class Argument <T> {
   private boolean initialized;
   private T value;
   private T defaultValue;
-  private Argument<?>[] requiredProperties;
+  private Argument<?>[] requiredArguments;
 
   private Collection<Argument<?>> requiredBy;
   private String description;
   
-  private boolean optional = false;
-  private boolean allowNull = false;
+  private final boolean hasDefault;
   
   private boolean permitted = false;
+  
+  protected Argument(String name, String description) {
+    this.name = name;
+    this.defaultValue = null;
+    this.hasDefault = false;
+    this.description = description;
+  }
   
   protected Argument(String name, T defaultValue, String description) {
     this.name = name;
     this.defaultValue = defaultValue;
+    this.hasDefault = true;
     this.description = description;
-    if (defaultValue == null) {
-      allowNull = true;
-    }
   }
   
   protected final void isRequiredBy(Argument<?> prop) {
@@ -66,15 +65,10 @@ public abstract class Argument <T> {
     permitted = true;
     return this;
   }
-  
-  public final Argument<T> makeOptional() {
-    optional = true;
-    return this;
-  }
-    
-  public final Argument<T> setRequiredProperties(Argument<?> ... properties) {
-    if (requiredProperties == null) {
-      requiredProperties = properties;
+   
+  public final Argument<T> setRequiredArguments(Argument<?> ... properties) {
+    if (requiredArguments == null) {
+      requiredArguments = properties;
       return this;
     } else {
       throw new IllegalStateException("May not require more than one set of properties.");
@@ -87,11 +81,11 @@ public abstract class Argument <T> {
   
   public abstract String getType();
   
-  protected final Argument<?>[] getRequiredProperties() {
-    if (requiredProperties == null) {
+  protected final Argument<?>[] getRequiredArguments() {
+    if (requiredArguments == null) {
       return new Argument<?>[0];
     } else {
-      return requiredProperties;
+      return requiredArguments;
     }
   }
   
@@ -116,15 +110,11 @@ public abstract class Argument <T> {
     return name;
   }
   
-  public final boolean isNotOptional() {
-    return !optional;
-  }
-  
   public final boolean hasValue() {
     if (!initialized) {
       initializeValue();
     }
-    return value != null || hasDefaultValue();
+    return value != null || hasDefault;
   }
   
   public final synchronized void setValue(T value) {
@@ -139,7 +129,7 @@ public abstract class Argument <T> {
     if (!initialized) {
       initializeValue();
     }
-    if (value == null && !allowNull) {
+    if (value == null && !hasDefault) {
       throw new IllegalStateException(name + " never specified.");
     } else {
       return value;
@@ -167,19 +157,22 @@ public abstract class Argument <T> {
       if (stringValue == null) {
         stringValue = System.getProperty(name);
         if (stringValue == null) {
-          if (hasDefaultValue() && this != PROMPT_MISSING && PROMPT_MISSING.getValue() && isNotOptional()) {
-            try {
-              System.out.print("Please enter value for " + name + ":");
-              BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-              stringValue = br.readLine();
-              value = parseString(stringValue);
-            } catch (Exception e) {
-              logger.log(Level.SEVERE, "Unable to read value for " + name, e);
-              throw new RuntimeException(e);
-            }
-          } else {
+          if (hasDefaultValue()) {
             value = getDefaultValue();
           }
+//          if (hasDefaultValue() && this != PROMPT_MISSING && PROMPT_MISSING.getValue() && isNotOptional()) {
+//            try {
+//              System.out.print("Please enter value for " + name + ":");
+//              BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+//              stringValue = br.readLine();
+//              value = parseString(stringValue);
+//            } catch (Exception e) {
+//              logger.log(Level.SEVERE, "Unable to read value for " + name, e);
+//              throw new RuntimeException(e);
+//            }
+//          } else {
+//            value = getDefaultValue();
+//          }
         } else {
           value = parseString(stringValue);
         }

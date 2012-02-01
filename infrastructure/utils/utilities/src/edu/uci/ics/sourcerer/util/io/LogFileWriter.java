@@ -43,6 +43,22 @@ public class LogFileWriter implements AutoCloseable {
     return new LogFileWriter(writer);
   }
   
+  static LogFileWriter createNull() {
+    return new LogFileWriter(null) {
+      @Override
+      public void writeAndIndent(String string) {}
+
+      @Override
+      public void write(String string) {}
+
+      @Override
+      public void writeFragment(String string) {}
+
+      @Override
+      public void newLine() {}
+    };
+  }
+  
   public void indent() {
     indent += 2;
   }

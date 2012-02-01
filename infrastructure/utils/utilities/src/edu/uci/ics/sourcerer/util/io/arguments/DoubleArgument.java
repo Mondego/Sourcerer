@@ -23,7 +23,7 @@ package edu.uci.ics.sourcerer.util.io.arguments;
  */
 public class DoubleArgument extends Argument<Double> {
   public DoubleArgument(String name, String description) {
-    super(name, null, description);
+    super(name, description);
   }
   
   public DoubleArgument(String name, Double defaultValue, String description) {

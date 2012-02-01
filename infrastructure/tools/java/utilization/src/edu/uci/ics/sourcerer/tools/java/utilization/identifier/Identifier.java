@@ -44,6 +44,7 @@ import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
 import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
 import edu.uci.ics.sourcerer.util.io.arguments.EnumArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.RelativeFileArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
@@ -53,8 +54,9 @@ public class Identifier {
   private Identifier() {
   }
   
+  public static final RelativeFileArgument CLUSTER_MERGING_LOG = new RelativeFileArgument("cluster-merging-log", null, Arguments.OUTPUT, "Log file containing cluster merging info.");
   public static final Argument<Double> COMPATIBILITY_THRESHOLD = new DoubleArgument("compatibility-threshold", 1., "").permit();
-  public static final Argument<ClusterMergeMethod> MERGE_METHOD = new EnumArgument<>("merge-method", ClusterMergeMethod.class, "Method for performing second stage merge.").makeOptional();
+  public static final Argument<ClusterMergeMethod> MERGE_METHOD = new EnumArgument<>("merge-method", ClusterMergeMethod.class, "Method for performing second stage merge.");
   
   private static boolean areCompatible(Cluster one, Cluster two) {
     // Do a pairwise comparison of every FQN. Calculate the conditional
@@ -97,7 +99,7 @@ public class Identifier {
     }
   }
   
-  public static ClusterCollection identifyClusters(TaskProgressLogger task, JarCollection jars, String logFileName) {
+  public static ClusterCollection identifyClusters(TaskProgressLogger task, JarCollection jars) {
     task.start("Identifying clusters in " + jars.size() + " jar files using tree clustering method");
     task.report("Compatibility threshold: " + COMPATIBILITY_THRESHOLD.getValue());
     task.report("Secondary merging method: " + MERGE_METHOD.getValue());
@@ -176,7 +178,7 @@ public class Identifier {
     
     Collection<Cluster> coreClusters = new LinkedList<>();
     // Go from cluster containing the most jars to the least
-    try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), logFileName))) {
+    try (LogFileWriter writer = IOUtils.createLogFileWriter(CLUSTER_MERGING_LOG.getValue())) {
       for (Cluster biggest : sortedClusters.descendingSet()) {
         boolean merged = false;
         // Find and merge any candidate clusters
@@ -210,11 +212,12 @@ public class Identifier {
     return clusters;
   }
   
+  public static Argument<File> EXEMPLAR_LOG = new RelativeFileArgument("exemplar-log", null, Arguments.OUTPUT, "Log file listing the cluster exemplars.");
   public static Argument<Double> EXEMPLAR_THRESHOLD = new DoubleArgument("exemplar-threshold", 0.5, "Threshold for expanding core fqns.").permit();
   
-  public static void identifyClusterExemplars(TaskProgressLogger task, ClusterCollection clusters, String logFileName) {
+  public static void identifyClusterExemplars(TaskProgressLogger task, ClusterCollection clusters) {
     task.start("Identifying cluster exemplars", "clusters examined", 500);
-    try (LogFileWriter logWriter = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), logFileName))) {
+    try (LogFileWriter logWriter = IOUtils.createLogFileWriter(EXEMPLAR_LOG.getValue())) {
       for (final Cluster cluster : clusters) {
         logWriter.writeAndIndent("Identifying cluster exemplars");
                
@@ -245,6 +248,10 @@ public class Identifier {
           int extraCount = 0;
           int outsideCount = 0;
           int score = 0;
+          
+          public String toString() {
+            return score + " " + exemplarCount + " " + extraCount + " " + outsideCount;
+          }
         }
         final Map<Jar, Stats> jarInfo = new HashMap<>();
         for (Jar jar : cluster.getJars()) {
@@ -262,8 +269,8 @@ public class Identifier {
           // Compute the score, lower is better
           // 100 points for every missing exemplar
           stats.score += 100 * (cluster.getExemplarFqns().size() - stats.exemplarCount);
-          // 5 points for every extra
-          stats.score += 5 * stats.extraCount;
+          // 1 point for every extra
+          stats.score += 1 * stats.extraCount;
           // 10 points for every outside
           stats.score += 10 * stats.outsideCount;
           
@@ -283,16 +290,16 @@ public class Identifier {
         logWriter.writeAndIndent("Jars (" + cluster.getJars().size() + ")");
         while (!queue.isEmpty()) {
           Jar top = queue.poll();
-          int topScore = jarInfo.get(top).score; 
+          Stats stats = jarInfo.get(top); 
           if (bestScore == -1) {
             cluster.addExemplar(top);
-            bestScore = topScore;
-            logWriter.write("E  " + top.toString() + " " + topScore);
-          } else if (topScore == bestScore) {
+            bestScore = stats.score;
+            logWriter.write("E  " + top.toString() + " " + stats);
+          } else if (stats.score == bestScore) {
             cluster.addExemplar(top);
-            logWriter.write("E  " + top.toString() + " " + topScore);
+            logWriter.write("E  " + top.toString() + " " + stats);
           } else {
-            logWriter.write("   " + top.toString() + " " + topScore);
+            logWriter.write("   " + top.toString() + " " + stats);
           }
         }
         logWriter.unindent();

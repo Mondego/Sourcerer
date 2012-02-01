@@ -46,15 +46,24 @@ public class Main {
         clusters = ClusterCollection.load(task, jars);
       } 
       if (clusters == null) {
-        clusters = Identifier.identifyClusters(task, jars, "merging.txt");
+        clusters = Identifier.identifyClusters(task, jars);
         clusters.save();
-        clusters.printStatistics(task, "jars.txt", "clusters.txt");
+        clusters.printStatistics(task);
       }
       
-      Identifier.identifyClusterExemplars(task, clusters, "exemplars.txt");
+      Identifier.identifyClusterExemplars(task, clusters);
       task.finish();
     }
-  }.setProperties(JavaRepositoryFactory.INPUT_REPO, Identifier.MERGE_METHOD, Fingerprint.FINGERPRINT_MODE, ClusterCollection.CLUSTER_COLLECTION.asInput(), ClusterCollection.CLUSTER_COLLECTION.asOutput());
+  }.setProperties(
+      JavaRepositoryFactory.INPUT_REPO,
+      Identifier.CLUSTER_MERGING_LOG,
+      Identifier.EXEMPLAR_LOG,
+      Identifier.MERGE_METHOD, 
+      Fingerprint.FINGERPRINT_MODE, 
+      ClusterCollection.CLUSTER_COLLECTION.asInput(), 
+      ClusterCollection.CLUSTER_COLLECTION.asOutput(),
+      ClusterCollection.JAR_LOG,
+      ClusterCollection.CLUSTER_LOG);
   
   public static final Command COMPARE_LIBRARY_IDENTIFICATION = new Command("compare-library-identification", "Compare methods for clustering and identifying the libraries.") {
     @Override
@@ -67,8 +76,13 @@ public class Main {
         @Override
         public void doMe() {
           ClusterMergeMethod method = Identifier.MERGE_METHOD.getValue();
-          ClusterCollection libraries = Identifier.identifyClusters(task, jars, method.toString());
-          libraries.printStatistics(task, "jars+" + method, "clusters+" + method);
+          
+          Identifier.CLUSTER_MERGING_LOG.setValue(method.toString());
+          ClusterCollection clusters = Identifier.identifyClusters(task, jars);
+          
+          ClusterCollection.JAR_LOG.setValue("jars+" + method);
+          ClusterCollection.CLUSTER_LOG.setValue("clusters+" + method);
+          clusters.printStatistics(task);
         }
       };
       for (ClusterMergeMethod method : ClusterMergeMethod.values()) {
@@ -76,7 +90,14 @@ public class Main {
       }
       task.finish();
     }
-  }.setProperties(JavaRepositoryFactory.INPUT_REPO, Identifier.MERGE_METHOD, Fingerprint.FINGERPRINT_MODE);
+  }.setProperties(
+      JavaRepositoryFactory.INPUT_REPO,
+      Identifier.CLUSTER_MERGING_LOG,
+      Identifier.EXEMPLAR_LOG,
+      Identifier.MERGE_METHOD, 
+      Fingerprint.FINGERPRINT_MODE, 
+      ClusterCollection.JAR_LOG,
+      ClusterCollection.CLUSTER_LOG);
   
   public static final Command COMPARE_FILTERED_LIBRARY_IDENTIFICATION = new Command("compare-filtered-library-identification", "Compare methods for clustering and identifying the libraries.") {
     @Override
@@ -89,8 +110,13 @@ public class Main {
         @Override
         public void doMe() {
           ClusterMergeMethod method = Identifier.MERGE_METHOD.getValue();
-          ClusterCollection libraries = Identifier.identifyClusters(task, jars, method.toString());
-          libraries.printStatistics(task, "jars+" + method, "clusters+" + method);
+          
+          Identifier.CLUSTER_MERGING_LOG.setValue(method.toString());
+          ClusterCollection clusters = Identifier.identifyClusters(task, jars);
+          
+          ClusterCollection.JAR_LOG.setValue("jars+" + method);
+          ClusterCollection.CLUSTER_LOG.setValue("clusters+" + method);
+          clusters.printStatistics(task);
         }
       };
       for (ClusterMergeMethod method : ClusterMergeMethod.values()) {
@@ -98,7 +124,14 @@ public class Main {
       }
       task.finish();
     }
-  }.setProperties(JavaRepositoryFactory.INPUT_REPO, Identifier.MERGE_METHOD, Fingerprint.FINGERPRINT_MODE, JarIdentifier.IDENTIFIED_JARS_FILE.asInput());
+  }.setProperties(
+      JavaRepositoryFactory.INPUT_REPO,
+      Identifier.CLUSTER_MERGING_LOG,
+      Identifier.EXEMPLAR_LOG,
+      Identifier.MERGE_METHOD, 
+      Fingerprint.FINGERPRINT_MODE, 
+      ClusterCollection.JAR_LOG,
+      ClusterCollection.CLUSTER_LOG);
   
   public static final Command CALCULATE_IMPORT_POPULARITY = new Command("calculate-import-popularity", "Calculates the popularity of FQNs based on import statements.") {
     @Override

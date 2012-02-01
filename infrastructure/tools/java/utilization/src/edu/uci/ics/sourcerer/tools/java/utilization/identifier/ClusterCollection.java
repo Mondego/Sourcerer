@@ -19,7 +19,6 @@ package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -44,12 +43,15 @@ import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
 import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.RelativeFileArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ClusterCollection implements Iterable<Cluster> {
+  public static RelativeFileArgument JAR_LOG = new RelativeFileArgument("jar-log", null, Arguments.OUTPUT, "Log file for jars broken down by clusters");
+  public static RelativeFileArgument CLUSTER_LOG = new RelativeFileArgument("cluster-log", null, Arguments.OUTPUT, "Log file for clusters broken down by jars");
   public static DualFileArgument CLUSTER_COLLECTION = new DualFileArgument("cluster-collection", "cluster-collection.txt", "File for saved cluster collection");
   private final Collection<Cluster> clusters;
   
@@ -140,13 +142,13 @@ public class ClusterCollection implements Iterable<Cluster> {
 //    task.finish();
 //  }
   
-  public void printStatistics(TaskProgressLogger task, String jarFileName, String clusterFileName) {
+  public void printStatistics(TaskProgressLogger task) {
     NumberFormat format = NumberFormat.getPercentInstance();
     format.setMinimumFractionDigits(2);
     format.setMaximumFractionDigits(2);
 
     task.start("Printing jar statistics");
-    try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), jarFileName))) {
+    try (LogFileWriter writer = IOUtils.createLogFileWriter(JAR_LOG.getValue())) {
       Multimap<Jar, Cluster> clusterMap = HashMultimap.create();
       int trivialCluster = 0;
       for (Cluster cluster : clusters) {
@@ -280,7 +282,7 @@ public class ClusterCollection implements Iterable<Cluster> {
     task.finish();
     
     task.start("Printing cluster statistics");
-    try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), clusterFileName))) {
+    try (LogFileWriter writer = IOUtils.createLogFileWriter(CLUSTER_LOG.getValue())) {
       TreeSet<Cluster> sortedClusters = new TreeSet<>(new Comparator<Cluster>() {
         @Override
         public int compare(Cluster o1, Cluster o2) {

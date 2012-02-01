@@ -46,8 +46,8 @@ public class ArgumentManager {
   private static ArgumentManager singleton = null;
   
   public static final Argument<Boolean> HELP = new BooleanArgument("help", false, "Prints usage information.").permit();
-  public static final Argument<File> PROPERTIES_FILE = new FileArgument("properties-file", "File containing Java-style property bindings.").makeOptional().permit();
-  public static final Argument<InputStream> PROPERTIES_STREAM = new StreamArgument("properties-stream", "Stream containing Java-style property bindings.").makeOptional().permit();
+  public static final Argument<File> PROPERTIES_FILE = new FileArgument("properties-file", null, "File containing Java-style property bindings.").permit();
+  public static final Argument<InputStream> PROPERTIES_STREAM = new StreamArgument("properties-stream", "Stream containing Java-style property bindings.").permit();
   
   private Map<String, String> propertyMap;
   
@@ -111,17 +111,18 @@ public class ArgumentManager {
       stack.addAll(Arrays.asList(activeCommand.getProperties()));
       for (Argument<?>[] conditionals : activeCommand.getConditionalProperties()) {
         for (Argument<?> prop : conditionals) {
-          stack.add(prop.makeOptional());
+//          stack.add(prop.makeOptional());
+          stack.add(prop);
         }
       }
       commandProps = Helper.newLinkedList();
       while (!stack.isEmpty()) {
         Argument<?> prop = stack.pop();
         commandProps.add(prop.permit());
-        for (Argument<?> required : prop.getRequiredProperties()) {
-          if (!Boolean.TRUE.equals(prop.getValue())) {
-            required.makeOptional();
-          }
+        for (Argument<?> required : prop.getRequiredArguments()) {
+//          if (!Boolean.TRUE.equals(prop.getValue())) {
+//            required.makeOptional();
+//          }
           required.isRequiredBy(prop);
           stack.add(required);
         }
@@ -150,7 +151,7 @@ public class ArgumentManager {
       
       // Check all of the registered properties
       for (Argument<?> prop : commandProps) {
-        if (prop.isNotOptional() && !prop.hasValue()) {
+        if (/*prop.isNotOptional() && */!prop.hasValue()) {
           missingProperties.add(prop);
         }
       }

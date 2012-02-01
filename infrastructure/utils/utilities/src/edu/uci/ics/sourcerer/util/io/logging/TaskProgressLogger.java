@@ -29,7 +29,6 @@ import edu.uci.ics.sourcerer.util.Strings;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class TaskProgressLogger {
-  private static TaskProgressLogger NULL_LOGGER;
   private String spaces;
   private final Deque<TaskInfo> tasks;
   
@@ -41,22 +40,19 @@ public class TaskProgressLogger {
     return new TaskProgressLogger(new LinkedList<TaskInfo>());
   }
   
-  public synchronized static TaskProgressLogger createNull() {
-    if (NULL_LOGGER == null) {
-      NULL_LOGGER = new TaskProgressLogger(null) {
-        @Override
-        protected void start(String taskName, int indent, String finishedText, int progressInterval) {}
-        @Override
-        public void report(Level level, String text) {}
-        @Override
-        public void progress(String message) {}
-        @Override
-        public void finish() {}
-        @Override
-        public void cancel() {}
-      };
-    }
-    return NULL_LOGGER;
+  public static TaskProgressLogger createNull() {
+    return new TaskProgressLogger(null) {
+      @Override
+      protected void start(String taskName, int indent, String finishedText, int progressInterval) {}
+      @Override
+      public void report(Level level, String text) {}
+      @Override
+      public void progress(String message) {}
+      @Override
+      public void finish() {}
+      @Override
+      public void cancel() {}
+    };
   }
   
   public TaskProgressLogger createChild() {

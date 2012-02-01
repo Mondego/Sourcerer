@@ -23,7 +23,7 @@ package edu.uci.ics.sourcerer.util.io.arguments;
 public class EnumArgument <E extends Enum<E>> extends Argument<E> {
   private Class<E> enumType;
   public EnumArgument(String name, Class<E> enumType, String description) {
-    super(name, null, description);
+    super(name, description);
     this.enumType = enumType;
   }
   

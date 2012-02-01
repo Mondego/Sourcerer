@@ -25,13 +25,12 @@ import java.io.File;
  */
 public class FileArgument extends Argument<File> {
   public FileArgument(String name, String description) {
-    super(name, null, description);
+    super(name, description);
   }
   
   public FileArgument(String name, File defaultValue, String description) {
     super(name, defaultValue, description);
   }
-  
   
   @Override
   public String getType() {
