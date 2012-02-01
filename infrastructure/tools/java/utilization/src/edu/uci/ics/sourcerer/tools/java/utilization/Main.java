@@ -48,8 +48,8 @@ public class Main {
       if (clusters == null) {
         clusters = Identifier.identifyClusters(task, jars, "merging.txt");
         clusters.save();
+        clusters.printStatistics(task, "jars.txt", "clusters.txt");
       }
-      clusters.printStatistics(task, "jars.txt", "clusters.txt");
       
       Identifier.identifyClusterExemplars(task, clusters, "exemplars.txt");
       task.finish();

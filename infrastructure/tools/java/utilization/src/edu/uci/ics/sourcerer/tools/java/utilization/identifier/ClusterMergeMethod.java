@@ -172,10 +172,32 @@ public enum ClusterMergeMethod {
         // Break the package into fragments
         breakFqn(otherFqn.getParent(), otherFragments);
         
-        // Find the FQN in the core cluster that matches best
+        // Find the core FQN in the core cluster that matches best
         double bestMatch = 0;
         for (VersionedFqnNode coreFqn : core.getCoreFqns()) {
           breakFqn(coreFqn.getParent(), coreFragments);
+          if (coreFragments.isEmpty()) {
+            if (otherFragments.isEmpty()) {
+              bestMatch = 1.;
+            }
+          } else {
+            Iterator<VersionedFqnNode> coreIter = coreFragments.iterator();
+            Iterator<VersionedFqnNode> otherIter = otherFragments.iterator();
+            int overlap = 0;
+            while (coreIter.hasNext() && otherIter.hasNext()) {
+              if (coreIter.next() == otherIter.next()) {
+                overlap++;
+              } else {
+                break;
+              }
+            }
+            bestMatch = Math.max(bestMatch, (double) overlap / otherFragments.size());
+          }
+          coreFragments.clear();
+        }
+        // See if an extra FQN is a better match
+        for (VersionedFqnNode extraFqn : core.getExtraFqns()) {
+          breakFqn(extraFqn.getParent(), coreFragments);
           if (coreFragments.isEmpty()) {
             if (otherFragments.isEmpty()) {
               bestMatch = 1.;

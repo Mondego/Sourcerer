@@ -244,7 +244,7 @@ public class Identifier {
           int exemplarCount = 0;
           int extraCount = 0;
           int outsideCount = 0;
-          int score = Integer.MAX_VALUE;
+          int score = 0;
         }
         final Map<Jar, Stats> jarInfo = new HashMap<>();
         for (Jar jar : cluster.getJars()) {
@@ -295,7 +295,9 @@ public class Identifier {
             logWriter.write("   " + top.toString() + " " + topScore);
           }
         }
-        
+        logWriter.unindent();
+       
+        logWriter.unindent();
         task.progress();
       }
     } catch (IOException e) {
