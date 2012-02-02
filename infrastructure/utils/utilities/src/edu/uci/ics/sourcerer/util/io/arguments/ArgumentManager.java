@@ -274,7 +274,7 @@ public class ArgumentManager {
       }
     }
 
-    if (PROPERTIES_FILE.hasValue()) {
+    if (PROPERTIES_FILE.getValue() != null) {
       try {
         FileInputStream fis = new FileInputStream(PROPERTIES_FILE.getValue());
 
@@ -294,7 +294,7 @@ public class ArgumentManager {
       }
     }
 
-    if (PROPERTIES_STREAM.hasValue()) {
+    if (PROPERTIES_STREAM.getValue() != null) {
       try {
         Properties props = new Properties();
         props.load(PROPERTIES_STREAM.getValue());

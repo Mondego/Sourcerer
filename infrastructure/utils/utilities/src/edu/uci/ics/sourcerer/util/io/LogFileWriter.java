@@ -56,6 +56,12 @@ public class LogFileWriter implements AutoCloseable {
 
       @Override
       public void newLine() {}
+      
+      @Override
+      public void indent() {}
+      
+      @Override
+      public void unindent() {}
     };
   }
   

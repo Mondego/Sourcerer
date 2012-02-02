@@ -73,13 +73,17 @@ public class JarCollection implements Iterable<Jar> {
   }
   
   public static JarCollection make(TaskProgressLogger task) {
+    return make(task, JavaRepositoryFactory.INPUT_REPO, JAR_COLLECTION_CACHE);
+  }
+  
+  public static JarCollection make(TaskProgressLogger task, Argument<File> repoDir, Argument<File> cacheDirArg) {
     task.start("Building jar collection");
     
     JarCollection jars = new JarCollection();
-    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(repoDir);
     
     task.report("Checking for cache...");
-    File cacheDir = JAR_COLLECTION_CACHE.getValue();
+    File cacheDir = cacheDirArg.getValue();
     File cache = new File(cacheDir, Fingerprint.FINGERPRINT_MODE.getValue() + ".cache");
     if (cache.exists()) {
       task.start("Cache found, loading", "jars loaded", 500);

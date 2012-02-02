@@ -217,30 +217,31 @@ public class Identifier {
   
   public static void identifyClusterExemplars(TaskProgressLogger task, ClusterCollection clusters) {
     task.start("Identifying cluster exemplars", "clusters examined", 500);
+    boolean log = EXEMPLAR_LOG.getValue() != null;
     try (LogFileWriter logWriter = IOUtils.createLogFileWriter(EXEMPLAR_LOG.getValue())) {
       for (final Cluster cluster : clusters) {
-        logWriter.writeAndIndent("Identifying cluster exemplars");
-               
+        if (log) logWriter.writeAndIndent("Identifying cluster exemplars");
+        
         // All of the core FQNs are exemplar FQNs
-        logWriter.writeAndIndent("Core FQNs (" + cluster.getCoreFqns().size() + ")");
+        if (log) logWriter.writeAndIndent("Core FQNs (" + cluster.getCoreFqns().size() + ")");
         for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
           cluster.addExemplarFqn(fqn);
-          logWriter.write(fqn.getFqn());
+          if (log) logWriter.write(fqn.getFqn());
         }
-        logWriter.unindent();
+        if (log) logWriter.unindent();
         
         // An extra FQN becomes an exmplar FQN if it occurs in >= EXEMPLAR_THRESHOLD of jars
-        logWriter.writeAndIndent("Extra FQNs (" + cluster.getExtraFqns().size() + ")");
+        if (log) logWriter.writeAndIndent("Extra FQNs (" + cluster.getExtraFqns().size() + ")");
         for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
           double rate = (double) cluster.getJars().getIntersectionSize(fqn.getVersions().getJars()) / cluster.getJars().size();
           if (rate >= EXEMPLAR_THRESHOLD.getValue()) {
-            logWriter.write("E  " + fqn.getFqn() + " " + rate);
+            if (log) logWriter.write("E  " + fqn.getFqn() + " " + rate);
             cluster.addExemplarFqn(fqn);
           } else {
-            logWriter.write("   " + fqn.getFqn() + " " + rate);
+            if (log) logWriter.write("   " + fqn.getFqn() + " " + rate);
           }
         }
-        logWriter.unindent();
+        if (log) logWriter.unindent();
         
         // Now let's try to find exemplar jars
         class Stats {
@@ -287,24 +288,24 @@ public class Identifier {
         }
         
         int bestScore = -1;
-        logWriter.writeAndIndent("Jars (" + cluster.getJars().size() + ")");
+        if (log) logWriter.writeAndIndent("Jars (" + cluster.getJars().size() + ")");
         while (!queue.isEmpty()) {
           Jar top = queue.poll();
           Stats stats = jarInfo.get(top); 
           if (bestScore == -1) {
             cluster.addExemplar(top);
             bestScore = stats.score;
-            logWriter.write("E  " + top.toString() + " " + stats);
+            if (log) logWriter.write("E  " + top.toString() + " " + stats);
           } else if (stats.score == bestScore) {
             cluster.addExemplar(top);
-            logWriter.write("E  " + top.toString() + " " + stats);
+            if (log) logWriter.write("E  " + top.toString() + " " + stats);
           } else {
-            logWriter.write("   " + top.toString() + " " + stats);
+            if (log) logWriter.write("   " + top.toString() + " " + stats);
           }
         }
-        logWriter.unindent();
+        if (log) logWriter.unindent();
        
-        logWriter.unindent();
+        if (log) logWriter.unindent();
         task.progress();
       }
     } catch (IOException e) {

@@ -47,7 +47,8 @@ public class Cluster implements CustomSerializable {
   
   Cluster() {
     this.coreFqns = new HashSet<>();
-    this.extraFqns = new TreeSet<>();
+//    this.extraFqns = new TreeSet<>();
+    this.extraFqns = new HashSet<>();
     jars = JarSet.create();
     exemplars = jars;
     exemplarFqns = Collections.emptySet();
