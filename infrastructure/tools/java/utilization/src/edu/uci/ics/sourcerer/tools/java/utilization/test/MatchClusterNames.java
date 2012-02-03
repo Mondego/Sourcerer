@@ -21,9 +21,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
 
-import com.sun.jmx.snmp.tasks.Task;
-
+import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterMatcher;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Identifier;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
@@ -67,15 +67,21 @@ public class MatchClusterNames {
     
     JarCollection jars = JarCollection.make(task, TEST_REPO, TEST_REPO_CACHE);
     ArrayList<VersionedFqnNode> fqns = new ArrayList<>();
-    for (VersionedFqnNode fqn : jars.getRoot().getChildren()) {
+    for (VersionedFqnNode fqn : jars.getRoot().getLeavesIterable()) {
       fqns.add(fqn);
     }
+    ClusterMatcher matcher = clusters.getClusterMatcher();
     Random random = new Random();
-    for (int i = 0, max = MATCH_COUNT.getValue(); i < 100; i++) {
+    for (int i = 0, max = MATCH_COUNT.getValue(); i < max; i++) {
       int next = random.nextInt(fqns.size());
       VersionedFqnNode fqn = fqns.get(next);
-      // look up the jar file in the cluster
-      // print out both the jar file and the cluster name
+      String fqnName = fqn.getName();
+      Cluster cluster = matcher.getMatch(fqnName);
+      if (cluster == null) {
+        task.report(fqnName + " from " + fqn.getVersions().getJars() + " MISSING!");
+      } else {
+        task.report(fqnName + " from " + fqn.getVersions().getJars() + " vs " + cluster.getExemplarFqns());
+      }
     }
     task.finish();
   }

@@ -17,8 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo;
 
+import edu.uci.ics.sourcerer.tools.java.repo.importers.MavenImporter;
 import edu.uci.ics.sourcerer.tools.java.repo.jars.JarIdentifier;
-import edu.uci.ics.sourcerer.tools.java.repo.maven.MavenImporter;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.repo.stats.RepositoryStatisticsCalculator;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;

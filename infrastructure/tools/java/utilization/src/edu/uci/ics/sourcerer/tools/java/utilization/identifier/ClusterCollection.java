@@ -53,7 +53,9 @@ public class ClusterCollection implements Iterable<Cluster> {
   public static RelativeFileArgument JAR_LOG = new RelativeFileArgument("jar-log", null, Arguments.OUTPUT, "Log file for jars broken down by clusters");
   public static RelativeFileArgument CLUSTER_LOG = new RelativeFileArgument("cluster-log", null, Arguments.OUTPUT, "Log file for clusters broken down by jars");
   public static DualFileArgument CLUSTER_COLLECTION = new DualFileArgument("cluster-collection", "cluster-collection.txt", "File for saved cluster collection");
+  
   private final Collection<Cluster> clusters;
+  private ClusterMatcher matcher;
   
   private ClusterCollection() {
     clusters = new ArrayList<>();
@@ -104,6 +106,13 @@ public class ClusterCollection implements Iterable<Cluster> {
 
   public int size() {
     return clusters.size();
+  }
+  
+  public ClusterMatcher getClusterMatcher() {
+    if (matcher == null) {
+      matcher = ClusterMatcher.create(this);
+    }
+    return matcher;
   }
   
 //  public void printStatistics(TaskProgressLogger task) {

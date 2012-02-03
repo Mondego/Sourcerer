@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -139,6 +140,51 @@ public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> implements C
     }
   }
   
+  public Iterable<T> getLeavesIterable() {
+    return new Iterable<T>() {
+      @SuppressWarnings("unchecked")
+      @Override
+      public Iterator<T> iterator() {
+        return new Iterator<T>() {
+          T node = null;
+          {
+            for (node = (T) AbstractFqnNode.this; node.firstChild != null; node = node.firstChild);
+          }
+          
+          @Override
+          public boolean hasNext() {
+            return node != null;
+          }
+
+          @Override
+          public T next() {
+            if (node == null) {
+              throw new NoSuchElementException();
+            } else {
+              T next = node;
+              // We're currently at a leaf
+              if (node.sibling != null) {
+                // Does this leaf have a sibling?
+                // Look at the sibling, find the lowest child
+                for (node = node.sibling; node.firstChild != null; node = node.firstChild);
+              } else {
+                // This leaf doesn't have a sibling, so we need to walk up the tree
+                // find the first parent with a sibling
+                for (node = node.parent; node != null && node.sibling == null; node = node.parent);
+                if (node != null) {
+                  // find the first child of this sibling
+                  for (node = node.sibling; node.firstChild != null; node = node.firstChild);
+                }
+              }
+              return next;
+            }
+          }
+
+          @Override
+          public void remove() {
+          }};
+      }};
+  }
   public Iterable<T> getPostOrderIterable() {
     return new Iterable<T>() {
       @SuppressWarnings("unchecked")
@@ -157,15 +203,19 @@ public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> implements C
 
           @Override
           public T next() {
-            T next = node;
-            if (node == AbstractFqnNode.this) {
-              node = null;
-            } else if (node.sibling != null) {
-              for (node = node.sibling; node.firstChild != null; node = node.firstChild);
+            if (node == null) {
+              throw new NoSuchElementException();
             } else {
-              node = node.parent;
+              T next = node;
+              if (node == AbstractFqnNode.this) {
+                node = null;
+              } else if (node.sibling != null) {
+                for (node = node.sibling; node.firstChild != null; node = node.firstChild);
+              } else {
+                node = node.parent;
+              }
+              return next;
             }
-            return next;
           }
 
           @Override

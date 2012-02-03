@@ -25,6 +25,7 @@ import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Identifier;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.popularity.ImportPopularityCalculator;
+import edu.uci.ics.sourcerer.tools.java.utilization.test.MatchClusterNames;
 import edu.uci.ics.sourcerer.util.Action;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
@@ -33,6 +34,23 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
+  public static final Command TEST_CLUSTER_NAMES = new Command("test-cluster-names", "Tests cluster names.") {
+    @Override
+    public void action() {
+      MatchClusterNames.matchClusterNames();
+    }
+  }.setProperties(
+      JavaRepositoryFactory.INPUT_REPO,
+      Identifier.CLUSTER_MERGING_LOG,
+      Identifier.EXEMPLAR_LOG,
+      Identifier.MERGE_METHOD, 
+      Fingerprint.FINGERPRINT_MODE, 
+      ClusterCollection.CLUSTER_COLLECTION.asInput(), 
+      ClusterCollection.CLUSTER_COLLECTION.asOutput(),
+      ClusterCollection.JAR_LOG,
+      ClusterCollection.CLUSTER_LOG,
+      MatchClusterNames.TEST_REPO);
+  
   public static final Command IDENTIFY_LIBRARIES = new Command("identify-libraries", "Identified libraries.") {
     @Override
     public void action() {

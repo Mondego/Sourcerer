@@ -159,7 +159,7 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
       }
     }
     if (biggestAVal == 0 && biggestBVal == -1) {
-      task.report("None found, starting at 0/0)");
+      task.report("None found, starting at 0/0");
     } else {
       task.report("Found " + biggestAVal + "/" + biggestBVal);
     }
