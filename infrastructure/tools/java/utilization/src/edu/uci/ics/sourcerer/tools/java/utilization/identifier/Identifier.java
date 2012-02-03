@@ -219,6 +219,7 @@ public class Identifier {
     task.start("Identifying cluster exemplars", "clusters examined", 500);
     boolean log = EXEMPLAR_LOG.getValue() != null;
     try (LogFileWriter logWriter = IOUtils.createLogFileWriter(EXEMPLAR_LOG.getValue())) {
+      int goodExemplars = 0;
       for (final Cluster cluster : clusters) {
         if (log) logWriter.writeAndIndent("Identifying cluster exemplars");
         
@@ -269,11 +270,11 @@ public class Identifier {
           
           // Compute the score, lower is better
           // 100 points for every missing exemplar
-          stats.score += 100 * (cluster.getExemplarFqns().size() - stats.exemplarCount);
+          stats.score += 1000 * (cluster.getExemplarFqns().size() - stats.exemplarCount);
           // 1 point for every extra
           stats.score += 1 * stats.extraCount;
           // 10 points for every outside
-          stats.score += 10 * stats.outsideCount;
+          stats.score += 100 * stats.outsideCount;
           
           jarInfo.put(jar, stats);
         }
@@ -295,6 +296,9 @@ public class Identifier {
           if (bestScore == -1) {
             cluster.addExemplar(top);
             bestScore = stats.score;
+            if (stats.outsideCount == 0) {
+              goodExemplars++;
+            }
             if (log) logWriter.write("E  " + top.toString() + " " + stats);
           } else if (stats.score == bestScore) {
             cluster.addExemplar(top);
@@ -308,6 +312,7 @@ public class Identifier {
         if (log) logWriter.unindent();
         task.progress();
       }
+      task.report(goodExemplars + " of " + clusters.size() + " clusters had good exemplars");
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error writing log", e);
     }

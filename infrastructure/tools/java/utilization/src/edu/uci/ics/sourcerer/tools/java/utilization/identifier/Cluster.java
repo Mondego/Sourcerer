@@ -77,7 +77,7 @@ public class Cluster implements CustomSerializable {
   }
   
   void addExemplar(Jar jar) {
-    exemplars.add(jar);
+    exemplars = exemplars.add(jar);
   }
   
   public Collection<VersionedFqnNode> getCoreFqns() {
@@ -94,6 +94,10 @@ public class Cluster implements CustomSerializable {
   
   public JarSet getJars() {
     return jars;
+  }
+  
+  public JarSet getExemplars() {
+    return exemplars;
   }
   
   @Override
