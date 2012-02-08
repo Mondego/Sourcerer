@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 
 /**

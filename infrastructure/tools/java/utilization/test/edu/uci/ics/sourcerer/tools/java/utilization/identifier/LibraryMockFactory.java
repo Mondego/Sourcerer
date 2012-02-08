@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.FqnFragmentMockFactory;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

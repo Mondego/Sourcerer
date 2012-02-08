@@ -17,38 +17,17 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.File;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
+import edu.uci.ics.sourcerer.util.io.arguments.DoubleArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.RelativeFileArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ClusterMatcher {
-  private Map<String, Cluster> map;
-  
-  private ClusterMatcher() {
-    map = new HashMap<>();
-  }
-  
-  static ClusterMatcher create(ClusterCollection clusters) {
-    ClusterMatcher matcher = new ClusterMatcher();
-    for (Cluster cluster : clusters) {
-      for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
-        matcher.map.put(fqn.getFqn(), cluster);
-      }
-      for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
-        matcher.map.put(fqn.getFqn(), cluster);
-      }
-    }
-    return matcher;
-  }
-  
-  /**
-   * Assumes the VersionedFqnNode comes from a different
-   */
-  public Cluster getMatch(String fqn) {
-    return map.get(fqn);
-  }
+public class ExemplarIdentifier {
+  public static Argument<File> EXEMPLAR_LOG = new RelativeFileArgument("exemplar-log", null, Arguments.OUTPUT, "Log file listing the cluster exemplars.");
+  public static Argument<Double> EXEMPLAR_THRESHOLD = new DoubleArgument("exemplar-threshold", 0.5, "Threshold for expanding core fqns.").permit();
 }

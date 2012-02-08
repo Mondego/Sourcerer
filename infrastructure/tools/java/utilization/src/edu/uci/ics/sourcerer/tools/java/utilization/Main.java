@@ -19,9 +19,9 @@ package edu.uci.ics.sourcerer.tools.java.utilization;
 
 import edu.uci.ics.sourcerer.tools.java.repo.jars.JarIdentifier;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterMergeMethod;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Identifier;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.popularity.ImportPopularityCalculator;

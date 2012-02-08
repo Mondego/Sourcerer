@@ -21,8 +21,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.LibraryMockFactory;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 
 /**

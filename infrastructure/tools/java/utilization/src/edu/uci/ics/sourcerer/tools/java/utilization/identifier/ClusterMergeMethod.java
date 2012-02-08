@@ -25,6 +25,7 @@ import java.util.Set;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.entropy.ClusterEntopyCalculator;
 import edu.uci.ics.sourcerer.tools.java.utilization.entropy.ClusterEntropyCalculatorFactory;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.Action;
 import edu.uci.ics.sourcerer.util.Averager;

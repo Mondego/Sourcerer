@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
+package edu.uci.ics.sourcerer.tools.java.utilization.model.cluster;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
@@ -54,24 +54,32 @@ public class ClusterCollection implements Iterable<Cluster> {
   public static RelativeFileArgument CLUSTER_LOG = new RelativeFileArgument("cluster-log", null, Arguments.OUTPUT, "Log file for clusters broken down by jars");
   public static DualFileArgument CLUSTER_COLLECTION = new DualFileArgument("cluster-collection", "cluster-collection.txt", "File for saved cluster collection");
   
-  private final Collection<Cluster> clusters;
+  private ArrayList<Cluster> clusters;
   private ClusterMatcher matcher;
   
-  private ClusterCollection() {
-    clusters = new ArrayList<>();
+  private ClusterCollection() {}
+  
+  public static ClusterCollection create(Collection<Cluster> clusters) {
+    ClusterCollection collection = new ClusterCollection();
+    
+    collection.clusters = new ArrayList<>(clusters);
+    
+    return collection;
   }
   
-  static ClusterCollection makeEmpty() {
-    return new ClusterCollection();
+  public void reset(Collection<Cluster> clusters) {
+    this.clusters = new ArrayList<>(clusters);
   }
   
   public static ClusterCollection load(TaskProgressLogger task, JarCollection jars) {
     ClusterCollection collection = new ClusterCollection();
+    
+    collection.clusters = new ArrayList<>(1000);
     task.start("Loading cluster collection", "clusters loaded", 500);
     try (SimpleDeserializer deserializer = IOUtils.makeSimpleDeserializer(CLUSTER_COLLECTION)) {
       for (Cluster cluster : deserializer.deserializeToIterable(Cluster.makeDeserializer(jars), true)) {
         task.progress();
-        collection.addCluster(cluster);
+        collection.clusters.add(cluster);
       }
       // Would use a finally block, but that crashes eclipse!
       task.finish();
@@ -91,9 +99,9 @@ public class ClusterCollection implements Iterable<Cluster> {
     }
   }
   
-  void addCluster(Cluster library) {
-    clusters.add(library);
-  }
+//  public void add(Cluster cluster) {
+//    clusters.add(cluster);
+//  }
   
   public Collection<Cluster> getClusters() {
     return clusters;

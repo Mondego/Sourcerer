@@ -15,15 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
+package edu.uci.ics.sourcerer.tools.java.utilization.model.cluster;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Scanner;
-import java.util.TreeSet;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
@@ -40,33 +40,45 @@ public class Cluster implements CustomSerializable {
   
 
   private JarSet jars;
-  private JarSet exemplars;
   private final Collection<VersionedFqnNode> coreFqns;
-  private final Collection<VersionedFqnNode> extraFqns;
+  private Collection<VersionedFqnNode> extraFqns;
+  
+  private JarSet exemplars;
   private Collection<VersionedFqnNode> exemplarFqns;
   
-  Cluster() {
+  private Cluster() {
     this.coreFqns = new HashSet<>();
-//    this.extraFqns = new TreeSet<>();
-    this.extraFqns = new HashSet<>();
-    jars = JarSet.create();
-    exemplars = jars;
-    exemplarFqns = Collections.emptySet();
   }
   
-  void addCoreFqn(VersionedFqnNode fqn) {
-    coreFqns.add(fqn);
-    jars = jars.merge(fqn.getVersions().getJars());
+  public static Cluster create(VersionedFqnNode fqn) {
+    Cluster cluster = new Cluster();
+
+    cluster.jars = fqn.getVersions().getJars();
+    cluster.coreFqns.add(fqn);
+    cluster.extraFqns = Collections.emptySet();
+    
+    cluster.exemplars = JarSet.create();
+    cluster.exemplarFqns = Collections.emptySet();
+    
+    return cluster;
+  }
+
+  public void mergeCore(Cluster cluster) {
+    coreFqns.addAll(cluster.coreFqns);
   }
   
-  void mergeCluster(Cluster cluster) {
-    if (cluster.jars.getIntersectionSize(jars) < cluster.jars.size()) {
-      logger.severe("Unexpected: merge should only be permitted with full overlap.");
+  public void mergeExtra(Cluster cluster) {
+//    if (cluster.jars.getIntersectionSize(jars) < cluster.jars.size()) {
+//      logger.severe("Unexpected: merge should only be permitted with full overlap.");
+//    }
+//    if (!cluster.extraFqns.isEmpty()) {
+//      logger.severe("Unexpected: merge target should not have any extra fqns.");
+//    }
+    if (extraFqns.isEmpty()) {
+      extraFqns = new ArrayList<>(cluster.coreFqns);
+    } else {
+      extraFqns.addAll(cluster.coreFqns);
     }
-    if (!cluster.extraFqns.isEmpty()) {
-      logger.severe("Unexpected: merge target should not have any extra fqns.");
-    }
-    extraFqns.addAll(cluster.coreFqns);
   }
   
   void addExemplarFqn(VersionedFqnNode fqn) {

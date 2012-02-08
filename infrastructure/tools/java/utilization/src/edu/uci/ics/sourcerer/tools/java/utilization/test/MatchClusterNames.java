@@ -21,10 +21,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Cluster;
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterCollection;
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterMatcher;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.Identifier;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterMatcher;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
