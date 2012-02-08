@@ -75,12 +75,12 @@ public class MatchClusterNames {
     for (int i = 0, max = MATCH_COUNT.getValue(); i < max; i++) {
       int next = random.nextInt(fqns.size());
       VersionedFqnNode fqn = fqns.get(next);
-      String fqnName = fqn.getName();
+      String fqnName = fqn.getFqn();
       Cluster cluster = matcher.getMatch(fqnName);
       if (cluster == null) {
         task.report(fqnName + " from " + fqn.getVersions().getJars() + " MISSING!");
       } else {
-        task.report(fqnName + " from " + fqn.getVersions().getJars() + " vs " + cluster.getExemplarFqns());
+        task.report(fqnName + " from " + fqn.getVersions().getJars() + " vs " + cluster.getExemplars());
       }
     }
     task.finish();
