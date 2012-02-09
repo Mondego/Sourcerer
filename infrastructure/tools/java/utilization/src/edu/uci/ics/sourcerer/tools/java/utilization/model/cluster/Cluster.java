@@ -81,14 +81,14 @@ public class Cluster implements CustomSerializable {
     }
   }
   
-  void addExemplarFqn(VersionedFqnNode fqn) {
+  public void addExemplarFqn(VersionedFqnNode fqn) {
     if (exemplarFqns.isEmpty()) {
       exemplarFqns = new HashSet<>();
     }
     exemplarFqns.add(fqn);
   }
   
-  void addExemplar(Jar jar) {
+  public void addExemplar(Jar jar) {
     exemplars = exemplars.add(jar);
   }
   

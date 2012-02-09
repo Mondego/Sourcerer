@@ -29,11 +29,23 @@ import edu.uci.ics.sourcerer.util.Strings;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class TaskProgressLogger {
+  private static final ThreadLocal<TaskProgressLogger> task = 
+      new ThreadLocal<TaskProgressLogger>() {
+        @Override
+        protected TaskProgressLogger initialValue() {
+          return TaskProgressLogger.create();
+        }
+  };
+  
   private String spaces;
   private final Deque<TaskInfo> tasks;
   
   private TaskProgressLogger(Deque<TaskInfo> tasks) {
     this.tasks = tasks;
+  }
+  
+  public static TaskProgressLogger get() {
+    return task.get();
   }
   
   public static TaskProgressLogger create() {

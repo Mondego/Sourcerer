@@ -41,7 +41,7 @@ public enum ClusterMergeMethod {
   RELATED_SUBPACKAGE {
     @Override
     public void doForEachVersion(Action action) {
-      Identifier.MERGE_METHOD.setValue(this);
+      ClusterMerger.MERGE_METHOD.setValue(this);
       for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
         MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
@@ -93,7 +93,7 @@ public enum ClusterMergeMethod {
   JACCARD_PACKAGE {
     @Override
     public void doForEachVersion(Action action) {
-      Identifier.MERGE_METHOD.setValue(this);
+      ClusterMerger.MERGE_METHOD.setValue(this);
       for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
         MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
@@ -142,7 +142,7 @@ public enum ClusterMergeMethod {
   MAX_PATH_SIMILARITY {
     @Override
     public void doForEachVersion(Action action) {
-      Identifier.MERGE_METHOD.setValue(this);
+      ClusterMerger.MERGE_METHOD.setValue(this);
       for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
         MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
@@ -197,27 +197,27 @@ public enum ClusterMergeMethod {
           coreFragments.clear();
         }
         // See if an extra FQN is a better match
-        for (VersionedFqnNode extraFqn : core.getExtraFqns()) {
-          breakFqn(extraFqn.getParent(), coreFragments);
-          if (coreFragments.isEmpty()) {
-            if (otherFragments.isEmpty()) {
-              bestMatch = 1.;
-            }
-          } else {
-            Iterator<VersionedFqnNode> coreIter = coreFragments.iterator();
-            Iterator<VersionedFqnNode> otherIter = otherFragments.iterator();
-            int overlap = 0;
-            while (coreIter.hasNext() && otherIter.hasNext()) {
-              if (coreIter.next() == otherIter.next()) {
-                overlap++;
-              } else {
-                break;
-              }
-            }
-            bestMatch = Math.max(bestMatch, (double) overlap / otherFragments.size());
-          }
-          coreFragments.clear();
-        }
+//        for (VersionedFqnNode extraFqn : core.getExtraFqns()) {
+//          breakFqn(extraFqn.getParent(), coreFragments);
+//          if (coreFragments.isEmpty()) {
+//            if (otherFragments.isEmpty()) {
+//              bestMatch = 1.;
+//            }
+//          } else {
+//            Iterator<VersionedFqnNode> coreIter = coreFragments.iterator();
+//            Iterator<VersionedFqnNode> otherIter = otherFragments.iterator();
+//            int overlap = 0;
+//            while (coreIter.hasNext() && otherIter.hasNext()) {
+//              if (coreIter.next() == otherIter.next()) {
+//                overlap++;
+//              } else {
+//                break;
+//              }
+//            }
+//            bestMatch = Math.max(bestMatch, (double) overlap / otherFragments.size());
+//          }
+//          coreFragments.clear();
+//        }
         averager.addValue(bestMatch);
         otherFragments.clear();
       }
@@ -234,7 +234,7 @@ public enum ClusterMergeMethod {
   AVG_PATH_SIMILARITY {
     @Override
     public void doForEachVersion(Action action) {
-      Identifier.MERGE_METHOD.setValue(this);
+      ClusterMerger.MERGE_METHOD.setValue(this);
       for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
         MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
@@ -334,7 +334,7 @@ public enum ClusterMergeMethod {
   public static final Argument<Integer> THRESHOLD_DECREMENT = new IntegerArgument("threshold-decrement", 5, "Threshold decrement, starting at 100, to test").permit();
   
   public void doForEachVersion(Action action) {
-    Identifier.MERGE_METHOD.setValue(this);
+    ClusterMerger.MERGE_METHOD.setValue(this);
     action.doMe();
   }
   

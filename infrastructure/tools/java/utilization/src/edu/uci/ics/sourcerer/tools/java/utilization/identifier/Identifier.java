@@ -65,95 +65,15 @@ public class Identifier {
     try (LogFileWriter logWriter = IOUtils.createLogFileWriter(EXEMPLAR_LOG.getValue())) {
       int goodExemplars = 0;
       for (final Cluster cluster : clusters) {
-        if (log) logWriter.writeAndIndent("Identifying cluster exemplars");
         
-        // All of the core FQNs are exemplar FQNs
-        if (log) logWriter.writeAndIndent("Core FQNs (" + cluster.getCoreFqns().size() + ")");
-        for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
-          cluster.addExemplarFqn(fqn);
-          if (log) logWriter.write(fqn.getFqn());
-        }
-        if (log) logWriter.unindent();
         
-        // An extra FQN becomes an exmplar FQN if it occurs in >= EXEMPLAR_THRESHOLD of jars
-        if (log) logWriter.writeAndIndent("Extra FQNs (" + cluster.getExtraFqns().size() + ")");
-        for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
-          double rate = (double) cluster.getJars().getIntersectionSize(fqn.getVersions().getJars()) / cluster.getJars().size();
-          if (rate >= EXEMPLAR_THRESHOLD.getValue()) {
-            if (log) logWriter.write("E  " + fqn.getFqn() + " " + rate);
-            cluster.addExemplarFqn(fqn);
-          } else {
-            if (log) logWriter.write("   " + fqn.getFqn() + " " + rate);
-          }
-        }
-        if (log) logWriter.unindent();
-        
-        // Now let's try to find exemplar jars
-        class Stats {
-          int exemplarCount = 0;
-          int extraCount = 0;
-          int outsideCount = 0;
-          int score = 0;
-          
-          public String toString() {
-            return score + " " + exemplarCount + " " + extraCount + " " + outsideCount;
-          }
-        }
-        final Map<Jar, Stats> jarInfo = new HashMap<>();
-        for (Jar jar : cluster.getJars()) {
-          Stats stats = new Stats();
-          for (VersionedFqnNode fqn : jar.getFqns()) {
-            if (cluster.getExemplarFqns().contains(fqn)) {
-              stats.exemplarCount++;
-            } else if (cluster.getExtraFqns().contains(fqn)) {
-              stats.extraCount++;
-            } else {
-              stats.outsideCount++;
-            }
-          }
-          
-          // Compute the score, lower is better
-          // 100 points for every missing exemplar
-          stats.score += 1000 * (cluster.getExemplarFqns().size() - stats.exemplarCount);
-          // 1 point for every extra
-          stats.score += 1 * stats.extraCount;
-          // 10 points for every outside
-          stats.score += 100 * stats.outsideCount;
-          
-          jarInfo.put(jar, stats);
-        }
-        
-        PriorityQueue<Jar> queue = new PriorityQueue<>(cluster.getJars().size(), new Comparator<Jar>() {
-          @Override
-          public int compare(Jar one, Jar two) {
-            return Integer.compare(jarInfo.get(one).score, jarInfo.get(two).score);
-          }});
+       
+        PriorityQueue<Jar> queue = new PriorityQueue<>(cluster.getJars().size(), ;
         for (Jar jar : cluster.getJars()) {
           queue.add(jar);
         }
         
-        int bestScore = -1;
-        if (log) logWriter.writeAndIndent("Jars (" + cluster.getJars().size() + ")");
-        while (!queue.isEmpty()) {
-          Jar top = queue.poll();
-          Stats stats = jarInfo.get(top); 
-          if (bestScore == -1) {
-            cluster.addExemplar(top);
-            bestScore = stats.score;
-            if (stats.outsideCount == 0) {
-              goodExemplars++;
-            }
-            if (log) logWriter.write("E  " + top.toString() + " " + stats);
-          } else if (stats.score == bestScore) {
-            cluster.addExemplar(top);
-            if (log) logWriter.write("E  " + top.toString() + " " + stats);
-          } else {
-            if (log) logWriter.write("   " + top.toString() + " " + stats);
-          }
-        }
-        if (log) logWriter.unindent();
-       
-        if (log) logWriter.unindent();
+
         task.progress();
       }
       task.report(goodExemplars + " of " + clusters.size() + " clusters had good exemplars");
