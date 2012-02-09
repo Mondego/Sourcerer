@@ -48,6 +48,7 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  */
 public class JarCollection implements Iterable<Jar> {
   public static Argument<File> JAR_COLLECTION_CACHE = new RelativeFileArgument("jar-collection-cache", "jar-collection-cache", Arguments.CACHE, "Cache for jar collection.").permit();
+  
   private final Map<String, Jar> jars;
   private final VersionedFqnNode rootFragment;
   
@@ -55,28 +56,37 @@ public class JarCollection implements Iterable<Jar> {
     jars = new HashMap<>();
     rootFragment = VersionedFqnNode.createRoot();
   }
+    
+  public static JarCollection create() {
+    return create(JavaRepositoryFactory.INPUT_REPO, JAR_COLLECTION_CACHE);
+  }
   
-  private void add(JarFile jar) {
-    Jar newJar = new Jar(jar);
-    try (ZipInputStream zis = new ZipInputStream(new FileInputStream(jar.getFile().toFile()))) {
-      for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
-        if (entry.getName().endsWith(".class")) {
-          String fqn = entry.getName();
-          fqn = fqn.substring(0, fqn.lastIndexOf('.'));
-          newJar.addFqn(rootFragment.getChild(fqn, '/'), Fingerprint.create(zis, entry.getSize()));
-        }
+  public static JarCollection create(Collection<String> jarHashes) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    task.start("Building jar collection");
+    
+    JarCollection jars = new JarCollection();
+    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+    
+    task.start("Adding jars", "jars added", 500);
+    for (String hash : jarHashes) {
+      JarFile jar = repo.getJarFile(hash);
+      if (jar == null) {
+        logger.warning("Unknown jar: " + hash);
+      } else {
+        task.progress();
+        jars.add(jar);
       }
-    } catch (IOException | IllegalArgumentException e) {
-      logger.log(Level.SEVERE, "Error reading jar file: " + jar, e);
     }
-    jars.put(jar.getProperties().HASH.getValue(), newJar);
+    task.finish();
+    
+    task.finish();
+    
+    return jars;
   }
   
-  public static JarCollection make(TaskProgressLogger task) {
-    return make(task, JavaRepositoryFactory.INPUT_REPO, JAR_COLLECTION_CACHE);
-  }
-  
-  public static JarCollection make(TaskProgressLogger task, Argument<File> repoDir, Argument<File> cacheDirArg) {
+  public static JarCollection create(Argument<File> repoDir, Argument<File> cacheDirArg) {
+    TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Building jar collection");
     
     JarCollection jars = new JarCollection();
@@ -92,13 +102,13 @@ public class JarCollection implements Iterable<Jar> {
           task.progress();
           jars.jars.put(jar.getJar().getProperties().HASH.getValue(), jar);
         }
+        task.finish();
+        task.finish();
         return jars;
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Error loading jar collection cache", e);
+        task.finish();
         jars = new JarCollection();
-      } finally {
-        task.finish();
-        task.finish();
       }
     } else {
       task.report("Cache not found, loading...");
@@ -135,27 +145,20 @@ public class JarCollection implements Iterable<Jar> {
     return jars;
   }
   
-  public static JarCollection make(TaskProgressLogger task, Collection<String> jarHashes) {
-    task.start("Building jar collection");
-    
-    JarCollection jars = new JarCollection();
-    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
-    
-    task.start("Adding jars", "jars added", 500);
-    for (String hash : jarHashes) {
-      JarFile jar = repo.getJarFile(hash);
-      if (jar == null) {
-        logger.warning("Unknown jar: " + hash);
-      } else {
-        task.progress();
-        jars.add(jar);
+  private void add(JarFile jar) {
+    Jar newJar = new Jar(jar);
+    try (ZipInputStream zis = new ZipInputStream(new FileInputStream(jar.getFile().toFile()))) {
+      for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
+        if (entry.getName().endsWith(".class")) {
+          String fqn = entry.getName();
+          fqn = fqn.substring(0, fqn.lastIndexOf('.'));
+          newJar.addFqn(rootFragment.getChild(fqn, '/'), Fingerprint.create(zis, entry.getSize()));
+        }
       }
+    } catch (IOException | IllegalArgumentException e) {
+      logger.log(Level.SEVERE, "Error reading jar file: " + jar, e);
     }
-    task.finish();
-    
-    task.finish();
-    
-    return jars;
+    jars.put(jar.getProperties().HASH.getValue(), newJar);
   }
   
   public Jar getJar(String hash) {
@@ -173,29 +176,5 @@ public class JarCollection implements Iterable<Jar> {
   
   public VersionedFqnNode getRoot() {
     return rootFragment;
-  }
-  
-  public void printStatistics(TaskProgressLogger task) {
-    task.start("Printing jar collection statistics");
-    
-    task.report("Collection contains " + jars.size() + " jars");
-    
-    task.start("Printing FQN suffix tree statistics");
-    
-    int fragmentCount = 0;
-    int fqnCount = 0;
-    for (VersionedFqnNode fragment : rootFragment.getPostOrderIterable()) {
-      fragmentCount++;
-      if (fragment.getVersions().getJars().size() > 0) {
-        fqnCount++;
-      }
-    }
-    task.report("Suffix tree contains " + fragmentCount + " nodes");
-    task.report("Suffix tree contains " + fqnCount + " leaves (FQNs)");
-    task.report("Suffix tree contains " + (fragmentCount - fqnCount) + " internal nodes (packages)");
-    
-    task.finish();
-    
-    task.finish();
   }
 }

@@ -88,6 +88,10 @@ public class TaskProgressLogger {
     }
   }
   
+  public Checkpoint checkpoint() {
+    return new Checkpoint(tasks.size());
+  }
+  
   protected void start(String taskName, int indent, String finishedText, int progressInterval) {
     logger.info(getSpaces(indent) + taskName + "...");
     tasks.push(new TaskInfo(finishedText, indent, progressInterval));
@@ -191,6 +195,20 @@ public class TaskProgressLogger {
       this.startTime = System.currentTimeMillis();
       this.count = 0;
       this.progressInterval = progressInterval;
+    }
+  }
+  
+  public class Checkpoint {
+    private int stackSize;
+    
+    private Checkpoint(int stackSize) {
+      this.stackSize = stackSize;
+    }
+    
+    public void activate() {
+      while (tasks.size() > stackSize) {
+        tasks.pop();
+      }
     }
   }
 }

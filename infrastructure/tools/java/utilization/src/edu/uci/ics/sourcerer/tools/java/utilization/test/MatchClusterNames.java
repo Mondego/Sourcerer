@@ -53,7 +53,7 @@ public class MatchClusterNames {
     {
       JarCollection jars = JarCollection.make(task);
       
-      if (ClusterCollection.CLUSTER_COLLECTION.asInput().getValue().exists()) {
+      if (ClusterCollection.CLUSTER_COLLECTION_CACHE.asInput().getValue().exists()) {
         clusters = ClusterCollection.load(task, jars);
       }
       if (clusters == null) {

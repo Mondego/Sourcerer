@@ -1,5 +1,6 @@
 package edu.uci.ics.sourcerer.util;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 public class Averager <T extends Number> {
@@ -8,9 +9,13 @@ public class Averager <T extends Number> {
   private T max;
   private Collection<T> values;
   
-  public Averager() {
-    values = Helper.newArrayList();
+  private Averager() {
+    values = new ArrayList<>();
     sum = 0;
+  }
+  
+  public static <T extends Number> Averager<T> create() {
+    return new Averager<T>();
   }
   
   public void addValue(T value) {

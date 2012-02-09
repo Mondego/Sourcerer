@@ -44,7 +44,9 @@ public class ClusterMerger {
   public static final RelativeFileArgument CLUSTER_MERGING_LOG = new RelativeFileArgument("cluster-merging-log", null, Arguments.OUTPUT, "Log file containing cluster merging info.");
   public static final Argument<ClusterMergeMethod> MERGE_METHOD = new EnumArgument<>("merge-method", ClusterMergeMethod.class, "Method for performing second stage merge.");
   
-  public static void mergeClusters(TaskProgressLogger task, ClusterCollection clusters) {
+  public static void mergeClusters(ClusterCollection clusters) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
     task.start("Merging " + clusters.size() + " clusters using " + MERGE_METHOD.getValue());
 
     File mergeLog = CLUSTER_MERGING_LOG.getValue();

@@ -85,7 +85,9 @@ public class ClusterIdentifier {
       }
     }
   }
-  public static ClusterCollection identifyClusters(TaskProgressLogger task, JarCollection jars) {
+  public static ClusterCollection identifyClusters(JarCollection jars) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
     task.start("Identifying core clusters in " + jars.size() + " jar files");
     task.report("Compatibility threshold: " + COMPATIBILITY_THRESHOLD.getValue());
     

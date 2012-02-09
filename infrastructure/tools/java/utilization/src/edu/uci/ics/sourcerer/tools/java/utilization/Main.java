@@ -45,8 +45,8 @@ public class Main {
       Identifier.EXEMPLAR_LOG,
       Identifier.MERGE_METHOD, 
       Fingerprint.FINGERPRINT_MODE, 
-      ClusterCollection.CLUSTER_COLLECTION.asInput(), 
-      ClusterCollection.CLUSTER_COLLECTION.asOutput(),
+      ClusterCollection.CLUSTER_COLLECTION_CACHE.asInput(), 
+      ClusterCollection.CLUSTER_COLLECTION_CACHE.asOutput(),
       ClusterCollection.JAR_LOG,
       ClusterCollection.CLUSTER_LOG,
       MatchClusterNames.TEST_REPO);
@@ -60,7 +60,7 @@ public class Main {
       JarCollection jars = JarCollection.make(task);
       
       ClusterCollection clusters = null;
-      if (ClusterCollection.CLUSTER_COLLECTION.asInput().getValue().exists()) {
+      if (ClusterCollection.CLUSTER_COLLECTION_CACHE.asInput().getValue().exists()) {
         clusters = ClusterCollection.load(task, jars);
       } 
       if (clusters == null) {
@@ -78,8 +78,8 @@ public class Main {
       Identifier.EXEMPLAR_LOG,
       Identifier.MERGE_METHOD, 
       Fingerprint.FINGERPRINT_MODE, 
-      ClusterCollection.CLUSTER_COLLECTION.asInput(), 
-      ClusterCollection.CLUSTER_COLLECTION.asOutput(),
+      ClusterCollection.CLUSTER_COLLECTION_CACHE.asInput(), 
+      ClusterCollection.CLUSTER_COLLECTION_CACHE.asOutput(),
       ClusterCollection.JAR_LOG,
       ClusterCollection.CLUSTER_LOG);
   

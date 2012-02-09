@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.tools.java.utilization.model.cluster;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
 import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
 import edu.uci.ics.sourcerer.util.io.arguments.RelativeFileArgument;
@@ -50,10 +52,6 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ClusterCollection implements Iterable<Cluster> {
-  public static RelativeFileArgument JAR_LOG = new RelativeFileArgument("jar-log", null, Arguments.OUTPUT, "Log file for jars broken down by clusters");
-  public static RelativeFileArgument CLUSTER_LOG = new RelativeFileArgument("cluster-log", null, Arguments.OUTPUT, "Log file for clusters broken down by jars");
-  public static DualFileArgument CLUSTER_COLLECTION = new DualFileArgument("cluster-collection", "cluster-collection.txt", "File for saved cluster collection");
-  
   private ArrayList<Cluster> clusters;
   private ClusterMatcher matcher;
   
@@ -67,16 +65,14 @@ public class ClusterCollection implements Iterable<Cluster> {
     return collection;
   }
   
-  public void reset(Collection<Cluster> clusters) {
-    this.clusters = new ArrayList<>(clusters);
-  }
-  
-  public static ClusterCollection load(TaskProgressLogger task, JarCollection jars) {
+  public static ClusterCollection load(File file, JarCollection jars) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
     ClusterCollection collection = new ClusterCollection();
     
     collection.clusters = new ArrayList<>(1000);
     task.start("Loading cluster collection", "clusters loaded", 500);
-    try (SimpleDeserializer deserializer = IOUtils.makeSimpleDeserializer(CLUSTER_COLLECTION)) {
+    try (SimpleDeserializer deserializer = IOUtils.makeSimpleDeserializer(file)) {
       for (Cluster cluster : deserializer.deserializeToIterable(Cluster.makeDeserializer(jars), true)) {
         task.progress();
         collection.clusters.add(cluster);
@@ -91,17 +87,17 @@ public class ClusterCollection implements Iterable<Cluster> {
     }
   }
   
-  public void save() {
-    try (SimpleSerializer serializer = IOUtils.makeSimpleSerializer(CLUSTER_COLLECTION)) {
+  public void reset(Collection<Cluster> clusters) {
+    this.clusters = new ArrayList<>(clusters);
+  }
+  
+  public void save(File file) {
+    try (SimpleSerializer serializer = IOUtils.makeSimpleSerializer(file)) {
       serializer.serialize(clusters);
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error saving cluster collection", e);
     }
   }
-  
-//  public void add(Cluster cluster) {
-//    clusters.add(cluster);
-//  }
   
   public Collection<Cluster> getClusters() {
     return clusters;
@@ -122,42 +118,6 @@ public class ClusterCollection implements Iterable<Cluster> {
     }
     return matcher;
   }
-  
-//  public void printStatistics(TaskProgressLogger task) {
-//    task.start("Printing library statistics");
-//    task.report(libraries.size() + " libraries identified");
-//    int trivial = 0;
-//    TreeSet<Library> nonTrivial = new TreeSet<>(new Comparator<Library>() {
-//      @Override
-//      public int compare(Library o1, Library o2) {
-//        int cmp = Integer.compare(o1.getJars().size(), o2.getJars().size());
-//        if (cmp == 0) {
-//          return Integer.compare(o1.hashCode(), o2.hashCode());
-//        } else {
-//          return cmp;
-//        }
-//      }});
-//    for (Library library : libraries) {
-//      if (library.getJars().size() > 1) {
-//        nonTrivial.add(library);
-//      } else {
-//        trivial++;
-//      }
-//    }
-//    task.report(trivial + " unique libraries");
-//    task.report(nonTrivial.size() + " compound libraries");
-//    task.start("Examining compound libraries");
-//    while (!nonTrivial.isEmpty()) {
-//      Library biggest = nonTrivial.pollLast();
-//      task.start("Listing FQNs for library found in " + biggest.getJars().size() + " jars");
-//      for (FqnFragment fqn : biggest.getFqns()) {
-//        task.report(fqn.getFqn());
-//      }
-//      task.finish();
-//    }
-//    task.finish();
-//    task.finish();
-//  }
   
   public void printStatistics(TaskProgressLogger task) {
     NumberFormat format = NumberFormat.getPercentInstance();
