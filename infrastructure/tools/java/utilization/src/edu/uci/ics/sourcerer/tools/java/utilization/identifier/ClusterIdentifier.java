@@ -66,8 +66,8 @@ public class ClusterIdentifier {
       if (one.getJars().getIntersectionSize(two.getJars()) == 0) {
         return false;
       } else {
-        Averager<Double> otherGivenThis = new Averager<>();
-        Averager<Double> thisGivenOther = new Averager<>();
+        Averager<Double> otherGivenThis = Averager.create();
+        Averager<Double> thisGivenOther = Averager.create();
       
         for (VersionedFqnNode fqn : one.getCoreFqns()) {
           for (VersionedFqnNode otherFqn : two.getCoreFqns()) {

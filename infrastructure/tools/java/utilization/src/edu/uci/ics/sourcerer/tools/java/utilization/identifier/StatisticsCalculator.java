@@ -23,10 +23,16 @@ import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.logging.Level;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.Averager;
@@ -74,9 +80,14 @@ public class StatisticsCalculator {
       writer.write((int) avgFqns.getSum() + " class files");
       writer.write(totalFragments + " name fragments");
       writer.write(uniqueFqns+ " unique names");
+      
+      writer.writeAndIndent("Class files per jar:");
       writer.write("Smallest jar contains " + avgFqns.getMin() + " class files");
       writer.write("Largest jar contains " + avgFqns.getMax() + " class files");
       writer.write("Average jar contains " + doubleFormat.format(avgFqns.getMean()) + " (" + doubleFormat.format(avgFqns.getStandardDeviation()) + ") class files");
+      writer.unindent();
+      
+      writer.unindent();
       
       task.finish();
       
@@ -109,14 +120,98 @@ public class StatisticsCalculator {
       }
       
       task.start("Calculating general cluster statistics");
-      // How many clusters?
-      // How many clusters contain only 1 jar?
-      // What's the largest/smallest/average number of jars in a cluster?
-      // What's the largest/smallest/average number of core/extra/exemplar FQNs per cluster?
-     
-      // How many jars match only a single cluster?
-      // What's the largest/smallest/average number of clusters for a jar?
       
+      // Compute cluster stats
+      Multimap<Jar, Cluster> jarsToClusters = HashMultimap.create();
+      Averager<Integer> jarsPerCluster = Averager.create();
+      int singleJarCount = 0;
+      Averager<Integer> coreFqnsPerCluster = Averager.create();
+      Averager<Integer> extraFqnsPerCluster = Averager.create();
+      Averager<Integer> exemplarFqnsPerCluster = Averager.create();
+      for (Cluster cluster : clusters) {
+        if (cluster.getJars().size() == 1) {
+          singleJarCount++;
+        }
+        jarsPerCluster.addValue(cluster.getJars().size());
+        coreFqnsPerCluster.addValue(cluster.getCoreFqns().size());
+        extraFqnsPerCluster.addValue(cluster.getExtraFqns().size());
+        exemplarFqnsPerCluster.addValue(cluster.getExemplarFqns().size());
+        for (Jar jar : cluster.getJars()) {
+          jarsToClusters.put(jar, cluster);
+        }
+      }
+      
+      int singleClusterCount = 0;
+      Averager<Integer> clustersPerJar = Averager.create();
+      for (Jar jar : jarsToClusters.keySet()) {
+        Collection<Cluster> clus = jarsToClusters.get(jar);
+        if (clus.size() == 1) {
+          singleClusterCount++;
+        }
+        clustersPerJar.addValue(clus.size());
+      }
+      
+      // How many clusters have good exemplars?
+      int goodExemplarCount = 0;
+      Averager<Integer> exemplars = Averager.create();
+      for (Cluster cluster : clusters) {
+        boolean good = true;
+        exemplars.addValue(cluster.getExemplars().size());
+        for (Jar exemplar : cluster.getExemplars()) {
+          good &= jarsToClusters.get(exemplar).size() == 1;
+        }
+        if (good) {
+          goodExemplarCount++;
+        }
+      }
+      
+      writer.writeAndIndent("Cluster stats:");
+      
+      writer.writeAndIndent("Jars per cluster");
+      writer.write(clusters.size() + " clusters");
+      writer.write(singleJarCount + " clusters with one jar");
+      writer.write((clusters.size() - singleJarCount) + " clusters with multiple jars");
+      writer.write("Smallest cluster contains " + jarsPerCluster.getMin() + " jars");
+      writer.write("Largest cluster contains " + jarsPerCluster.getMax() + " jars");
+      writer.write("Average cluster contains " + doubleFormat.format(jarsPerCluster.getMean()) + " (" + doubleFormat.format(jarsPerCluster.getStandardDeviation()) + ") jars");
+      writer.unindent();
+      
+      writer.writeAndIndent("Core FQNs per cluster");
+      writer.write("Fewest core fqns: " + coreFqnsPerCluster.getMin());
+      writer.write("Most core fqns: " + coreFqnsPerCluster.getMax());
+      writer.write("Average core fqns " + doubleFormat.format(coreFqnsPerCluster.getMean()) + " (" + doubleFormat.format(coreFqnsPerCluster.getStandardDeviation()) + ")");
+      writer.unindent();
+      
+      writer.writeAndIndent("Extra FQNs per cluster");
+      writer.write("Fewest extra fqns: " + extraFqnsPerCluster.getMin());
+      writer.write("Most extra fqns: " + extraFqnsPerCluster.getMax());
+      writer.write("Average extra fqns " + doubleFormat.format(extraFqnsPerCluster.getMean()) + " (" + doubleFormat.format(extraFqnsPerCluster.getStandardDeviation()) + ")");
+      writer.unindent();
+      
+      writer.writeAndIndent("Exemplar FQNs per cluster");
+      writer.write("Fewest exemplar fqns: " + exemplarFqnsPerCluster.getMin());
+      writer.write("Most exemplar fqns: " + exemplarFqnsPerCluster.getMax());
+      writer.write("Average exemplar fqns " + doubleFormat.format(exemplarFqnsPerCluster.getMean()) + " (" + doubleFormat.format(exemplarFqnsPerCluster.getStandardDeviation()) + ")");
+      writer.unindent();
+      
+      writer.writeAndIndent("Clusters per jar");
+      writer.write(jars.size() + " jars");
+      writer.write(singleClusterCount + " jars with one cluster");
+      writer.write((jars.size() - singleClusterCount) + " jars with multiple clusters");
+      writer.write("Smallest jar contains " + clustersPerJar.getMin() + " clusters");
+      writer.write("Largest jar contains " + clustersPerJar.getMax() + " clusters");
+      writer.write("Average jar contains " + doubleFormat.format(clustersPerJar.getMean()) + " (" + doubleFormat.format(clustersPerJar.getStandardDeviation()) + ") clusters");
+      writer.unindent();
+     
+      writer.writeAndIndent("Exemplars");
+      writer.write(clusters.size() + " clusters");
+      writer.write(goodExemplarCount + " clusters with good exemplars");
+      writer.write((clusters.size() - goodExemplarCount) + " clusters with bad exemplars");
+      writer.write("Largest cluster contains " + exemplars.getMax() + " exemplars");
+      writer.write("Smallest cluster contains " + exemplars.getMin() + " exemplars");
+      writer.write("Average cluster contains " + doubleFormat.format(exemplars.getMean()) + " (" + doubleFormat.format(exemplars.getStandardDeviation()) + " ) exemplars");
+      writer.unindent();
+     
       // How many clusters have a 'good' exemplar
       
       // Print out list of clusters, ordered by number of jars

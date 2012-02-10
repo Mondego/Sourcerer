@@ -165,7 +165,7 @@ public enum ClusterMergeMethod {
     
     @Override
     public boolean shouldMergeHelper(Cluster core, Cluster other, LogFileWriter writer) {
-      Averager<Double> averager = new Averager<>();
+      Averager<Double> averager = Averager.create();
       
       LinkedList<VersionedFqnNode> coreFragments = new LinkedList<>();
       LinkedList<VersionedFqnNode> otherFragments = new LinkedList<>();
@@ -257,7 +257,7 @@ public enum ClusterMergeMethod {
     
     @Override
     public boolean shouldMergeHelper(Cluster core, Cluster other, LogFileWriter writer) {
-      Averager<Double> averager = new Averager<>();
+      Averager<Double> averager = Averager.create();
       
       LinkedList<VersionedFqnNode> coreFragments = new LinkedList<>();
       LinkedList<VersionedFqnNode> otherFragments = new LinkedList<>();
@@ -268,7 +268,7 @@ public enum ClusterMergeMethod {
         
         // Does the fqn not have a package?
         // Find the FQN in the core cluster that matches best
-        Averager<Double> averageMatch = new Averager<>();
+        Averager<Double> averageMatch = Averager.create();
         for (VersionedFqnNode coreFqn : core.getCoreFqns()) {
           breakFqn(coreFqn.getParent(), coreFragments);
           if (coreFragments.isEmpty()) {
