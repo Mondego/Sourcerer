@@ -25,10 +25,15 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.sun.org.apache.bcel.internal.generic.POP;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
@@ -38,7 +43,9 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
+import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 import edu.uci.ics.sourcerer.util.io.arguments.RelativeFileArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
@@ -46,12 +53,11 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class StatisticsCalculator {
-  public static RelativeFileArgument JAR_LOG = new RelativeFileArgument("jar-log", null, Arguments.OUTPUT, "Log file for jars broken down by clusters");
-  public static RelativeFileArgument CLUSTER_LOG = new RelativeFileArgument("cluster-log", null, Arguments.OUTPUT, "Log file for clusters broken down by jars");
-  
   public static RelativeFileArgument GENERAL_STATS = new RelativeFileArgument("general-stats", "general-stats.txt", Arguments.OUTPUT, "File containing general stats.");
   public static RelativeFileArgument POPULAR_FQNS = new RelativeFileArgument("popular-fqns", null, Arguments.OUTPUT, "Log file containing the most popular FQNs.");
-  
+  public static RelativeFileArgument JAR_LISTING = new RelativeFileArgument("jar-listing", null, Arguments.OUTPUT, "Log file for jars broken down by clusters");
+  public static RelativeFileArgument CLUSTER_LISTING = new RelativeFileArgument("cluster-listing", null, Arguments.OUTPUT, "Log file for clusters broken down by jars");
+  public static Argument<Integer> MAX_TABLE_COLUMNS = new IntegerArgument("max-listing-table-columns", 40, "Maximum number of jars to compare in table listing");
   public static void calculateGeneralStatistics(JarCollection jars, ClusterCollection clusters) {
     TaskProgressLogger task = TaskProgressLogger.get();
     TaskProgressLogger.Checkpoint checkpoint = task.checkpoint();
@@ -91,11 +97,15 @@ public class StatisticsCalculator {
       
       task.finish();
       
-      File popularFqnsLog = POPULAR_FQNS.getValue();
-      if (popularFqnsLog != null) {
-        task.start("Logging most popular FQNs to: " + popularFqnsLog.getPath());
+      if (POPULAR_FQNS.hasValue()) {
+        task.start("Logging most popular FQNs to: " + POPULAR_FQNS.getValue().getPath());
         
-        try (LogFileWriter log = IOUtils.createLogFileWriter(popularFqnsLog)) {
+        try (LogFileWriter log = IOUtils.createLogFileWriter(POPULAR_FQNS)) {
+          writer.write(jars.size() + " unique jars");
+          writer.write(uniqueFqns+ " unique names");
+          writer.write((int) avgFqns.getSum() + " total names");
+          writer.newLine();
+          
           // Put the FQNs into an array
           VersionedFqnNode fqns[] = new VersionedFqnNode[uniqueFqns];
           int i = 0;
@@ -122,7 +132,7 @@ public class StatisticsCalculator {
       task.start("Calculating general cluster statistics");
       
       // Compute cluster stats
-      Multimap<Jar, Cluster> jarsToClusters = HashMultimap.create();
+      final Multimap<Jar, Cluster> jarsToClusters = HashMultimap.create();
       Averager<Integer> jarsPerCluster = Averager.create();
       int singleJarCount = 0;
       Averager<Integer> coreFqnsPerCluster = Averager.create();
@@ -211,11 +221,60 @@ public class StatisticsCalculator {
       writer.write("Smallest cluster contains " + exemplars.getMin() + " exemplars");
       writer.write("Average cluster contains " + doubleFormat.format(exemplars.getMean()) + " (" + doubleFormat.format(exemplars.getStandardDeviation()) + " ) exemplars");
       writer.unindent();
-     
-      // How many clusters have a 'good' exemplar
+      
+      if (JAR_LISTING.hasValue()) {
+        task.start("Logging jar listing to: " + JAR_LISTING.getValue().getPath());
+        writer.write(singleClusterCount + " jars with one cluster");
+        writer.write((jars.size() - singleClusterCount) + " jars with multiple clusters");
+
+        // Print out list of jars, ordered by number of clusters
+        try (LogFileWriter log = IOUtils.createLogFileWriter(JAR_LISTING)) {
+          log.write(jars.size() + " jars");
+          Jar[] sorted = new Jar[jars.size()];
+          int i = 0;
+          for (Jar jar : jars) {
+            sorted[i++] = jar;
+          }
+          
+          Arrays.sort(sorted, new Comparator<Jar>() {
+            @Override
+            public int compare(Jar one, Jar two) {
+              return Integer.compare(jarsToClusters.get(two).size(), jarsToClusters.get(one).size());
+            }});
+          
+          for (Jar jar : sorted) {
+            Collection<Cluster> jarClusters = jarsToClusters.get(jar);
+            
+            // Collect all the jars that overlap with this jar
+            Set<Jar> overlap = new TreeSet<>(new Comparator<Jar>() {
+              @Override
+              public int compare(Jar o1, Jar o2) {
+                String name1 = o1.getJar().toString();
+                String name2 = o2.getJar().toString();
+                return name1 == null ? (name2 == null ? 0 : -1) : (name2 == null ? 1 : name1.compareTo(name2));
+              }});
+            for (Cluster cluster : jarClusters) {
+              for (Jar otherJar : cluster.getJars()) {
+                overlap.add(otherJar);
+              }
+            }
+            // Remove this jar
+            overlap.remove(jar);
+            
+            log.newLine();
+            log.writeAndIndent(jar + " fragmented into " + jarClusters.size() + " clusters");
+            log.write("FQNs from this jar appear in " + overlap.size() + " other jars");
+            log.writeAndIndent("Listing jars with overlap");
+            int c = 1;
+            for (Jar otherJar : overlap) {
+              writer.write(c++ + ": " + otherJar.getJar());
+            }
+          }
+        }
+      }
       
       // Print out list of clusters, ordered by number of jars
-      // Print out list of jars, ordered by number of clusters
+
       task.finish();
       
     } catch (IOException e) {

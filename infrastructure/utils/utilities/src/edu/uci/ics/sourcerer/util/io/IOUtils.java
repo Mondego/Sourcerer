@@ -45,6 +45,10 @@ public final class IOUtils {
     return new FileOutputStream(file);
   }
   
+  public static LogFileWriter createLogFileWriter(Argument<File> arg) throws IOException {
+    return createLogFileWriter(arg.getValue());
+  }
+  
   public static LogFileWriter createLogFileWriter(File file) throws IOException {
     if (file == null) {
       return LogFileWriter.createNull();
