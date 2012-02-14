@@ -34,7 +34,7 @@ public abstract class AbstractSourceProject<Repo extends AbstractRepository<?, ?
   private RepoFileImpl contentFile;
   private CachedReference<FileSet> files = new CachedReference<FileSet>() {
     @Override
-    protected FileSet make() {
+    protected FileSet create() {
       return makeFileSet();
     }
   }; 

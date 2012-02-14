@@ -29,18 +29,18 @@ public abstract class CachedReference<T> {
   public static final Argument<Boolean> DISABLE_REF_CACHING = new BooleanArgument("disable-ref-caching", false, "Forces cached references to never cache.").permit();
   private SoftReference<T> ref;
   
-  protected abstract T make();
+  protected abstract T create();
   
   public T get() {
     if (DISABLE_REF_CACHING.getValue()) {
-      return make();
+      return create();
     } else {
       T result = null;
       if (ref != null) {
         result = ref.get();
       }
       if (result == null) {
-        result = make();
+        result = create();
         ref = new SoftReference<>(result);
       }
       return result;

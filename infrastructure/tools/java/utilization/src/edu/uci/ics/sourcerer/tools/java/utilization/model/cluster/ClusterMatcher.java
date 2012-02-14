@@ -17,38 +17,80 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.model.cluster;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
+import edu.uci.ics.sourcerer.util.CachedReference;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ClusterMatcher {
-  private Map<String, Cluster> map;
+  private final ClusterCollection clusters;
   
-  private ClusterMatcher() {
-    map = new HashMap<>();
+  private CachedReference<Map<String, Cluster>> fqnStringsToClusters = new CachedReference<Map<String,Cluster>>() {
+    @Override
+    protected Map<String, Cluster> create() {
+      Map<String, Cluster> map = new HashMap<>();
+      for (Cluster cluster : clusters) {
+        for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
+          map.put(fqn.getFqn(), cluster);
+        }
+        for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
+          map.put(fqn.getFqn(), cluster);
+        }
+      }
+      return map;
+    }};
+  private CachedReference<Map<VersionedFqnNode, Cluster>> fqnsToClusters = new CachedReference<Map<VersionedFqnNode,Cluster>>() {
+    @Override
+    protected Map<VersionedFqnNode, Cluster> create() {
+      Map<VersionedFqnNode, Cluster> map = new HashMap<>();
+      for (Cluster cluster : clusters) {
+        for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
+          map.put(fqn, cluster);
+        }
+        for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
+          map.put(fqn, cluster);
+        }
+      }
+      return map;
+    }};
+  private CachedReference<Multimap<Jar, Cluster>> jarsToClusters = new CachedReference<Multimap<Jar,Cluster>>() {
+    @Override
+    protected Multimap<Jar, Cluster> create() {
+      Multimap<Jar, Cluster> map = HashMultimap.create();
+      for (Cluster cluster : clusters) {
+        for (Jar jar : cluster.getJars()) {
+          map.put(jar, cluster);
+        }
+      }
+      return map;
+    }};
+  
+  private ClusterMatcher(ClusterCollection clusters) {
+    this.clusters = clusters;
   }
   
   static ClusterMatcher create(ClusterCollection clusters) {
-    ClusterMatcher matcher = new ClusterMatcher();
-    for (Cluster cluster : clusters) {
-      for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
-        matcher.map.put(fqn.getFqn(), cluster);
-      }
-      for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
-        matcher.map.put(fqn.getFqn(), cluster);
-      }
-    }
-    return matcher;
+    return new ClusterMatcher(clusters);
   }
   
-  /**
-   * Assumes the VersionedFqnNode comes from a different
-   */
-  public Cluster getMatch(String fqn) {
-    return map.get(fqn);
+  public Collection<Cluster> getClusters(Jar jar) {
+   return jarsToClusters.get().get(jar);
+  }
+  
+  public Cluster getCluster(VersionedFqnNode fqn) {
+    return fqnsToClusters.get().get(fqn);
+  }
+  
+  public Cluster getCluster(String fqn) {
+    return fqnStringsToClusters.get().get(fqn);
   }
 }

@@ -1,3 +1,4 @@
+package edu.uci.ics.sourcerer.tools.java.utilization.stats;
 ///* 
 // * Sourcerer: an infrastructure for large-scale source code analysis.
 // * Copyright (C) by contributors. See CONTRIBUTORS.txt for full list.

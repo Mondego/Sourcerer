@@ -21,11 +21,13 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterIdentifier;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterMerger;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ExemplarIdentifier;
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.StatisticsCalculator;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.popularity.ImportPopularityCalculator;
+import edu.uci.ics.sourcerer.tools.java.utilization.stats.ClusterStats;
+import edu.uci.ics.sourcerer.tools.java.utilization.stats.GeneralStats;
+import edu.uci.ics.sourcerer.tools.java.utilization.stats.JarStats;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
@@ -62,7 +64,9 @@ public class Main {
       ClusterMerger.mergeClusters(clusters);
       ExemplarIdentifier.identifyExemplars(clusters);
       
-      StatisticsCalculator.calculateGeneralStatistics(jars, clusters);
+      GeneralStats.calculate(jars, clusters);
+      JarStats.calculate(jars, clusters);
+      ClusterStats.calculate(jars, clusters);
       
       task.finish();
     }
@@ -74,11 +78,11 @@ public class Main {
       ClusterMerger.CLUSTER_MERGING_LOG,
       ExemplarIdentifier.EXEMPLAR_THRESHOLD, 
       ExemplarIdentifier.EXEMPLAR_LOG,
-      StatisticsCalculator.GENERAL_STATS, 
-      StatisticsCalculator.POPULAR_FQNS,
-      StatisticsCalculator.JAR_LISTING,
-      StatisticsCalculator.CLUSTER_LISTING,
-      StatisticsCalculator.MAX_TABLE_COLUMNS);
+      GeneralStats.GENERAL_STATS, 
+      GeneralStats.POPULAR_FQNS,
+      JarStats.JAR_LISTING,
+      ClusterStats.CLUSTER_LISTING,
+      GeneralStats.MAX_TABLE_COLUMNS);
   
 //  public static final Command COMPARE_LIBRARY_IDENTIFICATION = new Command("compare-library-identification", "Compare methods for clustering and identifying the libraries.") {
 //    @Override

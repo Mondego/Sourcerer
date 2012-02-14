@@ -32,7 +32,7 @@ public abstract class AbstractRepoProject<Repo extends AbstractRepository<?, ?>,
   private final RepoFileImpl propFile;
   private CachedReference<Properties> properties = new CachedReference<Properties>() {
     @Override
-    protected Properties make() {
+    protected Properties create() {
       return makeProperties(propFile);
     }
   };

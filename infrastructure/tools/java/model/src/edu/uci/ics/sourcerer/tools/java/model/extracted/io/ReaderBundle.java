@@ -45,49 +45,49 @@ public class ReaderBundle {
   
   private CachedReference<Collection<EntityEX>> entities = new CachedReference<Collection<EntityEX>>() {
     @Override
-    protected Collection<EntityEX> make() {
+    protected Collection<EntityEX> create() {
       return ReaderBundle.this.get(EntityEX.class, new File(input, EntityEX.ENTITY_FILE.getValue()));
     }
   };
   private CachedReference<Collection<FileEX>> files = new CachedReference<Collection<FileEX>>() {
     @Override
-    protected Collection<FileEX> make() {
+    protected Collection<FileEX> create() {
       return ReaderBundle.this.get(FileEX.class, new File(input, FileEX.FILE_FILE.getValue()));
     }
   };
   private CachedReference<Collection<LocalVariableEX>> localVariables = new CachedReference<Collection<LocalVariableEX>>() {
     @Override
-    protected Collection<LocalVariableEX> make() {
+    protected Collection<LocalVariableEX> create() {
       return ReaderBundle.this.get(LocalVariableEX.class, new File(input, LocalVariableEX.LOCAL_VARIABLE_FILE.getValue()));
     }
   };
   private CachedReference<Collection<RelationEX>> relations = new CachedReference<Collection<RelationEX>>() {
     @Override
-    protected Collection<RelationEX> make() {
+    protected Collection<RelationEX> create() {
       return ReaderBundle.this.get(RelationEX.class, new File(input, RelationEX.RELATION_FILE.getValue()));
     }
   };
   private CachedReference<Collection<ProblemEX>> problems = new CachedReference<Collection<ProblemEX>>() {
     @Override
-    protected Collection<ProblemEX> make() {
+    protected Collection<ProblemEX> create() {
       return ReaderBundle.this.get(ProblemEX.class, new File(input, ProblemEX.PROBLEM_FILE.getValue()));
     }
   };
   private CachedReference<Collection<ImportEX>> imports = new CachedReference<Collection<ImportEX>>() {
     @Override
-    protected Collection<ImportEX> make() {
+    protected Collection<ImportEX> create() {
       return ReaderBundle.this.get(ImportEX.class, new File(input, ImportEX.IMPORT_FILE.getValue()));
     }
   };
   private CachedReference<Collection<CommentEX>> comments = new CachedReference<Collection<CommentEX>>() {
     @Override
-    protected Collection<CommentEX> make() {
+    protected Collection<CommentEX> create() {
       return ReaderBundle.this.get(CommentEX.class, new File(input, CommentEX.COMMENT_FILE.getValue()));
     }
   };
   private CachedReference<Collection<UsedJarEX>> usedJars = new CachedReference<Collection<UsedJarEX>>() {
     @Override
-    protected Collection<UsedJarEX> make() {
+    protected Collection<UsedJarEX> create() {
       return ReaderBundle.this.get(UsedJarEX.class, new File(input, UsedJarEX.USED_JAR_FILE.getValue()));
     }
   };
