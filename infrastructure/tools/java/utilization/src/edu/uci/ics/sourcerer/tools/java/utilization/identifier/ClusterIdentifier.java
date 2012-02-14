@@ -38,7 +38,7 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 public class ClusterIdentifier {
   private ClusterIdentifier() {}
   
-  public static final Argument<Double> COMPATIBILITY_THRESHOLD = new DoubleArgument("compatibility-threshold", 1., "").permit();
+  public static final Argument<Double> COMPATIBILITY_THRESHOLD = new DoubleArgument("compatibility-threshold", 1., "");
   
   private static boolean areCompatible(Cluster one, Cluster two) {
     // Do a pairwise comparison of every FQN. Calculate the conditional
@@ -140,6 +140,8 @@ public class ClusterIdentifier {
     task.finish();
     
     task.report("Identified " + clusterCount + " core clusters");
+    
+    task.finish();
     
     return ClusterCollection.create(tempClusterMap.get(jars.getRoot()));
   }

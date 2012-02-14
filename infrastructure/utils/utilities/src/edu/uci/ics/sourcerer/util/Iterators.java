@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.util;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -67,5 +68,22 @@ public class Iterators {
         };
       }
     };
+  }
+  
+  @SuppressWarnings("unchecked")
+  public static <T> T[] toArray(Iterable<T> iterable) {
+    ArrayList<T> list = new ArrayList<>();
+    for (T item : iterable) {
+      list.add(item);
+    }
+    return (T[]) list.toArray();
+  }
+  
+  public static <T> T[] toArray(Iterable<T> iterable, T[] hint) {
+    ArrayList<T> list = new ArrayList<>(hint.length);
+    for (T item : iterable) {
+      list.add(item);
+    }
+    return list.toArray(hint);
   }
 }

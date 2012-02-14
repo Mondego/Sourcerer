@@ -41,7 +41,7 @@ public enum ClusterMergeMethod {
   RELATED_SUBPACKAGE {
     @Override
     public void doForEachVersion(Action action) {
-      ClusterMerger.MERGE_METHOD.setValue(this);
+      ClusterMerger.CLUSTER_MERGE_METHOD.setValue(this);
       for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
         MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
@@ -93,7 +93,7 @@ public enum ClusterMergeMethod {
   JACCARD_PACKAGE {
     @Override
     public void doForEachVersion(Action action) {
-      ClusterMerger.MERGE_METHOD.setValue(this);
+      ClusterMerger.CLUSTER_MERGE_METHOD.setValue(this);
       for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
         MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
@@ -142,7 +142,7 @@ public enum ClusterMergeMethod {
   MAX_PATH_SIMILARITY {
     @Override
     public void doForEachVersion(Action action) {
-      ClusterMerger.MERGE_METHOD.setValue(this);
+      ClusterMerger.CLUSTER_MERGE_METHOD.setValue(this);
       for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
         MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
@@ -234,7 +234,7 @@ public enum ClusterMergeMethod {
   AVG_PATH_SIMILARITY {
     @Override
     public void doForEachVersion(Action action) {
-      ClusterMerger.MERGE_METHOD.setValue(this);
+      ClusterMerger.CLUSTER_MERGE_METHOD.setValue(this);
       for (int threshold = 100, min = MINIMUM_THRESHOLD.getValue(), dec = THRESHOLD_DECREMENT.getValue(); threshold >= min; threshold -= dec) {
         MERGE_THRESHOLD.setValue(threshold / 100.);
         action.doMe();
@@ -334,7 +334,7 @@ public enum ClusterMergeMethod {
   public static final Argument<Integer> THRESHOLD_DECREMENT = new IntegerArgument("threshold-decrement", 5, "Threshold decrement, starting at 100, to test").permit();
   
   public void doForEachVersion(Action action) {
-    ClusterMerger.MERGE_METHOD.setValue(this);
+    ClusterMerger.CLUSTER_MERGE_METHOD.setValue(this);
     action.doMe();
   }
   

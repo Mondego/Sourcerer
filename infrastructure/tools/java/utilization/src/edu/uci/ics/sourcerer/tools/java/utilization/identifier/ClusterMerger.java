@@ -42,12 +42,12 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  */
 public class ClusterMerger {
   public static final RelativeFileArgument CLUSTER_MERGING_LOG = new RelativeFileArgument("cluster-merging-log", null, Arguments.OUTPUT, "Log file containing cluster merging info.");
-  public static final Argument<ClusterMergeMethod> MERGE_METHOD = new EnumArgument<>("merge-method", ClusterMergeMethod.class, "Method for performing second stage merge.");
+  public static final Argument<ClusterMergeMethod> CLUSTER_MERGE_METHOD = new EnumArgument<>("cluster-merge-method", ClusterMergeMethod.class, "Method for performing second stage merge.");
   
   public static void mergeClusters(ClusterCollection clusters) {
     TaskProgressLogger task = TaskProgressLogger.get();
     
-    task.start("Merging " + clusters.size() + " clusters using " + MERGE_METHOD.getValue());
+    task.start("Merging " + clusters.size() + " clusters using " + CLUSTER_MERGE_METHOD.getValue());
 
     File mergeLog = CLUSTER_MERGING_LOG.getValue();
     if (mergeLog != null) {
@@ -79,7 +79,7 @@ public class ClusterMerger {
         // Find and merge any candidate clusters
         for (Cluster coreCluster : coreClusters) {
           // Check if the core cluster should include the next biggest
-          if (MERGE_METHOD.getValue().shouldMerge(coreCluster, biggest, writer)) {
+          if (CLUSTER_MERGE_METHOD.getValue().shouldMerge(coreCluster, biggest, writer)) {
             coreCluster.mergeExtra(biggest);
             merged = true;
             break;
@@ -88,7 +88,7 @@ public class ClusterMerger {
         if (!merged) {
           coreClusters.add(biggest);
         }
-        task.finish();
+        task.progress();
       }
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Error writing log", e);

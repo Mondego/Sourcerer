@@ -44,7 +44,7 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  */
 public class ExemplarIdentifier {
   public static Argument<File> EXEMPLAR_LOG = new RelativeFileArgument("exemplar-log", null, Arguments.OUTPUT, "Log file listing the cluster exemplars.");
-  public static Argument<Double> EXEMPLAR_THRESHOLD = new DoubleArgument("exemplar-threshold", 0.5, "Threshold for expanding core fqns.").permit();
+  public static Argument<Double> EXEMPLAR_THRESHOLD = new DoubleArgument("exemplar-threshold", 0.5, "Threshold for expanding core fqns.");
   
   private static class Stats {
     int exemplarCount = 0;
