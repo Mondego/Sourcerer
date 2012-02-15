@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.tools.java.utilization.model.cluster;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import com.google.common.collect.HashMultimap;
@@ -83,7 +84,38 @@ public class ClusterMatcher {
   }
   
   public Collection<Cluster> getClusters(Jar jar) {
-   return jarsToClusters.get().get(jar);
+    Collection<Cluster> clusters = jarsToClusters.get().get(jar);
+    if (clusters.isEmpty()) {
+      // If it doesn't match any clusters, 2 possibilities
+      // No fqns, in which cast return nothing
+      if (jar.getFqns().isEmpty()) {
+        return clusters;
+      }
+      // It's from a different JarCollection, so look up fqns directly
+      else {
+        clusters = new HashSet<>();
+        for (VersionedFqnNode fqn : jar.getFqns()) {
+          Cluster cluster = getCluster(fqn.getFqn());
+          if (cluster != null) {
+            clusters.add(cluster);
+          }
+        }
+        return clusters;
+      }
+    } else {
+      return clusters;
+    }
+  }
+  
+  public Collection<Cluster> getClusters(Collection<String> fqns) {
+    Collection<Cluster> clusters = new HashSet<>();
+    for (String fqn : fqns) {
+      Cluster cluster = getCluster(fqn);
+      if (cluster != null) {
+        clusters.add(cluster);
+      }
+    }
+    return clusters;
   }
   
   public Cluster getCluster(VersionedFqnNode fqn) {

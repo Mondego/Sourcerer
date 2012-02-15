@@ -26,6 +26,7 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.popularity.ImportPopularityCalculator;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.ClusterStats;
+import edu.uci.ics.sourcerer.tools.java.utilization.stats.DecomposeJars;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.GeneralStats;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.JarStats;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
@@ -68,6 +69,8 @@ public class Main {
       JarStats.calculate(jars, clusters);
       ClusterStats.calculate(jars, clusters);
       
+      DecomposeJars.decomposeJars(clusters);
+      
       task.finish();
     }
   }.setProperties(
@@ -82,7 +85,10 @@ public class Main {
       GeneralStats.POPULAR_FQNS,
       JarStats.JAR_LISTING,
       ClusterStats.CLUSTER_LISTING,
-      GeneralStats.MAX_TABLE_COLUMNS);
+      GeneralStats.MAX_TABLE_COLUMNS,
+      DecomposeJars.TEST_REPO,
+      DecomposeJars.TEST_REPO_CACHE,
+      DecomposeJars.DECOMPOSED_JAR_LISTING);
   
 //  public static final Command COMPARE_LIBRARY_IDENTIFICATION = new Command("compare-library-identification", "Compare methods for clustering and identifying the libraries.") {
 //    @Override

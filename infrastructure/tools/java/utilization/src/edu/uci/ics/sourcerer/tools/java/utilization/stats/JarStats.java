@@ -118,7 +118,7 @@ public class JarStats {
         // Log the table for each cluster
         int clusterCount = 0;
         for (Cluster cluster : clusters) {
-          log.write("Cluster " + ++clusterCount + " (" + cluster.getJars().size() + " jars )");
+          log.write("Cluster " + ++clusterCount + " (" + cluster.getJars().size() + " jars)");
           // Start with the core FQNs
           // Log the number line
           for (int i = 1; i <= c; i++) {
