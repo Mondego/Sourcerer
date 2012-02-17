@@ -182,7 +182,9 @@ public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> implements C
 
           @Override
           public void remove() {
-          }};
+            throw new UnsupportedOperationException();
+          }
+        };
       }};
   }
   public Iterable<T> getPostOrderIterable() {

@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.extractor.eclipse;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.Closeable;
 import java.util.Collection;
@@ -43,26 +43,24 @@ import edu.uci.ics.sourcerer.tools.java.extractor.bytecode.ASMExtractor;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
-import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 @SuppressWarnings("restriction")
 public class EclipseExtractor implements Closeable {
-  private final TaskProgressLogger task;
   private final ASTParser parser;
   private final WriterBundle writers;
   private final ReferenceExtractorVisitor visitor;
   private final ASMExtractor asmExtractor;
   private final ClassFileExtractor eclipseExtractor;
   
-  public EclipseExtractor(TaskProgressLogger task, WriterBundle bundle) {
-    this(task, bundle, null);
+  public EclipseExtractor(WriterBundle bundle) {
+    this(bundle, null);
   }
   
-  public EclipseExtractor(TaskProgressLogger task, WriterBundle writers, ASMExtractor asmExtractor) {
-    this.task = task;
+  public EclipseExtractor(WriterBundle writers, ASMExtractor asmExtractor) {
     this.writers = writers;
     parser = ASTParser.newParser(AST.JLS4);
     visitor = new ReferenceExtractorVisitor(writers);
@@ -95,6 +93,8 @@ public class EclipseExtractor implements Closeable {
   }
 
   public boolean extractClassFiles(Collection<IClassFile> classFiles) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
     task.start("Extracting " + classFiles.size() + " class files", "class files extracted", 500);
     boolean oneWithSource = false;
     
@@ -199,11 +199,12 @@ public class EclipseExtractor implements Closeable {
   }
   
   public void extractSourceFiles(Map<JavaFile, IFile> sourceFiles) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
     task.start("Extracting " + sourceFiles.size() + " source files", "sources files extracted", 500);
 
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(writers);
     for (Map.Entry<JavaFile, IFile> entry : sourceFiles.entrySet()) {
-      task.progress();
       ICompilationUnit icu = JavaCore.createCompilationUnitFrom(entry.getValue());
 
       parser.setStatementsRecovery(true);
@@ -228,6 +229,8 @@ public class EclipseExtractor implements Closeable {
       } catch (Exception e) {
         logger.log(Level.SEVERE, "Error in extracting " + entry.getKey(), e);
       }
+      
+      task.progress();
     }
     task.finish();
   }

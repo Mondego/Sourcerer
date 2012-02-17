@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.extractor;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.util.Collection;
 import java.util.Map;
@@ -31,6 +31,8 @@ import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.FileWriter;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.UsedJarWriter;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.tools.java.extractor.missing.MissingTypeCollection;
+import edu.uci.ics.sourcerer.tools.java.extractor.missing.MissingTypeIdentifier;
 import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
@@ -45,108 +47,73 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtracted
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaProject;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaRepository;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
-import edu.uci.ics.sourcerer.util.io.Logging;
-import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
+import edu.uci.ics.sourcerer.util.io.logging.Logging;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher 
  *
  */
 public class Extractor {
-  private JavaRepository repo;
-  private ModifiableExtractedJavaRepository extracted;
-  
-  private TaskProgressLogger task;
-  
-  private Extractor() {
-    // Load the input repository
-    repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
-    // Load the output repository
-    extracted = JavaRepositoryFactory.INSTANCE.loadModifiableExtractedJavaRepository(JavaRepositoryFactory.OUTPUT_REPO);
-    
-    task = new TaskProgressLogger();
-  }
-  
-  public static void extractLibrariesWithASM() {
-    Extractor extractor = new Extractor();
-    
-    extractor.task.start("Performing library extraction with ASM");
-    extractor.extractJars(false, true, true);
-    extractor.task.finish();
-  }
-  
-  public static void extractLibrariesWithEclipse() {
-    Extractor extractor = new Extractor();
-    
-    extractor.task.start("Performing library extraction with Eclipse");
-    extractor.extractJars(true, false, true);
-    extractor.task.finish();
-  }
-  
-  public static void extractLibraries() {
-    Extractor extractor = new Extractor();
-    
-    extractor.task.start("Performing library extraction with Eclipse and ASM");
-    extractor.extractJars(true, true, true);
-    extractor.task.finish();
-  }
+  private Extractor() {}
 
-  
-  public static void extractProjectJarsWithASM() {
-    Extractor extractor = new Extractor();
+  public static enum JarType {
+    LIBRARY,
+    PROJECT,
+    MAVEN;
     
-    extractor.task.start("Performing project jar extraction with ASM");
-    extractor.extractJars(false, true, false);
-    extractor.task.finish();
+    @Override
+    public String toString() {
+      return name().toLowerCase();
+    }
+  };
+  
+  public static enum ExtractionMethod {
+    ASM("ASM", true, false),
+    ECLIPSE("Eclipse", false, true),
+    ASM_ECLIPSE("ASM and Eclipse", true, true);
+    
+    private final String text;
+    private final boolean withASM;
+    private final boolean withEclipse;
+    
+    private ExtractionMethod(String text, boolean withASM, boolean withEclipse) {
+      this.text = text;
+      this.withASM = withASM;
+      this.withEclipse = withEclipse;
+    }
+    
+    @Override
+    public String toString() {
+      return text;
+    }
   }
   
-  public static void extractProjectJarsWithEclipse() {
-    Extractor extractor = new Extractor();
+  public static void extractJars(JarType jarType, ExtractionMethod method) {
+    TaskProgressLogger task = TaskProgressLogger.get();
     
-    extractor.task.start("Performing project jar extraction with Eclipse");
-    extractor.extractJars(true, false, false);
-    extractor.task.finish();
-  }
-  
-  public static void extractProjectJars() {
-    Extractor extractor = new Extractor();
+    // Load the input repository
+    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+    // Load the output repository
+    ModifiableExtractedJavaRepository extracted = JavaRepositoryFactory.INSTANCE.loadModifiableExtractedJavaRepository(JavaRepositoryFactory.OUTPUT_REPO);
     
-    extractor.task.start("Performing project jar extraction with Eclipse");
-    extractor.extractJars(true, true, false);
-    extractor.task.finish();
-  }
-  
-  public static void extractProjectsWithEclipse() {
-    Extractor extractor = new Extractor();
+    task.start("Performing " + jarType.toString() + " jar extraction with " + method);
     
-    extractor.task = new TaskProgressLogger();
-    extractor.task.start("Performing project extraction with Eclipse");
-    
-    extractor.task.start("Loading projects");
-    Collection<? extends JavaProject> projects = extractor.repo.getProjects();
-    extractor.task.finish();
-    
-    extractor.extractProjects(projects);
-    
-    extractor.task.finish();
-  }
-  
-  private void extractJars(boolean withEclipse, boolean withASM, boolean lib) {
-    Collection<? extends JarFile> jars = null;
     task.start("Loading jar files");
-    if (lib) {
-      jars = repo.getLibraryJarFiles();
-    } else {
-      jars = repo.getProjectJarFiles();
+    Collection<? extends JarFile> jars = null;
+    switch (jarType) {
+      case LIBRARY: jars = repo.getLibraryJarFiles(); break;
+      case MAVEN:   jars = repo.getMavenJarFiles(); break;
+      case PROJECT: jars = repo.getProjectJarFiles(); break;
     }
     task.finish();
+    
     task.start("Extracting " + jars.size() + " jar files", "jar files extracted", 1);
     
-    if (!(withEclipse || withASM)) {
-      throw new IllegalStateException("Must choose either Eclipse or ASM.");
-    }
-    
-    if (withEclipse && lib) {
+    // Only do this initialization once
+    if (method.withEclipse && jarType == JarType.LIBRARY) {
       task.start("Initializing eclipse project");
       EclipseUtils.initializeLibraryProject(jars);
       task.finish();
@@ -167,7 +134,7 @@ public class Extractor {
       // Set up logging
       Logging.addFileLogger(extractedJar.getExtractionDir().toFile());
 
-      if (withEclipse && !lib) {
+      if (method.withEclipse && jarType != JarType.LIBRARY) {
         task.start("Initializing eclipse project");
         EclipseUtils.initializeJarProject(jars);
         task.finish();
@@ -177,17 +144,17 @@ public class Extractor {
       WriterBundle writers = new WriterBundle(extractedJar.getExtractionDir().toFile());
     
       ASMExtractor asmExtractor = null;
-      if (withASM) {
-        asmExtractor = new ASMExtractor(task, writers);
+      if (method.withASM) {
+        asmExtractor = new ASMExtractor(writers);
       }
       boolean hasSource = false;
-      if (withEclipse) {
+      if (method.withEclipse) {
         task.start("Getting class files");
         Collection<IClassFile> classFiles = EclipseUtils.getClassFiles(jar);
         task.finish();
 
         // Extract
-        try (EclipseExtractor extractor = new EclipseExtractor(task, writers, asmExtractor)) {
+        try (EclipseExtractor extractor = new EclipseExtractor(writers, asmExtractor)) {
           hasSource = extractor.extractClassFiles(classFiles);
         }
       } else {
@@ -207,7 +174,66 @@ public class Extractor {
     task.finish();
   }
   
-  private void extractProjects(Collection<? extends JavaProject> projects) {
+  public static final Argument<Boolean> INCLUDE_PROJECT_JARS = new BooleanArgument("include-project-jars", true, "Should projects jars be added to the classpath?");
+  
+  public static void identifyMissingTypes() {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
+    task.start("Identifying missing types with Eclipse");
+    
+    // Load the input repository
+    task.start("Loading projects");
+    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+    Collection<? extends JavaProject> projects = repo.getProjects();
+    task.finish();
+    
+    MissingTypeIdentifier identifier = MissingTypeIdentifier.create();
+    
+    int projectsMissingTypes = 0;
+    task.start("Identifying missing types in " + projects.size() + " projects", "projects processed", 1);
+    for (JavaProject project : projects) {
+      task.progress("Processing " + project + " (%d of " + projects.size() + ")");
+      
+      task.report("Getting project contents");
+      JavaFileSet files = project.getContent();
+      
+      if (INCLUDE_PROJECT_JARS.getValue()) {
+        task.start("Loading " + files.getJarFiles().size() + " jar files into classpath");
+        EclipseUtils.initializeProject(files.getJarFiles());
+        task.finish();
+      }
+      
+      task.start("Loading " + files.getFilteredJavaFiles().size() + " java files into project");
+      Map<JavaFile, IFile> sourceFiles = EclipseUtils.loadFilesIntoProject(files.getFilteredJavaFiles());
+      task.finish();
+      
+      MissingTypeCollection missingTypes = identifier.identifyMissingTypes(sourceFiles);
+      task.report(missingTypes.getMissingTypeCount() + " types reported missing");
+      if (missingTypes.hasMissingTypes()) {
+        projectsMissingTypes++;
+      }
+    }
+    task.finish();
+    
+    task.report(projectsMissingTypes + " projects missing types");
+    task.finish();
+  }
+  
+  public static void extractProjects() {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
+    task.start("Performing project extraction with Eclipse");
+    
+    // Load the input repository
+    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+    // Load the output repository
+    ModifiableExtractedJavaRepository extracted = JavaRepositoryFactory.INSTANCE.loadModifiableExtractedJavaRepository(JavaRepositoryFactory.OUTPUT_REPO);
+
+    
+    task.start("Loading projects");
+    Collection<? extends JavaProject> projects = repo.getProjects();
+    task.finish();
+    
     task.start("Extracting " + projects.size() + " projects", "projects extracted", 1);
     for (JavaProject project : projects) {
       task.progress("Extracting " + project + " (%d of " + projects.size() + ")");
@@ -226,10 +252,12 @@ public class Extractor {
       
       task.report("Getting project contents");
       JavaFileSet files = project.getContent();
-      
-      task.start("Loading " + files.getJarFiles().size() + " jar files into classpath");
-      EclipseUtils.initializeProject(files.getJarFiles());
-      task.finish();
+     
+      if (INCLUDE_PROJECT_JARS.getValue()) {
+        task.start("Loading " + files.getJarFiles().size() + " jar files into classpath");
+        EclipseUtils.initializeProject(files.getJarFiles());
+        task.finish();
+      }
       
       task.start("Loading " + files.getFilteredJavaFiles().size() + " java files into project");
       Map<JavaFile, IFile> sourceFiles = EclipseUtils.loadFilesIntoProject(files.getFilteredJavaFiles());
@@ -249,7 +277,7 @@ public class Extractor {
       }
 
       // Extract
-      try (EclipseExtractor extractor = new EclipseExtractor(task, bundle)) {
+      try (EclipseExtractor extractor = new EclipseExtractor(bundle)) {
         extractor.extractSourceFiles(sourceFiles);
       }
       
@@ -261,6 +289,8 @@ public class Extractor {
       // End the error logging
       Logging.removeFileLogger(extractedProject.getExtractionDir().toFile());
     }
+    task.finish();
+    
     task.finish();
   }
 }

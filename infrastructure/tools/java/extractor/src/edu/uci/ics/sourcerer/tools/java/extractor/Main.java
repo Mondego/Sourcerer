@@ -20,6 +20,8 @@ package edu.uci.ics.sourcerer.tools.java.extractor;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 
+import edu.uci.ics.sourcerer.tools.java.extractor.Extractor.ExtractionMethod;
+import edu.uci.ics.sourcerer.tools.java.extractor.Extractor.JarType;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.CommentWriterImpl;
@@ -32,7 +34,7 @@ import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.ProblemWriterImpl;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.RelationWriterImpl;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.UsedJarWriterImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
-import edu.uci.ics.sourcerer.util.io.Logging;
+import edu.uci.ics.sourcerer.util.io.logging.Logging;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
@@ -96,51 +98,58 @@ public class Main implements IApplication {
   public static final Command EXTRACT_LIBRARIES_ECLIPSE =
     new ExtractorCommand("extract-libraries-eclipse", "Extract the libraries using Eclipse.") {
       protected void action() {
-        Extractor.extractLibrariesWithEclipse();
+        Extractor.extractJars(JarType.LIBRARY, ExtractionMethod.ECLIPSE);
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
     
   public static final Command EXTRACT_LIBRARIES_ASM =
     new ExtractorCommand("extract-libraries-asm", "Extract the libraries using Asm.") {
       protected void action() {
-        Extractor.extractLibrariesWithASM();
+        Extractor.extractJars(JarType.LIBRARY, ExtractionMethod.ASM);
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
     
   public static final Command EXTRACT_LIBRARIES =
     new ExtractorCommand("extract-libraries", "Extract the libraries using Eclipse and Asm.") {
       protected void action() {
-        Extractor.extractLibraries();
+        Extractor.extractJars(JarType.LIBRARY, ExtractionMethod.ASM_ECLIPSE);
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
   
   public static final Command EXTRACT_JARS_ECLIPSE =
     new ExtractorCommand("extract-jars-eclipse", "Extract the jars using Eclipse.") {
       protected void action() {
-        Extractor.extractProjectJarsWithEclipse();
+        Extractor.extractJars(JarType.PROJECT, ExtractionMethod.ECLIPSE);
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
     
   public static final Command EXTRACT_JARS_ASM =
     new ExtractorCommand("extract-jars-asm", "Extract the jars using Asm.") {
       protected void action() {
-        Extractor.extractProjectJarsWithASM();
+        Extractor.extractJars(JarType.PROJECT, ExtractionMethod.ASM);
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
   
   public static final Command EXTRACT_JARS =
     new ExtractorCommand("extract-jars", "Extract the jars using Eclipse and Asm.") {
       protected void action() {
-        Extractor.extractProjectJars();
+        Extractor.extractJars(JarType.PROJECT, ExtractionMethod.ASM_ECLIPSE);
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
     
   public static final Command EXTRACT_PROJECTS = 
     new ExtractorCommand("extract-projects", "Extract the projects.") {
       protected void action() {
-        Extractor.extractProjectsWithEclipse();
+        Extractor.extractProjects();
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO, Extractor.INCLUDE_PROJECT_JARS);
+    
+  public static final Command IDENTIFY_MISSING_TYPES =
+    new Command("identify-missing-types", "Identified the missing types") {
+      protected void action() {
+        Extractor.identifyMissingTypes();
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, Extractor.INCLUDE_PROJECT_JARS);
   		  
   @Override
   public Object start(IApplicationContext context) throws Exception {

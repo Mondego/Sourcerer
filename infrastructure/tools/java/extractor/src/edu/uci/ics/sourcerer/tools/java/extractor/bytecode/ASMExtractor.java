@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.extractor.bytecode;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -53,13 +53,12 @@ import edu.uci.ics.sourcerer.tools.java.model.types.Location;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
-import edu.uci.ics.sourcerer.util.io.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ASMExtractor implements Closeable {
-  private TaskProgressLogger task;
   private WriterBundle writers;
   
   private FileWriter fileWriter;
@@ -76,8 +75,7 @@ public class ASMExtractor implements Closeable {
   private FqnStack fqnStack;
   private Location location;
   
-  public ASMExtractor(TaskProgressLogger task, WriterBundle writers) {
-    this.task = task;
+  public ASMExtractor(WriterBundle writers) {
     this.writers = writers;
     this.fileWriter = writers.getFileWriter();
     this.entityWriter = writers.getEntityWriter();
@@ -94,6 +92,7 @@ public class ASMExtractor implements Closeable {
   
   public void extractJar(java.io.File file) {
     try (JarFile jar = new JarFile(file)) {
+      TaskProgressLogger task = TaskProgressLogger.get();
       task.start("Extracting class files", "class files extracted", 500);
       Enumeration<JarEntry> en = jar.entries();
       while (en.hasMoreElements()) {

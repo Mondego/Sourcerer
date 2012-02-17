@@ -24,6 +24,8 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
@@ -68,12 +70,14 @@ public class GeneralStats {
       Averager<Integer> jarsPerFqn = Averager.create();
       int fqnFragments = 0;
       int totalFqns = 0;
+      Set<VersionedFqnNode> packages = new HashSet<>();
       for (VersionedFqnNode fqn : jars.getRoot().getPostOrderIterable()) {
         fqnFragments++;
         int jarCount = fqn.getVersions().getJars().size();
         if (jarCount > 0) {
           jarsPerFqn.addValue(jarCount);
           totalFqns++;
+          packages.add(fqn.getParent());
         }
       }
       
@@ -82,6 +86,7 @@ public class GeneralStats {
       writer.write((int) fqnsPerJar.getSum() + " total FQNs");
       writer.write(fqnFragments + " name fragments");
       writer.write(totalFqns+ " unique FQNs");
+      writer.write(packages.size() + " packages");
       
       writer.writeAndIndent("FQNs per jar:");
       writer.write("Minimum of " + fqnsPerJar.getMin() + " FQNs in a jar");
