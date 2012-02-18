@@ -19,6 +19,8 @@ package edu.uci.ics.sourcerer.tools.java.extractor.missing;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -29,7 +31,20 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
+import edu.uci.ics.sourcerer.tools.java.extractor.Main;
+import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.MissingTypeWriter;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFileSet;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JavaProject;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepository;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
+import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProjectProperties;
+import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaProject;
+import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaRepository;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -41,11 +56,69 @@ public class MissingTypeIdentifier {
     parser = ASTParser.newParser(AST.JLS4);
   }
   
-  public static MissingTypeIdentifier create() {
-    return new MissingTypeIdentifier();
+  public static void identifyExternalTypes() {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
+    task.start("Identifying external types with Eclipse");
+    
+    // Load the input repository
+    task.start("Loading projects");
+    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+    Collection<? extends JavaProject> projects = repo.getProjects();
+    task.finish();
+    
+    // Load the output repository
+    ModifiableExtractedJavaRepository extracted = JavaRepositoryFactory.INSTANCE.loadModifiableExtractedJavaRepository(JavaRepositoryFactory.OUTPUT_REPO);
+    
+    MissingTypeIdentifier identifier = new MissingTypeIdentifier();
+    
+    task.start("Identifying external types in " + projects.size() + " projects", "projects processed", 1);
+    for (JavaProject project : projects) {
+      task.progress("Processing " + project + " (%d of " + projects.size() + ")");
+      ModifiableExtractedJavaProject extractedProject = extracted.getMatchingProject(project);
+      if (Boolean.TRUE.equals(extractedProject.getProperties().EXTRACTED.getValue())) {
+        if (Main.FORCE_REDO.getValue()) {
+          extractedProject.reset(project);
+        } else {
+          task.report("Project already processed");
+          continue;
+        }
+      }
+      
+      task.start("Getting project contents");
+      JavaFileSet files = project.getContent();
+      task.finish();
+      
+      EclipseUtils.initializeProject(Collections.<JarFile>emptyList());
+      
+      task.start("Loading " + files.getFilteredJavaFiles().size() + " java files into project");
+      Map<JavaFile, IFile> sourceFiles = EclipseUtils.loadFilesIntoProject(files.getFilteredJavaFiles());
+      task.finish();
+      
+      MissingTypeCollection missingTypes = identifier.identifyMissingTypes(sourceFiles);
+      
+      // Write the missing types to disk
+      try (WriterBundle bundle = new WriterBundle(extractedProject.getExtractionDir().toFile())) {
+        MissingTypeWriter writer = bundle.getMissingTypeWriter();
+        for (MissingType type : missingTypes.getMissingTypes()) {
+          writer.writeMissingType(type.getFqn());
+        }
+      }
+      
+      // Write the properties files
+      ExtractedJavaProjectProperties properties = extractedProject.getProperties();
+      properties.EXTRACTED.setValue(true);
+      properties.save();
+      
+      task.report(missingTypes.getMissingTypeCount() + " external types identified");
+      
+    }
+    task.finish();
+    
+    task.finish();
   }
   
-  public MissingTypeCollection identifyMissingTypes(Map<JavaFile, IFile> sourceFiles) {
+  private MissingTypeCollection identifyMissingTypes(Map<JavaFile, IFile> sourceFiles) {
     MissingTypeVisitor visitor = MissingTypeVisitor.create();
     for (Map.Entry<JavaFile, IFile> entry : sourceFiles.entrySet()) {
       ICompilationUnit icu = JavaCore.createCompilationUnitFrom(entry.getValue());

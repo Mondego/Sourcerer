@@ -65,6 +65,48 @@ public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> implements C
     return newChild;
   }
   
+  protected final T lookupChild(String name) {
+    for (T child = firstChild; child != null; child = child.sibling) {
+      int cmp = child.name.compareTo(name);
+      if (cmp == 0) {
+        return child;
+      } else if (cmp > 0) {
+        return null;
+      }
+    }
+    return null;
+  }
+  
+  @SuppressWarnings("unchecked")
+  public final T lookup(String fqn, char sep) {
+    T fragment = (T) this;
+    int start = 0;
+    int sepIdx = fqn.indexOf(sep);
+    while (sepIdx != -1 && fragment != null) {
+      fragment = fragment.getChild(fqn.substring(start, sepIdx));
+      start = sepIdx + 1;
+      sepIdx = fqn.indexOf(sep, start);
+    }
+    if (fragment == null) {
+      return null;
+    } else { 
+      return fragment.getChild(fqn.substring(start));
+    }
+  }
+  
+  @SuppressWarnings("unchecked")
+  public final T lookup(AbstractFqnNode<?> fqn) {
+    Deque<String> stack = new LinkedList<>();
+    for (AbstractFqnNode<?> fragment = fqn; fragment != null; fragment = fragment.parent) {
+      stack.push(fragment.name);
+    } 
+    T fragment = (T) this;
+    while (!stack.isEmpty() && fragment != null) {
+      fragment = fragment.lookupChild(stack.pop());
+    }
+    return fragment;
+  }
+  
   @SuppressWarnings("unchecked")
   public final T getChild(String fqn, char sep) {
     T fragment = (T) this;

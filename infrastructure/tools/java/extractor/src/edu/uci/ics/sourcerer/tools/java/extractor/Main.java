@@ -33,6 +33,7 @@ import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.MissingTypeWriterI
 import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.ProblemWriterImpl;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.RelationWriterImpl;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.internal.UsedJarWriterImpl;
+import edu.uci.ics.sourcerer.tools.java.extractor.missing.MissingTypeIdentifier;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.logging.Logging;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
@@ -144,12 +145,13 @@ public class Main implements IApplication {
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO, Extractor.INCLUDE_PROJECT_JARS);
     
-  public static final Command IDENTIFY_MISSING_TYPES =
-    new Command("identify-missing-types", "Identified the missing types") {
+  public static final Command IDENTIFY_EXTERNAL_TYPES =
+    new Command("identify-external-types", "Identified the external types") {
       protected void action() {
-        Extractor.identifyMissingTypes();
+        WriterBundle.MISSING_TYPE_WRITER.setValue(MissingTypeWriterImpl.class);
+        MissingTypeIdentifier.identifyExternalTypes();
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, Extractor.INCLUDE_PROJECT_JARS);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
   		  
   @Override
   public Object start(IApplicationContext context) throws Exception {

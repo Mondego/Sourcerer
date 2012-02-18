@@ -38,7 +38,6 @@ public final class WriterFactory {
       Constructor<?> constructor = klass.getConstructor(File.class);
       return (T)constructor.newInstance(output);
     } catch (Exception e) {
-      logger.log(Level.SEVERE, "Unable to create writer: " + arg.getName(), e);
       Class<?> klass = arg.getDefaultValue();
       if (klass != null) {
         try {

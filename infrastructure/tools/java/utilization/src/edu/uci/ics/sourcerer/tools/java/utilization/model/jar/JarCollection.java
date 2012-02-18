@@ -47,7 +47,7 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarCollection implements Iterable<Jar> {
-  public static Argument<File> JAR_COLLECTION_CACHE = new RelativeFileArgument("jar-collection-cache", "jar-collection-cache", Arguments.CACHE, "Cache for jar collection.").permit();
+  public static final Argument<File> JAR_COLLECTION_CACHE = new RelativeFileArgument("jar-collection-cache", "jar-collection-cache", Arguments.CACHE, "Cache for jar collection.").permit();
   
   private final Map<String, Jar> jars;
   private final VersionedFqnNode rootFragment;

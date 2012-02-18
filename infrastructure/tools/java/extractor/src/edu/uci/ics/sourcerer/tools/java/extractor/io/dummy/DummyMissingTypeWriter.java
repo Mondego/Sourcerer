@@ -25,6 +25,8 @@ import edu.uci.ics.sourcerer.tools.java.model.extracted.MissingTypeEX;
  */
 public class DummyMissingTypeWriter implements MissingTypeWriter {
   @Override
+  public void writeMissingType(String fqn) {}
+  @Override
   public void writeMissingType(MissingTypeEX type) {}
 
   @Override

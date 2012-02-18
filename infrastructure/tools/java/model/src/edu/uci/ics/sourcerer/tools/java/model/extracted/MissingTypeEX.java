@@ -29,14 +29,15 @@ public final class MissingTypeEX implements SimpleSerializable {
   
   private String fqn;
   
-  protected MissingTypeEX() {}
+  public MissingTypeEX() {}
   
   public MissingTypeEX(String fqn) {
     this.fqn = fqn;
   }
   
-  public void update(String fqn) {
+  public MissingTypeEX update(String fqn) {
     this.fqn = fqn;
+    return this;
   }
   
   public String getFqn() {

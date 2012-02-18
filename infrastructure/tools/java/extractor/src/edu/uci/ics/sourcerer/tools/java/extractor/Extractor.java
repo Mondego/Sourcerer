@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.tools.java.extractor;
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
@@ -176,49 +177,6 @@ public class Extractor {
   
   public static final Argument<Boolean> INCLUDE_PROJECT_JARS = new BooleanArgument("include-project-jars", true, "Should projects jars be added to the classpath?");
   
-  public static void identifyMissingTypes() {
-    TaskProgressLogger task = TaskProgressLogger.get();
-    
-    task.start("Identifying missing types with Eclipse");
-    
-    // Load the input repository
-    task.start("Loading projects");
-    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
-    Collection<? extends JavaProject> projects = repo.getProjects();
-    task.finish();
-    
-    MissingTypeIdentifier identifier = MissingTypeIdentifier.create();
-    
-    int projectsMissingTypes = 0;
-    task.start("Identifying missing types in " + projects.size() + " projects", "projects processed", 1);
-    for (JavaProject project : projects) {
-      task.progress("Processing " + project + " (%d of " + projects.size() + ")");
-      
-      task.report("Getting project contents");
-      JavaFileSet files = project.getContent();
-      
-      if (INCLUDE_PROJECT_JARS.getValue()) {
-        task.start("Loading " + files.getJarFiles().size() + " jar files into classpath");
-        EclipseUtils.initializeProject(files.getJarFiles());
-        task.finish();
-      }
-      
-      task.start("Loading " + files.getFilteredJavaFiles().size() + " java files into project");
-      Map<JavaFile, IFile> sourceFiles = EclipseUtils.loadFilesIntoProject(files.getFilteredJavaFiles());
-      task.finish();
-      
-      MissingTypeCollection missingTypes = identifier.identifyMissingTypes(sourceFiles);
-      task.report(missingTypes.getMissingTypeCount() + " types reported missing");
-      if (missingTypes.hasMissingTypes()) {
-        projectsMissingTypes++;
-      }
-    }
-    task.finish();
-    
-    task.report(projectsMissingTypes + " projects missing types");
-    task.finish();
-  }
-  
   public static void extractProjects() {
     TaskProgressLogger task = TaskProgressLogger.get();
     
@@ -242,7 +200,7 @@ public class Extractor {
         if (Main.FORCE_REDO.getValue()) {
           extractedProject.reset(project);
         } else {
-          logger.info("  Project already extracted");
+          task.report("Project already extracted");
           continue;
         }
       }
@@ -257,6 +215,8 @@ public class Extractor {
         task.start("Loading " + files.getJarFiles().size() + " jar files into classpath");
         EclipseUtils.initializeProject(files.getJarFiles());
         task.finish();
+      } else {
+        EclipseUtils.initializeProject(Collections.<JarFile>emptyList());
       }
       
       task.start("Loading " + files.getFilteredJavaFiles().size() + " java files into project");

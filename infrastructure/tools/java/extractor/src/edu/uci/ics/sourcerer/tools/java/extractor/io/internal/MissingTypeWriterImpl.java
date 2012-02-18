@@ -30,6 +30,12 @@ public class MissingTypeWriterImpl extends AbstractExtractorWriter<MissingTypeEX
     super(new File(output, MissingTypeEX.MISSING_TYPE_FILE.getValue()), MissingTypeEX.class);
   }
 
+  private MissingTypeEX trans = new MissingTypeEX();
+  @Override
+  public void writeMissingType(String fqn) {
+    write(trans.update(fqn));
+  }
+  
   @Override
   public void writeMissingType(MissingTypeEX type) {
     write(type);

@@ -22,6 +22,7 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +34,8 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
@@ -300,5 +303,59 @@ public class FileUtils {
     } finally {
       IOUtils.close(is);
     }
+  }
+  
+  public static Iterable<String> getClassFilesFromJar(final File file) {
+    return new Iterable<String>() {
+      @Override
+      public Iterator<String> iterator() {
+        try {
+          return new Iterator<String>() {
+            ZipInputStream zis = new ZipInputStream(new FileInputStream(file));
+            String next = progress();
+            
+            private String progress() {
+              try {
+                String progress = null;
+                for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
+                  if (entry.getName().endsWith(".class")) {
+                    progress = entry.getName();
+                    progress = progress.substring(0, progress.lastIndexOf('.'));
+                    return progress;
+                  }
+                }
+              } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error reading zip file", e);
+              }
+              IOUtils.close(zis);
+              return null;
+            }
+            
+            @Override
+            public boolean hasNext() {
+              return next != null;
+            }
+
+            @Override
+            public String next() {
+              if (next == null) {
+                throw new NoSuchElementException();
+              }
+              String result = next;
+              next = progress();
+              return result;
+            }
+
+            @Override
+            public void remove() {
+              throw new UnsupportedOperationException();
+            }
+          };
+        } catch (FileNotFoundException e) {
+          logger.log(Level.SEVERE, "Unable to find file", e);
+          return Collections.emptyIterator();
+        }
+      }
+    };
   }
 }

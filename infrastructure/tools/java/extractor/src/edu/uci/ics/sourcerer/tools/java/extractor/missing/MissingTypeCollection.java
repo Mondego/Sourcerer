@@ -118,4 +118,8 @@ public class MissingTypeCollection {
   public int getMissingTypeCount() {
     return missingTypes.size();
   }
+  
+  public Iterable<MissingType> getMissingTypes() {
+    return missingTypes.values();
+  }
 }

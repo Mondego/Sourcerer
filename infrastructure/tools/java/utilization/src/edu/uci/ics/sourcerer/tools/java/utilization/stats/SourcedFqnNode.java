@@ -15,51 +15,49 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.extractor.missing;
+package edu.uci.ics.sourcerer.tools.java.utilization.stats;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.Set;
+
+import edu.uci.ics.sourcerer.tools.java.utilization.model.fqn.AbstractFqnNode;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class MissingType {
-  private final String fqn;
-  private final MissingPackage pkg;
-  private int missingCount;
-  private Set<String> missingFields;
-  private int missingStaticOnDemandCount;
-  
-  private MissingType(String fqn, MissingPackage pkg) {
-    this.fqn = fqn;
-    this.pkg = pkg;
-    missingCount = 0;
-    missingStaticOnDemandCount = 0;
-    missingFields = Collections.emptySet();
-    pkg.addMemberType(this);
+public class SourcedFqnNode extends AbstractFqnNode<SourcedFqnNode> {
+  public static enum Source {
+    PROJECT,
+    MAVEN,
+    MISSING;
   }
   
-  static MissingType create(String fqn, MissingPackage pkg) {
-    return new MissingType(fqn, pkg);
+  private Set<Source> sources;
+  
+  protected SourcedFqnNode(String name, SourcedFqnNode parent) {
+    super(name, parent);
+    sources = Collections.emptySet();
   }
   
-  void reportMissing() {
-    missingCount++;
+  static SourcedFqnNode createRoot() {
+    return new SourcedFqnNode(null, null);
   }
-
-  void reportMissingField(String name) {
-    if (missingFields.isEmpty()) {
-      missingFields = new HashSet<>();
+  
+  @Override
+  protected SourcedFqnNode create(String name, AbstractFqnNode<?> parent) {
+    return new SourcedFqnNode(name, (SourcedFqnNode) parent);
+  }
+  
+  void addSource(Source source) {
+    if (sources.isEmpty()) {
+      sources = EnumSet.of(source);
+    } else {
+      sources.add(source);
     }
-    missingFields.add(name);
   }
   
-  void reportMissingStaticOnDemand() {
-    missingStaticOnDemandCount++;
-  }
-  
-  public String getFqn() {
-    return fqn;
+  public Set<Source> getSources() {
+    return sources;
   }
 }

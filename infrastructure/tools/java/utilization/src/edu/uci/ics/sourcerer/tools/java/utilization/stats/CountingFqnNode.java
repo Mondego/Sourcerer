@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.popularity;
+package edu.uci.ics.sourcerer.tools.java.utilization.stats;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,10 +32,11 @@ public class CountingFqnNode extends AbstractFqnNode<CountingFqnNode> {
 
   protected CountingFqnNode(String name, CountingFqnNode parent) {
     super(name, parent);
+    projects = Collections.emptySet();
     count = 0;
   }
 
-  static public CountingFqnNode createRoot() {
+  static CountingFqnNode createRoot() {
     return new CountingFqnNode(null, null);
   }
   
@@ -45,7 +47,7 @@ public class CountingFqnNode extends AbstractFqnNode<CountingFqnNode> {
   
   void add(String fqn, String project) {
     CountingFqnNode node = getChild(fqn, '.');
-    if (node.projects == null) {
+    if (node.projects.isEmpty()) {
       node.projects = new HashSet<>();
     }
     node.projects.add(project);
@@ -57,10 +59,16 @@ public class CountingFqnNode extends AbstractFqnNode<CountingFqnNode> {
   }
   
   public int getProjectCount() {
-    if (projects == null) {
-      return 0;
+    return projects.size();
+  }
+  
+  @Override
+  public int compareTo(CountingFqnNode other) {
+    int cmp = Integer.compare(projects.size(), other.projects.size());
+    if (cmp == 0) {
+      return super.compareTo(other);
     } else {
-      return projects.size();
+      return cmp;
     }
   }
 }

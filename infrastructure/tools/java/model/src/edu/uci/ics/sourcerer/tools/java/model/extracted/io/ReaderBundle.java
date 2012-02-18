@@ -30,6 +30,7 @@ import edu.uci.ics.sourcerer.tools.java.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.FileEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.ImportEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.LocalVariableEX;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.MissingTypeEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.UsedJarEX;
@@ -89,6 +90,12 @@ public class ReaderBundle {
     @Override
     protected Collection<UsedJarEX> create() {
       return ReaderBundle.this.get(UsedJarEX.class, new File(input, UsedJarEX.USED_JAR_FILE.getValue()));
+    }
+  };
+  private CachedReference<Collection<MissingTypeEX>> missingTypes = new CachedReference<Collection<MissingTypeEX>>() {
+    @Override
+    protected Collection<MissingTypeEX> create() {
+      return ReaderBundle.this.get(MissingTypeEX.class, new File(input, MissingTypeEX.MISSING_TYPE_FILE.getValue()));
     }
   };
   
@@ -214,6 +221,18 @@ public class ReaderBundle {
     Iterable<UsedJarEX> result = usedJars.getIfCached();
     if (result == null) {
       result = getTransient(UsedJarEX.class, new File(input, UsedJarEX.USED_JAR_FILE.getValue()));
+    }
+    return result;
+  }
+  
+  public Collection<MissingTypeEX> getMissingTypes() {
+    return missingTypes.get();
+  }
+  
+  public Iterable<MissingTypeEX> getTransientMissingTypes() {
+    Iterable<MissingTypeEX> result = missingTypes.getIfCached();
+    if (result == null) {
+      result = getTransient(MissingTypeEX.class, new File(input, MissingTypeEX.MISSING_TYPE_FILE.getValue()));
     }
     return result;
   }

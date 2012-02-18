@@ -24,11 +24,12 @@ import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ExemplarIdentifie
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
-import edu.uci.ics.sourcerer.tools.java.utilization.popularity.ImportPopularityCalculator;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.ClusterStats;
+import edu.uci.ics.sourcerer.tools.java.utilization.stats.CoverageCalculator;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.DecomposeJars;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.GeneralStats;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.JarStats;
+import edu.uci.ics.sourcerer.tools.java.utilization.stats.PopularityCalculator;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
@@ -161,9 +162,16 @@ public class Main {
   public static final Command CALCULATE_IMPORT_POPULARITY = new Command("calculate-import-popularity", "Calculates the popularity of FQNs based on import statements.") {
     @Override
     protected void action() {
-      ImportPopularityCalculator.calculateImportPopularity();
+      PopularityCalculator.calculateImportPopularity();
     }
   }.setProperties(JavaRepositoryFactory.INPUT_REPO);
+  
+  public static final Command CALCULATE_JAR_COVERAGE = new Command("calculate-jar-coverage", "Calculates the coverage of missing types by the jar collection.") {
+    @Override
+    protected void action() {
+      CoverageCalculator.calculateJarCoverage();
+    }
+  }.setProperties(JavaRepositoryFactory.INPUT_REPO, CoverageCalculator.JAR_REPO);  
   
   public static void main(String[] args) {
     Command.execute(args, Main.class);
