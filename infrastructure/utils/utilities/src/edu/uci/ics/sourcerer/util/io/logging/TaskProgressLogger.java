@@ -207,7 +207,7 @@ public class TaskProgressLogger {
     
     public void activate() {
       while (tasks.size() > stackSize) {
-        tasks.pop();
+        finish();
       }
     }
   }

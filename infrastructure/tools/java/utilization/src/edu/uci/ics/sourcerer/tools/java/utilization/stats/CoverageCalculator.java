@@ -17,7 +17,16 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.stats;
 
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
+import java.util.Comparator;
+import java.util.NoSuchElementException;
+import java.util.TreeSet;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.java.model.extracted.MissingTypeEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
@@ -30,8 +39,12 @@ import edu.uci.ics.sourcerer.tools.java.utilization.stats.SourcedFqnNode.Source;
 import edu.uci.ics.sourcerer.util.Counter;
 import edu.uci.ics.sourcerer.util.CounterSet;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
+import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
 import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.RelativeFileArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
@@ -39,6 +52,8 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  */
 public class CoverageCalculator {
   public static final Argument<File> JAR_REPO = new FileArgument("jar-repo", "Jar repo");
+  public static final Argument<File> MAVEN_MISSING_TYPES_LISTING = new RelativeFileArgument("maven-missing-types-listing", "missing-missing-types.txt", Arguments.OUTPUT, "File containing the list of missing types that can't be found in maven.");
+  public static final Argument<File> SOURCED_CACHE = new RelativeFileArgument("sourced-cache", "sources-cache.txt", Arguments.CACHE, "Cache for sources prefix tree.");
   
   public static void calculateJarCoverage() {
     TaskProgressLogger task = TaskProgressLogger.get();
@@ -50,24 +65,48 @@ public class CoverageCalculator {
     
     task.start("Populating the prefix tree");
     SourcedFqnNode root = SourcedFqnNode.createRoot();
-    
-    task.start("Processing maven jars", "jars processed", 500);
-    for (JarFile jar : jarRepo.getMavenJarFiles()) {
-      for (String fqn : FileUtils.getClassFilesFromJar(jar.getFile().toFile())) {
-        root.getChild(fqn, '.').addSource(Source.MAVEN);
+
+    boolean loaded = false;
+    if (SOURCED_CACHE.getValue().exists()) {
+      task.start("Loading cache");
+      try (BufferedReader reader = IOUtils.makeBufferedReader(SOURCED_CACHE.getValue())) {
+        root.createLoader().load(reader);
+        loaded = true;
+      } catch (IOException | NoSuchElementException e) {
+        logger.log(Level.SEVERE, "Error loading cache", e);
+        root = SourcedFqnNode.createRoot();
       }
-      task.progress();
+      task.finish();
     }
-    task.finish();
-    
-    task.start("Processing project jars", "jars processed", 500);
-    for (JarFile jar : jarRepo.getProjectJarFiles()) {
-      for (String fqn : FileUtils.getClassFilesFromJar(jar.getFile().toFile())) {
-        root.getChild(fqn, '.').addSource(Source.PROJECT);
+    if (!loaded) {
+      task.start("Processing maven jars", "jars processed", 500);
+      for (JarFile jar : jarRepo.getMavenJarFiles()) {
+        for (String fqn : FileUtils.getClassFilesFromJar(jar.getFile().toFile())) {
+          root.getChild(fqn, '/').addSource(Source.MAVEN);
+        }
+        task.progress();
       }
-      task.progress();
-    }
-    task.finish();
+      task.finish();
+    
+      task.start("Processing project jars", "jars processed", 500);
+      for (JarFile jar : jarRepo.getProjectJarFiles()) {
+        for (String fqn : FileUtils.getClassFilesFromJar(jar.getFile().toFile())) {
+          root.getChild(fqn, '/').addSource(Source.PROJECT);
+        }
+        task.progress();
+      }
+      task.finish();
+      
+      // Save the prefix tree
+      task.start("Saving prefix tree cache");
+      try (BufferedWriter writer = IOUtils.makeBufferedWriter(FileUtils.ensureWriteable(SOURCED_CACHE.getValue()))) {
+        root.createSaver().save(writer);
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Error writing log", e);
+        FileUtils.delete(SOURCED_CACHE.getValue());
+      }
+      task.finish();
+    }    
     
     // Load the extracted repo with the missing types
     ExtractedJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(JavaRepositoryFactory.INPUT_REPO);
@@ -85,14 +124,55 @@ public class CoverageCalculator {
     task.finish();
     
     task.start("Evaluating FQN coverage");
+    TreeSet<SourcedFqnNode> sortedMissing = new TreeSet<>(new Comparator<SourcedFqnNode>() {
+      @Override
+      public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+        int cmp = Integer.compare(o1.getCount(Source.MISSING), o2.getCount(Source.MISSING));
+        if (cmp == 0) {
+          return o1.compareTo(o2);
+        } else {
+          return cmp;
+        }
+      }
+    });
     CounterSet<String> counters = new CounterSet<>();
+    CounterSet<String> filteredCounters = new CounterSet<>();
     for (SourcedFqnNode fqn : root.getPostOrderIterable()) {
       counters.increment(fqn.getSources().toString());
+      // Add to the filtered counters only if it occurs in missing in more than one project
+      if (fqn.getCount(Source.MISSING) > 1) {
+        filteredCounters.increment(fqn.getSources().toString());
+      }
+      if (fqn.getCount(Source.MAVEN) == 0 && fqn.getCount(Source.MISSING) >= 1) {
+        sortedMissing.add(fqn);
+      }
     }
     task.finish();
     
+    task.start("Reporting basic coverage");
     for (Counter<String> counter : counters.getCounters()) {
       task.report(counter.getObject() + " " + counter.getCount());
     }
+    task.finish();
+    
+    task.start("Reporting filtered coverage");
+    for (Counter<String> counter : filteredCounters.getCounters()) {
+      task.report(counter.getObject() + " " + counter.getCount());
+    }
+    task.finish();
+    
+    task.start("Logging missing missing types listing");
+    
+    
+    try (LogFileWriter writer = IOUtils.createLogFileWriter(MAVEN_MISSING_TYPES_LISTING)) {
+      for (SourcedFqnNode fqn : sortedMissing.descendingSet()) {
+        writer.write(fqn.getCount(Source.MISSING) + "\t" + fqn.getFqn());
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error writing file", e);
+    }
+    task.finish();
+    
+    task.finish();
   }
 }

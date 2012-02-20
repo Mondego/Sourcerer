@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.tools.java.utilization.model.jar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import edu.uci.ics.sourcerer.util.MutableSingletonMap;
 
@@ -65,5 +66,9 @@ public class VersionMap {
   
   public JarSet getJars() {
     return jars;
+  }
+  
+  public Set<Map.Entry<Fingerprint, JarSet>> getVersions() {
+    return versions.entrySet();
   }
 }

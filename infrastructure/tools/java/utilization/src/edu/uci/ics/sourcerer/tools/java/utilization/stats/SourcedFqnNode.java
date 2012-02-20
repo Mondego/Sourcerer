@@ -17,9 +17,13 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.stats;
 
-import java.util.Collections;
-import java.util.EnumSet;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.util.Scanner;
 import java.util.Set;
+
+import com.google.common.collect.EnumMultiset;
+import com.google.common.collect.Multiset;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.fqn.AbstractFqnNode;
 
@@ -33,11 +37,11 @@ public class SourcedFqnNode extends AbstractFqnNode<SourcedFqnNode> {
     MISSING;
   }
   
-  private Set<Source> sources;
+  private Multiset<Source> sources;
   
   protected SourcedFqnNode(String name, SourcedFqnNode parent) {
     super(name, parent);
-    sources = Collections.emptySet();
+    sources = EnumMultiset.create(Source.class);
   }
   
   static SourcedFqnNode createRoot() {
@@ -50,14 +54,37 @@ public class SourcedFqnNode extends AbstractFqnNode<SourcedFqnNode> {
   }
   
   void addSource(Source source) {
-    if (sources.isEmpty()) {
-      sources = EnumSet.of(source);
-    } else {
-      sources.add(source);
-    }
+    sources.add(source);
   }
   
   public Set<Source> getSources() {
-    return sources;
+    return sources.elementSet();
+  }
+  
+  public int getCount(Source source) {
+    return sources.count(source);
+  }
+  
+  protected Saver createSaver() {
+    return new Saver() {
+      @Override
+      protected void save(BufferedWriter writer, SourcedFqnNode node) throws IOException {
+        for (Source source : Source.values()) {
+          writer.write(" ");
+          writer.write(Integer.toString(node.sources.count(source)));
+        }
+      }
+    };
+  }
+  
+  protected Loader createLoader() {
+    return new Loader() {
+      @Override
+      protected void load(Scanner scanner, SourcedFqnNode node) {
+        for (Source source : Source.values()) {
+          node.sources.setCount(source, scanner.nextInt());
+        }
+      }
+    };
   }
 }

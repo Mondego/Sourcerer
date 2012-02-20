@@ -16,11 +16,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.model.fqn;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Scanner;
+
+import edu.uci.ics.sourcerer.util.io.InvalidFileFormatException;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -229,6 +240,49 @@ public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> implements C
         };
       }};
   }
+  
+  public Iterable<T> getPreOrderIterable() {
+    return new Iterable<T>() {
+      @SuppressWarnings("unchecked")
+      @Override
+      public Iterator<T> iterator() {
+        return new Iterator<T>() {
+          T node = (T) AbstractFqnNode.this;
+
+          @Override
+          public boolean hasNext() {
+            return node != null;
+          }
+
+          @Override
+          public T next() {
+            if (node == null) {
+              throw new NoSuchElementException();
+            } else {
+              T next = node;
+              if (node.firstChild != null) {
+                node = node.firstChild;
+              } else {
+                for (; node != null; node = node.parent) {
+                  if (node.sibling != null) {
+                    node = node.sibling;
+                    break;
+                  }
+                }
+              }
+              return next;
+            }
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
+      }
+    };
+  }
+  
   public Iterable<T> getPostOrderIterable() {
     return new Iterable<T>() {
       @SuppressWarnings("unchecked")
@@ -251,9 +305,7 @@ public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> implements C
               throw new NoSuchElementException();
             } else {
               T next = node;
-              if (node == AbstractFqnNode.this) {
-                node = null;
-              } else if (node.sibling != null) {
+              if (node.sibling != null) {
                 for (node = node.sibling; node.firstChild != null; node = node.firstChild);
               } else {
                 node = node.parent;
@@ -270,7 +322,83 @@ public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> implements C
       }
     };
   }
-  
+
+  public abstract class Saver {
+    protected Saver() {}
+
+    protected abstract void save(BufferedWriter writer, T node) throws IOException;
+    
+    public void save(BufferedWriter writer) throws IOException {
+      Map<T, Integer> nodes = new HashMap<>();
+      int count = 0;
+      for (T node : getPreOrderIterable()) {
+        nodes.put(node, count);
+        // Write the node name, and it's parent's id
+        writer.write(node.name + " " + (node.parent == null ? "null" : nodes.get(node.parent)));
+        // Save the extra node information
+        save(writer, node);
+        writer.newLine();
+        count++;
+      }
+    }
+  }
+ 
+  public abstract class Loader {
+    protected Loader() {}
+    
+    protected abstract void load(Scanner scanner, T node);
+    
+    @SuppressWarnings("unchecked")
+    public void load(BufferedReader reader) throws IOException {
+      TaskProgressLogger task = TaskProgressLogger.get();
+      task.start("Loading prefix tree", "nodes loaded", 100_000);
+      ArrayList<T> nodes = new ArrayList<>();
+      T lastNode = null;
+      for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+        Scanner lineScanner = new Scanner(line);
+        T node = null;
+        // Special check for the root node
+        if (nodes.isEmpty()) {
+          // Get the name
+          String next = lineScanner.next();
+          if ("null".equals(next)) {
+            node = (T) AbstractFqnNode.this;
+          } else {
+            throw new InvalidFileFormatException("Expected null for root name, received " + name);
+          }
+          // Check the parent info
+          next = lineScanner.next();
+          if (!"null".equals(next)) {
+            throw new InvalidFileFormatException("Expected null for root parent, received " + name);
+          }
+        } else {
+          String name = lineScanner.next();
+          T parent = null;
+          if (lineScanner.hasNextInt()) {
+            parent = nodes.get(lineScanner.nextInt());
+          } else {
+            throw new InvalidFileFormatException("Expected number for node parent, received " + lineScanner.next());
+          }
+          node = create(name, parent);
+          // Hook it up properly
+          if (lastNode.parent == parent) {
+            lastNode.sibling = node;
+          } else if (parent.firstChild == null){
+            parent.firstChild = node;
+          } else {
+            for (lastNode = parent.firstChild; lastNode.sibling != null; lastNode = lastNode.sibling);
+            lastNode.sibling = node;
+          }
+        }
+        lastNode = node;
+        nodes.add(node);
+        load(lineScanner, node);
+        task.progress();
+      }
+      task.finish();
+    }
+  }
+
   @Override
   public String toString() {
     return getFqn();

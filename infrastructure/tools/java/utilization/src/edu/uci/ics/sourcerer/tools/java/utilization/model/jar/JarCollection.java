@@ -19,6 +19,8 @@ package edu.uci.ics.sourcerer.tools.java.utilization.model.jar;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -36,18 +38,22 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
+import edu.uci.ics.sourcerer.util.io.InvalidFileFormatException;
 import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
+import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
 import edu.uci.ics.sourcerer.util.io.arguments.RelativeFileArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger.Checkpoint;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarCollection implements Iterable<Jar> {
   public static final Argument<File> JAR_COLLECTION_CACHE = new RelativeFileArgument("jar-collection-cache", "jar-collection-cache", Arguments.CACHE, "Cache for jar collection.").permit();
+  public static final Argument<Boolean> FAST_MODE = new BooleanArgument("fast-mode", true, "Fast mode!").permit();
   
   private final Map<String, Jar> jars;
   private final VersionedFqnNode rootFragment;
@@ -96,19 +102,44 @@ public class JarCollection implements Iterable<Jar> {
     File cacheDir = cacheDirArg.getValue();
     File cache = new File(cacheDir, Fingerprint.FINGERPRINT_MODE.getValue() + ".cache");
     if (cache.exists()) {
-      task.start("Cache found, loading", "jars loaded", 500);
-      try (SimpleDeserializer deserializer = IOUtils.makeSimpleDeserializer(cache)) {
-        for (Jar jar : deserializer.deserializeToIterable(Jar.makeDeserializer(jars.rootFragment, repo), true)) {
-          task.progress();
-          jars.jars.put(jar.getJar().getProperties().HASH.getValue(), jar);
+      if (FAST_MODE.getValue()) {
+        Checkpoint checkpoint = task.checkpoint();
+        task.report("Cache found");
+        task.start("Loading jars", "jars loaded", 500);
+        try (BufferedReader reader = IOUtils.makeBufferedReader(cache)) {
+          // Read the number of jars
+          int count = Integer.parseInt(reader.readLine());
+          // Read the jars
+          Jar[] jarMapping = new Jar[count];
+          for (int i = 0; i < count; i++) {
+            Jar jar = new Jar(repo.getJarFile(reader.readLine()));
+            jarMapping[i] = jar;
+            jars.jars.put(jar.getJar().getProperties().HASH.getValue(), jar);
+            task.progress();
+          }
+          task.finish();
+          // Load the tree
+          jars.rootFragment.createLoader(jarMapping).load(reader);
+        } catch (IOException | NullPointerException | InvalidFileFormatException | IllegalArgumentException e) {
+          logger.log(Level.SEVERE, "Error loading jar collection cache", e);
+          checkpoint.activate();
+          jars = new JarCollection();
         }
-        task.finish();
-        task.finish();
-        return jars;
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Error loading jar collection cache", e);
-        task.finish();
-        jars = new JarCollection();
+      } else {
+        task.start("Cache found, loading", "jars loaded", 500);
+        try (SimpleDeserializer deserializer = IOUtils.makeSimpleDeserializer(cache)) {
+          for (Jar jar : deserializer.deserializeToIterable(Jar.makeDeserializer(jars.rootFragment, repo), true)) {
+            task.progress();
+            jars.jars.put(jar.getJar().getProperties().HASH.getValue(), jar);
+          }
+          task.finish();
+          task.finish();
+          return jars;
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Error loading jar collection cache", e);
+          task.finish();
+          jars = new JarCollection();
+        }
       }
     } else {
       task.report("Cache not found, loading...");
@@ -132,17 +163,55 @@ public class JarCollection implements Iterable<Jar> {
     task.finish();
     
     task.start("Saving cache");
-    try (SimpleSerializer serializer = IOUtils.makeSimpleSerializer(FileUtils.ensureWriteable(cache));
-         EntryWriter<Jar> writer = serializer.getEntryWriter(Jar.class)) {
-      for (Jar jar : jars) {
-        writer.write(jar);
+    if (FAST_MODE.getValue()) {
+      try (BufferedWriter writer = IOUtils.makeBufferedWriter(FileUtils.ensureWriteable(cache))) {
+        // Write out the jar count
+        writer.write(Integer.toString(jars.size()));
+        writer.newLine();
+        // Write out the jars
+        Map<Jar, Integer> jarMapping = new HashMap<>();
+        int count = 0;
+        for (Jar jar : jars) {
+          jarMapping.put(jar, count++);
+          writer.write(jar.getJar().getProperties().HASH.getValue());
+          writer.newLine();
+        }
+        // Write out the tree
+        jars.rootFragment.createSaver(jarMapping).save(writer);
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Error writing jar collection cache", e);
       }
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error writing jar collection cache", e);
+    } else {
+      try (SimpleSerializer serializer = IOUtils.makeSimpleSerializer(FileUtils.ensureWriteable(cache));
+           EntryWriter<Jar> writer = serializer.getEntryWriter(Jar.class)) {
+        for (Jar jar : jars) {
+          writer.write(jar);
+        }
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Error writing jar collection cache", e);
+      }
     }
     task.finish();
     
     return jars;
+  }
+  
+  public void save(File file) {
+    // Let's see if we can save things more speedily
+    try (BufferedWriter writer = IOUtils.makeBufferedWriter(file)) {
+      Map<Jar, Integer> jarMap = new HashMap<>();
+      int count = 0;
+      // Write out a line for each jar, just containing the hash
+      for (Map.Entry<String, Jar> entry : jars.entrySet()) {
+        writer.write(entry.getKey());
+        writer.newLine();
+        jarMap.put(entry.getValue(), count++);
+      }
+      // Write out the entire tree, starting at the root
+      
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error saving jar collection");
+    }
   }
   
   private void add(JarFile jar) {
@@ -163,6 +232,10 @@ public class JarCollection implements Iterable<Jar> {
   
   public Jar getJar(String hash) {
     return jars.get(hash);
+  }
+  
+  public Collection<Jar> getJars() {
+    return jars.values();
   }
   
   @Override

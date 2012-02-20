@@ -171,7 +171,7 @@ public class Main {
     protected void action() {
       CoverageCalculator.calculateJarCoverage();
     }
-  }.setProperties(JavaRepositoryFactory.INPUT_REPO, CoverageCalculator.JAR_REPO);  
+  }.setProperties(JavaRepositoryFactory.INPUT_REPO, CoverageCalculator.JAR_REPO, CoverageCalculator.SOURCED_CACHE, CoverageCalculator.MAVEN_MISSING_TYPES_LISTING);  
   
   public static void main(String[] args) {
     Command.execute(args, Main.class);

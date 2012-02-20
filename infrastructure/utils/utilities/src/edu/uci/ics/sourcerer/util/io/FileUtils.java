@@ -324,7 +324,7 @@ public class FileUtils {
                     return progress;
                   }
                 }
-              } catch (IOException e) {
+              } catch (Exception e) {
                 logger.log(Level.SEVERE, "Error reading zip file", e);
               }
               IOUtils.close(zis);

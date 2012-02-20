@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Scanner;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
@@ -76,6 +77,11 @@ public final class IOUtils {
   public static BufferedReader makeBufferedReader(DualFileArgument arg) throws IOException {
     return new BufferedReader(new FileReader(arg.asInput().getValue()));
   }
+  
+//  public static Scanner createScanner(File file) throws IOException {
+//      return new Scanner(arg.getValue());
+//
+//  }
   
   public static void close (Closeable ... closeMe) {
     for (Closeable close : closeMe) {

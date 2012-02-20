@@ -17,10 +17,14 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.model.jar;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Scanner;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.fqn.AbstractFqnNode;
+import edu.uci.ics.sourcerer.util.io.InvalidFileFormatException;
+import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -49,6 +53,49 @@ public class VersionedFqnNode extends AbstractFqnNode<VersionedFqnNode> {
   public VersionMap getVersions() {
     return versions;
   }
+  
+  protected Saver createSaver(final Map<Jar, Integer> jarMapping) {
+    return new Saver() {
+      @Override
+      protected void save(BufferedWriter writer, VersionedFqnNode node) throws IOException {
+        for (Map.Entry<Fingerprint, JarSet> entry : versions.getVersions()) {
+          writer.write(" ");
+          writer.write(entry.getKey().serialize());
+          for (Jar jar : entry.getValue()) {
+            writer.write(":");
+            writer.write(jarMapping.get(jar));
+          }
+        }
+      }
+    };
+  }
+
+  protected Loader createLoader(final Jar[] jarMapping) {
+    return new Loader() {
+      ObjectDeserializer<Fingerprint> deserializer = Fingerprint.makeDeserializer();
+      
+      @Override
+      protected void load(Scanner scanner, VersionedFqnNode node) {
+        while (scanner.hasNext()) {
+          String entry = scanner.next();
+          Scanner entryScanner = new Scanner(entry);
+          entryScanner.useDelimiter(":");
+          
+          // Get the fingerprint
+          Fingerprint fingerprint = deserializer.deserialize(entryScanner);
+          // Get the jars
+          while (entryScanner.hasNext()) {
+            Jar jar = jarMapping[scanner.nextInt()];
+            if (jar == null) {
+              throw new InvalidFileFormatException("Missing jar!");
+            }
+            node.versions.add(fingerprint, jar);
+          }
+        }
+      }
+    };
+  }
+  
 //  
 //  public Iterable<VersionedFqnNode> getPackageIterable() {
 //    // We want all the nodes that are the direct parent of a node with a version 
