@@ -1,7 +1,20 @@
 package edu.uci.ics.sourcerer.util;
 
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.Level;
+
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.SortedMultiset;
+import com.google.common.collect.TreeMultiset;
+
+import edu.uci.ics.sourcerer.util.io.IOUtils;
 
 public class Averager <T extends Number> {
   private double sum;
@@ -61,6 +74,25 @@ public class Averager <T extends Number> {
       variance /= values.size();
       double std = Math.sqrt(variance);
       return std;
+    }
+  }
+  
+  public void writeValueMap(File file) {
+    Multiset<T> counts = HashMultiset.create();
+    for (T value : values) {
+      counts.add(value);
+    }
+    SortedMultiset<Integer> sorted = TreeMultiset.create();
+    for (T value : counts.elementSet()) {
+      sorted.add(counts.count(value));
+    }
+    try (BufferedWriter writer = IOUtils.makeBufferedWriter(file)) {
+      for (Integer element : sorted.elementSet()) {
+        writer.write(element + " " + sorted.count(element));
+        writer.newLine();
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error writing value map", e);
     }
   }
   
