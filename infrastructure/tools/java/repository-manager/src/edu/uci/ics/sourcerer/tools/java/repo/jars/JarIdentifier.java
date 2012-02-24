@@ -51,10 +51,10 @@ public class JarIdentifier {
   public static void identifyJarsContainingFqn() {
     String fqnToFind = CONTAINING_FQN.getValue();
     
-    TaskProgressLogger task = TaskProgressLogger.create();
+    TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Identifying jar files containing " + fqnToFind);
 
-    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO, task);
+    JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
     
     try (BufferedWriter bw = IOUtils.makeBufferedWriter(IDENTIFIED_JARS_FILE)) {
       int count = 0;

@@ -57,9 +57,17 @@ public class MissingTypeIdentifier {
   }
   
   public static void identifyExternalTypes() {
+    identifyMissingTypes(false);
+  }
+  
+  public static void identifyMissingTypes() {
+    identifyMissingTypes(true);
+  }
+  
+  private static void identifyMissingTypes(boolean includeJars) {
     TaskProgressLogger task = TaskProgressLogger.get();
     
-    task.start("Identifying external types with Eclipse");
+    task.start("Identifying " + (includeJars ? "missing" : "external") + " types with Eclipse");
     
     // Load the input repository
     task.start("Loading projects");
@@ -89,7 +97,11 @@ public class MissingTypeIdentifier {
       JavaFileSet files = project.getContent();
       task.finish();
       
-      EclipseUtils.initializeProject(Collections.<JarFile>emptyList());
+      if (includeJars) {
+        EclipseUtils.initializeProject(files.getJarFiles());
+      } else {
+        EclipseUtils.initializeProject(Collections.<JarFile>emptyList());
+      }
       
       task.start("Loading " + files.getFilteredJavaFiles().size() + " java files into project");
       Map<JavaFile, IFile> sourceFiles = EclipseUtils.loadFilesIntoProject(files.getFilteredJavaFiles());

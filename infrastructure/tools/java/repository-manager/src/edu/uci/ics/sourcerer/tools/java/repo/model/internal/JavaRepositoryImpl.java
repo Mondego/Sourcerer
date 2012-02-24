@@ -45,7 +45,8 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
     super(repoRoot);
   }
   
-  protected static JavaRepositoryImpl load(RepoFileImpl repoRoot, TaskProgressLogger task) {
+  protected static JavaRepositoryImpl load(RepoFileImpl repoRoot) {
+    TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Loading Java repository from: " + repoRoot.toFile().getPath());
     try {
       JavaRepositoryImpl repo = new JavaRepositoryImpl(repoRoot);
@@ -116,7 +117,7 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
 
   @Override
   public void aggregateJarFiles() {
-    TaskProgressLogger task = TaskProgressLogger.create();
+    TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Aggregating jar files");
     
     aggregating = true;

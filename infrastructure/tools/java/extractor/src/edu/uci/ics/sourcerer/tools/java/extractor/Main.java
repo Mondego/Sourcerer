@@ -152,6 +152,14 @@ public class Main implements IApplication {
         MissingTypeIdentifier.identifyExternalTypes();
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
+    
+  public static final Command IDENTIFY_MISSING_TYPES =
+    new Command("identify-missing-types", "Identified the missing types") {
+      protected void action() {
+        WriterBundle.MISSING_TYPE_WRITER.setValue(MissingTypeWriterImpl.class);
+        MissingTypeIdentifier.identifyMissingTypes();
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);       
   		  
   @Override
   public Object start(IApplicationContext context) throws Exception {

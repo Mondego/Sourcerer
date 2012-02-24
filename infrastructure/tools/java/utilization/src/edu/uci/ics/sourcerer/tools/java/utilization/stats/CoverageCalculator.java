@@ -36,6 +36,7 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProject;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaRepository;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.SourcedFqnNode.Source;
+import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Counter;
 import edu.uci.ics.sourcerer.util.CounterSet;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
@@ -52,13 +53,12 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  */
 public class CoverageCalculator {
   public static final Argument<File> JAR_REPO = new FileArgument("jar-repo", "Jar repo");
-  public static final Argument<File> MAVEN_MISSING_TYPES_LISTING = new RelativeFileArgument("maven-missing-types-listing", "missing-missing-types.txt", Arguments.OUTPUT, "File containing the list of missing types that can't be found in maven.");
   public static final Argument<File> SOURCED_CACHE = new RelativeFileArgument("sourced-cache", "sources-cache.txt", Arguments.CACHE, "Cache for sources prefix tree.");
   
   public static void calculateJarCoverage() {
     TaskProgressLogger task = TaskProgressLogger.get();
     
-    task.start("Calculating coverage by " + JAR_REPO.getValue().getPath() + " of missing imports from " + JavaRepositoryFactory.INPUT_REPO.getValue().getPath());
+    task.start("Calculating coverage by " + JAR_REPO.getValue().getPath() + " of missing/external imports from " + JavaRepositoryFactory.INPUT_REPO.getValue().getPath());
     
     // Load the jar repo
     JavaRepository jarRepo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JAR_REPO);
@@ -79,7 +79,7 @@ public class CoverageCalculator {
       task.finish();
     }
     if (!loaded) {
-      task.start("Processing maven jars", "jars processed", 500);
+      task.start("Processing maven jars", "jars processed", 1_000);
       for (JarFile jar : jarRepo.getMavenJarFiles()) {
         for (String fqn : FileUtils.getClassFilesFromJar(jar.getFile().toFile())) {
           root.getChild(fqn, '/').addSource(Source.MAVEN);
@@ -88,7 +88,7 @@ public class CoverageCalculator {
       }
       task.finish();
     
-      task.start("Processing project jars", "jars processed", 500);
+      task.start("Processing project jars", "jars processed", 1_000);
       for (JarFile jar : jarRepo.getProjectJarFiles()) {
         for (String fqn : FileUtils.getClassFilesFromJar(jar.getFile().toFile())) {
           root.getChild(fqn, '/').addSource(Source.PROJECT);
@@ -111,18 +111,32 @@ public class CoverageCalculator {
     // Load the extracted repo with the missing types
     ExtractedJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(JavaRepositoryFactory.INPUT_REPO);
     
-    task.start("Processing extracted projects for missing types", "projects processed", 500);
+    task.start("Processing extracted projects for missing/external types", "projects processed", 1_000);
+    // The number of projects with missing/external types
+    int projectsWithTypes = 0;
+    // Averager for missing/external FQNs per project
+    Averager<Integer> missingFqns = Averager.create();
+    // Averager for missing/external FQNs per project containing at least one
+    Averager<Integer> missingFqnsNonEmpty = Averager.create();
     for (ExtractedJavaProject project : repo.getProjects()) {
       task.progress();
       ReaderBundle bundle = new ReaderBundle(project.getExtractionDir().toFile());
+      int missingCount = 0;
       for (MissingTypeEX missing : bundle.getTransientMissingTypes()) {
         root.getChild(missing.getFqn(), '.').addSource(Source.MISSING);
+        missingCount++;
       }
+      if (missingCount > 0) {
+        missingFqnsNonEmpty.addValue(missingCount);
+        projectsWithTypes++;
+      }
+      missingFqns.addValue(missingCount);
     }
     task.finish();
     
     task.finish();
     
+    task.start("Reporting missing/external type information)
     task.start("Evaluating FQN coverage");
     TreeSet<SourcedFqnNode> sortedMissing = new TreeSet<>(new Comparator<SourcedFqnNode>() {
       @Override

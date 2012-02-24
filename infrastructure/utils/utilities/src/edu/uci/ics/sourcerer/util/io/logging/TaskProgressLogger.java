@@ -33,7 +33,7 @@ public class TaskProgressLogger {
       new ThreadLocal<TaskProgressLogger>() {
         @Override
         protected TaskProgressLogger initialValue() {
-          return TaskProgressLogger.create();
+          return new TaskProgressLogger(new LinkedList<TaskInfo>());
         }
   };
   
@@ -48,12 +48,8 @@ public class TaskProgressLogger {
     return task.get();
   }
   
-  public static TaskProgressLogger create() {
-    return new TaskProgressLogger(new LinkedList<TaskInfo>());
-  }
-  
-  public static TaskProgressLogger createNull() {
-    return new TaskProgressLogger(null) {
+  public static void makeNull() {
+    task.set(new TaskProgressLogger(null) {
       @Override
       protected void start(String taskName, int indent, String finishedText, int progressInterval) {}
       @Override
@@ -64,7 +60,7 @@ public class TaskProgressLogger {
       public void finish() {}
       @Override
       public void cancel() {}
-    };
+    });
   }
   
   public TaskProgressLogger createChild() {

@@ -351,7 +351,7 @@ public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> implements C
     @SuppressWarnings("unchecked")
     public void load(BufferedReader reader) throws IOException {
       TaskProgressLogger task = TaskProgressLogger.get();
-      task.start("Loading prefix tree", "nodes loaded", 100_000);
+      task.start("Loading prefix tree", "nodes loaded", 1_000_000);
       ArrayList<T> nodes = new ArrayList<>();
       T lastNode = null;
       for (String line = reader.readLine(); line != null; line = reader.readLine()) {

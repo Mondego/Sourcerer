@@ -46,7 +46,7 @@ public class RepositoryStatisticsCalculator {
     int projectsWithFiles = 0;
     int filteredFiles = 0;
     
-    TaskProgressLogger task = TaskProgressLogger.create();
+    TaskProgressLogger task = TaskProgressLogger.get();
     
     task.start("Analyzing projects", "projects analyzed", 100);
     
@@ -122,7 +122,7 @@ public class RepositoryStatisticsCalculator {
   }
   
   public static void testForMemoryLeaks() {
-    TaskProgressLogger task = TaskProgressLogger.create();
+    TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Testing repository memory usage");
     
     task.start("Loading repository");

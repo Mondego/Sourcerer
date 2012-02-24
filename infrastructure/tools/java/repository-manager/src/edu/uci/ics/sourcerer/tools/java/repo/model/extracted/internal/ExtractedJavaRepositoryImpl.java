@@ -37,7 +37,8 @@ public final class ExtractedJavaRepositoryImpl extends AbstractJavaRepository<Ex
     super(repoRoot);
   }
   
-  public static ExtractedJavaRepositoryImpl load(RepoFileImpl repoRoot, TaskProgressLogger task) {
+  public static ExtractedJavaRepositoryImpl load(RepoFileImpl repoRoot) {
+    TaskProgressLogger task = TaskProgressLogger.get(); 
     task.start("Loading extracted Java repository from: " + repoRoot.toFile().getPath());
     try {
       ExtractedJavaRepositoryImpl repo = new ExtractedJavaRepositoryImpl(repoRoot);
