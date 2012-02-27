@@ -224,7 +224,7 @@
     	<classpath>
         <pathelement path="${classpath}" />
 	        <fileset dir="${lib}">
-	        	<include name="**/guava*.jar" />
+	        	<include name="**/guava-11.0.1.jar" />
 	        </fileset>
       </classpath>
     </javac>
@@ -245,7 +245,7 @@
     <copy todir="${build-utilization}">
       <fileset dir="${utilization}" includes="**/*.java" />
     </copy>
-  	<unjar src="${lib}/guava-10.0.1.jar" dest="${build-utilization}" />
+  	<unjar src="${lib}/guava-11.0.1.jar" dest="${build-utilization}" />
   </target>
     
   <target name="utilization" depends="compile-utilization" description="Build utilization executable jar. (utilization.jar)">

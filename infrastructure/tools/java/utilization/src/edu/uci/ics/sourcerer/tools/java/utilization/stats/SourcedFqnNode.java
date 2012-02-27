@@ -57,6 +57,14 @@ public class SourcedFqnNode extends AbstractFqnNode<SourcedFqnNode> {
     sources.add(source);
   }
   
+  public boolean hasSource() {
+    return !sources.isEmpty();
+  }
+  
+  public boolean has(Source source) {
+    return sources.contains(source);
+  }
+  
   public Set<Source> getSources() {
     return sources.elementSet();
   }

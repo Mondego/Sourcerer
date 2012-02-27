@@ -171,7 +171,7 @@ public class Main {
     protected void action() {
       CoverageCalculator.calculateJarCoverage();
     }
-  }.setProperties(JavaRepositoryFactory.INPUT_REPO, CoverageCalculator.JAR_REPO, CoverageCalculator.SOURCED_CACHE, CoverageCalculator.MAVEN_MISSING_TYPES_LISTING);  
+  }.setProperties(JavaRepositoryFactory.INPUT_REPO, CoverageCalculator.JAR_REPO, CoverageCalculator.SOURCED_CACHE, CoverageCalculator.MISSING_FQNS_PER_PROJECT, CoverageCalculator.PROJECTS_PER_MISSING_FQN);  
   
   public static void main(String[] args) {
     Command.execute(args, Main.class);
