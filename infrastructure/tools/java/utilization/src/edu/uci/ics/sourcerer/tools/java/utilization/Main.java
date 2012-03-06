@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization;
 
+import java.io.File;
+
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterIdentifier;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterMerger;
@@ -30,7 +32,10 @@ import edu.uci.ics.sourcerer.tools.java.utilization.stats.DecomposeJars;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.GeneralStats;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.JarStats;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.PopularityCalculator;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
+import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
@@ -90,6 +95,35 @@ public class Main {
       DecomposeJars.TEST_REPO,
       DecomposeJars.TEST_REPO_CACHE,
       DecomposeJars.DECOMPOSED_JAR_LISTING);
+  
+  public static final Argument<File> JAR_FILTER_FILE = new FileArgument("jar-filter-file", null, "Jar filter file");
+  public static final Command CLUSTER_JARS = new Command("cluster-jars", "Cluster jars.") {
+    @Override
+    public void action() {
+      TaskProgressLogger task = TaskProgressLogger.get();
+      task.start("Clustering jars");
+      
+      JarCollection jars = null;
+      if (JAR_FILTER_FILE.getValue() != null) {
+        jars = JarCollection.create(FileUtils.readFileToCollection(JAR_FILTER_FILE.getValue()));
+      } else {
+        jars = JarCollection.create();
+      }
+      
+      ClusterCollection clusters = ClusterIdentifier.identifyFullMatchingClusters(jars);
+      ClusterMerger.mergeByVersions(clusters);
+      
+      ClusterStats.calculate(jars, clusters);
+      
+      task.finish();
+    }
+  }.setProperties(
+      JavaRepositoryFactory.INPUT_REPO,
+      Fingerprint.FINGERPRINT_MODE,
+      JAR_FILTER_FILE,
+      GeneralStats.MAX_TABLE_COLUMNS,
+      ClusterStats.CLUSTER_LISTING
+      );
   
 //  public static final Command COMPARE_LIBRARY_IDENTIFICATION = new Command("compare-library-identification", "Compare methods for clustering and identifying the libraries.") {
 //    @Override

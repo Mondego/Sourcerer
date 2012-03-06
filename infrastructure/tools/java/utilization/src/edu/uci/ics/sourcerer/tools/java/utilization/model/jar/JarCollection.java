@@ -104,22 +104,25 @@ public class JarCollection implements Iterable<Jar> {
     if (cache.exists()) {
       if (FAST_MODE.getValue()) {
         Checkpoint checkpoint = task.checkpoint();
-        task.report("Cache found");
-        task.start("Loading jars", "jars loaded", 500);
+        task.report(" Cache found");
+        task.start("Loading jars", "jars loaded", 0);
         try (BufferedReader reader = IOUtils.makeBufferedReader(cache)) {
           // Read the number of jars
           int count = Integer.parseInt(reader.readLine());
           // Read the jars
           Jar[] jarMapping = new Jar[count];
           for (int i = 0; i < count; i++) {
-            Jar jar = new Jar(repo.getJarFile(reader.readLine()));
+            String hash = reader.readLine();
+            Jar jar = new Jar(repo.getJarFile(hash));
             jarMapping[i] = jar;
-            jars.jars.put(jar.getJar().getProperties().HASH.getValue(), jar);
+            jars.jars.put(hash, jar);
             task.progress();
           }
           task.finish();
           // Load the tree
           jars.rootFragment.createLoader(jarMapping).load(reader);
+          task.finish();
+          return jars;
         } catch (IOException | NullPointerException | InvalidFileFormatException | IllegalArgumentException e) {
           logger.log(Level.SEVERE, "Error loading jar collection cache", e);
           checkpoint.activate();

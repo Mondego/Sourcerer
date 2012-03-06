@@ -33,16 +33,17 @@ import edu.uci.ics.sourcerer.util.io.arguments.EnumArgument;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class Fingerprint implements CustomSerializable {
-  public static final Argument<Mode> FINGERPRINT_MODE = new EnumArgument<>("fingerprint-mode", Mode.class, Mode.NONE, "What fingerprint mode to use");
+  public static final Argument<Mode> FINGERPRINT_MODE = new EnumArgument<>("fingerprint-mode", Mode.class, "What fingerprint mode to use");
   
   public enum Mode {
     NONE,
     LENGTH,
-    HASH
+    HASH,
+    NAME,
     ;
   }
 
-  private Fingerprint() {}
+  Fingerprint() {}
   
   private static class LengthFingerprint extends Fingerprint {
     private final long length;
@@ -109,7 +110,7 @@ public abstract class Fingerprint implements CustomSerializable {
       return length + " " + hash;
     }
   }
-  
+ 
   private static final Fingerprint BASE_FINGERPRINT = new Fingerprint() {
     @Override
     public String serialize() {
@@ -117,7 +118,7 @@ public abstract class Fingerprint implements CustomSerializable {
     }
   };
   
-  protected static Fingerprint create(InputStream is, long length) throws IOException {
+  static Fingerprint create(InputStream is, long length) throws IOException {
     switch (FINGERPRINT_MODE.getValue()) {
       case NONE:
         return BASE_FINGERPRINT;
@@ -125,6 +126,8 @@ public abstract class Fingerprint implements CustomSerializable {
         return new LengthFingerprint(length);
       case HASH:
         return new HashFingerprint(length, FileUtils.computeHash(is));
+      case NAME:
+        return NameFingerprint.create(is);
       default:
         logger.severe("Unknown fingerprint mode: " + FINGERPRINT_MODE.getValue());
         return null;
@@ -173,6 +176,8 @@ public abstract class Fingerprint implements CustomSerializable {
             }
           }
         };
+      case NAME:
+        return NameFingerprint.makeDeserializer();
       default:
         logger.severe("Unknown fingerprint mode: " + FINGERPRINT_MODE.getValue());
         return null;

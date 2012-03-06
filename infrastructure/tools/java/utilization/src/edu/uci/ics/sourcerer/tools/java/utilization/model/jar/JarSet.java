@@ -118,6 +118,9 @@ public class JarSet implements Iterable<Jar> {
     return count;
   }
   
+  /**
+   * Is this JarSet a subset of the argument?
+   */
   public boolean isSubset(JarSet other) {
     for (Jar jar : jars) {
       if (!other.jars.contains(jar)) {

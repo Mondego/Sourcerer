@@ -19,47 +19,48 @@ package edu.uci.ics.sourcerer.tools.java.utilization.model.jar;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import edu.uci.ics.sourcerer.util.MutableSingletonMap;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class VersionMap {
+public class Versions implements Iterable<Version> {
   private JarSet jars;
-  private Map<Fingerprint, JarSet> versions;
+  private Map<Fingerprint, Version> versions;
   
-  private VersionMap() {
+  private Versions() {
     jars = JarSet.create();
     versions = Collections.emptyMap();
   }
   
-  public static VersionMap make() {
-    return new VersionMap();
+  public static Versions create() {
+    return new Versions();
   }
   
   public void add(Fingerprint fingerprint, Jar jar) {
     if (versions.isEmpty()) {
       jars = jars.add(jar);
-      versions = MutableSingletonMap.create(fingerprint, jars);
+      versions = MutableSingletonMap.create(fingerprint, Version.create(fingerprint, jar));
     } else if (versions.size() == 1) {
-      JarSet set = versions.get(fingerprint);
-      if (set == null) {
+      Version version = versions.get(fingerprint);
+      if (version == null) {
         versions = new HashMap<>(versions);
-        versions.put(fingerprint, JarSet.create(jar));
+        versions.put(fingerprint, Version.create(fingerprint, jar));
         jars = jars.add(jar);
       } else {
         jars = jars.add(jar);
-        versions.put(fingerprint, jars);
+        version.addJar(jar);
       }
     } else {
-      JarSet set = versions.get(fingerprint);
-      if (set == null) {
-        set = JarSet.create();
+      Version version = versions.get(fingerprint);
+      if (version == null) {
+        versions.put(fingerprint, Version.create(fingerprint, jar));
+      } else {
+        version.addJar(jar);
       }
-      versions.put(fingerprint, set.add(jar));
       jars = jars.add(jar);
     }
   }
@@ -68,7 +69,8 @@ public class VersionMap {
     return jars;
   }
   
-  public Set<Map.Entry<Fingerprint, JarSet>> getVersions() {
-    return versions.entrySet();
+  @Override
+  public Iterator<Version> iterator() {
+    return versions.values().iterator();
   }
 }

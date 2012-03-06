@@ -24,11 +24,18 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterMatcher;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Version;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
@@ -98,6 +105,71 @@ public class ClusterMerger {
     task.report("Cluster count reduced to " + coreClusters.size());
     clusters.reset(coreClusters);
     
+    task.finish();
+  }
+  
+  public static void mergeByVersions(ClusterCollection clusters) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
+    task.start("Merging " + clusters.size() + " clusters by matching versions");
+    
+    ClusterMatcher matcher = clusters.getClusterMatcher();
+    
+    TreeSet<Cluster> sortedClusters = new TreeSet<>(Cluster.DESCENDING_SIZE_COMPARATOR);
+    sortedClusters.addAll(clusters.getClusters());
+    
+    Collection<Cluster> remainingClusters = new LinkedList<>();
+    task.start("Merging clusters", "clusters examined", 500);
+    // Starting from the most important jar
+    // For each cluster
+    Set<VersionedFqnNode> newFqns = new HashSet<>();
+    while (!sortedClusters.isEmpty()) {
+      Cluster biggest = sortedClusters.pollFirst();
+      remainingClusters.add(biggest);
+      // For each fqn in that cluster
+      for (VersionedFqnNode fqn : biggest.getCoreFqns()) {
+        // For each version of each fqn
+        for (Version version : fqn.getVersions()) {
+          // What are the fqns that are always present with this version of this fqn?
+          Set<VersionedFqnNode> potentials = null;
+          // For every jar for this version
+          for (Jar jar : version.getJars()) {
+            // For the first jar, add everything to the potentials
+            if (potentials == null) {
+              potentials = new HashSet<>(jar.getFqns());
+            }
+            // Otherwise, retain everything in this jar
+            else {
+              potentials.retainAll(jar.getFqns());
+            }
+          }
+          
+          // For each potential fqn
+          for (VersionedFqnNode potential : potentials) {
+            // If it's a good match to the core of this cluster
+            if (potential.getVersions().getJars().isSubset(biggest.getJars())) {
+              newFqns.add(potential);
+            }
+          }
+        }
+      }
+      newFqns.removeAll(biggest.getCoreFqns());
+      // Now we have a set of new fqns to add to the cluster
+      for (VersionedFqnNode fqn : newFqns) {
+        biggest.addVersionedCore(fqn);
+        // Remove the associated cluster from the set
+        sortedClusters.remove(matcher.getCluster(fqn));
+      }
+      newFqns.clear();
+      
+      task.progress();
+    }
+    
+    
+    task.finish();
+    
+    clusters.reset(remainingClusters);
+    task.report(clusters.size() + " clusters remain");
     task.finish();
   }
 }

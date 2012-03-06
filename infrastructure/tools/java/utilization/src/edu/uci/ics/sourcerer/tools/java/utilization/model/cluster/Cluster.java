@@ -22,6 +22,7 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Scanner;
 
@@ -37,10 +38,22 @@ import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Cluster implements CustomSerializable {
-  
+  public static final Comparator<Cluster> DESCENDING_SIZE_COMPARATOR = 
+      new Comparator<Cluster>() {
+        @Override
+        public int compare(Cluster o1, Cluster o2) {
+          int cmp = -Integer.compare(o1.getJars().size(), o2.getJars().size());
+          if (cmp == 0) {
+            return Integer.compare(o1.hashCode(), o2.hashCode());
+          } else {
+            return cmp;
+          }
+        }
+      };
 
   private JarSet jars;
   private final Collection<VersionedFqnNode> coreFqns;
+  private Collection<VersionedFqnNode> versionedCoreFqns;
   private Collection<VersionedFqnNode> extraFqns;
   
   private JarSet exemplars;
@@ -55,6 +68,7 @@ public class Cluster implements CustomSerializable {
 
     cluster.jars = fqn.getVersions().getJars();
     cluster.coreFqns.add(fqn);
+    cluster.versionedCoreFqns = Collections.emptySet();
     cluster.extraFqns = Collections.emptySet();
     
     cluster.exemplars = JarSet.create();
@@ -67,6 +81,12 @@ public class Cluster implements CustomSerializable {
     coreFqns.addAll(cluster.coreFqns);
   }
   
+  public void addVersionedCore(VersionedFqnNode fqn) {
+    if (versionedCoreFqns.isEmpty()) {
+      versionedCoreFqns = new ArrayList<>();
+    }
+    versionedCoreFqns.add(fqn);
+  }
   public void mergeExtra(Cluster cluster) {
 //    if (cluster.jars.getIntersectionSize(jars) < cluster.jars.size()) {
 //      logger.severe("Unexpected: merge should only be permitted with full overlap.");
@@ -94,6 +114,10 @@ public class Cluster implements CustomSerializable {
   
   public Collection<VersionedFqnNode> getCoreFqns() {
     return coreFqns;
+  }
+  
+  public Collection<VersionedFqnNode> getVersionedCoreFqns() {
+    return versionedCoreFqns;
   }
   
   public Collection<VersionedFqnNode> getExtraFqns() {

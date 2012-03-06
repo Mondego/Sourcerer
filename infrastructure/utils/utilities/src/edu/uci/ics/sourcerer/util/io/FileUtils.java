@@ -29,9 +29,11 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
@@ -214,6 +216,19 @@ public class FileUtils {
       return tempDir;
     } else {
       return null;
+    }
+  }
+  
+  public static Collection<String> readFileToCollection(File file) {
+    try (BufferedReader reader = IOUtils.makeBufferedReader(file)) {
+      Collection<String> result = new LinkedList<>();
+      for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+        result.add(line);
+      }
+      return result;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error reading file", e);
+      return Collections.emptyList();
     }
   }
   

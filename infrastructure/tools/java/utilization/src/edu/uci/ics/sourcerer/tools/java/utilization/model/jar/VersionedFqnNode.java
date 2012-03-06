@@ -30,11 +30,11 @@ import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class VersionedFqnNode extends AbstractFqnNode<VersionedFqnNode> {
-  private VersionMap versions;
+  private Versions versions;
   
   private VersionedFqnNode(String name, VersionedFqnNode parent) {
     super(name, parent);
-    this.versions = VersionMap.make();
+    this.versions = Versions.create();
   }
   
   @Override
@@ -50,7 +50,7 @@ public class VersionedFqnNode extends AbstractFqnNode<VersionedFqnNode> {
     versions.add(fingerprint, jar);
   }
   
-  public VersionMap getVersions() {
+  public Versions getVersions() {
     return versions;
   }
   
@@ -58,12 +58,18 @@ public class VersionedFqnNode extends AbstractFqnNode<VersionedFqnNode> {
     return new Saver() {
       @Override
       protected void save(BufferedWriter writer, VersionedFqnNode node) throws IOException {
-        for (Map.Entry<Fingerprint, JarSet> entry : versions.getVersions()) {
+        for (Version version : node.versions) {
           writer.write(" ");
-          writer.write(entry.getKey().serialize());
-          for (Jar jar : entry.getValue()) {
-            writer.write(":");
-            writer.write(jarMapping.get(jar));
+          writer.write(version.getFingerprint().serialize());
+          writer.write(" ");
+          boolean rest = true;
+          for (Jar jar : version.getJars()) {
+            if (rest) {
+              writer.write(":");
+            } else {
+              rest = true;
+            }
+            writer.write(Integer.toString(jarMapping.get(jar)));
           }
         }
       }
@@ -77,19 +83,17 @@ public class VersionedFqnNode extends AbstractFqnNode<VersionedFqnNode> {
       @Override
       protected void load(Scanner scanner, VersionedFqnNode node) {
         while (scanner.hasNext()) {
-          String entry = scanner.next();
-          Scanner entryScanner = new Scanner(entry);
-          entryScanner.useDelimiter(":");
-          
           // Get the fingerprint
-          Fingerprint fingerprint = deserializer.deserialize(entryScanner);
+          Fingerprint fingerprint = deserializer.deserialize(scanner);
           // Get the jars
-          while (entryScanner.hasNext()) {
-            Jar jar = jarMapping[scanner.nextInt()];
+          Scanner jarScanner = new Scanner(scanner.next());
+          jarScanner.useDelimiter(":");
+          while (jarScanner.hasNext()) {
+            Jar jar = jarMapping[jarScanner.nextInt()];
             if (jar == null) {
               throw new InvalidFileFormatException("Missing jar!");
             }
-            node.versions.add(fingerprint, jar);
+            jar.addFqn(node, fingerprint);
           }
         }
       }

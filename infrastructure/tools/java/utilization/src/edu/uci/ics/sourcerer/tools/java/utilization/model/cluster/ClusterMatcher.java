@@ -87,7 +87,7 @@ public class ClusterMatcher {
     Collection<Cluster> clusters = jarsToClusters.get().get(jar);
     if (clusters.isEmpty()) {
       // If it doesn't match any clusters, 2 possibilities
-      // No fqns, in which cast return nothing
+      // No fqns, in which case return nothing
       if (jar.getFqns().isEmpty()) {
         return clusters;
       }

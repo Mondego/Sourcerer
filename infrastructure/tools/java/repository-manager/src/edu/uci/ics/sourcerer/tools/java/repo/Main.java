@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.tools.java.repo;
 
 import edu.uci.ics.sourcerer.tools.java.repo.importers.MavenImporter;
 import edu.uci.ics.sourcerer.tools.java.repo.jars.JarIdentifier;
+import edu.uci.ics.sourcerer.tools.java.repo.misc.JarRepositoryCloner;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.repo.stats.RepositoryStatisticsCalculator;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
@@ -70,6 +71,14 @@ public class Main {
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JarIdentifier.CONTAINING_FQN, JarIdentifier.IDENTIFIED_JARS_FILE.asOutput());
     
+  public static final Command CLONE_JAR_REPO_FRAGMENT =
+    new Command("clone-jar-repo-fragment", "Clones a fragment of a jar repository.") {
+      @Override
+      protected void action() {
+        JarRepositoryCloner.cloneJarRepositoryFragment();
+      }
+  }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, JarRepositoryCloner.JAR_FILTER_FILE);
+  
   public static void main(String[] args) {
     Command.execute(args, Main.class);
   }

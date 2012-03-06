@@ -132,7 +132,31 @@ public class ClusterStats {
             nonCoreExemplar.add(fqn);
           }
         }
+
+        // Log the versioned core fqns
+        if (!cluster.getVersionedCoreFqns().isEmpty()) {
+          // Log the number line
+          for (int i = 1; i <= c; i++) {
+            log.writeFragment(Integer.toString(i % 10));
+          }
+          log.writeFragment(" Versioned Core FQNs");
+          log.newLine();
           
+          Collection<VersionedFqnNode> versionedCoreFqns = new TreeSet<>(cluster.getVersionedCoreFqns());
+          for (VersionedFqnNode fqn : versionedCoreFqns) {
+            for (Jar jar : containedJars) {
+              // Does this jar contain the FQN?
+              if (fqn.getVersions().getJars().contains(jar)) {
+                log.writeFragment("*");
+              } else {
+                log.writeFragment(" ");
+              }
+            }
+            log.writeFragment(" " + fqn.getFqn());
+            log.newLine();
+          }
+        }
+        
         // Log the non-core exemplar fqns
         if (!nonCoreExemplar.isEmpty()) {
           // Log the number line

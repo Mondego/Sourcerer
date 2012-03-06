@@ -22,11 +22,15 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
+import edu.uci.ics.sourcerer.util.Iterators;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
@@ -90,6 +94,12 @@ public class ClusterCollection implements Iterable<Cluster> {
   @Override
   public Iterator<Cluster> iterator() {
     return clusters.iterator();
+  }
+  
+  public Iterable<Cluster> byDescendingSize() {
+    Cluster[] clus = clusters.toArray(new Cluster[clusters.size()]);
+    Arrays.sort(clus, Cluster.DESCENDING_SIZE_COMPARATOR);
+    return Arrays.asList(clus);
   }
 
   public int size() {

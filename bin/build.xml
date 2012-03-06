@@ -140,6 +140,12 @@
       <src path="${utilities}" />
       <src path="${core-repository-manager}" />
       <src path="${java-repository-manager}" />
+      <classpath>
+        <pathelement path="${classpath}" />
+          <fileset dir="${lib}">
+            <include name="**/guava-11.0.1.jar" />
+          </fileset>
+      </classpath>
     </javac>
 
     <!-- Copy the source -->
@@ -152,6 +158,7 @@
     <copy todir="${build-java-repo-tools}">
       <fileset dir="${java-repository-manager}" includes="**/*.java" />
     </copy>
+    <unjar src="${lib}/guava-11.0.1.jar" dest="${build-java-repo-tools}" />
   </target>
   
   <target name="java-repo-tools" depends="compile-java-repo-tools" description="Build java repository tools executable jar. (repo-tools.jar)">
@@ -337,6 +344,12 @@
       <src path="${core-repository-manager}" />
       <src path="${java-repository-manager}" />
       <src path="${model}" />
+      <classpath>
+        <pathelement path="${classpath}" />
+          <fileset dir="${lib}">
+            <include name="**/guava-11.0.1.jar" />
+          </fileset>
+      </classpath>
     </javac>
 
     <!-- Copy the source -->
