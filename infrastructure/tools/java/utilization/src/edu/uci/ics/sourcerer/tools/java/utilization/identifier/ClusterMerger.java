@@ -129,31 +129,34 @@ public class ClusterMerger {
       // For each fqn in that cluster
       for (VersionedFqnNode fqn : biggest.getCoreFqns()) {
         // For each version of each fqn
-        for (Version version : fqn.getVersions()) {
-          // What are the fqns that are always present with this version of this fqn?
-          Set<VersionedFqnNode> potentials = null;
-          // For every jar for this version
-          for (Jar jar : version.getJars()) {
-            // For the first jar, add everything to the potentials
-            if (potentials == null) {
-              potentials = new HashSet<>(jar.getFqns());
+        if (fqn.getVersions().getCount() > 1) {
+          for (Version version : fqn.getVersions()) {
+            Collection<VersionedFqnNode> currentCore = biggest.getCoreFqns(); 
+            // What are the fqns that are always present with this version of this fqn?
+            Set<VersionedFqnNode> potentials = null;
+            // For every jar for this version
+            for (Jar jar : version.getJars()) {
+              // For the first jar, add everything to the potentials
+              if (potentials == null) {
+                potentials = new HashSet<>(jar.getFqns());
+              }
+              // Otherwise, retain everything in this jar
+              else {
+                potentials.retainAll(jar.getFqns());
+              }
             }
-            // Otherwise, retain everything in this jar
-            else {
-              potentials.retainAll(jar.getFqns());
-            }
-          }
-          
-          // For each potential fqn
-          for (VersionedFqnNode potential : potentials) {
-            // If it's a good match to the core of this cluster
-            if (potential.getVersions().getJars().isSubset(biggest.getJars())) {
-              newFqns.add(potential);
+            potentials.removeAll(currentCore);
+            potentials.removeAll(newFqns);
+            // For each potential fqn
+            for (VersionedFqnNode potential : potentials) {
+              // If it's a good match to the core of this cluster
+              if (potential.getVersions().getJars().isSubset(biggest.getJars())) {
+                newFqns.add(potential);
+              }
             }
           }
         }
       }
-      newFqns.removeAll(biggest.getCoreFqns());
       // Now we have a set of new fqns to add to the cluster
       for (VersionedFqnNode fqn : newFqns) {
         biggest.addVersionedCore(fqn);

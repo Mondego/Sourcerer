@@ -65,6 +65,10 @@ public class Versions implements Iterable<Version> {
     }
   }
   
+  public int getCount() {
+    return versions.size();
+  }
+  
   public JarSet getJars() {
     return jars;
   }

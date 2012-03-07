@@ -29,6 +29,14 @@ public final class LineBuilder {
     builder = new StringBuilder();
   }
   
+  public <T> LineBuilder append(T[] items) {
+    builder.append(items.length).append(" ");
+    for (T item : items) {
+      builder.append(item).append(" ");
+    }
+    return this;
+  }
+  
   public LineBuilder append(String item) {
     builder.append(item).append(" ");
     return this;

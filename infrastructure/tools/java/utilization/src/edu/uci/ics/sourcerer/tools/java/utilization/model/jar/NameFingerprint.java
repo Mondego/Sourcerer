@@ -30,17 +30,19 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import edu.uci.ics.sourcerer.util.io.LineBuilder;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class NameFingerprint extends Fingerprint {
-  private int classAccess;
   private String superName;
   private String[] interfaces;
   private String[] fields;
   private String[] methods;
+  private String[] innerClasses;
+  private int hash = 0;
   
   private NameFingerprint() {
     super();
@@ -51,6 +53,7 @@ public class NameFingerprint extends Fingerprint {
     private NameFingerprint fingerprint;
     private Collection<String> fields;
     private Collection<String> methods;
+    private Collection<String> innerClasses;
 
     
     private FingerprintClassVisitor() {
@@ -61,18 +64,20 @@ public class NameFingerprint extends Fingerprint {
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
       fingerprint = new NameFingerprint();
       
-      fingerprint.classAccess = access;
       fingerprint.superName = superName;
       fingerprint.interfaces = interfaces;
       Arrays.sort(fingerprint.interfaces);
       
       fields = new ArrayList<>();
       methods = new ArrayList<>();
+      innerClasses = new ArrayList<>();
     }
    
     @Override
     public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-      fields.add(desc);
+      if ((access & Opcodes.ACC_SYNTHETIC) == 0) {
+        fields.add(desc);
+      }
       return null;
     }
     
@@ -82,12 +87,19 @@ public class NameFingerprint extends Fingerprint {
       return null;
     }
     
+    @Override
+    public void visitInnerClass(String name, String outerName, String innerName, int access) {
+      innerClasses.add(name);
+    }
+    
     
     public NameFingerprint createFingerprint() {
       fingerprint.fields = fields.toArray(new String[fields.size()]);
       Arrays.sort(fingerprint.fields);
       fingerprint.methods = methods.toArray(new String[methods.size()]);
       Arrays.sort(fingerprint.methods);
+      fingerprint.innerClasses = innerClasses.toArray(new String[innerClasses.size()]);
+      Arrays.sort(fingerprint.innerClasses);
       return fingerprint;
     }
   }
@@ -100,7 +112,10 @@ public class NameFingerprint extends Fingerprint {
   
   @Override
   public int hashCode() {
-    return -1;
+    if (hash == 0) {
+      hash = Arrays.hashCode(methods);
+    }
+    return hash;
   }
   
   @Override
@@ -109,11 +124,11 @@ public class NameFingerprint extends Fingerprint {
       return true;
     } else if (o instanceof NameFingerprint) {
       NameFingerprint other = (NameFingerprint) o;
-      return classAccess == other.classAccess &&
-          superName.equals(other.superName) &&
-          Arrays.equals(interfaces, interfaces) &&
-          Arrays.equals(fields, fields) &&
-          Arrays.equals(methods, methods);
+      return superName.equals(other.superName) &&
+          Arrays.equals(interfaces, other.interfaces) &&
+          Arrays.equals(fields, other.fields) &&
+          Arrays.equals(methods, other.methods) &&
+          Arrays.equals(innerClasses, other.innerClasses);
     } else {
       return false;
     }
@@ -121,14 +136,40 @@ public class NameFingerprint extends Fingerprint {
   
   @Override
   public String serialize() {
-    return "";
+    LineBuilder builder = new LineBuilder();
+    builder.append(superName);
+    builder.append(interfaces);
+    builder.append(fields);
+    builder.append(methods);
+    builder.append(innerClasses);
+    return builder.toString();
   }
   
   public static ObjectDeserializer<Fingerprint> makeDeserializer() {
     return new ObjectDeserializer<Fingerprint>() {
+      private String[] deserializeArray(Scanner scanner) {
+        int length = scanner.nextInt();
+        String[] result = new String[length];
+        for (int i = 0; i < length; i++) {
+          result[i] = scanner.next();
+        }
+        return result;
+      }
+      
       @Override
       public Fingerprint deserialize(Scanner scanner) {
-        return null;
+        NameFingerprint fingerprint = new NameFingerprint();
+        
+        fingerprint.superName = scanner.next();
+        if ("null".equals(fingerprint.superName)) {
+          fingerprint.superName = null;
+        }
+        fingerprint.interfaces = deserializeArray(scanner);
+        fingerprint.fields = deserializeArray(scanner);
+        fingerprint.methods = deserializeArray(scanner);
+        fingerprint.innerClasses = deserializeArray(scanner);
+        
+        return fingerprint;
       }
     };
   }
