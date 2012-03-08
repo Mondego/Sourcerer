@@ -15,33 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.model.jar;
+package edu.uci.ics.sourcerer.tools.java.utilization.repo;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class Version {
-  private final Fingerprint fingerprint;
-  private JarSet jars;
+public class Repository {
+  private Collection<Library> libraries;
   
-  private Version(Fingerprint fingerprint, Jar jar) {
-    this.fingerprint = fingerprint;
-    jars = JarSet.create(jar);
+  private Repository() {
+    
   }
   
-  static Version create(Fingerprint fingerprint, Jar jar) {
-    return new Version(fingerprint, jar);
+  static Repository create(Collection<Library> libraries) {
+    Repository repo = new Repository();
+    repo.libraries = new ArrayList<>(libraries);
+    return repo;
   }
   
-  void addJar(Jar jar) {
-    jars = jars.add(jar);
-  }
-  
-  public Fingerprint getFingerprint() {
-    return fingerprint;
-  }
-  
-  public JarSet getJars() {
-    return jars;
+  public Collection<Library> getLibraries() {
+    return libraries;
   }
 }

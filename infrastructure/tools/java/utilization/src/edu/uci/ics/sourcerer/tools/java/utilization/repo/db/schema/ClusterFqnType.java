@@ -15,32 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.utils.db.internal;
-
-import edu.uci.ics.sourcerer.util.db.columns.Column;
+package edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class ResultTranslator<T> extends BasicResultTranslator<T> {
-  private final String table;
-  private final String select;
-  
-  public ResultTranslator(String table, Column<?> ... columns) {
-    this.table = table;
-    StringBuilder builder = new StringBuilder();
-    for (Column<?> column : columns) {
-      builder.append(column.getQualifiedName()).append(',');
-    }
-    builder.deleteCharAt(builder.length() - 1);
-    select = builder.toString();
-  }
-  
-  public final String getTable() {
-    return table;
-  }
-  
-  public final String getSelect() {
-    return select;
-  }
+public enum ClusterFqnType {
+  CORE,
+  VERSION;
 }

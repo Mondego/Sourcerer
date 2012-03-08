@@ -19,10 +19,14 @@ package edu.uci.ics.sourcerer.tools.java.utilization.model.jar;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.fqn.AbstractFqnNode;
+import edu.uci.ics.sourcerer.util.MutableSingletonMap;
 import edu.uci.ics.sourcerer.util.io.InvalidFileFormatException;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
 
@@ -30,11 +34,13 @@ import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class VersionedFqnNode extends AbstractFqnNode<VersionedFqnNode> {
-  private Versions versions;
+  private JarSet jars;
+  private Map<Fingerprint, FqnVersion> versions;
   
   private VersionedFqnNode(String name, VersionedFqnNode parent) {
     super(name, parent);
-    this.versions = Versions.create();
+    jars = JarSet.create();
+    versions =  Collections.emptyMap();
   }
   
   @Override
@@ -46,19 +52,57 @@ public class VersionedFqnNode extends AbstractFqnNode<VersionedFqnNode> {
     return new VersionedFqnNode(null, null);
   }
   
-  void addJar(Jar jar, Fingerprint fingerprint) {
-    versions.add(fingerprint, jar);
+  void addJar(Jar jar) {
+    jars = jars.add(jar);
   }
   
-  public Versions getVersions() {
-    return versions;
+  public JarSet getJars() {
+    return jars;
+  }
+  
+  public FqnVersion getVersion(Jar jar) {
+    for (FqnVersion version : versions.values()) {
+      if (version.getJars().contains(jar)) {
+        return version;
+      }
+    }
+    return null;
+  }
+  FqnVersion getVersion(Fingerprint fingerprint) {
+    FqnVersion fqn = null;
+    if (versions.isEmpty()) {
+      fqn = FqnVersion.create(this, fingerprint);
+      versions = MutableSingletonMap.create(fingerprint, fqn);
+    } else if (versions.size() == 1) {
+      fqn = versions.get(fingerprint);
+      if (fqn == null) {
+        versions = new HashMap<>(versions);
+        fqn = FqnVersion.create(this, fingerprint);
+        versions.put(fingerprint, fqn);
+      }
+    } else {
+      fqn = versions.get(fingerprint);
+      if (fqn == null) {
+        fqn = FqnVersion.create(this, fingerprint);
+        versions.put(fingerprint, fqn);
+      }
+    }
+    return fqn;
+  }
+  
+  public int getVersionCount() {
+    return versions.size();
+  }
+  
+  public Collection<FqnVersion> getVersions() {
+    return versions.values();
   }
   
   protected Saver createSaver(final Map<Jar, Integer> jarMapping) {
     return new Saver() {
       @Override
       protected void save(BufferedWriter writer, VersionedFqnNode node) throws IOException {
-        for (Version version : node.versions) {
+        for (FqnVersion version : versions.values()) {
           writer.write(" ");
           writer.write(version.getFingerprint().serialize());
           writer.write(" ");
@@ -93,7 +137,7 @@ public class VersionedFqnNode extends AbstractFqnNode<VersionedFqnNode> {
             if (jar == null) {
               throw new InvalidFileFormatException("Missing jar!");
             }
-            jar.addFqn(node, fingerprint);
+            jar.addFqn(node.getVersion(fingerprint));
           }
         }
       }

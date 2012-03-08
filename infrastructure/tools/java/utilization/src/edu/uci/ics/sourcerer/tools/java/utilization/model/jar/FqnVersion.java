@@ -15,40 +15,40 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util.db.columns;
+package edu.uci.ics.sourcerer.tools.java.utilization.model.jar;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class BooleanColumn extends Column<Boolean> {
-  private BooleanColumn(String name, String table, String type, boolean nullable) {
-    super(name, table, type, nullable);
-  }
-
-  public static Column<Boolean> getBoolean(String name, String table) {
-    return new BooleanColumn(name, table, "BOOLEAN", true);
+public class FqnVersion {
+  private final VersionedFqnNode fqn;
+  private final Fingerprint fingerprint;
+  private JarSet jars;
+  
+  private FqnVersion(VersionedFqnNode fqn, Fingerprint fingerprint) {
+    this.fqn = fqn;
+    this.fingerprint = fingerprint;
+    jars = JarSet.create();
   }
   
-  public static Column<Boolean> getBooleanNotNull(String name, String table) {
-    return new BooleanColumn(name, table, "BOOLEAN NOT NULL", false);
+  static FqnVersion create(VersionedFqnNode fqn, Fingerprint fingerprint) {
+    return new FqnVersion(fqn, fingerprint);
   }
   
-  @Override
-  public Boolean convertFromDB(String value) {
-    if (value == null) {
-      return null; 
-    } else {
-      return Boolean.valueOf(value);
-    }
-  }
-
-  @Override
-  protected String convertHelper(Boolean value) {
-    return value.toString();
+  void addJar(Jar jar) {
+    jars = jars.add(jar);
+    fqn.addJar(jar);
   }
   
-  @Override
-  protected String equalsHelper(Boolean value) {
-    return value.toString();
+  public VersionedFqnNode getFqn() {
+    return fqn;
+  }
+  
+  public Fingerprint getFingerprint() {
+    return fingerprint;
+  }
+  
+  public JarSet getJars() {
+    return jars;
   }
 }

@@ -71,8 +71,8 @@ public class ClusterIdentifier {
       
         for (VersionedFqnNode fqn : one.getCoreFqns()) {
           for (VersionedFqnNode otherFqn : two.getCoreFqns()) {
-            JarSet fqnJars = fqn.getVersions().getJars();
-            JarSet otherFqnJars = otherFqn.getVersions().getJars();
+            JarSet fqnJars = fqn.getJars();
+            JarSet otherFqnJars = otherFqn.getJars();
             // Conditional probability of other given this
             // # shared jars / total jars in this
             otherGivenThis.addValue((double) fqnJars.getIntersectionSize(otherFqnJars) / fqnJars.size());

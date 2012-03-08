@@ -17,24 +17,10 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.model.cluster;
 
-import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.logging.Level;
-
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
-import edu.uci.ics.sourcerer.util.Iterators;
-import edu.uci.ics.sourcerer.util.io.IOUtils;
-import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
-import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
-import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -53,39 +39,40 @@ public class ClusterCollection implements Iterable<Cluster> {
     return collection;
   }
   
-  public static ClusterCollection load(File file, JarCollection jars) {
-    TaskProgressLogger task = TaskProgressLogger.get();
-    
-    ClusterCollection collection = new ClusterCollection();
-    
-    collection.clusters = new ArrayList<>(1000);
-    task.start("Loading cluster collection", "clusters loaded", 500);
-    try (SimpleDeserializer deserializer = IOUtils.makeSimpleDeserializer(file)) {
-      for (Cluster cluster : deserializer.deserializeToIterable(Cluster.makeDeserializer(jars), true)) {
-        task.progress();
-        collection.clusters.add(cluster);
-      }
-      // Would use a finally block, but that crashes eclipse!
-      task.finish();
-      return collection;
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error loading cluster collection", e);
-      task.finish();
-      return null;
-    }
-  }
+//  public static ClusterCollection load(File file, JarCollection jars) {
+//    TaskProgressLogger task = TaskProgressLogger.get();
+//    
+//    ClusterCollection collection = new ClusterCollection();
+//    
+//    collection.clusters = new ArrayList<>(1000);
+//    task.start("Loading cluster collection", "clusters loaded", 500);
+//    try (SimpleDeserializer deserializer = IOUtils.makeSimpleDeserializer(file)) {
+//      for (Cluster cluster : deserializer.deserializeToIterable(Cluster.makeDeserializer(jars), true)) {
+//        task.progress();
+//        collection.clusters.add(cluster);
+//      }
+//      // Would use a finally block, but that crashes eclipse!
+//      task.finish();
+//      return collection;
+//    } catch (IOException e) {
+//      logger.log(Level.SEVERE, "Error loading cluster collection", e);
+//      task.finish();
+//      return null;
+//    }
+//  }
   
   public void reset(Collection<Cluster> clusters) {
     this.clusters = new ArrayList<>(clusters);
+    matcher = null;
   }
   
-  public void save(File file) {
-    try (SimpleSerializer serializer = IOUtils.makeSimpleSerializer(file)) {
-      serializer.serialize(clusters);
-    } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error saving cluster collection", e);
-    }
-  }
+//  public void save(File file) {
+//    try (SimpleSerializer serializer = IOUtils.makeSimpleSerializer(file)) {
+//      serializer.serialize(clusters);
+//    } catch (IOException e) {
+//      logger.log(Level.SEVERE, "Error saving cluster collection", e);
+//    }
+//  }
   
   public Collection<Cluster> getClusters() {
     return clusters;

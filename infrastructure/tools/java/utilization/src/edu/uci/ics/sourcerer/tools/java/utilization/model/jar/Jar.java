@@ -17,81 +17,37 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.model.jar;
 
-import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Scanner;
 
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
-import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepository;
-import edu.uci.ics.sourcerer.util.io.CustomSerializable;
-import edu.uci.ics.sourcerer.util.io.LineBuilder;
-import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class Jar implements CustomSerializable {
+public class Jar {
   private final JarFile jar;
-  private final Collection<VersionedFqnNode> fqns;
+  private final Collection<FqnVersion> fqns;
   
   Jar(JarFile jar) {
     this.jar = jar;
     fqns = new ArrayList<>();
   }
   
-  void addFqn(VersionedFqnNode fqn, Fingerprint fingerprint) {
+  void addFqn(FqnVersion fqn) {
     fqns.add(fqn);
-    fqn.addJar(this, fingerprint);
+    fqn.addJar(this);
   }
   
   public JarFile getJar() {
     return jar;
   }
   
-  public Collection<VersionedFqnNode> getFqns() {
+  public Collection<FqnVersion> getFqns() {
     return fqns;
   }
   
   @Override
   public String toString() {
     return jar.toString();
-  }
-
-  @Override
-  public String serialize() {
-    LineBuilder builder = new LineBuilder();
-    builder.append(jar.getProperties().HASH.getValue());
-    for (VersionedFqnNode fqn : fqns) {
-      builder.append(fqn.getFqn());
-      
-    }
-    return builder.toString();
-  }
-  
-  public static ObjectDeserializer<Jar> makeDeserializer(final VersionedFqnNode rootFragment, final JavaRepository repo) {
-    return new ObjectDeserializer<Jar>() {
-      ObjectDeserializer<Fingerprint> fingerprintDeserializer = Fingerprint.makeDeserializer();
-      @Override
-      public Jar deserialize(Scanner scanner) {
-        if (scanner.hasNext()) {
-          String hash = scanner.next();
-          JarFile jarFile = repo.getJarFile(hash);
-          if (jarFile == null) {
-            logger.severe("Jar with hash " + hash + " cannot be found in " + repo);
-            return null;
-          } else {
-            Jar jar = new Jar(jarFile);
-            while (scanner.hasNext()) {
-              jar.addFqn(rootFragment.getChild(scanner.next(), '.'), fingerprintDeserializer.deserialize(scanner));
-            }
-            return jar;
-          }
-        } else {
-          logger.severe("Missing hash for jar deserialization");
-          return null;
-        }
-      }
-    };
   }
 }

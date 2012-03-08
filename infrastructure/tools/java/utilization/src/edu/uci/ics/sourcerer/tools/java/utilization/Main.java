@@ -22,15 +22,13 @@ import java.io.File;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterIdentifier;
 import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ClusterMerger;
-import edu.uci.ics.sourcerer.tools.java.utilization.identifier.ExemplarIdentifier;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.Repository;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.RepositoryBuilder;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.ClusterStats;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.CoverageCalculator;
-import edu.uci.ics.sourcerer.tools.java.utilization.stats.DecomposeJars;
-import edu.uci.ics.sourcerer.tools.java.utilization.stats.GeneralStats;
-import edu.uci.ics.sourcerer.tools.java.utilization.stats.JarStats;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.PopularityCalculator;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
@@ -59,42 +57,42 @@ public class Main {
 //      ClusterCollection.CLUSTER_LOG,
 //      MatchClusterNames.TEST_REPO);
   
-  public static final Command IDENTIFY_LIBRARIES = new Command("identify-libraries", "Identified libraries.") {
-    @Override
-    public void action() {
-      TaskProgressLogger task = TaskProgressLogger.get();
-      task.start("Identifying libraries");
-      
-      JarCollection jars = JarCollection.create();
-      
-      ClusterCollection clusters = ClusterIdentifier.identifyClusters(jars);
-      ClusterMerger.mergeClusters(clusters);
-      ExemplarIdentifier.identifyExemplars(clusters);
-      
-      GeneralStats.calculate(jars, clusters);
-      JarStats.calculate(jars, clusters);
-      ClusterStats.calculate(jars, clusters);
-      
-      DecomposeJars.decomposeJars(clusters);
-      
-      task.finish();
-    }
-  }.setProperties(
-      JavaRepositoryFactory.INPUT_REPO,
-      Fingerprint.FINGERPRINT_MODE,
-      ClusterIdentifier.COMPATIBILITY_THRESHOLD,
-      ClusterMerger.CLUSTER_MERGE_METHOD,
-      ClusterMerger.CLUSTER_MERGING_LOG,
-      ExemplarIdentifier.EXEMPLAR_THRESHOLD, 
-      ExemplarIdentifier.EXEMPLAR_LOG,
-      GeneralStats.GENERAL_STATS, 
-      GeneralStats.POPULAR_FQNS,
-      JarStats.JAR_LISTING,
-      ClusterStats.CLUSTER_LISTING,
-      GeneralStats.MAX_TABLE_COLUMNS,
-      DecomposeJars.TEST_REPO,
-      DecomposeJars.TEST_REPO_CACHE,
-      DecomposeJars.DECOMPOSED_JAR_LISTING);
+//  public static final Command IDENTIFY_LIBRARIES = new Command("identify-libraries", "Identified libraries.") {
+//    @Override
+//    public void action() {
+//      TaskProgressLogger task = TaskProgressLogger.get();
+//      task.start("Identifying libraries");
+//      
+//      JarCollection jars = JarCollection.create();
+//      
+//      ClusterCollection clusters = ClusterIdentifier.identifyClusters(jars);
+//      ClusterMerger.mergeClusters(clusters);
+//      ExemplarIdentifier.identifyExemplars(clusters);
+//      
+//      GeneralStats.calculate(jars, clusters);
+//      JarStats.calculate(jars, clusters);
+//      ClusterStats.calculate(jars, clusters);
+//      
+//      DecomposeJars.decomposeJars(clusters);
+//      
+//      task.finish();
+//    }
+//  }.setProperties(
+//      JavaRepositoryFactory.INPUT_REPO,
+//      Fingerprint.FINGERPRINT_MODE,
+//      ClusterIdentifier.COMPATIBILITY_THRESHOLD,
+//      ClusterMerger.CLUSTER_MERGE_METHOD,
+//      ClusterMerger.CLUSTER_MERGING_LOG,
+//      ExemplarIdentifier.EXEMPLAR_THRESHOLD, 
+//      ExemplarIdentifier.EXEMPLAR_LOG,
+//      GeneralStats.GENERAL_STATS, 
+//      GeneralStats.POPULAR_FQNS,
+//      JarStats.JAR_LISTING,
+//      ClusterStats.CLUSTER_LISTING,
+//      GeneralStats.MAX_TABLE_COLUMNS,
+//      DecomposeJars.TEST_REPO,
+//      DecomposeJars.TEST_REPO_CACHE,
+//      DecomposeJars.DECOMPOSED_JAR_LISTING);
   
   public static final Argument<File> JAR_FILTER_FILE = new FileArgument("jar-filter-file", null, "Jar filter file");
   public static final Command CLUSTER_JARS = new Command("cluster-jars", "Cluster jars.") {
@@ -113,6 +111,7 @@ public class Main {
       ClusterCollection clusters = ClusterIdentifier.identifyFullMatchingClusters(jars);
       ClusterMerger.mergeByVersions(clusters);
       
+      Repository repo = RepositoryBuilder.buildRepository(jars, clusters);
       ClusterStats.calculate(jars, clusters);
       
       task.finish();
@@ -121,7 +120,7 @@ public class Main {
       JavaRepositoryFactory.INPUT_REPO,
       Fingerprint.FINGERPRINT_MODE,
       JAR_FILTER_FILE,
-      GeneralStats.MAX_TABLE_COLUMNS,
+//      GeneralStats.MAX_TABLE_COLUMNS,
       ClusterStats.CLUSTER_LISTING
       );
   

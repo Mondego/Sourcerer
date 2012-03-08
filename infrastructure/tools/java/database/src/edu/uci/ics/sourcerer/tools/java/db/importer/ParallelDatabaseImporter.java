@@ -58,7 +58,7 @@ public final class ParallelDatabaseImporter {
     new DatabaseRunnable() {
       @Override
       public void action() {
-        TaskProgressLogger task = TaskProgressLogger.create();
+        TaskProgressLogger task = TaskProgressLogger.get();
         task.start("Initializing database");
         
         task.start("Dropping old tables");
@@ -111,7 +111,7 @@ public final class ParallelDatabaseImporter {
   }
   
   public static void importJavaLibraries() {
-    TaskProgressLogger task = TaskProgressLogger.create();
+    TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Importing Java libraries");
     
     task.start("Loading extracted repository");
@@ -198,7 +198,7 @@ public final class ParallelDatabaseImporter {
   }
   
   public static void importJarFiles() {
-    TaskProgressLogger task = TaskProgressLogger.create();
+    TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Importing jar files");
     
     task.start("Loading extracted repository");
@@ -344,7 +344,7 @@ public final class ParallelDatabaseImporter {
   }
   
   public static void importProjects() {
-    TaskProgressLogger task = TaskProgressLogger.create();
+    TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Importing projects");
     
     task.start("Loading extracted repository");

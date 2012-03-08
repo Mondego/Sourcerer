@@ -64,7 +64,7 @@ public class ClusterStats {
           return Integer.compare(two.getJars().size(), one.getJars().size());
         }});
       
-      Integer maxJarsToShow = GeneralStats.MAX_TABLE_COLUMNS.getValue();
+      Integer maxJarsToShow = null;//GeneralStats.MAX_TABLE_COLUMNS.getValue();
       
       for (Cluster cluster : sorted) {
         // Collect all the jars that overlap with this jar
@@ -114,7 +114,7 @@ public class ClusterStats {
         for (VersionedFqnNode fqn : coreFqns) {
           for (Jar jar : containedJars) {
             // Does this jar contain the FQN?
-            if (fqn.getVersions().getJars().contains(jar)) {
+            if (fqn.getJars().contains(jar)) {
               log.writeFragment("*");
             } else {
               log.writeFragment(" ");
@@ -125,16 +125,8 @@ public class ClusterStats {
         }
         coreFqns = cluster.getCoreFqns();
         
-        // See if there are any exemplar non-core FQNs
-        Collection<VersionedFqnNode> nonCoreExemplar = new TreeSet<>();
-        for (VersionedFqnNode fqn : cluster.getExemplarFqns()) {
-          if (!coreFqns.contains(fqn)) {
-            nonCoreExemplar.add(fqn);
-          }
-        }
-
         // Log the versioned core fqns
-        if (!cluster.getVersionedCoreFqns().isEmpty()) {
+        if (!cluster.getVersionFqns().isEmpty()) {
           // Log the number line
           for (int i = 1; i <= c; i++) {
             log.writeFragment(Integer.toString(i % 10));
@@ -142,11 +134,11 @@ public class ClusterStats {
           log.writeFragment(" Versioned Core FQNs");
           log.newLine();
           
-          Collection<VersionedFqnNode> versionedCoreFqns = new TreeSet<>(cluster.getVersionedCoreFqns());
+          Collection<VersionedFqnNode> versionedCoreFqns = new TreeSet<>(cluster.getVersionFqns());
           for (VersionedFqnNode fqn : versionedCoreFqns) {
             for (Jar jar : containedJars) {
               // Does this jar contain the FQN?
-              if (fqn.getVersions().getJars().contains(jar)) {
+              if (fqn.getJars().contains(jar)) {
                 log.writeFragment("*");
               } else {
                 log.writeFragment(" ");
@@ -157,59 +149,36 @@ public class ClusterStats {
           }
         }
         
-        // Log the non-core exemplar fqns
-        if (!nonCoreExemplar.isEmpty()) {
-          // Log the number line
-          for (int i = 1; i <= c; i++) {
-            log.writeFragment(Integer.toString(i % 10));
-          }
-          log.writeFragment(" Non-core Exemplar FQNs");
-          log.newLine();
-          
-          for (VersionedFqnNode fqn : nonCoreExemplar) {
-            for (Jar jar : containedJars) {
-              // Does this jar contain the FQN?
-              if (fqn.getVersions().getJars().contains(jar)) {
-                log.writeFragment("*");
-              } else {
-                log.writeFragment(" ");
-              }
-            }
-            log.writeFragment(" " + fqn.getFqn());
-            log.newLine();
-          }
-        }
-        
-        // See if there are any other extra fqns
-        Collection<VersionedFqnNode> extraFqns = new TreeSet<>();
-        for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
-          if (!nonCoreExemplar.contains(fqn)) {
-            extraFqns.add(fqn);
-          }
-        }
-         
-        // Log the extra fqns
-        if (!extraFqns.isEmpty()) {
-          // Log the number line
-          for (int i = 1; i <= c; i++) {
-            log.writeFragment(Integer.toString(i % 10));
-          }
-          log.writeFragment(" Extra FQNs");
-          log.newLine();
-          
-          for (VersionedFqnNode fqn : extraFqns) {
-            for (Jar jar : containedJars) {
-              // Does this other jar contain the FQN?
-              if (fqn.getVersions().getJars().contains(jar)) {
-                log.writeFragment("*");
-              } else {
-                log.writeFragment(" ");
-              }
-            }
-            log.writeFragment(" " + fqn.getFqn());
-            log.newLine();
-          }
-        } 
+//        // See if there are any other extra fqns
+//        Collection<VersionedFqnNode> extraFqns = new TreeSet<>();
+//        for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
+//          if (!nonCoreExemplar.contains(fqn)) {
+//            extraFqns.add(fqn);
+//          }
+//        }
+//         
+//        // Log the extra fqns
+//        if (!extraFqns.isEmpty()) {
+//          // Log the number line
+//          for (int i = 1; i <= c; i++) {
+//            log.writeFragment(Integer.toString(i % 10));
+//          }
+//          log.writeFragment(" Extra FQNs");
+//          log.newLine();
+//          
+//          for (VersionedFqnNode fqn : extraFqns) {
+//            for (Jar jar : containedJars) {
+//              // Does this other jar contain the FQN?
+//              if (fqn.getVersions().getJars().contains(jar)) {
+//                log.writeFragment("*");
+//              } else {
+//                log.writeFragment(" ");
+//              }
+//            }
+//            log.writeFragment(" " + fqn.getFqn());
+//            log.newLine();
+//          }
+//        } 
       }
     } catch (IOException e)  {
       logger.log(Level.SEVERE, "Error in writing logs", e);

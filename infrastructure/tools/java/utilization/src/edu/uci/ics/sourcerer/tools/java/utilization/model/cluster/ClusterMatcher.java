@@ -25,6 +25,7 @@ import java.util.Map;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.CachedReference;
@@ -43,7 +44,7 @@ public class ClusterMatcher {
         for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
           map.put(fqn.getFqn(), cluster);
         }
-        for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
+        for (VersionedFqnNode fqn : cluster.getVersionFqns()) {
           map.put(fqn.getFqn(), cluster);
         }
       }
@@ -57,7 +58,7 @@ public class ClusterMatcher {
         for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
           map.put(fqn, cluster);
         }
-        for (VersionedFqnNode fqn : cluster.getExtraFqns()) {
+        for (VersionedFqnNode fqn : cluster.getVersionFqns()) {
           map.put(fqn, cluster);
         }
       }
@@ -94,8 +95,8 @@ public class ClusterMatcher {
       // It's from a different JarCollection, so look up fqns directly
       else {
         clusters = new HashSet<>();
-        for (VersionedFqnNode fqn : jar.getFqns()) {
-          Cluster cluster = getCluster(fqn.getFqn());
+        for (FqnVersion fqn : jar.getFqns()) {
+          Cluster cluster = getCluster(fqn.getFqn().getFqn());
           if (cluster != null) {
             clusters.add(cluster);
           }
