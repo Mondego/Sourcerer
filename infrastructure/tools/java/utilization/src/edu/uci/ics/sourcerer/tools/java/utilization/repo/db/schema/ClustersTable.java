@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema;
 
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
@@ -45,11 +46,11 @@ public class ClustersTable extends DatabaseTable {
   }
   
   // ---- INSERT ----
-  public static Insert createInsert(String name) {
+  private static Insert createInsert(String name) {
     return TABLE.makeInsert(NAME.to(name));
   }
   
-  public static Insert createInsert() {
-    return createInsert(null);
+  public static Insert createInsert(Cluster cluster) {
+    return createInsert((String) null);
   }
 }

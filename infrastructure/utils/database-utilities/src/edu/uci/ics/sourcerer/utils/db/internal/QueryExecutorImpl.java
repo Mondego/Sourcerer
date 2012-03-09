@@ -330,6 +330,13 @@ class QueryExecutorImpl implements QueryExecutor {
   }
   
   @Override
+  public void createTables(DatabaseTable ... tables) {
+    for (DatabaseTable table : tables) {
+      createTable(table);
+    }
+  }
+  
+  @Override
   public void dropTables(DatabaseTable ... tables) {
     StringBuilder sql = new StringBuilder("DROP TABLE IF EXISTS ");
     for (DatabaseTable table : tables) {

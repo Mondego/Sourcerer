@@ -46,6 +46,7 @@ public interface QueryExecutor extends Closeable {
   
   // Typed Updates
   public void createTable(DatabaseTable table);
+  public void createTables(DatabaseTable ... tables);
   public void dropTables(DatabaseTable ... tables);
   public void insert(Insert insert);
   public Integer insertWithKey(Insert insert);

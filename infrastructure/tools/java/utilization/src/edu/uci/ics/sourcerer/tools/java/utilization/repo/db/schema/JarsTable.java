@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema;
 
+import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
@@ -47,7 +49,12 @@ public class JarsTable extends DatabaseTable {
   }
   
   // ---- INSERT ----
-  public static Insert createInsert(String name, String hash) {
+  private static Insert createInsert(String name, String hash) {
     return TABLE.makeInsert(NAME.to(name), HASH.to(hash));
+  }
+  
+  public static Insert createInsert(Jar jar) {
+    JarProperties properties = jar.getJar().getProperties();
+    return createInsert(properties.NAME.getValue(), properties.HASH.getValue());
   }
 }

@@ -27,6 +27,7 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.Repository;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.RepositoryBuilder;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.DatabaseImporter;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.ClusterStats;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.CoverageCalculator;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.PopularityCalculator;
@@ -35,6 +36,7 @@ import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
+import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -112,7 +114,10 @@ public class Main {
       ClusterMerger.mergeByVersions(clusters);
       
       Repository repo = RepositoryBuilder.buildRepository(jars, clusters);
-      ClusterStats.calculate(jars, clusters);
+      
+      DatabaseImporter importer = DatabaseImporter.create(jars, clusters, repo);
+      importer.run();
+//      ClusterStats.calculate(jars, clusters);
       
       task.finish();
     }
@@ -121,7 +126,11 @@ public class Main {
       Fingerprint.FINGERPRINT_MODE,
       JAR_FILTER_FILE,
 //      GeneralStats.MAX_TABLE_COLUMNS,
-      ClusterStats.CLUSTER_LISTING
+      ClusterStats.CLUSTER_LISTING,
+      FileUtils.TEMP_DIR,
+      DatabaseConnectionFactory.DATABASE_URL,
+      DatabaseConnectionFactory.DATABASE_USER,
+      DatabaseConnectionFactory.DATABASE_PASSWORD
       );
   
 //  public static final Command COMPARE_LIBRARY_IDENTIFICATION = new Command("compare-library-identification", "Compare methods for clustering and identifying the libraries.") {

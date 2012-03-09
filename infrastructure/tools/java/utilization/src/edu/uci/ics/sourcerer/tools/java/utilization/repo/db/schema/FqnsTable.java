@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema;
 
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
@@ -33,6 +34,8 @@ public class FqnsTable extends DatabaseTable {
    *  +-------------+-----------------+-------+--------+
    *  | fqn_id      | SERIAL          | No    | Yes    |
    *  | fqn         | VARCHAR(8192)   | No    | Yes    |
+   *  | cluster_id  | BIGINT UNSIGNED | No    | Yes    |
+   *  | type        | ENUM(values)    | No    | No     |
    *  +-------------+-----------------+-------+--------+
    */
   
@@ -40,13 +43,19 @@ public class FqnsTable extends DatabaseTable {
   
   public static final Column<Integer> FQN_ID = TABLE.addSerialColumn("fqn_id");
   public static final StringColumn FQN = TABLE.addVarcharColumn("fqn", 8192, false).addIndex(48);
+  public static final Column<Integer> CLUSTER_ID = TABLE.addIDColumn("cluster_id", false).addIndex();
+  public static final Column<ClusterFqnType> TYPE = TABLE.addEnumColumn("tyoe", ClusterFqnType.values(), false);
   
   private FqnsTable() {
     super("fqns");
   }
   
   // ---- INSERT ----
-  public static Insert createInsert(String fqn) {
-    return TABLE.makeInsert(FQN.to(fqn));
+  private static Insert createInsert(String fqn, Integer clusterID, ClusterFqnType type) {
+    return TABLE.makeInsert(FQN.to(fqn), CLUSTER_ID.to(clusterID), TYPE.to(type));
+  }
+  
+  public static Insert createInsert(VersionedFqnNode fqn, Integer clusterID, ClusterFqnType type) {
+    return createInsert(fqn.getFqn(), clusterID, type);
   }
 }

@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema;
 
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.LibraryVersion;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
@@ -33,23 +34,25 @@ public class VersionsTable extends DatabaseTable {
    * +-------------+-----------------+-------+--------+
    * | version_id  | SERIAL          | No    | Yes    |
    * | name        | VARCHAR(128)    | Yes   | Yes    |
+   * | library_id  | BIGINT UNSIGNED | No    | Yes    |
    * +-------------+-----------------+-------+--------+   
    */
   public static final VersionsTable TABLE = new VersionsTable();
   
   public static final Column<Integer> VERSION_ID = TABLE.addSerialColumn("version_id");
   public static final StringColumn NAME = TABLE.addVarcharColumn("name", 128, true).addIndex(48);
+  public static final Column<Integer> LIBRARY_ID = TABLE.addIDColumn("library_id", false).addIndex();
   
   private VersionsTable() {
     super("versions");
   }
   
   // ---- INSERT ----
-  public static Insert createInsert(String name) {
-    return TABLE.makeInsert(NAME.to(name));
+  private static Insert createInsert(String name, Integer libraryID) {
+    return TABLE.makeInsert(NAME.to(name), LIBRARY_ID.to(libraryID));
   }
   
-  public static Insert createInsert() {
-    return createInsert(null);
+  public static Insert createInsert(LibraryVersion version, Integer libraryID) {
+    return createInsert((String) null, libraryID);
   }
 }

@@ -25,7 +25,7 @@ package edu.uci.ics.sourcerer.utils.db;
 public abstract class DatabaseRunnable {
   protected QueryExecutor exec;
   
-  public abstract void action();
+  protected abstract void action();
   
   public final void run() {
     try (DatabaseConnection conn = DatabaseConnectionFactory.INSTANCE.make()) {

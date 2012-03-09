@@ -36,7 +36,7 @@ public class JarRepositoryCloner {
   public static void cloneJarRepositoryFragment() {
     JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
     ModifiableJavaRepository newRepo = JavaRepositoryFactory.INSTANCE.loadModifiableJavaRepository(JavaRepositoryFactory.OUTPUT_REPO);
-    
+
     for (String hash : FileUtils.readFileToCollection(JAR_FILTER_FILE.getValue())) {
       JarFile jar = repo.getJarFile(hash);
       newRepo.addMavenJarFile(jar.getFile().toFile(), jar.getSourceFile() == null ? null : jar.getSourceFile().toFile(), jar.getProperties().GROUP.getValue(), jar.getProperties().NAME.getValue(), jar.getProperties().VERSION.getValue());

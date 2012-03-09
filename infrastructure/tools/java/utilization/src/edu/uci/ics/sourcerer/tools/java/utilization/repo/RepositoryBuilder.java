@@ -133,34 +133,34 @@ public class RepositoryBuilder {
     Repository repo = Repository.create(clusterSetMap.values());
     
     // Print things out
-    Map<Library, Integer> numMap = new HashMap<>();
-    int count = 0;
-    for (Library library : clusterSetMap.values()) {
-      numMap.put(library, ++count);
-    }
-    Map<LibraryVersion, Integer> versionNumMap = new HashMap<>();
-    count = 0;
-    for (Library library : clusterSetMap.values()) {
-      for (LibraryVersion version : library.getVersions()) {
-        versionNumMap.put(version, ++count);
-      }
-    }
-    for (Library library : clusterSetMap.values()) {
-      logger.info(numMap.get(library) + ": Library");
-      StringBuilder builder = new StringBuilder(" Depends on:");
-      for (Library dep : library.getDependencies()) {
-        builder.append(" ").append(numMap.get(dep));
-      }
-      logger.info(builder.toString());
-      
-      for (LibraryVersion version : library.getVersions()) {
-        builder = new StringBuilder(" " + versionNumMap.get(version) + " Version: " + version.getJars().toString());
-        for (LibraryVersion dep : version.getDependencies()) {
-          builder.append(" ").append(versionNumMap.get(dep));
-        }
-        logger.info(builder.toString());
-      }
-    }
+//    Map<Library, Integer> numMap = new HashMap<>();
+//    int count = 0;
+//    for (Library library : clusterSetMap.values()) {
+//      numMap.put(library, ++count);
+//    }
+//    Map<LibraryVersion, Integer> versionNumMap = new HashMap<>();
+//    count = 0;
+//    for (Library library : clusterSetMap.values()) {
+//      for (LibraryVersion version : library.getVersions()) {
+//        versionNumMap.put(version, ++count);
+//      }
+//    }
+//    for (Library library : clusterSetMap.values()) {
+//      logger.info(numMap.get(library) + ": Library");
+//      StringBuilder builder = new StringBuilder(" Depends on:");
+//      for (Library dep : library.getDependencies()) {
+//        builder.append(" ").append(numMap.get(dep));
+//      }
+//      logger.info(builder.toString());
+//      
+//      for (LibraryVersion version : library.getVersions()) {
+//        builder = new StringBuilder(" " + versionNumMap.get(version) + " Version: " + version.getJars().toString());
+//        for (LibraryVersion dep : version.getDependencies()) {
+//          builder.append(" ").append(versionNumMap.get(dep));
+//        }
+//        logger.info(builder.toString());
+//      }
+//    }
 
     return repo;
   }
