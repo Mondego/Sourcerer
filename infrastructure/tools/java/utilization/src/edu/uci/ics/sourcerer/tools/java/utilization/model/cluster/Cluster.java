@@ -30,6 +30,18 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Cluster {
+  public static final Comparator<Cluster> ASCENDING_SIZE_COMPARATOR =
+    new Comparator<Cluster>() {
+      @Override
+      public int compare(Cluster o1, Cluster o2) {
+        int cmp = Integer.compare(o1.getJars().size(), o2.getJars().size());
+        if (cmp == 0) {
+          return Integer.compare(o1.hashCode(), o2.hashCode());
+        } else {
+          return cmp;
+        }
+      }
+    };
   public static final Comparator<Cluster> DESCENDING_SIZE_COMPARATOR = 
       new Comparator<Cluster>() {
         @Override

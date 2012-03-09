@@ -40,6 +40,7 @@ public abstract class Fingerprint implements CustomSerializable {
     LENGTH,
     HASH,
     NAME,
+    TYPE,
     ;
   }
 
@@ -128,6 +129,8 @@ public abstract class Fingerprint implements CustomSerializable {
         return new HashFingerprint(length, FileUtils.computeHash(is));
       case NAME:
         return NameFingerprint.create(is);
+      case TYPE:
+        return TypeFingerprint.create(is);
       default:
         logger.severe("Unknown fingerprint mode: " + FINGERPRINT_MODE.getValue());
         return null;
@@ -178,6 +181,8 @@ public abstract class Fingerprint implements CustomSerializable {
         };
       case NAME:
         return NameFingerprint.makeDeserializer();
+      case TYPE:
+        return TypeFingerprint.makeDeserializer();
       default:
         logger.severe("Unknown fingerprint mode: " + FINGERPRINT_MODE.getValue());
         return null;

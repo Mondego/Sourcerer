@@ -136,28 +136,29 @@ public class ClusterMerger {
         }
         JarSet jars = versions.get(version);
         if (jars == null) {
-          jars = JarSet.create();
+          versions.put(version, JarSet.create(jar));
+        } else {
+          versions.put(version, jars.add(jar));
         }
-        versions.put(version, jars.add(jar));
       }
       
       Set<VersionedFqnNode> globalPotentials = new HashSet<>();
       Set<VersionedFqnNode> globalPartials = new HashSet<>();
       // For each version, find any fqns that always occur
       for (JarSet jars : versions.values()) {
-        Multiset<VersionedFqnNode> potentials = HashMultiset.create();
+        Multiset<FqnVersion> potentials = HashMultiset.create();
         for (Jar jar : jars) {
           for (FqnVersion version : jar.getFqns()) {
-            potentials.add(version.getFqn());
+            potentials.add(version);
           }
         }
         
         int max = jars.size();
-        for (VersionedFqnNode fqn : potentials.elementSet()) {
+        for (FqnVersion fqn : potentials.elementSet()) {
           if (potentials.count(fqn) == max && fqn.getJars().isSubset(biggest.getJars())) {
-            globalPotentials.add(fqn);
+            globalPotentials.add(fqn.getFqn());
           } else {
-            globalPartials.add(fqn);
+            globalPartials.add(fqn.getFqn());
           }
         }
       }

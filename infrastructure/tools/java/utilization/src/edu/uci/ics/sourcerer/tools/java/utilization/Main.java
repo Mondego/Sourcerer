@@ -115,8 +115,8 @@ public class Main {
       
       Repository repo = RepositoryBuilder.buildRepository(jars, clusters);
       
-      DatabaseImporter importer = DatabaseImporter.create(jars, clusters, repo);
-      importer.run();
+//      DatabaseImporter importer = DatabaseImporter.create(jars, clusters, repo);
+//      importer.run();
 //      ClusterStats.calculate(jars, clusters);
       
       task.finish();

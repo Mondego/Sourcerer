@@ -102,11 +102,11 @@ public class VersionedFqnNode extends AbstractFqnNode<VersionedFqnNode> {
     return new Saver() {
       @Override
       protected void save(BufferedWriter writer, VersionedFqnNode node) throws IOException {
-        for (FqnVersion version : versions.values()) {
+        for (FqnVersion version : node.versions.values()) {
           writer.write(" ");
           writer.write(version.getFingerprint().serialize());
           writer.write(" ");
-          boolean rest = true;
+          boolean rest = false;
           for (Jar jar : version.getJars()) {
             if (rest) {
               writer.write(":");
