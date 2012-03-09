@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -115,8 +117,13 @@ public class ClusterMerger {
     task.start("Merging clusters", "clusters examined", 500);
     // Starting from the most important jar
     // For each cluster
+    Set<Cluster> mergedClusters = new HashSet<>();
     while (!sortedClusters.isEmpty()) {
       Cluster biggest = sortedClusters.pollFirst();
+      // Has this cluster already been merged?
+      if (mergedClusters.contains(biggest)) {
+        continue;
+      }
       remainingClusters.add(biggest);
       
       // Collect the various versions of this cluster that are present
@@ -138,29 +145,38 @@ public class ClusterMerger {
       Set<VersionedFqnNode> globalPartials = new HashSet<>();
       // For each version, find any fqns that always occur
       for (JarSet jars : versions.values()) {
-        Multiset<FqnVersion> potentials = HashMultiset.create();
+        Multiset<VersionedFqnNode> potentials = HashMultiset.create();
         for (Jar jar : jars) {
-          potentials.addAll(jar.getFqns());
+          for (FqnVersion version : jar.getFqns()) {
+            potentials.add(version.getFqn());
+          }
         }
         
         int max = jars.size();
-        for (FqnVersion fqn : potentials.elementSet()) {
+        for (VersionedFqnNode fqn : potentials.elementSet()) {
           if (potentials.count(fqn) == max && fqn.getJars().isSubset(biggest.getJars())) {
-            globalPotentials.add(fqn.getFqn());
+            globalPotentials.add(fqn);
           } else {
-            globalPartials.add(fqn.getFqn());
+            globalPartials.add(fqn);
           }
         }
       }
       
       globalPotentials.removeAll(globalPartials);
       globalPotentials.removeAll(biggest.getCoreFqns());
-      // Now we have a set of new fqns to add to the cluster
+      // Collect the clusters we plan on merging
+      Set<Cluster> clustersToMerge = new HashSet<>();
       for (VersionedFqnNode fqn : globalPotentials) {
-        biggest.addVersionedCore(fqn);
-        // Remove the associated cluster from the set
-        sortedClusters.remove(matcher.getCluster(fqn));
+        clustersToMerge.add(matcher.getCluster(fqn));
       }
+      clustersToMerge.removeAll(mergedClusters);
+      // Now merge the clusters
+      for (Cluster cluster : clustersToMerge) {
+        for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
+          biggest.addVersionedCore(fqn);
+        }
+      }
+      mergedClusters.addAll(clustersToMerge);
       
       task.progress();
     }

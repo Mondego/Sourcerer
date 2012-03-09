@@ -321,6 +321,7 @@ public class DatabaseImporter extends DatabaseRunnable {
     task.start("Processing libraries", "libraries processed");
     for (Library library : repo.getLibraries()) {
       inserter.addInsert(LibrariesTable.createInsert(library));
+      task.progress();
     }
     task.finish();
     
@@ -355,6 +356,7 @@ public class DatabaseImporter extends DatabaseRunnable {
     for (Map.Entry<Library, Integer> entry : libraryMap.entrySet()) {
       for (Cluster cluster : entry.getKey().getClusters()) {
         inserter.addInsert(LibraryToClusterTable.createInsert(entry.getValue(), clusterMap.get(cluster)));
+        task.progress();
       }
     }
     task.finish();
@@ -376,6 +378,7 @@ public class DatabaseImporter extends DatabaseRunnable {
     for (Map.Entry<Library, Integer> entry : libraryMap.entrySet()) {
       for (Library dep : entry.getKey().getDependencies()) {
         inserter.addInsert(LibraryDependencyTable.createInsert(entry.getValue(), libraryMap.get(dep)));
+        task.progress();
       }
     }
     task.finish();
@@ -397,6 +400,7 @@ public class DatabaseImporter extends DatabaseRunnable {
     for (Map.Entry<Library, Integer> entry : libraryMap.entrySet()) {
       for (LibraryVersion version : entry.getKey().getVersions()) {
         inserter.addInsert(VersionsTable.createInsert(version, entry.getValue()));
+        task.progress();
       }
     }
     task.finish();
@@ -434,6 +438,7 @@ public class DatabaseImporter extends DatabaseRunnable {
     for (Map.Entry<LibraryVersion, Integer> entry : versionMap.entrySet()) {
       for (Jar jar : entry.getKey().getJars()) {
         inserter.addInsert(VersionToJarTable.createInsert(entry.getValue(), jarMap.get(jar)));
+        task.progress();
       }
     }
     task.finish();
@@ -455,6 +460,7 @@ public class DatabaseImporter extends DatabaseRunnable {
     for (Map.Entry<LibraryVersion, Integer> entry : versionMap.entrySet()) {
       for (FqnVersion fqn : entry.getKey().getFqnVersions()) {
         inserter.addInsert(VersionToFqnVersionTable.createInsert(entry.getValue(), fqnVersionMap.get(fqn)));
+        task.progress();
       }
     }
     task.finish();
@@ -476,6 +482,7 @@ public class DatabaseImporter extends DatabaseRunnable {
     for (Map.Entry<LibraryVersion, Integer> entry : versionMap.entrySet()) {
       for (LibraryVersion dep : entry.getKey().getDependencies()) {
         inserter.addInsert(VersionToFqnVersionTable.createInsert(entry.getValue(), versionMap.get(dep)));
+        task.progress();
       }
     }
     task.finish();

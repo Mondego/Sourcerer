@@ -5,11 +5,25 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.logging.Level;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class ServletUtils {
-
+  public static Integer getIntValue(HttpServletRequest request, String name) {
+    String val = request.getParameter(name);
+    if (val == null) {
+      return null;
+    } else {
+      try {
+        return Integer.valueOf(val);
+      } catch (NumberFormatException e) {
+        return null;
+      }
+    }
+  }
+  
 	public static void writeEntityIds(HttpServletResponse response, long[] eids)
 	throws IOException {
 		OutputStream os = response.getOutputStream();
