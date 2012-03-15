@@ -17,8 +17,6 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
-import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -103,6 +101,38 @@ public class ClusterMerger {
 //    task.finish();
 //  }
   
+  /*
+   * There are two ways to do this. 
+   * 
+   * Version one:
+   * Group the jars according to their versions of the core fqns.
+   * For every version of the core, look through each jar for that version.
+   * Collect every VERSION of every FQN in those jars.
+   * If one version occurs in every jar, add it to the potential fqns list.
+   * If one version does not occur in every jar, add it to the invalid fqns list.
+   * Once every version has been examined, remove all the invalid fqns from the potentials list.
+   * Go through each potential fqn to see if there is complete coverage of a cluster.
+   * If there is, merge that cluster.
+   * 
+   * The intuition is that the extra fqns should only change version if the core is changing version.
+   * If the core is fixed and they're changing version, the worry is that the other cluster is and application
+   * and this cluster is the library, which means they should not be merged.
+   * This turns out not to be true in cases when the only difference between two versions is in the extra fqns.
+   * Can't see a good way to fix that.
+   * 
+   * Version two:
+   * Group the jars according to their versions of the core fqns.
+   * For every version of the core, look through each jar for that version.
+   * Collect every fqn in those jars.
+   * If one fqn occurs in every jar, add it to the potentials fqns list.
+   * If one fqn does not occur in every jar, add it to the invalid fqns list.
+   * Once every version has been examined, remove all the invalid fqns from the potentials list.
+   * Collect all the clusters for these fqns, and merge them.
+   * A cluster will never be paritally matched, as they are all 100% co-occurence.
+   * 
+   * This fixes the problem from above, but runs the risk of the issue mentioned above as well.
+   */
+  
   public static void mergeByVersions(ClusterCollection clusters) {
     TaskProgressLogger task = TaskProgressLogger.get();
     
@@ -114,71 +144,80 @@ public class ClusterMerger {
     sortedClusters.addAll(clusters.getClusters());
     
     Collection<Cluster> remainingClusters = new LinkedList<>();
+    Set<VersionedFqnNode> usedFqns = new HashSet<>();
     task.start("Merging clusters", "clusters examined", 500);
     // Starting from the most important jar
     // For each cluster
-    Set<Cluster> mergedClusters = new HashSet<>();
     while (!sortedClusters.isEmpty()) {
       Cluster biggest = sortedClusters.pollFirst();
-      // Has this cluster already been merged?
-      if (mergedClusters.contains(biggest)) {
-        continue;
-      }
       remainingClusters.add(biggest);
-      
-      // Collect the various versions of this cluster that are present
-      // A version is a set of versions for each fqn
-      Map<Set<FqnVersion>, JarSet> versions = new HashMap<>();
-      for (Jar jar : biggest.getJars()) {
-        Set<FqnVersion> version = new HashSet<>();
-        for (VersionedFqnNode fqn : biggest.getCoreFqns()) {
-          version.add(fqn.getVersion(jar));
+
+      usedFqns.addAll(biggest.getCoreFqns());
+      // Repeatedly add new fqns to the cluster, until no new ones can be added
+      boolean addedSomething = true;
+      while (addedSomething) {
+        // Collect the various versions of this cluster that are present
+        // A version is a set of versions for each fqn
+        Map<Set<FqnVersion>, JarSet> versions = new HashMap<>();
+        for (Jar jar : biggest.getJars()) {
+          Set<FqnVersion> version = new HashSet<>();
+          for (VersionedFqnNode fqn : biggest.getCoreFqns()) {
+            version.add(fqn.getVersion(jar));
+          }
+          for (VersionedFqnNode fqn : biggest.getVersionFqns()) {
+            FqnVersion versionedFqn = fqn.getVersion(jar);
+            if (versionedFqn != null) {
+              version.add(versionedFqn);
+            }
+          }
+          JarSet jars = versions.get(version);
+          if (jars == null) {
+            versions.put(version, JarSet.create(jar));
+          } else {
+            versions.put(version, jars.add(jar));
+          }
         }
-        JarSet jars = versions.get(version);
-        if (jars == null) {
-          versions.put(version, JarSet.create(jar));
-        } else {
-          versions.put(version, jars.add(jar));
-        }
-      }
       
-      Set<VersionedFqnNode> globalPotentials = new HashSet<>();
-      Set<VersionedFqnNode> globalPartials = new HashSet<>();
-      // For each version, find any fqns that always occur
-      for (JarSet jars : versions.values()) {
-        Multiset<FqnVersion> potentials = HashMultiset.create();
-        for (Jar jar : jars) {
-          for (FqnVersion version : jar.getFqns()) {
-            potentials.add(version);
+        Set<VersionedFqnNode> globalPotentials = new HashSet<>();
+        Set<VersionedFqnNode> globalPartials = new HashSet<>();
+
+        // For each version, find any fqns that always occur
+        for (JarSet jars : versions.values()) {
+          Multiset<VersionedFqnNode> potentials = HashMultiset.create();
+          for (Jar jar : jars) {
+            for (FqnVersion version : jar.getFqns()) {
+              if (!usedFqns.contains(version.getFqn())) {
+                potentials.add(version.getFqn());
+              }
+            }
+          }
+          
+          int max = jars.size();
+          for (VersionedFqnNode fqn : potentials.elementSet()) {
+            if (potentials.count(fqn) == max && fqn.getJars().isSubset(biggest.getJars())) {
+              globalPotentials.add(fqn);
+            } else {
+              globalPartials.add(fqn);
+            }
           }
         }
         
-        int max = jars.size();
-        for (FqnVersion fqn : potentials.elementSet()) {
-          if (potentials.count(fqn) == max && fqn.getJars().isSubset(biggest.getJars())) {
-            globalPotentials.add(fqn.getFqn());
-          } else {
-            globalPartials.add(fqn.getFqn());
-          }
-        }
-      }
-      
-      globalPotentials.removeAll(globalPartials);
-      globalPotentials.removeAll(biggest.getCoreFqns());
-      // Collect the clusters we plan on merging
-      Set<Cluster> clustersToMerge = new HashSet<>();
-      for (VersionedFqnNode fqn : globalPotentials) {
-        clustersToMerge.add(matcher.getCluster(fqn));
-      }
-      clustersToMerge.removeAll(mergedClusters);
-      // Now merge the clusters
-      for (Cluster cluster : clustersToMerge) {
-        for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
+        globalPotentials.removeAll(globalPartials);
+        
+        // Collect the clusters we plan on merging
+        Set<Cluster> newClusters = new HashSet<>();
+        for (VersionedFqnNode fqn : globalPotentials) {
+          newClusters.add(matcher.getCluster(fqn));
+          usedFqns.add(fqn);
           biggest.addVersionedCore(fqn);
         }
+        
+        // Remove the clusters from the queue
+        sortedClusters.removeAll(newClusters);
+        
+        addedSomething = !globalPotentials.isEmpty();
       }
-      mergedClusters.addAll(clustersToMerge);
-      
+
       task.progress();
     }
     

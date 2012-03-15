@@ -77,10 +77,16 @@ public class RepositoryBuilder {
     
     Collection<Library> libraries = new LinkedList<>();
     task.start("Identifying libraries", "clusters examined");
+    int count = 1;
+    Multimap<Jar, Integer> map = HashMultimap.create();
     while (!sortedClusters.isEmpty()) {
       Cluster smallest = sortedClusters.pollFirst();
       // Make all the jars that match this cluster into a library
-      System.out.println(smallest.getJars() + smallest.toString());
+      for (Jar jar : smallest.getJars()) {
+        map.put(jar, count);
+      }
+      System.out.println(count + ": " + smallest.getJars() + " " + smallest);
+      count++;
 //      // Find all the ways that this cluster is expressed
 //      Map<Set<FqnVersion>, JarSet> versions = new HashMap<>();
 //      for (Jar jar : smallest.getJars()) {
@@ -126,7 +132,9 @@ public class RepositoryBuilder {
       
     }
     
-    
+    for (Jar jar : map.keySet()) {
+      System.out.println(jar + " " + map.get(jar));
+    }
     
     
     
