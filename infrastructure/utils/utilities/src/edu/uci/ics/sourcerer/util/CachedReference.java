@@ -54,4 +54,10 @@ public abstract class CachedReference<T> {
       return ref.get();
     }
   }
+  
+  public void clear() {
+    if (ref != null) {
+      ref.clear();
+    }
+  }
 }

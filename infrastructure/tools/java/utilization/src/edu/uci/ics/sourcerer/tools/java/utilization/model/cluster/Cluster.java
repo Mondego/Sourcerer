@@ -21,10 +21,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
+import edu.uci.ics.sourcerer.util.CachedReference;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -58,7 +64,27 @@ public class Cluster {
   private JarSet jars;
   private final Collection<VersionedFqnNode> coreFqns;
   private Collection<VersionedFqnNode> versionFqns;
-    
+  private CachedReference<Map<Set<FqnVersion>, ClusterVersion>> versions = new CachedReference<Map<Set<FqnVersion>, ClusterVersion>>() {
+    @Override
+    protected Map<Set<FqnVersion>, ClusterVersion> create() {
+      Map<Set<FqnVersion>, ClusterVersion> versions = new HashMap<>();
+      for (Jar jar : jars) {
+        Set<FqnVersion> fqns = new HashSet<>();
+        for (FqnVersion fqn : jar.getFqns()) {
+          if (coreFqns.contains(fqn.getFqn()) || versionFqns.contains(fqn.getFqn())) {
+            fqns.add(fqn);
+          }
+        }
+        ClusterVersion version = versions.get(fqns);
+        if (version == null) {
+          version = ClusterVersion.create(Cluster.this, fqns);
+          versions.put(fqns, version);
+        }
+        version.addJar(jar);
+      }
+      return versions;
+    }
+  };
   private Cluster() {
     this.coreFqns = new HashSet<>();
   }
@@ -82,6 +108,7 @@ public class Cluster {
       versionFqns = new ArrayList<>();
     }
     versionFqns.add(fqn);
+    versions.clear();
   }
   
   public Collection<VersionedFqnNode> getCoreFqns() {
@@ -91,7 +118,15 @@ public class Cluster {
   public Collection<VersionedFqnNode> getVersionFqns() {
     return versionFqns;
   }
-    
+
+  public Collection<ClusterVersion> getVersions() {
+    return versions.get().values();
+  }
+  
+//  public ClusterVersion getVersion(Set<FqnVersion> version) {
+//    return versions.get().get(version);
+//  }
+  
   public JarSet getJars() {
     return jars;
   }

@@ -18,10 +18,8 @@
 package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -31,9 +29,9 @@ import com.google.common.collect.Multiset;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterMatcher;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
@@ -156,43 +154,21 @@ public class ClusterMerger {
       // Repeatedly add new fqns to the cluster, until no new ones can be added
       boolean addedSomething = true;
       while (addedSomething) {
-        // Collect the various versions of this cluster that are present
-        // A version is a set of versions for each fqn
-        Map<Set<FqnVersion>, JarSet> versions = new HashMap<>();
-        for (Jar jar : biggest.getJars()) {
-          Set<FqnVersion> version = new HashSet<>();
-          for (VersionedFqnNode fqn : biggest.getCoreFqns()) {
-            version.add(fqn.getVersion(jar));
-          }
-          for (VersionedFqnNode fqn : biggest.getVersionFqns()) {
-            FqnVersion versionedFqn = fqn.getVersion(jar);
-            if (versionedFqn != null) {
-              version.add(versionedFqn);
-            }
-          }
-          JarSet jars = versions.get(version);
-          if (jars == null) {
-            versions.put(version, JarSet.create(jar));
-          } else {
-            versions.put(version, jars.add(jar));
-          }
-        }
-      
         Set<VersionedFqnNode> globalPotentials = new HashSet<>();
         Set<VersionedFqnNode> globalPartials = new HashSet<>();
 
         // For each version, find any fqns that always occur
-        for (JarSet jars : versions.values()) {
+        for (ClusterVersion version : biggest.getVersions()) {
           Multiset<VersionedFqnNode> potentials = HashMultiset.create();
-          for (Jar jar : jars) {
-            for (FqnVersion version : jar.getFqns()) {
-              if (!usedFqns.contains(version.getFqn())) {
-                potentials.add(version.getFqn());
+          for (Jar jar : version.getJars()) {
+            for (FqnVersion fqn : jar.getFqns()) {
+              if (!usedFqns.contains(fqn.getFqn())) {
+                potentials.add(fqn.getFqn());
               }
             }
           }
           
-          int max = jars.size();
+          int max = version.getJars().size();
           for (VersionedFqnNode fqn : potentials.elementSet()) {
             if (potentials.count(fqn) == max && fqn.getJars().isSubset(biggest.getJars())) {
               globalPotentials.add(fqn);

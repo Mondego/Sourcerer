@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -60,6 +61,19 @@ public class ClusterMatcher {
         }
         for (VersionedFqnNode fqn : cluster.getVersionFqns()) {
           map.put(fqn, cluster);
+        }
+      }
+      return map;
+    }};
+  private CachedReference<Multimap<FqnVersion, ClusterVersion>> fqnVersionsToClusterVersions = new CachedReference<Multimap<FqnVersion, ClusterVersion>>() {
+    @Override
+    protected Multimap<FqnVersion, ClusterVersion> create() {
+      Multimap<FqnVersion, ClusterVersion> map = HashMultimap.create();
+      for (Cluster cluster : clusters) {
+        for (ClusterVersion version : cluster.getVersions()) {
+          for (FqnVersion fqn : version.getFqns()) {
+            map.put(fqn, version);
+          }
         }
       }
       return map;
@@ -125,5 +139,9 @@ public class ClusterMatcher {
   
   public Cluster getCluster(String fqn) {
     return fqnStringsToClusters.get().get(fqn);
+  }
+  
+  public Collection<ClusterVersion> getClusterVersions(FqnVersion fqn) {
+    return fqnVersionsToClusterVersions.get().get(fqn);
   }
 }

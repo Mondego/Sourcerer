@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -35,6 +36,7 @@ import com.google.common.collect.Multiset;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterMatcher;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
@@ -71,93 +73,118 @@ public class RepositoryBuilder {
 //    }
 //    task.finish();
     
+    task.start("Mapping jars to clusters", "clusters examined");
+    Multimap<Jar, Cluster> jarsToClusters = HashMultimap.create();
+    for (Cluster cluster : clusters) {
+      for (Jar jar : cluster.getJars()) {
+        jarsToClusters.put(jar, cluster);
+      }
+      task.progress();
+    }
+    task.finish();
     
-    TreeSet<Cluster> sortedClusters = new TreeSet<>(Cluster.ASCENDING_SIZE_COMPARATOR);
+    PriorityQueue<Cluster> sortedClusters = new PriorityQueue<>(clusters.size(), Cluster.DESCENDING_SIZE_COMPARATOR);
     sortedClusters.addAll(clusters.getClusters());
     
-    Collection<Library> libraries = new LinkedList<>();
-    task.start("Identifying libraries", "clusters examined");
-    int count = 1;
-    Multimap<Jar, Integer> map = HashMultimap.create();
+    Map<Cluster, Library> libraries = new HashMap<>();
+    JarSet assignedJars = JarSet.create();
+    
+    task.start("Creating libraries from clusters", "clusters examined");
     while (!sortedClusters.isEmpty()) {
-      Cluster smallest = sortedClusters.pollFirst();
-      // Make all the jars that match this cluster into a library
-      for (Jar jar : smallest.getJars()) {
-        map.put(jar, count);
+      Cluster biggest = sortedClusters.poll();
+      
+      Library library = Library.create(biggest);
+      libraries.put(biggest, library);
+      
+      Set<FqnVersion> globalPotentials = new HashSet<>();
+      Set<FqnVersion> globalPartials = new HashSet<>();
+      
+      // For each version, find any fqns that always occur
+      for (ClusterVersion version : biggest.getVersions()) {
+        Multiset<FqnVersion> potentials = HashMultiset.create();
+        for (Jar jar : version.getJars()) {
+          for (FqnVersion fqn : jar.getFqns()) {
+            potentials.add(fqn);
+          }
+        }
+
+        int max = version.getJars().size();
+        for (FqnVersion fqn : potentials) {
+          if (potentials.count(fqn) == max) {
+            globalPotentials.add(fqn);
+          } else {
+            globalPartials.add(fqn);
+          }
+        }
       }
-      System.out.println(count + ": " + smallest.getJars() + " " + smallest);
-      count++;
-//      // Find all the ways that this cluster is expressed
-//      Map<Set<FqnVersion>, JarSet> versions = new HashMap<>();
-//      for (Jar jar : smallest.getJars()) {
-//        Set<FqnVersion> version = new HashSet<>();
-//        for (VersionedFqnNode fqn : smallest.getCoreFqns()) {
-//          version.add(fqn.getVersion(jar));
-//        }
-//        for (VersionedFqnNode fqn : smallest.getVersionFqns()) {
-//          version.add(fqn.getVersion(jar));
-//        }
-//        JarSet matched = versions.get(version);
-//        if (matched == null) {
-//          versions.put(version, JarSet.create(jar));
-//        } else {
-//          versions.put(version, matched.add(jar));
-//        }
-//      }
+      globalPotentials.removeAll(globalPartials);
+      // Are there any clusters that we match?
+      Set<Cluster> newClusters = new HashSet<>();
+      Set<ClusterVersion> possibleClusterVersions = new HashSet<>();
+      for (FqnVersion fqn : globalPotentials) {
+        possibleClusterVersions.addAll(matcher.getClusterVersions(fqn));
+      }
+      for (ClusterVersion version : possibleClusterVersions) {
+        if (globalPotentials.containsAll(version.getFqns())) {
+          newClusters.add(version.getCluster());
+        }
+      }
+      // Add all the secondary clusters
+      library.addSecondaryClusters(newClusters);
       
-//      Set<VersionedFqnNode> globalPotentials = new HashSet<>();
-//      Set<VersionedFqnNode> globalPartials = new HashSet<>();
-//      Set<Set<Cluster>> globalCombinations = new HashSet<>();
-//      // For each version, find any fqns that always occur
-//      for (JarSet matched : versions.values()) {
-//        Multiset<FqnVersion> potentials = HashMultiset.create();
-//        for (Jar jar : matched) {
-//          for (FqnVersion version : jar.getFqns()) {
-//            potentials.add(version);
-//          }
-//        }
-//        
-//        Set<Cluster> combinations = new HashSet<>(); 
-//        int max = matched.size();
-//        for (FqnVersion fqn : potentials.elementSet()) {
-//          if (potentials.count(fqn) == max) {
-//            globalPotentials.add(fqn.getFqn());
-//            combinations.add(matcher.getCluster(fqn.getFqn()));
-//          } else {
-//            globalPartials.add(fqn.getFqn());
-//          }
-//        }
-//      }
-//      globalPotentials.removeAll(globalPartials);
       
+      // Add the jars to the library
+      for (Jar jar : biggest.getJars()) {
+        boolean addMe = true;
+        for (Cluster cluster : jarsToClusters.get(jar)) {
+          if (cluster != biggest && !library.getSecondaryClusters().contains(cluster)) {
+            addMe = false;
+            break;
+          }
+        }
+        if (addMe) {
+          library.addJar(jar);
+          assignedJars = assignedJars.add(jar);
+        }
+      }
+      
+      // Split the jars into versions
+      
+      task.progress();
     }
+    task.finish();
     
-    for (Jar jar : map.keySet()) {
-      System.out.println(jar + " " + map.get(jar));
+    task.start("Creating libraries from unassigned jars", "jars examined");
+    Map<Set<Cluster>, Library> packages = new HashMap<>();
+    Multimap<Cluster, Library> clusterToPackage = HashMultimap.create();
+    for (Jar jar : jars) {
+      if (!assignedJars.contains(jar)) {
+        Set<Cluster> matched = new HashSet<>(jarsToClusters.get(jar));
+        Library library = packages.get(matched);
+        if (library == null) {
+          library = Library.createPackaging();
+          library.addSecondaryClusters(matched);
+          packages.put(matched, library);
+          for (Cluster cluster : matched) {
+            clusterToPackage.put(cluster, library);
+          }
+        }
+        library.addJar(jar);
+        task.progress();
+      }
     }
+    task.finish();
     
-    
-    
-    
-//    // Build the initial mapping to libraries
-//
-//    
-//    // Compute dependencies between libraries
-//    for (Library library: clusterSetMap.values()) {
+//    // Hook up the dependencies
+//    for (Library library : libraries.values()) {
 //      // No dependencies if it's a single cluster
-//      if (library.getClusters().size() > 1) {
-//        // Find all libraries that are a subset of this cluster
-//        for (Cluster cluster : library.getClusters()) {
-//          for (Library subLib : clusterMap.get(cluster)) {
-//            // Does our current library subsume this library
-//            if (library != subLib && library.getClusters().containsAll(subLib.getClusters())) {
-//              library.addDependency(subLib);
-//            }
-//          }
+//      if (!library.getSecondaryClusters().isEmpty()) {
+//        // Add the libraries for each secondary cluster
+//        for (Cluster cluster : library.getSecondaryClusters()) {
+//          library.addDependency(libraries.get(cluster));
 //        }
-//      }
 //    }
-//    
+
 //    // Break libraries into versions
 //    for (Library library : clusterSetMap.values()) {
 //      for (Jar jar : library.getJars()) {

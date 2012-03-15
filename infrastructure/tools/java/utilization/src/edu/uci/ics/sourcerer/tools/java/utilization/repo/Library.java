@@ -19,8 +19,10 @@ package edu.uci.ics.sourcerer.tools.java.utilization.repo;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
@@ -31,24 +33,37 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Library {
+  private final Cluster coreCluster;
   private JarSet jars;
-  private Set<Cluster> clusters;
-  private Collection<Library> dependencies;
-  private Collection<LibraryVersion> versions;
+  private Set<Cluster> secondaryClusters;
+//  private Collection<Library> dependencies;
+//  private Collection<LibraryVersion> versions;
   
-  private Library(Set<Cluster> clusters) {
-    this.clusters = clusters;
+  private Library(Cluster coreCluster) {
+    this.coreCluster = coreCluster;
+    secondaryClusters = Collections.emptySet();
     jars = JarSet.create();
-    versions = Collections.emptyList();
-    dependencies = Collections.emptyList();
+//    versions = Collections.emptyList();
+//    dependencies = Collections.emptyList();
   }
   
-  static Library create(Set<Cluster> clusters) {
-    return new Library(clusters);
+  static Library createPackaging() {
+    return new Library(null);
+  }
+  static Library create(Cluster cluster) {
+    return new Library(cluster);
   }
   
-  public Set<Cluster> getClusters() {
-    return clusters;
+  public Cluster getCoreCluster() {
+    return coreCluster;
+  }
+  
+  void addSecondaryClusters(Set<Cluster> clusters) {
+    secondaryClusters = new HashSet<>(clusters);
+  }
+  
+  public Set<Cluster> getSecondaryClusters() {
+    return secondaryClusters;
   }
   
   void addJar(Jar jar) {
@@ -59,27 +74,27 @@ public class Library {
     return jars;
   }
   
-  void addDependency(Library library) {
-    if (dependencies.isEmpty()) {
-      dependencies = new HashSet<>();
-    }
-    dependencies.add(library);
-  }
-  
-  public Collection<Library> getDependencies() {
-    return dependencies;
-  }
-  
-  void addVersion(LibraryVersion version) {
-    if (versions.isEmpty()) {
-      versions = new LinkedList<>();
-    }
-    versions.add(version);
-  }
-  
-  public Collection<LibraryVersion> getVersions() {
-    return versions;
-  }
+//  void addDependency(Library library) {
+//    if (dependencies.isEmpty()) {
+//      dependencies = new HashSet<>();
+//    }
+//    dependencies.add(library);
+//  }
+//  
+//  public Collection<Library> getDependencies() {
+//    return dependencies;
+//  }
+//  
+//  void addVersion(LibraryVersion version) {
+//    if (versions.isEmpty()) {
+//      versions = new LinkedList<>();
+//    }
+//    versions.add(version);
+//  }
+//  
+//  public Collection<LibraryVersion> getVersions() {
+//    return versions;
+//  }
   
   @Override
   public String toString() {
