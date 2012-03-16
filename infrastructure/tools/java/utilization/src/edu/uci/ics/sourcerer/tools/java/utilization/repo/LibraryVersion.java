@@ -31,7 +31,7 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
  */
 public class LibraryVersion {
   private JarSet jars;
-  private Set<FqnVersion> fqnVersions;
+  private final Set<FqnVersion> fqnVersions;
   private Collection<LibraryVersion> dependencies;
   
   private LibraryVersion(Jar jar, Set<FqnVersion> fqnVersions) {

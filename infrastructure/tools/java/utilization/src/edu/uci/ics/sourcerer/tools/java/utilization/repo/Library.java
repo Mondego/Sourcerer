@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
 
@@ -37,13 +38,13 @@ public class Library {
   private JarSet jars;
   private Set<Cluster> secondaryClusters;
 //  private Collection<Library> dependencies;
-//  private Collection<LibraryVersion> versions;
+  private Map<Set<FqnVersion>, LibraryVersion> versions;
   
   private Library(Cluster coreCluster) {
     this.coreCluster = coreCluster;
     secondaryClusters = Collections.emptySet();
     jars = JarSet.create();
-//    versions = Collections.emptyList();
+    versions = new HashMap<>();
 //    dependencies = Collections.emptyList();
   }
   
@@ -56,6 +57,13 @@ public class Library {
   
   public Cluster getCoreCluster() {
     return coreCluster;
+  }
+  
+  void addSecondaryCluster(Cluster cluster) {
+    if (secondaryClusters.isEmpty()) {
+      secondaryClusters = new HashSet<>();
+    }
+    secondaryClusters.add(cluster);
   }
   
   void addSecondaryClusters(Set<Cluster> clusters) {
@@ -72,6 +80,18 @@ public class Library {
   
   public JarSet getJars() {
     return jars;
+  }
+  
+  void addVersion(LibraryVersion version) {
+    versions.put(version.getFqnVersions(), version);
+  }
+  
+  public LibraryVersion getVersion(Set<FqnVersion> key) {
+    return versions.get(key);
+  }
+  
+  public Collection<LibraryVersion> getVersions() {
+    return versions.values();
   }
   
 //  void addDependency(Library library) {

@@ -32,6 +32,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
+import com.sun.corba.se.impl.util.Version;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
@@ -42,6 +43,7 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
+import edu.uci.ics.sourcerer.util.CollectionUtils;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
@@ -54,24 +56,6 @@ public class RepositoryBuilder {
     task.start("Building repository structure for " + jars.size() + " jars and " + clusters.size() + " clusters");
     
     ClusterMatcher matcher = clusters.getClusterMatcher();
-    
-//    task.start("Identifying matching packaging", "jars examined");
-//    Map<Set<Cluster>, Library> clusterSetMap = new HashMap<>();
-//    Multimap<Cluster, Library> clusterMap = HashMultimap.create();
-//    for (Jar jar : jars) {
-//      // Find out how many clusters it matches
-//      Set<Cluster> matched = new HashSet<>(matcher.getClusters(jar));
-//      Library library = clusterSetMap.get(matched);
-//      if (library == null) {
-//        library = Library.create(matched);
-//        clusterSetMap.put(matched, library);
-//        for (Cluster cluster : matched) {
-//          clusterMap.put(cluster, library);
-//        }
-//      }
-//      library.addJar(jar);
-//    }
-//    task.finish();
     
     task.start("Mapping jars to clusters", "clusters examined");
     Multimap<Jar, Cluster> jarsToClusters = HashMultimap.create();
@@ -96,42 +80,40 @@ public class RepositoryBuilder {
       Library library = Library.create(biggest);
       libraries.put(biggest, library);
       
-      Set<FqnVersion> globalPotentials = new HashSet<>();
-      Set<FqnVersion> globalPartials = new HashSet<>();
-      
-      // For each version, find any fqns that always occur
-      for (ClusterVersion version : biggest.getVersions()) {
-        Multiset<FqnVersion> potentials = HashMultiset.create();
-        for (Jar jar : version.getJars()) {
-          for (FqnVersion fqn : jar.getFqns()) {
-            potentials.add(fqn);
+      {
+        Set<VersionedFqnNode> globalPotentials = new HashSet<>();
+        Set<VersionedFqnNode> globalPartials = new HashSet<>();
+        
+        // For each version, find any fqns that always occur
+        for (ClusterVersion version : biggest.getVersions()) {
+          Multiset<FqnVersion> potentials = HashMultiset.create();
+          for (Jar jar : version.getJars()) {
+            for (FqnVersion fqn : jar.getFqns()) {
+              potentials.add(fqn);
+            }
+          }
+  
+          int max = version.getJars().size();
+          for (FqnVersion fqn : potentials) {
+            if (potentials.count(fqn) == max) {
+              globalPotentials.add(fqn.getFqn());
+            } else {
+              globalPartials.add(fqn.getFqn());
+            }
           }
         }
-
-        int max = version.getJars().size();
-        for (FqnVersion fqn : potentials) {
-          if (potentials.count(fqn) == max) {
-            globalPotentials.add(fqn);
-          } else {
-            globalPartials.add(fqn);
+        globalPotentials.removeAll(globalPartials);
+        // Are there any clusters that we match?
+        Set<Cluster> potentialClusters = new HashSet<>();
+        for (VersionedFqnNode fqn : globalPotentials) {
+          potentialClusters.add(matcher.getCluster(fqn));
+        }
+        for (Cluster cluster : potentialClusters) {
+          if (globalPotentials.containsAll(cluster.getCoreFqns()) && CollectionUtils.containsNone(globalPartials, cluster.getVersionFqns())) {
+            library.addSecondaryCluster(cluster);
           }
         }
       }
-      globalPotentials.removeAll(globalPartials);
-      // Are there any clusters that we match?
-      Set<Cluster> newClusters = new HashSet<>();
-      Set<ClusterVersion> possibleClusterVersions = new HashSet<>();
-      for (FqnVersion fqn : globalPotentials) {
-        possibleClusterVersions.addAll(matcher.getClusterVersions(fqn));
-      }
-      for (ClusterVersion version : possibleClusterVersions) {
-        if (globalPotentials.containsAll(version.getFqns())) {
-          newClusters.add(version.getCluster());
-        }
-      }
-      // Add all the secondary clusters
-      library.addSecondaryClusters(newClusters);
-      
       
       // Add the jars to the library
       for (Jar jar : biggest.getJars()) {
@@ -149,6 +131,7 @@ public class RepositoryBuilder {
       }
       
       // Split the jars into versions
+      splitLibaryIntoVersions(library);
       
       task.progress();
     }
@@ -175,7 +158,42 @@ public class RepositoryBuilder {
     }
     task.finish();
     
-//    // Hook up the dependencies
+    // Split the packaged libraries into versions
+    for (Library library : packages.values()) {
+      splitLibaryIntoVersions(library);
+    }
+    
+    // Hook up the dependencies
+    // Build map from FqnVersions to LibraryVersions
+    {
+      Multimap<FqnVersion, LibraryVersion> libVersionMultimap = HashMultimap.create();
+      for (Library library : libraries.values()) {
+        for (LibraryVersion version : library.getVersions()) {
+          for (FqnVersion fqn : version.getFqnVersions()) {
+            libVersionMultimap.put(fqn, version);
+          }
+        }
+      }
+      
+      for (Library library : libraries.values()) {
+        for (LibraryVersion version : library.getVersions()) {
+          // For each version of the library, look up all the libraries that contain that fqn
+          Multiset<LibraryVersion> versionSet = HashMultiset.create();
+          for (FqnVersion fqn : version.getFqnVersions()) {
+            versionSet.addAll(libVersionMultimap.get(fqn));
+          }
+          
+          // See if any other library contains a subset of the fqn versions for this library
+          for (LibraryVersion libVersion : versionSet.elementSet()) {
+            if (versionSet.count(libVersion) == libVersion.getFqnVersions().size()) {
+              version.addDependency(libVersion);
+            }
+          }
+        }
+      }
+    }
+    
+    
 //    for (Library library : libraries.values()) {
 //      // No dependencies if it's a single cluster
 //      if (!library.getSecondaryClusters().isEmpty()) {
@@ -273,5 +291,36 @@ public class RepositoryBuilder {
 //    }
     return null;
 //    return repo;
+  }
+  
+  private static void splitLibaryIntoVersions(Library library) {
+    // Build up the set of fqns to compare
+    Set<VersionedFqnNode> fqns = new HashSet<>();
+    Cluster coreCluster = library.getCoreCluster();
+    if (coreCluster != null) {
+      fqns.addAll(coreCluster.getCoreFqns());
+      fqns.addAll(coreCluster.getVersionFqns());
+    }
+    for (Cluster cluster : library.getSecondaryClusters()) {
+      fqns.addAll(cluster.getCoreFqns());
+      fqns.addAll(cluster.getVersionFqns());
+    }
+    
+    // Go through each jar, and find its version
+    for (Jar jar : library.getJars()) {
+      Set<FqnVersion> version = new HashSet<>();
+      for (FqnVersion fqn : jar.getFqns()) {
+        if (fqns.contains(fqn.getFqn())) {
+          version.add(fqn);
+        }
+      }
+      LibraryVersion libVersion = library.getVersion(version);
+      if (libVersion == null) {
+        libVersion = LibraryVersion.create(jar, version);
+        library.addVersion(libVersion);
+      } else {
+        libVersion.addJar(jar);
+      }
+    }
   }
 }

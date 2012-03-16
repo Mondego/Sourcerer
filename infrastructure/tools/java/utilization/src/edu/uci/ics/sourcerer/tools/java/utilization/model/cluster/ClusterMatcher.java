@@ -24,7 +24,9 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
@@ -143,5 +145,20 @@ public class ClusterMatcher {
   
   public Collection<ClusterVersion> getClusterVersions(FqnVersion fqn) {
     return fqnVersionsToClusterVersions.get().get(fqn);
+  }
+  
+  public Set<ClusterVersion> getClusterVersions(Collection<FqnVersion> fqns) {
+    Multimap<FqnVersion, ClusterVersion> map = fqnVersionsToClusterVersions.get();
+    Multiset<ClusterVersion> set = HashMultiset.create();
+    for (FqnVersion fqn : fqns) {
+      set.addAll(map.get(fqn));
+    }
+    Set<ClusterVersion> result = new HashSet<>();
+    for (ClusterVersion version : set.elementSet()) {
+      if (set.count(version) == version.getFqns().size()) {
+        result.add(version);
+      }
+    }
+    return result;
   }
 }
