@@ -24,27 +24,27 @@ import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class VersionDependencyTable extends DatabaseTable{
+public class LibraryVersionToLibraryVersionTable extends DatabaseTable{
   /*
-   *                 version_dep table
+   *      library_version_to_library_version table
    * +-------------+-----------------+-------+--------+
    * | Column name | Type            | Null? | Index? |
    * +-------------+-----------------+-------+--------+
-   * | source_vid  | BIGINT UNSIGNED | No    | Yes    |
-   * | target_vid  | BIGINT UNSIGNED | No    | Yes    |
+   * | source_id   | BIGINT UNSIGNED | No    | Yes    |
+   * | target_id   | BIGINT UNSIGNED | No    | Yes    |
    * +-------------+-----------------+-------+--------+   
    */
-  public static final VersionDependencyTable TABLE = new VersionDependencyTable();
+  public static final LibraryVersionToLibraryVersionTable TABLE = new LibraryVersionToLibraryVersionTable();
   
-  public static final Column<Integer> SOURCE_VID = TABLE.addIDColumn("source_vid", false).addIndex();
-  public static final Column<Integer> TARGET_VID = TABLE.addIDColumn("target_vid", false).addIndex();
+  public static final Column<Integer> SOURCE_ID = TABLE.addIDColumn("source_id", false).addIndex();
+  public static final Column<Integer> TARGET_ID = TABLE.addIDColumn("target_id", false).addIndex();
   
-  private VersionDependencyTable() {
-    super("version_dep");
+  private LibraryVersionToLibraryVersionTable() {
+    super("library_version_to_library_version");
   }
   
   // ---- INSERT ----
-  public static Insert createInsert(Integer sourceVID, Integer targetVID) {
-    return TABLE.makeInsert(SOURCE_VID.to(sourceVID), TARGET_VID.to(targetVID));
+  public static Insert createInsert(Integer sourceID, Integer targetID) {
+    return TABLE.makeInsert(SOURCE_ID.to(sourceID), TARGET_ID.to(targetID));
   }
 }

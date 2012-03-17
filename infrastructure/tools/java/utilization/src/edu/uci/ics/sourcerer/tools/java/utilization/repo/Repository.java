@@ -27,13 +27,15 @@ public class Repository {
   private Collection<Library> libraries;
   
   private Repository() {
-    
+    this.libraries = new ArrayList<>();
   }
   
-  static Repository create(Collection<Library> libraries) {
-    Repository repo = new Repository();
-    repo.libraries = new ArrayList<>(libraries);
-    return repo;
+  static Repository create() {
+    return new Repository();
+  }
+  
+  void addLibrary(Library library) {
+    libraries.add(library);
   }
   
   public Collection<Library> getLibraries() {

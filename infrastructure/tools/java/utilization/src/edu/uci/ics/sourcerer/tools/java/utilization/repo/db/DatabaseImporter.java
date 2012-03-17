@@ -24,6 +24,7 @@ import java.util.Map;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
@@ -33,17 +34,20 @@ import edu.uci.ics.sourcerer.tools.java.utilization.repo.LibraryVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.Repository;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClusterFqnType;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClusterToJarTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClusterVersionToFqnVersionTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClusterVersionToJarTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClusterVersionsTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClustersTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.FqnVersionsTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.FqnsTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.JarsTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibrariesTable;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryDependencyTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryToClusterTable;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.VersionDependencyTable;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.VersionToFqnVersionTable;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.VersionToJarTable;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.VersionsTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToLibraryTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToFqnVersionTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToJarTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToLibraryVersionTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionsTable;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.BatchInserter;
@@ -62,6 +66,7 @@ public class DatabaseImporter extends DatabaseRunnable {
   private final File tempDir;
   
   private Map<Cluster, Integer> clusterMap;
+  private Map<ClusterVersion, Integer> clusterVersionMap;
   private Map<VersionedFqnNode, Integer> fqnMap;
   private Map<Jar, Integer> jarMap;
   private Map<FqnVersion, Integer> fqnVersionMap;
@@ -87,49 +92,58 @@ public class DatabaseImporter extends DatabaseRunnable {
     task.start("Dropping old tables");
     exec.dropTables(
         ClustersTable.TABLE,
+        ClusterVersionsTable.TABLE,
         FqnsTable.TABLE,
         JarsTable.TABLE,
         ClusterToJarTable.TABLE,
+        ClusterVersionToJarTable.TABLE,
         FqnVersionsTable.TABLE,
+        ClusterVersionToFqnVersionTable.TABLE,
         LibrariesTable.TABLE,
         LibraryToClusterTable.TABLE,
-        LibraryDependencyTable.TABLE,
-        VersionsTable.TABLE,
-        VersionToJarTable.TABLE,
-        VersionToFqnVersionTable.TABLE,
-        VersionDependencyTable.TABLE
+        LibraryVersionsTable.TABLE,
+        LibraryVersionToJarTable.TABLE,
+        LibraryVersionToFqnVersionTable.TABLE,
+        LibraryVersionToLibraryTable.TABLE,
+        LibraryVersionToLibraryVersionTable.TABLE
         );
     task.finish();
     
     task.start("Creating new tables");
     exec.createTables(
         ClustersTable.TABLE,
+        ClusterVersionsTable.TABLE,
         FqnsTable.TABLE,
         JarsTable.TABLE,
         ClusterToJarTable.TABLE,
+        ClusterVersionToJarTable.TABLE,
         FqnVersionsTable.TABLE,
+        ClusterVersionToFqnVersionTable.TABLE,
         LibrariesTable.TABLE,
         LibraryToClusterTable.TABLE,
-        LibraryDependencyTable.TABLE,
-        VersionsTable.TABLE,
-        VersionToJarTable.TABLE,
-        VersionToFqnVersionTable.TABLE,
-        VersionDependencyTable.TABLE
+        LibraryVersionsTable.TABLE,
+        LibraryVersionToJarTable.TABLE,
+        LibraryVersionToFqnVersionTable.TABLE,
+        LibraryVersionToLibraryTable.TABLE,
+        LibraryVersionToLibraryVersionTable.TABLE
         );
     task.finish();
     
     populateClustersTable();
+    populateClusterVersionsTable();
     populateFqnsTable();
     populateJarsTable();
     populateClusterToJarTable();
+    populateClusterVersionToJarTable();
     populateFqnVersionsTable();
+    populateClusterVersionToFqnVersionTable();
     populateLibrariesTable();
     populateLibraryToClusterTable();
-    populateLibraryDependencyTable();
-    populateVersionsTable();
-    populateVersionToJarTable();
-    populateVersionToFqnVersionTable();
-    populateVersionDependencyTable();
+    populateLibraryVersionsTable();
+    populateLibraryVersionToJarTable();
+    populateLibraryVersionToFqnVersionTable();
+    populateLibraryVersionToLibraryTable();
+    populateLibraryVersionToLibraryVersionTable();
     
     task.finish();
   }
@@ -155,12 +169,53 @@ public class DatabaseImporter extends DatabaseRunnable {
     clusterMap = new HashMap<>();
     try (SelectQuery query = exec.makeSelectQuery(ClustersTable.TABLE)) {
       query.addSelects(ClustersTable.CLUSTER_ID);
+      query.orderBy(ClustersTable.CLUSTER_ID, true);
       
       Iterator<Cluster> iter = clusters.iterator();
       TypedQueryResult result = query.select();
       while (result.next()) {
         clusterMap.put(iter.next(), result.getResult(ClustersTable.CLUSTER_ID));
         task.progress();
+      }
+    }
+    task.finish();
+    
+    task.finish();
+  }
+  
+  private void populateClusterVersionsTable() {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    task.start("Populating cluster_versions table");
+    
+    BatchInserter inserter = exec.makeInFileInserter(tempDir, ClusterVersionsTable.TABLE);
+    
+    task.start("Processing cluster versions", "cluster version processed");
+    for (Cluster cluster : clusters) {
+      Integer clusterID = clusterMap.get(cluster);
+      for (ClusterVersion version : cluster.getVersions()) {
+        inserter.addInsert(ClusterVersionsTable.createInsert(version, clusterID));
+        task.progress();
+      }
+    }
+    task.finish();
+    
+    task.start("Performing db insert");
+    inserter.insert();
+    task.finish();
+   
+    task.start("Loading cluster version mapping", "cluster verions loaded");
+    clusterVersionMap = new HashMap<>();
+    try (SelectQuery query = exec.makeSelectQuery(ClusterVersionsTable.TABLE)) {
+      query.addSelects(ClusterVersionsTable.CLUSTER_VERSION_ID);
+      query.orderBy(ClusterVersionsTable.CLUSTER_VERSION_ID, true);
+      
+      TypedQueryResult result = query.select();
+      for (Cluster cluster : clusters) {
+        for (ClusterVersion version : cluster.getVersions()) {
+          result.next();
+          clusterVersionMap.put(version, result.getResult(ClusterVersionsTable.CLUSTER_VERSION_ID));
+          task.progress();
+        }
       }
     }
     task.finish();
@@ -272,6 +327,28 @@ public class DatabaseImporter extends DatabaseRunnable {
     task.finish();
   }
   
+  private void populateClusterVersionToJarTable() {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    task.start("Populating cluster_version_to_jar table");
+    
+    BatchInserter inserter = exec.makeInFileInserter(tempDir, ClusterVersionToJarTable.TABLE);
+    
+    task.start("Processing mappings", "mappings processed");
+    for (Map.Entry<ClusterVersion, Integer> entry : clusterVersionMap.entrySet()) {
+      for (Jar jar : entry.getKey().getJars()) {
+        inserter.addInsert(ClusterVersionToJarTable.createInsert(entry.getValue(), jarMap.get(jar)));
+        task.progress();
+      }
+    }
+    task.finish();
+    
+    task.start("Performing db insert");
+    inserter.insert();
+    task.finish();
+    
+    task.finish();
+  }
+  
   private void populateFqnVersionsTable() {
     TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Populating fqn_versions table");
@@ -295,18 +372,39 @@ public class DatabaseImporter extends DatabaseRunnable {
     fqnVersionMap = new HashMap<>();
     try (SelectQuery query = exec.makeSelectQuery(FqnVersionsTable.TABLE)) {
       query.addSelects(FqnVersionsTable.FQN_VERSION_ID);
+      query.orderBy(FqnVersionsTable.FQN_VERSION_ID, true);
       
-      Iterator<VersionedFqnNode> iter = jars.getRoot().getPostOrderIterable().iterator();
-      Iterator<FqnVersion> iter2 = null;
       TypedQueryResult result = query.select();
-      while (result.next()) {
-        while (iter2 == null || !iter2.hasNext()) {
-          iter2 = iter.next().getVersions().iterator();
+      for (VersionedFqnNode fqn : jars.getRoot().getPostOrderIterable()) {
+        for (FqnVersion version : fqn.getVersions()) {
+          result.next();
+          fqnVersionMap.put(version, result.getResult(FqnVersionsTable.FQN_VERSION_ID));
+          task.progress();
         }
-        fqnVersionMap.put(iter2.next(), result.getResult(FqnVersionsTable.FQN_VERSION_ID));
+      }
+    }
+    task.finish();
+    
+    task.finish();
+  }
+  
+  private void populateClusterVersionToFqnVersionTable() {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    task.start("Populating cluster_version_to_fqn_version table");
+    
+    BatchInserter inserter = exec.makeInFileInserter(tempDir, ClusterVersionToFqnVersionTable.TABLE);
+    
+    task.start("Processing mappings", "mappings processed");
+    for (Map.Entry<ClusterVersion, Integer> entry : clusterVersionMap.entrySet()) {
+      for (FqnVersion fqn : entry.getKey().getFqns()) {
+        inserter.addInsert(ClusterVersionToFqnVersionTable.createInsert(entry.getValue(), fqnVersionMap.get(fqn)));
         task.progress();
       }
     }
+    task.finish();
+    
+    task.start("Performing db insert");
+    inserter.insert();
     task.finish();
     
     task.finish();
@@ -320,7 +418,7 @@ public class DatabaseImporter extends DatabaseRunnable {
     
     task.start("Processing libraries", "libraries processed");
     for (Library library : repo.getLibraries()) {
-      inserter.addInsert(LibrariesTable.createInsert(library));
+      inserter.addInsert(LibrariesTable.createInsert(library, clusterMap.get(library.getCoreCluster())));
       task.progress();
     }
     task.finish();
@@ -333,6 +431,7 @@ public class DatabaseImporter extends DatabaseRunnable {
     libraryMap = new HashMap<>();
     try (SelectQuery query = exec.makeSelectQuery(LibrariesTable.TABLE)) {
       query.addSelects(LibrariesTable.LIBRARY_ID);
+      query.orderBy(LibrariesTable.LIBRARY_ID, true);
       
       Iterator<Library> iter = repo.getLibraries().iterator();
       TypedQueryResult result = query.select();
@@ -354,7 +453,7 @@ public class DatabaseImporter extends DatabaseRunnable {
     
     task.start("Processing mappings", "mappings processed");
     for (Map.Entry<Library, Integer> entry : libraryMap.entrySet()) {
-      for (Cluster cluster : entry.getKey().getClusters()) {
+      for (Cluster cluster : entry.getKey().getSecondaryClusters()) {
         inserter.addInsert(LibraryToClusterTable.createInsert(entry.getValue(), clusterMap.get(cluster)));
         task.progress();
       }
@@ -368,38 +467,16 @@ public class DatabaseImporter extends DatabaseRunnable {
     task.finish();
   }
   
-  private void populateLibraryDependencyTable() {
-    TaskProgressLogger task = TaskProgressLogger.get();
-    task.start("Populating library_dep table");
-    
-    BatchInserter inserter = exec.makeInFileInserter(tempDir, LibraryDependencyTable.TABLE);
-    
-    task.start("Processing mappings", "mappings processed");
-    for (Map.Entry<Library, Integer> entry : libraryMap.entrySet()) {
-      for (Library dep : entry.getKey().getDependencies()) {
-        inserter.addInsert(LibraryDependencyTable.createInsert(entry.getValue(), libraryMap.get(dep)));
-        task.progress();
-      }
-    }
-    task.finish();
-    
-    task.start("Performing db insert");
-    inserter.insert();
-    task.finish();
-    
-    task.finish();
-  }
-  
-  private void populateVersionsTable() {
+  private void populateLibraryVersionsTable() {
     TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Populating versions table");
     
-    BatchInserter inserter = exec.makeInFileInserter(tempDir, VersionsTable.TABLE);
+    BatchInserter inserter = exec.makeInFileInserter(tempDir, LibraryVersionsTable.TABLE);
     
     task.start("Processing versions", "versions processed");
     for (Map.Entry<Library, Integer> entry : libraryMap.entrySet()) {
       for (LibraryVersion version : entry.getKey().getVersions()) {
-        inserter.addInsert(VersionsTable.createInsert(version, entry.getValue()));
+        inserter.addInsert(LibraryVersionsTable.createInsert(version, entry.getValue()));
         task.progress();
       }
     }
@@ -411,14 +488,15 @@ public class DatabaseImporter extends DatabaseRunnable {
    
     task.start("Loading version mapping", "versions loaded");
     versionMap = new HashMap<>();
-    try (SelectQuery query = exec.makeSelectQuery(VersionsTable.TABLE)) {
-      query.addSelects(VersionsTable.VERSION_ID);
+    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionsTable.TABLE)) {
+      query.addSelects(LibraryVersionsTable.LIBRARY_VERSION_ID);
+      query.orderBy(LibraryVersionsTable.LIBRARY_VERSION_ID, true);
       
       TypedQueryResult result = query.select();
       for (Map.Entry<Library, Integer> entry : libraryMap.entrySet()) {
         for (LibraryVersion version : entry.getKey().getVersions()) {
           result.next();
-          versionMap.put(version, result.getResult(VersionsTable.VERSION_ID));
+          versionMap.put(version, result.getResult(LibraryVersionsTable.LIBRARY_VERSION_ID));
           task.progress();
         }
       }
@@ -428,16 +506,16 @@ public class DatabaseImporter extends DatabaseRunnable {
     task.finish();
   }
   
-  private void populateVersionToJarTable() {
+  private void populateLibraryVersionToJarTable() {
     TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Populating version_to_jar table");
     
-    BatchInserter inserter = exec.makeInFileInserter(tempDir, VersionToJarTable.TABLE);
+    BatchInserter inserter = exec.makeInFileInserter(tempDir, LibraryVersionToJarTable.TABLE);
     
     task.start("Processing mappings", "mappings processed");
     for (Map.Entry<LibraryVersion, Integer> entry : versionMap.entrySet()) {
       for (Jar jar : entry.getKey().getJars()) {
-        inserter.addInsert(VersionToJarTable.createInsert(entry.getValue(), jarMap.get(jar)));
+        inserter.addInsert(LibraryVersionToJarTable.createInsert(entry.getValue(), jarMap.get(jar)));
         task.progress();
       }
     }
@@ -450,16 +528,16 @@ public class DatabaseImporter extends DatabaseRunnable {
     task.finish();
   }
   
-  private void populateVersionToFqnVersionTable() {
+  private void populateLibraryVersionToFqnVersionTable() {
     TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Populating version_to_fqn_version table");
     
-    BatchInserter inserter = exec.makeInFileInserter(tempDir, VersionToFqnVersionTable.TABLE);
+    BatchInserter inserter = exec.makeInFileInserter(tempDir, LibraryVersionToFqnVersionTable.TABLE);
     
     task.start("Processing mappings", "mappings processed");
     for (Map.Entry<LibraryVersion, Integer> entry : versionMap.entrySet()) {
       for (FqnVersion fqn : entry.getKey().getFqnVersions()) {
-        inserter.addInsert(VersionToFqnVersionTable.createInsert(entry.getValue(), fqnVersionMap.get(fqn)));
+        inserter.addInsert(LibraryVersionToFqnVersionTable.createInsert(entry.getValue(), fqnVersionMap.get(fqn)));
         task.progress();
       }
     }
@@ -472,16 +550,38 @@ public class DatabaseImporter extends DatabaseRunnable {
     task.finish();
   }
   
-  private void populateVersionDependencyTable() {
+  private void populateLibraryVersionToLibraryTable() {
     TaskProgressLogger task = TaskProgressLogger.get();
-    task.start("Populating version_dep table");
+    task.start("Populating library_version_to_library table");
     
-    BatchInserter inserter = exec.makeInFileInserter(tempDir, VersionDependencyTable.TABLE);
+    BatchInserter inserter = exec.makeInFileInserter(tempDir, LibraryVersionToLibraryTable.TABLE);
     
     task.start("Processing mappings", "mappings processed");
     for (Map.Entry<LibraryVersion, Integer> entry : versionMap.entrySet()) {
-      for (LibraryVersion dep : entry.getKey().getDependencies()) {
-        inserter.addInsert(VersionToFqnVersionTable.createInsert(entry.getValue(), versionMap.get(dep)));
+      for (Library dep : entry.getKey().getLibraryDependencies()) {
+        inserter.addInsert(LibraryVersionToLibraryTable.createInsert(entry.getValue(), libraryMap.get(dep)));
+        task.progress();
+      }
+    }
+    task.finish();
+    
+    task.start("Performing db insert");
+    inserter.insert();
+    task.finish();
+    
+    task.finish();
+  }
+  
+  private void populateLibraryVersionToLibraryVersionTable() {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    task.start("Populating library_version_to_library_version table");
+    
+    BatchInserter inserter = exec.makeInFileInserter(tempDir, LibraryVersionToLibraryVersionTable.TABLE);
+    
+    task.start("Processing mappings", "mappings processed");
+    for (Map.Entry<LibraryVersion, Integer> entry : versionMap.entrySet()) {
+      for (LibraryVersion dep : entry.getKey().getVersionDependencies()) {
+        inserter.addInsert(LibraryVersionToLibraryVersionTable.createInsert(entry.getValue(), versionMap.get(dep)));
         task.progress();
       }
     }

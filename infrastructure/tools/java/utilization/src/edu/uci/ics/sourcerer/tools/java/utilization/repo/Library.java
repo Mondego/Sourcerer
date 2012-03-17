@@ -37,7 +37,6 @@ public class Library {
   private final Cluster coreCluster;
   private JarSet jars;
   private Set<Cluster> secondaryClusters;
-//  private Collection<Library> dependencies;
   private Map<Set<FqnVersion>, LibraryVersion> versions;
   
   private Library(Cluster coreCluster) {
@@ -45,7 +44,6 @@ public class Library {
     secondaryClusters = Collections.emptySet();
     jars = JarSet.create();
     versions = new HashMap<>();
-//    dependencies = Collections.emptyList();
   }
   
   static Library createPackaging() {
@@ -93,28 +91,6 @@ public class Library {
   public Collection<LibraryVersion> getVersions() {
     return versions.values();
   }
-  
-//  void addDependency(Library library) {
-//    if (dependencies.isEmpty()) {
-//      dependencies = new HashSet<>();
-//    }
-//    dependencies.add(library);
-//  }
-//  
-//  public Collection<Library> getDependencies() {
-//    return dependencies;
-//  }
-//  
-//  void addVersion(LibraryVersion version) {
-//    if (versions.isEmpty()) {
-//      versions = new LinkedList<>();
-//    }
-//    versions.add(version);
-//  }
-//  
-//  public Collection<LibraryVersion> getVersions() {
-//    return versions;
-//  }
   
   @Override
   public String toString() {

@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Set;
 
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
@@ -32,16 +33,20 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 public class LibraryVersion {
   private JarSet jars;
   private final Set<FqnVersion> fqnVersions;
-  private Collection<LibraryVersion> dependencies;
+  private final Set<Cluster> clusters;
+  private Collection<Library> libraryDependencies;
+  private Collection<LibraryVersion> versionDependencies;
   
-  private LibraryVersion(Jar jar, Set<FqnVersion> fqnVersions) {
+  private LibraryVersion(Jar jar, Set<FqnVersion> fqnVersions, Set<Cluster> clusters) {
     jars = JarSet.create(jar);
     this.fqnVersions = fqnVersions;
-    this.dependencies = Collections.emptyList();
+    this.clusters = clusters;
+    this.libraryDependencies = Collections.emptyList();
+    this.versionDependencies = Collections.emptyList();
   }
   
-  static LibraryVersion create(Jar jar, Set<FqnVersion> fqnVersions) {
-    return new LibraryVersion(jar, fqnVersions);
+  static LibraryVersion create(Jar jar, Set<FqnVersion> fqnVersions, Set<Cluster> clusters) {
+    return new LibraryVersion(jar, fqnVersions, clusters);
   }
   
   void addJar(Jar jar) {
@@ -56,14 +61,29 @@ public class LibraryVersion {
     return fqnVersions;
   }
   
-  void addDependency(LibraryVersion library) {
-    if (dependencies.isEmpty()) {
-      dependencies = new LinkedList<>();
-    }
-    dependencies.add(library);
+  public Set<Cluster> getClusters() {
+    return clusters;
   }
   
-  public Collection<LibraryVersion> getDependencies() {
-    return dependencies;
+  void addLibraryDependency(Library library) {
+    if (libraryDependencies.isEmpty()) {
+      libraryDependencies = new LinkedList<>();
+    }
+    libraryDependencies.add(library);
+  }
+  
+  public Collection<Library> getLibraryDependencies() {
+    return libraryDependencies;
+  }
+  
+  void addVersionDependency(LibraryVersion library) {
+    if (versionDependencies.isEmpty()) {
+      versionDependencies = new LinkedList<>();
+    }
+    versionDependencies.add(library);
+  }
+  
+  public Collection<LibraryVersion> getVersionDependencies() {
+    return versionDependencies;
   }
 }

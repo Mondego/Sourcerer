@@ -26,25 +26,25 @@ import edu.uci.ics.sourcerer.utils.db.sql.StringColumn;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class VersionsTable extends DatabaseTable {
+public class LibraryVersionsTable extends DatabaseTable {
   /*
-   *              versions table
-   * +-------------+-----------------+-------+--------+
-   * | Column name | Type            | Null? | Index? |
-   * +-------------+-----------------+-------+--------+
-   * | version_id  | SERIAL          | No    | Yes    |
-   * | name        | VARCHAR(128)    | Yes   | Yes    |
-   * | library_id  | BIGINT UNSIGNED | No    | Yes    |
-   * +-------------+-----------------+-------+--------+   
+   *              library_versions table
+   * +---------------------+-----------------+-------+--------+
+   * | Column name         | Type            | Null? | Index? |
+   * +---------------------+-----------------+-------+--------+
+   * | library_version_id  | SERIAL          | No    | Yes    |
+   * | name                | VARCHAR(128)    | Yes   | Yes    |
+   * | library_id          | BIGINT UNSIGNED | No    | Yes    |
+   * +---------------------+-----------------+-------+--------+   
    */
-  public static final VersionsTable TABLE = new VersionsTable();
+  public static final LibraryVersionsTable TABLE = new LibraryVersionsTable();
   
-  public static final Column<Integer> VERSION_ID = TABLE.addSerialColumn("version_id");
+  public static final Column<Integer> LIBRARY_VERSION_ID = TABLE.addSerialColumn("library_version_id");
   public static final StringColumn NAME = TABLE.addVarcharColumn("name", 128, true).addIndex(48);
   public static final Column<Integer> LIBRARY_ID = TABLE.addIDColumn("library_id", false).addIndex();
   
-  private VersionsTable() {
-    super("versions");
+  private LibraryVersionsTable() {
+    super("library_versions");
   }
   
   // ---- INSERT ----

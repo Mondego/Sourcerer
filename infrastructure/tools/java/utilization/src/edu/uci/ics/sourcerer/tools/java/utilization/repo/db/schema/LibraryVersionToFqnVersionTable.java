@@ -24,27 +24,27 @@ import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class LibraryDependencyTable extends DatabaseTable{
+public class LibraryVersionToFqnVersionTable extends DatabaseTable {
   /*
-   *                 library_dep table
-   * +-------------+-----------------+-------+--------+
-   * | Column name | Type            | Null? | Index? |
-   * +-------------+-----------------+-------+--------+
-   * | source_lid  | BIGINT UNSIGNED | No    | Yes    |
-   * | target_lid  | BIGINT UNSIGNED | No    | Yes    |
-   * +-------------+-----------------+-------+--------+   
+   *             library_version_to_fqn_version table
+   * +------------------------+-----------------+-------+--------+
+   * | Column name            | Type            | Null? | Index? |
+   * +------------------------+-----------------+-------+--------+
+   * | library_version_id     | BIGINT UNSIGNED | No    | Yes    |
+   * | fqn_version_id         | BIGINT UNSIGNED | No    | Yes    |
+   * +------------------------+-----------------+-------+--------+   
    */
-  public static final LibraryDependencyTable TABLE = new LibraryDependencyTable();
+  public static final LibraryVersionToFqnVersionTable TABLE = new LibraryVersionToFqnVersionTable();
   
-  public static final Column<Integer> SOURCE_LID = TABLE.addIDColumn("source_lid", false).addIndex();
-  public static final Column<Integer> TARGET_LID = TABLE.addIDColumn("target_lid", false).addIndex();
-  
-  private LibraryDependencyTable() {
-    super("library_dep");
+  public static final Column<Integer> LIBRARY_VERSION_ID = TABLE.addIDColumn("library_version_id", false).addIndex();
+  public static final Column<Integer> FQN_VERSION_ID = TABLE.addIDColumn("fqn_version_id", false).addIndex();
+    
+  private LibraryVersionToFqnVersionTable() {
+    super("version_to_fqn_version");
   }
   
   // ---- INSERT ----
-  public static Insert createInsert(Integer sourceLID, Integer targetLID) {
-    return TABLE.makeInsert(SOURCE_LID.to(sourceLID), TARGET_LID.to(targetLID));
+  public static Insert createInsert(Integer versionID, Integer fqnVersionID) {
+    return TABLE.makeInsert(LIBRARY_VERSION_ID.to(versionID), FQN_VERSION_ID.to(fqnVersionID));
   }
 }

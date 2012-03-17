@@ -111,12 +111,12 @@ public class Main {
       }
       
       ClusterCollection clusters = ClusterIdentifier.identifyFullMatchingClusters(jars);
-      ClusterMerger.mergeByVersions(jars, clusters);
+      ClusterMerger.mergeByVersions(clusters);
       
       Repository repo = RepositoryBuilder.buildRepository(jars, clusters);
       
-//      DatabaseImporter importer = DatabaseImporter.create(jars, clusters, repo);
-//      importer.run();
+      DatabaseImporter importer = DatabaseImporter.create(jars, clusters, repo);
+      importer.run();
       ClusterStats.calculate(jars, clusters);
       
       task.finish();

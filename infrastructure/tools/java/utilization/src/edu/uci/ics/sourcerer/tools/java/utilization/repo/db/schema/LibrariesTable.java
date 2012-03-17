@@ -34,23 +34,25 @@ public class LibrariesTable extends DatabaseTable {
    * +-------------+-----------------+-------+--------+
    * | library_id  | SERIAL          | No    | Yes    |
    * | name        | VARCHAR(128)    | Yes   | Yes    |
+   * | cluster_id  | BIGINT UNSIGNED | Yes   | Yes    |
    * +-------------+-----------------+-------+--------+   
    */
   public static final LibrariesTable TABLE = new LibrariesTable();
   
   public static final Column<Integer> LIBRARY_ID = TABLE.addSerialColumn("library_id");
   public static final StringColumn NAME = TABLE.addVarcharColumn("name", 128, true).addIndex(48);
+  public static final Column<Integer> CLUSTER_ID = TABLE.addIDColumn("cluster_id", true).addIndex();
   
   private LibrariesTable() {
     super("libraries");
   }
   
   // ---- INSERT ----
-  private static Insert createInsert(String name) {
-    return TABLE.makeInsert(NAME.to(name));
+  private static Insert createInsert(String name, Integer clusterID) {
+    return TABLE.makeInsert(NAME.to(name), CLUSTER_ID.to(clusterID));
   }
   
-  public static Insert createInsert(Library library) {
-    return createInsert((String)null);
+  public static Insert createInsert(Library library, Integer clusterID) {
+    return createInsert((String)null, clusterID);
   }
 }
