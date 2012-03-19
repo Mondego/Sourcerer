@@ -21,7 +21,7 @@ import java.util.Collection;
 
 import edu.uci.ics.sourcerer.util.ArrayUtils;
 import edu.uci.ics.sourcerer.utils.db.sql.InConstantCondition;
-import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
+import edu.uci.ics.sourcerer.utils.db.sql.GenericColumn;
 import edu.uci.ics.sourcerer.utils.db.sql.Table;
 
 /**
@@ -33,11 +33,11 @@ public class InConstantConditionImpl<T> extends ConditionImpl implements InConst
     NOT_IN;
   }
   
-  private Selectable<T> sel;
+  private GenericColumn<T> sel;
   private Type type;
   private Collection<T> values;
   
-  public InConstantConditionImpl(Selectable<T> sel, Type type, Collection<T> values) {
+  public InConstantConditionImpl(GenericColumn<T> sel, Type type, Collection<T> values) {
     this.sel = sel;
     this.type = type;
     this.values = values;

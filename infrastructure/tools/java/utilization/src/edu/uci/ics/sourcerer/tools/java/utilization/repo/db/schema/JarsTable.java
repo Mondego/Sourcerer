@@ -52,9 +52,9 @@ public class JarsTable extends DatabaseTable {
   private static Insert createInsert(String name, String hash) {
     return TABLE.makeInsert(NAME.to(name), HASH.to(hash));
   }
-  
+
   public static Insert createInsert(Jar jar) {
     JarProperties properties = jar.getJar().getProperties();
-    return createInsert(properties.NAME.getValue(), properties.HASH.getValue());
+    return createInsert(jar.toString(), properties.HASH.getValue());
   }
 }

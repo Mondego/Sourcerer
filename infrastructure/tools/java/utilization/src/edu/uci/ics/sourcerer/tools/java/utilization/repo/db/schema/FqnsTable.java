@@ -44,7 +44,7 @@ public class FqnsTable extends DatabaseTable {
   public static final Column<Integer> FQN_ID = TABLE.addSerialColumn("fqn_id");
   public static final StringColumn FQN = TABLE.addVarcharColumn("fqn", 8192, false).addIndex(48);
   public static final Column<Integer> CLUSTER_ID = TABLE.addIDColumn("cluster_id", false).addIndex();
-  public static final Column<ClusterFqnType> TYPE = TABLE.addEnumColumn("tyoe", ClusterFqnType.values(), false);
+  public static final Column<ClusterFqnType> TYPE = TABLE.addEnumColumn("type", ClusterFqnType.values(), false);
   
   private FqnsTable() {
     super("fqns");

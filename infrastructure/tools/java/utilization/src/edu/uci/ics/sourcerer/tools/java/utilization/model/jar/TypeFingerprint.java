@@ -157,8 +157,12 @@ public class TypeFingerprint extends Fingerprint {
     
   static TypeFingerprint create(InputStream is) throws IOException {
     ClassReader reader = new ClassReader(is);
-    reader.accept(CLASS_VISITOR, 0);
-    return new TypeFingerprint(CLASS_VISITOR.createFingerprint());
+    try {
+      reader.accept(CLASS_VISITOR, 0);
+      return new TypeFingerprint(CLASS_VISITOR.createFingerprint());
+    } catch (Exception e) {
+      return new TypeFingerprint("ERROR");
+    }
   }
     
   @Override

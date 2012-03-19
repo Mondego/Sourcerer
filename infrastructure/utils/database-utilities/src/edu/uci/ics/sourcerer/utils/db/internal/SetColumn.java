@@ -25,7 +25,7 @@ import edu.uci.ics.sourcerer.util.BitEnumSet;
 import edu.uci.ics.sourcerer.util.BitEnumSetFactory;
 import edu.uci.ics.sourcerer.utils.db.internal.ConstantConditionImpl.Type;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
-import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
+import edu.uci.ics.sourcerer.utils.db.sql.GenericColumn;
 
 
 /**
@@ -53,7 +53,7 @@ class SetColumn<T extends Enum<T>, S extends BitEnumSet<T>> extends ColumnImpl<S
   }
   
   @Override
-  protected ConstantCondition<S> createConstantCondition(Selectable<S> sel, Type type) {
+  protected ConstantCondition<S> createConstantCondition(GenericColumn<S> sel, Type type) {
     return new SetConstantConditionImpl<>(sel, type);
   }
   

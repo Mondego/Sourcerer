@@ -17,47 +17,44 @@
  */
 package edu.uci.ics.sourcerer.utils.db.internal;
 
-import edu.uci.ics.sourcerer.util.ArrayUtils;
-import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
-import edu.uci.ics.sourcerer.utils.db.sql.GenericColumn;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 import edu.uci.ics.sourcerer.utils.db.sql.Table;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-class ComparisonConditionImpl extends ConditionImpl implements ComparisonCondition {
-  private GenericColumn<?> left;
-  private GenericColumn<?> right;
+public class DistinctSelectable<T> implements Selectable<T> {
+  private final Selectable<T> selectable;
   
-  <T> ComparisonConditionImpl(GenericColumn<T> left, GenericColumn<T> right) {
-    this.left = left;
-    this.right = right;
+  private DistinctSelectable(Selectable<T> selectable) {
+    this.selectable = selectable;
+  }
+  
+  static <T> DistinctSelectable<T> create(Selectable<T> selectable) {
+    return new DistinctSelectable<>(selectable);
+  }
+  
+  @Override
+  public Table getTable() {
+    return selectable.getTable();
   }
 
-  @Override
-  public Table getLeftTable() {
-    return left.getTable();
-  }
-
-  @Override
-  public Table getRightTable() {
-    return right.getTable();
-  }
-  
-  @Override
-  public void verifyTables(Table ... tables) {
-    if (!ArrayUtils.containsReference(tables, left.getTable())) {
-      throw new IllegalStateException("Missing " + left.getTable());
-    }
-    if (!ArrayUtils.containsReference(tables, right.getTable())) {
-      throw new IllegalStateException("Missing " + right.getTable());
-    }
-  }
-  
   @Override
   public void toSql(StringBuilder builder) {
-    left.toSql(builder);
-    builder.append("=");
-    right.toSql(builder);
+    builder.append("DISTINCT ");
+    selectable.toSql(builder);
+  }
+
+  @Override
+  public T from(String value) {
+    return selectable.from(value);
+  }
+  
+  @Override
+  public void bind(T value, PreparedStatement statement, int index) throws SQLException {
+    selectable.bind(value, statement, index);
   }
 }

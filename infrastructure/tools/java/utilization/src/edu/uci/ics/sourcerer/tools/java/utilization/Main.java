@@ -117,7 +117,7 @@ public class Main {
       
       DatabaseImporter importer = DatabaseImporter.create(jars, clusters, repo);
       importer.run();
-      ClusterStats.calculate(jars, clusters);
+//      ClusterStats.calculate(jars, clusters);
       
       task.finish();
     }

@@ -28,6 +28,7 @@ import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.InConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.QualifiedColumn;
 import edu.uci.ics.sourcerer.utils.db.sql.QualifiedTable;
+import edu.uci.ics.sourcerer.utils.db.sql.GenericColumn;
 import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 
 /**
@@ -79,6 +80,11 @@ abstract class ColumnImpl<T> implements Column<T> {
     }
   }
 
+  @Override
+  public Selectable<T> makeDistinct() {
+    return DistinctSelectable.create(this);
+  }
+  
   @Override
   public final void bind(T value, PreparedStatement statement, int index) throws SQLException {
     if (value == null) {
@@ -134,11 +140,11 @@ abstract class ColumnImpl<T> implements Column<T> {
   }
   
   @Override
-  public final ComparisonCondition compareEquals(Selectable<T> other) {
+  public final ComparisonCondition compareEquals(GenericColumn<T> other) {
     return new ComparisonConditionImpl(this, other);
   }
   
-  protected ConstantCondition<T> createConstantCondition(Selectable<T> sel, Type type) {
+  protected ConstantCondition<T> createConstantCondition(GenericColumn<T> sel, Type type) {
     return new ConstantConditionImpl<>(sel, type);
   }
   

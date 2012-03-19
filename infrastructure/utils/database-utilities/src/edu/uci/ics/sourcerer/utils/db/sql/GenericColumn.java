@@ -15,29 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.util;
+package edu.uci.ics.sourcerer.utils.db.sql;
 
 import java.util.Collection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class CollectionUtils {
-  public static <T> boolean containsNone(Collection<T> outer, Iterable<T> inner) {
-    for (T item : inner) {
-      if (outer.contains(item)) {
-        return false;
-      }
-    }
-    return true;
-  }
+public interface GenericColumn<T> extends Selectable<T> {
+  public ComparisonCondition compareEquals(GenericColumn<T> other);
+  public ConstantCondition<T> compareEquals();
+  public ConstantCondition<T> compareEquals(T value);
+  public ConstantCondition<T> compareNotEquals();
+  public ConstantCondition<T> compareNotEquals(T value);
+  public InConstantCondition<T> compareIn(Collection<T> values);
+  public InConstantCondition<T> compareNotIn(Collection<T> values);
   
-  public static <T> boolean containsAny(Collection<T> outer, Iterable<T> inner) {
-    for (T item : inner) {
-      if (outer.contains(item)) {
-        return true;
-      }
-    }
-    return false;
-  }
+  public Selectable<T> makeDistinct();
+  
+  public String to(T value);
+  
 }
