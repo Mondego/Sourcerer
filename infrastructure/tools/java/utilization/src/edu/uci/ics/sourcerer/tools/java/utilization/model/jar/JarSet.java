@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.MapMaker;
 import com.google.common.collect.Multimap;
 
 /**
@@ -77,6 +78,29 @@ public class JarSet implements Iterable<Jar> {
       JarSet set = new JarSet(jars, jar);
       sets.put(hashCode, set);
       return set;
+    }
+  }
+  
+  public JarSet remove(Jar jar) {
+    if (jars.contains(jar)) {
+      int hashCode = 0;
+      for (Jar j : jars) {
+        if (j != jar) {
+          hashCode += j.hashCode();
+        }
+      }
+      for (JarSet set : sets.get(hashCode)) {
+        if (set.jars.size() == jars.size() - 1 && !set.jars.contains(jar) && jars.containsAll(set.jars)) {
+          return set;
+        }
+      }
+      Set<Jar> newSet = new HashSet<>(jars);
+      newSet.remove(jar);
+      JarSet set = new JarSet(newSet);
+      sets.put(hashCode, set);
+      return set;
+    } else {
+      return this;
     }
   }
   

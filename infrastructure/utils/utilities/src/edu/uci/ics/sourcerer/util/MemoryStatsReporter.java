@@ -46,6 +46,7 @@ public class MemoryStatsReporter {
     }
   }
   public static void reportMemoryStats(TaskProgressLogger task) {
+    task.start("Reporting memory usage information");
     Runtime runtime = Runtime.getRuntime();
     long total = runtime.totalMemory();
     long free = runtime.freeMemory();
@@ -55,5 +56,6 @@ public class MemoryStatsReporter {
     total = runtime.totalMemory();
     free = runtime.freeMemory();
     task.report("After GC using " + formatSize(total - free) + " of " + formatSize(total) + " (" + formatSize(max) + ")");
+    task.finish();
   }
 }

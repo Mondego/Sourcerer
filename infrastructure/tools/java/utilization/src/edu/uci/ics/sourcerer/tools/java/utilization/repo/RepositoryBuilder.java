@@ -19,7 +19,6 @@ package edu.uci.ics.sourcerer.tools.java.utilization.repo;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -28,13 +27,11 @@ import java.util.Set;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterMatcher;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
@@ -52,7 +49,7 @@ public class RepositoryBuilder {
   
   private final JarCollection jars;
   private final ClusterCollection clusters;
-  private final ClusterMatcher matcher;
+//  private final ClusterMatcher matcher;
   
   private Multimap<Jar, Cluster> jarsToClusters;
   private Repository repo;
@@ -63,7 +60,7 @@ public class RepositoryBuilder {
     this.jars = jars;
     this.clusters = clusters;
     
-    this.matcher = clusters.getClusterMatcher();
+//    this.matcher = clusters.getClusterMatcher();
     
     this.jarsToClusters = HashMultimap.create();
     
@@ -90,9 +87,19 @@ public class RepositoryBuilder {
     JarSet assignedJars = JarSet.create();
     
     PriorityQueue<Cluster> sortedClusters = new PriorityQueue<>(clusters.size(), Cluster.DESCENDING_SIZE_COMPARATOR);
+    Map<VersionedFqnNode, Cluster> fqnToCluster = new HashMap<>();
+    for (Cluster cluster : clusters) {
+      sortedClusters.add(cluster);
+      for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
+        fqnToCluster.put(fqn, cluster);
+      }
+      for (VersionedFqnNode fqn : cluster.getVersionFqns()) {
+        fqnToCluster.put(fqn, cluster);
+      }
+    }
     sortedClusters.addAll(clusters.getClusters());
-    
-    task.start("Creating simple libraries from clusters", "clusters examined");
+
+    task.start("Creating simple libraries from clusters", "clusters examined", 500);
     while (!sortedClusters.isEmpty()) {
       Cluster biggest = sortedClusters.poll();
       
@@ -126,7 +133,12 @@ public class RepositoryBuilder {
         // Are there any clusters that we match?
         Set<Cluster> potentialClusters = new HashSet<>();
         for (VersionedFqnNode fqn : globalPotentials) {
-          potentialClusters.add(matcher.getCluster(fqn));
+          Cluster cluster = fqnToCluster.get(fqn);
+          if (cluster == null) {
+            logger.severe("Missing cluster for FQN: " + fqn.getFqn());
+          } else {
+            potentialClusters.add(cluster);
+          }
         }
         for (Cluster cluster : potentialClusters) {
           if (globalPotentials.containsAll(cluster.getCoreFqns()) && CollectionUtils.containsNone(globalPartials, cluster.getVersionFqns())) {
@@ -151,7 +163,7 @@ public class RepositoryBuilder {
       }
       
       // Split the jars into versions
-      splitLibaryIntoVersions(library);
+//      splitLibaryIntoVersions(library);
       
       task.progress();
     }
@@ -179,7 +191,7 @@ public class RepositoryBuilder {
     
     // Split them into versions and put them into the repo
     for (Library library : packages.values()) {
-      splitLibaryIntoVersions(library);
+//      splitLibaryIntoVersions(library);
       repo.addLibrary(library);
     }
     task.finish();
@@ -298,8 +310,8 @@ public class RepositoryBuilder {
     
     buildJarToClusterMap();
     createCompoundLibraries(createSimpleLibraries());
-    computeLibraryDependencies();
-    computeVersionDependencies();
+//    computeLibraryDependencies();
+//    computeVersionDependencies();
     
     task.finish();
 //    // Print things out

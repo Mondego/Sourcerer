@@ -90,7 +90,7 @@ public class ClusterIdentifier {
     return one.getJars() == two.getJars();
   }
   
-  public static ClusterCollection identifyFullMatchingClusters(JarCollection jars) {
+  public static ClusterCollection identifyFullyMatchingClusters(JarCollection jars) {
     TaskProgressLogger task = TaskProgressLogger.get();
     
     task.start("Identifying fully matching clusters in " + jars.size() + " jar files");
@@ -101,11 +101,14 @@ public class ClusterIdentifier {
     for (VersionedFqnNode parent : jars.getRoot().getPostOrderIterable()) {
       // If it's a leaf, then it starts out as a trivial cluster
       if (!parent.hasChildren()) {
-        Cluster cluster = Cluster.create(parent);
-        clusterMap.put(parent, cluster);
+        clusterMap.put(parent, Cluster.create(parent));
       } 
       // If it has children, see what children always co-occur
       else {
+        // Check if the node itself should be a cluster
+        if (parent.getJars().size() > 0) {
+          clusterMap.put(parent, Cluster.create(parent));
+        }
         for (VersionedFqnNode child : parent.getChildren()) {
           // Match the clusters from the children with the current clusters for this node
           for (Cluster childCluster : clusterMap.get(child)) {

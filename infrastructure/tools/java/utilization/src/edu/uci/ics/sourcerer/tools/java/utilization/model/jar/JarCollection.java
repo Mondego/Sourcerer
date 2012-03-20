@@ -26,8 +26,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -186,6 +188,23 @@ public class JarCollection implements Iterable<Jar> {
   
   private void add(JarFile jar) {
     Jar newJar = new Jar(jar);
+    Set<String> names = new HashSet<>();
+    // Read it once to check for duplicates. Stupid!
+    try (ZipInputStream zis = new ZipInputStream(new FileInputStream(jar.getFile().toFile()))) {
+      for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
+        if (entry.getName().endsWith(".class")) {
+          if (names.contains(entry.getName())) {
+            logger.severe("Skipping " + jar + " due to duplicate entry: " + entry.getName());
+            return;
+          } else {
+            names.add(entry.getName());
+          }
+        }
+      }
+    } catch (IOException | IllegalArgumentException e) {
+      logger.log(Level.SEVERE, "Error reading jar file: " + jar, e);
+    }
+    
     try (ZipInputStream zis = new ZipInputStream(new FileInputStream(jar.getFile().toFile()))) {
       for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
         if (entry.getName().endsWith(".class")) {

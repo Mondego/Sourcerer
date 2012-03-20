@@ -20,8 +20,10 @@ package edu.uci.ics.sourcerer.tools.java.utilization.identifier;
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -31,10 +33,10 @@ import com.google.common.collect.Multiset;
 
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterMatcher;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.util.CollectionUtils;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
@@ -141,7 +143,13 @@ public class ClusterMerger {
     task.start("Merging " + clusters.size() + " clusters by matching versions");
     
     TreeSet<Cluster> sortedClusters = new TreeSet<>(Cluster.DESCENDING_SIZE_COMPARATOR);
-    sortedClusters.addAll(clusters.getClusters());
+    Map<VersionedFqnNode, Cluster> fqnToCluster = new HashMap<>();
+    for (Cluster cluster : clusters) {
+      sortedClusters.add(cluster);
+      for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
+        fqnToCluster.put(fqn, cluster);
+      }
+    }
     
     Collection<Cluster> remainingClusters = new LinkedList<>();
     Set<VersionedFqnNode> usedFqns = new HashSet<>();
@@ -150,9 +158,6 @@ public class ClusterMerger {
     // For each cluster
     while (!sortedClusters.isEmpty()) {
       Cluster biggest = sortedClusters.pollFirst();
-      if (CollectionUtils.containsAny(usedFqns, biggest.getCoreFqns())) {
-        continue;
-      }
       remainingClusters.add(biggest);
 
       usedFqns.addAll(biggest.getCoreFqns());
@@ -175,6 +180,17 @@ public class ClusterMerger {
           
           int max = version.getJars().size();
           for (VersionedFqnNode fqn : potentials.elementSet()) {
+            if (potentials.count(fqn) > max) {
+              logger.severe("wtf! " + fqn.getFqn());
+              // Check the jars for duplicates
+              for (Jar jar : version.getJars()) {
+                for (FqnVersion node : jar.getFqns()) {
+                  if (node.getFqn() == fqn) {
+                    logger.severe(jar.getJar().getProperties().HASH.getValue() + " " + node.getFingerprint().serialize());
+                  }
+                }
+              }
+            }
             if (potentials.count(fqn) == max && fqn.getJars().isSubset(biggest.getJars())) {
               globalPotentials.add(fqn);
             } else {
@@ -186,20 +202,35 @@ public class ClusterMerger {
         globalPotentials.removeAll(globalPartials);
         
         // Collect the clusters we plan on merging
-//        Set<Cluster> newClusters = new HashSet<>();
+        Set<Cluster> newClusters = new HashSet<>();
         for (VersionedFqnNode fqn : globalPotentials) {
-//          Cluster newCluster = matcher.getCluster(fqn);
-//          if (newCluster == null) {
-//            logger.log(Level.SEVERE, "Unable to find cluster for: " + fqn.getFqn());
-//          } else {
-//            newClusters.add(newCluster);
+          Cluster newCluster = fqnToCluster.get(fqn);
+          if (newCluster == null) {
+            logger.log(Level.SEVERE, "Unable to find cluster for: " + fqn.getFqn());
+          } else {
+            newClusters.add(newCluster);
             usedFqns.add(fqn);
             biggest.addVersionedCore(fqn);
-//          }
+          }
         }
         
+//        // Verify the clusters
+//        for (Cluster cluster : newClusters) {
+//          for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
+//            if (!globalPotentials.contains(fqn)) {
+//              logger.severe("Cluster included without fqn: " + fqn.getFqn());
+//              // Every node should have the same JarSet
+//              for (VersionedFqnNode node : cluster.getCoreFqns()) {
+//                logger.severe(" " + node.getFqn() + " " + globalPotentials.contains(node) + " " + globalPartials.contains(node) + " " + usedFqns.contains(node) + " "+ node.getJars().hashCode());
+//              }
+//            }
+//          }
+//        }
+        
+//        usedFqns.addAll(globalPotentials);
+        
         // Remove the clusters from the queue
-//        sortedClusters.removeAll(newClusters);
+        sortedClusters.removeAll(newClusters);
         
         addedSomething = !globalPotentials.isEmpty();
       }

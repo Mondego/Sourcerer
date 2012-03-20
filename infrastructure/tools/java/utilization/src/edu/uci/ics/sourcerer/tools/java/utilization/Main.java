@@ -31,6 +31,7 @@ import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.DatabaseImporter;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.ClusterStats;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.CoverageCalculator;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.PopularityCalculator;
+import edu.uci.ics.sourcerer.util.MemoryStatsReporter;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
@@ -103,6 +104,9 @@ public class Main {
       TaskProgressLogger task = TaskProgressLogger.get();
       task.start("Clustering jars");
       
+      MemoryStatsReporter.reportMemoryStats(task);
+      
+      
       JarCollection jars = null;
       if (JAR_FILTER_FILE.getValue() != null) {
         jars = JarCollection.create(FileUtils.readFileToCollection(JAR_FILTER_FILE.getValue()));
@@ -110,16 +114,33 @@ public class Main {
         jars = JarCollection.create();
       }
       
-      ClusterCollection clusters = ClusterIdentifier.identifyFullMatchingClusters(jars);
-      ClusterMerger.mergeByVersions(clusters);
+
+      MemoryStatsReporter.reportMemoryStats(task);
+
+      while (true) {
+        if (jars == null) {
+          break;
+        }
+      }
+      jars.toString();
+//      ClusterCollection clusters = ClusterIdentifier.identifyFullyMatchingClusters(jars);
+//      
+//      MemoryStatsReporter.reportMemoryStats(task);
+//      
+//      ClusterMerger.mergeByVersions(clusters);
+//      
+//      MemoryStatsReporter.reportMemoryStats(task);
+//      
+//      Repository repo = RepositoryBuilder.buildRepository(jars, clusters);
+//      
+//      MemoryStatsReporter.reportMemoryStats(task);
       
-      Repository repo = RepositoryBuilder.buildRepository(jars, clusters);
+//      DatabaseImporter importer = DatabaseImporter.create(jars, clusters, repo);
+//      importer.run();
       
-      DatabaseImporter importer = DatabaseImporter.create(jars, clusters, repo);
-      importer.run();
 //      ClusterStats.calculate(jars, clusters);
       
-      task.finish();
+//      task.finish();
     }
   }.setProperties(
       JavaRepositoryFactory.INPUT_REPO,
