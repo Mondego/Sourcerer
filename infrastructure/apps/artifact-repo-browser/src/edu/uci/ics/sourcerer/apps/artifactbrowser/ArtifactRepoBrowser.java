@@ -24,6 +24,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.sun.org.apache.bcel.internal.generic.FNEG;
+
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClusterFqnType;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClusterVersionToFqnVersionTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClusterVersionToJarTable;
@@ -33,6 +36,13 @@ import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.FqnVersionsTa
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.FqnsTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.JarToFqnVerionTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.JarsTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibrariesTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryToClusterTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToFqnVersionTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToJarTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToLibraryTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToLibraryVersionTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionsTable;
 import edu.uci.ics.sourcerer.util.TimeoutManager;
 import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnection;
@@ -75,10 +85,187 @@ public class ArtifactRepoBrowser extends HttpServlet {
   private void serveMain(StringBuilder html) {
     html.append(
         "<ul>" +
+          "<li><a href=\"./libraries\">Library Listing</a></li>" +
           "<li><a href=\"./clusters\">Cluster Listing</a></li>" +
           "<li><a href=\"./jars\">Jar Listing</a></li>" +
           "<li><a href=\"./fqns\">FQN Listing</a></li>" +
         "</ul>");
+  }
+  
+  private void serveLibraryList(StringBuilder html) {
+    QueryExecutor exec = db.get().getExecutor();
+    
+    try (SelectQuery query = exec.makeSelectQuery(LibrariesTable.TABLE)) {
+      query.addSelect(LibrariesTable.LIBRARY_ID);
+      html.append("<ul>");
+      TypedQueryResult result = query.select();
+      while (result.next()) {
+        Integer libraryID = result.getResult(LibrariesTable.LIBRARY_ID);
+        html.append("<li><a href=\"?libraryID=").append(libraryID).append("\">Library ").append(result.getResult(LibrariesTable.LIBRARY_ID)).append("</a></li>");
+      }
+      html.append("</ul>");
+    }
+  }
+  
+  private void serveLibrary(Integer libraryID, StringBuilder html) {
+    QueryExecutor exec = db.get().getExecutor();
+    
+    html.append("<h3>Library ").append(libraryID).append("</h3>");
+    
+    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionsTable.LIBRARY_VERSION_ID.compareEquals(LibraryVersionToJarTable.LIBRARY_VERSION_ID), LibraryVersionToJarTable.JAR_ID.compareEquals(JarsTable.JAR_ID))) {
+      query.addSelects(JarsTable.NAME, JarsTable.JAR_ID);
+      query.andWhere(LibraryVersionsTable.LIBRARY_ID.compareEquals(libraryID));
+      query.orderBy(JarsTable.NAME, true);
+      
+      // Jars
+      html.append("<h4>Jars</h4>");
+      html.append("<ul>");
+      TypedQueryResult result = query.select();
+      while (result.next()) {
+        html.append("<li><a href=\"./jars?jarID=" + result.getResult(JarsTable.JAR_ID) + "\">" + result.getResult(JarsTable.NAME) + "</a></li>");
+      }
+      html.append("</ul>");
+    }
+    
+    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionsTable.TABLE)) {
+      query.addSelect(LibraryVersionsTable.LIBRARY_VERSION_ID);
+      query.andWhere(LibraryVersionsTable.LIBRARY_ID.compareEquals(libraryID));
+      query.orderBy(LibraryVersionsTable.LIBRARY_ID, true);
+      
+      // Library Versions
+      html.append("<h4>Library Versions</h4>");
+      html.append("<ul>");
+      TypedQueryResult result = query.select();
+      while (result.next()) {
+        Integer libraryVersionID = result.getResult(LibraryVersionsTable.LIBRARY_VERSION_ID);
+        html.append("<li><a href=\"./libraries?libraryVersionID=" + libraryVersionID + "\">Library Version " + libraryVersionID + "</a></li>");
+      }
+      html.append("</ul>");
+    }
+    
+    try (SelectQuery query = exec.makeSelectQuery(LibraryToClusterTable.TABLE)) {
+      query.addSelect(LibraryToClusterTable.CLUSTER_ID);
+      query.andWhere(LibraryToClusterTable.LIBRARY_ID.compareEquals(libraryID));
+      query.orderBy(LibraryToClusterTable.CLUSTER_ID, true);
+      
+      // Clusters
+      html.append("<h4>Clusters</h4>");
+      html.append("<ul>");
+      TypedQueryResult result = query.select();
+      while (result.next()) {
+        Integer clusterID = result.getResult(LibraryToClusterTable.CLUSTER_ID);
+        html.append("<li><a href=\"./clusters?clusterID=" + clusterID + "\">Cluster " + clusterID + "</a></li>");
+      }
+      html.append("</ul>");
+    }
+    
+    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionsTable.LIBRARY_VERSION_ID.compareEquals(LibraryVersionToFqnVersionTable.LIBRARY_VERSION_ID), LibraryVersionToFqnVersionTable.FQN_VERSION_ID.compareEquals(FqnVersionsTable.FQN_VERSION_ID), FqnVersionsTable.FQN_ID.compareEquals(FqnsTable.FQN_ID))) {
+      query.setDistinct(true);
+      query.addSelects(FqnsTable.FQN, FqnsTable.FQN_ID);
+      query.andWhere(LibraryVersionsTable.LIBRARY_ID.compareEquals(libraryID));
+      query.orderBy(FqnsTable.FQN, true);
+      
+      // FQNs
+      html.append("<h4>Version FQNs</h4>");
+      html.append("<ul>");
+      TypedQueryResult result = query.select();
+      while (result.next()) {
+        html.append("<li><a href=\"./fqns?fqnID=" + result.getResult(FqnsTable.FQN_ID) + "\">" + result.getResult(FqnsTable.FQN) + "</a></li>");
+      }
+      html.append("</ul>");
+     }
+  }
+  
+  private void serveLibraryVersion(Integer libraryVersionID, StringBuilder html) {
+    QueryExecutor exec = db.get().getExecutor();
+    
+    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionsTable.TABLE)) {
+      query.addSelect(LibraryVersionsTable.LIBRARY_ID);
+      query.andWhere(LibraryVersionsTable.LIBRARY_VERSION_ID.compareEquals(libraryVersionID));
+      
+      Integer libraryID = query.select().toSingleton(LibraryVersionsTable.LIBRARY_ID, false);
+      html.append("<h3><a href=\"./libraries?libraryID=").append(libraryID).append("\">Library ").append(libraryID).append(" Version ").append(libraryVersionID).append("</a></h3>");
+    }
+    
+    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToJarTable.JAR_ID.compareEquals(JarsTable.JAR_ID))) {
+      query.addSelects(JarsTable.NAME, JarsTable.JAR_ID);
+      query.andWhere(LibraryVersionToJarTable.LIBRARY_VERSION_ID.compareEquals(libraryVersionID));
+      query.orderBy(JarsTable.NAME, true);
+      
+      // Jars
+      html.append("<h4>Jars</h4>");
+      html.append("<ul>");
+      TypedQueryResult result = query.select();
+      while (result.next()) {
+        html.append("<li><a href=\"./jars?jarID=" + result.getResult(JarsTable.JAR_ID) + "\">" + result.getResult(JarsTable.NAME) + "</a></li>");
+      }
+      html.append("</ul>");
+    }
+    
+    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToFqnVersionTable.FQN_VERSION_ID.compareEquals(FqnVersionsTable.FQN_VERSION_ID), FqnVersionsTable.FQN_ID.compareEquals(FqnsTable.FQN_ID))) {
+      query.addSelects(FqnVersionsTable.FQN_VERSION_ID, FqnsTable.FQN);
+      query.andWhere(LibraryVersionToFqnVersionTable.LIBRARY_VERSION_ID.compareEquals(libraryVersionID));
+      query.orderBy(FqnsTable.FQN, true);
+      
+      // FQNs
+      html.append("<h4>FQNs</h4>");
+      html.append("<ul>");
+      TypedQueryResult result = query.select();
+      while (result.next()) {
+        html.append("<li><a href=\"./fqns?fqnVersionID=" + result.getResult(FqnVersionsTable.FQN_VERSION_ID) + "\">" + result.getResult(FqnsTable.FQN) + "</a></li>");
+      }
+      html.append("</ul>");
+    }
+    
+    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToLibraryTable.TABLE)) {
+      query.addSelect(LibraryVersionToLibraryTable.LIBRARY_ID);
+      query.andWhere(LibraryVersionToLibraryTable.LIBRARY_VERSION_ID.compareEquals(libraryVersionID));
+      query.orderBy(LibraryVersionsTable.LIBRARY_ID, true);
+      
+      // Libraries
+      html.append("<h4>Depends on libraries</h4>");
+      html.append("<ul>");
+      TypedQueryResult result = query.select();
+      while (result.next()) {
+        Integer libraryID = result.getResult(LibraryVersionToLibraryTable.LIBRARY_ID);
+        html.append("<li><a href=\"./libraries?libraryID=" + libraryID + "\">Library " + libraryID + "</a></li>");
+      }
+      html.append("</ul>");
+    }
+    
+    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToLibraryVersionTable.TARGET_ID.compareEquals(LibraryVersionsTable.LIBRARY_ID))) {
+      query.addSelects(LibraryVersionToLibraryVersionTable.TARGET_ID, LibraryVersionsTable.LIBRARY_ID);
+      query.andWhere(LibraryVersionToLibraryVersionTable.SOURCE_ID.compareEquals(libraryVersionID));
+      query.orderBy(LibraryVersionToLibraryVersionTable.TARGET_ID, true);
+      
+      // Libraries
+      html.append("<h4>Depends on library versions</h4>");
+      html.append("<ul>");
+      TypedQueryResult result = query.select();
+      while (result.next()) {
+        Integer libraryID = result.getResult(LibraryVersionsTable.LIBRARY_ID);
+        Integer versionID = result.getResult(LibraryVersionToLibraryVersionTable.TARGET_ID);
+        html.append("<li><a href=\"./libraries?libraryVersionID=" + versionID + "\">Library " + libraryID + "." + libraryVersionID + "</a></li>");
+      }
+      html.append("</ul>");
+    }
+    
+    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToLibraryVersionTable.SOURCE_ID.compareEquals(LibraryVersionsTable.LIBRARY_ID))) {
+      query.addSelects(LibraryVersionToLibraryVersionTable.SOURCE_ID, LibraryVersionsTable.LIBRARY_ID);
+      query.andWhere(LibraryVersionToLibraryVersionTable.TARGET_ID.compareEquals(libraryVersionID));
+      query.orderBy(LibraryVersionToLibraryVersionTable.SOURCE_ID, true);
+      
+      // Libraries
+      html.append("<h4>Depended on by library versions</h4>");
+      html.append("<ul>");
+      TypedQueryResult result = query.select();
+      while (result.next()) {
+        Integer libraryID = result.getResult(LibraryVersionsTable.LIBRARY_ID);
+        Integer versionID = result.getResult(LibraryVersionToLibraryVersionTable.SOURCE_ID);
+        html.append("<li><a href=\"./libraries?libraryVersionID=" + versionID + "\">Library " + libraryID + "." + libraryVersionID + "</a></li>");
+      }
+      html.append("</ul>");
+    }
   }
   
   private void serveClusterList(StringBuilder html) {
@@ -302,8 +489,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
     
     try (SelectQuery query = exec.makeSelectQuery(FqnVersionsTable.FQN_VERSION_ID.compareEquals(ClusterVersionToFqnVersionTable.FQN_VERSION_ID), ClusterVersionToFqnVersionTable.CLUSTER_VERSION_ID.compareEquals(ClusterVersionsTable.CLUSTER_VERSION_ID))) {
-      Selectable<Integer> distinctCol = ClusterVersionsTable.CLUSTER_ID.makeDistinct();
-      query.addSelects(distinctCol);
+      query.addSelects(ClusterVersionsTable.CLUSTER_ID);
       query.andWhere(FqnVersionsTable.FQN_ID.compareEquals(fqnID));
       query.orderBy(ClusterVersionsTable.CLUSTER_ID, true);
       
@@ -312,7 +498,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
-        Integer clusterID = result.getResult(distinctCol);
+        Integer clusterID = result.getResult(ClusterVersionsTable.CLUSTER_ID);
         html.append("<li><a href=\"./clusters?clusterID=" + clusterID + "\">" + clusterID + "</a></li>");
       }
       html.append("</ul>");
@@ -389,41 +575,66 @@ public class ArtifactRepoBrowser extends HttpServlet {
         "<html>" +
         "<head><title>Sourcerer Artifact Repository</title></head>" +
         "<body>");
-    String path = request.getPathInfo();
-    if ("/clusters".equals(path)) {
-      Integer clusterID = ServletUtils.getIntValue(request, "clusterID");
-      if (clusterID == null) {
-        Integer clusterVersionID = ServletUtils.getIntValue(request, "clusterVersionID");
-        if (clusterVersionID == null) {
-          serveClusterList(html);
-        } else {
-          serveClusterVersion(clusterVersionID, html);
+    switch (request.getPathInfo()) {
+      case "/libraries":
+        {
+          Integer libraryID = ServletUtils.getIntValue(request, "libraryID");
+          if (libraryID == null) {
+            Integer libraryVersionID = ServletUtils.getIntValue(request, "libraryVersionID");
+            if (libraryVersionID == null) {
+              serveLibraryList(html);
+            } else {
+              serveLibraryVersion(libraryVersionID, html);
+            }
+            
+          } else {
+            serveLibrary(libraryID, html);
+          }
         }
-        
-      } else {
-        serveCluster(clusterID, html);
-      }
-    } else if ("/jars".equals(path)) {
-      Integer jarID = ServletUtils.getIntValue(request, "jarID");
-      if (jarID == null) {
-        serveJarList(html);
-      } else {
-        serveJar(jarID, html);
-      }
-    } else if ("/fqns".equals(path)) {
-      Integer fqnID = ServletUtils.getIntValue(request, "fqnID");
-      if (fqnID == null) {
-        Integer fqnVersionID = ServletUtils.getIntValue(request, "fqnVersionID");
-        if (fqnVersionID == null) {
-          serveFqnList(html);
-        } else {
-          serveFqnVersion(fqnVersionID, html);
+        break;
+      case "/clusters":
+        {
+          Integer clusterID = ServletUtils.getIntValue(request, "clusterID");
+          if (clusterID == null) {
+            Integer clusterVersionID = ServletUtils.getIntValue(request, "clusterVersionID");
+            if (clusterVersionID == null) {
+              serveClusterList(html);
+            } else {
+              serveClusterVersion(clusterVersionID, html);
+            }
+            
+          } else {
+            serveCluster(clusterID, html);
+          }
         }
-      } else {
-        serveFqn(fqnID, html);
-      }
-    } else {
-      serveMain(html);
+        break;
+      case "/jars":
+        {
+          Integer jarID = ServletUtils.getIntValue(request, "jarID");
+          if (jarID == null) {
+            serveJarList(html);
+          } else {
+            serveJar(jarID, html);
+          }
+        }
+        break;
+      case "/fqns":
+        {
+          Integer fqnID = ServletUtils.getIntValue(request, "fqnID");
+          if (fqnID == null) {
+            Integer fqnVersionID = ServletUtils.getIntValue(request, "fqnVersionID");
+            if (fqnVersionID == null) {
+              serveFqnList(html);
+            } else {
+              serveFqnVersion(fqnVersionID, html);
+            }
+          } else {
+            serveFqn(fqnID, html);
+          }
+        }
+        break;
+      default:
+        serveMain(html);
     }
     html.append("</body></html>");
     ServletUtils.writeString(response, null, html.toString(), true);

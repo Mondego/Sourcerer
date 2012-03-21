@@ -19,17 +19,17 @@ package edu.uci.ics.sourcerer.utils.db.internal;
 
 import edu.uci.ics.sourcerer.util.ArrayUtils;
 import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
-import edu.uci.ics.sourcerer.utils.db.sql.GenericColumn;
+import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 import edu.uci.ics.sourcerer.utils.db.sql.Table;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 class ComparisonConditionImpl extends ConditionImpl implements ComparisonCondition {
-  private GenericColumn<?> left;
-  private GenericColumn<?> right;
+  private Selectable<?> left;
+  private Selectable<?> right;
   
-  <T> ComparisonConditionImpl(GenericColumn<T> left, GenericColumn<T> right) {
+  <T> ComparisonConditionImpl(Selectable<T> left, Selectable<T> right) {
     this.left = left;
     this.right = right;
   }

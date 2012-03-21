@@ -23,7 +23,7 @@ package edu.uci.ics.sourcerer.utils.db.sql;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface Column<T> extends GenericColumn<T> {
+public interface Column<T> extends Selectable<T> {
   public String getName();
   public String getType();
   

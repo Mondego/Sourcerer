@@ -26,10 +26,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -188,16 +186,14 @@ public class JarCollection implements Iterable<Jar> {
   
   private void add(JarFile jar) {
     Jar newJar = new Jar(jar);
-    Set<String> names = new HashSet<>();
-    // Read it once to check for duplicates. Stupid!
+    Map<String, Long> names = new HashMap<>();
+    // If there are duplicates, always go with the first entry
     try (ZipInputStream zis = new ZipInputStream(new FileInputStream(jar.getFile().toFile()))) {
       for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
         if (entry.getName().endsWith(".class")) {
-          if (names.contains(entry.getName())) {
-            logger.severe("Skipping " + jar + " due to duplicate entry: " + entry.getName());
-            return;
-          } else {
-            names.add(entry.getName());
+          Long length = names.get(entry.getName());
+          if (length == null) {
+            names.put(entry.getName(), entry.getSize());
           }
         }
       }
@@ -208,9 +204,14 @@ public class JarCollection implements Iterable<Jar> {
     try (ZipInputStream zis = new ZipInputStream(new FileInputStream(jar.getFile().toFile()))) {
       for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
         if (entry.getName().endsWith(".class")) {
-          String fqn = entry.getName();
-          fqn = fqn.substring(0, fqn.lastIndexOf('.'));
-          newJar.addFqn(rootFragment.getChild(fqn, '/').getVersion(Fingerprint.create(zis, entry.getSize())));
+          // Should i include this entry?
+          Long length = names.get(entry.getName());
+          if (length != null && length.longValue() == entry.getSize()) {
+            names.remove(entry.getName());
+            String fqn = entry.getName();
+            fqn = fqn.substring(0, fqn.lastIndexOf('.'));
+            newJar.addFqn(rootFragment.getChild(fqn, '/').getVersion(Fingerprint.create(zis, entry.getSize())));
+          }
         }
       }
     } catch (IOException | IllegalArgumentException e) {

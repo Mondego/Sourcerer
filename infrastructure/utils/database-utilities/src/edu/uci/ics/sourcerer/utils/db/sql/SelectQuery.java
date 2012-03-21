@@ -22,6 +22,7 @@ package edu.uci.ics.sourcerer.utils.db.sql;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface SelectQuery extends Query {
+  public void setDistinct(boolean distinct);
   public void addSelect(Selectable<?> select);
   public void addSelects(Selectable<?> ... selects);
   public void clearSelect();

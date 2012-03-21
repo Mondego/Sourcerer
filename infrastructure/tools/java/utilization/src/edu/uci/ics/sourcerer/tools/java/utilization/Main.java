@@ -104,43 +104,24 @@ public class Main {
       TaskProgressLogger task = TaskProgressLogger.get();
       task.start("Clustering jars");
       
-      MemoryStatsReporter.reportMemoryStats(task);
-      
-      
       JarCollection jars = null;
       if (JAR_FILTER_FILE.getValue() != null) {
         jars = JarCollection.create(FileUtils.readFileToCollection(JAR_FILTER_FILE.getValue()));
       } else {
         jars = JarCollection.create();
       }
-      
 
-      MemoryStatsReporter.reportMemoryStats(task);
-
-      while (true) {
-        if (jars == null) {
-          break;
-        }
-      }
-      jars.toString();
-//      ClusterCollection clusters = ClusterIdentifier.identifyFullyMatchingClusters(jars);
-//      
-//      MemoryStatsReporter.reportMemoryStats(task);
-//      
-//      ClusterMerger.mergeByVersions(clusters);
-//      
-//      MemoryStatsReporter.reportMemoryStats(task);
-//      
-//      Repository repo = RepositoryBuilder.buildRepository(jars, clusters);
-//      
-//      MemoryStatsReporter.reportMemoryStats(task);
+      ClusterCollection clusters = ClusterIdentifier.identifyFullyMatchingClusters(jars);
+      ClusterMerger.mergeByVersions(clusters);
       
-//      DatabaseImporter importer = DatabaseImporter.create(jars, clusters, repo);
-//      importer.run();
+      Repository repo = RepositoryBuilder.buildRepository(jars, clusters);
+      
+      DatabaseImporter importer = DatabaseImporter.create(jars, clusters, repo);
+      importer.run();
       
 //      ClusterStats.calculate(jars, clusters);
       
-//      task.finish();
+      task.finish();
     }
   }.setProperties(
       JavaRepositoryFactory.INPUT_REPO,

@@ -22,7 +22,7 @@ import java.sql.SQLException;
 
 import edu.uci.ics.sourcerer.util.ArrayUtils;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
-import edu.uci.ics.sourcerer.utils.db.sql.GenericColumn;
+import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 import edu.uci.ics.sourcerer.utils.db.sql.Table;
 
 /**
@@ -35,11 +35,11 @@ class ConstantConditionImpl<T> extends ConditionImpl implements ConstantConditio
     LIKE;
   }
   
-  protected GenericColumn<T> sel;
+  protected Selectable<T> sel;
   protected Type type;
   protected T value;
   
-  ConstantConditionImpl(GenericColumn<T> sel, Type type) {
+  ConstantConditionImpl(Selectable<T> sel, Type type) {
     this.sel = sel;
     this.type = type;
   }

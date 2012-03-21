@@ -87,6 +87,14 @@ public class ClusterIdentifier {
   }
   
   private static boolean areFullyCompatible(Cluster one, Cluster two) {
+//    if (one.getJars() == two.getJars()) {
+//      return true;
+//    } else if (one.getJars().isSubset(two.getJars()) && two.getJars().isSubset(one.getJars())) {
+//      System.out.println("foo");
+//      return true;
+//    } else {
+//      return false;
+//    }
     return one.getJars() == two.getJars();
   }
   

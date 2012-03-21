@@ -40,7 +40,7 @@ public class LibraryVersionToFqnVersionTable extends DatabaseTable {
   public static final Column<Integer> FQN_VERSION_ID = TABLE.addIDColumn("fqn_version_id", false).addIndex();
     
   private LibraryVersionToFqnVersionTable() {
-    super("version_to_fqn_version");
+    super("library_version_to_fqn_version");
   }
   
   // ---- INSERT ----

@@ -49,6 +49,7 @@ class SelectQueryImpl implements SelectQuery {
   
   private Table[] tables;
   private ComparisonCondition[] joinConditions;
+  private boolean distinct;
   private Map<Selectable<?>, Integer> selects;
   private Condition whereCondition;
   private ArrayList<Pair<Selectable<?>, Boolean>> orderBy;
@@ -107,6 +108,11 @@ class SelectQueryImpl implements SelectQuery {
     } else {
       throw new IllegalStateException("Cannot set from twice");
     }
+  }
+  
+  @Override
+  public void setDistinct(boolean distinct) {
+    this.distinct = distinct;
   }
   
   @Override
@@ -175,6 +181,9 @@ class SelectQueryImpl implements SelectQuery {
         throw new IllegalStateException("Must have at least one table.");
       }
       StringBuilder sql = new StringBuilder("SELECT ");
+      if (distinct) {
+        sql.append("DISTINCT ");
+      }
       boolean comma = false;
       for (Selectable<?> select : selects.keySet()) {
         if (comma) {

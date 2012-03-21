@@ -22,13 +22,13 @@ import java.sql.SQLException;
 
 import edu.uci.ics.sourcerer.util.BitEnumSet;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
-import edu.uci.ics.sourcerer.utils.db.sql.GenericColumn;
+import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class SetConstantConditionImpl<T extends Enum<T>, S extends BitEnumSet<T>> extends ConstantConditionImpl<S> {
-  SetConstantConditionImpl(GenericColumn<S> sel, Type type) {
+  SetConstantConditionImpl(Selectable<S> sel, Type type) {
     super(sel, type);
   }
   

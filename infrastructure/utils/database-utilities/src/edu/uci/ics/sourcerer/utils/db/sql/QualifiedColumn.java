@@ -20,6 +20,6 @@ package edu.uci.ics.sourcerer.utils.db.sql;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface QualifiedColumn<T> extends GenericColumn<T> {
+public interface QualifiedColumn<T> extends Selectable<T> {
   public QualifiedTable getTable();
 }

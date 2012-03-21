@@ -27,7 +27,6 @@ import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.InConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.QualifiedColumn;
 import edu.uci.ics.sourcerer.utils.db.sql.QualifiedTable;
-import edu.uci.ics.sourcerer.utils.db.sql.GenericColumn;
 import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 
 /**
@@ -55,7 +54,7 @@ final class QualifiedColumnImpl<T> implements QualifiedColumn<T> {
   }
 
   @Override
-  public ComparisonCondition compareEquals(GenericColumn<T> other) {
+  public ComparisonCondition compareEquals(Selectable<T> other) {
     return new ComparisonConditionImpl(this, other);
   }
   
@@ -104,11 +103,6 @@ final class QualifiedColumnImpl<T> implements QualifiedColumn<T> {
     return column.from(value);
   }
 
-  @Override
-  public Selectable<T> makeDistinct() {
-    return DistinctSelectable.create(this);
-  }
-  
   @Override
   public void bind(T value, PreparedStatement statement, int index) throws SQLException {
     column.bind(value, statement, index);

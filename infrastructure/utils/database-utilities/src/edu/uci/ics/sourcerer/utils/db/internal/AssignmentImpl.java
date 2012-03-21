@@ -21,16 +21,16 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import edu.uci.ics.sourcerer.utils.db.sql.Assignment;
-import edu.uci.ics.sourcerer.utils.db.sql.GenericColumn;
+import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 class AssignmentImpl <T> implements Assignment<T> {
-  private final GenericColumn<T> sel;
+  private final Selectable<T> sel;
   private T value;
 
-  AssignmentImpl(GenericColumn<T> sel) {
+  AssignmentImpl(Selectable<T> sel) {
     this.sel = sel;
   }
   

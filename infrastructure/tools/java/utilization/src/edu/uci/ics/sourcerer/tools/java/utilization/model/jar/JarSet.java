@@ -17,92 +17,77 @@
  */
 package edu.uci.ics.sourcerer.tools.java.utilization.model.jar;
 
-import java.util.Collections;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.MapMaker;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class JarSet implements Iterable<Jar> {
-  private final static Multimap<Integer, JarSet> sets = ArrayListMultimap.create();
+  private final static Map<Set<Jar>, Reference<JarSet>> sets = new WeakHashMap<>();
   private final Set<Jar> jars;
-  
-  private JarSet() {
-    jars = Collections.emptySet();
-  }
-  
-  private JarSet(Set<Jar> jars, Jar jar) {
-    if (jars.isEmpty()) {
-      this.jars = Collections.singleton(jar);
-    } else {
-      this.jars = new HashSet<>(jars);
-      this.jars.add(jar);
-    }
-  }
-  
+
   private JarSet(Set<Jar> jars) {
     this.jars = jars;
   }
   
-  public static JarSet create() {
-    for (JarSet set : sets.get(0)) {
-      if (set.jars.isEmpty()) {
-        return set;
-      }
+  private static JarSet create(Set<Jar> set) {
+    Reference<JarSet> ref = sets.get(set);
+    JarSet result = ref == null ? null : ref.get();
+    if (result == null) {
+      result = new JarSet(ImmutableSet.copyOf(set));
+      sets.put(result.jars, new WeakReference<>(result));
     }
-    JarSet set = new JarSet();
-    sets.put(0, set);
-    return set;
+    return result;
+  }
+  
+  public static JarSet create() {
+    return create(ImmutableSet.<Jar>of());
   }
   
   public static JarSet create(Jar jar) {
-    return create().add(jar);
+    return create(ImmutableSet.<Jar>of(jar));
   }
   
   public JarSet add(Jar jar) {
     if (jars.contains(jar)) {
       return this;
     } else {
-      int hashCode = hashCode() + jar.hashCode();
-      for (JarSet set : sets.get(hashCode)) {
-        if (set.jars.size() == jars.size() + 1 && set.jars.contains(jar) && set.jars.containsAll(jars)) {
-          return set;
-        }
-      }
-      JarSet set = new JarSet(jars, jar);
-      sets.put(hashCode, set);
-      return set;
+      Set<Jar> set = new HashSet<>(jars);
+      set.add(jar);
+      return create(set);
     }
   }
   
-  public JarSet remove(Jar jar) {
-    if (jars.contains(jar)) {
-      int hashCode = 0;
-      for (Jar j : jars) {
-        if (j != jar) {
-          hashCode += j.hashCode();
-        }
-      }
-      for (JarSet set : sets.get(hashCode)) {
-        if (set.jars.size() == jars.size() - 1 && !set.jars.contains(jar) && jars.containsAll(set.jars)) {
-          return set;
-        }
-      }
-      Set<Jar> newSet = new HashSet<>(jars);
-      newSet.remove(jar);
-      JarSet set = new JarSet(newSet);
-      sets.put(hashCode, set);
-      return set;
-    } else {
-      return this;
-    }
-  }
+//  public JarSet remove(Jar jar) {
+//    if (jars.contains(jar)) {
+//      int hashCode = 0;
+//      for (Jar j : jars) {
+//        if (j != jar) {
+//          hashCode += j.hashCode();
+//        }
+//      }
+//      for (JarSet set : sets.get(hashCode)) {
+//        if (set.jars.size() == jars.size() - 1 && !set.jars.contains(jar) && jars.containsAll(set.jars)) {
+//          return set;
+//        }
+//      }
+//      Set<Jar> newSet = new HashSet<>(jars);
+//      newSet.remove(jar);
+//      JarSet set = new JarSet(newSet);
+//      sets.put(hashCode, set);
+//      return set;
+//    } else {
+//      return this;
+//    }
+//  }
   
   public JarSet merge(JarSet other) {
     if (jars.containsAll(other.jars)) {
@@ -113,18 +98,7 @@ public class JarSet implements Iterable<Jar> {
       Set<Jar> newSet = new HashSet<>();
       newSet.addAll(jars);
       newSet.addAll(other.jars);
-      int hashCode = 0;
-      for (Jar jar : newSet) {
-        hashCode += jar.hashCode();
-      }
-      for (JarSet set : sets.get(hashCode)) {
-        if (set.jars.size() == newSet.size() && set.jars.containsAll(newSet)) {
-          return set;
-        }
-      }
-      JarSet set = new JarSet(newSet);
-      sets.put(hashCode, set);
-      return set;
+      return create(newSet);
     }
   }
   
@@ -158,16 +132,10 @@ public class JarSet implements Iterable<Jar> {
     return jars.size();
   }
   
-  @Override
-  public int hashCode() {
-    int hashCode = 0;
-    if (jars != null) {
-      for (Jar jar : jars) {
-        hashCode += jar.hashCode();
-      }
-    }
-    return hashCode;
-  }
+//  @Override
+//  public int hashCode() {
+//    return jars.hashCode();
+//  }
 
   @Override
   public Iterator<Jar> iterator() {

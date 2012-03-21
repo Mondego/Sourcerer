@@ -163,7 +163,7 @@ public class RepositoryBuilder {
       }
       
       // Split the jars into versions
-//      splitLibaryIntoVersions(library);
+      splitLibaryIntoVersions(library);
       
       task.progress();
     }
@@ -191,7 +191,7 @@ public class RepositoryBuilder {
     
     // Split them into versions and put them into the repo
     for (Library library : packages.values()) {
-//      splitLibaryIntoVersions(library);
+      splitLibaryIntoVersions(library);
       repo.addLibrary(library);
     }
     task.finish();
@@ -272,6 +272,7 @@ public class RepositoryBuilder {
         }
       }
     }
+    task.finish();
   }
   
   private void computeVersionDependencies() {
@@ -310,8 +311,8 @@ public class RepositoryBuilder {
     
     buildJarToClusterMap();
     createCompoundLibraries(createSimpleLibraries());
-//    computeLibraryDependencies();
-//    computeVersionDependencies();
+    computeLibraryDependencies();
+    computeVersionDependencies();
     
     task.finish();
 //    // Print things out
