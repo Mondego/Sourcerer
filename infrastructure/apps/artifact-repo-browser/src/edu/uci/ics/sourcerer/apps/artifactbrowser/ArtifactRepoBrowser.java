@@ -143,13 +143,24 @@ public class ArtifactRepoBrowser extends HttpServlet {
       html.append("</ul>");
     }
     
+    try (SelectQuery query = exec.makeSelectQuery(LibrariesTable.TABLE)) {
+      query.addSelect(LibrariesTable.CLUSTER_ID);
+      query.andWhere(LibrariesTable.LIBRARY_ID.compareEquals(libraryID));
+      
+      html.append("<h4>Core Cluster</h4>");
+      html.append("<ul>");
+      Integer clusterID = query.select().toSingleton(LibrariesTable.CLUSTER_ID, false);
+      html.append("<li><a href=\"./clusters?clusterID=" + clusterID + "\">Cluster " + clusterID + "</a></li>");
+      html.append("</ul>");
+    }
+    
     try (SelectQuery query = exec.makeSelectQuery(LibraryToClusterTable.TABLE)) {
       query.addSelect(LibraryToClusterTable.CLUSTER_ID);
       query.andWhere(LibraryToClusterTable.LIBRARY_ID.compareEquals(libraryID));
       query.orderBy(LibraryToClusterTable.CLUSTER_ID, true);
       
       // Clusters
-      html.append("<h4>Clusters</h4>");
+      html.append("<h4>Version Clusters</h4>");
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
