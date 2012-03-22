@@ -22,10 +22,10 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Set;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterVersion;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarSet;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -33,11 +33,11 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
 public class LibraryVersion {
   private JarSet jars;
   private final Set<FqnVersion> fqnVersions;
-  private final Set<Cluster> clusters;
+  private final Set<ClusterVersion> clusters;
   private Collection<Library> libraryDependencies;
   private Collection<LibraryVersion> versionDependencies;
   
-  private LibraryVersion(Jar jar, Set<FqnVersion> fqnVersions, Set<Cluster> clusters) {
+  private LibraryVersion(Jar jar, Set<FqnVersion> fqnVersions, Set<ClusterVersion> clusters) {
     jars = JarSet.create(jar);
     this.fqnVersions = fqnVersions;
     this.clusters = clusters;
@@ -45,7 +45,7 @@ public class LibraryVersion {
     this.versionDependencies = Collections.emptyList();
   }
   
-  static LibraryVersion create(Jar jar, Set<FqnVersion> fqnVersions, Set<Cluster> clusters) {
+  static LibraryVersion create(Jar jar, Set<FqnVersion> fqnVersions, Set<ClusterVersion> clusters) {
     return new LibraryVersion(jar, fqnVersions, clusters);
   }
   
@@ -61,7 +61,7 @@ public class LibraryVersion {
     return fqnVersions;
   }
   
-  public Set<Cluster> getClusters() {
+  public Set<ClusterVersion> getClusters() {
     return clusters;
   }
   

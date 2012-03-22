@@ -221,7 +221,18 @@ public class RepositoryBuilder {
       
       LibraryVersion libVersion = library.getVersion(version);
       if (libVersion == null) {
-        libVersion = LibraryVersion.create(jar, version, new HashSet<>(jarsToClusters.get(jar)));
+        Set<ClusterVersion> clusterVersions = new HashSet<>();
+        outer:
+        for (Cluster cluster : jarsToClusters.get(jar)) {
+          for (ClusterVersion clusterVersion : cluster.getVersions()) {
+            if (version.containsAll(clusterVersion.getFqns())) {
+              clusterVersions.add(clusterVersion);
+              continue outer;
+            }
+          }
+          logger.severe("Unable to find matching cluster version!");
+        }
+        libVersion = LibraryVersion.create(jar, version, clusterVersions);
         library.addVersion(libVersion);
       } else {
         libVersion.addJar(jar);
@@ -247,14 +258,14 @@ public class RepositoryBuilder {
       for (Library library : repo.getLibraries()) {
         for (LibraryVersion version : library.getVersions()) {
           Multiset<Library> librarySet = HashMultiset.create();
-          for (Cluster cluster : version.getClusters()) {
-            librarySet.addAll(clustersToLibraries.get(cluster));
+          for (ClusterVersion clusterVersion : version.getClusters()) {
+            librarySet.addAll(clustersToLibraries.get(clusterVersion.getCluster()));
           }
           
           for (Library dep : librarySet.elementSet()) {
             if (library != dep) {
               if (dep.getCoreCluster() == null) {
-                // Must match every secondary cluster for pakcage libraries
+                // Must match every secondary cluster for package libraries
                 if (librarySet.count(dep) == dep.getSecondaryClusters().size()) {
                   version.addLibraryDependency(dep);
                 }

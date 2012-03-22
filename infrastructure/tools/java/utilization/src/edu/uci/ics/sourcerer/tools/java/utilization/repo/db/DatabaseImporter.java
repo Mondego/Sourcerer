@@ -43,6 +43,7 @@ import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.JarToFqnVerio
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.JarsTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibrariesTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryToClusterTable;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToClusterVersionTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToFqnVersionTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToJarTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToLibraryTable;
@@ -102,6 +103,7 @@ public class DatabaseImporter extends DatabaseRunnable {
         LibrariesTable.TABLE,
         LibraryToClusterTable.TABLE,
         LibraryVersionsTable.TABLE,
+        LibraryVersionToClusterVersionTable.TABLE,
         LibraryVersionToJarTable.TABLE,
         LibraryVersionToFqnVersionTable.TABLE,
         LibraryVersionToLibraryTable.TABLE,
@@ -122,6 +124,7 @@ public class DatabaseImporter extends DatabaseRunnable {
         LibrariesTable.TABLE,
         LibraryToClusterTable.TABLE,
         LibraryVersionsTable.TABLE,
+        LibraryVersionToClusterVersionTable.TABLE,
         LibraryVersionToJarTable.TABLE,
         LibraryVersionToFqnVersionTable.TABLE,
         LibraryVersionToLibraryTable.TABLE,
@@ -140,6 +143,7 @@ public class DatabaseImporter extends DatabaseRunnable {
     populateLibrariesTable();
     populateLibraryToClusterTable();
     populateLibraryVersionsTable();
+    populateLibraryVersionToClusterVersionTable();
     populateLibraryVersionToJarTable();
     populateLibraryVersionToFqnVersionTable();
     populateLibraryVersionToLibraryTable();
@@ -503,6 +507,28 @@ public class DatabaseImporter extends DatabaseRunnable {
         }
       }
     }
+    task.finish();
+    
+    task.finish();
+  }
+  
+  private void populateLibraryVersionToClusterVersionTable() {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    task.start("Populating library_version_to_cluster table");
+    
+    BatchInserter inserter = exec.makeInFileInserter(tempDir, LibraryVersionToClusterVersionTable.TABLE);
+    
+    task.start("Processing mappings", "mappings processed");
+    for (Map.Entry<LibraryVersion, Integer> entry : versionMap.entrySet()) {
+      for (ClusterVersion clusterVersion : entry.getKey().getClusters()) {
+        inserter.addInsert(LibraryVersionToClusterVersionTable.createInsert(entry.getValue(), clusterVersionMap.get(clusterVersion)));
+        task.progress();
+      }
+    }
+    task.finish();
+    
+    task.start("Performing db insert");
+    inserter.insert();
     task.finish();
     
     task.finish();
