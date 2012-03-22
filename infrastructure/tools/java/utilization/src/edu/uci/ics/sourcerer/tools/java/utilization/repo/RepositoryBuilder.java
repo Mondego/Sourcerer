@@ -97,7 +97,6 @@ public class RepositoryBuilder {
         fqnToCluster.put(fqn, cluster);
       }
     }
-    sortedClusters.addAll(clusters.getClusters());
 
     task.start("Creating simple libraries from clusters", "clusters examined", 500);
     while (!sortedClusters.isEmpty()) {

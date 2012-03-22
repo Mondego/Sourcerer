@@ -90,6 +90,8 @@ public class ArtifactRepoBrowser extends HttpServlet {
   }
   
   private void serveLibraryList(StringBuilder html) {
+    html.append("<p><a href=\"./\">main</a></p>");
+
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.makeSelectQuery(LibrariesTable.TABLE)) {
@@ -105,6 +107,8 @@ public class ArtifactRepoBrowser extends HttpServlet {
   }
   
   private void serveLibrary(Integer libraryID, StringBuilder html) {
+    html.append("<p><a href=\"./\">main</a>/<a href=\"./libraries\">libraries</a></p>");
+    
     QueryExecutor exec = db.get().getExecutor();
     
     html.append("<h3>Library ").append(libraryID).append("</h3>");
@@ -194,7 +198,8 @@ public class ArtifactRepoBrowser extends HttpServlet {
       query.andWhere(LibraryVersionsTable.LIBRARY_VERSION_ID.compareEquals(libraryVersionID));
       
       Integer libraryID = query.select().toSingleton(LibraryVersionsTable.LIBRARY_ID, false);
-      html.append("<h3><a href=\"./libraries?libraryID=").append(libraryID).append("\">Library ").append(libraryID).append(" Version ").append(libraryVersionID).append("</a></h3>");
+      html.append("<p><a href=\"./\">main</a>/<a href=\"./libraries\">libraries</a>/<a href=\"./libraries?libraryID=").append(libraryID).append("\">Library ").append(libraryID).append("</a></p>");
+      html.append("<h3>Library ").append(libraryID).append(" Version ").append(libraryVersionID).append("</h3>");
     }
     
     try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToJarTable.JAR_ID.compareEquals(JarsTable.JAR_ID))) {
@@ -245,8 +250,8 @@ public class ArtifactRepoBrowser extends HttpServlet {
       html.append("</ul>");
     }
     
-    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToLibraryVersionTable.TARGET_ID.compareEquals(LibraryVersionsTable.LIBRARY_ID))) {
-      query.addSelects(LibraryVersionToLibraryVersionTable.TARGET_ID, LibraryVersionsTable.LIBRARY_ID);
+    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToLibraryVersionTable.TARGET_ID.compareEquals(LibraryVersionsTable.LIBRARY_VERSION_ID))) {
+      query.addSelects(LibraryVersionsTable.LIBRARY_ID, LibraryVersionsTable.LIBRARY_VERSION_ID);
       query.andWhere(LibraryVersionToLibraryVersionTable.SOURCE_ID.compareEquals(libraryVersionID));
       query.orderBy(LibraryVersionToLibraryVersionTable.TARGET_ID, true);
       
@@ -256,16 +261,16 @@ public class ArtifactRepoBrowser extends HttpServlet {
       TypedQueryResult result = query.select();
       while (result.next()) {
         Integer libraryID = result.getResult(LibraryVersionsTable.LIBRARY_ID);
-        Integer versionID = result.getResult(LibraryVersionToLibraryVersionTable.TARGET_ID);
-        html.append("<li><a href=\"./libraries?libraryVersionID=").append(versionID).append("\">Library ").append(libraryID).append(".").append(libraryVersionID).append("</a></li>");
+        Integer versionID = result.getResult(LibraryVersionsTable.LIBRARY_VERSION_ID);
+        html.append("<li><a href=\"./libraries?libraryVersionID=").append(versionID).append("\">Library ").append(libraryID).append(".").append(versionID).append("</a></li>");
       }
       html.append("</ul>");
     }
     
-    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToLibraryVersionTable.SOURCE_ID.compareEquals(LibraryVersionsTable.LIBRARY_ID))) {
-      query.addSelects(LibraryVersionToLibraryVersionTable.SOURCE_ID, LibraryVersionsTable.LIBRARY_ID);
+    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToLibraryVersionTable.SOURCE_ID.compareEquals(LibraryVersionsTable.LIBRARY_VERSION_ID))) {
+      query.addSelects(LibraryVersionsTable.LIBRARY_ID, LibraryVersionsTable.LIBRARY_VERSION_ID);
       query.andWhere(LibraryVersionToLibraryVersionTable.TARGET_ID.compareEquals(libraryVersionID));
-      query.orderBy(LibraryVersionToLibraryVersionTable.SOURCE_ID, true);
+      query.orderBy(LibraryVersionsTable.LIBRARY_VERSION_ID, true);
       
       // Libraries
       html.append("<h4>Depended on by library versions</h4>");
@@ -273,8 +278,8 @@ public class ArtifactRepoBrowser extends HttpServlet {
       TypedQueryResult result = query.select();
       while (result.next()) {
         Integer libraryID = result.getResult(LibraryVersionsTable.LIBRARY_ID);
-        Integer versionID = result.getResult(LibraryVersionToLibraryVersionTable.SOURCE_ID);
-        html.append("<li><a href=\"./libraries?libraryVersionID=").append(versionID).append("\">Library ").append(libraryID).append(".").append(libraryVersionID).append("</a></li>");
+        Integer versionID = result.getResult(LibraryVersionsTable.LIBRARY_VERSION_ID);
+        html.append("<li><a href=\"./libraries?libraryVersionID=").append(versionID).append("\">Library ").append(libraryID).append(".").append(versionID).append("</a></li>");
       }
       html.append("</ul>");
     }
@@ -296,6 +301,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
   }
   
   private void serveClusterList(StringBuilder html) {
+    html.append("<p><a href=\"./\">main</a></p>");
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.makeSelectQuery(ClustersTable.TABLE)) {
@@ -311,6 +317,8 @@ public class ArtifactRepoBrowser extends HttpServlet {
   }
   
   private void serveCluster(Integer clusterID, StringBuilder html) {
+    html.append("<p><a href=\"./\">main</a>/<a href=\"./clusters\">clusters</a></p>");
+    
     QueryExecutor exec = db.get().getExecutor();
     
     html.append("<h3>Cluster ").append(clusterID).append("</h3>");
@@ -426,7 +434,8 @@ public class ArtifactRepoBrowser extends HttpServlet {
       query.andWhere(ClusterVersionsTable.CLUSTER_VERSION_ID.compareEquals(clusterVersionID));
       
       Integer clusterID = query.select().toSingleton(ClusterVersionsTable.CLUSTER_ID, false);
-      html.append("<h3><a href=\"./clusters?clusterID=").append(clusterID).append("\">Cluster ").append(clusterID).append(" Version ").append(clusterVersionID).append("</a></h3>");
+      html.append("<p><a href=\"./\">main</a>/<a href=\"./clusters\">libraries</a>/<a href=\"./clusters?clusterID=").append(clusterID).append("\">Cluster ").append(clusterID).append("</a></p>");
+      html.append("<h3>Cluster ").append(clusterID).append(" Version ").append(clusterVersionID).append("</h3>");
     }
     
     try (SelectQuery query = exec.makeSelectQuery(ClusterVersionToJarTable.JAR_ID.compareEquals(JarsTable.JAR_ID))) {
@@ -478,6 +487,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
   }
   
   private void serveJarList(StringBuilder html) {
+    html.append("<p><a href=\"./\">main</a></p>");
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.makeSelectQuery(JarsTable.TABLE)) {
@@ -494,6 +504,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
   }
   
   private void serveJar(Integer jarID, StringBuilder html) {
+    html.append("<p><a href=\"./\">main</a>/<a href=\"./jars\">jars</a></p>");
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.makeSelectQuery(JarsTable.TABLE)) {
@@ -553,6 +564,8 @@ public class ArtifactRepoBrowser extends HttpServlet {
   }
   
   private void serveFqnList(StringBuilder html) {
+    html.append("<p><a href=\"./\">main</a></p>");
+    
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.makeSelectQuery(FqnsTable.TABLE)) {
@@ -569,6 +582,8 @@ public class ArtifactRepoBrowser extends HttpServlet {
   }
   
   private void serveFqn(Integer fqnID, StringBuilder html) {
+    html.append("<p><a href=\"./\">main</a>/<a href=\"./fqns\">fqns</a></p>");
+    
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.makeSelectQuery(FqnsTable.TABLE)) {
@@ -652,8 +667,10 @@ public class ArtifactRepoBrowser extends HttpServlet {
       
       TypedQueryResult result = query.select();
       if (result.next()) {
+        String fqn = result.getResult(FqnsTable.FQN);
         Integer fqnID = result.getResult(FqnsTable.FQN_ID);
-        html.append("<h3><a href=\"./fqns?fqnID=").append(fqnID).append("\">").append("FQN ").append(fqnID).append(": ").append(result.getResult(FqnsTable.FQN)).append(" Version ").append(fqnVersionID).append("</a></h3>");
+        html.append("<p><a href=\"./\">main</a>/<a href=\"./fqns\">fqns</a>/<a href=\"./fqns?fqnID=").append(fqnID).append("\">").append(fqn).append("</a></p>");
+        html.append("<h3>FQN ").append(fqnID).append(": ").append(fqn).append(" Version ").append(fqnVersionID).append("</h3>");
       }
     }
     
