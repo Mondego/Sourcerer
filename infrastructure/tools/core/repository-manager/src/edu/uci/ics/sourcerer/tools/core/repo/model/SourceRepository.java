@@ -33,5 +33,8 @@ public interface SourceRepository extends Repository {
   public SourceProject getProject(Integer batch, Integer checkout);
   
   @Override
+  public SourceProject getProject(ProjectLocation loc);
+  
+  @Override
   public Collection<? extends SourceProject> getProjects();
 }

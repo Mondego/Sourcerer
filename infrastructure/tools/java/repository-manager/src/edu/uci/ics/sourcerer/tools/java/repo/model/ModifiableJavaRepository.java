@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.Collection;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceRepository;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ProjectLocation;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -34,6 +35,9 @@ public interface ModifiableJavaRepository extends JavaRepository, ModifiableSour
   
   @Override
   public ModifiableJavaProject getProject(Integer batch, Integer checkout);
+  
+  @Override
+  public ModifiableJavaProject getProject(ProjectLocation loc);
   
   @Override
   public Collection<? extends ModifiableJavaProject> getProjects();

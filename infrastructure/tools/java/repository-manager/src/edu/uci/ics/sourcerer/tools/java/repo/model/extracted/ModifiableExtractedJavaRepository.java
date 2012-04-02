@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.tools.java.repo.model.extracted;
 import java.util.Collection;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableRepository;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ProjectLocation;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaProject;
 
@@ -38,6 +39,9 @@ public interface ModifiableExtractedJavaRepository extends ExtractedJavaReposito
   
   @Override
   public ModifiableExtractedJavaProject getProject(Integer batch, Integer checkout);
+  
+  @Override
+  public ModifiableExtractedJavaProject getProject(ProjectLocation loc);
 
   @Override
   public Collection<? extends ModifiableExtractedJavaProject> getProjects();

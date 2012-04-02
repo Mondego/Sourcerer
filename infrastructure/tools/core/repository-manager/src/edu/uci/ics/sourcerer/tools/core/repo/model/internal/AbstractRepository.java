@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
+import edu.uci.ics.sourcerer.tools.core.repo.model.ProjectLocation;
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryProperties;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
@@ -143,6 +144,11 @@ public abstract class AbstractRepository<Project extends AbstractRepoProject<? e
     } else {
       return b.getProject(checkout);
     }
+  }
+  
+  public Project getProject(ProjectLocation loc) {
+    ProjectLocationImpl location = (ProjectLocationImpl) loc;
+    return getProject(location.getBatchNumber(), location.getCheckoutNumber());
   }
   
   public Collection<Project> getProjects() {

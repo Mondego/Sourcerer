@@ -27,6 +27,7 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
@@ -36,6 +37,7 @@ import com.google.common.collect.EnumMultiset;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
+import edu.uci.ics.sourcerer.tools.java.model.extracted.ImportEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.MissingTypeEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
@@ -59,15 +61,17 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class CoverageCalculator {
+  public static final Argument<File> EXTERNAL_REPO = new FileArgument("external-repo", "External repo");
+  public static final Argument<File> MISSING_REPO = new FileArgument("external-repo", "Missing repo");
   public static final Argument<File> JAR_REPO = new FileArgument("jar-repo", "Jar repo");
-  public static final Argument<File> SOURCED_CACHE = new RelativeFileArgument("sourced-cache", "sources-cache.txt", Arguments.CACHE, "Cache for sources prefix tree.");
+  public static final Argument<File> SOURCED_CACHE = new RelativeFileArgument("sourced-cache", "sourced-cache.txt", Arguments.CACHE, "Cache for sources prefix tree.");
   public static final Argument<File> MISSING_FQNS_PER_PROJECT = new RelativeFileArgument("missing-fqns-per-project", "missing-fqns-per-project.txt", Arguments.OUTPUT, "Summary of missing fqns per project");
   public static final Argument<File> PROJECTS_PER_MISSING_FQN = new RelativeFileArgument("projects-per-missing-fqn", "projects-per-missing-fqn.txt", Arguments.OUTPUT, "Summary of projects per missing fqn");
   
   public static void calculateJarCoverage() {
     TaskProgressLogger task = TaskProgressLogger.get();
     
-    task.start("Calculating coverage by " + JAR_REPO.getValue().getPath() + " of missing imports from " + JavaRepositoryFactory.INPUT_REPO.getValue().getPath());
+    task.start("Calculating coverage by " + JAR_REPO.getValue().getPath() + " of external imports from " + EXTERNAL_REPO.getValue() + " and missing imports from " + MISSING_REPO.getValue());
     
     // Load the jar repo
     JavaRepository jarRepo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JAR_REPO);
@@ -88,18 +92,30 @@ public class CoverageCalculator {
       task.finish();
     }
     if (!loaded) {
-      task.start("Processing maven jars", "jars processed", 1_000);
+      int nonEmptyMaven = 0;
+      task.start("Processing maven jars", "jars processed", 10_000);
       for (JarFile jar : jarRepo.getMavenJarFiles()) {
+        boolean go = true;
         for (String fqn : FileUtils.getClassFilesFromJar(jar.getFile().toFile())) {
+          if (go) {
+            nonEmptyMaven++;
+            go = false;
+          }
           root.getChild(fqn, '/').addSource(Source.MAVEN);
         }
         task.progress();
       }
       task.finish();
     
-      task.start("Processing project jars", "jars processed", 1_000);
+      int nonEmptyProject = 0;
+      task.start("Processing project jars", "jars processed", 10_000);
       for (JarFile jar : jarRepo.getProjectJarFiles()) {
+        boolean go = true;
         for (String fqn : FileUtils.getClassFilesFromJar(jar.getFile().toFile())) {
+          if (go) {
+            nonEmptyProject++;
+            go = false;
+          }
           root.getChild(fqn, '/').addSource(Source.PROJECT);
         }
         task.progress();
@@ -115,17 +131,52 @@ public class CoverageCalculator {
         FileUtils.delete(SOURCED_CACHE.getValue());
       }
       task.finish();
-    }    
+      
+      int mavenClassFiles = 0;
+      int projectClassFiles = 0;
+      int mavenUnique = 0;
+      int projectUnique = 0;
+      Set<SourcedFqnNode> mavenPackages = new HashSet<>();
+      Set<SourcedFqnNode> projectPackages = new HashSet<>();
+      for (SourcedFqnNode node : root.getPostOrderIterable()) {
+        if (node.has(Source.MAVEN)) {
+          mavenClassFiles += node.getCount(Source.MAVEN);
+          mavenUnique++;
+          mavenPackages.add(node.getParent());
+        }
+        if (node.has(Source.PROJECT)) {
+          projectClassFiles += node.getCount(Source.PROJECT);
+          projectUnique++;
+          projectPackages.add(node.getParent());
+        }
+      }
+      task.start("Reporting statistics on jars");
+      task.start("Maven");
+      task.report(nonEmptyMaven + " non-empty jars");
+      task.report(mavenClassFiles + " class files");
+      task.report(mavenUnique + " unique types");
+      task.report(mavenPackages.size() + " packages");
+      task.finish();
+      task.start("Project");
+      task.report(nonEmptyProject + " non-empty jars");
+      task.report(projectClassFiles + " class files");
+      task.report(projectUnique + " unique types");
+      task.report(projectPackages.size() + " packages");
+      task.finish();
+      task.finish();
+    }
     
-    // Load the extracted repo with the missing types
-    ExtractedJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+    // Load the external repo
+    ExtractedJavaRepository externalRepo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(EXTERNAL_REPO);
+    ExtractedJavaRepository missingRepo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(MISSING_REPO);
     
     NumberFormat format = NumberFormat.getNumberInstance();
     format.setMaximumFractionDigits(2);
     {
-      task.start("Processing extracted projects for missing types", "projects processed", 1_000);
+      task.start("Processing extracted projects for missing and external types", "projects processed", 10_000);
       // The number of projects with missing/external types
       int projectsWithMissingTypes = 0;
+      int projectsWithExternalTypes = 0;
       // Averager for missing FQNs per project
       Averager<Integer> missingFqns = Averager.create();
       // Averager for missing FQNs per project containing at least one
@@ -143,11 +194,13 @@ public class CoverageCalculator {
           projectsWithMissingTypes++;
         }
         missingFqns.addValue(missingCount);
+        for (ImportEX imp : bundle.getTransientImports()) {
+          root.getChild(imp.getImported(), '.').addSource(Source.FOUND);
+        }
       }
       task.finish();
     
       task.finish();
-      
       
       Averager<Integer> projectsPerFQN = Averager.create();
       for (SourcedFqnNode fqn : root.getPreOrderIterable()) {
@@ -155,7 +208,7 @@ public class CoverageCalculator {
           projectsPerFQN.addValue(fqn.getCount(Source.MISSING));
         }
       }
-      
+            
       Percenterator percent = Percenterator.create(repo.getProjectCount());
       task.start("Reporting missing type information");
       task.report(percent.format(projectsWithMissingTypes) + " projects with missing types");
@@ -169,11 +222,15 @@ public class CoverageCalculator {
     
     {
       int uniqueTotal = 0;
+      int uniqueImported = 0;
       Multiset<Source> uniqueByType = EnumMultiset.create(Source.class);
       Multiset<Source> totalByType = EnumMultiset.create(Source.class);
       for (SourcedFqnNode node : root.getPostOrderIterable()) {
         if (node.hasSource()) {
           uniqueTotal++;
+        }
+        if (node.has(Source.MISSING) || node.has(Source.FOUND)) {
+          uniqueImported++;
         }
         for (Source source : Source.values()) {
           int count = node.getCount(source);
@@ -194,6 +251,8 @@ public class CoverageCalculator {
       }
       task.report("Sum:");
       task.report("  Unique: " + uniqueTotal);
+      task.report("Unique imported:");
+      task.report("  Unique: " + uniqueImported);
       task.finish();
     }
     
@@ -251,6 +310,39 @@ public class CoverageCalculator {
       task.finish();
     }
 
+    {
+      // Find all the most popular fqns per source
+      for (final Source source : Source.values()) {
+        TreeSet<SourcedFqnNode> sorted = new TreeSet<>(new Comparator<SourcedFqnNode>() {
+          @Override
+          public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+            int cmp = Integer.compare(o1.getCount(source), o2.getCount(source));
+            if (cmp == 0) {
+              return o1.compareTo(o2);
+            } else {
+              return cmp;
+            }
+          }
+        });
+        
+        for (SourcedFqnNode node : root.getPostOrderIterable()) {
+          if (node.has(source)) {
+            sorted.add(node);
+          }
+        }
+        
+        task.start("Logging popular types listing for " + source.name());
+        try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), source.name() + "-popular.txt"))) {
+          for (SourcedFqnNode fqn : sorted.descendingSet()) {
+            writer.write(fqn.getCount(source) + "\t" + fqn.getFqn());
+          }
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Error writing file", e);
+        }
+        task.finish();
+      }
+    }
+    
     {
       // Find all the fqns unique to that source
       for (final Source source : Source.values()) {

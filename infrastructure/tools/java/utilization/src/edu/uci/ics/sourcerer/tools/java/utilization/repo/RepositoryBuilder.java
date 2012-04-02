@@ -100,6 +100,7 @@ public class RepositoryBuilder {
 
     task.start("Creating simple libraries from clusters", "clusters examined", 500);
     while (!sortedClusters.isEmpty()) {
+      // Perhaps this needs to be iterated, too?
       Cluster biggest = sortedClusters.poll();
       
       Library library = Library.create(biggest);
@@ -215,6 +216,8 @@ public class RepositoryBuilder {
       for (FqnVersion fqn : jar.getFqns()) {
         if (fqns.contains(fqn.getFqn())) {
           version.add(fqn);
+        } else {
+          logger.severe("This should be unpossible");
         }
       }
       

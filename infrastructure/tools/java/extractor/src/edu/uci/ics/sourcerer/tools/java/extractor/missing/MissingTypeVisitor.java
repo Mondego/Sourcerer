@@ -58,7 +58,8 @@ class MissingTypeVisitor extends ASTVisitor {
     IBinding binding = node.resolveBinding();
     if (binding == null) {
       missingTypes.addMissingImport(node.getName().getFullyQualifiedName(), node.isOnDemand(), node.isStatic());
-    }
+    } 
+    missingTypes.addImport(node.getName().getFullyQualifiedName(), node.isOnDemand(), node.isStatic());
     return false;
   }
 }

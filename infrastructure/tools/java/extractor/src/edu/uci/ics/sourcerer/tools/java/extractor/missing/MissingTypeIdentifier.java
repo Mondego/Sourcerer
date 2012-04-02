@@ -33,6 +33,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import edu.uci.ics.sourcerer.tools.java.extractor.Main;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
+import edu.uci.ics.sourcerer.tools.java.extractor.io.ImportWriter;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.MissingTypeWriter;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
@@ -109,20 +110,27 @@ public class MissingTypeIdentifier {
       
       MissingTypeCollection missingTypes = identifier.identifyMissingTypes(sourceFiles);
       
-      // Write the missing types to disk
+      // Write the missing and resolved types to disk
       try (WriterBundle bundle = new WriterBundle(extractedProject.getExtractionDir().toFile())) {
         MissingTypeWriter writer = bundle.getMissingTypeWriter();
         for (MissingType type : missingTypes.getMissingTypes()) {
           writer.writeMissingType(type.getFqn());
         }
+        
+        ImportWriter importWriter = bundle.getImportWriter();
+        for (String type : missingTypes.getImports()) {
+          importWriter.writeImport(type, false, false, null);
+        }
       }
+
       
       // Write the properties files
       ExtractedJavaProjectProperties properties = extractedProject.getProperties();
       properties.EXTRACTED.setValue(true);
       properties.save();
       
-      task.report(missingTypes.getMissingTypeCount() + " external types identified");
+      task.report(missingTypes.getImportCount() + " imports types identified");
+      task.report(missingTypes.getMissingTypeCount() + (includeJars ? " missing" : " external") + " types identified");
       
     }
     task.finish();
@@ -135,7 +143,8 @@ public class MissingTypeIdentifier {
     for (Map.Entry<JavaFile, IFile> entry : sourceFiles.entrySet()) {
       ICompilationUnit icu = JavaCore.createCompilationUnitFrom(entry.getValue());
       
-      parser.setStatementsRecovery(true);
+      parser.setIgnoreMethodBodies(true);
+      parser.setStatementsRecovery(false);
       parser.setResolveBindings(true);
       parser.setBindingsRecovery(false);
       parser.setSource(icu);

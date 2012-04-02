@@ -34,6 +34,9 @@ public interface ModifiableSourceRepository extends ModifiableRepository, Source
   public ModifiableSourceProject getProject(Integer batch, Integer checkout);
   
   @Override
+  public ModifiableSourceProject getProject(ProjectLocation loc);
+  
+  @Override
   public Collection<? extends ModifiableSourceProject> getProjects();
   
   @Override

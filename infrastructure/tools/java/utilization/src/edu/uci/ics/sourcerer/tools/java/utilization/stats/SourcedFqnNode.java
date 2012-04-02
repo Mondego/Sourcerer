@@ -34,7 +34,10 @@ public class SourcedFqnNode extends AbstractFqnNode<SourcedFqnNode> {
   public static enum Source {
     PROJECT,
     MAVEN,
-    MISSING;
+    IMPORTED,
+    EXTERNAL,
+    MISSING,
+    ;
   }
   
   private Multiset<Source> sources;

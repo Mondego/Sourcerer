@@ -30,6 +30,7 @@ import edu.uci.ics.sourcerer.tools.java.utilization.repo.RepositoryBuilder;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.DatabaseImporter;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.ClusterStats;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.CoverageCalculator;
+import edu.uci.ics.sourcerer.tools.java.utilization.stats.ExternalAndMissingComparator;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.PopularityCalculator;
 import edu.uci.ics.sourcerer.util.MemoryStatsReporter;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
@@ -215,7 +216,14 @@ public class Main {
     protected void action() {
       CoverageCalculator.calculateJarCoverage();
     }
-  }.setProperties(JavaRepositoryFactory.INPUT_REPO, CoverageCalculator.JAR_REPO, CoverageCalculator.SOURCED_CACHE, CoverageCalculator.MISSING_FQNS_PER_PROJECT, CoverageCalculator.PROJECTS_PER_MISSING_FQN);  
+  }.setProperties(JavaRepositoryFactory.INPUT_REPO, CoverageCalculator.JAR_REPO, CoverageCalculator.SOURCED_CACHE, CoverageCalculator.MISSING_FQNS_PER_PROJECT, CoverageCalculator.PROJECTS_PER_MISSING_FQN);
+  
+  public static final Command COMPARE_EXTERNAL_AND_MISSING = new Command("compare-external-and-missing", "Compare the external and missing types.") {
+    @Override
+    protected void action() {
+      ExternalAndMissingComparator.compareExternalAndMissing();
+    }
+  }.setProperties(ExternalAndMissingComparator.EXTERNAL_REPO, ExternalAndMissingComparator.MISSING_REPO);
   
   public static void main(String[] args) {
     Command.execute(args, Main.class);

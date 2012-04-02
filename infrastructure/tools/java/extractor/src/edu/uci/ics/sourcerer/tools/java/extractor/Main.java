@@ -149,6 +149,7 @@ public class Main implements IApplication {
     new Command("identify-external-types", "Identified the external types") {
       protected void action() {
         WriterBundle.MISSING_TYPE_WRITER.setValue(MissingTypeWriterImpl.class);
+        WriterBundle.IMPORT_WRITER.setValue(ImportWriterImpl.class);
         MissingTypeIdentifier.identifyExternalTypes();
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);
@@ -157,6 +158,7 @@ public class Main implements IApplication {
     new Command("identify-missing-types", "Identified the missing types") {
       protected void action() {
         WriterBundle.MISSING_TYPE_WRITER.setValue(MissingTypeWriterImpl.class);
+        WriterBundle.IMPORT_WRITER.setValue(ImportWriterImpl.class);
         MissingTypeIdentifier.identifyMissingTypes();
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, FORCE_REDO);       

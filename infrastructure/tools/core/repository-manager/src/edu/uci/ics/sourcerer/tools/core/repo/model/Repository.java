@@ -29,6 +29,8 @@ public interface Repository {
   
   public Project getProject(Integer batch, Integer checkout);
   
+  public Project getProject(ProjectLocation loc);
+  
   public Collection<? extends Project> getProjects();
   
   public int getProjectCount();

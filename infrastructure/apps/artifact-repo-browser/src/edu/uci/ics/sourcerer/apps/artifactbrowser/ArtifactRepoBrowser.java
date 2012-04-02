@@ -626,6 +626,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
     
     try (SelectQuery query = exec.makeSelectQuery(FqnVersionsTable.FQN_VERSION_ID.compareEquals(ClusterVersionToFqnVersionTable.FQN_VERSION_ID), ClusterVersionToFqnVersionTable.CLUSTER_VERSION_ID.compareEquals(ClusterVersionsTable.CLUSTER_VERSION_ID))) {
+      query.setDistinct(true);
       query.addSelects(ClusterVersionsTable.CLUSTER_ID);
       query.andWhere(FqnVersionsTable.FQN_ID.compareEquals(fqnID));
       query.orderBy(ClusterVersionsTable.CLUSTER_ID, true);
@@ -636,7 +637,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       TypedQueryResult result = query.select();
       while (result.next()) {
         Integer clusterID = result.getResult(ClusterVersionsTable.CLUSTER_ID);
-        html.append("<li><a href=\"./clusters?clusterID=").append(clusterID).append("\">").append(clusterID).append("</a></li>");
+        html.append("<li><a href=\"./clusters?clusterID=").append(clusterID).append("\">Cluster ").append(clusterID).append("</a></li>");
       }
       html.append("</ul>");
     }

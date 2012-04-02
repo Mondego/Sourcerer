@@ -26,6 +26,7 @@ import java.util.Set;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class MissingTypeCollection {
+  private Set<String> imports;
   private Map<String, MissingType> missingTypes;
   private Map<String, MissingPackage> missingPackages;
   
@@ -35,6 +36,7 @@ public class MissingTypeCollection {
   private Set<String> currentlyMissingStaticOnDemand;
   
   private MissingTypeCollection() {
+    imports = new HashSet<>();
     missingTypes = new HashMap<>();
     missingPackages = new HashMap<>();
     currentlyMissing = new HashSet<>();
@@ -95,6 +97,22 @@ public class MissingTypeCollection {
     currentlyMissingStaticOnDemand.clear();
   }
   
+  void addImport(String fqn, boolean onDemand, boolean isStatic) {
+    if (isStatic) {
+      if (onDemand) {
+        imports.add(fqn);
+      } else {
+        String klass = fqn.substring(0, fqn.lastIndexOf('.'));
+        imports.add(klass);
+      }
+    } else {
+      if (onDemand) {
+        
+      } else {
+        imports.add(fqn);
+      }
+    }
+  }
   void addMissingImport(String fqn, boolean onDemand, boolean isStatic) {
     if (isStatic) {
       if (onDemand) {
@@ -117,6 +135,14 @@ public class MissingTypeCollection {
   
   public int getMissingTypeCount() {
     return missingTypes.size();
+  }
+  
+  public Iterable<String> getImports() {
+    return imports;
+  }
+  
+  public int getImportCount() {
+    return imports.size();
   }
   
   public Iterable<MissingType> getMissingTypes() {

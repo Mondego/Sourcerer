@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.tools.java.repo.model.extracted;
 
 import java.util.Collection;
 
+import edu.uci.ics.sourcerer.tools.core.repo.model.ProjectLocation;
 import edu.uci.ics.sourcerer.tools.core.repo.model.Repository;
 
 /**
@@ -33,6 +34,9 @@ public interface ExtractedJavaRepository extends Repository {
   
   @Override
   public ExtractedJavaProject getProject(Integer batch, Integer checkout);
+  
+  @Override
+  public ExtractedJavaProject getProject(ProjectLocation loc);
 
   @Override
   public Collection<? extends ExtractedJavaProject> getProjects();
