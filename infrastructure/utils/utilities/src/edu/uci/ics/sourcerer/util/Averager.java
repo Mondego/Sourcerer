@@ -18,6 +18,7 @@ import edu.uci.ics.sourcerer.util.io.IOUtils;
 
 public class Averager <T extends Number> {
   private double sum;
+  private int nonZero;
   private T min;
   private T max;
   private Collection<T> values;
@@ -25,6 +26,7 @@ public class Averager <T extends Number> {
   private Averager() {
     values = new ArrayList<>();
     sum = 0;
+    nonZero = 0;
   }
   
   public static <T extends Number> Averager<T> create() {
@@ -32,6 +34,9 @@ public class Averager <T extends Number> {
   }
   
   public void addValue(T value) {
+    if (Math.abs(value.doubleValue()) > .00000001) {
+      nonZero++;
+    }
     values.add(value);
     sum += value.doubleValue();
     if (min == null || value.doubleValue() < min.doubleValue()) {
@@ -40,6 +45,14 @@ public class Averager <T extends Number> {
     if (max == null || value.doubleValue() > max.doubleValue()) {
       max = value;
     }
+  }
+  
+  public int getCount() {
+    return values.size();
+  }
+  
+  public int getNonZeroCount() {
+    return nonZero;
   }
   
   public double getSum() {
@@ -54,6 +67,14 @@ public class Averager <T extends Number> {
     }
   }
   
+  public double getNonZeroMean() {
+    if (values.size() == 0) {
+      return Double.NaN;
+    } else {
+      return sum / (double) nonZero;
+    }
+  }
+  
   public T getMin() {
     return min; 
   }
@@ -63,6 +84,21 @@ public class Averager <T extends Number> {
   }
   
   public double getStandardDeviation() {
+    if (values.size() == 0) {
+      return Double.NaN;
+    } else {
+      double mean = sum / (double) values.size();
+      double variance = 0;
+      for (T value : values) {
+        variance += Math.pow(value.doubleValue() - mean, 2);
+      }
+      variance /= values.size();
+      double std = Math.sqrt(variance);
+      return std;
+    }
+  }
+  
+  public double getNonZeroStandardDeviation() {
     if (values.size() == 0) {
       return Double.NaN;
     } else {

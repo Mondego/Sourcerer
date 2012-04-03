@@ -65,8 +65,8 @@ public class CoverageCalculator {
   public static final Argument<File> MISSING_REPO = new FileArgument("external-repo", "Missing repo");
   public static final Argument<File> JAR_REPO = new FileArgument("jar-repo", "Jar repo");
   public static final Argument<File> SOURCED_CACHE = new RelativeFileArgument("sourced-cache", "sourced-cache.txt", Arguments.CACHE, "Cache for sources prefix tree.");
-  public static final Argument<File> MISSING_FQNS_PER_PROJECT = new RelativeFileArgument("missing-fqns-per-project", "missing-fqns-per-project.txt", Arguments.OUTPUT, "Summary of missing fqns per project");
-  public static final Argument<File> PROJECTS_PER_MISSING_FQN = new RelativeFileArgument("projects-per-missing-fqn", "projects-per-missing-fqn.txt", Arguments.OUTPUT, "Summary of projects per missing fqn");
+//  public static final Argument<File> MISSING_FQNS_PER_PROJECT = new RelativeFileArgument("missing-fqns-per-project", "missing-fqns-per-project.txt", Arguments.OUTPUT, "Summary of missing fqns per project");
+//  public static final Argument<File> PROJECTS_PER_MISSING_FQN = new RelativeFileArgument("projects-per-missing-fqn", "projects-per-missing-fqn.txt", Arguments.OUTPUT, "Summary of projects per missing fqn");
   
   public static void calculateJarCoverage() {
     TaskProgressLogger task = TaskProgressLogger.get();
@@ -168,50 +168,67 @@ public class CoverageCalculator {
     
     // Load the external repo
     ExtractedJavaRepository externalRepo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(EXTERNAL_REPO);
+    // load the missing repo
     ExtractedJavaRepository missingRepo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(MISSING_REPO);
     
     NumberFormat format = NumberFormat.getNumberInstance();
     format.setMaximumFractionDigits(2);
     {
       task.start("Processing extracted projects for missing and external types", "projects processed", 10_000);
-      // The number of projects with missing/external types
-      int projectsWithMissingTypes = 0;
-      int projectsWithExternalTypes = 0;
+      // Averager for external FQNs per project
+      Averager<Integer> externalFqns = Averager.create();
       // Averager for missing FQNs per project
       Averager<Integer> missingFqns = Averager.create();
-      // Averager for missing FQNs per project containing at least one
-      Averager<Integer> missingFqnsNonEmpty = Averager.create();
-      for (ExtractedJavaProject project : repo.getProjects()) {
-        task.progress();
-        ReaderBundle bundle = new ReaderBundle(project.getExtractionDir().toFile());
+      for (ExtractedJavaProject externalProject : externalRepo.getProjects()) {
+        ExtractedJavaProject missingProject = missingRepo.getProject(externalProject.getLocation());
+        
+        ReaderBundle externalBundle = new ReaderBundle(externalProject.getExtractionDir().toFile());
+        ReaderBundle missingBundle = new ReaderBundle(missingProject.getExtractionDir().toFile());
+        
+        int externalCount = 0;
         int missingCount = 0;
-        for (MissingTypeEX missing : bundle.getTransientMissingTypes()) {
-          root.getChild(missing.getFqn(), '.').addSource(Source.MISSING);
-          missingCount++;
+        
+        // Add all the imports for this project
+        for (ImportEX imp : externalBundle.getTransientImports()) {
+          root.getChild(imp.getImported(), '.').addSource(Source.IMPORTED);
         }
-        if (missingCount > 0) {
-          missingFqnsNonEmpty.addValue(missingCount);
-          projectsWithMissingTypes++;
+        
+        Set<String> validMissing = new HashSet<>();
+        // Add the external types
+        for (MissingTypeEX missing : externalBundle.getTransientMissingTypes()) {
+          validMissing.add(missing.getFqn());
+          root.getChild(missing.getFqn(), '.').addSource(Source.EXTERNAL);
+          externalCount++;
         }
+        
+        // Add the missing types
+        for (MissingTypeEX missing : missingBundle.getTransientMissingTypes()) {
+          if (validMissing.contains(missing.getFqn())) {
+            root.getChild(missing.getFqn(), '.').addSource(Source.MISSING);
+            missingCount++;
+          }
+        }
+        
+        externalFqns.addValue(externalCount);
         missingFqns.addValue(missingCount);
-        for (ImportEX imp : bundle.getTransientImports()) {
-          root.getChild(imp.getImported(), '.').addSource(Source.FOUND);
-        }
+        
+        task.progress();
       }
-      task.finish();
-    
       task.finish();
       
-      Averager<Integer> projectsPerFQN = Averager.create();
-      for (SourcedFqnNode fqn : root.getPreOrderIterable()) {
-        if (fqn.getCount(Source.MISSING) > 0) {
-          projectsPerFQN.addValue(fqn.getCount(Source.MISSING));
-        }
-      }
+//      Averager<Integer> projectsPerFQN = Averager.create();
+//      for (SourcedFqnNode fqn : root.getPreOrderIterable()) {
+//        if (fqn.getCount(Source.MISSING) > 0) {
+//          projectsPerFQN.addValue(fqn.getCount(Source.MISSING));
+//        }
+//      }
             
-      Percenterator percent = Percenterator.create(repo.getProjectCount());
+      Percenterator percent = Percenterator.create(externalRepo.getProjectCount());
       task.start("Reporting missing type information");
-      task.report(percent.format(projectsWithMissingTypes) + " projects with missing types");
+      task.report(percent.format(externalFqns.getNonZeroCount()) + " projects with external types");
+      task.report(percent.format(missingFqns.getNonZeroCount()) + " projects with missing types");
+      task.report(format.format(externalFqns.getMean()) + " (" + format.format(externalFqns.getStandardDeviation()) + ") imported external types per project, on average");
+      task.report(format.format(externalFqns.getNonZeroMean()) + " (" + format.format(externalFqns.getNonZeroStandardDeviation()) + ") imported external types per project containing at least one external type, on average");
       task.report(format.format(missingFqns.getMean()) + " (" + format.format(missingFqns.getStandardDeviation()) + ") missing FQNs per project, on average");
       task.report(format.format(missingFqnsNonEmpty.getMean()) + " (" + format.format(missingFqnsNonEmpty.getStandardDeviation()) + ") missing FQNs per project containing at least one missing FQN, on average");
       task.finish();
