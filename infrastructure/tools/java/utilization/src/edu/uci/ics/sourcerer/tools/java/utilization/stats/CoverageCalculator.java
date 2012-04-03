@@ -24,10 +24,14 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
@@ -229,25 +233,22 @@ public class CoverageCalculator {
       task.report(percent.format(missingFqns.getNonZeroCount()) + " projects with missing types");
       task.report(format.format(externalFqns.getMean()) + " (" + format.format(externalFqns.getStandardDeviation()) + ") imported external types per project, on average");
       task.report(format.format(externalFqns.getNonZeroMean()) + " (" + format.format(externalFqns.getNonZeroStandardDeviation()) + ") imported external types per project containing at least one external type, on average");
-      task.report(format.format(missingFqns.getMean()) + " (" + format.format(missingFqns.getStandardDeviation()) + ") missing FQNs per project, on average");
-      task.report(format.format(missingFqnsNonEmpty.getMean()) + " (" + format.format(missingFqnsNonEmpty.getStandardDeviation()) + ") missing FQNs per project containing at least one missing FQN, on average");
+      task.report(format.format(missingFqns.getMean()) + " (" + format.format(missingFqns.getStandardDeviation()) + ") imported missing types per project, on average");
+      task.report(format.format(missingFqns.getNonZeroMean()) + " (" + format.format(missingFqns.getNonZeroStandardDeviation()) + ") missing FQNs per project containing at least one missing FQN, on average");
       task.finish();
       
-      missingFqns.writeValueMap(MISSING_FQNS_PER_PROJECT.getValue());
-      projectsPerFQN.writeValueMap(PROJECTS_PER_MISSING_FQN.getValue());
+//      missingFqns.writeValueMap(MISSING_FQNS_PER_PROJECT.getValue());
+//      projectsPerFQN.writeValueMap(PROJECTS_PER_MISSING_FQN.getValue());
     }
     
+    // Report general statistics
     {
       int uniqueTotal = 0;
-      int uniqueImported = 0;
       Multiset<Source> uniqueByType = EnumMultiset.create(Source.class);
       Multiset<Source> totalByType = EnumMultiset.create(Source.class);
       for (SourcedFqnNode node : root.getPostOrderIterable()) {
         if (node.hasSource()) {
           uniqueTotal++;
-        }
-        if (node.has(Source.MISSING) || node.has(Source.FOUND)) {
-          uniqueImported++;
         }
         for (Source source : Source.values()) {
           int count = node.getCount(source);
@@ -268,62 +269,238 @@ public class CoverageCalculator {
       }
       task.report("Sum:");
       task.report("  Unique: " + uniqueTotal);
-      task.report("Unique imported:");
-      task.report("  Unique: " + uniqueImported);
       task.finish();
     }
     
+    // Identify the most popular imported types and packages
+    {
+      for (final Source source : EnumSet.of(Source.IMPORTED, Source.EXTERNAL, Source.MISSING)) {
+        {
+          TreeSet<SourcedFqnNode> popularTypes = new TreeSet<>(new Comparator<SourcedFqnNode>() {
+            @Override
+            public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+              int cmp = Integer.compare(o1.getCount(source), o2.getCount(source));
+              if (cmp == 0) {
+                return o1.compareTo(o2);
+              } else {
+                return cmp;
+              }
+            }
+          });
+          
+          for (SourcedFqnNode fqn : root.getPostOrderIterable()) {
+            if (fqn.has(source)) {
+              popularTypes.add(fqn);
+            }
+          }
+          
+          task.start("Logging popular types listing for " + source.name());
+          try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), source.name() + "-popular-types.txt"))) {
+            for (SourcedFqnNode fqn : popularTypes.descendingSet()) {
+              writer.write(fqn.getCount(source) + "\t" + fqn.getFqn());
+            }
+          } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error writing file", e);
+          }
+          task.finish();
+        }
+        
+        {
+          final Multiset<SourcedFqnNode> packages = HashMultiset.create();
+          
+          for (SourcedFqnNode fqn : root.getPostOrderIterable()) {
+            if (fqn.has(source)) {
+              packages.add(fqn.getParent(), fqn.getCount(source));
+            }
+          }
+          
+          List<SourcedFqnNode> sorted = new ArrayList<>(packages);
+          Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
+            @Override
+            public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+              int cmp = -Integer.compare(packages.count(o1), packages.count(o2));
+              if (cmp == 0) {
+                return o1.compareTo(o2);
+              } else {
+                return cmp;
+              }
+            }});
+          
+          task.start("Logging popular packages listing for " + source.name());
+          try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), source.name() + "-popular-packages.txt"))) {
+            for (SourcedFqnNode fqn : sorted) {
+              writer.write(packages.count(fqn) + "\t" + fqn.getFqn());
+            }
+          } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error writing file", e);
+          }
+          task.finish();
+        }
+      }
+    }
     
+    // Identify the most popular imported type found in maven, project and nothing
+    {
+      for (final Source importSource : EnumSet.of(Source.IMPORTED, Source.EXTERNAL, Source.MISSING)) {
+        for (final Source typeSource : EnumSet.of(Source.MAVEN, Source.PROJECT)) {
+          {
+            TreeSet<SourcedFqnNode> popularTypes = new TreeSet<>(new Comparator<SourcedFqnNode>() {
+              @Override
+              public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+                int cmp = Integer.compare(o1.getCount(importSource), o2.getCount(importSource));
+                if (cmp == 0) {
+                  return o1.compareTo(o2);
+                } else {
+                  return cmp;
+                }
+              }
+            });
+            
+            for (SourcedFqnNode fqn : root.getPostOrderIterable()) {
+              if (fqn.has(importSource) && fqn.has(typeSource)) {
+                popularTypes.add(fqn);
+              }
+            }
+            
+            task.start("Logging popular types listing for " + importSource.name() + " and " + typeSource.name());
+            try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), importSource.name() + "-" + typeSource.name() + "-popular-types.txt"))) {
+              for (SourcedFqnNode fqn : popularTypes.descendingSet()) {
+                writer.write(fqn.getCount(importSource) + "\t" + fqn.getFqn());
+              }
+            } catch (IOException e) {
+              logger.log(Level.SEVERE, "Error writing file", e);
+            }
+            task.finish();
+          }
+          {
+            final Multiset<SourcedFqnNode> packages = HashMultiset.create();
+            
+            for (SourcedFqnNode fqn : root.getPostOrderIterable()) {
+              if (fqn.has(importSource) && fqn.has(typeSource)) {
+                packages.add(fqn.getParent(), fqn.getCount(importSource));
+              }
+            }
+            
+            List<SourcedFqnNode> sorted = new ArrayList<>(packages);
+            Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
+              @Override
+              public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+                int cmp = -Integer.compare(packages.count(o1), packages.count(o2));
+                if (cmp == 0) {
+                  return o1.compareTo(o2);
+                } else {
+                  return cmp;
+                }
+              }});
+            
+            task.start("Logging popular packages listing for " + importSource.name() + " and " + typeSource.name());
+            try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), importSource.name() + "-" + typeSource.name() + "-popular-packages.txt"))) {
+              for (SourcedFqnNode fqn : sorted) {
+                writer.write(packages.count(fqn) + "\t" + fqn.getFqn());
+              }
+            } catch (IOException e) {
+              logger.log(Level.SEVERE, "Error writing file", e);
+            }
+            task.finish();
+          }
+        }
+      }
+    }
     
     for (int threshold : new int[] { 1, 2, 10, 50, 100}) {
-      Multiset<String> uniqueByString = HashMultiset.create(6);
-      Multiset<String> totalByString = HashMultiset.create(6);
+      Multiset<String> externalUniqueByString = HashMultiset.create(6);
+      Multiset<String> externalTotalByString = HashMultiset.create(6);
+      Multiset<String> missingUniqueByString = HashMultiset.create(6);
+      Multiset<String> missingTotalByString = HashMultiset.create(6);
             
-      int uniqueTotal = 0;
-      int totalTotal = 0;
+      int externalUniqueTotal = 0;
+      int externalTotalTotal = 0;
+      int missingUniqueTotal = 0;
+      int missingTotalTotal = 0;
       for (SourcedFqnNode node : root.getPostOrderIterable()) {
-        int missingCount = node.getCount(Source.MISSING);
-        if (missingCount >= threshold) {
-          uniqueTotal++;
-          totalTotal += missingCount;
+        int externalCount = node.getCount(Source.EXTERNAL);
+        if (externalCount >= threshold) {
+          externalUniqueTotal++;
+          externalTotalTotal += externalCount;
           int mavenCount = node.getCount(Source.MAVEN);
           int projectCount = node.getCount(Source.PROJECT);
           if (mavenCount > 0) {
-            uniqueByString.add("Maven");
-            totalByString.add("Maven", missingCount);
+            externalUniqueByString.add("Maven");
+            externalTotalByString.add("Maven", externalCount);
             if (projectCount == 0) {
-              uniqueByString.add("Maven only");
-              totalByString.add("Maven only", missingCount);
+              externalUniqueByString.add("Maven only");
+              externalTotalByString.add("Maven only", externalCount);
             } else {
-              uniqueByString.add("Project");
-              totalByString.add("Project", missingCount);
-              uniqueByString.add("Maven and Project");
-              totalByString.add("Maven and Project", missingCount);
+              externalUniqueByString.add("Project");
+              externalTotalByString.add("Project", externalCount);
+              externalUniqueByString.add("Maven and Project");
+              externalTotalByString.add("Maven and Project", externalCount);
             }
           } else if (projectCount > 0) {
-            uniqueByString.add("Project");
-            totalByString.add("Project", missingCount);
-            uniqueByString.add("Project only");
-            totalByString.add("Project only", missingCount);
+            externalUniqueByString.add("Project");
+            externalTotalByString.add("Project", externalCount);
+            externalUniqueByString.add("Project only");
+            externalTotalByString.add("Project only", externalCount);
           } else {
-            uniqueByString.add("Nothing");
-            totalByString.add("Nothing", missingCount);
+            externalUniqueByString.add("Nothing");
+            externalTotalByString.add("Nothing", externalCount);
+          }
+        }
+        
+        int missingCount = node.getCount(Source.MISSING);
+        if (missingCount >= threshold) {
+          missingUniqueTotal++;
+          missingTotalTotal += missingCount;
+          int mavenCount = node.getCount(Source.MAVEN);
+          int projectCount = node.getCount(Source.PROJECT);
+          if (mavenCount > 0) {
+            missingUniqueByString.add("Maven");
+            missingTotalByString.add("Maven", missingCount);
+            if (projectCount == 0) {
+              missingUniqueByString.add("Maven only");
+              missingTotalByString.add("Maven only", missingCount);
+            } else {
+              missingUniqueByString.add("Project");
+              missingTotalByString.add("Project", missingCount);
+              missingUniqueByString.add("Maven and Project");
+              missingTotalByString.add("Maven and Project", missingCount);
+            }
+          } else if (projectCount > 0) {
+            missingUniqueByString.add("Project");
+            missingTotalByString.add("Project", missingCount);
+            missingUniqueByString.add("Project only");
+            missingTotalByString.add("Project only", missingCount);
+          } else {
+            missingUniqueByString.add("Nothing");
+            missingTotalByString.add("Nothing", missingCount);
           }
         }
       }
       
-      Percenterator uniqueP = Percenterator.create(uniqueTotal);
-      Percenterator totalP = Percenterator.create(totalTotal);
+      Percenterator externalUniqueP = Percenterator.create(externalUniqueTotal);
+      Percenterator missingUniqueP = Percenterator.create(missingUniqueTotal);
+      Percenterator externalTotalP = Percenterator.create(externalTotalTotal);
+      Percenterator missingTotalP = Percenterator.create(externalTotalTotal);
 
-      task.start("Reporting FQN missing type coverage for threshold " + threshold);
-      for (String condition : uniqueByString.elementSet()) {
+      task.start("Reporting external import coverage for threshold " + threshold);
+      for (String condition : externalUniqueByString.elementSet()) {
         task.report(condition + ":");
-        task.report("  Unique: " + uniqueP.format(uniqueByString.count(condition)));
-        task.report("  Total:  " + totalP.format(totalByString.count(condition)));
+        task.report("  Unique: " + externalUniqueP.format(externalUniqueByString.count(condition)));
+        task.report("  Total:  " + externalTotalP.format(externalTotalByString.count(condition)));
       }
       task.report("Sum:");
-      task.report("  Unique: " + uniqueTotal);
-      task.report("  Total: " + totalTotal);
+      task.report("  Unique: " + externalUniqueTotal);
+      task.report("  Total: " + externalTotalTotal);
+      task.finish();
+      task.start("Reporting missing import coverage for threshold " + threshold);
+      for (String condition : missingUniqueByString.elementSet()) {
+        task.report(condition + ":");
+        task.report("  Unique: " + missingUniqueP.format(missingUniqueByString.count(condition)));
+        task.report("  Total:  " + missingTotalP.format(missingTotalByString.count(condition)));
+      }
+      task.report("Sum:");
+      task.report("  Unique: " + missingUniqueTotal);
+      task.report("  Total: " + missingTotalTotal);
       task.finish();
     }
 
