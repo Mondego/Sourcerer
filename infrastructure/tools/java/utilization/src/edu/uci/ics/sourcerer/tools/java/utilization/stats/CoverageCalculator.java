@@ -66,7 +66,7 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  */
 public class CoverageCalculator {
   public static final Argument<File> EXTERNAL_REPO = new FileArgument("external-repo", "External repo");
-  public static final Argument<File> MISSING_REPO = new FileArgument("external-repo", "Missing repo");
+  public static final Argument<File> MISSING_REPO = new FileArgument("missing-repo", "Missing repo");
   public static final Argument<File> JAR_REPO = new FileArgument("jar-repo", "Jar repo");
   public static final Argument<File> SOURCED_CACHE = new RelativeFileArgument("sourced-cache", "sourced-cache.txt", Arguments.CACHE, "Cache for sources prefix tree.");
 //  public static final Argument<File> MISSING_FQNS_PER_PROJECT = new RelativeFileArgument("missing-fqns-per-project", "missing-fqns-per-project.txt", Arguments.OUTPUT, "Summary of missing fqns per project");
