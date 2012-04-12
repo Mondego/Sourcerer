@@ -216,7 +216,7 @@ public class Main {
     protected void action() {
       CoverageCalculator.calculateJarCoverage();
     }
-  }.setProperties(JavaRepositoryFactory.INPUT_REPO, CoverageCalculator.JAR_REPO, CoverageCalculator.SOURCED_CACHE, CoverageCalculator.MISSING_FQNS_PER_PROJECT, CoverageCalculator.PROJECTS_PER_MISSING_FQN);
+  }.setProperties(CoverageCalculator.JAR_REPO, CoverageCalculator.EXTERNAL_REPO, CoverageCalculator.MISSING_REPO, CoverageCalculator.SOURCED_CACHE);
   
   public static final Command COMPARE_EXTERNAL_AND_MISSING = new Command("compare-external-and-missing", "Compare the external and missing types.") {
     @Override

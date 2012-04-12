@@ -25,8 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -38,7 +36,9 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 
 import com.google.common.collect.EnumMultiset;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
 import edu.uci.ics.sourcerer.tools.java.model.extracted.ImportEX;
@@ -105,7 +105,7 @@ public class CoverageCalculator {
             nonEmptyMaven++;
             go = false;
           }
-          root.getChild(fqn, '/').addSource(Source.MAVEN);
+          root.getChild(fqn, '/').addSource(Source.MAVEN, jar.getProperties().HASH.getValue());
         }
         task.progress();
       }
@@ -120,7 +120,7 @@ public class CoverageCalculator {
             nonEmptyProject++;
             go = false;
           }
-          root.getChild(fqn, '/').addSource(Source.PROJECT);
+          root.getChild(fqn, '/').addSource(Source.PROJECT, jar.getProperties().HASH.getValue());
         }
         task.progress();
       }
@@ -184,6 +184,7 @@ public class CoverageCalculator {
       // Averager for missing FQNs per project
       Averager<Integer> missingFqns = Averager.create();
       for (ExtractedJavaProject externalProject : externalRepo.getProjects()) {
+        String loc = externalProject.getLocation().toString();
         ExtractedJavaProject missingProject = missingRepo.getProject(externalProject.getLocation());
         
         ReaderBundle externalBundle = new ReaderBundle(externalProject.getExtractionDir().toFile());
@@ -194,21 +195,21 @@ public class CoverageCalculator {
         
         // Add all the imports for this project
         for (ImportEX imp : externalBundle.getTransientImports()) {
-          root.getChild(imp.getImported(), '.').addSource(Source.IMPORTED);
+          root.getChild(imp.getImported(), '.').addSource(Source.IMPORTED, loc);
         }
         
         Set<String> validMissing = new HashSet<>();
         // Add the external types
         for (MissingTypeEX missing : externalBundle.getTransientMissingTypes()) {
           validMissing.add(missing.getFqn());
-          root.getChild(missing.getFqn(), '.').addSource(Source.EXTERNAL);
+          root.getChild(missing.getFqn(), '.').addSource(Source.EXTERNAL, loc);
           externalCount++;
         }
         
         // Add the missing types
         for (MissingTypeEX missing : missingBundle.getTransientMissingTypes()) {
           if (validMissing.contains(missing.getFqn())) {
-            root.getChild(missing.getFqn(), '.').addSource(Source.MISSING);
+            root.getChild(missing.getFqn(), '.').addSource(Source.MISSING, loc);
             missingCount++;
           }
         }
@@ -306,19 +307,19 @@ public class CoverageCalculator {
         }
         
         {
-          final Multiset<SourcedFqnNode> packages = HashMultiset.create();
+          final Multimap<SourcedFqnNode, String> packages = HashMultimap.create();
           
           for (SourcedFqnNode fqn : root.getPostOrderIterable()) {
             if (fqn.has(source)) {
-              packages.add(fqn.getParent(), fqn.getCount(source));
+              packages.putAll(fqn.getParent(), fqn.getSourceIDs(source));
             }
           }
           
-          List<SourcedFqnNode> sorted = new ArrayList<>(packages);
+          List<SourcedFqnNode> sorted = new ArrayList<>(packages.keySet().size());
           Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
             @Override
             public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
-              int cmp = -Integer.compare(packages.count(o1), packages.count(o2));
+              int cmp = -Integer.compare(packages.get(o1).size(), packages.get(o2).size());
               if (cmp == 0) {
                 return o1.compareTo(o2);
               } else {
@@ -329,7 +330,7 @@ public class CoverageCalculator {
           task.start("Logging popular packages listing for " + source.name());
           try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), source.name() + "-popular-packages.txt"))) {
             for (SourcedFqnNode fqn : sorted) {
-              writer.write(packages.count(fqn) + "\t" + fqn.getFqn());
+              writer.write(packages.get(fqn).size() + "\t" + fqn.getFqn());
             }
           } catch (IOException e) {
             logger.log(Level.SEVERE, "Error writing file", e);
@@ -339,70 +340,190 @@ public class CoverageCalculator {
       }
     }
     
-    // Identify the most popular imported type found in maven, project and nothing
+    // Identify the most popular external types found in only maven, project and nothing
     {
-      for (final Source importSource : EnumSet.of(Source.IMPORTED, Source.EXTERNAL, Source.MISSING)) {
-        for (final Source typeSource : EnumSet.of(Source.MAVEN, Source.PROJECT)) {
-          {
-            TreeSet<SourcedFqnNode> popularTypes = new TreeSet<>(new Comparator<SourcedFqnNode>() {
-              @Override
-              public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
-                int cmp = Integer.compare(o1.getCount(importSource), o2.getCount(importSource));
-                if (cmp == 0) {
-                  return o1.compareTo(o2);
-                } else {
-                  return cmp;
-                }
-              }
-            });
-            
-            for (SourcedFqnNode fqn : root.getPostOrderIterable()) {
-              if (fqn.has(importSource) && fqn.has(typeSource)) {
-                popularTypes.add(fqn);
+      {
+        TreeSet<SourcedFqnNode> popularJoint = new TreeSet<>(SourcedFqnNode.createComparator(Source.EXTERNAL));
+        TreeSet<SourcedFqnNode> popularMaven = new TreeSet<>(SourcedFqnNode.createComparator(Source.EXTERNAL));
+        TreeSet<SourcedFqnNode> popularProject = new TreeSet<>(SourcedFqnNode.createComparator(Source.EXTERNAL));
+        TreeSet<SourcedFqnNode> popularMissing = new TreeSet<>(SourcedFqnNode.createComparator(Source.EXTERNAL));
+       
+        for (SourcedFqnNode fqn : root.getPostOrderIterable()) {
+          if (fqn.has(Source.EXTERNAL)) {
+            boolean maven = fqn.has(Source.MAVEN);
+            boolean project = fqn.has(Source.PROJECT);
+            if (maven && project) {
+              popularJoint.add(fqn);
+            } else {
+              if (maven) {
+                popularMaven.add(fqn);
+              } else if (project) {
+                popularProject.add(fqn);
+              } else {
+                popularMissing.add(fqn);
               }
             }
-            
-            task.start("Logging popular types listing for " + importSource.name() + " and " + typeSource.name());
-            try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), importSource.name() + "-" + typeSource.name() + "-popular-types.txt"))) {
-              for (SourcedFqnNode fqn : popularTypes.descendingSet()) {
-                writer.write(fqn.getCount(importSource) + "\t" + fqn.getFqn());
-              }
-            } catch (IOException e) {
-              logger.log(Level.SEVERE, "Error writing file", e);
-            }
-            task.finish();
           }
-          {
-            final Multiset<SourcedFqnNode> packages = HashMultiset.create();
+        }
             
-            for (SourcedFqnNode fqn : root.getPostOrderIterable()) {
-              if (fqn.has(importSource) && fqn.has(typeSource)) {
-                packages.add(fqn.getParent(), fqn.getCount(importSource));
-              }
-            }
-            
-            List<SourcedFqnNode> sorted = new ArrayList<>(packages);
-            Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
-              @Override
-              public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
-                int cmp = -Integer.compare(packages.count(o1), packages.count(o2));
-                if (cmp == 0) {
-                  return o1.compareTo(o2);
-                } else {
-                  return cmp;
-                }
-              }});
-            
-            task.start("Logging popular packages listing for " + importSource.name() + " and " + typeSource.name());
-            try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), importSource.name() + "-" + typeSource.name() + "-popular-packages.txt"))) {
-              for (SourcedFqnNode fqn : sorted) {
-                writer.write(packages.count(fqn) + "\t" + fqn.getFqn());
-              }
-            } catch (IOException e) {
-              logger.log(Level.SEVERE, "Error writing file", e);
-            }
-            task.finish();
+        task.start("Logging popular external joint types");
+        try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "joint-popular-types.txt"))) {
+          for (SourcedFqnNode fqn : popularMaven.descendingSet()) {
+            writer.write(fqn.getCount(Source.EXTERNAL) + "\t" + fqn.getFqn());
           }
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Error writing file", e);
+        }
+        task.finish();
+        
+        task.start("Logging popular external types unique to maven");
+        try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "maven-unique-popular-types.txt"))) {
+          for (SourcedFqnNode fqn : popularMaven.descendingSet()) {
+            writer.write(fqn.getCount(Source.EXTERNAL) + "\t" + fqn.getFqn());
+          }
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Error writing file", e);
+        }
+        task.finish();
+        
+        task.start("Logging popular external types unique to project");
+        try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "project-unique-popular-types.txt"))) {
+          for (SourcedFqnNode fqn : popularProject.descendingSet()) {
+            writer.write(fqn.getCount(Source.EXTERNAL) + "\t" + fqn.getFqn());
+          }
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Error writing file", e);
+        }
+        task.finish();
+        
+        task.start("Logging popular external types unique to maven");
+        try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "missing-unique-popular-types.txt"))) {
+          for (SourcedFqnNode fqn : popularMaven.descendingSet()) {
+            writer.write(fqn.getCount(Source.EXTERNAL) + "\t" + fqn.getFqn());
+          }
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Error writing file", e);
+        }
+        task.finish();
+      }
+      {
+        final Multimap<SourcedFqnNode, String> jointPackages = HashMultimap.create();
+        final Multimap<SourcedFqnNode, String> mavenPackages = HashMultimap.create();
+        final Multimap<SourcedFqnNode, String> projectPackages = HashMultimap.create();
+        final Multimap<SourcedFqnNode, String> missingPackages = HashMultimap.create();
+          
+        for (SourcedFqnNode fqn : root.getPostOrderIterable()) {
+          if (fqn.has(Source.EXTERNAL)) {
+            boolean maven = fqn.has(Source.MAVEN);
+            boolean project = fqn.has(Source.PROJECT);
+            if (maven && project) {
+              jointPackages.putAll(fqn, fqn.getSourceIDs(Source.EXTERNAL));
+            } else {
+              if (maven) {
+                mavenPackages.putAll(fqn, fqn.getSourceIDs(Source.EXTERNAL));
+              } else if (project) {
+                projectPackages.putAll(fqn, fqn.getSourceIDs(Source.EXTERNAL));
+              } else {
+                missingPackages.putAll(fqn, fqn.getSourceIDs(Source.EXTERNAL));
+              }
+            }
+          }
+        }
+        
+        {
+          List<SourcedFqnNode> sorted = new ArrayList<>(jointPackages.keySet().size());
+          Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
+            @Override
+            public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+              int cmp = -Integer.compare(jointPackages.get(o1).size(), jointPackages.get(o2).size());
+              if (cmp == 0) {
+                return o1.compareTo(o2);
+              } else {
+                return cmp;
+              }
+            }});
+          
+          task.start("Logging popular packages unique to maven");
+          try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "joint-popular-packages.txt"))) {
+            for (SourcedFqnNode fqn : sorted) {
+              writer.write(jointPackages.get(fqn).size() + "\t" + fqn.getFqn());
+            }
+          } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error writing file", e);
+          }
+          task.finish();
+        }
+        
+        {
+          List<SourcedFqnNode> sorted = new ArrayList<>(mavenPackages.keySet().size());
+          Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
+            @Override
+            public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+              int cmp = -Integer.compare(mavenPackages.get(o1).size(), mavenPackages.get(o2).size());
+              if (cmp == 0) {
+                return o1.compareTo(o2);
+              } else {
+                return cmp;
+              }
+            }});
+          
+          task.start("Logging popular packages unique to maven");
+          try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "maven-unique-popular-packages.txt"))) {
+            for (SourcedFqnNode fqn : sorted) {
+              writer.write(mavenPackages.get(fqn).size() + "\t" + fqn.getFqn());
+            }
+          } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error writing file", e);
+          }
+          task.finish();
+        }
+        
+        {
+          List<SourcedFqnNode> sorted = new ArrayList<>(projectPackages.keySet().size());
+          Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
+            @Override
+            public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+              int cmp = -Integer.compare(projectPackages.get(o1).size(), projectPackages.get(o2).size());
+              if (cmp == 0) {
+                return o1.compareTo(o2);
+              } else {
+                return cmp;
+              }
+            }});
+          
+          task.start("Logging popular packages unique to project");
+          try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "project-unique-popular-packages.txt"))) {
+            for (SourcedFqnNode fqn : sorted) {
+              writer.write(projectPackages.get(fqn).size() + "\t" + fqn.getFqn());
+            }
+          } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error writing file", e);
+          }
+          task.finish();
+        }
+        
+        {
+          List<SourcedFqnNode> sorted = new ArrayList<>(missingPackages.keySet().size());
+          Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
+            @Override
+            public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+              int cmp = -Integer.compare(missingPackages.get(o1).size(), missingPackages.get(o2).size());
+              if (cmp == 0) {
+                return o1.compareTo(o2);
+              } else {
+                return cmp;
+              }
+            }});
+          
+          task.start("Logging popular packages unique to missing");
+          try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "missing-unique-popular-packages.txt"))) {
+            for (SourcedFqnNode fqn : sorted) {
+              writer.write(missingPackages.get(fqn).size() + "\t" + fqn.getFqn());
+            }
+          } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error writing file", e);
+          }
+          task.finish();
         }
       }
     }
@@ -422,12 +543,12 @@ public class CoverageCalculator {
         if (externalCount >= threshold) {
           externalUniqueTotal++;
           externalTotalTotal += externalCount;
-          int mavenCount = node.getCount(Source.MAVEN);
-          int projectCount = node.getCount(Source.PROJECT);
-          if (mavenCount > 0) {
+          boolean maven = node.has(Source.MAVEN);
+          boolean project = node.has(Source.PROJECT);
+          if (maven) {
             externalUniqueByString.add("Maven");
             externalTotalByString.add("Maven", externalCount);
-            if (projectCount == 0) {
+            if (!project) {
               externalUniqueByString.add("Maven only");
               externalTotalByString.add("Maven only", externalCount);
             } else {
@@ -436,7 +557,7 @@ public class CoverageCalculator {
               externalUniqueByString.add("Maven and Project");
               externalTotalByString.add("Maven and Project", externalCount);
             }
-          } else if (projectCount > 0) {
+          } else if (project) {
             externalUniqueByString.add("Project");
             externalTotalByString.add("Project", externalCount);
             externalUniqueByString.add("Project only");
@@ -451,12 +572,12 @@ public class CoverageCalculator {
         if (missingCount >= threshold) {
           missingUniqueTotal++;
           missingTotalTotal += missingCount;
-          int mavenCount = node.getCount(Source.MAVEN);
-          int projectCount = node.getCount(Source.PROJECT);
-          if (mavenCount > 0) {
+          boolean maven = node.has(Source.MAVEN);
+          boolean project = node.has(Source.PROJECT);
+          if (maven) {
             missingUniqueByString.add("Maven");
             missingTotalByString.add("Maven", missingCount);
-            if (projectCount == 0) {
+            if (!project) {
               missingUniqueByString.add("Maven only");
               missingTotalByString.add("Maven only", missingCount);
             } else {
@@ -465,7 +586,7 @@ public class CoverageCalculator {
               missingUniqueByString.add("Maven and Project");
               missingTotalByString.add("Maven and Project", missingCount);
             }
-          } else if (projectCount > 0) {
+          } else if (project) {
             missingUniqueByString.add("Project");
             missingTotalByString.add("Project", missingCount);
             missingUniqueByString.add("Project only");
@@ -503,194 +624,218 @@ public class CoverageCalculator {
       task.report("  Total: " + missingTotalTotal);
       task.finish();
     }
+    
+    {
+      Set<String> maven = new HashSet<>();
+      Set<String> mavenImported = new HashSet<>();
+      
+      Set<String> project = new HashSet<>();
+      Set<String> projectImported = new HashSet<>();
+      // Find the coverage of the maven and project jars
+      for (SourcedFqnNode fqn : root.getPostOrderIterable()) {
+        maven.addAll(fqn.getSourceIDs(Source.MAVEN));
+        project.addAll(fqn.getSourceIDs(Source.PROJECT));
+        if (fqn.has(Source.IMPORTED)) {
+          mavenImported.addAll(fqn.getSourceIDs(Source.MAVEN));
+          projectImported.addAll(fqn.getSourceIDs(Source.PROJECT));
+        }
+      }
+      
+      Percenterator mavenP = Percenterator.create(maven.size());
+      Percenterator projectP = Percenterator.create(project.size());
+      task.start("Reporting coverage of jars");
+      task.report(mavenP.format(mavenImported.size()) + " maven jars had at least one type imported");
+      task.report(projectP.format(projectImported.size()) + " project jars had at least one type imported");
+      task.finish();
+    }
 
-    {
-      // Find all the most popular fqns per source
-      for (final Source source : Source.values()) {
-        TreeSet<SourcedFqnNode> sorted = new TreeSet<>(new Comparator<SourcedFqnNode>() {
-          @Override
-          public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
-            int cmp = Integer.compare(o1.getCount(source), o2.getCount(source));
-            if (cmp == 0) {
-              return o1.compareTo(o2);
-            } else {
-              return cmp;
-            }
-          }
-        });
-        
-        for (SourcedFqnNode node : root.getPostOrderIterable()) {
-          if (node.has(source)) {
-            sorted.add(node);
-          }
-        }
-        
-        task.start("Logging popular types listing for " + source.name());
-        try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), source.name() + "-popular.txt"))) {
-          for (SourcedFqnNode fqn : sorted.descendingSet()) {
-            writer.write(fqn.getCount(source) + "\t" + fqn.getFqn());
-          }
-        } catch (IOException e) {
-          logger.log(Level.SEVERE, "Error writing file", e);
-        }
-        task.finish();
-      }
-    }
-    
-    {
-      // Find all the fqns unique to that source
-      for (final Source source : Source.values()) {
-        TreeSet<SourcedFqnNode> sorted = new TreeSet<>(new Comparator<SourcedFqnNode>() {
-          @Override
-          public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
-            int cmp = Integer.compare(o1.getCount(source), o2.getCount(source));
-            if (cmp == 0) {
-              return o1.compareTo(o2);
-            } else {
-              return cmp;
-            }
-          }
-        });
-        
-        Set<Source> expected = EnumSet.of(Source.MISSING, source);
-        for (SourcedFqnNode node : root.getPostOrderIterable()) {
-          Set<Source> sources = node.getSources();
-          if (sources.containsAll(expected) && expected.containsAll(sources)) {
-            sorted.add(node);
-          }
-        }
-        
-        task.start("Logging missing types listing");
-        try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), source.name() + "-missing.txt"))) {
-          for (SourcedFqnNode fqn : sorted.descendingSet()) {
-            writer.write(fqn.getCount(Source.MISSING) + "\t" + fqn.getFqn());
-          }
-        } catch (IOException e) {
-          logger.log(Level.SEVERE, "Error writing file", e);
-        }
-        task.finish();
-      }
-    }
-    
-    {
-      final Multiset<SourcedFqnNode> maven = HashMultiset.create();
-      final Multiset<SourcedFqnNode> project = HashMultiset.create();
-      final Multiset<SourcedFqnNode> mavenProject= HashMultiset.create();
-      final Multiset<SourcedFqnNode> missing = HashMultiset.create();
-      
-      
-      // Find the package specific info
-      for (SourcedFqnNode node : root.getPostOrderIterable()) {
-        int missingCount = node.getCount(Source.MISSING);
-        if (missingCount > 0) {
-          int mavenCount = node.getCount(Source.MAVEN);
-          int projectCount = node.getCount(Source.PROJECT);
-          if (mavenCount > 0) {
-            if (projectCount == 0) {
-              maven.add(node.getParent());
-            } else {
-              mavenProject.add(node.getParent());
-            }
-          } else if (projectCount > 0) {
-            project.add(node.getParent());
-          } else {
-            missing.add(node.getParent());
-          }
-        }
-      }
-      
-      task.start("Reporting package breakdown");
-      task.report("Maven only:        " + maven.elementSet().size());
-      task.report("Project only:      " + project.elementSet().size());
-      task.report("Maven and Project: " + mavenProject.elementSet().size());
-      task.report("Missing:           " + missing.elementSet().size());
-      task.finish();
-      
-      task.start("Logging package popularity");
-      // Maven
-      SourcedFqnNode[] nodes = maven.elementSet().toArray(new SourcedFqnNode[maven.elementSet().size()]);
-      Arrays.sort(nodes, new Comparator<SourcedFqnNode>() {
-        @Override
-        public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
-          int cmp = Integer.compare(maven.count(o2), maven.count(o1));
-          if (cmp == 0) {
-            return o1.compareTo(o2);
-          } else {
-            return cmp;
-          }
-        }
-      });
-      try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "maven-pkgs.txt"))) {
-        for (SourcedFqnNode pkg : nodes) {
-          writer.write(maven.count(pkg) + "\t" + pkg.getFqn());
-        }
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Error writing file", e);
-      }
-      
-      // Project
-      nodes = project.elementSet().toArray(new SourcedFqnNode[project.elementSet().size()]);
-      Arrays.sort(nodes, new Comparator<SourcedFqnNode>() {
-        @Override
-        public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
-          int cmp = Integer.compare(project.count(o2), project.count(o1));
-          if (cmp == 0) {
-            return o1.compareTo(o2);
-          } else {
-            return cmp;
-          }
-        }
-      });
-      try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "project-pkgs.txt"))) {
-        for (SourcedFqnNode pkg : nodes) {
-          writer.write(project.count(pkg) + "\t" + pkg.getFqn());
-        }
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Error writing file", e);
-      }
-      
-      // Maven/Project
-      nodes = mavenProject.elementSet().toArray(new SourcedFqnNode[mavenProject.elementSet().size()]);
-      Arrays.sort(nodes, new Comparator<SourcedFqnNode>() {
-        @Override
-        public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
-          int cmp = Integer.compare(mavenProject.count(o2), mavenProject.count(o1));
-          if (cmp == 0) {
-            return o1.compareTo(o2);
-          } else {
-            return cmp;
-          }
-        }
-      });
-      try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "maven-project-pkgs.txt"))) {
-        for (SourcedFqnNode pkg : nodes) {
-          writer.write(mavenProject.count(pkg) + "\t" + pkg.getFqn());
-        }
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Error writing file", e);
-      }
-      
-      nodes = missing.elementSet().toArray(new SourcedFqnNode[missing.elementSet().size()]);
-      Arrays.sort(nodes, new Comparator<SourcedFqnNode>() {
-        @Override
-        public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
-          int cmp = Integer.compare(missing.count(o2), missing.count(o1));
-          if (cmp == 0) {
-            return o1.compareTo(o2);
-          } else {
-            return cmp;
-          }
-        }
-      });
-      try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "missing-pkgs.txt"))) {
-        for (SourcedFqnNode pkg : nodes) {
-          writer.write(missing.count(pkg) + "\t" + pkg.getFqn());
-        }
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Error writing file", e);
-      }
-      task.finish();
-    }
+//    {
+//      // Find all the most popular fqns per source
+//      for (final Source source : Source.values()) {
+//        TreeSet<SourcedFqnNode> sorted = new TreeSet<>(new Comparator<SourcedFqnNode>() {
+//          @Override
+//          public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+//            int cmp = Integer.compare(o1.getCount(source), o2.getCount(source));
+//            if (cmp == 0) {
+//              return o1.compareTo(o2);
+//            } else {
+//              return cmp;
+//            }
+//          }
+//        });
+//        
+//        for (SourcedFqnNode node : root.getPostOrderIterable()) {
+//          if (node.has(source)) {
+//            sorted.add(node);
+//          }
+//        }
+//        
+//        task.start("Logging popular types listing for " + source.name());
+//        try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), source.name() + "-popular.txt"))) {
+//          for (SourcedFqnNode fqn : sorted.descendingSet()) {
+//            writer.write(fqn.getCount(source) + "\t" + fqn.getFqn());
+//          }
+//        } catch (IOException e) {
+//          logger.log(Level.SEVERE, "Error writing file", e);
+//        }
+//        task.finish();
+//      }
+//    }
+//    
+//    {
+//      // Find all the fqns unique to that source
+//      for (final Source source : Source.values()) {
+//        TreeSet<SourcedFqnNode> sorted = new TreeSet<>(new Comparator<SourcedFqnNode>() {
+//          @Override
+//          public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+//            int cmp = Integer.compare(o1.getCount(source), o2.getCount(source));
+//            if (cmp == 0) {
+//              return o1.compareTo(o2);
+//            } else {
+//              return cmp;
+//            }
+//          }
+//        });
+//        
+//        Set<Source> expected = EnumSet.of(Source.MISSING, source);
+//        for (SourcedFqnNode node : root.getPostOrderIterable()) {
+//          Set<Source> sources = node.getSources();
+//          if (sources.containsAll(expected) && expected.containsAll(sources)) {
+//            sorted.add(node);
+//          }
+//        }
+//        
+//        task.start("Logging missing types listing");
+//        try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), source.name() + "-missing.txt"))) {
+//          for (SourcedFqnNode fqn : sorted.descendingSet()) {
+//            writer.write(fqn.getCount(Source.MISSING) + "\t" + fqn.getFqn());
+//          }
+//        } catch (IOException e) {
+//          logger.log(Level.SEVERE, "Error writing file", e);
+//        }
+//        task.finish();
+//      }
+//    }
+//    
+//    {
+//      final Multiset<SourcedFqnNode> maven = HashMultiset.create();
+//      final Multiset<SourcedFqnNode> project = HashMultiset.create();
+//      final Multiset<SourcedFqnNode> mavenProject= HashMultiset.create();
+//      final Multiset<SourcedFqnNode> missing = HashMultiset.create();
+//      
+//      
+//      // Find the package specific info
+//      for (SourcedFqnNode node : root.getPostOrderIterable()) {
+//        int missingCount = node.getCount(Source.MISSING);
+//        if (missingCount > 0) {
+//          int mavenCount = node.getCount(Source.MAVEN);
+//          int projectCount = node.getCount(Source.PROJECT);
+//          if (mavenCount > 0) {
+//            if (projectCount == 0) {
+//              maven.add(node.getParent());
+//            } else {
+//              mavenProject.add(node.getParent());
+//            }
+//          } else if (projectCount > 0) {
+//            project.add(node.getParent());
+//          } else {
+//            missing.add(node.getParent());
+//          }
+//        }
+//      }
+//      
+//      task.start("Reporting package breakdown");
+//      task.report("Maven only:        " + maven.elementSet().size());
+//      task.report("Project only:      " + project.elementSet().size());
+//      task.report("Maven and Project: " + mavenProject.elementSet().size());
+//      task.report("Missing:           " + missing.elementSet().size());
+//      task.finish();
+//      
+//      task.start("Logging package popularity");
+//      // Maven
+//      SourcedFqnNode[] nodes = maven.elementSet().toArray(new SourcedFqnNode[maven.elementSet().size()]);
+//      Arrays.sort(nodes, new Comparator<SourcedFqnNode>() {
+//        @Override
+//        public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+//          int cmp = Integer.compare(maven.count(o2), maven.count(o1));
+//          if (cmp == 0) {
+//            return o1.compareTo(o2);
+//          } else {
+//            return cmp;
+//          }
+//        }
+//      });
+//      try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "maven-pkgs.txt"))) {
+//        for (SourcedFqnNode pkg : nodes) {
+//          writer.write(maven.count(pkg) + "\t" + pkg.getFqn());
+//        }
+//      } catch (IOException e) {
+//        logger.log(Level.SEVERE, "Error writing file", e);
+//      }
+//      
+//      // Project
+//      nodes = project.elementSet().toArray(new SourcedFqnNode[project.elementSet().size()]);
+//      Arrays.sort(nodes, new Comparator<SourcedFqnNode>() {
+//        @Override
+//        public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+//          int cmp = Integer.compare(project.count(o2), project.count(o1));
+//          if (cmp == 0) {
+//            return o1.compareTo(o2);
+//          } else {
+//            return cmp;
+//          }
+//        }
+//      });
+//      try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "project-pkgs.txt"))) {
+//        for (SourcedFqnNode pkg : nodes) {
+//          writer.write(project.count(pkg) + "\t" + pkg.getFqn());
+//        }
+//      } catch (IOException e) {
+//        logger.log(Level.SEVERE, "Error writing file", e);
+//      }
+//      
+//      // Maven/Project
+//      nodes = mavenProject.elementSet().toArray(new SourcedFqnNode[mavenProject.elementSet().size()]);
+//      Arrays.sort(nodes, new Comparator<SourcedFqnNode>() {
+//        @Override
+//        public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+//          int cmp = Integer.compare(mavenProject.count(o2), mavenProject.count(o1));
+//          if (cmp == 0) {
+//            return o1.compareTo(o2);
+//          } else {
+//            return cmp;
+//          }
+//        }
+//      });
+//      try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "maven-project-pkgs.txt"))) {
+//        for (SourcedFqnNode pkg : nodes) {
+//          writer.write(mavenProject.count(pkg) + "\t" + pkg.getFqn());
+//        }
+//      } catch (IOException e) {
+//        logger.log(Level.SEVERE, "Error writing file", e);
+//      }
+//      
+//      nodes = missing.elementSet().toArray(new SourcedFqnNode[missing.elementSet().size()]);
+//      Arrays.sort(nodes, new Comparator<SourcedFqnNode>() {
+//        @Override
+//        public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
+//          int cmp = Integer.compare(missing.count(o2), missing.count(o1));
+//          if (cmp == 0) {
+//            return o1.compareTo(o2);
+//          } else {
+//            return cmp;
+//          }
+//        }
+//      });
+//      try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "missing-pkgs.txt"))) {
+//        for (SourcedFqnNode pkg : nodes) {
+//          writer.write(missing.count(pkg) + "\t" + pkg.getFqn());
+//        }
+//      } catch (IOException e) {
+//        logger.log(Level.SEVERE, "Error writing file", e);
+//      }
+//      task.finish();
+//    }
     
     task.finish();
   }

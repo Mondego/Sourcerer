@@ -50,82 +50,89 @@ public class ExternalAndMissingComparator {
     // Iterate through the projects in the external repo
     task.start("Examining projects", "projects examined", 1_000);
     for (ExtractedJavaProject externalProject : external.getProjects()) {
-      Set<String> foundExternal = new HashSet<>();
-      Set<String> missingExternal = new HashSet<>();
+      Set<String> externalImports = new HashSet<>();
+      Set<String> missingExternalImports = new HashSet<>();
       
       {
         ReaderBundle bundle = new ReaderBundle(externalProject.getExtractionDir().toFile());
         for (ImportEX imp : bundle.getTransientImports()) {
-          foundExternal.add(imp.getImported());
+          externalImports.add(imp.getImported());
         }
         for (MissingTypeEX miss : bundle.getTransientMissingTypes()) {
-          missingExternal.add(miss.getFqn());
+          missingExternalImports.add(miss.getFqn());
         }
       }
-      Set<String> foundMissing = new HashSet<>();
-      Set<String> missingMissing = new HashSet<>();
+      Set<String> missingImports = new HashSet<>();
+      Set<String> missingMissingImports = new HashSet<>();
       
       ExtractedJavaProject missingProject = missing.getProject(externalProject.getLocation());
       {
         ReaderBundle bundle = new ReaderBundle(missingProject.getExtractionDir().toFile());
         for (ImportEX imp : bundle.getTransientImports()) {
-          foundMissing.add(imp.getImported());
+          missingImports.add(imp.getImported());
         }
         for (MissingTypeEX miss : bundle.getTransientMissingTypes()) {
-          missingMissing.add(miss.getFqn());
+          missingMissingImports.add(miss.getFqn());
         }
+      }
+      
+      // Verify that the external imports and the missing imports are the same
+      if (!externalImports.equals(missingImports)) {
+        task.start("External and Missing imports don't match for : " + externalProject.toString());
+        if (!missingImports.containsAll(externalImports)) {
+          task.start("External but not missing");
+          for (String fqn : externalImports) {
+            if (!missingImports.contains(fqn)) {
+              task.report(fqn);
+            }
+          }
+          task.finish();
+        }
+        if (externalImports.containsAll(missingImports)) {
+          task.start("Missing but not external");
+          for (String fqn : missingImports) {
+            if (!externalImports.contains(fqn)) {
+              task.report(fqn);
+            }
+          }
+          task.finish();
+        }
+        task.finish();
       }
 
-      Set<String> externalUnion = new HashSet<>();
-      externalUnion.addAll(foundExternal);
-      externalUnion.addAll(missingExternal);
-      
-      Set<String> missingUnion = new HashSet<>();
-      missingUnion.addAll(foundMissing);
-      missingUnion.addAll(missingMissing);
-      
-      // Verify that there's no overlap between found and missing
-      if (externalUnion.size() != foundExternal.size() + missingExternal.size()) {
-        task.start("Duplicate external type for: " + externalProject.toString());
-        for (String fqn : externalUnion) {
-          if (foundExternal.contains(fqn) && missingExternal.contains(fqn)) {
+      // Verify that the external missing types are a subset of the imports
+      if (!externalImports.containsAll(missingExternalImports)) {
+        task.start("Missing external type not found as import for: " + externalProject.toString());
+        for (String fqn : missingExternalImports) {
+          if (!externalImports.contains(fqn)) {
             task.report(fqn);
           }
         }
         task.finish();
       }
-      if (missingUnion.size() != foundMissing.size() + missingMissing.size()) {
-        task.start("Duplicate missing type for: " + externalProject.toString());
-        for (String fqn : missingUnion) {
-          if (foundMissing.contains(fqn) && missingMissing.contains(fqn)) {
+      
+      // Verify that the missing missing types are a subset of the imports
+      if (!missingImports.containsAll(missingMissingImports)) {
+        task.start("Missing missing type not found as import for: " + externalProject.toString());
+        for (String fqn : missingExternalImports) {
+          if (!missingImports.contains(fqn)) {
             task.report(fqn);
           }
         }
         task.finish();
       }
-      // Verify that the unions are the same      
-      if (!externalUnion.equals(missingUnion)) {
-        task.start("Union does not match for: " + externalProject.toString());
-        if (!externalUnion.containsAll(missingUnion)) {
-          task.start("Missing but not external");
-          for (String fqn : missingUnion) {
-            if (!externalUnion.contains(fqn)) {
-              task.report(fqn);
-            }
+      
+      // Check if there are any missing missing imports that aren't external missing imports
+      if (!missingExternalImports.containsAll(missingMissingImports)) {
+        task.start("Missing import that isn't external for: " + externalProject.toString());
+        for (String fqn : missingMissingImports) {
+          if (!missingExternalImports.contains(fqn)) {
+            task.report(fqn);
           }
-          task.finish();
-        }
-        if (!missingUnion.containsAll(externalUnion)) {
-          task.start("External but not missing");
-          for (String fqn : externalUnion) {
-            if (!missingUnion.contains(fqn)) {
-              task.report(fqn);
-            }
-          }
-          task.finish();
         }
         task.finish();
       }
+
       task.progress();
     }
     task.finish();
