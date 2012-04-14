@@ -315,7 +315,7 @@ public class CoverageCalculator {
             }
           }
           
-          List<SourcedFqnNode> sorted = new ArrayList<>(packages.keySet().size());
+          List<SourcedFqnNode> sorted = new ArrayList<>(packages.keySet());
           Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
             @Override
             public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
@@ -455,7 +455,7 @@ public class CoverageCalculator {
         }
         
         {
-          List<SourcedFqnNode> sorted = new ArrayList<>(mavenPackages.keySet().size());
+          List<SourcedFqnNode> sorted = new ArrayList<>(mavenPackages.keySet());
           Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
             @Override
             public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {

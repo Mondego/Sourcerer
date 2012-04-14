@@ -24,12 +24,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import edu.uci.ics.sourcerer.tools.java.db.schema.ClusterVersionsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.FqnVersionsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.LibraryVersionToLibraryTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClusterFqnType;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClusterVersionToFqnVersionTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClusterVersionToJarTable;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClusterVersionsTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.ClustersTable;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.FqnVersionsTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.FqnsTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.JarToFqnVerionTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.JarsTable;
@@ -38,7 +39,6 @@ import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryToClus
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToClusterVersionTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToFqnVersionTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToJarTable;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToLibraryTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionToLibraryVersionTable;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema.LibraryVersionsTable;
 import edu.uci.ics.sourcerer.util.TimeoutManager;

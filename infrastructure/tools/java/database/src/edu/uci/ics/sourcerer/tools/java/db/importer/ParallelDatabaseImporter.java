@@ -25,17 +25,6 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
 import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
-import edu.uci.ics.sourcerer.tools.java.db.schema.CommentsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.FileMetricsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.ImportsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.ProblemsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
-import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProject;
@@ -44,7 +33,6 @@ import edu.uci.ics.sourcerer.util.Nullerator;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
-import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -53,62 +41,6 @@ public final class ParallelDatabaseImporter {
   public static Argument<Integer> THREAD_COUNT = new IntegerArgument("thread-count", 4, "Number of simultaneous threads");
   
   private ParallelDatabaseImporter() {}
-  
-  public static void initializeDatabase() {
-    new DatabaseRunnable() {
-      @Override
-      public void action() {
-        TaskProgressLogger task = TaskProgressLogger.get();
-        task.start("Initializing database");
-        
-        task.start("Dropping old tables");
-        exec.dropTables(
-            CommentsTable.TABLE,
-            EntitiesTable.TABLE,
-            EntityMetricsTable.TABLE,
-            FileMetricsTable.TABLE,
-            FilesTable.TABLE,
-            ImportsTable.TABLE,
-            ProblemsTable.TABLE,
-            ProjectMetricsTable.TABLE,
-            ProjectsTable.TABLE,
-            RelationsTable.TABLE);
-        task.finish();
-        
-        task.start("Creating new tables");
-        exec.createTable(CommentsTable.TABLE);
-        exec.createTable(EntitiesTable.TABLE);
-        exec.createTable(EntityMetricsTable.TABLE);
-        exec.createTable(FileMetricsTable.TABLE);
-        exec.createTable(FilesTable.TABLE);
-        exec.createTable(ImportsTable.TABLE);
-        exec.createTable(ProblemsTable.TABLE);
-        exec.createTable(ProjectMetricsTable.TABLE);
-        exec.createTable(ProjectsTable.TABLE);
-        exec.createTable(RelationsTable.TABLE);
-        task.finish();
-        
-        task.start("Adding the primitive types");
-        Integer projectID = exec.insertWithKey(ProjectsTable.TABLE.makePrimitivesInsert());
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "boolean",  projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "char", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "byte", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "short", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "int", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "long", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "float", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "double", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "void", projectID));
-        task.finish();
-        
-        task.start("Adding the unknowns project");
-        exec.insert(ProjectsTable.TABLE.makeUnknownsInsert());
-        task.finish();
-        
-        task.finish();
-      }
-    }.run();
-  }
   
   public static void importJavaLibraries() {
     TaskProgressLogger task = TaskProgressLogger.get();

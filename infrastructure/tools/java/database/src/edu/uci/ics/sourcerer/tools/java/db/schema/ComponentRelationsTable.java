@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema;
+package edu.uci.ics.sourcerer.tools.java.db.schema;
 
+import edu.uci.ics.sourcerer.tools.java.utilization.model.ComponentRelationType;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
@@ -24,27 +25,29 @@ import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class LibraryToClusterTable extends DatabaseTable {
+public class ComponentRelationsTable extends DatabaseTable{
   /*
-   *             library_to_cluster table
+   *               component_relations table
    * +-------------+-----------------+-------+--------+
    * | Column name | Type            | Null? | Index? |
    * +-------------+-----------------+-------+--------+
-   * | library_id  | BIGINT UNSIGNED | No    | Yes    |
-   * | cluster_id  | BIGINT UNSIGNED | No    | Yes    |
+   * | type        | ENUM(values)    | No    | No     | 
+   * | source_id   | BIGINT UNSIGNED | No    | Yes    |
+   * | target_id   | BIGINT UNSIGNED | No    | Yes    |
    * +-------------+-----------------+-------+--------+   
    */
-  public static final LibraryToClusterTable TABLE = new LibraryToClusterTable();
+  public static final ComponentRelationsTable TABLE = new ComponentRelationsTable();
   
-  public static final Column<Integer> LIBRARY_ID = TABLE.addIDColumn("library_id", false).addIndex();
-  public static final Column<Integer> CLUSTER_ID = TABLE.addIDColumn("cluster_id", false).addIndex();
+  public static final Column<ComponentRelationType> TYPE = TABLE.addEnumColumn("type", ComponentRelationType.values(), false);
+  public static final Column<Integer> SOURCE_ID = TABLE.addIDColumn("source_id", false).addIndex();
+  public static final Column<Integer> TARGET_ID = TABLE.addIDColumn("target_id", false).addIndex();
   
-  private LibraryToClusterTable() {
-    super("library_to_cluster");
+  private ComponentRelationsTable() {
+    super("component_relations");
   }
   
   // ---- INSERT ----
-  public static Insert createInsert(Integer libraryID, Integer clusterID) {
-    return TABLE.makeInsert(LIBRARY_ID.to(libraryID), CLUSTER_ID.to(clusterID));
+  public static Insert createInsert(ComponentRelationType type, Integer sourceID, Integer targetID) {
+    return TABLE.makeInsert(TYPE.to(type), SOURCE_ID.to(sourceID), TARGET_ID.to(targetID));
   }
 }

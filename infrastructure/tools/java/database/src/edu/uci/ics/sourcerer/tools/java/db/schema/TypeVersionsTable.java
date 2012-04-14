@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.repo.db.schema;
+package edu.uci.ics.sourcerer.tools.java.db.schema;
 
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
@@ -25,30 +25,30 @@ import edu.uci.ics.sourcerer.utils.db.sql.StringColumn;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FqnVersionsTable extends DatabaseTable {
+public class TypeVersionsTable extends DatabaseTable {
   /*  
-   *                 fqn_versions table
-   *  +----------------+-----------------+-------+--------+
-   *  | Column name    | Type            | Null? | Index? |
-   *  +----------------+-----------------+-------+--------+
-   *  | fqn_version_id | SERIAL          | No    | Yes    |
-   *  | fqn_id         | BIGINT UNSIGNED | No    | Yes    |
-   *  | fingerprint    | VARCHAR(8192)   | Yes   | No     |
-   *  +----------------+-----------------+-------+--------+
+   *                 type_versions table
+   *  +------------------+-----------------+-------+--------+
+   *  | Column name      | Type            | Null? | Index? |
+   *  +------------------+-----------------+-------+--------+
+   *  | type_version_id  | SERIAL          | No    | Yes    |
+   *  | type_id          | BIGINT UNSIGNED | No    | Yes    |
+   *  | fingerprint      | VARCHAR(8192)   | Yes   | No     |
+   *  +------------------+-----------------+-------+--------+
    */
   
-  public static final FqnVersionsTable TABLE = new FqnVersionsTable();
+  public static final TypeVersionsTable TABLE = new TypeVersionsTable();
   
-  public static final Column<Integer> FQN_VERSION_ID = TABLE.addSerialColumn("fqn_version_id");
-  public static final Column<Integer> FQN_ID = TABLE.addIDColumn("fqn_id", false).addIndex();
+  public static final Column<Integer> TYPE_VERSION_ID = TABLE.addSerialColumn("type_version_id");
+  public static final Column<Integer> TYPE_ID = TABLE.addIDColumn("type_id", false).addIndex();
   public static final StringColumn FINGERPRINT = TABLE.addVarcharColumn("fingerprint", 8192, true);
   
-  private FqnVersionsTable() {
-    super("fqn_versions");
+  private TypeVersionsTable() {
+    super("type_versions");
   }
   
   // ---- INSERT ----
-  public static Insert createInsert(Integer fqnID, String fingerprint) {
-    return TABLE.makeInsert(FQN_ID.to(fqnID), FINGERPRINT.to(fingerprint));
+  public static Insert createInsert(Integer typeID, String fingerprint) {
+    return TABLE.makeInsert(TYPE_ID.to(typeID), FINGERPRINT.to(fingerprint));
   }
 }

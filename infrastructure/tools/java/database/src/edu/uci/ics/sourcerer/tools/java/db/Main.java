@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db;
 
+import edu.uci.ics.sourcerer.tools.java.db.importer.DatabaseInitializer;
 import edu.uci.ics.sourcerer.tools.java.db.importer.ParallelDatabaseImporter;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
@@ -30,7 +31,7 @@ public class Main {
   public static final Command INITIALIZE_DB =
     new Command("initialize-db", "Clean and initialize the database.") {
       protected void action() {
-        ParallelDatabaseImporter.initializeDatabase();
+        DatabaseInitializer.initializeDatabase();
       }
     }.setProperties(
         DatabaseConnectionFactory.DATABASE_URL, 
