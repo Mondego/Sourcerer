@@ -23,5 +23,6 @@ package edu.uci.ics.sourcerer.tools.java.utilization.model;
 public enum ComponentRelationType {
   CLUSTER_CONTAINS_VERSION,
   JAR_CONTAINS_CLUSTER_VERSION,
+  JAR_CONTAINS_FQN_VERSION,
   ;
 }

@@ -417,14 +417,14 @@ public class CoverageCalculator {
             boolean maven = fqn.has(Source.MAVEN);
             boolean project = fqn.has(Source.PROJECT);
             if (maven && project) {
-              jointPackages.putAll(fqn, fqn.getSourceIDs(Source.EXTERNAL));
+              jointPackages.putAll(fqn.getParent(), fqn.getSourceIDs(Source.EXTERNAL));
             } else {
               if (maven) {
-                mavenPackages.putAll(fqn, fqn.getSourceIDs(Source.EXTERNAL));
+                mavenPackages.putAll(fqn.getParent(), fqn.getSourceIDs(Source.EXTERNAL));
               } else if (project) {
-                projectPackages.putAll(fqn, fqn.getSourceIDs(Source.EXTERNAL));
+                projectPackages.putAll(fqn.getParent(), fqn.getSourceIDs(Source.EXTERNAL));
               } else {
-                missingPackages.putAll(fqn, fqn.getSourceIDs(Source.EXTERNAL));
+                missingPackages.putAll(fqn.getParent(), fqn.getSourceIDs(Source.EXTERNAL));
               }
             }
           }

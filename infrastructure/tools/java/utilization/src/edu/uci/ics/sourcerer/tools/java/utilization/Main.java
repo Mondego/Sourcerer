@@ -27,7 +27,6 @@ import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.Repository;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.RepositoryBuilder;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.db.DatabaseImporter;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.ClusterStats;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.CoverageCalculator;
 import edu.uci.ics.sourcerer.tools.java.utilization.stats.ExternalAndMissingComparator;
@@ -117,8 +116,8 @@ public class Main {
       
       Repository repo = RepositoryBuilder.buildRepository(jars, clusters);
       
-      DatabaseImporter importer = DatabaseImporter.create(jars, clusters, repo);
-      importer.run();
+//      DatabaseImporter importer = DatabaseImporter.create(jars, clusters, repo);
+//      importer.run();
       
 //      ClusterStats.calculate(jars, clusters);
       

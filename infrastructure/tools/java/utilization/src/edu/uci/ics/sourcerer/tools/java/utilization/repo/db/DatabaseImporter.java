@@ -90,14 +90,7 @@ public class DatabaseImporter extends DatabaseRunnable {
     
     BatchInserter inserter = exec.makeInFileInserter(tempDir, JarToFqnVerionTable.TABLE);
     
-    task.start("Processing mappings", "mapping processed");
-    for (Map.Entry<Jar, Integer> entry : jarMap.entrySet()) {
-      for (FqnVersion fqn : entry.getKey().getFqns()) {
-        inserter.addInsert(JarToFqnVerionTable.createInsert(entry.getValue(), fqnVersionMap.get(fqn)));
-        task.progress();
-      }
-    }
-    task.finish();
+
     
     task.start("Performing db insert");
     inserter.insert();

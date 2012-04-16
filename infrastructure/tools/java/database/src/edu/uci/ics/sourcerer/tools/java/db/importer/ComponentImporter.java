@@ -26,6 +26,7 @@ import java.util.Map;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentRelationsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.TypeVersionsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.TypesTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.ComponentRelationType;
@@ -84,6 +85,7 @@ public class ComponentImporter extends DatabaseRunnable {
     importClusterVersions();
     loadJarMapping();
     importFqns();
+    importFqnVersions();
     importComponentRelations();
   }
   
@@ -191,7 +193,7 @@ public class ComponentImporter extends DatabaseRunnable {
   
   private void importFqns() {
     TaskProgressLogger task = TaskProgressLogger.get();
-    task.start("Importomg fqns");
+    task.start("Importing fqns");
     
     BatchInserter inserter = exec.makeInFileInserter(tempDir, TypesTable.TABLE);
     
@@ -239,14 +241,14 @@ public class ComponentImporter extends DatabaseRunnable {
   
   private void importFqnVersions() {
     TaskProgressLogger task = TaskProgressLogger.get();
-    task.start("Populating fqn_versions table");
+    task.start("Importing fqn versions");
     
-    BatchInserter inserter = exec.makeInFileInserter(tempDir, FqnVersionsTable.TABLE);
+    BatchInserter inserter = exec.makeInFileInserter(tempDir, TypeVersionsTable.TABLE);
     
-    task.start("Processing fqns", "fqns processed");
+    task.start("Processing fqn versions", "fqns processed");
     for (Map.Entry<VersionedFqnNode, Integer> entry : fqnMap.entrySet()) {
       for (FqnVersion version : entry.getKey().getVersions()) {
-        inserter.addInsert(FqnVersionsTable.createInsert(entry.getValue(), version.getFingerprint().serialize()));
+        inserter.addInsert(TypeVersionsTable.createInsert(entry.getValue(), version.getFingerprint().serialize()));
         task.progress();
       }
     }
@@ -258,15 +260,15 @@ public class ComponentImporter extends DatabaseRunnable {
    
     task.start("Loading fqn version mapping", "fqn versions loaded");
     fqnVersionMap = new HashMap<>();
-    try (SelectQuery query = exec.makeSelectQuery(FqnVersionsTable.TABLE)) {
-      query.addSelects(FqnVersionsTable.FQN_VERSION_ID);
-      query.orderBy(FqnVersionsTable.FQN_VERSION_ID, true);
+    try (SelectQuery query = exec.makeSelectQuery(TypeVersionsTable.TABLE)) {
+      query.addSelects(TypeVersionsTable.TYPE_VERSION_ID);
+      query.orderBy(TypeVersionsTable.TYPE_VERSION_ID, true);
       
       TypedQueryResult result = query.select();
       for (Map.Entry<VersionedFqnNode, Integer> entry : fqnMap.entrySet()) {
         for (FqnVersion version : entry.getKey().getVersions()) {
           result.next();
-          fqnVersionMap.put(version, result.getResult(FqnVersionsTable.FQN_VERSION_ID));
+          fqnVersionMap.put(version, result.getResult(TypeVersionsTable.TYPE_VERSION_ID));
           task.progress();
         }
       }
@@ -295,6 +297,15 @@ public class ComponentImporter extends DatabaseRunnable {
     for (Map.Entry<ClusterVersion, Integer> entry : clusterVersionMap.entrySet()) {
       for (Jar jar : entry.getKey().getJars()) {
         inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelationType.JAR_CONTAINS_CLUSTER_VERSION, jarMap.get(jar), entry.getValue()));
+        task.progress();
+      }
+    }
+    task.finish();
+    
+    task.start("Processing jar to fqn version mapping", "mappings processed");
+    for (Map.Entry<Jar, Integer> entry : jarMap.entrySet()) {
+      for (FqnVersion fqn : entry.getKey().getFqns()) {
+        inserter.addInsert(ComponentRelationsTable..createInsert(ComponentRelationType.JAR_CONTAINS_FQN_VERSION, entry.getValue(), fqnVersionMap.get(fqn)));
         task.progress();
       }
     }
