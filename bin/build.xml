@@ -29,6 +29,7 @@
   <property name="build-java-repo-tools" location="${build}/java-repo-tools" />
   <property name="build-extractor-lib" location="${build}/extractor-lib" />
   <property name="build-extractor" location="${build}/extractor" />
+	<property name="build-token-extractor" location="${build}/token-extractor" />
   <property name="build-database" location="${build}/database" />
   <property name="build-artifact-repo-browser" location="${build}/artifact-repo-browser" />
   <property name="build-comparison-test" location="${build}/comparison-test" />
@@ -56,6 +57,7 @@
   <property name="java-repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
   <property name="model" location="../infrastructure/tools/java/model/src" />
   <property name="extractor" location="../infrastructure/tools/java/extractor" />
+	<property name="token-extractor" location="../infrastructure/tools/java/token-extractor" />
   <property name="utilization" location="../infrastructure/tools/java/utilization/src" />
   <property name="database" location="../infrastructure/tools/java/database/src" />
 
@@ -435,6 +437,23 @@
     <zip destfile="${dist}/Extractor_1.0.0.jar" basedir="${build-extractor}" />
   </target>
 
+  <target name="token-extractor-lib" description="Populate the token extractor's lib directory">
+  	<mkdir dir="${token-extractor}/lib"/>
+    <copy file="${dist}/Extractor_1.0.0.jar" tofile="${token-extractor}/lib/extractor.jar" />
+  </target>
+	
+  <!-- Build the token extractor plugin - is asynchronous -->
+  <target name="token-extractor" description="Build the token extractor plugin.">
+    <pde.exportPlugins destination="${build}" exportSource="true" exportType="directory" plugins="Token-Extractor" useJARFormat="true" />
+  </target>
+
+  <!-- Repackage the plugin jar file - run after the extractor target -->
+  <target name="repackage-token-extractor" description="Prepares the final token extractor jar">
+  	<unjar src="${token-extractor}/lib/extractor.jar" dest="${build-token-extractor}" />
+  	<unjar src="${build}/plugins/Token-Extractor_1.0.0.jar" dest="${build-token-extractor}" />
+    <zip destfile="${dist}/Token-Extractor_1.0.0.jar" basedir="${build-token-extractor}" />
+  </target>
+	
   <target name="scs">
     <war destfile="${dist}/scs.war" webxml="../infrastructure/apps/codesearch/war/WEB-INF/web.xml" basedir="../infrastructure/apps/codesearch/war">
       <lib dir="${lib}">
