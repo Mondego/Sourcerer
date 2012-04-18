@@ -78,7 +78,7 @@ class ProjectEntitiesImporter extends EntitiesImporter {
         
         if (shouldImport) {
           task.start("Inserting project");
-          Integer projectID = exec.insertWithKey(ProjectsTable.TABLE.makeInsert(project));
+          Integer projectID = exec.insertWithKey(ProjectsTable.TABLE.createInsert(project));
           task.finish();
           
           ReaderBundle reader = new ReaderBundle(project.getExtractionDir().toFile());

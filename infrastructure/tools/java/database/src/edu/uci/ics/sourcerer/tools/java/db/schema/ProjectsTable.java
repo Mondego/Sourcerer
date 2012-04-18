@@ -18,6 +18,8 @@
 package edu.uci.ics.sourcerer.tools.java.db.schema;
 
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarProperties;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProject;
@@ -65,8 +67,8 @@ public final class ProjectsTable extends DatabaseTable {
   public static final String UNKNOWNS_PROJECT = "unknowns";
   
   // ---- INSERT ----
-  private Insert makeRowInsert(Project type, String name, String description, String version, String group, String path, String hash, boolean hasSource) {
-    return makeInsert(
+  private static Insert createRowInsert(Project type, String name, String description, String version, String group, String path, String hash, boolean hasSource) {
+    return TABLE.createInsert(
         PROJECT_TYPE.to(type),
         NAME.to(name),
         DESCRIPTION.to(description),
@@ -77,8 +79,8 @@ public final class ProjectsTable extends DatabaseTable {
         HAS_SOURCE.to(hasSource));
   }
   
-  public Insert makePrimitivesInsert() {
-    return makeRowInsert(Project.SYSTEM, 
+  public static Insert createPrimitivesInsert() {
+    return createRowInsert(Project.SYSTEM, 
             PRIMITIVES_PROJECT,
             "Primitive types",
             null, // no version 
@@ -88,8 +90,8 @@ public final class ProjectsTable extends DatabaseTable {
             false);
   }
   
-  public Insert makeUnknownsInsert() {
-    return makeRowInsert(Project.SYSTEM,
+  public static Insert createUnknownsInsert() {
+    return createRowInsert(Project.SYSTEM,
             UNKNOWNS_PROJECT,
             "Project for unknown entities",
             null, // no version
@@ -99,7 +101,26 @@ public final class ProjectsTable extends DatabaseTable {
             false);
   }
   
-  public Insert makeInsert(ExtractedJarFile jar) {
+  public static Insert createInsert(JarFile jar) {
+    JarProperties props = jar.getProperties();
+    Project type = null;
+    switch (props.SOURCE.getValue()) {
+      case JAVA_LIBRARY: type = Project.JAVA_LIBRARY; break;
+      case MAVEN: type = Project.MAVEN; break;
+      case PROJECT: type = Project.JAR; break;
+    }
+    return createRowInsert(
+        type,
+        props.NAME.getValue(), 
+        null, 
+        props.VERSION.getValue(), 
+        props.GROUP.getValue(), 
+        "COMPONENT", // no path 
+        props.HASH.getValue(), 
+        false); // not sure if it has source
+        
+  }
+  public static Insert createInsert(ExtractedJarFile jar) {
     ExtractedJarProperties props = jar.getProperties();
     Project type = null;
     switch (props.SOURCE.getValue()) {
@@ -107,7 +128,7 @@ public final class ProjectsTable extends DatabaseTable {
       case MAVEN: type = Project.MAVEN; break;
       case PROJECT: type = Project.JAR; break;
     }
-    return makeRowInsert(
+    return createRowInsert(
         type,
         props.NAME.getValue(), 
         null, 
@@ -116,12 +137,11 @@ public final class ProjectsTable extends DatabaseTable {
         "BEGIN_ENTITY", // no path 
         props.HASH.getValue(), 
         props.HAS_SOURCE.getValue());
-
   }
   
-  public Insert makeInsert(ExtractedJavaProject project) {
+  public static Insert createInsert(ExtractedJavaProject project) {
     ExtractedJavaProjectProperties props = project.getProperties();
-    return makeRowInsert(
+    return createRowInsert(
         Project.CRAWLED,
         props.NAME.getValue(), 
         null, // no description 

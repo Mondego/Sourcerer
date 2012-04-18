@@ -17,7 +17,6 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.schema;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.model.ComponentRelationType;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
@@ -38,7 +37,7 @@ public class ComponentRelationsTable extends DatabaseTable{
    */
   public static final ComponentRelationsTable TABLE = new ComponentRelationsTable();
   
-  public static final Column<ComponentRelationType> TYPE = TABLE.addEnumColumn("type", ComponentRelationType.values(), false);
+  public static final Column<ComponentRelation> TYPE = TABLE.addEnumColumn("type", ComponentRelation.values(), false);
   public static final Column<Integer> SOURCE_ID = TABLE.addIDColumn("source_id", false).addIndex();
   public static final Column<Integer> TARGET_ID = TABLE.addIDColumn("target_id", false).addIndex();
   
@@ -47,7 +46,7 @@ public class ComponentRelationsTable extends DatabaseTable{
   }
   
   // ---- INSERT ----
-  public static Insert createInsert(ComponentRelationType type, Integer sourceID, Integer targetID) {
-    return TABLE.makeInsert(TYPE.to(type), SOURCE_ID.to(sourceID), TARGET_ID.to(targetID));
+  public static Insert createInsert(ComponentRelation type, Integer sourceID, Integer targetID) {
+    return TABLE.createInsert(TYPE.to(type), SOURCE_ID.to(sourceID), TARGET_ID.to(targetID));
   }
 }

@@ -91,7 +91,7 @@ public class DatabaseTableImpl implements Table {
     return col;
   }
   
-  protected final Insert makeInsert(String ... values) {
+  protected final Insert createInsert(String ... values) {
     if (serial) {
       if (values.length != columns.size() - 1) {
         throw new IllegalArgumentException("Expected " + (columns.size() - 1) + " insert values, received " + Arrays.toString(values));

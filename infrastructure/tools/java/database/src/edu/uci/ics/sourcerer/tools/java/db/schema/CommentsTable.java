@@ -58,7 +58,7 @@ public final class CommentsTable extends DatabaseTable {
 
   // ---- INSERT ----
   private static Insert makeRowInsert(Comment type, Integer containing, Integer following, Integer projectID, Integer fileID, Integer offset, Integer length) {
-    return TABLE.makeInsert(
+    return TABLE.createInsert(
         COMMENT_TYPE.to(type),
         CONTAINING_EID.to(containing),
         FOLLOWING_EID.to(following),

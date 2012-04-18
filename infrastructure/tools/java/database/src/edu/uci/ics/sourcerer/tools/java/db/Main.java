@@ -17,9 +17,13 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db;
 
+import edu.uci.ics.sourcerer.tools.java.db.importer.ComponentImporter;
 import edu.uci.ics.sourcerer.tools.java.db.importer.DatabaseInitializer;
 import edu.uci.ics.sourcerer.tools.java.db.importer.ParallelDatabaseImporter;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
+import edu.uci.ics.sourcerer.tools.java.utilization.RepositoryGenerator;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.ArtifactRepository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
@@ -77,6 +81,21 @@ public class Main {
         ParallelDatabaseImporter.THREAD_COUNT,
         FileUtils.TEMP_DIR);
   
+  public static final Command ADD_COMPONENTS =
+    new Command("add-components", "Identifies and adds components to the database.") {
+      protected void action() {
+        ArtifactRepository repo = RepositoryGenerator.generateArtifactRepository();
+        ComponentImporter.importComponents(repo);
+    }
+  }.setProperties(
+      JavaRepositoryFactory.INPUT_REPO,
+      Fingerprint.FINGERPRINT_MODE,
+      RepositoryGenerator.JAR_FILTER_FILE,
+      DatabaseConnectionFactory.DATABASE_URL, 
+      DatabaseConnectionFactory.DATABASE_USER, 
+      DatabaseConnectionFactory.DATABASE_PASSWORD,
+      FileUtils.TEMP_DIR);
+
   public static final Command INTERACTIVE_FILE_ACCESSOR = 
     new Command("interactive-file-accessor", "Interactive test of the file accessor.") {
       protected void action() {

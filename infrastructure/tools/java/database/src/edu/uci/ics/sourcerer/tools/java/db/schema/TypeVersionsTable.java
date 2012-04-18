@@ -49,6 +49,6 @@ public class TypeVersionsTable extends DatabaseTable {
   
   // ---- INSERT ----
   public static Insert createInsert(Integer typeID, String fingerprint) {
-    return TABLE.makeInsert(TYPE_ID.to(typeID), FINGERPRINT.to(fingerprint));
+    return TABLE.createInsert(TYPE_ID.to(typeID), FINGERPRINT.to(fingerprint));
   }
 }

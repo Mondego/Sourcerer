@@ -15,13 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.entropy;
-
-import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
+package edu.uci.ics.sourcerer.tools.java.db.schema;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface ClusterEntopyCalculator {
-  public double compute(Cluster ... libraries);  
+public enum Type {
+  CORE,
+  VERSION,
+  ;
 }

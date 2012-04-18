@@ -44,31 +44,28 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class RepositoryBuilder {
+public class ArtifactRepositoryBuilder {
   private final TaskProgressLogger task;
   
   private final JarCollection jars;
   private final ClusterCollection clusters;
-//  private final ClusterMatcher matcher;
   
   private Multimap<Jar, Cluster> jarsToClusters;
-  private Repository repo;
+  private ArtifactRepository repo;
   
-  private RepositoryBuilder(JarCollection jars, ClusterCollection clusters) {
+  private ArtifactRepositoryBuilder(JarCollection jars, ClusterCollection clusters) {
     this.task = TaskProgressLogger.get();
     
     this.jars = jars;
     this.clusters = clusters;
     
-//    this.matcher = clusters.getClusterMatcher();
-    
     this.jarsToClusters = HashMultimap.create();
     
-    this.repo = Repository.create(); 
+    this.repo = ArtifactRepository.create(jars, clusters); 
   }
   
-  public static Repository buildRepository(JarCollection jars, ClusterCollection clusters) {
-    RepositoryBuilder builder = new RepositoryBuilder(jars, clusters);
+  public static ArtifactRepository buildRepository(JarCollection jars, ClusterCollection clusters) {
+    ArtifactRepositoryBuilder builder = new ArtifactRepositoryBuilder(jars, clusters);
     return builder.buildRepository();
   }
   
@@ -319,7 +316,7 @@ public class RepositoryBuilder {
     task.finish();
   }
   
-  public Repository buildRepository() {
+  public ArtifactRepository buildRepository() {
     task.start("Building repository structure for " + jars.size() + " jars and " + clusters.size() + " clusters");
     
     buildJarToClusterMap();

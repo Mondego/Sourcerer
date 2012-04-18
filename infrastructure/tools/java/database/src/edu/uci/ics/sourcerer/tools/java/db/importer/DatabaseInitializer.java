@@ -18,8 +18,6 @@
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import edu.uci.ics.sourcerer.tools.java.db.schema.CommentsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentRelationsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.FileMetricsTable;
@@ -29,8 +27,6 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.ProblemsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.TypeVersionsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.TypesTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
@@ -51,8 +47,6 @@ public class DatabaseInitializer {
         task.start("Dropping old tables");
         exec.dropTables(
             CommentsTable.TABLE,
-            ComponentRelationsTable.TABLE,
-            ComponentsTable.TABLE,
             EntitiesTable.TABLE,
             EntityMetricsTable.TABLE,
             FileMetricsTable.TABLE,
@@ -61,16 +55,12 @@ public class DatabaseInitializer {
             ProblemsTable.TABLE,
             ProjectMetricsTable.TABLE,
             ProjectsTable.TABLE,
-            RelationsTable.TABLE,
-            TypesTable.TABLE,
-            TypeVersionsTable.TABLE);
+            RelationsTable.TABLE);
         task.finish();
         
         task.start("Creating new tables");
         exec.createTables(
             CommentsTable.TABLE,
-            ComponentRelationsTable.TABLE,
-            ComponentsTable.TABLE,
             EntitiesTable.TABLE,
             EntityMetricsTable.TABLE,
             FileMetricsTable.TABLE,
@@ -79,13 +69,11 @@ public class DatabaseInitializer {
             ProblemsTable.TABLE,
             ProjectMetricsTable.TABLE,
             ProjectsTable.TABLE,
-            RelationsTable.TABLE,
-            TypesTable.TABLE,
-            TypeVersionsTable.TABLE);
+            RelationsTable.TABLE);
         task.finish();
         
         task.start("Adding the primitive types");
-        Integer projectID = exec.insertWithKey(ProjectsTable.TABLE.makePrimitivesInsert());
+        Integer projectID = exec.insertWithKey(ProjectsTable.TABLE.createPrimitivesInsert());
         exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "boolean",  projectID));
         exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "char", projectID));
         exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "byte", projectID));
@@ -98,7 +86,7 @@ public class DatabaseInitializer {
         task.finish();
         
         task.start("Adding the unknowns project");
-        exec.insert(ProjectsTable.TABLE.makeUnknownsInsert());
+        exec.insert(ProjectsTable.TABLE.createUnknownsInsert());
         task.finish();
         
         task.finish();

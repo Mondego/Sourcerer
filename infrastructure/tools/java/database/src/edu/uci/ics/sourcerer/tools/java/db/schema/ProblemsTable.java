@@ -53,7 +53,7 @@ public final class ProblemsTable extends DatabaseTable {
   
   // ---- INSERT ----
   private static Insert makeInsert(Problem type, Integer errorCode, String message, Integer projectID, Integer fileID) {
-    return TABLE.makeInsert(
+    return TABLE.createInsert(
         PROBLEM_TYPE.to(type),
         ERROR_CODE.to(errorCode),
         MESSAGE.to(message),

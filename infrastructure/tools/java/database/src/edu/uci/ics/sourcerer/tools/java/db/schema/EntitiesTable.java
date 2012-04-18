@@ -70,7 +70,7 @@ public final class EntitiesTable extends DatabaseTable {
   
   // ---- INSERT ----
   private static Insert makeInsert(Entity type, String fqn, String signature, String rawSignature, Modifiers modifiers, Integer multi, Integer projectID, Integer fileID, Integer offset, Integer length) {
-    return TABLE.makeInsert(
+    return TABLE.createInsert(
         ENTITY_TYPE.to(type),
         MODIFIERS.to(modifiers),
         FQN.to(fqn),

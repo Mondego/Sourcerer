@@ -56,7 +56,7 @@ public final class ImportsTable extends DatabaseTable {
   
   // ---- INSERT ----
   private static Insert makeInsert(boolean isStatic, boolean onDemand, Integer eid, Integer projectID, Integer fileID, Integer offset, Integer length) {
-    return TABLE.makeInsert(
+    return TABLE.createInsert(
         STATIC.to(isStatic),
         ON_DEMAND.to(onDemand),
         EID.to(eid),

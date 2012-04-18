@@ -17,7 +17,6 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.schema;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.model.TypeType;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
@@ -43,7 +42,7 @@ public class TypesTable extends DatabaseTable {
   public static final TypesTable TABLE = new TypesTable();
   
   public static final Column<Integer> TYPE_ID = TABLE.addSerialColumn("type_id");
-  public static final Column<TypeType> TYPE = TABLE.addEnumColumn("type", TypeType.values(), false);
+  public static final Column<Type> TYPE = TABLE.addEnumColumn("type", Type.values(), false);
   public static final StringColumn FQN = TABLE.addVarcharColumn("fqn", 8192, false).addIndex(48);
   public static final Column<Integer> COMPONENT_ID = TABLE.addIDColumn("component_id", false).addIndex();
   
@@ -53,11 +52,11 @@ public class TypesTable extends DatabaseTable {
   }
   
   // ---- INSERT ----
-  private static Insert createInsert(TypeType type, String fqn, Integer componentID) {
-    return TABLE.makeInsert(TYPE.to(type), FQN.to(fqn), COMPONENT_ID.to(componentID));
+  private static Insert createInsert(Type type, String fqn, Integer componentID) {
+    return TABLE.createInsert(TYPE.to(type), FQN.to(fqn), COMPONENT_ID.to(componentID));
   }
   
-  public static Insert createInsert(TypeType type, VersionedFqnNode fqn, Integer componentID) {
+  public static Insert createInsert(Type type, VersionedFqnNode fqn, Integer componentID) {
     return createInsert(type, fqn.getFqn(), componentID);
   }
 }

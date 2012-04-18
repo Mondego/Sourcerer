@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.utilization.model;
+package edu.uci.ics.sourcerer.tools.java.db.schema;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public enum ComponentType {
+public enum Component {
   CLUSTER,
   CLUSTER_VERSION,
   LIBRARY,

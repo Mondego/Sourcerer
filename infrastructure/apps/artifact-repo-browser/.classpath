@@ -4,8 +4,8 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/lib/servlet-api.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/utilities"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/utilization"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/database-utilities"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/servlet-utilities"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/database"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

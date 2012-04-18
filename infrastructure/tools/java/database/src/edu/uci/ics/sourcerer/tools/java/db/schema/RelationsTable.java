@@ -62,7 +62,7 @@ public final class RelationsTable extends DatabaseTable {
   
   // ---- INSERT ----
   private static Insert makeInsert(Relation type, RelationClass klass, Integer lhsEid, Integer rhsEid, Integer projectID, Integer fileID, Integer offset, Integer length) {
-    return TABLE.makeInsert(
+    return TABLE.createInsert(
         RELATION_TYPE.to(type),
         RELATION_CLASS.to(klass),
         LHS_EID.to(lhsEid),

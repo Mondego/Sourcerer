@@ -54,7 +54,7 @@ public final class FilesTable extends DatabaseTable {
   }
   // ---- INSERT ----
   private static Insert makeInsert(File type, String name, String relativePath, String hash, Integer projectID) {
-    return TABLE.makeInsert(
+    return TABLE.createInsert(
         FILE_TYPE.to(type),
         NAME.to(name),
         PATH.to(relativePath),

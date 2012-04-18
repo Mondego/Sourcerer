@@ -17,10 +17,10 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.schema;
 
-import edu.uci.ics.sourcerer.tools.java.utilization.model.ComponentType;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.Library;
+import edu.uci.ics.sourcerer.tools.java.utilization.repo.LibraryVersion;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
@@ -43,7 +43,7 @@ public class ComponentsTable extends DatabaseTable {
   public static final ComponentsTable TABLE = new ComponentsTable();
   
   public static final Column<Integer> COMPONENT_ID = TABLE.addSerialColumn("cluster_id");
-  public static final Column<ComponentType> TYPE = TABLE.addEnumColumn("type", ComponentType.values(), false).addIndex();
+  public static final Column<Component> TYPE = TABLE.addEnumColumn("type", Component.values(), false).addIndex();
   public static final StringColumn NAME = TABLE.addVarcharColumn("name", 128, true).addIndex(48);
   
   private ComponentsTable() {
@@ -51,19 +51,23 @@ public class ComponentsTable extends DatabaseTable {
   }
   
   // ---- INSERT ----
-  public static Insert createInsert(ComponentType type, String name) {
-    return TABLE.makeInsert(TYPE.to(type), NAME.to(name));
+  public static Insert createInsert(Component type, String name) {
+    return TABLE.createInsert(TYPE.to(type), NAME.to(name));
   }
   
   public static Insert createInsert(Cluster cluster) {
-    return createInsert(ComponentType.CLUSTER, null);
+    return createInsert(Component.CLUSTER, null);
   }
   
   public static Insert createInsert(ClusterVersion cluster) {
-    return createInsert(ComponentType.CLUSTER_VERSION, null);
+    return createInsert(Component.CLUSTER_VERSION, null);
   }
   
   public static Insert createInsert(Library library) {
-    return createInsert(ComponentType.LIBRARY, null);
+    return createInsert(Component.LIBRARY, null);
+  }
+  
+  public static Insert createInsert(LibraryVersion library) {
+    return createInsert(Component.LIBRARY_VERSION, null);
   }
 }

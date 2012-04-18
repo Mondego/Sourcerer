@@ -20,22 +20,37 @@ package edu.uci.ics.sourcerer.tools.java.utilization.repo;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
+import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class Repository {
-  private Collection<Library> libraries;
+public class ArtifactRepository {
+  private final JarCollection jars;
+  private final ClusterCollection clusters;
+  private final Collection<Library> libraries;
   
-  private Repository() {
+  private ArtifactRepository(JarCollection jars, ClusterCollection clusters) {
+    this.jars = jars;
+    this.clusters = clusters;
     this.libraries = new ArrayList<>();
   }
   
-  static Repository create() {
-    return new Repository();
+  static ArtifactRepository create(JarCollection jars, ClusterCollection clusters) {
+    return new ArtifactRepository(jars, clusters);
   }
   
   void addLibrary(Library library) {
     libraries.add(library);
+  }
+  
+  public JarCollection getJars() {
+    return jars;
+  }
+  
+  public ClusterCollection getClusters() {
+    return clusters;
   }
   
   public Collection<Library> getLibraries() {
