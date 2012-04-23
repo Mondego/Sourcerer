@@ -180,7 +180,7 @@ public class EclipseExtractor implements Closeable {
             }
           }
         }
-      } catch (JavaModelException | ClassCastException e) {
+      } catch (JavaModelException | ClassCastException | IllegalArgumentException e) {
         sourceFailed.add(classFile.getElementName());
         extractClassFile(classFile);
       }
