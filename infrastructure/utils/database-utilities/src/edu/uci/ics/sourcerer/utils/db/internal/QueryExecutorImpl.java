@@ -361,24 +361,24 @@ class QueryExecutorImpl implements QueryExecutor {
   }
   
   @Override
-  public SetStatement makeSetStatement(DatabaseTable table) {
+  public SetStatement createSetStatement(DatabaseTable table) {
     return new SetStatementImpl(this, table);
   }
   
   @Override
-  public DeleteStatement makeDeleteStatement(DatabaseTable table) {
+  public DeleteStatement createDeleteStatement(DatabaseTable table) {
     return new DeleteStatementImpl(this, table);
   }
 
   @Override
-  public SelectQuery makeSelectQuery(DatabaseTable table) {
+  public SelectQuery createSelectQuery(DatabaseTable table) {
     SelectQueryImpl select = new SelectQueryImpl(this);
     select.fromTable(table);
     return select;
   }
   
   @Override
-  public SelectQuery makeSelectQuery(ComparisonCondition ... joinConditions) {
+  public SelectQuery createSelectQuery(ComparisonCondition ... joinConditions) {
     SelectQueryImpl select = new SelectQueryImpl(this);
     select.fromJoin(joinConditions);
     return select;

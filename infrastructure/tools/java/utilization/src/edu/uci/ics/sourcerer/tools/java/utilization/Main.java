@@ -30,7 +30,7 @@ public class Main {
   public static final Command CALCULATE_IMPORT_POPULARITY = new Command("calculate-import-popularity", "Calculates the popularity of FQNs based on import statements.") {
     @Override
     protected void action() {
-      PopularityCalculator.calculateImportPopularity();
+      PopularityCalculator.printImportPopularity();
     }
   }.setProperties(JavaRepositoryFactory.INPUT_REPO);
   

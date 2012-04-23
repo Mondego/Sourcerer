@@ -81,7 +81,7 @@ public class FileAccessor {
     private ConstantCondition<Integer> equalsProjectID = null;
     public TypedQueryResult selectByProjectID(Integer projectID) {
       if (selectByProjectID == null) {
-        selectByProjectID = conn.getExecutor().makeSelectQuery(ProjectsTable.TABLE);
+        selectByProjectID = conn.getExecutor().createSelectQuery(ProjectsTable.TABLE);
         selectByProjectID.addSelects(ProjectsTable.PROJECT_TYPE, ProjectsTable.HASH, ProjectsTable.PATH);
         equalsProjectID = ProjectsTable.PROJECT_ID.compareEquals();
         selectByProjectID.andWhere(equalsProjectID);
@@ -94,7 +94,7 @@ public class FileAccessor {
     private ConstantCondition<Integer> equalsFileID = null;
     public TypedQueryResult selectByFileID(Integer fileID) {
       if (selectByFileID == null) {
-        selectByFileID = conn.getExecutor().makeSelectQuery(FilesTable.TABLE);
+        selectByFileID = conn.getExecutor().createSelectQuery(FilesTable.TABLE);
         selectByFileID.addSelects(FilesTable.FILE_TYPE, FilesTable.HASH, FilesTable.PATH, FilesTable.PROJECT_ID);
         equalsFileID = FilesTable.FILE_ID.compareEquals();
         selectByFileID.andWhere(equalsFileID);
@@ -107,7 +107,7 @@ public class FileAccessor {
     private ConstantCondition<Integer> equalsEntityID = null;
     public TypedQueryResult selectByEntityID(Integer entityID) {
       if (selectByEntityID == null) {
-        selectByEntityID = conn.getExecutor().makeSelectQuery(EntitiesTable.TABLE);
+        selectByEntityID = conn.getExecutor().createSelectQuery(EntitiesTable.TABLE);
         selectByEntityID.addSelects(EntitiesTable.PROJECT_ID, EntitiesTable.FILE_ID, EntitiesTable.OFFSET, EntitiesTable.LENGTH);
         equalsEntityID = EntitiesTable.ENTITY_ID.compareEquals();
         selectByEntityID.andWhere(equalsEntityID);
@@ -120,7 +120,7 @@ public class FileAccessor {
     private ConstantCondition<Integer> equalsRelationID = null;
     public TypedQueryResult selectByRelationID(Integer relationID) {
       if (selectByRelationID == null) {
-        selectByRelationID = conn.getExecutor().makeSelectQuery(RelationsTable.TABLE);
+        selectByRelationID = conn.getExecutor().createSelectQuery(RelationsTable.TABLE);
         selectByRelationID.addSelects(RelationsTable.PROJECT_ID, RelationsTable.FILE_ID, RelationsTable.OFFSET, RelationsTable.LENGTH);
         equalsRelationID = RelationsTable.RELATION_ID.compareEquals();
         selectByRelationID.andWhere(equalsRelationID);
@@ -133,7 +133,7 @@ public class FileAccessor {
     private ConstantCondition<Integer> equalsCommentID = null;
     public TypedQueryResult selectByCommentID(Integer commentID) {
       if (selectByCommentID == null) {
-        selectByCommentID = conn.getExecutor().makeSelectQuery(CommentsTable.TABLE);
+        selectByCommentID = conn.getExecutor().createSelectQuery(CommentsTable.TABLE);
         selectByCommentID.addSelects(CommentsTable.PROJECT_ID, CommentsTable.FILE_ID, CommentsTable.OFFSET, CommentsTable.LENGTH);
         equalsCommentID = CommentsTable.COMMENT_ID.compareEquals();
         selectByCommentID.andWhere(equalsRelationID);
@@ -146,7 +146,7 @@ public class FileAccessor {
     private ConstantCondition<Integer> importFileID = null;
     public TypedQueryResult selectImportLinks(Integer fileID) {
       if (selectImportLinks == null) {
-        selectImportLinks = conn.getExecutor().makeSelectQuery(ImportsTable.TABLE);
+        selectImportLinks = conn.getExecutor().createSelectQuery(ImportsTable.TABLE);
         selectImportLinks.addSelects(ImportsTable.EID, ImportsTable.OFFSET, ImportsTable.LENGTH);
         importFileID = ImportsTable.FILE_ID.compareEquals();
         selectImportLinks.andWhere(importFileID);
@@ -159,7 +159,7 @@ public class FileAccessor {
     private ConstantCondition<Integer> fieldFileID = null;
     public TypedQueryResult selectFields(Integer fileID) {
       if (selectFields == null) {
-        selectFields = conn.getExecutor().makeSelectQuery(EntitiesTable.TABLE);
+        selectFields = conn.getExecutor().createSelectQuery(EntitiesTable.TABLE);
         selectFields.addSelects(EntitiesTable.OFFSET, EntitiesTable.LENGTH);
         fieldFileID = EntitiesTable.FILE_ID.compareEquals();
         selectFields.andWhere(fieldFileID.and(EntitiesTable.ENTITY_TYPE.compareEquals(Entity.FIELD)));
@@ -172,7 +172,7 @@ public class FileAccessor {
     private ConstantCondition<Integer> relationFileID = null;
     public TypedQueryResult selectRelationLinks(Integer fileID) {
       if (selectRelationLinks == null) {
-        selectRelationLinks = conn.getExecutor().makeSelectQuery(RelationsTable.RHS_EID.compareEquals(EntitiesTable.ENTITY_ID));
+        selectRelationLinks = conn.getExecutor().createSelectQuery(RelationsTable.RHS_EID.compareEquals(EntitiesTable.ENTITY_ID));
         selectRelationLinks.addSelects(RelationsTable.RELATION_TYPE, RelationsTable.OFFSET, RelationsTable.LENGTH, EntitiesTable.ENTITY_ID, EntitiesTable.FQN);
         relationFileID = RelationsTable.FILE_ID.compareEquals();
         selectRelationLinks.andWhere(relationFileID.and(RelationsTable.RELATION_TYPE.compareIn(EnumSet.of(Relation.USES, Relation.READS, Relation.WRITES, Relation.CALLS))));

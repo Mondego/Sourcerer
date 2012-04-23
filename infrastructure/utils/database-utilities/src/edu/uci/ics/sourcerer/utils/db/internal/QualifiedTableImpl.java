@@ -51,4 +51,26 @@ class QualifiedTableImpl implements QualifiedTable {
   public QualifiedTable qualify(String qualifier) {
     return new QualifiedTableImpl(table, qualifier);
   }
+  
+  @Override
+  public String toString() {
+    return toSql();
+  }
+  
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    } else if (o instanceof QualifiedTableImpl) {
+      QualifiedTableImpl other = (QualifiedTableImpl) o;
+      return table.equals(other.table) && id.equals(other.id);
+    } else {
+      return false;
+    }
+  }
+  
+  @Override
+  public int hashCode() {
+    return 37 * table.hashCode() + id.hashCode();
+  }
 }

@@ -50,10 +50,10 @@ public interface QueryExecutor extends Closeable {
   public void dropTables(DatabaseTable ... tables);
   public void insert(Insert insert);
   public Integer insertWithKey(Insert insert);
-  public SetStatement makeSetStatement(DatabaseTable table);
-  public DeleteStatement makeDeleteStatement(DatabaseTable table);
+  public SetStatement createSetStatement(DatabaseTable table);
+  public DeleteStatement createDeleteStatement(DatabaseTable table);
   
   // Typed Executes
-  public SelectQuery makeSelectQuery(DatabaseTable fromTable);
-  public SelectQuery makeSelectQuery(ComparisonCondition ... joinConditions);
+  public SelectQuery createSelectQuery(DatabaseTable fromTable);
+  public SelectQuery createSelectQuery(ComparisonCondition ... joinConditions);
 }

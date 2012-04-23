@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.tools.java.db;
 import edu.uci.ics.sourcerer.tools.java.db.importer.ComponentImporter;
 import edu.uci.ics.sourcerer.tools.java.db.importer.DatabaseInitializer;
 import edu.uci.ics.sourcerer.tools.java.db.importer.ParallelDatabaseImporter;
+import edu.uci.ics.sourcerer.tools.java.db.importer.TypePopularityImporter;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.utilization.RepositoryGenerator;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
@@ -86,16 +87,28 @@ public class Main {
       protected void action() {
         ArtifactRepository repo = RepositoryGenerator.generateArtifactRepository();
         ComponentImporter.importComponents(repo);
-    }
-  }.setProperties(
-      JavaRepositoryFactory.INPUT_REPO,
-      Fingerprint.FINGERPRINT_MODE,
-      RepositoryGenerator.JAR_FILTER_FILE,
-      DatabaseConnectionFactory.DATABASE_URL, 
-      DatabaseConnectionFactory.DATABASE_USER, 
-      DatabaseConnectionFactory.DATABASE_PASSWORD,
-      FileUtils.TEMP_DIR);
+      }
+    }.setProperties(
+        JavaRepositoryFactory.INPUT_REPO,
+        Fingerprint.FINGERPRINT_MODE,
+        RepositoryGenerator.JAR_FILTER_FILE,
+        DatabaseConnectionFactory.DATABASE_URL, 
+        DatabaseConnectionFactory.DATABASE_USER, 
+        DatabaseConnectionFactory.DATABASE_PASSWORD,
+        FileUtils.TEMP_DIR);
 
+  public static final Command ADD_TYPE_POPULARITY =
+    new Command("add-type-popularity", "Adds the type popularity to the database.") {
+      @Override
+      protected void action() {
+        TypePopularityImporter.importTypePopularity();
+      }
+    }.setProperties(
+        JavaRepositoryFactory.INPUT_REPO,
+        DatabaseConnectionFactory.DATABASE_URL,
+        DatabaseConnectionFactory.DATABASE_USER, 
+        DatabaseConnectionFactory.DATABASE_PASSWORD);
+    
   public static final Command INTERACTIVE_FILE_ACCESSOR = 
     new Command("interactive-file-accessor", "Interactive test of the file accessor.") {
       protected void action() {

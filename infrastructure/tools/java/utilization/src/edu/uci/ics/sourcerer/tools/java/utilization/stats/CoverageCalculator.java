@@ -368,7 +368,7 @@ public class CoverageCalculator {
             
         task.start("Logging popular external joint types");
         try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "joint-popular-types.txt"))) {
-          for (SourcedFqnNode fqn : popularMaven.descendingSet()) {
+          for (SourcedFqnNode fqn : popularJoint.descendingSet()) {
             writer.write(fqn.getCount(Source.EXTERNAL) + "\t" + fqn.getFqn());
           }
         } catch (IOException e) {
@@ -431,7 +431,7 @@ public class CoverageCalculator {
         }
         
         {
-          List<SourcedFqnNode> sorted = new ArrayList<>(jointPackages.keySet().size());
+          List<SourcedFqnNode> sorted = new ArrayList<>(jointPackages.keySet());
           Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
             @Override
             public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {
@@ -443,7 +443,7 @@ public class CoverageCalculator {
               }
             }});
           
-          task.start("Logging popular packages unique to maven");
+          task.start("Logging popular external joint packages");
           try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "joint-popular-packages.txt"))) {
             for (SourcedFqnNode fqn : sorted) {
               writer.write(jointPackages.get(fqn).size() + "\t" + fqn.getFqn());
@@ -479,7 +479,7 @@ public class CoverageCalculator {
         }
         
         {
-          List<SourcedFqnNode> sorted = new ArrayList<>(projectPackages.keySet().size());
+          List<SourcedFqnNode> sorted = new ArrayList<>(projectPackages.keySet());
           Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
             @Override
             public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {

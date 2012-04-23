@@ -47,7 +47,7 @@ public class FlossmoleCrawler {
     new DatabaseRunnable() {
       @Override
       public void action() {
-        SelectQuery select = exec.makeSelectQuery(GoogleCodeProjects.TABLE);
+        SelectQuery select = exec.createSelectQuery(GoogleCodeProjects.TABLE);
         select.addSelect(GoogleCodeProjects.PROJECT_NAME);
         TypedQueryResult result = select.select();
         

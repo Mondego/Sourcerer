@@ -7,5 +7,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/database-utilities"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/servlet-utilities"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/database"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/model"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

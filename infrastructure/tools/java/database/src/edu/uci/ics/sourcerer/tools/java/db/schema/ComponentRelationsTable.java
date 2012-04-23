@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.schema;
 
+import edu.uci.ics.sourcerer.tools.java.model.types.ComponentRelation;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
@@ -24,7 +25,7 @@ import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ComponentRelationsTable extends DatabaseTable{
+public class ComponentRelationsTable extends DatabaseTable {
   /*
    *               component_relations table
    * +-------------+-----------------+-------+--------+

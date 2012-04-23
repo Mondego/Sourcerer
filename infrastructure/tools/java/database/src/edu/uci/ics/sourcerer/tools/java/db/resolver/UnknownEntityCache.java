@@ -53,13 +53,13 @@ public class UnknownEntityCache  {
         task.start("Building unknown entities cache");
         
         task.start("Loading unknown entities", "unknown entities loaded");
-        try (SelectQuery query = exec.makeSelectQuery(ProjectsTable.TABLE)) {
+        try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
           query.addSelect(ProjectsTable.PROJECT_ID);
           query.andWhere(ProjectsTable.NAME.compareEquals(ProjectsTable.UNKNOWNS_PROJECT));
           cache.unknownsProject = query.select().toSingleton(ProjectsTable.PROJECT_ID, false);
         }
         
-        try (SelectQuery query = exec.makeSelectQuery(EntitiesTable.TABLE)) {
+        try (SelectQuery query = exec.createSelectQuery(EntitiesTable.TABLE)) {
           query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.PARAMS);
           query.andWhere(EntitiesTable.PROJECT_ID.compareEquals(cache.unknownsProject));
           TypedQueryResult result = query.selectStreamed();

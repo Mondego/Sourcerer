@@ -44,13 +44,13 @@ class JarReferentialRelationsImporter extends ReferentialRelationsImporter {
   
   @Override
   public void doImport() {
-    try (SelectQuery projectState = exec.makeSelectQuery(ProjectsTable.TABLE)) {
+    try (SelectQuery projectState = exec.createSelectQuery(ProjectsTable.TABLE)) {
       projectState.addSelect(ProjectsTable.PATH);
       projectState.addSelect(ProjectsTable.PROJECT_ID);
       ConstantCondition<String> equalsHash = ProjectsTable.HASH.compareEquals();
       projectState.andWhere(equalsHash);
       
-      SetStatement updateState = exec.makeSetStatement(ProjectsTable.TABLE);
+      SetStatement updateState = exec.createSetStatement(ProjectsTable.TABLE);
       Assignment<String> stateValue = updateState.addAssignment(ProjectsTable.PATH);
       ConstantCondition<Integer> equalsID = ProjectsTable.PROJECT_ID.compareEquals();
       updateState.andWhere(equalsID);

@@ -17,9 +17,12 @@
  */
 package edu.uci.ics.sourcerer.utils.db.sql;
 
+import java.io.Closeable;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface Statement {
+public interface Statement extends Closeable {
+  public void close();
   public void execute();
 }

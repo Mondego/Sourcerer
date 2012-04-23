@@ -15,23 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.db.schema;
+package edu.uci.ics.sourcerer.tools.java.model.types;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public enum ComponentRelation {
-  CLUSTER_CONTAINS_CLUSTER_VERSION,
-  CLUSTER_VERSION_CONTAINS_TYPE_VERSION,
-  JAR_CONTAINS_CLUSTER_VERSION,
-  JAR_CONTAINS_FQN_VERSION,
-  JAR_MATCHES_LIBRARY_VERSION,
-  LIBRARY_MATCHES_CLUSTER,
-  LIBRARY_CONTAINS_CLUSTER,
-  LIBRARY_CONTAINS_LIBRARY_VERSION,
-  LIBRARY_VERSION_CONTAINS_CLUSTER_VERSION,
-  LIBRARY_VERSION_CONTAINS_TYPE_VERSION,
-  LIBRARY_VERSION_CONTAINS_LIBRARY,
-  LIBRARY_VERSION_CONTAINS_LIBRARY_VERSION,
+public enum Type {
+  CORE,
+  VERSION,
   ;
 }

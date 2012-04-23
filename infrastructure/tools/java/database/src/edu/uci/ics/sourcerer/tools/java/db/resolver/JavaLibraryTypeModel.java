@@ -72,7 +72,7 @@ public class JavaLibraryTypeModel {
         
         task.start("Loading Java library entities", "entities loaded");
 
-        try (SelectQuery query = exec.makeSelectQuery(EntitiesTable.TABLE)) {
+        try (SelectQuery query = exec.createSelectQuery(EntitiesTable.TABLE)) {
           query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN);
           query.andWhere(EntitiesTable.ENTITY_TYPE.compareEquals(Entity.PRIMITIVE));
           TypedQueryResult result = query.select();
@@ -85,7 +85,7 @@ public class JavaLibraryTypeModel {
         }
         
         Collection<Integer> libraries = new ArrayList<>();
-        try (SelectQuery query = exec.makeSelectQuery(ProjectsTable.TABLE)) {
+        try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
           // Get the Java Library projectIDs
           query.addSelect(ProjectsTable.PROJECT_ID);
           query.andWhere(ProjectsTable.PROJECT_TYPE.compareEquals(Project.JAVA_LIBRARY));
@@ -93,7 +93,7 @@ public class JavaLibraryTypeModel {
           libraries.addAll(query.select().toCollection(ProjectsTable.PROJECT_ID));
         }
         
-        try (SelectQuery query = exec.makeSelectQuery(EntitiesTable.TABLE)) {
+        try (SelectQuery query = exec.createSelectQuery(EntitiesTable.TABLE)) {
           query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.ENTITY_TYPE, EntitiesTable.PARAMS, EntitiesTable.RAW_PARAMS);
           query.andWhere(
               EntitiesTable.PROJECT_ID.compareIn(libraries),
@@ -124,7 +124,7 @@ public class JavaLibraryTypeModel {
         }
         task.finish();
         
-        try (SelectQuery query = exec.makeSelectQuery(RelationsTable.TABLE)) {
+        try (SelectQuery query = exec.createSelectQuery(RelationsTable.TABLE)) {
           query.addSelects(RelationsTable.LHS_EID, RelationsTable.RHS_EID);
           query.andWhere(RelationsTable.PROJECT_ID.compareIn(libraries), RelationsTable.RELATION_TYPE.compareEquals(Relation.HAS_BASE_TYPE));
           Map<Integer, Integer> pMapping = new HashMap<>();

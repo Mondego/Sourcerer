@@ -18,27 +18,29 @@
 package edu.uci.ics.sourcerer.apps.artifactbrowser;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.EnumSet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import edu.uci.ics.sourcerer.tools.java.db.schema.Component;
-import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentRelation;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentRelationsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.TypeVersionsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.TypesTable;
+import edu.uci.ics.sourcerer.tools.java.model.types.Component;
+import edu.uci.ics.sourcerer.tools.java.model.types.ComponentRelation;
+import edu.uci.ics.sourcerer.tools.java.model.types.Project;
+import edu.uci.ics.sourcerer.tools.java.model.types.Type;
 import edu.uci.ics.sourcerer.util.TimeoutManager;
 import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnection;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
+import edu.uci.ics.sourcerer.utils.db.sql.QualifiedColumn;
 import edu.uci.ics.sourcerer.utils.db.sql.QualifiedTable;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
@@ -86,7 +88,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
 
     QueryExecutor exec = db.get().getExecutor();
     
-    try (SelectQuery query = exec.makeSelectQuery(ComponentsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentsTable.TABLE)) {
       query.addSelect(ComponentsTable.COMPONENT_ID);
       query.andWhere(ComponentsTable.TYPE.compareEquals(Component.LIBRARY));
       query.orderBy(ComponentsTable.COMPONENT_ID, true);
@@ -107,14 +109,13 @@ public class ArtifactRepoBrowser extends HttpServlet {
     
     html.append("<h3>Library ").append(libraryID).append("</h3>");
     
-    Collection<Integer> jars = new LinkedList<>();
     { // Jars
-      QualifiedTable libsToVersions = ComponentRelationsTable.TABLE.qualify("ltv");
-      QualifiedTable jarsToVersions = ComponentRelationsTable.TABLE.qualify("jtv");
+      QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("a");
+      QualifiedTable j2lv = ComponentRelationsTable.TABLE.qualify("b");
       
-      try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(libsToVersions).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(jarsToVersions)), ComponentRelationsTable.SOURCE_ID.qualify(jarsToVersions).compareEquals(ProjectsTable.PROJECT_ID))) {
+      try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(l2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(j2lv)), ComponentRelationsTable.SOURCE_ID.qualify(j2lv).compareEquals(ProjectsTable.PROJECT_ID))) {
         query.addSelects(ProjectsTable.NAME, ProjectsTable.PROJECT_ID);
-        query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(libsToVersions).compareEquals(libraryID), ComponentRelationsTable.TYPE.qualify(libsToVersions).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(jarsToVersions).compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION));
+        query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(l2lv).compareEquals(libraryID), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(j2lv).compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION));
         query.orderBy(ProjectsTable.NAME, true);
         
         html.append("<h4>Jars</h4>");
@@ -122,7 +123,6 @@ public class ArtifactRepoBrowser extends HttpServlet {
         TypedQueryResult result = query.select();
         while (result.next()) {
           Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
-          jars.add(jarID);
           String name = result.getResult(ProjectsTable.NAME);
           html.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
         }
@@ -131,7 +131,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
     
     // Library Versions
-    try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
       query.addSelect(ComponentRelationsTable.TARGET_ID);
       query.andWhere(ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.SOURCE_ID.compareEquals(libraryID));
       query.orderBy(ComponentRelationsTable.TARGET_ID, true);
@@ -147,7 +147,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
     
     // Contained by Libraries
-    try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
       query.addSelect(ComponentRelationsTable.SOURCE_ID);
       query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(libraryID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_LIBRARY));
       query.orderBy(ComponentRelationsTable.TARGET_ID, true);   
@@ -163,7 +163,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
     
     // Core Cluster
-    try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
       query.addSelect(ComponentRelationsTable.TARGET_ID);
       query.andWhere(ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_MATCHES_CLUSTER), ComponentRelationsTable.SOURCE_ID.compareEquals(libraryID));
       
@@ -177,7 +177,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
     
     // Clusters
-    try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
       query.addSelect(ComponentRelationsTable.TARGET_ID);
       query.andWhere(ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_CONTAINS_CLUSTER), ComponentRelationsTable.SOURCE_ID.compareEquals(libraryID));
       query.orderBy(ComponentRelationsTable.TARGET_ID, true);
@@ -193,10 +193,13 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
     
     { // FQNs
-      try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TARGET_ID.compareEquals(TypeVersionsTable.TYPE_VERSION_ID), TypeVersionsTable.TYPE_ID.compareEquals(TypesTable.TYPE_ID))) {
+      QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("a");
+      QualifiedTable lv2tv = ComponentRelationsTable.TABLE.qualify("b");
+      
+      try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(l2lv).compareEquals(ComponentRelationsTable.SOURCE_ID.qualify(lv2tv)), ComponentRelationsTable.TARGET_ID.qualify(lv2tv).compareEquals(TypeVersionsTable.TYPE_VERSION_ID), TypeVersionsTable.TYPE_ID.compareEquals(TypesTable.TYPE_ID))) {
         query.setDistinct(true);
         query.addSelects(TypesTable.FQN, TypesTable.TYPE_ID);
-        query.andWhere(ComponentRelationsTable.SOURCE_ID.compareIn(jars), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_FQN_VERSION));
+        query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(l2lv).compareEquals(libraryID), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(lv2tv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_TYPE_VERSION));
         query.orderBy(TypesTable.FQN, true);
         
         html.append("<h4>FQNs</h4>");
@@ -215,7 +218,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
   private void serveLibraryVersion(Integer libraryVersionID, StringBuilder html) {
     QueryExecutor exec = db.get().getExecutor();
     
-    try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
       query.addSelect(ComponentRelationsTable.SOURCE_ID);
       query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(libraryVersionID));
       
@@ -225,7 +228,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
 
     // Jars
-    try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
       query.addSelects(ProjectsTable.NAME, ProjectsTable.PROJECT_ID);
       query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(libraryVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION));
       query.orderBy(ProjectsTable.NAME, true);
@@ -246,7 +249,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable libV2clusterV = ComponentRelationsTable.TABLE.qualify("a");
       QualifiedTable cluster2clusterV = ComponentRelationsTable.TABLE.qualify("b");
       
-      try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(libV2clusterV).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(cluster2clusterV)))) {
+      try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(libV2clusterV).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(cluster2clusterV)))) {
         query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(cluster2clusterV), ComponentRelationsTable.TARGET_ID.qualify(cluster2clusterV));
         query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(libV2clusterV).compareEquals(libraryVersionID), ComponentRelationsTable.TYPE.qualify(libV2clusterV).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_CLUSTER_VERSION), ComponentRelationsTable.TYPE.qualify(cluster2clusterV).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(cluster2clusterV), true);
@@ -265,7 +268,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
 
     // Libraries
-    try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
       query.addSelect(ComponentRelationsTable.TARGET_ID);
       query.andWhere(ComponentRelationsTable.SOURCE_ID.compareEquals(libraryVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_LIBRARY));
       query.orderBy(ComponentRelationsTable.TARGET_ID, true);   
@@ -284,7 +287,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable lv2lv = ComponentRelationsTable.TABLE.qualify("a");
       QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("b");
       
-      try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(lv2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
+      try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(lv2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
         query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
         query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(lv2lv).compareEquals(libraryVersionID), ComponentRelationsTable.TYPE.qualify(lv2lv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);   
@@ -306,7 +309,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable lv2lv = ComponentRelationsTable.TABLE.qualify("a");
       QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("b");
       
-      try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.SOURCE_ID.qualify(lv2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
+      try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.qualify(lv2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
         query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
         query.andWhere(ComponentRelationsTable.TARGET_ID.qualify(lv2lv).compareEquals(libraryVersionID), ComponentRelationsTable.TYPE.qualify(lv2lv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);   
@@ -324,7 +327,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
 
     // FQNs
-    try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TARGET_ID.compareEquals(TypeVersionsTable.TYPE_VERSION_ID), TypeVersionsTable.TYPE_ID.compareEquals(TypesTable.TYPE_ID))) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.compareEquals(TypeVersionsTable.TYPE_VERSION_ID), TypeVersionsTable.TYPE_ID.compareEquals(TypesTable.TYPE_ID))) {
       query.addSelects(TypeVersionsTable.TYPE_VERSION_ID, TypesTable.FQN);
       query.andWhere(ComponentRelationsTable.SOURCE_ID.compareEquals(libraryVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_TYPE_VERSION));
       query.orderBy(TypesTable.FQN, true);
@@ -345,7 +348,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     html.append("<p><a href=\"./\">main</a></p>");
     QueryExecutor exec = db.get().getExecutor();
     
-    try (SelectQuery query = exec.makeSelectQuery(ComponentsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentsTable.TABLE)) {
       query.addSelect(ComponentsTable.COMPONENT_ID);
       query.andWhere(ComponentsTable.TYPE.compareEquals(Component.CLUSTER));
       html.append("<ul>");
@@ -369,7 +372,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable c2cv = ComponentRelationsTable.TABLE.qualify("a");
       QualifiedTable jar2cv = ComponentRelationsTable.TABLE.qualify("b");
        
-      try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(c2cv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(jar2cv)), ComponentRelationsTable.SOURCE_ID.qualify(jar2cv).compareEquals(ProjectsTable.PROJECT_ID))) {
+      try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(c2cv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(jar2cv)), ComponentRelationsTable.SOURCE_ID.qualify(jar2cv).compareEquals(ProjectsTable.PROJECT_ID))) {
         query.addSelects(ProjectsTable.NAME, ProjectsTable.PROJECT_ID);
         query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(c2cv).compareEquals(clusterID), ComponentRelationsTable.TYPE.qualify(c2cv).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION), ComponentRelationsTable.TYPE.qualify(jar2cv).compareEquals(ComponentRelation.JAR_CONTAINS_CLUSTER_VERSION));
         query.orderBy(ProjectsTable.NAME, true);
@@ -387,7 +390,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
     
     // Cluster Versions
-    try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
       query.addSelect(ComponentRelationsTable.TARGET_ID);
       query.andWhere(ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION), ComponentRelationsTable.SOURCE_ID.compareEquals(clusterID));
       query.orderBy(ComponentRelationsTable.TARGET_ID, true);
@@ -401,74 +404,79 @@ public class ArtifactRepoBrowser extends HttpServlet {
       }
       html.append("</ul>");
     }
-    
-    try (SelectQuery query = exec.makeSelectQuery(ComponentRelationsTable.)) {
-      query.addSelect(LibrariesTable.LIBRARY_ID);
-      query.andWhere(LibrariesTable.CLUSTER_ID.compareEquals(clusterID));
+
+    // Core Library
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
+      query.addSelect(ComponentRelationsTable.SOURCE_ID);
+      query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(clusterID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_MATCHES_CLUSTER));
       
-      // Library
+
       html.append("<h4>Core Library</h4>");
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
-        Integer libraryID = result.getResult(LibrariesTable.LIBRARY_ID);
+        Integer libraryID = result.getResult(ComponentRelationsTable.SOURCE_ID);
         html.append("<li><a href=\"./libraries?libraryID=").append(libraryID).append("\">Library ").append(libraryID).append("</a></li>");
       }
       html.append("</ul>");
     }
-    
-    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToClusterVersionTable.LIBRARY_VERSION_ID.compareEquals(LibraryVersionsTable.LIBRARY_VERSION_ID))) {
-      query.addSelects(LibraryVersionsTable.LIBRARY_ID, LibraryVersionsTable.LIBRARY_VERSION_ID);
-      query.andWhere(LibraryVersionToClusterVersionTable.CLUSTER_VERSION_ID.compareEquals(clusterID));
-      query.orderBy(LibraryVersionsTable.LIBRARY_ID, true);
-      query.orderBy(LibraryVersionsTable.LIBRARY_VERSION_ID, true);
+
+    // Libraries
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
+      query.addSelects(ComponentRelationsTable.SOURCE_ID);
+      query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(clusterID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_CONTAINS_CLUSTER));
+      query.orderBy(ComponentRelationsTable.SOURCE_ID, true);
       
-      // Library
       html.append("<h4>Libraries</h4>");
       html.append("<ul>");
       TypedQueryResult result = query.select();
-      Integer previousLibraryID = null;
+//      Integer previousLibraryID = null;
       while (result.next()) {
-        Integer libraryID = result.getResult(LibraryVersionsTable.LIBRARY_ID);
-        if (libraryID != previousLibraryID) {
-          if (previousLibraryID != null) {
-            html.append("</ul></li>");
-          }
-          html.append("<li><a href=\"./libraries?libraryID=").append(libraryID).append("\">Library ").append(libraryID).append("</a><ul>");
-          previousLibraryID = libraryID;
-        }
-        Integer libraryVersionID = result.getResult(LibraryVersionsTable.LIBRARY_VERSION_ID);
-        html.append("<li><a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">Library ").append(libraryID).append(".").append(libraryVersionID).append("</a></li>");
+        Integer libraryID = result.getResult(ComponentRelationsTable.SOURCE_ID);
+//        if (libraryID != previousLibraryID) {
+//          if (previousLibraryID != null) {
+//            html.append("</ul></li>");
+//          }
+//          html.append("<li><a href=\"./libraries?libraryID=").append(libraryID).append("\">Library ").append(libraryID).append("</a><ul>");
+//          previousLibraryID = libraryID;
+//        }
+//        Integer libraryVersionID = result.getResult(LibraryVersionsTable.LIBRARY_VERSION_ID);
+//        html.append("<li><a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">Library ").append(libraryID).append(".").append(libraryVersionID).append("</a></li>");
+        html.append("<li><a href=\"./libraries?libraryID=").append(libraryID).append("\">Library ").append(libraryID).append("</a></li>");
       }
-      if (previousLibraryID != null) {
-        html.append("</ul></li>");
-      }
+//      if (previousLibraryID != null) {
+//        html.append("</ul></li>");
+//      }
       html.append("</ul>");
     }
-    
-    try (SelectQuery query = exec.makeSelectQuery(FqnsTable.TABLE)) {
-      query.addSelects(FqnsTable.FQN, FqnsTable.FQN_ID);
-      ConstantCondition<ClusterFqnType> typeCond = FqnsTable.TYPE.compareEquals();
-      query.andWhere(FqnsTable.CLUSTER_ID.compareEquals(clusterID).and(typeCond));
-      query.orderBy(FqnsTable.FQN, true);
+
+    // FQNs
+    try (SelectQuery query = exec.createSelectQuery(TypesTable.TABLE)) {
+      query.addSelects(TypesTable.FQN, TypesTable.TYPE_ID);
+      ConstantCondition<Type> typeCond = TypesTable.TYPE.compareEquals();
+      query.andWhere(TypesTable.COMPONENT_ID.compareEquals(clusterID).and(typeCond));
+      query.orderBy(TypesTable.FQN, true);
       
-      // Core FQNs
       html.append("<h4>Core FQNs</h4>");
       html.append("<ul>");
-      typeCond.setValue(ClusterFqnType.CORE);
+      typeCond.setValue(Type.CORE);
       TypedQueryResult result = query.select();
       while (result.next()) {
-        html.append("<li><a href=\"./fqns?fqnID=").append(result.getResult(FqnsTable.FQN_ID)).append("\">").append(result.getResult(FqnsTable.FQN)).append("</a></li>");
+        Integer fqnID = result.getResult(TypesTable.TYPE_ID);
+        String fqn = result.getResult(TypesTable.FQN);
+        html.append("<li><a href=\"./fqns?fqnID=").append(fqnID).append("\">").append(fqn).append("</a></li>");
       }
       html.append("</ul>");
       
       // Version FQNs
       html.append("<h4>Version FQNs</h4>");
       html.append("<ul>");
-      typeCond.setValue(ClusterFqnType.VERSION);
+      typeCond.setValue(Type.VERSION);
       result = query.select();
       while (result.next()) {
-        html.append("<li><a href=\"./fqns?").append(result.getResult(FqnsTable.FQN_ID)).append("\">").append(result.getResult(FqnsTable.FQN)).append("</a></li>");
+        Integer fqnID = result.getResult(TypesTable.TYPE_ID);
+        String fqn = result.getResult(TypesTable.FQN);
+        html.append("<li><a href=\"./fqns?").append(fqnID).append("\">").append(fqn).append("</a></li>");
       }
       html.append("</ul>");
     }
@@ -477,58 +485,66 @@ public class ArtifactRepoBrowser extends HttpServlet {
   private void serveClusterVersion(Integer clusterVersionID, StringBuilder html) {
     QueryExecutor exec = db.get().getExecutor();
     
-    try (SelectQuery query = exec.makeSelectQuery(ClusterVersionsTable.TABLE)) {
-      query.addSelect(ClusterVersionsTable.CLUSTER_ID);
-      query.andWhere(ClusterVersionsTable.CLUSTER_VERSION_ID.compareEquals(clusterVersionID));
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
+      query.addSelect(ComponentRelationsTable.SOURCE_ID);
+      query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(clusterVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION));
       
-      Integer clusterID = query.select().toSingleton(ClusterVersionsTable.CLUSTER_ID, false);
+      Integer clusterID = query.select().toSingleton(ComponentRelationsTable.SOURCE_ID, false);
       html.append("<p><a href=\"./\">main</a>/<a href=\"./clusters\">libraries</a>/<a href=\"./clusters?clusterID=").append(clusterID).append("\">Cluster ").append(clusterID).append("</a></p>");
       html.append("<h3>Cluster ").append(clusterID).append(" Version ").append(clusterVersionID).append("</h3>");
     }
-    
-    try (SelectQuery query = exec.makeSelectQuery(ClusterVersionToJarTable.JAR_ID.compareEquals(JarsTable.JAR_ID))) {
-      query.addSelects(JarsTable.NAME, JarsTable.JAR_ID);
-      query.andWhere(ClusterVersionToJarTable.CLUSTER_VERSION_ID.compareEquals(clusterVersionID));
-      query.orderBy(JarsTable.NAME, true);
-      
-      // Jars
+
+    // Jars
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
+      query.addSelects(ProjectsTable.NAME, ProjectsTable.PROJECT_ID);
+      query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(clusterVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_CLUSTER_VERSION));
+      query.orderBy(ProjectsTable.NAME, true);
+
       html.append("<h4>Jars</h4>");
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
-        html.append("<li><a href=\"./jars?jarID=").append(result.getResult(JarsTable.JAR_ID)).append("\">").append(result.getResult(JarsTable.NAME)).append("</a></li>");
+        Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
+        String name = result.getResult(ProjectsTable.NAME);
+        html.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
       }
       html.append("</ul>");
     }
-    
-    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToClusterVersionTable.LIBRARY_VERSION_ID.compareEquals(LibraryVersionsTable.LIBRARY_VERSION_ID))) {
-      query.addSelects(LibraryVersionsTable.LIBRARY_ID, LibraryVersionsTable.LIBRARY_VERSION_ID);
-      query.andWhere(LibraryVersionToClusterVersionTable.CLUSTER_VERSION_ID.compareEquals(clusterVersionID));
-      query.orderBy(LibraryVersionsTable.LIBRARY_VERSION_ID, true);
+
+    { // Library versions
+      QualifiedTable lv2cv = ComponentRelationsTable.TABLE.qualify("a");
+      QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("b");
       
-      // Library versions
-      html.append("<h4>Library Versions</h4>");
-      html.append("<ul>");
-      TypedQueryResult result = query.select();
-      while (result.next()) {
-        Integer libraryID = result.getResult(LibraryVersionsTable.LIBRARY_ID);
-        Integer libraryVersionID = result.getResult(LibraryVersionsTable.LIBRARY_VERSION_ID);
-        html.append("<li><a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">").append("Library ").append(libraryID).append(".").append(libraryVersionID).append("</a></li>");
+      try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.qualify(lv2cv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
+        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+        query.andWhere(ComponentRelationsTable.TARGET_ID.qualify(lv2cv).compareEquals(clusterVersionID), ComponentRelationsTable.TYPE.qualify(lv2cv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_CLUSTER_VERSION));
+        query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);
+  
+        html.append("<h4>Library Versions</h4>");
+        html.append("<ul>");
+        TypedQueryResult result = query.select();
+        while (result.next()) {
+          Integer libraryID = result.getResult(ComponentRelationsTable.SOURCE_ID.qualify(l2lv));
+          Integer libraryVersionID = result.getResult(ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+          html.append("<li><a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">").append("Library ").append(libraryID).append(".").append(libraryVersionID).append("</a></li>");
+        }
+        html.append("</ul>");
       }
-      html.append("</ul>");
     }
-    
-    try (SelectQuery query = exec.makeSelectQuery(ClusterVersionToFqnVersionTable.FQN_VERSION_ID.compareEquals(FqnVersionsTable.FQN_VERSION_ID), FqnVersionsTable.FQN_ID.compareEquals(FqnsTable.FQN_ID))) {
-      query.addSelects(FqnVersionsTable.FQN_VERSION_ID, FqnsTable.FQN);
-      query.andWhere(ClusterVersionToFqnVersionTable.CLUSTER_VERSION_ID.compareEquals(clusterVersionID));
-      query.orderBy(FqnsTable.FQN, true);
-      
-      // FQNs
+
+    // FQNs
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.compareEquals(TypeVersionsTable.TYPE_VERSION_ID), TypeVersionsTable.TYPE_ID.compareEquals(TypesTable.TYPE_ID))) {
+      query.addSelects(TypeVersionsTable.TYPE_VERSION_ID, TypesTable.FQN);
+      query.andWhere(ComponentRelationsTable.SOURCE_ID.compareEquals(clusterVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.CLUSTER_VERSION_CONTAINS_TYPE_VERSION));
+      query.orderBy(TypesTable.FQN, true);
+
       html.append("<h4>FQNs</h4>");
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
-        html.append("<li><a href=\"./fqns?fqnVersionID=").append(result.getResult(FqnVersionsTable.FQN_VERSION_ID)).append("\">").append(result.getResult(FqnsTable.FQN)).append("</a></li>");
+        Integer fqnVersionID = result.getResult(TypeVersionsTable.TYPE_VERSION_ID);
+        String fqn = result.getResult(TypesTable.FQN);
+        html.append("<li><a href=\"./fqns?fqnVersionID=").append(fqnVersionID).append("\">").append(fqn).append("</a></li>");
       }
       html.append("</ul>");
     }
@@ -538,14 +554,17 @@ public class ArtifactRepoBrowser extends HttpServlet {
     html.append("<p><a href=\"./\">main</a></p>");
     QueryExecutor exec = db.get().getExecutor();
     
-    try (SelectQuery query = exec.makeSelectQuery(JarsTable.TABLE)) {
-      query.addSelects(JarsTable.JAR_ID, JarsTable.NAME);
-      query.orderBy(JarsTable.NAME, true);
+    try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
+      query.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.NAME);
+      query.andWhere(ProjectsTable.PROJECT_TYPE.compareIn(EnumSet.of(Project.JAR, Project.MAVEN)));
+      query.orderBy(ProjectsTable.NAME, true);
       
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
-        html.append("<li><a href=\"?jarID=").append(result.getResult(JarsTable.JAR_ID)+ "\">").append(result.getResult(JarsTable.NAME)).append("</a></li>");
+        Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
+        String name = result.getResult(ProjectsTable.NAME);
+        html.append("<li><a href=\"?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
       }
       html.append("</ul>");
     }
@@ -555,57 +574,64 @@ public class ArtifactRepoBrowser extends HttpServlet {
     html.append("<p><a href=\"./\">main</a>/<a href=\"./jars\">jars</a></p>");
     QueryExecutor exec = db.get().getExecutor();
     
-    try (SelectQuery query = exec.makeSelectQuery(JarsTable.TABLE)) {
-      query.addSelect(JarsTable.NAME);
-      query.andWhere(JarsTable.JAR_ID.compareEquals(jarID));
+    try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
+      query.addSelect(ProjectsTable.NAME);
+      query.andWhere(ProjectsTable.PROJECT_ID.compareEquals(jarID));
       
-      html.append("<h3>Jar ").append(jarID).append(": ").append(query.select().toSingleton(JarsTable.NAME, false)).append("</h3>");
+      html.append("<h3>Jar ").append(jarID).append(": ").append(query.select().toSingleton(ProjectsTable.NAME, false)).append("</h3>");
     }
-    
-    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToJarTable.LIBRARY_VERSION_ID.compareEquals(LibraryVersionsTable.LIBRARY_VERSION_ID))) {
-      query.addSelects(LibraryVersionsTable.LIBRARY_ID, LibraryVersionsTable.LIBRARY_VERSION_ID);
-      query.andWhere(LibraryVersionToJarTable.JAR_ID.compareEquals(jarID));
-      query.orderBy(LibraryVersionsTable.LIBRARY_VERSION_ID, true);
+
+    { // Library versions
+      QualifiedTable j2lv = ComponentRelationsTable.TABLE.qualify("a");
+      QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("b");
       
-      // Library versions
-      html.append("<h4>Library Version</h4>");
-      html.append("<ul>");
-      TypedQueryResult result = query.select();
-      while (result.next()) {
-        Integer libraryID = result.getResult(LibraryVersionsTable.LIBRARY_ID);
-        Integer libraryVersionID = result.getResult(LibraryVersionsTable.LIBRARY_VERSION_ID);
-        html.append("<li><a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">").append("Library ").append(libraryID).append(".").append(libraryVersionID).append("</a></li>");
+      try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(j2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
+        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+        query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(j2lv).compareEquals(jarID), ComponentRelationsTable.TYPE.qualify(j2lv).compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
+        query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);
+        
+        html.append("<h4>Library Version</h4>");
+        html.append("<ul>");
+        TypedQueryResult result = query.select();
+        while (result.next()) {
+          Integer libraryID = result.getResult(ComponentRelationsTable.SOURCE_ID.qualify(l2lv));
+          Integer libraryVersionID = result.getResult(ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+          html.append("<li><a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">").append("Library ").append(libraryID).append(".").append(libraryVersionID).append("</a></li>");
+        }
+        html.append("</ul>");
       }
-      html.append("</ul>");
     }
     
-    try (SelectQuery query = exec.makeSelectQuery(ClusterVersionToJarTable.CLUSTER_VERSION_ID.compareEquals(ClusterVersionsTable.CLUSTER_VERSION_ID))) {
-      query.addSelects(ClusterVersionToJarTable.CLUSTER_VERSION_ID, ClusterVersionsTable.CLUSTER_ID);
-      query.andWhere(ClusterVersionToJarTable.JAR_ID.compareEquals(jarID));
-      query.orderBy(ClusterVersionsTable.CLUSTER_ID, true);
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
+      query.addSelects(ComponentRelationsTable.TARGET_ID);
+      query.andWhere(ComponentRelationsTable.SOURCE_ID.compareEquals(jarID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_CLUSTER_VERSION));
+      query.orderBy(ComponentRelationsTable.TARGET_ID, true);
       
       // Clusters
-      html.append("<h4>Clusters</h4>");
+      html.append("<h4>Clusters Versions</h4>");
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
-        Integer clusterVersionID = result.getResult(ClusterVersionToJarTable.CLUSTER_VERSION_ID);
-        html.append("<li><a href=\"./clusters?clusterVersionID=").append(clusterVersionID).append("\">Cluster ").append(result.getResult(ClusterVersionsTable.CLUSTER_ID)).append(".").append(clusterVersionID).append("</a></li>");
+        Integer clusterVersionID = result.getResult(ComponentRelationsTable.TARGET_ID);
+        html.append("<li><a href=\"./clusters?clusterVersionID=").append(clusterVersionID).append("\">Cluster Version ").append(clusterVersionID).append("</a></li>");
       }
       html.append("</ul>");
     }
-    
-    try (SelectQuery query = exec.makeSelectQuery(JarToFqnVerionTable.FQN_VERSION_ID.compareEquals(FqnVersionsTable.FQN_VERSION_ID), FqnVersionsTable.FQN_ID.compareEquals(FqnsTable.FQN_ID))) {
-      query.addSelects(FqnVersionsTable.FQN_VERSION_ID, FqnsTable.FQN);
-      query.andWhere(JarToFqnVerionTable.JAR_ID.compareEquals(jarID));
-      query.orderBy(FqnsTable.FQN, true);
+
+    // Fqns
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.compareEquals(TypeVersionsTable.TYPE_VERSION_ID), TypeVersionsTable.TYPE_ID.compareEquals(TypesTable.TYPE_ID))) {
+      query.addSelects(TypeVersionsTable.TYPE_VERSION_ID, TypesTable.FQN);
+      query.andWhere(ComponentRelationsTable.SOURCE_ID.compareEquals(jarID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_TYPE_VERSION));
+      query.orderBy(TypesTable.FQN, true);
       
-      // Fqns
+
       html.append("<h4>FQNs</h4>");
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
-        html.append("<li><a href=\"./fqns?fqnVersionID=").append(result.getResult(FqnVersionsTable.FQN_VERSION_ID)).append("\">").append(result.getResult(FqnsTable.FQN)).append("</a></li>");
+        Integer fqnVersionID = result.getResult(TypeVersionsTable.TYPE_VERSION_ID);
+        String fqn = result.getResult(TypesTable.FQN);
+        html.append("<li><a href=\"./fqns?fqnVersionID=").append(fqnVersionID).append("\">").append(fqn).append("</a></li>");
       }
       html.append("</ul>");
     }
@@ -616,14 +642,16 @@ public class ArtifactRepoBrowser extends HttpServlet {
     
     QueryExecutor exec = db.get().getExecutor();
     
-    try (SelectQuery query = exec.makeSelectQuery(FqnsTable.TABLE)) {
-      query.addSelects(FqnsTable.FQN_ID, FqnsTable.FQN);
-      query.orderBy(FqnsTable.FQN, true);
+    try (SelectQuery query = exec.createSelectQuery(TypesTable.TABLE)) {
+      query.addSelects(TypesTable.TYPE_ID, TypesTable.FQN);
+      query.orderBy(TypesTable.FQN, true);
       
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
-        html.append("<li><a href=\"?fqnID=").append(result.getResult(FqnsTable.FQN_ID)+ "\">").append(result.getResult(FqnsTable.FQN)).append("</a></li>");
+        Integer fqnID = result.getResult(TypesTable.TYPE_ID);
+        String fqn = result.getResult(TypesTable.FQN);
+        html.append("<li><a href=\"?fqnID=").append(fqnID).append("\">").append(fqn).append("</a></li>");
       }
       html.append("</ul>");
     }
@@ -634,73 +662,84 @@ public class ArtifactRepoBrowser extends HttpServlet {
     
     QueryExecutor exec = db.get().getExecutor();
     
-    try (SelectQuery query = exec.makeSelectQuery(FqnsTable.TABLE)) {
-      query.addSelect(FqnsTable.FQN);
-      query.andWhere(FqnsTable.FQN_ID.compareEquals(fqnID));
+    try (SelectQuery query = exec.createSelectQuery(TypesTable.TABLE)) {
+      query.addSelect(TypesTable.FQN);
+      query.andWhere(TypesTable.TYPE_ID.compareEquals(fqnID));
       
-      html.append("<h3>FQN ").append(fqnID).append(": ").append(query.select().toSingleton(FqnsTable.FQN, false)).append("</h3>");
+      html.append("<h3>FQN ").append(fqnID).append(": ").append(query.select().toSingleton(TypesTable.FQN, false)).append("</h3>");
     }
     
-    try (SelectQuery query = exec.makeSelectQuery(FqnVersionsTable.FQN_VERSION_ID.compareEquals(LibraryVersionToFqnVersionTable.FQN_VERSION_ID), LibraryVersionToFqnVersionTable.LIBRARY_VERSION_ID.compareEquals(LibraryVersionsTable.LIBRARY_VERSION_ID))) {
-      query.addSelects(LibraryVersionsTable.LIBRARY_ID, LibraryVersionsTable.LIBRARY_VERSION_ID);
-      query.andWhere(FqnVersionsTable.FQN_ID.compareEquals(fqnID));
-      query.orderBy(LibraryVersionsTable.LIBRARY_VERSION_ID, true);
+    { // Library versions
+      QualifiedTable lv2tv = ComponentRelationsTable.TABLE.qualify("a");
+      QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("b");
       
-      // Library versions
-      html.append("<h4>Library Version</h4>");
-      html.append("<ul>");
-      TypedQueryResult result = query.select();
-      while (result.next()) {
-        Integer libraryID = result.getResult(LibraryVersionsTable.LIBRARY_ID);
-        Integer libraryVersionID = result.getResult(LibraryVersionsTable.LIBRARY_VERSION_ID);
-        html.append("<li><a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">").append("Library ").append(libraryID).append(".").append(libraryVersionID).append("</a></li>");
+      try (SelectQuery query = exec.createSelectQuery(TypeVersionsTable.TYPE_VERSION_ID.compareEquals(ComponentRelationsTable.TARGET_ID.qualify(lv2tv)), ComponentRelationsTable.SOURCE_ID.qualify(lv2tv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
+        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+        query.andWhere(TypeVersionsTable.TYPE_ID.compareEquals(fqnID), ComponentRelationsTable.TYPE.qualify(lv2tv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_TYPE_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
+        query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);
+        
+        html.append("<h4>Library Version</h4>");
+        html.append("<ul>");
+        TypedQueryResult result = query.select();
+        while (result.next()) {
+          Integer libraryID = result.getResult(ComponentRelationsTable.SOURCE_ID.qualify(l2lv));
+          Integer libraryVersionID = result.getResult(ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+          html.append("<li><a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">").append("Library ").append(libraryID).append(".").append(libraryVersionID).append("</a></li>");
+        }
+        html.append("</ul>"); 
       }
-      html.append("</ul>"); 
     }
-    
-    try (SelectQuery query = exec.makeSelectQuery(FqnVersionsTable.FQN_VERSION_ID.compareEquals(JarToFqnVerionTable.FQN_VERSION_ID), JarToFqnVerionTable.JAR_ID.compareEquals(JarsTable.JAR_ID))) {
-      query.addSelects(JarsTable.NAME, JarsTable.JAR_ID);
-      query.andWhere(FqnVersionsTable.FQN_ID.compareEquals(fqnID));
-      query.orderBy(JarsTable.NAME, true);
-      
-      // Jars
+
+    // Jars
+    try (SelectQuery query = exec.createSelectQuery(TypeVersionsTable.TYPE_VERSION_ID.compareEquals(ComponentRelationsTable.TARGET_ID), ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
+      query.addSelects(ProjectsTable.NAME, ProjectsTable.PROJECT_ID);
+      query.andWhere(TypeVersionsTable.TYPE_ID.compareEquals(fqnID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_TYPE_VERSION));
+      query.orderBy(ProjectsTable.NAME, true);
+
       html.append("<h4>Jars</h4>");
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
-        html.append("<li><a href=\"./jars?jarID=").append(result.getResult(JarsTable.JAR_ID)).append("\">").append(result.getResult(JarsTable.NAME)).append("</a></li>");
+        Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
+        String name = result.getResult(ProjectsTable.NAME);
+        html.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
       }
       html.append("</ul>");
     }
-    
-    try (SelectQuery query = exec.makeSelectQuery(FqnVersionsTable.FQN_VERSION_ID.compareEquals(ClusterVersionToFqnVersionTable.FQN_VERSION_ID), ClusterVersionToFqnVersionTable.CLUSTER_VERSION_ID.compareEquals(ClusterVersionsTable.CLUSTER_VERSION_ID))) {
-      query.setDistinct(true);
-      query.addSelects(ClusterVersionsTable.CLUSTER_ID);
-      query.andWhere(FqnVersionsTable.FQN_ID.compareEquals(fqnID));
-      query.orderBy(ClusterVersionsTable.CLUSTER_ID, true);
+
+    { // Clusters
+      QualifiedTable c2cv = ComponentRelationsTable.TABLE.qualify("a");
+      QualifiedTable cv2tv = ComponentRelationsTable.TABLE.qualify("b");
       
-      // Clusters
-      html.append("<h4>Clusters</h4>");
-      html.append("<ul>");
-      TypedQueryResult result = query.select();
-      while (result.next()) {
-        Integer clusterID = result.getResult(ClusterVersionsTable.CLUSTER_ID);
-        html.append("<li><a href=\"./clusters?clusterID=").append(clusterID).append("\">Cluster ").append(clusterID).append("</a></li>");
+      try (SelectQuery query = exec.createSelectQuery(TypeVersionsTable.TYPE_VERSION_ID.compareEquals(ComponentRelationsTable.TARGET_ID.qualify(cv2tv)), ComponentRelationsTable.SOURCE_ID.qualify(cv2tv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(c2cv)))) {
+        query.setDistinct(true);
+        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(c2cv));
+        query.andWhere(TypeVersionsTable.TYPE_ID.compareEquals(fqnID), ComponentRelationsTable.TYPE.qualify(c2cv).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION), ComponentRelationsTable.TYPE.qualify(cv2tv).compareEquals(ComponentRelation.CLUSTER_VERSION_CONTAINS_TYPE_VERSION));
+        query.orderBy(ComponentRelationsTable.SOURCE_ID.qualify(c2cv), true);
+  
+        html.append("<h4>Clusters</h4>");
+        html.append("<ul>");
+        TypedQueryResult result = query.select();
+        while (result.next()) {
+          Integer clusterID = result.getResult(ComponentRelationsTable.SOURCE_ID.qualify(c2cv));
+          html.append("<li><a href=\"./clusters?clusterID=").append(clusterID).append("\">Cluster ").append(clusterID).append("</a></li>");
+        }
+        html.append("</ul>");
       }
-      html.append("</ul>");
     }
-    
-    try (SelectQuery query = exec.makeSelectQuery(FqnVersionsTable.TABLE)) {
-      query.addSelect(FqnVersionsTable.FQN_VERSION_ID);
-      query.andWhere(FqnVersionsTable.FQN_ID.compareEquals(fqnID));
-      query.orderBy(FqnVersionsTable.FQN_ID, true);
+
+    // FQN Versions
+    try (SelectQuery query = exec.createSelectQuery(TypeVersionsTable.TABLE)) {
+      query.addSelect(TypeVersionsTable.TYPE_VERSION_ID);
+      query.andWhere(TypeVersionsTable.TYPE_ID.compareEquals(fqnID));
+      query.orderBy(TypeVersionsTable.TYPE_VERSION_ID, true);
       
-      // FQN Versions
+
       html.append("<h4>FQN Versions</h4>");
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
-        Integer fqnVersionID = result.getResult(FqnVersionsTable.FQN_VERSION_ID);
+        Integer fqnVersionID = result.getResult(TypeVersionsTable.TYPE_VERSION_ID);
         html.append("<li><a href=\"./fqns?fqnVersionID=").append(fqnVersionID).append("\">FQN Version ").append(fqnVersionID).append("</a></li>");
       }
       html.append("</ul>");
@@ -710,67 +749,81 @@ public class ArtifactRepoBrowser extends HttpServlet {
   private void serveFqnVersion(Integer fqnVersionID, StringBuilder html) {
     QueryExecutor exec = db.get().getExecutor();
     
-    try (SelectQuery query = exec.makeSelectQuery(FqnVersionsTable.FQN_ID.compareEquals(FqnsTable.FQN_ID))) {
-      query.addSelects(FqnsTable.FQN, FqnsTable.FQN_ID);
-      query.andWhere(FqnVersionsTable.FQN_VERSION_ID.compareEquals(fqnVersionID));
+    try (SelectQuery query = exec.createSelectQuery(TypeVersionsTable.TYPE_ID.compareEquals(TypesTable.TYPE_ID))) {
+      query.addSelects(TypesTable.FQN, TypesTable.TYPE_ID);
+      query.andWhere(TypeVersionsTable.TYPE_VERSION_ID.compareEquals(fqnVersionID));
       
       TypedQueryResult result = query.select();
       if (result.next()) {
-        String fqn = result.getResult(FqnsTable.FQN);
-        Integer fqnID = result.getResult(FqnsTable.FQN_ID);
+        String fqn = result.getResult(TypesTable.FQN);
+        Integer fqnID = result.getResult(TypesTable.TYPE_ID);
         html.append("<p><a href=\"./\">main</a>/<a href=\"./fqns\">fqns</a>/<a href=\"./fqns?fqnID=").append(fqnID).append("\">").append(fqn).append("</a></p>");
         html.append("<h3>FQN ").append(fqnID).append(": ").append(fqn).append(" Version ").append(fqnVersionID).append("</h3>");
       }
     }
-    
-    try (SelectQuery query = exec.makeSelectQuery(LibraryVersionToFqnVersionTable.LIBRARY_VERSION_ID.compareEquals(LibraryVersionsTable.LIBRARY_VERSION_ID))) {
-      query.addSelects(LibraryVersionsTable.LIBRARY_ID, LibraryVersionsTable.LIBRARY_VERSION_ID);
-      query.andWhere(LibraryVersionToFqnVersionTable.FQN_VERSION_ID.compareEquals(fqnVersionID));
-      query.orderBy(LibraryVersionsTable.LIBRARY_VERSION_ID, true);
+
+    { // Library versions
+      QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("a");
+      QualifiedTable lv2tv = ComponentRelationsTable.TABLE.qualify("b");
       
-      // Library versions
-      html.append("<h4>Library Version</h4>");
-      html.append("<ul>");
-      TypedQueryResult result = query.select();
-      while (result.next()) {
-        Integer libraryID = result.getResult(LibraryVersionsTable.LIBRARY_ID);
-        Integer libraryVersionID = result.getResult(LibraryVersionsTable.LIBRARY_VERSION_ID);
-        html.append("<li><a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">").append("Library ").append(libraryID).append(".").append(libraryVersionID).append("</a></li>");
+      try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.qualify(lv2tv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
+        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+        query.andWhere(ComponentRelationsTable.TARGET_ID.qualify(lv2tv).compareEquals(fqnVersionID), ComponentRelationsTable.TYPE.qualify(lv2tv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_TYPE_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
+        query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);
+        
+  
+        html.append("<h4>Library Version</h4>");
+        html.append("<ul>");
+        TypedQueryResult result = query.select();
+        while (result.next()) {
+          Integer libraryID = result.getResult(ComponentRelationsTable.SOURCE_ID.qualify(l2lv));
+          Integer libraryVersionID = result.getResult(ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+          html.append("<li><a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">").append("Library ").append(libraryID).append(".").append(libraryVersionID).append("</a></li>");
+        }
+        html.append("</ul>"); 
       }
-      html.append("</ul>"); 
     }
     
-    try (SelectQuery query = exec.makeSelectQuery(JarToFqnVerionTable.JAR_ID.compareEquals(JarsTable.JAR_ID))) {
-      query.addSelects(JarsTable.NAME, JarsTable.JAR_ID);
-      query.andWhere(JarToFqnVerionTable.FQN_VERSION_ID.compareEquals(fqnVersionID));
-      query.orderBy(JarsTable.NAME, true);
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
+      query.addSelects(ProjectsTable.NAME, ProjectsTable.PROJECT_ID);
+      query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(fqnVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_TYPE_VERSION));
+      query.orderBy(ProjectsTable.NAME, true);
       
       // Jars
       html.append("<h4>Jars</h4>");
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
-        html.append("<li><a href=\"./jars?jarID=").append(result.getResult(JarsTable.JAR_ID)).append("\">").append(result.getResult(JarsTable.NAME)).append("</a></li>");
+        Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
+        String name = result.getResult(ProjectsTable.NAME);
+        html.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
       }
       html.append("</ul>");
     }
     
-    try (SelectQuery query = exec.makeSelectQuery(ClusterVersionToFqnVersionTable.CLUSTER_VERSION_ID.compareEquals(ClusterVersionsTable.CLUSTER_VERSION_ID))) {
-      query.addSelects(ClusterVersionsTable.CLUSTER_ID, ClusterVersionsTable.CLUSTER_VERSION_ID);
-      query.andWhere(ClusterVersionToFqnVersionTable.FQN_VERSION_ID.compareEquals(fqnVersionID));
-      query.orderBy(ClusterVersionsTable.CLUSTER_ID, true);
-      query.orderBy(ClusterVersionsTable.CLUSTER_VERSION_ID, true);
+    {
+      QualifiedTable c2cv = ComponentRelationsTable.TABLE.qualify("a");
+      QualifiedColumn<Integer> clusterIDcol = ComponentRelationsTable.SOURCE_ID.qualify(c2cv);
+      QualifiedColumn<Integer> clusterVersionIDcol = ComponentRelationsTable.TARGET_ID.qualify(c2cv);
+      QualifiedTable cv2tv = ComponentRelationsTable.TABLE.qualify("b");
       
-      // Clusters
-      html.append("<h4>Cluster Versions</h4>");
-      html.append("<ul>");
-      TypedQueryResult result = query.select();
-      while (result.next()) {
-        Integer clusterID = result.getResult(ClusterVersionsTable.CLUSTER_ID);
-        Integer clusterVersionID = result.getResult(ClusterVersionsTable.CLUSTER_VERSION_ID);
-        html.append("<li><a href=\"./clusters?clusterVersionID=").append(clusterVersionID).append("\">").append(clusterID).append(".").append(clusterVersionID).append("</a></li>");
+      try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.qualify(cv2tv).compareEquals(clusterVersionIDcol))) {
+        query.addSelects(clusterIDcol, clusterVersionIDcol);
+        query.andWhere(ComponentRelationsTable.TARGET_ID.qualify(cv2tv).compareEquals(fqnVersionID), ComponentRelationsTable.TYPE.qualify(cv2tv).compareEquals(ComponentRelation.CLUSTER_VERSION_CONTAINS_TYPE_VERSION), ComponentRelationsTable.TYPE.qualify(c2cv).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION));
+        query.orderBy(clusterIDcol, true);
+        query.orderBy(clusterVersionIDcol, true);
+        
+        // Clusters
+        html.append("<h4>Cluster Versions</h4>");
+        html.append("<ul>");
+        TypedQueryResult result = query.select();
+        while (result.next()) {
+          Integer clusterID = result.getResult(clusterIDcol);
+          Integer clusterVersionID = result.getResult(clusterVersionIDcol);
+          html.append("<li><a href=\"./clusters?clusterVersionID=").append(clusterVersionID).append("\">").append(clusterID).append(".").append(clusterVersionID).append("</a></li>");
+        }
+        html.append("</ul>");
       }
-      html.append("</ul>");
     }
   }
   

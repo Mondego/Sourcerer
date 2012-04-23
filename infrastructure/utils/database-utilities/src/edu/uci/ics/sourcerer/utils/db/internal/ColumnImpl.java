@@ -125,11 +125,11 @@ abstract class ColumnImpl<T> implements Column<T> {
   }
   
   @Override
-  public QualifiedColumn<T> qualify(QualifiedTable table) {
-    if (table.getQualifiedTable() == table) {
-      return new QualifiedColumnImpl<T>(this, table);
+  public QualifiedColumn<T> qualify(QualifiedTable qualified) {
+    if (qualified.getQualifiedTable() == table) {
+      return new QualifiedColumnImpl<T>(this, qualified);
     } else {
-      throw new IllegalArgumentException("This column is not for table " + table);
+      throw new IllegalArgumentException(toString() + " is not for table " + qualified);
     }
   }
   

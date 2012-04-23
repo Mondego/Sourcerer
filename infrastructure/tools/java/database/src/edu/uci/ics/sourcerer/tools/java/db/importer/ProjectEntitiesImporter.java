@@ -39,13 +39,13 @@ class ProjectEntitiesImporter extends EntitiesImporter {
   
   @Override
   public void doImport() {
-    try (SelectQuery projectState = exec.makeSelectQuery(ProjectsTable.TABLE)) {
+    try (SelectQuery projectState = exec.createSelectQuery(ProjectsTable.TABLE)) {
       projectState.addSelect(ProjectsTable.HASH);
       projectState.addSelect(ProjectsTable.PROJECT_ID);
       ConstantCondition<String> equalsPath = ProjectsTable.PATH.compareEquals();
       projectState.andWhere(equalsPath);
       
-      SetStatement updateState = exec.makeSetStatement(ProjectsTable.TABLE);
+      SetStatement updateState = exec.createSetStatement(ProjectsTable.TABLE);
       updateState.addAssignment(ProjectsTable.HASH, Stage.END_ENTITY.name());
       ConstantCondition<Integer> equalsID = ProjectsTable.PROJECT_ID.compareEquals();
       updateState.andWhere(equalsID);

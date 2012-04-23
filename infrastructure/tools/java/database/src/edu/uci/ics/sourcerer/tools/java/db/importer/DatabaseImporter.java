@@ -103,7 +103,7 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
   protected final void loadFileMap(Integer projectID) {
     task.start("Populating file map", "files loaded");
     
-    try (SelectQuery query = exec.makeSelectQuery(FilesTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(FilesTable.TABLE)) {
       query.addSelects(FilesTable.FILE_ID, FilesTable.PATH);
       query.andWhere(
           FilesTable.FILE_TYPE.compareNotEquals(edu.uci.ics.sourcerer.tools.java.model.types.File.JAR).and(
@@ -140,43 +140,43 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
   }
   
   protected final void deleteProject(Integer projectID) {
-    DeleteStatement delete = exec.makeDeleteStatement(ProjectsTable.TABLE);
+    DeleteStatement delete = exec.createDeleteStatement(ProjectsTable.TABLE);
     delete.andWhere(ProjectsTable.PROJECT_ID.compareEquals(projectID));
     delete.execute();
     
-    delete = exec.makeDeleteStatement(ProjectMetricsTable.TABLE);
+    delete = exec.createDeleteStatement(ProjectMetricsTable.TABLE);
     delete.andWhere(ProjectMetricsTable.PROJECT_ID.compareEquals(projectID));
     delete.execute();
     
-    delete = exec.makeDeleteStatement(FilesTable.TABLE);
+    delete = exec.createDeleteStatement(FilesTable.TABLE);
     delete.andWhere(FilesTable.PROJECT_ID.compareEquals(projectID));
     delete.execute();
     
-    delete = exec.makeDeleteStatement(FileMetricsTable.TABLE);
+    delete = exec.createDeleteStatement(FileMetricsTable.TABLE);
     delete.andWhere(FileMetricsTable.PROJECT_ID.compareEquals(projectID));
     delete.execute(); 
     
-    delete = exec.makeDeleteStatement(EntitiesTable.TABLE);
+    delete = exec.createDeleteStatement(EntitiesTable.TABLE);
     delete.andWhere(EntitiesTable.PROJECT_ID.compareEquals(projectID));
     delete.execute();
     
-    delete = exec.makeDeleteStatement(EntityMetricsTable.TABLE);
+    delete = exec.createDeleteStatement(EntityMetricsTable.TABLE);
     delete.andWhere(EntityMetricsTable.PROJECT_ID.compareEquals(projectID));
     delete.execute();
     
-    delete = exec.makeDeleteStatement(CommentsTable.TABLE);
+    delete = exec.createDeleteStatement(CommentsTable.TABLE);
     delete.andWhere(CommentsTable.PROJECT_ID.compareEquals(projectID));
     delete.execute();
     
-    delete = exec.makeDeleteStatement(ImportsTable.TABLE);
+    delete = exec.createDeleteStatement(ImportsTable.TABLE);
     delete.andWhere(ImportsTable.PROJECT_ID.compareEquals(projectID));
     delete.execute();
     
-    delete = exec.makeDeleteStatement(ProblemsTable.TABLE);
+    delete = exec.createDeleteStatement(ProblemsTable.TABLE);
     delete.andWhere(ProblemsTable.PROJECT_ID.compareEquals(projectID));
     delete.execute();
     
-    delete = exec.makeDeleteStatement(RelationsTable.TABLE);
+    delete = exec.createDeleteStatement(RelationsTable.TABLE);
     delete.andWhere(RelationsTable.PROJECT_ID.compareEquals(projectID));
     delete.execute();
   }

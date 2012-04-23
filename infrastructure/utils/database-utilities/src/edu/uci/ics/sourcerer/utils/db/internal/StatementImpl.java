@@ -36,7 +36,12 @@ abstract class StatementImpl implements Statement {
     this.executor = executor;
   }
   
-  protected void reset() {
+  protected void prepareStatement(String sql) {
+    statement = executor.prepareStatement(sql);
+  }
+  
+  @Override
+  public void close() {
     if (statement != null) {
       try {
         statement.close();
@@ -45,10 +50,6 @@ abstract class StatementImpl implements Statement {
       }
       statement = null;
     }
-  }
-  
-  protected void prepareStatement(String sql) {
-    statement = executor.prepareStatement(sql);
   }
   
   @Override

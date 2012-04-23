@@ -137,7 +137,7 @@ public class Extractor {
 
       if (method.withEclipse && jarType != JarType.LIBRARY) {
         task.start("Initializing eclipse project");
-        EclipseUtils.initializeJarProject(jars);
+        EclipseUtils.initializeJarProject(jar);
         task.finish();
       }
 

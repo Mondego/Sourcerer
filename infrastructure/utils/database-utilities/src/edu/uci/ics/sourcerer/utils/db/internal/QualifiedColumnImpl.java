@@ -107,4 +107,21 @@ final class QualifiedColumnImpl<T> implements QualifiedColumn<T> {
   public void bind(T value, PreparedStatement statement, int index) throws SQLException {
     column.bind(value, statement, index);
   }
+  
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    } else if (o instanceof QualifiedColumnImpl) {
+      QualifiedColumnImpl<?> other = (QualifiedColumnImpl<?>) o;
+      return column.equals(other.column) && table.equals(other.table);
+    } else {
+      return false;
+    }
+  }
+  
+  @Override
+  public int hashCode() {
+    return 37 * column.hashCode() + table.hashCode(); 
+  }
 }

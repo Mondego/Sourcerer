@@ -48,7 +48,7 @@ final class SetStatementImpl extends StatementImpl implements SetStatement {
     if (column.getTable() != table) {
       throw new IllegalArgumentException("Column " + column.getName() + " is not from table " + table.getName());
     } else {
-      reset();
+      close();
       AssignmentImpl<T> ass = new AssignmentImpl<T>(column);
       assignments.add(ass);
       return ass;
@@ -64,7 +64,7 @@ final class SetStatementImpl extends StatementImpl implements SetStatement {
   
   @Override
   public void andWhere(Condition condition) {
-    reset();
+    close();
     condition.verifyTables(table);
     if (whereCondition == null) {
       whereCondition = condition;

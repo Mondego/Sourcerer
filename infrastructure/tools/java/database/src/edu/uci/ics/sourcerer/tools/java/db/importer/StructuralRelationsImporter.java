@@ -79,7 +79,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
 //  }
   
   protected final void initializeQueries() {
-    localVariablesQuery = exec.makeSelectQuery(EntitiesTable.TABLE);
+    localVariablesQuery = exec.createSelectQuery(EntitiesTable.TABLE);
     localVariablesQuery.addSelects(EntitiesTable.ENTITY_ID);
     localVariablesQueryProjectID = EntitiesTable.PROJECT_ID.compareEquals();
     localVariablesQuery.andWhere(localVariablesQueryProjectID);

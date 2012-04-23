@@ -48,8 +48,8 @@ public class ProjectReferentialRelationsImporter extends ReferentialRelationsImp
   
   @Override
   public void doImport() {
-    try (SelectQuery projectState = exec.makeSelectQuery(ProjectsTable.TABLE);
-         SelectQuery findUsedJar = exec.makeSelectQuery(ProjectsTable.TABLE)) {
+    try (SelectQuery projectState = exec.createSelectQuery(ProjectsTable.TABLE);
+         SelectQuery findUsedJar = exec.createSelectQuery(ProjectsTable.TABLE)) {
       projectState.addSelect(ProjectsTable.HASH);
       projectState.addSelect(ProjectsTable.PROJECT_ID);
       ConstantCondition<String> equalsPath = ProjectsTable.PATH.compareEquals();
@@ -59,7 +59,7 @@ public class ProjectReferentialRelationsImporter extends ReferentialRelationsImp
       ConstantCondition<String> equalsHash = ProjectsTable.HASH.compareEquals();
       findUsedJar.andWhere(equalsHash);
       
-      SetStatement updateState = exec.makeSetStatement(ProjectsTable.TABLE);
+      SetStatement updateState = exec.createSetStatement(ProjectsTable.TABLE);
       Assignment<String> stateValue = updateState.addAssignment(ProjectsTable.HASH);
       ConstantCondition<Integer> equalsID = ProjectsTable.PROJECT_ID.compareEquals();
       updateState.andWhere(equalsID);

@@ -45,27 +45,33 @@ public class PopularityCalculator {
   public static final Argument<File> IMPORT_LIST = new RelativeFileArgument("imports-list", "imports.txt", Arguments.OUTPUT, "List of imports, ordered by popularity.");
   public static final Argument<File> MISSING_TYPES_LIST = new RelativeFileArgument("missing-types-list", "missing-types.txt", Arguments.OUTPUT, "List of missing types, ordered by popularity.");
   
-  public static void calculateImportPopularity() {
+  public static CountingFqnNode calculateImportPopularity() {
     TaskProgressLogger task = TaskProgressLogger.get();
     
-    task.start("Loading repository");
+    task.start("Calculating import popularity");
+    
     ExtractedJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(JavaRepositoryFactory.INPUT_REPO);
-    task.finish();
-
-    int count = 0;
-    task.start("Processing extracted projects for imports", "projects processed", 500);
+    
+    task.start("Processing projects for imports", "projects processed", 500);
     CountingFqnNode root = CountingFqnNode.createRoot();
     for (ExtractedJavaProject project : repo.getProjects()) {
-      task.progress();
       ReaderBundle bundle = new ReaderBundle(project.getExtractionDir().toFile());
       for (ImportEX imp : bundle.getTransientImports()) {
-        count++;
         root.add(imp.getImported(), project.getLocation().toString());
       }
+      task.progress();
     }
     task.finish();
     
-    task.report(count + " imports processed.");
+    task.finish();
+    
+    return root;
+  }
+  
+  public static void printImportPopularity() {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
+    CountingFqnNode root = calculateImportPopularity();
     
     task.start("Sorting FQNs by total import count");
     TreeSet<CountingFqnNode> sorted = new TreeSet<>(new Comparator<CountingFqnNode>() {

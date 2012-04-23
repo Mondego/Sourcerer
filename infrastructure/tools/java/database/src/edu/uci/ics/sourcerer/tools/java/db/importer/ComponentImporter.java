@@ -24,15 +24,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.tools.java.db.schema.Component;
-import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentRelation;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentRelationsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.Type;
 import edu.uci.ics.sourcerer.tools.java.db.schema.TypeVersionsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.TypesTable;
+import edu.uci.ics.sourcerer.tools.java.model.types.Component;
+import edu.uci.ics.sourcerer.tools.java.model.types.ComponentRelation;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
+import edu.uci.ics.sourcerer.tools.java.model.types.Type;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterVersion;
@@ -124,7 +124,7 @@ public class ComponentImporter extends DatabaseRunnable {
    
     task.start("Loading cluster mapping", "clusters loaded");
     clusterMap = new HashMap<>();
-    try (SelectQuery query = exec.makeSelectQuery(ComponentsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentsTable.TABLE)) {
       query.addSelects(ComponentsTable.COMPONENT_ID);
       query.andWhere(ComponentsTable.TYPE.compareEquals(Component.CLUSTER));
       query.orderBy(ComponentsTable.COMPONENT_ID, true);
@@ -162,7 +162,7 @@ public class ComponentImporter extends DatabaseRunnable {
    
     task.start("Loading cluster version mapping", "cluster verions loaded");
     clusterVersionMap = new HashMap<>();
-    try (SelectQuery query = exec.makeSelectQuery(ComponentsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentsTable.TABLE)) {
       query.addSelects(ComponentsTable.COMPONENT_ID);
       query.andWhere(ComponentsTable.TYPE.compareEquals(Component.CLUSTER_VERSION));
       query.orderBy(ComponentsTable.COMPONENT_ID, true);
@@ -186,7 +186,7 @@ public class ComponentImporter extends DatabaseRunnable {
     
     task.start("Loading jar mapping", "jars loaded");
     jarMap = new HashMap<>();
-    try (SelectQuery query = exec.makeSelectQuery(ProjectsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
       query.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.HASH);
       query.andWhere(ProjectsTable.PROJECT_TYPE.compareIn(EnumSet.of(Project.JAR, Project.MAVEN)));
 
@@ -223,7 +223,7 @@ public class ComponentImporter extends DatabaseRunnable {
 
       task.start("Reloading jar mapping", "jars loaded");
       jarMap = new HashMap<>();
-      try (SelectQuery query = exec.makeSelectQuery(ProjectsTable.TABLE)) {
+      try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
         query.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.HASH);
         query.andWhere(ProjectsTable.PROJECT_TYPE.compareIn(EnumSet.of(Project.JAR, Project.MAVEN)));
 
@@ -273,7 +273,7 @@ public class ComponentImporter extends DatabaseRunnable {
    
     task.start("Loading fqn mapping", "fqns loaded");
     fqnMap = new HashMap<>();
-    try (SelectQuery query = exec.makeSelectQuery(TypesTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(TypesTable.TABLE)) {
       query.addSelects(TypesTable.TYPE_ID);
       query.orderBy(TypesTable.TYPE_ID, true);
       
@@ -317,7 +317,7 @@ public class ComponentImporter extends DatabaseRunnable {
    
     task.start("Loading fqn version mapping", "fqn versions loaded");
     fqnVersionMap = new HashMap<>();
-    try (SelectQuery query = exec.makeSelectQuery(TypeVersionsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(TypeVersionsTable.TABLE)) {
       query.addSelects(TypeVersionsTable.TYPE_VERSION_ID);
       query.orderBy(TypeVersionsTable.TYPE_VERSION_ID, true);
       
@@ -354,7 +354,7 @@ public class ComponentImporter extends DatabaseRunnable {
    
     task.start("Loading library mapping", "libraries loaded");
     libraryMap = new HashMap<>();
-    try (SelectQuery query = exec.makeSelectQuery(ComponentsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentsTable.TABLE)) {
       query.addSelects(ComponentsTable.COMPONENT_ID);
       query.andWhere(ComponentsTable.TYPE.compareEquals(Component.LIBRARY));
       query.orderBy(ComponentsTable.COMPONENT_ID, true);
@@ -392,7 +392,7 @@ public class ComponentImporter extends DatabaseRunnable {
    
     task.start("Loading library version mapping", "versions loaded");
     libraryVersionMap = new HashMap<>();
-    try (SelectQuery query = exec.makeSelectQuery(ComponentsTable.TABLE)) {
+    try (SelectQuery query = exec.createSelectQuery(ComponentsTable.TABLE)) {
       query.addSelects(ComponentsTable.COMPONENT_ID);
       query.andWhere(ComponentsTable.TYPE.compareEquals(Component.LIBRARY_VERSION));
       query.orderBy(ComponentsTable.COMPONENT_ID, true);
@@ -430,6 +430,7 @@ public class ComponentImporter extends DatabaseRunnable {
     for (Map.Entry<ClusterVersion, Integer> entry : clusterVersionMap.entrySet()) {
       for (FqnVersion fqn : entry.getKey().getFqns()) {
         inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.CLUSTER_VERSION_CONTAINS_TYPE_VERSION, entry.getValue(), fqnVersionMap.get(fqn)));
+        task.progress();
       }
     }
     task.finish();
@@ -439,9 +440,11 @@ public class ComponentImporter extends DatabaseRunnable {
       Cluster coreCluster = entry.getKey().getCoreCluster();
       if (coreCluster != null) {
         inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.LIBRARY_MATCHES_CLUSTER, entry.getValue(), clusterMap.get(coreCluster)));
+        task.progress();
       }
       for (Cluster cluster : entry.getKey().getSecondaryClusters()) {
         inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.LIBRARY_CONTAINS_CLUSTER, entry.getValue(), clusterMap.get(cluster)));
+        task.progress();
       }
     }
     task.finish();
@@ -450,6 +453,7 @@ public class ComponentImporter extends DatabaseRunnable {
     for (Map.Entry<Library, Integer> entry : libraryMap.entrySet()) {
       for (LibraryVersion version : entry.getKey().getVersions()) {
         inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION, entry.getValue(), libraryVersionMap.get(version)));
+        task.progress();
       }
     }
     task.finish();
@@ -458,6 +462,7 @@ public class ComponentImporter extends DatabaseRunnable {
     for (Map.Entry<LibraryVersion, Integer> entry : libraryVersionMap.entrySet()) {
       for (Library dep : entry.getKey().getLibraryDependencies()) {
         inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.LIBRARY_VERSION_CONTAINS_LIBRARY, entry.getValue(), libraryMap.get(dep)));
+        task.progress();
       }
     }
     task.finish();
@@ -466,6 +471,7 @@ public class ComponentImporter extends DatabaseRunnable {
     for (Map.Entry<LibraryVersion, Integer> entry : libraryVersionMap.entrySet()) {
       for (LibraryVersion dep : entry.getKey().getVersionDependencies()) {
         inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.LIBRARY_VERSION_CONTAINS_LIBRARY_VERSION, entry.getValue(), libraryVersionMap.get(dep)));
+        task.progress();
       }
     }
     task.finish();
@@ -474,6 +480,7 @@ public class ComponentImporter extends DatabaseRunnable {
     for (Map.Entry<LibraryVersion, Integer> entry : libraryVersionMap.entrySet()) {
       for (ClusterVersion clusterVersion : entry.getKey().getClusters()) {
         inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.LIBRARY_VERSION_CONTAINS_CLUSTER_VERSION, entry.getValue(), clusterVersionMap.get(clusterVersion)));
+        task.progress();
       }
     }
     task.finish();
@@ -482,6 +489,7 @@ public class ComponentImporter extends DatabaseRunnable {
     for (Map.Entry<LibraryVersion, Integer> entry : libraryVersionMap.entrySet()) {
       for (FqnVersion fqn : entry.getKey().getFqnVersions()) {
         inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.LIBRARY_VERSION_CONTAINS_TYPE_VERSION, entry.getValue(), fqnVersionMap.get(fqn)));
+        task.progress();
       }
     }
     task.finish();
@@ -498,7 +506,7 @@ public class ComponentImporter extends DatabaseRunnable {
     task.start("Processing jar to fqn version mapping", "mappings processed");
     for (Map.Entry<Jar, Integer> entry : jarMap.entrySet()) {
       for (FqnVersion fqn : entry.getKey().getFqns()) {
-        inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.JAR_CONTAINS_FQN_VERSION, entry.getValue(), fqnVersionMap.get(fqn)));
+        inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.JAR_CONTAINS_TYPE_VERSION, entry.getValue(), fqnVersionMap.get(fqn)));
         task.progress();
       }
     }
@@ -508,6 +516,7 @@ public class ComponentImporter extends DatabaseRunnable {
     for (Map.Entry<LibraryVersion, Integer> entry : libraryVersionMap.entrySet()) {
       for (Jar jar : entry.getKey().getJars()) {
         inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION, jarMap.get(jar), entry.getValue()));
+        task.progress();
       }
     }
     task.finish();

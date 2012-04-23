@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.schema;
 
+import edu.uci.ics.sourcerer.tools.java.model.types.Component;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
 import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterVersion;
 import edu.uci.ics.sourcerer.tools.java.utilization.repo.Library;
