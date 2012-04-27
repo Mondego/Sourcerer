@@ -15,21 +15,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.utils.db.sql;
+package edu.uci.ics.sourcerer.tools.java.cloning.method;
 
-import java.io.Closeable;
-import java.util.Collection;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface TypedQueryResult extends Closeable {
-  public boolean next();
-  public <T> T getResult(Selectable<T> selectable);
-  public <T> Collection<T> toCollection(Selectable<T> selectable);
-  public <T> Collection<T> toCollection(ResultConstructor<T> constructor);
-  public <T> Iterable<T> toIterable(Selectable<T> selectable);
-  public <T> Iterable<T> toIterable(ResultConstructor<T> constructor);
-  public <T> T toSingleton(Selectable<T> selectable, boolean permitMissing);
-  public void close();
+public class KeyMatch {
+  private File file;
+  private Confidence confidence;
+  
+  public KeyMatch(File file, Confidence confidence) {
+    this.file = file;
+    this.confidence = confidence;
+  }
+
+  public File getFile() {
+    return file;
+  }
+
+  public Confidence getConfidence() {
+    return confidence;
+  }
 }

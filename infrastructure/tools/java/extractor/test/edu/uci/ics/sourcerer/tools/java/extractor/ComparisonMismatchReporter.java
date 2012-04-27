@@ -17,7 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.extractor;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
+
 import edu.uci.ics.sourcerer.tools.java.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.RelationEX;

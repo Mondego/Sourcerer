@@ -15,21 +15,41 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.utils.db.sql;
+package edu.uci.ics.sourcerer.tools.java.cloning.method;
 
-import java.io.Closeable;
 import java.util.Collection;
+
+import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface TypedQueryResult extends Closeable {
-  public boolean next();
-  public <T> T getResult(Selectable<T> selectable);
-  public <T> Collection<T> toCollection(Selectable<T> selectable);
-  public <T> Collection<T> toCollection(ResultConstructor<T> constructor);
-  public <T> Iterable<T> toIterable(Selectable<T> selectable);
-  public <T> Iterable<T> toIterable(ResultConstructor<T> constructor);
-  public <T> T toSingleton(Selectable<T> selectable, boolean permitMissing);
-  public void close();
+public final class ComplexKey implements Key {
+  private Collection<KeyMatch> matches;
+  
+  public ComplexKey() {
+    matches = Helper.newArrayList();
+  }
+
+  @Override
+  public void addFile(File file) {}
+
+  public void addMatch(KeyMatch match) {
+    matches.add(match);
+  }
+  
+  @Override
+  public Collection<KeyMatch> getMatches() {
+    return matches;
+  }
+
+  @Override
+  public boolean isUnique(Confidence confidence) {
+    for (KeyMatch match : matches) {
+      if (confidence.compareTo(match.getConfidence()) <= 0) {
+        return false;
+      }
+    }
+    return true;
+  }
 }

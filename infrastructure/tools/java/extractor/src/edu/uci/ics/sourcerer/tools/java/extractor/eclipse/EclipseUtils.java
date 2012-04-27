@@ -73,7 +73,7 @@ public class EclipseUtils {
   private static IJavaProject javaProject = null;
  
   private static void initializeProject() {
-    Hashtable options = JavaCore.getOptions();
+    Hashtable<?, ?> options = JavaCore.getOptions();
     JavaCore.setComplianceOptions("1.7", options);
     JavaCore.setOptions(options);
     

@@ -15,21 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.utils.db.sql;
+package edu.uci.ics.sourcerer.tools.java.cloning.pairwise;
 
-import java.io.Closeable;
 import java.util.Collection;
+import java.util.Map;
+
+import edu.uci.ics.sourcerer.tools.java.cloning.method.Project;
+import edu.uci.ics.sourcerer.util.Helper;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface TypedQueryResult extends Closeable {
-  public boolean next();
-  public <T> T getResult(Selectable<T> selectable);
-  public <T> Collection<T> toCollection(Selectable<T> selectable);
-  public <T> Collection<T> toCollection(ResultConstructor<T> constructor);
-  public <T> Iterable<T> toIterable(Selectable<T> selectable);
-  public <T> Iterable<T> toIterable(ResultConstructor<T> constructor);
-  public <T> T toSingleton(Selectable<T> selectable, boolean permitMissing);
-  public void close();
+public final class ProjectMatchSet {
+  private Map<Project, ProjectMatches> map;
+  
+  public ProjectMatchSet(Collection<Project> projects) {
+    map = Helper.newHashMap();
+    for (Project project : projects) {
+      map.put(project, new ProjectMatches(project));
+    }
+  }
+  
+  public MatchingProjects getFileMatch(Project a, Project b) {
+    return map.get(a).getFileMatch(b);
+  }
+  
+  public Collection<ProjectMatches> getProjectMatches() {
+    return map.values();
+  }
 }

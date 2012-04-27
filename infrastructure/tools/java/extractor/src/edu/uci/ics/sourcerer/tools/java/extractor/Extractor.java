@@ -17,8 +17,6 @@
  */
 package edu.uci.ics.sourcerer.tools.java.extractor;
 
-import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -32,8 +30,6 @@ import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.FileWriter;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.UsedJarWriter;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
-import edu.uci.ics.sourcerer.tools.java.extractor.missing.MissingTypeCollection;
-import edu.uci.ics.sourcerer.tools.java.extractor.missing.MissingTypeIdentifier;
 import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;

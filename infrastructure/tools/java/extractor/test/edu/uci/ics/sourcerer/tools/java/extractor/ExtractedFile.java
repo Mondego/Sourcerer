@@ -34,37 +34,37 @@ class ExtractedFile {
   
   private CachedReference<Collection<EntityEX>> entities = new CachedReference<Collection<EntityEX>>() {
     @Override
-    protected Collection<EntityEX> make() {
+    protected Collection<EntityEX> create() {
       return Collections.unmodifiableCollection(project.loadEntities(ExtractedFile.this));
     }
   };
   private CachedReference<EntitySet> entitySet = new CachedReference<EntitySet>() {
     @Override
-    protected EntitySet make() {
+    protected EntitySet create() {
       return EntitySet.make(entities.get());
     }
   };
   private CachedReference<Collection<RelationEX>> relations = new CachedReference<Collection<RelationEX>>() {
     @Override
-    protected Collection<RelationEX> make() {
+    protected Collection<RelationEX> create() {
       return Collections.unmodifiableCollection(project.loadRelations(ExtractedFile.this));
     }
   };
   private CachedReference<RelationSet> relationSet = new CachedReference<RelationSet>() {
     @Override
-    protected RelationSet make() {
+    protected RelationSet create() {
       return RelationSet.make(relations.get(), entitySet.get());
     }
   };
   private CachedReference<Collection<LocalVariableEX>> localVariables = new CachedReference<Collection<LocalVariableEX>>() {
     @Override
-    protected Collection<LocalVariableEX> make() {
+    protected Collection<LocalVariableEX> create() {
       return Collections.unmodifiableCollection(project.loadLocalVariables(ExtractedFile.this));
     }
   }; 
   private CachedReference<LocalVariableSet> localVariableSet = new CachedReference<LocalVariableSet>() {
     @Override
-    protected LocalVariableSet make() {
+    protected LocalVariableSet create() {
       return LocalVariableSet.make(localVariables.get());
     }
   };

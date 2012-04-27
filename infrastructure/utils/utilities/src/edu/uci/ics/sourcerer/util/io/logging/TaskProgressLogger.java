@@ -65,7 +65,7 @@ public class TaskProgressLogger {
   
   public TaskProgressLogger createChild() {
     TaskProgressLogger child = new TaskProgressLogger(new LinkedList<TaskInfo>());
-    child.tasks.add(new TaskInfo(null, tasks.peek().indent, -1));
+    child.tasks.add(new TaskInfo(null, null, tasks.peek().indent, -1));
     return child;
   }
   
@@ -90,11 +90,11 @@ public class TaskProgressLogger {
   
   protected void start(String taskName, int indent, String finishedText, int progressInterval) {
     logger.info(getSpaces(indent) + taskName + "...");
-    tasks.push(new TaskInfo(finishedText, indent, progressInterval));
+    tasks.push(new TaskInfo(taskName, finishedText, indent, progressInterval));
   }
   
   public void start(String taskName) {
-    start(taskName, getIndent(), taskName.toLowerCase(), -1);
+    start(taskName, getIndent(), null, -1);
   }
   
   public void start(String taskName, String finishedText) {
@@ -134,13 +134,23 @@ public class TaskProgressLogger {
     progress(null);
   }
   
+  public void exception(Exception e) {
+    if (tasks.isEmpty()) {
+      throw new IllegalStateException("Cannot finish a non-existant task.", e);
+    } else {
+      TaskInfo info = tasks.pop();
+      logger.info(getSpaces(info.indent + 1) + "Unable to finish " + info.taskText + " due to exception.");
+      logger.log(Level.SEVERE, "Exception while " + info.taskText, e);
+    }
+  }
+  
   public void finish() {
     if (tasks.isEmpty()) {
       throw new IllegalStateException("Cannot finish a non-existant task.");
     } else {
       TaskInfo info = tasks.pop();
       if (info.progressInterval == -1) {
-        logger.info(getSpaces(info.indent + 1) + "Finished " + info.finishedText + " in " + formatTime(info.startTime));
+        logger.info(getSpaces(info.indent + 1) + "Finished " + info.taskText + " in " + formatTime(info.startTime));
       } else {
         logger.info(getSpaces(info.indent + 1) + info.count + " " + info.finishedText + " in " + formatTime(info.startTime));
       }
@@ -179,13 +189,15 @@ public class TaskProgressLogger {
 
   
   private static class TaskInfo {
+    public final String taskText;
     public final String finishedText;
     public final int indent;
     public final long startTime;
     public int count;
     public int progressInterval;
     
-    public TaskInfo(String finishedText, int indent, int progressInterval) {
+    public TaskInfo(String taskText, String finishedText, int indent, int progressInterval) {
+      this.taskText = taskText.toLowerCase();
       this.finishedText = finishedText;
       this.indent = indent;
       this.startTime = System.currentTimeMillis();

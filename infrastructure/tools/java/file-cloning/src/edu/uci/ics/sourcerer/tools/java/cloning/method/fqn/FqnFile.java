@@ -15,21 +15,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.utils.db.sql;
+package edu.uci.ics.sourcerer.tools.java.cloning.method.fqn;
 
-import java.io.Closeable;
-import java.util.Collection;
+import edu.uci.ics.sourcerer.util.io.LWField;
+import edu.uci.ics.sourcerer.util.io.LineWriteable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface TypedQueryResult extends Closeable {
-  public boolean next();
-  public <T> T getResult(Selectable<T> selectable);
-  public <T> Collection<T> toCollection(Selectable<T> selectable);
-  public <T> Collection<T> toCollection(ResultConstructor<T> constructor);
-  public <T> Iterable<T> toIterable(Selectable<T> selectable);
-  public <T> Iterable<T> toIterable(ResultConstructor<T> constructor);
-  public <T> T toSingleton(Selectable<T> selectable, boolean permitMissing);
-  public void close();
+public class FqnFile implements LineWriteable {
+  @LWField private String project;
+  @LWField private String path;
+  @LWField private String fqn;
+  
+  protected FqnFile() {}
+  
+  protected void set(String project, String path, String fqn) {
+    this.project = project;
+    this.path = path;
+    this.fqn = fqn;
+  }
+  
+  public String getProject() {
+    return project;
+  }
+  
+  public String getPath() {
+    return path;
+  }
+  
+  public String getFqn() {
+    return fqn;
+  }
 }

@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -35,6 +36,7 @@ import edu.uci.ics.sourcerer.util.ArrayUtils;
 import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.Condition;
+import edu.uci.ics.sourcerer.utils.db.sql.ResultConstructor;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 import edu.uci.ics.sourcerer.utils.db.sql.Table;
@@ -306,7 +308,7 @@ class SelectQueryImpl implements SelectQuery {
         }
       }
     }
-
+    
     @Override
     public <T> Collection<T> toCollection(Selectable<T> selectable) {
       Collection<T> collection = new ArrayList<>();
@@ -316,6 +318,98 @@ class SelectQueryImpl implements SelectQuery {
       return collection;
     }
     
+
+    @Override
+    public <T> Collection<T> toCollection(ResultConstructor<T> constructor) {
+      Collection<T> collection = new ArrayList<>();
+      while (next()) {
+        collection.add(constructor.constructResult(this));
+      }
+      return collection;
+    }
+    
+    @Override
+    public <T> Iterable<T> toIterable(final Selectable<T> selectable) {
+      return new Iterable<T>() {
+        @Override
+        public Iterator<T> iterator() {
+          return new Iterator<T>() {
+            T next = null;
+            @Override
+            public boolean hasNext() {
+              if (next == null) {
+                if (QueryResult.this.next()) {
+                  next = getResult(selectable);
+                  return true;
+                } else {
+                  return false;
+                }
+              } else {
+                return true;
+              }
+            }
+
+            @Override
+            public T next() {
+              if (hasNext()) {
+                T result = next;
+                next = null;
+                return result;
+              } else {
+                throw new NoSuchElementException();
+              }
+            }
+
+            @Override
+            public void remove() {
+              throw new UnsupportedOperationException();
+            }
+          };
+        }
+      };
+    }
+    
+    @Override
+    public <T> Iterable<T> toIterable(final ResultConstructor<T> constructor) {
+      return new Iterable<T>() {
+        @Override
+        public Iterator<T> iterator() {
+          return new Iterator<T>() {
+            T next = null;
+            @Override
+            public boolean hasNext() {
+              if (next == null) {
+                if (QueryResult.this.next()) {
+                  next = constructor.constructResult(QueryResult.this);
+                  return true;
+                } else {
+                  return false;
+                }
+              } else {
+                return true;
+              }
+            }
+
+            @Override
+            public T next() {
+              if (hasNext()) {
+                T result = next;
+                next = null;
+                return result;
+              } else {
+                throw new NoSuchElementException();
+              }
+            }
+
+            @Override
+            public void remove() {
+              throw new UnsupportedOperationException();
+            }
+          };
+        }
+      };
+    }
+
     @Override
     public <T> T toSingleton(Selectable<T> selectable, boolean permitMissing) {
       if (next()) {

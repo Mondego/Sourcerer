@@ -73,7 +73,7 @@ public class DatabaseInitializer {
         task.finish();
         
         task.start("Adding the primitive types");
-        Integer projectID = exec.insertWithKey(ProjectsTable.TABLE.createPrimitivesInsert());
+        Integer projectID = exec.insertWithKey(ProjectsTable.createPrimitivesInsert());
         exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "boolean",  projectID));
         exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "char", projectID));
         exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "byte", projectID));
@@ -86,7 +86,7 @@ public class DatabaseInitializer {
         task.finish();
         
         task.start("Adding the unknowns project");
-        exec.insert(ProjectsTable.TABLE.createUnknownsInsert());
+        exec.insert(ProjectsTable.createUnknownsInsert());
         task.finish();
         
         task.finish();
