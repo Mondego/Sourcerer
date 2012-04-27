@@ -128,7 +128,7 @@ public final class RepoBuilder {
   public static void downloadProjectContent() {
     ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
     
-    TaskProgressLogger task = TaskProgressLogger.create();
+    TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Downloading projects", "projects downloaded");
     
     SimpleDateFormat format = new SimpleDateFormat("MMM-dd-yyyy");
@@ -163,7 +163,7 @@ public final class RepoBuilder {
   }
   
   public static void cleanSubversionContent() {
-    TaskProgressLogger task = TaskProgressLogger.create();
+    TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Cleaning SVN content");
     ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
     
