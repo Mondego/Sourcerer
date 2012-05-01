@@ -32,6 +32,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.ContentFile;
+import edu.uci.ics.sourcerer.tools.core.repo.model.RepoFile;
 import edu.uci.ics.sourcerer.tools.java.db.schema.CommentsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable;
@@ -74,7 +75,9 @@ public class FileAccessor {
     
     private FileDatabaseAccessor() {
       conn = DatabaseConnectionFactory.INSTANCE.make();
-      conn.open();
+      if (!conn.open()) {
+        logger.info("Error opening connection");
+      }
     }
     
     private SelectQuery selectByProjectID = null;
@@ -321,60 +324,70 @@ public class FileAccessor {
   
   private static Result getSourceFile(FileDatabaseAccessor db, Integer projectID, Integer fileID, String path, Integer offset, Integer length) {
     TypedQueryResult projectInfo = db.selectByProjectID(projectID);
-    Project type = projectInfo.getResult(ProjectsTable.PROJECT_TYPE);
-    if (type == Project.CRAWLED) {
-      JavaProject project = repo.getProject(projectInfo.getResult(ProjectsTable.PATH));
-      JavaFileSet files = project.getContent();
-      ContentFile file = files.getFile(path);
-      byte[] contents = FileUtils.getFileAsByteArray(file.getFile().toFile());
-      if (contents == null) {
-          return new Result("Unable to find " + path + " for " + fileID);
-      } else {
-        if (offset == null) {
-          return new Result(file.getFile().getName(), fileID, contents);
+    if (projectInfo.next()) {
+      Project type = projectInfo.getResult(ProjectsTable.PROJECT_TYPE);
+      if (type == Project.CRAWLED) {
+        JavaProject project = repo.getProject(projectInfo.getResult(ProjectsTable.PATH));
+        JavaFileSet files = project.getContent();
+        ContentFile file = files.getFile(path);
+        byte[] contents = FileUtils.getFileAsByteArray(file.getFile().toFile());
+        if (contents == null) {
+            return new Result("Unable to find " + path + " for " + fileID);
         } else {
-          String name = file.getFile().getName();
-          name = name.substring(0, name.indexOf('.')) + "-" + offset + "-" + length + ".java";
-          return new Result(name, fileID, contents, offset, length);
+          if (offset == null) {
+            return new Result(file.getFile().getName(), fileID, contents);
+          } else {
+            String name = file.getFile().getName();
+            name = name.substring(0, name.indexOf('.')) + "-" + offset + "-" + length + ".java";
+            return new Result(name, fileID, contents, offset, length);
+          }
         }
-      }
-    } else if (type == Project.JAR || type == Project.JAVA_LIBRARY || type == Project.MAVEN) {
-      String hash = projectInfo.getResult(ProjectsTable.HASH);
-      JarFile jar = repo.getJarFile(hash);
-      if (jar == null) {
-        return new Result("Unable to find project " + projectID + " for class file " + fileID + " with hash " + hash);
-      } else {
-        try (ZipFile zip = new ZipFile(jar.getFile().toFile())) {
-          String minusClass = path.substring(0, path.lastIndexOf('.'));
-          String entryName = minusClass.replace('.', '/') + ".java";
-          ZipEntry entry = zip.getEntry(entryName);
-          if (entry == null) {
-            Enumeration<? extends ZipEntry> entries = zip.entries();
-            for (ZipEntry possibleEntry = entries.nextElement(); entries.hasMoreElements(); possibleEntry = entries.nextElement()) {
-              if (possibleEntry.getName().endsWith(entryName)) {
-                entry = possibleEntry;
-                break;
+      } else if (type == Project.JAR || type == Project.JAVA_LIBRARY || type == Project.MAVEN) {
+        String hash = projectInfo.getResult(ProjectsTable.HASH);
+        JarFile jar = repo.getJarFile(hash);
+        if (jar == null) {
+          return new Result("Unable to find project " + projectID + " for class file " + fileID + " with hash " + hash);
+        } else {
+          RepoFile file = null;
+          if (jar.getSourceFile().exists()) {
+            file = jar.getSourceFile();
+          } else {
+            file = jar.getFile();
+          }
+          try (ZipFile zip = new ZipFile(file.toFile())) {
+            String minusClass = path.substring(0, path.lastIndexOf('.'));
+            String entryName = minusClass.replace('.', '/') + ".java";
+            ZipEntry entry = zip.getEntry(entryName);
+            if (entry == null) {
+              Enumeration<? extends ZipEntry> entries = zip.entries();
+              for (ZipEntry possibleEntry = entries.nextElement(); entries.hasMoreElements(); possibleEntry = entries.nextElement()) {
+                if (possibleEntry.getName().endsWith(entryName)) {
+                  entry = possibleEntry;
+                  break;
+                }
               }
             }
-          }
-          if (entry == null) {
-            return new Result("Unable to find entry " + entryName + " in " + jar + " for file " + fileID + " and project " + projectID);
-          } else {
-            if (offset == null) {
-              return new Result(entry.getName(), fileID, IOUtils.getInputStreamAsByteArray(zip.getInputStream(entry), (int)entry.getSize()));
+            if (entry == null) {
+              return new Result("Unable to find entry " + entryName + " in " + jar + " for file " + fileID + " and project " + projectID);
             } else {
-              String name = entry.getName();
-              name = name.substring(0, name.lastIndexOf('.')) + "-" + offset + "-" + length + ".java";
-              return new Result(name, fileID, IOUtils.getInputStreamAsByteArray(zip.getInputStream(entry), (int)entry.getSize()), offset, length);
+              if (offset == null) {
+                return new Result(entry.getName(), fileID, IOUtils.getInputStreamAsByteArray(zip.getInputStream(entry), (int)entry.getSize()));
+              } else {
+                String name = entry.getName();
+                name = name.substring(0, name.lastIndexOf('.')) + "-" + offset + "-" + length + ".java";
+                return new Result(name, fileID, IOUtils.getInputStreamAsByteArray(zip.getInputStream(entry), (int)entry.getSize()), offset, length);
+              }
             }
+          } catch (Exception e) {
+            logger.log(Level.SEVERE, "Unable to read jar file", e);
+            return new Result("Unable to read jar file");
           }
-        } catch (Exception e) {
-          logger.log(Level.SEVERE, "Unable to read jar file", e);
-          return new Result("Unable to read jar file");
         }
+      } else {
+        return new Result("Invalid project type: " + type + " for project " + projectID + " and file " + fileID);
       }
     } else {
-      return new Result("Invalid project type: " + type + " for file " + fileID);
+      return new Result("No match for project " + projectID + " and file " + fileID);
     }
   }
   

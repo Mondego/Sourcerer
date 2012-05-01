@@ -40,4 +40,21 @@ public class CollectionUtils {
     }
     return false;
   }
+  
+  public static <T> double compuateJaccard(Collection<T> one, Collection<T> two) {
+    int intersection = 0;
+    int union = 0;
+    for (T item : one) {
+      if (two.contains(item)) {
+        intersection++;
+      }
+      union++;
+    }
+    for (T item : two) {
+      if (!one.contains(item)) {
+        union++;
+      }
+    }
+    return (double) intersection / (double) union;
+  }
 }

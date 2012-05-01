@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.server.file;
+package edu.uci.ics.sourcerer.services.file;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -27,10 +27,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import edu.uci.ics.sourcerer.db.tools.FileAccessor;
-import edu.uci.ics.sourcerer.db.tools.FileAccessor.Result;
+import edu.uci.ics.sourcerer.tools.java.db.exported.FileAccessor;
+import edu.uci.ics.sourcerer.tools.java.db.exported.FileAccessor.Result;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
-import edu.uci.ics.sourcerer.util.server.ServletUtils;
+import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
+import edu.uci.ics.sourcerer.utils.servlet.ServletUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -40,26 +42,16 @@ public class FileServer extends HttpServlet {
   @Override
   public void init() throws ServletException {
     ArgumentManager.PROPERTIES_STREAM.setValue(getServletContext().getResourceAsStream("/WEB-INF/lib/file-server.properties"));
+    JavaRepositoryFactory.INPUT_REPO.permit();
+    DatabaseConnectionFactory.DATABASE_URL.permit();
+    DatabaseConnectionFactory.DATABASE_USER.permit();
+    DatabaseConnectionFactory.DATABASE_PASSWORD.permit();
     ArgumentManager.initializeProperties();
   }
   
   @Override
   public void destroy() {
     logger.log(Level.INFO, "Destroying");
-  }
-  
-  private Integer getIntValue(HttpServletRequest request, String name) {
-    String val = request.getParameter(name);
-    if (val == null) {
-      return null;
-    } else {
-      try {
-        return Integer.valueOf(val);
-      } catch (NumberFormatException e) {
-        logger.log(Level.SEVERE, val + " is not an int");
-        return null;
-      }
-    }
   }
   
   @Override
@@ -70,22 +62,22 @@ public class FileServer extends HttpServlet {
     Result result = null;
     
     // Lookup by projectID
-    Integer projectID = getIntValue(request, "projectID");
+    Integer projectID = ServletUtils.getIntValue(request, "projectID");
     if (projectID != null) {
       result = FileAccessor.lookupResultByProjectID(projectID);
     } else {
       // Lookup by fileID
-      Integer fileID = getIntValue(request, "fileID");
+      Integer fileID = ServletUtils.getIntValue(request, "fileID");
       if (fileID != null) {
         result = FileAccessor.lookupResultByFileID(fileID);
       } else {
         // Lookup by entityID
-        Integer entityID = getIntValue(request, "entityID");
+        Integer entityID = ServletUtils.getIntValue(request, "entityID");
         if (entityID != null) {
           result = FileAccessor.lookupResultByEntityID(entityID);
         } else {
           // Lookup by relationID
-          Integer relationID = getIntValue(request, "relationID");
+          Integer relationID = ServletUtils.getIntValue(request, "relationID");
           if (relationID != null) {
             result = FileAccessor.lookupResultByRelationID(relationID);
           } else {

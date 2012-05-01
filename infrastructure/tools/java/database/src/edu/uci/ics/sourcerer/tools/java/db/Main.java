@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db;
 
+import edu.uci.ics.sourcerer.tools.java.db.exported.ComponentVerifier;
 import edu.uci.ics.sourcerer.tools.java.db.importer.ComponentImporter;
 import edu.uci.ics.sourcerer.tools.java.db.importer.DatabaseInitializer;
 import edu.uci.ics.sourcerer.tools.java.db.importer.ParallelDatabaseImporter;
@@ -96,6 +97,19 @@ public class Main {
         DatabaseConnectionFactory.DATABASE_USER, 
         DatabaseConnectionFactory.DATABASE_PASSWORD,
         FileUtils.TEMP_DIR);
+    
+  public static final Command COMPUTE_COMPONENT_FIT =
+    new Command("compute-component-fit", "Computes how well the identified components match the maven classification.") {
+      @Override
+      protected void action() {
+        ComponentVerifier.computeJaccard();
+      }
+    }.setProperties(
+        DatabaseConnectionFactory.DATABASE_URL, 
+        DatabaseConnectionFactory.DATABASE_USER, 
+        DatabaseConnectionFactory.DATABASE_PASSWORD,
+        ComponentVerifier.JACCARD_TABLE,
+        ComponentVerifier.JACCARD_LOG);
 
   public static final Command ADD_TYPE_POPULARITY =
     new Command("add-type-popularity", "Adds the type popularity to the database.") {

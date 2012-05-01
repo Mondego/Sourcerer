@@ -183,7 +183,7 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
       FileUtils.copyFile(entry.getValue().iterator().next().getFile().toFile(), dir.getChild(JarFileImpl.JAR_NAME).toFile());
       
       // Populate the properties
-      JarFileImpl jar = JarFileImpl.make(dir);
+      JarFileImpl jar = JarFileImpl.create(dir);
       
       JarProperties properties = jar.getProperties();
       
@@ -225,7 +225,7 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
     }
     
     // Populate the properties
-    JarFileImpl newJar = JarFileImpl.make(dir);
+    JarFileImpl newJar = JarFileImpl.create(dir);
     
     JarProperties properties = newJar.getProperties();
     properties.NAME.setValue(jar.getName());
@@ -262,7 +262,7 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
       }
       
       // Populate the properties
-      JarFileImpl newJar = JarFileImpl.make(dir);
+      JarFileImpl newJar = JarFileImpl.create(dir);
       
       if (newJar != null) {
         JarProperties properties = newJar.getProperties();

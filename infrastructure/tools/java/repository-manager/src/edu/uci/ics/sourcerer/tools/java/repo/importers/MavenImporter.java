@@ -174,8 +174,6 @@ public class MavenImporter {
         }
       }
 
-
-
       @Override
       public void characters(char[] ch, int start, int length) {
         if (inGroupID) {

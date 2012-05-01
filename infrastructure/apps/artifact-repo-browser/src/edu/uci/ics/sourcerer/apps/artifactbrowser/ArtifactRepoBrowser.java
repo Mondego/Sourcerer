@@ -39,7 +39,6 @@ import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnection;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
-import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.QualifiedColumn;
 import edu.uci.ics.sourcerer.utils.db.sql.QualifiedTable;

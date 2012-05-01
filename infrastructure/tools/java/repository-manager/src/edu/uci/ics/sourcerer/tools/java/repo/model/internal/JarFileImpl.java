@@ -76,11 +76,11 @@ public final class JarFileImpl implements JarFile, IJar {
     }
   }
   
-  static JarFileImpl make(RepoFileImpl dir) {
+  static JarFileImpl create(RepoFileImpl dir) {
     RepoFileImpl root = dir.asRoot();
     RepoFileImpl propFile = root.getChild(JAR_PROPERTIES.getValue());
     if (propFile.exists()) {
-      logger.log(Level.SEVERE, "Cannot make a JarFileImpl where one already exists: " + dir);
+      logger.log(Level.SEVERE, "Cannot create a JarFileImpl where one already exists: " + dir);
       return null;
     } else {
       JarProperties properties = new JarProperties(propFile);

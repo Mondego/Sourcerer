@@ -17,7 +17,7 @@
  */
 package edu.uci.ics.sourcerer.apps.codebrowser;
 
-import static edu.uci.ics.sourcerer.util.io.Logging.logger;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -36,7 +36,9 @@ import edu.uci.ics.sourcerer.tools.java.highlighter.TagInfo;
 import edu.uci.ics.sourcerer.tools.java.highlighter.TagType;
 import edu.uci.ics.sourcerer.tools.java.highlighter.SyntaxHighlighter;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
+import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
 import edu.uci.ics.sourcerer.utils.servlet.ServletUtils;
 
 /**
@@ -47,6 +49,10 @@ public class CodeBrowser extends HttpServlet {
   @Override
   public void init() throws ServletException {
     ArgumentManager.PROPERTIES_STREAM.setValue(getServletContext().getResourceAsStream("/WEB-INF/lib/code-browser.properties"));
+    JavaRepositoryFactory.INPUT_REPO.permit();
+    DatabaseConnectionFactory.DATABASE_URL.permit();
+    DatabaseConnectionFactory.DATABASE_USER.permit();
+    DatabaseConnectionFactory.DATABASE_PASSWORD.permit();
     ArgumentManager.initializeProperties();
   }
   

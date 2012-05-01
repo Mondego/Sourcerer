@@ -11,7 +11,7 @@
 
     <servlet>
         <servlet-name>FileServer</servlet-name>
-        <servlet-class>edu.uci.ics.sourcerer.server.file.FileServer</servlet-class>
+        <servlet-class>edu.uci.ics.sourcerer.services.file.FileServer</servlet-class>
     </servlet>
 
     <servlet-mapping>
