@@ -86,7 +86,7 @@ public class CoverageCalculator {
     boolean loaded = false;
     if (SOURCED_CACHE.getValue().exists()) {
       task.start("Loading cache");
-      try (BufferedReader reader = IOUtils.makeBufferedReader(SOURCED_CACHE.getValue())) {
+      try (BufferedReader reader = IOUtils.createBufferedReader(SOURCED_CACHE.getValue())) {
         root.createLoader().load(reader);
         loaded = true;
       } catch (IOException | NoSuchElementException e) {

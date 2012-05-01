@@ -100,7 +100,7 @@ public class JarCollection implements Iterable<Jar> {
       Checkpoint checkpoint = task.checkpoint();
       task.report(" Cache found");
       task.start("Loading jars", "jars loaded", 0);
-      try (BufferedReader reader = IOUtils.makeBufferedReader(cache)) {
+      try (BufferedReader reader = IOUtils.createBufferedReader(cache)) {
         // Read the number of jars
         int count = Integer.parseInt(reader.readLine());
         // Read the jars

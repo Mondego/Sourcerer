@@ -41,10 +41,10 @@ public final class IOUtilFactory {
   }
   
   public static SimpleDeserializer makeSimpleDeserializer(Argument<File> file) throws IOException {
-    return SimpleDeserializerImpl.make(file.getValue());
+    return SimpleDeserializerImpl.create(file.getValue());
   }
   
   public static SimpleDeserializer makeSimpleDeserializer(File file) throws IOException {
-    return SimpleDeserializerImpl.make(file);
+    return SimpleDeserializerImpl.create(file);
   }
 }

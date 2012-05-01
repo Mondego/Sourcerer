@@ -45,14 +45,16 @@ import edu.uci.ics.sourcerer.util.io.SimpleSerializable;
  * @author Joel Ossher (jossher@uci.edu)
  */
 final class SimpleDeserializerImpl implements SimpleDeserializer {
+  private final File file;
   private BufferedReader br;
   
-  private SimpleDeserializerImpl(BufferedReader br) {
+  private SimpleDeserializerImpl(File file, BufferedReader br) {
+    this.file = file;
     this.br = br;
   }
   
-  static SimpleDeserializerImpl make(File file) throws IOException {
-    return new SimpleDeserializerImpl(IOUtils.makeBufferedReader(file));
+  static SimpleDeserializerImpl create(File file) throws IOException {
+    return new SimpleDeserializerImpl(file, IOUtils.createBufferedReader(file));
   }
   
   private <T extends CustomSerializable> EntryReader<T> positionForNext(ObjectDeserializer<T> deserializer) throws IOException {
@@ -258,12 +260,8 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
                 } else {
                   try {
                     next = entryReader.create(line);
-                  } catch (InstantiationException e) {
-                    logger.log(Level.SEVERE, "Unable to create object instance", e);
-                  } catch (IllegalAccessException e) {
-                    logger.log(Level.SEVERE, "Unable to create object instance / set field values", e);
-                  } catch (InvocationTargetException e) {
-                    logger.log(Level.SEVERE, "Unable to create object instance", e);
+                  } catch (NoSuchElementException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                    logger.log(Level.SEVERE, "Error deserializing line: " + line + " in " + file.getPath(), e);
                   }
                 }
               }
@@ -300,6 +298,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
       }
     };
   }
+  
   @Override
   public <T extends SimpleSerializable> Iterable<T> deserializeToIterable(Class<T> klass, final boolean closeOnCompletion, boolean trans) throws IOException {
     final EntryReader<T> entryReader = positionForNext(klass, trans);
@@ -320,12 +319,8 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
       for (String line = br.readLine(); !SimpleSerializerImpl.isFinished(line); line = br.readLine()) {
         try {
           coll.add(entryReader.create(line));
-        } catch (InstantiationException e) {
-          logger.log(Level.SEVERE, "Unable to create object instance", e);
-        } catch (IllegalAccessException e) {
-          logger.log(Level.SEVERE, "Unable to create object instance / set field values", e);
-        } catch (InvocationTargetException e) {
-          logger.log(Level.SEVERE, "Unable to create object instance", e);
+        } catch (NoSuchElementException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+          logger.log(Level.SEVERE, "Error deserializing line: " + line + " in " + file.getPath(), e);
         }
       }
       return coll;
@@ -352,12 +347,8 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
       for (String line = br.readLine(); !SimpleSerializerImpl.isFinished(line); line = br.readLine()) {
         try {
           coll.add(entryReader.create(line));
-        } catch (InstantiationException e) {
-          logger.log(Level.SEVERE, "Unable to create object instance", e);
-        } catch (IllegalAccessException e) {
-          logger.log(Level.SEVERE, "Unable to create object instance / set field values", e);
-        } catch (InvocationTargetException e) {
-          logger.log(Level.SEVERE, "Unable to create object instance", e);
+        } catch (NoSuchElementException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+          logger.log(Level.SEVERE, "Error deserializing line: " + line + " in " + file.getPath(), e);
         }
       }
       return coll;

@@ -38,7 +38,7 @@ public class PackageExtractor {
   };
   
   public static String extractPackage(File file) {
-    try (BufferedReader br = IOUtils.makeBufferedReader(file)) {
+    try (BufferedReader br = IOUtils.createBufferedReader(file)) {
       StringBuilder word = new StringBuilder();
       State state = State.START;
       for (int next = br.read(); next != -1; next = br.read()) {

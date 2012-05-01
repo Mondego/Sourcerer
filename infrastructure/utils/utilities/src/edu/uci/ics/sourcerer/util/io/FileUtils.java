@@ -220,7 +220,7 @@ public class FileUtils {
   }
   
   public static Collection<String> readFileToCollection(File file) {
-    try (BufferedReader reader = IOUtils.makeBufferedReader(file)) {
+    try (BufferedReader reader = IOUtils.createBufferedReader(file)) {
       Collection<String> result = new LinkedList<>();
       for (String line = reader.readLine(); line != null; line = reader.readLine()) {
         result.add(line);
@@ -241,7 +241,7 @@ public class FileUtils {
       public Iterator<String> iterator() {
         if (file.exists()) {
           try {
-            final BufferedReader br = IOUtils.makeBufferedReader(file);
+            final BufferedReader br = IOUtils.createBufferedReader(file);
             return new Iterator<String>() {
               BufferedReader reader = br;
               String nextLine = null;

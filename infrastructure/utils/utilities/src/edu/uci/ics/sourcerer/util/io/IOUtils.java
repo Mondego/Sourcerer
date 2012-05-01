@@ -70,7 +70,7 @@ public final class IOUtils {
     return new BufferedWriter(new FileWriter(file, append));
   }
   
-  public static BufferedReader makeBufferedReader(File file) throws IOException {
+  public static BufferedReader createBufferedReader(File file) throws IOException {
     return new BufferedReader(new FileReader(file));
   }
   
