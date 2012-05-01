@@ -245,34 +245,42 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
       loadMavenJarIndex();
     }
     String hash = FileUtils.computeHash(jar);
-    if (mavenJarIndex.containsKey(hash)) {
-      logger.info("Repository already contains a copy of " + group + "." + artifact);
-    } else {
-      String subDir = group.replace('.', '/') + "/" + artifact + "/" + version;
-  
-      RepoFileImpl dir = repoRoot.getChild(JARS_DIRECTORY).getChild(MAVEN_JARS_DIRECTORY).getChild(subDir);
-      
-      // Make the directory
-      dir.makeDirs();
-      
-      // Copy the files
-      FileUtils.copyFile(jar, dir.getChild(JarFileImpl.JAR_NAME).toFile());
-      if (source != null && source.exists()) {
-        FileUtils.copyFile(source, dir.getChild(JarFileImpl.SOURCE_JAR_NAME).toFile());
+    while (mavenJarIndex.containsKey(hash)) {
+      logger.info("Difficulty matching: " + group + "." + artifact + " (" + version + ")");
+      JarFileImpl mavenJar = mavenJarIndex.get(hash);
+      logger.info("  Found duplicate at: " + mavenJar);
+      JarProperties properties = mavenJar.getProperties();
+      // If it's not exactly equal, just add the duplicate, giving the original priority
+      if (group.equals(properties.GROUP.getValue()) && artifact.equals(properties.NAME.getValue()) && version.equals(properties.VERSION.getValue())) {
+        return;
       }
-      
-      // Populate the properties
-      JarFileImpl newJar = JarFileImpl.make(dir);
-      
-      if (newJar != null) {
-        JarProperties properties = newJar.getProperties();
-        properties.NAME.setValue(artifact);
-        properties.GROUP.setValue(group);
-        properties.SOURCE.setValue(JarSource.MAVEN);
-        properties.HASH.setValue(hash);
-        properties.VERSION.setValue(version);
-        properties.save();
-      }
+      // Add a 0 to the end of the hash
+      hash += "0";
+    } 
+    String subDir = group.replace('.', '/') + "/" + artifact + "/" + version;
+
+    RepoFileImpl dir = repoRoot.getChild(JARS_DIRECTORY).getChild(MAVEN_JARS_DIRECTORY).getChild(subDir);
+    
+    // Make the directory
+    dir.makeDirs();
+    
+    // Copy the files
+    FileUtils.copyFile(jar, dir.getChild(JarFileImpl.JAR_NAME).toFile());
+    if (source != null && source.exists()) {
+      FileUtils.copyFile(source, dir.getChild(JarFileImpl.SOURCE_JAR_NAME).toFile());
+    }
+    
+    // Populate the properties
+    JarFileImpl newJar = JarFileImpl.make(dir);
+    
+    if (newJar != null) {
+      JarProperties properties = newJar.getProperties();
+      properties.NAME.setValue(artifact);
+      properties.GROUP.setValue(group);
+      properties.SOURCE.setValue(JarSource.MAVEN);
+      properties.HASH.setValue(hash);
+      properties.VERSION.setValue(version);
+      properties.save();
     }
   }
   

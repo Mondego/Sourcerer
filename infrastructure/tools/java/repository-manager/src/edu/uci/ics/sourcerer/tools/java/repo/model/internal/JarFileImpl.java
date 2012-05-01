@@ -115,10 +115,21 @@ public final class JarFileImpl implements JarFile, IJar {
   
   @Override
   public String toString() {
-    if (properties.VERSION.getValue() == null) {
+    String group = properties.GROUP.getValue();
+    String name = properties.NAME.getValue();
+    String version = properties.VERSION.getValue();
+    if (version == null) {
       return properties.NAME.getValue();
     } else {
-      return properties.NAME.getValue() + " (" + properties.VERSION.getValue() + ")";
+      StringBuilder builder = new StringBuilder();
+      if (group != null) {
+        builder.append(group);
+      }
+      builder.append(name);
+      if (version != null) {
+        builder.append(" (").append(version).append(")");
+      }
+      return builder.toString();
     }
   }
 
