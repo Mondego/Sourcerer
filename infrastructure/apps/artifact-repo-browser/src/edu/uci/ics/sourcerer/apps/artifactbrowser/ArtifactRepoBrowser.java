@@ -25,10 +25,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.w3c.dom.html.HTMLAppletElement;
-
-import com.sun.media.sound.JARSoundbankReader;
-
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentRelationsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
@@ -43,6 +39,7 @@ import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnection;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
+import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.QualifiedColumn;
 import edu.uci.ics.sourcerer.utils.db.sql.QualifiedTable;
@@ -75,6 +72,20 @@ public class ArtifactRepoBrowser extends HttpServlet {
     DatabaseConnectionFactory.DATABASE_USER.permit();
     DatabaseConnectionFactory.DATABASE_PASSWORD.permit();
     ArgumentManager.initializeProperties();
+  }
+  
+  private static void appendJarName(TypedQueryResult result, StringBuilder builder) {
+    String name = result.getResult(ProjectsTable.NAME);
+    String version = result.getResult(ProjectsTable.VERSION);
+    String group = result.getResult(ProjectsTable.GROUP);
+    
+    if (group != null) {
+      builder.append(group).append(".");
+    }
+    builder.append(name);
+    if (version != null) {
+      builder.append(" (").append(version).append(")");
+    }
   }
   
   private void serveMain(StringBuilder html) {
@@ -113,43 +124,72 @@ public class ArtifactRepoBrowser extends HttpServlet {
     
     html.append("<h3>Library ").append(libraryID).append("</h3>");
     
+    // Library Versions
+    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE);
+         SelectQuery inner = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
+      query.addSelect(ComponentRelationsTable.TARGET_ID);
+      query.andWhere(ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.SOURCE_ID.compareEquals(libraryID));
+      query.orderBy(ComponentRelationsTable.TARGET_ID, true);
+      
+      inner.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION);
+      ConstantCondition<Integer> innerCond = ComponentRelationsTable.TARGET_ID.compareEquals();
+      inner.andWhere(innerCond.and(ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION)));
+      
+      int libraryVersionCount = 0;
+      StringBuilder temp = new StringBuilder();
+      TypedQueryResult result = query.select();
+      while (result.next()) {
+        Integer libraryVersionID = result.getResult(ComponentRelationsTable.TARGET_ID);
+        temp.append("<li>");
+        temp.append("<a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">Library Version ").append(libraryVersionID).append("</a>");
+        
+        temp.append("<ul>");
+        innerCond.setValue(libraryVersionID);
+        TypedQueryResult innerResult = inner.select();
+        while (innerResult.next()) {
+          Integer jarID = innerResult.getResult(ProjectsTable.PROJECT_ID);
+          temp.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">");
+          appendJarName(innerResult, temp);
+          temp.append("</a></li>");
+        }
+        temp.append("</ul></li>");
+        libraryVersionCount++;
+      }
+      
+      html.append("<h4>").append(libraryVersionCount).append(" Library Versions</h4>");
+      html.append("<ul>");
+      html.append(temp.toString());
+      html.append("</ul>");
+    }
+    
     { // Jars
       QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("a");
       QualifiedTable j2lv = ComponentRelationsTable.TABLE.qualify("b");
       
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(l2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(j2lv)), ComponentRelationsTable.SOURCE_ID.qualify(j2lv).compareEquals(ProjectsTable.PROJECT_ID))) {
-        query.addSelects(ProjectsTable.NAME, ProjectsTable.PROJECT_ID);
+        query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
         query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(l2lv).compareEquals(libraryID), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(j2lv).compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION));
+        query.orderBy(ProjectsTable.GROUP, true);
         query.orderBy(ProjectsTable.NAME, true);
+        query.orderBy(ProjectsTable.VERSION, true);
         
-        html.append("<h4>Jars</h4>");
-        html.append("<ul>");
+        StringBuilder temp = new StringBuilder();
+        Integer jarCount = 0;
         TypedQueryResult result = query.select();
         while (result.next()) {
           Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
-          String name = result.getResult(ProjectsTable.NAME);
-          html.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
+          temp.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">");
+          appendJarName(result, temp);
+          temp.append("</a></li>");
+          jarCount++;
         }
+        html.append("<h4>").append(jarCount).append(" Jars</h4>");
+        html.append("<ul>");
+        html.append(temp.toString());
         html.append("</ul>");
       }
     }
-    
-    // Library Versions
-    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
-      query.addSelect(ComponentRelationsTable.TARGET_ID);
-      query.andWhere(ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.SOURCE_ID.compareEquals(libraryID));
-      query.orderBy(ComponentRelationsTable.TARGET_ID, true);
-      
-      html.append("<h4>Library Versions</h4>");
-      html.append("<ul>");
-      TypedQueryResult result = query.select();
-      while (result.next()) {
-        Integer libraryVersionID = result.getResult(ComponentRelationsTable.TARGET_ID);
-        html.append("<li><a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">Library Version ").append(libraryVersionID).append("</a></li>");
-      }
-      html.append("</ul>");
-    }
-    
+ 
     // Contained by Libraries
     try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
       query.addSelect(ComponentRelationsTable.SOURCE_ID);
@@ -233,19 +273,25 @@ public class ArtifactRepoBrowser extends HttpServlet {
 
     // Jars
     try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
-      query.addSelects(ProjectsTable.NAME, ProjectsTable.PROJECT_ID);
+      query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
       query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(libraryVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION));
+      query.orderBy(ProjectsTable.GROUP, true);
       query.orderBy(ProjectsTable.NAME, true);
+      query.orderBy(ProjectsTable.VERSION, true);
       
-
-      html.append("<h4>Jars</h4>");
-      html.append("<ul>");
+      Integer jarCount = 0;
+      StringBuilder temp = new StringBuilder();
       TypedQueryResult result = query.select();
       while (result.next()) {
         Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
-        String name = result.getResult(ProjectsTable.NAME);
-        html.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
+        temp.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">");
+        appendJarName(result, temp);
+        temp.append("</a></li>");
+        jarCount++;
       }
+      html.append("<h4>").append(jarCount).append(" Jars</h4>");
+      html.append("<ul>");
+      html.append(temp.toString());
       html.append("</ul>");
     }
     
@@ -377,18 +423,25 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable jar2cv = ComponentRelationsTable.TABLE.qualify("b");
        
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(c2cv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(jar2cv)), ComponentRelationsTable.SOURCE_ID.qualify(jar2cv).compareEquals(ProjectsTable.PROJECT_ID))) {
-        query.addSelects(ProjectsTable.NAME, ProjectsTable.PROJECT_ID);
+        query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
         query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(c2cv).compareEquals(clusterID), ComponentRelationsTable.TYPE.qualify(c2cv).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION), ComponentRelationsTable.TYPE.qualify(jar2cv).compareEquals(ComponentRelation.JAR_CONTAINS_CLUSTER_VERSION));
+        query.orderBy(ProjectsTable.GROUP, true);
         query.orderBy(ProjectsTable.NAME, true);
+        query.orderBy(ProjectsTable.VERSION, true);
   
-        html.append("<h4>Jars</h4>");
-        html.append("<ul>");
+        StringBuilder temp = new StringBuilder();
+        Integer jarCount = 0;
         TypedQueryResult result = query.select();
         while (result.next()) {
           Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
-          String name = result.getResult(ProjectsTable.NAME); 
-          html.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
+          temp.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">");
+          appendJarName(result, temp);
+          temp.append("</a></li>");
+          jarCount++;
         }
+        html.append("<h4>").append(jarCount).append(" Jars</h4>");
+        html.append(temp.toString());
+        html.append("<ul>");
         html.append("</ul>");
       }
     }
@@ -500,18 +553,24 @@ public class ArtifactRepoBrowser extends HttpServlet {
 
     // Jars
     try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
-      query.addSelects(ProjectsTable.NAME, ProjectsTable.PROJECT_ID);
+      query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
       query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(clusterVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_CLUSTER_VERSION));
+      query.orderBy(ProjectsTable.GROUP, true);
       query.orderBy(ProjectsTable.NAME, true);
+      query.orderBy(ProjectsTable.VERSION, true);
 
-      html.append("<h4>Jars</h4>");
-      html.append("<ul>");
+      StringBuilder temp = new StringBuilder();
+      Integer jarCount = 0;
       TypedQueryResult result = query.select();
       while (result.next()) {
         Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
-        String name = result.getResult(ProjectsTable.NAME);
-        html.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
+        temp.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">");
+        appendJarName(result, temp);
+        temp.append("</a></li>");
       }
+      html.append("<h4>").append(jarCount).append(" Jars</h4>");
+      html.append("<ul>");
+      html.append(temp.toString());
       html.append("</ul>");
     }
 
@@ -559,16 +618,19 @@ public class ArtifactRepoBrowser extends HttpServlet {
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
-      query.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.NAME);
+      query.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.NAME);
       query.andWhere(ProjectsTable.PROJECT_TYPE.compareIn(EnumSet.of(Project.JAR, Project.MAVEN)));
+      query.orderBy(ProjectsTable.GROUP, true);
       query.orderBy(ProjectsTable.NAME, true);
+      query.orderBy(ProjectsTable.VERSION, true);
       
       html.append("<ul>");
       TypedQueryResult result = query.select();
       while (result.next()) {
         Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
-        String name = result.getResult(ProjectsTable.NAME);
-        html.append("<li><a href=\"?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
+        html.append("<li><a href=\"?jarID=").append(jarID).append("\">");
+        appendJarName(result, html);
+        html.append("</a></li>");
       }
       html.append("</ul>");
     }
@@ -579,10 +641,15 @@ public class ArtifactRepoBrowser extends HttpServlet {
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
-      query.addSelect(ProjectsTable.NAME);
+      query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION);
       query.andWhere(ProjectsTable.PROJECT_ID.compareEquals(jarID));
       
-      html.append("<h3>Jar ").append(jarID).append(": ").append(query.select().toSingleton(ProjectsTable.NAME, false)).append("</h3>");
+      html.append("<h3>Jar ").append(jarID).append(": ");
+      TypedQueryResult result = query.select();
+      if (result.next()) {
+        appendJarName(result, html);
+      }
+      html.append("</h3>");
     }
 
     { // Library versions
@@ -683,10 +750,12 @@ public class ArtifactRepoBrowser extends HttpServlet {
         query.andWhere(TypeVersionsTable.TYPE_ID.compareEquals(fqnID), ComponentRelationsTable.TYPE.qualify(lv2tv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_TYPE_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);
         
-        inner.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.NAME);
+        inner.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.NAME);
         ConstantCondition<Integer> innerCond = ComponentRelationsTable.TARGET_ID.compareEquals();
         inner.andWhere(innerCond.and(ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION)));
+        inner.orderBy(ProjectsTable.GROUP, true);
         inner.orderBy(ProjectsTable.NAME, true);
+        inner.orderBy(ProjectsTable.VERSION, true);
 
         int libraryCount = 0;
         Integer lastLibrary = null;
@@ -710,8 +779,9 @@ public class ArtifactRepoBrowser extends HttpServlet {
           temp.append("<ul>");
           while (innerResult.next()) {
             Integer jarID = innerResult.getResult(ProjectsTable.PROJECT_ID);
-            String name = innerResult.getResult(ProjectsTable.NAME);
-            temp.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
+            temp.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">");
+            appendJarName(innerResult, temp);
+            temp.append("</a></li>");
           }
           temp.append("</ul>");
         }
@@ -726,9 +796,11 @@ public class ArtifactRepoBrowser extends HttpServlet {
 
     // Jars
     try (SelectQuery query = exec.createSelectQuery(TypeVersionsTable.TYPE_VERSION_ID.compareEquals(ComponentRelationsTable.TARGET_ID), ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
-      query.addSelects(ProjectsTable.NAME, ProjectsTable.PROJECT_ID);
+      query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
       query.andWhere(TypeVersionsTable.TYPE_ID.compareEquals(fqnID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_TYPE_VERSION));
+      query.orderBy(ProjectsTable.GROUP, true);
       query.orderBy(ProjectsTable.NAME, true);
+      query.orderBy(ProjectsTable.VERSION, true);
 
       Integer jarCount = 0;
       StringBuilder temp = new StringBuilder();
@@ -736,8 +808,9 @@ public class ArtifactRepoBrowser extends HttpServlet {
       TypedQueryResult result = query.select();
       while (result.next()) {
         Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
-        String name = result.getResult(ProjectsTable.NAME);
-        temp.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
+        temp.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">");
+        appendJarName(result, temp);
+        temp.append("</a></li>");
         jarCount++;
       }
       temp.append("</ul>");
@@ -823,19 +896,26 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
     
     try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
-      query.addSelects(ProjectsTable.NAME, ProjectsTable.PROJECT_ID);
+      query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
       query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(fqnVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_TYPE_VERSION));
+      query.orderBy(ProjectsTable.GROUP, true);
       query.orderBy(ProjectsTable.NAME, true);
+      query.orderBy(ProjectsTable.VERSION, true);
       
       // Jars
-      html.append("<h4>Jars</h4>");
-      html.append("<ul>");
+      StringBuilder temp = new StringBuilder();
+      Integer jarCount = 0;
       TypedQueryResult result = query.select();
       while (result.next()) {
         Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
-        String name = result.getResult(ProjectsTable.NAME);
-        html.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">").append(name).append("</a></li>");
+        temp.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">");
+        appendJarName(result, temp);
+        temp.append("</a></li>");
+        jarCount++;
       }
+      html.append("<h4>").append(jarCount).append(" Jars</h4>");
+      html.append("<ul>");
+      html.append(temp.toString());
       html.append("</ul>");
     }
     
