@@ -206,31 +206,54 @@ public class MavenImporter {
             } catch (SAXException | IOException e) {
               logger.log(Level.SEVERE, "Error reading maven metadata.", e);
             }
+            // Verify the artifact info matches properly
+            if (!handler.versions.isEmpty()) {
+              String testGroup = next.getParent().substring(root.getPath().length()).replace(File.separatorChar, '.');
+              if (!testGroup.isEmpty()) {
+                testGroup = testGroup.substring(1);
+              }
+              if (!testGroup.equals(handler.groupID)) {
+                logger.info("Group mismatch for: " + next.getPath() + " " + testGroup);
+                handler.groupID = testGroup;
+              }
+              if (!next.getName().equals(handler.artifactID)) {
+                logger.info("Artifact mismatch for: " + next.getPath());
+                handler.artifactID = next.getName();
+              }
+            }
             // Look up the all the version
             for (String v : handler.versions) {
               File version = new File(next, v);
               if (version.isDirectory()) {
-                String jarSuffix = version.getName() + ".jar";
-                String sourceSuffix = version.getName() + "-sources.jar";
-                File jar = null;
-                File source = null;
-                for (File file : version.listFiles()) {
-                  if (file.getName().endsWith(jarSuffix)) {
-                    if (jar == null) {
-                      jar = file;
-                    } else {
-                      logger.info("Multiple jar files for " + version.getAbsolutePath());
-                    }
-                  } else if (file.getName().endsWith(sourceSuffix)) {
-                    if (source == null) {
-                      source = file;
-                    } else {
-                      logger.info("Multiple source files for " + version.getAbsolutePath());
+                File jar = new File(version, handler.artifactID + "-" + version.getName() + ".jar");
+                File source = new File(version, handler.artifactID + "-" + version.getName() + "-sources.jar");
+                if (!jar.exists()) {
+                  jar = null;
+                }
+                if (!source.exists()) {
+                  source = null;
+                }
+                if (jar == null || source == null) {
+                  String jarSuffix = version.getName() + ".jar";
+                  String sourceSuffix = version.getName() + "-sources.jar";
+                  for (File file : version.listFiles()) {
+                    if (file.getName().endsWith(jarSuffix)) {
+                      if (jar == null) {
+                        jar = file;
+                      } else if (!jar.equals(file)) {
+                        logger.info("Multiple jar files for " + version.getAbsolutePath());
+                      }
+                    } else if (file.getName().endsWith(sourceSuffix)) {
+                      if (source == null) {
+                        source = file;
+                      } else if (!source.equals(file)) {
+                        logger.info("Multiple source files for " + version.getAbsolutePath());
+                      }
                     }
                   }
                 }
                 if (jar == null) {
-                  logger.info("Unable to find jar for " + version.getAbsolutePath());
+//                  logger.info("Unable to find jar for " + version.getAbsolutePath());
                 } else {
                   repo.addMavenJarFile(jar, source, handler.groupID, handler.artifactID, version.getName());
                 }
@@ -241,7 +264,9 @@ public class MavenImporter {
           }
         }
         for (File child : next.listFiles()) {
-          stack.add(child);
+          if (!child.getName().startsWith(".")) {
+            stack.add(child);
+          }
         }
       }
     }

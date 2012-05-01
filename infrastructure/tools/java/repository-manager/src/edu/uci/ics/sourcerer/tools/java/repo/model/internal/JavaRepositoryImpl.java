@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.ContentFile;
 import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceRepository;
@@ -245,13 +246,26 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
       loadMavenJarIndex();
     }
     String hash = FileUtils.computeHash(jar);
-    if (mavenJarIndex.containsKey(hash)) {
-      logger.info("Repository already contains a copy of " + group + "." + artifact);
+    while (mavenJarIndex.containsKey(hash)) {
+      logger.info("Difficulty matching: " + group + "." + artifact + " (" + version + ")");
+      JarFileImpl mavenJar = mavenJarIndex.get(hash);
+      logger.info("  Found duplicate at: " + mavenJar);
+      JarProperties properties = mavenJar.getProperties();
+      // If it's not exactly equal, just add the duplicate, giving the original priority
+      if (group.equals(properties.GROUP.getValue()) && artifact.equals(properties.NAME.getValue()) && version.equals(properties.VERSION.getValue())) {
+        return;
+      }
+      // Add a 0 to the end of the hash
+      hash += "0";
+    } 
+    String subDir = group.replace('.', '/') + "/" + artifact + "/" + version;
+
+    RepoFileImpl dir = repoRoot.getChild(JARS_DIRECTORY).getChild(MAVEN_JARS_DIRECTORY).getChild(subDir);
+
+    // Verify there's no overlap
+    if (dir.exists()) {
+      logger.log(Level.SEVERE, "Directory already exists for: " + group + "." + artifact + " (" + version + ")");
     } else {
-      String subDir = group.replace('.', '/') + "/" + artifact + "/" + version;
-  
-      RepoFileImpl dir = repoRoot.getChild(JARS_DIRECTORY).getChild(MAVEN_JARS_DIRECTORY).getChild(subDir);
-      
       // Make the directory
       dir.makeDirs();
       
@@ -263,16 +277,14 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
       
       // Populate the properties
       JarFileImpl newJar = JarFileImpl.create(dir);
-      
-      if (newJar != null) {
-        JarProperties properties = newJar.getProperties();
-        properties.NAME.setValue(artifact);
-        properties.GROUP.setValue(group);
-        properties.SOURCE.setValue(JarSource.MAVEN);
-        properties.HASH.setValue(hash);
-        properties.VERSION.setValue(version);
-        properties.save();
-      }
+
+      JarProperties properties = newJar.getProperties();
+      properties.NAME.setValue(artifact);
+      properties.GROUP.setValue(group);
+      properties.SOURCE.setValue(JarSource.MAVEN);
+      properties.HASH.setValue(hash);
+      properties.VERSION.setValue(version);
+      properties.save();
     }
   }
   
