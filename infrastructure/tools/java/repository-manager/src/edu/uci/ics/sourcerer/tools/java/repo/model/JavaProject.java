@@ -24,5 +24,8 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProject;
  */
 public interface JavaProject extends SourceProject {
   @Override
+  public JavaRepository getRepository();
+  
+  @Override
   public JavaFileSet getContent();
 }

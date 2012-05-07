@@ -31,7 +31,7 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
-import edu.uci.ics.sourcerer.tools.java.extractor.Main;
+import edu.uci.ics.sourcerer.tools.java.extractor.Extractor;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.ImportWriter;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.MissingTypeWriter;
@@ -86,7 +86,7 @@ public class MissingTypeIdentifier {
       task.progress("Processing " + project + " (%d of " + projects.size() + ")");
       ModifiableExtractedJavaProject extractedProject = extracted.getMatchingProject(project);
       if (Boolean.TRUE.equals(extractedProject.getProperties().EXTRACTED.getValue())) {
-        if (Main.FORCE_REDO.getValue()) {
+        if (Extractor.FORCE_REDO.getValue()) {
           extractedProject.reset(project);
         } else {
           task.report("Project already processed");
@@ -143,7 +143,7 @@ public class MissingTypeIdentifier {
     for (Map.Entry<JavaFile, IFile> entry : sourceFiles.entrySet()) {
       ICompilationUnit icu = JavaCore.createCompilationUnitFrom(entry.getValue());
       
-      parser.setIgnoreMethodBodies(true);
+      parser.setIgnoreMethodBodies(false);
       parser.setStatementsRecovery(false);
       parser.setResolveBindings(true);
       parser.setBindingsRecovery(false);

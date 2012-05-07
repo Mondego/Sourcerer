@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo.model.internal;
 
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceRepository;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -26,6 +28,11 @@ public final class SourceProjectImpl extends AbstractSourceProject<SourceReposit
     super(repo, loc);
   }
 
+  @Override
+  public ModifiableSourceRepository getRepository() {
+    return repo;
+  }
+  
   @Override
   protected FileSetImpl makeFileSet() {
     return new FileSetImpl(this);

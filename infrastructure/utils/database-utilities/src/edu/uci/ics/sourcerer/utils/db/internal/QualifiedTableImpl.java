@@ -23,7 +23,7 @@ import edu.uci.ics.sourcerer.utils.db.sql.Table;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-class QualifiedTableImpl implements QualifiedTable {
+final class QualifiedTableImpl implements QualifiedTable {
   private Table table;
   private String id;
   

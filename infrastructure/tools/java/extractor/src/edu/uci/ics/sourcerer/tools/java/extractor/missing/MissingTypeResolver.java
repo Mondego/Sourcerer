@@ -15,12 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.core.repo.model;
+package edu.uci.ics.sourcerer.tools.java.extractor.missing;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+
+import org.eclipse.core.resources.IFile;
+
+import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface ModifiableProject extends Project {
-  @Override
-  public ModifiableRepository getRepository();
+public class MissingTypeResolver {
+  private MissingTypeResolver() {}
+  
+  public static MissingTypeResolver create() {
+    return new MissingTypeResolver();
+  }
+  
+  public Collection<JarFile> resolveMissingTypes(Map<JavaFile, IFile> sourceFiles) {
+    return Collections.emptySet();
+  }
 }

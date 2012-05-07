@@ -22,7 +22,7 @@ import java.util.Iterator;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class Pair <First, Second> {
+public class Pair<First, Second> {
   protected First a;
   protected Second b;
   
@@ -37,6 +37,30 @@ public class Pair <First, Second> {
   
   public Second getSecond() {
     return b;
+  }
+  
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    } else if (o instanceof Pair<?, ?>) {
+      Pair<?, ?> other = (Pair<?, ?>) o;
+      return (a == null ? other.a == null : a.equals(other.a)) && (b == null ? other.b == null : b.equals(other.b));
+    } else {
+      return false;
+    }
+  }
+  
+  @Override
+  public int hashCode() {
+    int hashCode = 1;
+    if (a != null) {
+      hashCode += 37 * a.hashCode();
+    }
+    if (b != null) {
+      hashCode += 37 * b.hashCode();
+    }
+    return hashCode;
   }
   
   public static <First, Second> Iterable<First> firstIterable(final Iterable<Pair<First,Second>> iterable) {

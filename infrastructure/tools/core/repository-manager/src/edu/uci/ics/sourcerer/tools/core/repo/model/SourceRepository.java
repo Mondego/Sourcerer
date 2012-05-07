@@ -27,6 +27,9 @@ public interface SourceRepository extends Repository {
   public Collection<? extends SourceBatch> getBatches();
   
   @Override
+  public SourceBatch getBatch(ProjectLocation loc);
+  
+  @Override
   public SourceProject getProject(String path);
   
   @Override

@@ -23,5 +23,6 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceProject;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface ModifiableJavaProject extends ModifiableSourceProject, JavaProject {
-
+  @Override
+  public ModifiableJavaRepository getRepository();
 }

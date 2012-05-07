@@ -30,6 +30,9 @@ public interface JavaRepository extends SourceRepository {
   public Collection<? extends JavaBatch> getBatches();
   
   @Override
+  public JavaBatch getBatch(ProjectLocation loc);
+  
+  @Override
   public JavaProject getProject(String path);
   
   @Override

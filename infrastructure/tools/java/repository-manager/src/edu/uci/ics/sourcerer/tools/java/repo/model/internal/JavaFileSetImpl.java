@@ -60,7 +60,7 @@ public class JavaFileSetImpl extends AbstractFileSet implements JavaFileSet {
   
   protected JavaFileSetImpl(JavaProjectImpl project) {
     super(project);
-    this.repo = project.getRepository();
+    this.repo = project.getRepo();
     cache = new File(cacheDir, JAVA_FILE_CACHE.getValue());
     new File(project.getLocation().getProjectRoot().toFile(), JAVA_FILE_CACHE.getValue()).delete();
   }

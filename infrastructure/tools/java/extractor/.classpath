@@ -6,6 +6,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="test"/>
 	<classpathentry exported="true" kind="lib" path="lib/sourcerer-lib.jar"/>
-	<classpathentry kind="lib" path="/lib/asm-4.0_RC2.jar" sourcepath="/lib/asm-4.0_RC2.zip"/>
+	<classpathentry kind="lib" path="lib/guava-11.0.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

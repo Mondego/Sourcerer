@@ -470,10 +470,14 @@
       <src path="${core-repository-manager}" />
       <src path="${java-repository-manager}" />
       <src path="${model}" />
+      <src path="${utilization}" />
+      <src path="${database}" />
+      <src path="${database-utilities}" />
       <classpath>
         <pathelement path="${classpath}" />
           <fileset dir="${lib}">
             <include name="**/guava-11.0.1.jar" />
+          	<include name="**/asm-4.0_RC2.jar" />
           </fileset>
       </classpath>
     </javac>
@@ -496,6 +500,8 @@
   <target name="extractor-lib" depends="compile-extractor-lib" description="Populate the Extractor's lib directory">
     <jar destfile="${extractor}/lib/sourcerer-lib.jar" basedir="${build-extractor-lib}" />
     <copy file="${lib}/asm-4.0_RC2.jar" todir="${extractor}/lib/" />
+  	<copy file="${lib}/guava-11.0.1.jar" todir="${extractor}/lib/" />
+    <copy file="${lib}/mysql-connector-java-5.1.7-bin.jar" todir="${extractor}/lib/" />
   </target>
   
   <!-- Build the extractor plugin - is asynchronous -->

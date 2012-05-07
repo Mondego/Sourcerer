@@ -20,6 +20,10 @@ package edu.uci.ics.sourcerer.tools.java.extractor.missing;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.Set;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -27,11 +31,13 @@ import java.util.LinkedList;
 public class MissingPackage {
   private final String fqn;
   private Collection<MissingType> memberTypes;
+  private Multimap<String, MissingName> potentialNames;
   private int onDemandCount;
   
   private MissingPackage(String fqn) {
     this.fqn = fqn;
     memberTypes = Collections.emptySet();
+    potentialNames = null;
     onDemandCount = 0;
   }
   
@@ -44,6 +50,14 @@ public class MissingPackage {
       memberTypes = new LinkedList<>();
     }
     memberTypes.add(type);
+  }
+  
+  void addPotentialName(MissingName name) {
+    if (potentialNames == null) {
+      potentialNames = HashMultimap.create();
+    }
+    potentialNames.put(name.getName(), name);
+    name.addPotentialOwner(this);
   }
   
   void reportMissing() {

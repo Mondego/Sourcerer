@@ -24,5 +24,8 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.Project;
  */
 public interface ExtractedJavaProject extends Project, Extracted {
   @Override
+  public ExtractedJavaRepository getRepository();
+  
+  @Override
   public ExtractedJavaProjectProperties getProperties();
 }

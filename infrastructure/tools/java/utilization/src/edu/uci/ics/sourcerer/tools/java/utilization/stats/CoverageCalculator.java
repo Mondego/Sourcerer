@@ -105,7 +105,7 @@ public class CoverageCalculator {
             nonEmptyMaven++;
             go = false;
           }
-          root.getChild(fqn, '/').addSource(Source.MAVEN, jar.getProperties().HASH.getValue());
+          root.getChild(fqn.replace('$', '/'), '/').addSource(Source.MAVEN, jar.getProperties().HASH.getValue());
         }
         task.progress();
       }
@@ -120,7 +120,7 @@ public class CoverageCalculator {
             nonEmptyProject++;
             go = false;
           }
-          root.getChild(fqn, '/').addSource(Source.PROJECT, jar.getProperties().HASH.getValue());
+          root.getChild(fqn.replace('$', '/'), '/').addSource(Source.PROJECT, jar.getProperties().HASH.getValue());
         }
         task.progress();
       }
@@ -155,20 +155,22 @@ public class CoverageCalculator {
         }
       }
       task.start("Reporting statistics on jars");
-      task.start("Maven");
-      task.report(nonEmptyMaven + " non-empty jars");
-      task.report(mavenClassFiles + " class files");
-      task.report(mavenUnique + " unique types");
-      task.report(mavenPackages.size() + " packages");
-      task.finish();
-      task.start("Project");
-      task.report(nonEmptyProject + " non-empty jars");
-      task.report(projectClassFiles + " class files");
-      task.report(projectUnique + " unique types");
-      task.report(projectPackages.size() + " packages");
-      task.finish();
+        task.start("Maven");
+          task.report(nonEmptyMaven + " non-empty jars");
+          task.report(mavenClassFiles + " class files");
+          task.report(mavenUnique + " unique types");
+          task.report(mavenPackages.size() + " packages");
+        task.finish();
+        
+        task.start("Project");
+          task.report(nonEmptyProject + " non-empty jars");
+          task.report(projectClassFiles + " class files");
+          task.report(projectUnique + " unique types");
+          task.report(projectPackages.size() + " packages");
+        task.finish();
       task.finish();
     }
+    task.finish();
     
     // Load the external repo
     ExtractedJavaRepository externalRepo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(EXTERNAL_REPO);
@@ -396,9 +398,9 @@ public class CoverageCalculator {
         }
         task.finish();
         
-        task.start("Logging popular external types unique to maven");
+        task.start("Logging popular missing external types");
         try (LogFileWriter writer = IOUtils.createLogFileWriter(new File(Arguments.OUTPUT.getValue(), "missing-unique-popular-types.txt"))) {
-          for (SourcedFqnNode fqn : popularMaven.descendingSet()) {
+          for (SourcedFqnNode fqn : popularMissing.descendingSet()) {
             writer.write(fqn.getCount(Source.EXTERNAL) + "\t" + fqn.getFqn());
           }
         } catch (IOException e) {
@@ -503,7 +505,7 @@ public class CoverageCalculator {
         }
         
         {
-          List<SourcedFqnNode> sorted = new ArrayList<>(missingPackages.keySet().size());
+          List<SourcedFqnNode> sorted = new ArrayList<>(missingPackages.keySet());
           Collections.sort(sorted, new Comparator<SourcedFqnNode>() {
             @Override
             public int compare(SourcedFqnNode o1, SourcedFqnNode o2) {

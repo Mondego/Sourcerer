@@ -25,6 +25,8 @@ import java.util.Collection;
 public interface Repository {
   public Collection<? extends Batch> getBatches();
   
+  public Batch getBatch(ProjectLocation loc);
+  
   public Project getProject(String path);
   
   public Project getProject(Integer batch, Integer checkout);

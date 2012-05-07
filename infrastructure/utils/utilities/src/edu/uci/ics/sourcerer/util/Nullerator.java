@@ -53,7 +53,7 @@ public class Nullerator<T> {
     }
   }
   
-  public static <T> Nullerator<T> makeNullerator(Iterable<? extends T> iterable, TaskProgressLogger task, String message) {
+  public static <T> Nullerator<T> createNullerator(Iterable<? extends T> iterable, TaskProgressLogger task, String message) {
     return new Nullerator<>(iterable, task, message);
   }
 }

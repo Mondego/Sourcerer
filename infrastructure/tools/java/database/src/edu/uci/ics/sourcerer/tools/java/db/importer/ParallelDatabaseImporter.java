@@ -67,7 +67,7 @@ public final class ParallelDatabaseImporter {
     
     int numThreads = THREAD_COUNT.getValue();
     
-    Nullerator<ExtractedJarFile> nullerator = Nullerator.makeNullerator(libs, task, "Thread %s now processing: %s");
+    Nullerator<ExtractedJarFile> nullerator = Nullerator.createNullerator(libs, task, "Thread %s now processing: %s");
     
     task.start("Performing entity import with " + numThreads + " threads");
     Collection<Thread> threads = new ArrayList<>(numThreads);
@@ -88,7 +88,7 @@ public final class ParallelDatabaseImporter {
     JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.makeJavaLibraryTypeModel(task);
     UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
     
-    nullerator = Nullerator.makeNullerator(libs, task, "Thread %s now processing: %s");
+    nullerator = Nullerator.createNullerator(libs, task, "Thread %s now processing: %s");
     task.start("Performing structural relation import with " + numThreads + " threads");
 
     threads.clear();
@@ -108,7 +108,7 @@ public final class ParallelDatabaseImporter {
     
     javaModel = JavaLibraryTypeModel.makeJavaLibraryTypeModel(task);
     
-    nullerator = Nullerator.makeNullerator(libs, task, "Thread %s now processing: %s");
+    nullerator = Nullerator.createNullerator(libs, task, "Thread %s now processing: %s");
     task.start("Performing referential relation import with " + numThreads + " threads");
 
     threads.clear();
@@ -146,7 +146,7 @@ public final class ParallelDatabaseImporter {
     Collection<Thread> threads = new ArrayList<>(numThreads);
     
     if (!mavenJars.isEmpty()) {
-      nullerator = Nullerator.makeNullerator(mavenJars, task, "Thread %s now processing: %s");
+      nullerator = Nullerator.createNullerator(mavenJars, task, "%s now processing: %s");
       task.start("Performing entity import with " + numThreads + " threads");
       
       threads.clear();
@@ -170,7 +170,7 @@ public final class ParallelDatabaseImporter {
     task.finish();
     
     if (!projectJars.isEmpty()) {
-      nullerator = Nullerator.makeNullerator(projectJars, task, "Thread %s now processing: %s");
+      nullerator = Nullerator.createNullerator(projectJars, task, "%s now processing: %s");
       task.start("Performing entity import with " + numThreads + " threads");
       
       threads.clear();
@@ -193,7 +193,7 @@ public final class ParallelDatabaseImporter {
     UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
     
     if (!mavenJars.isEmpty()) {
-      nullerator = Nullerator.makeNullerator(mavenJars, task, "Thread %s now processing: %s");
+      nullerator = Nullerator.createNullerator(mavenJars, task, "%s now processing: %s");
       task.start("Performing structural relation import with " + numThreads + " threads");
 
       threads.clear();
@@ -213,7 +213,7 @@ public final class ParallelDatabaseImporter {
     }
     
     if (!projectJars.isEmpty()) {
-      nullerator = Nullerator.makeNullerator(projectJars, task, "Thread %s now processing: %s");
+      nullerator = Nullerator.createNullerator(projectJars, task, "Thread %s now processing: %s");
       task.start("Performing structural relation import with " + numThreads + " threads");
 
       threads.clear();
@@ -233,7 +233,7 @@ public final class ParallelDatabaseImporter {
     }
     
     if (!mavenJars.isEmpty()) {
-      nullerator = Nullerator.makeNullerator(mavenJars, task, "Thread %s now processing: %s");
+      nullerator = Nullerator.createNullerator(mavenJars, task, "Thread %s now processing: %s");
       task.start("Performing referential relation import with " + numThreads + " threads");
 
       threads.clear();
@@ -253,7 +253,7 @@ public final class ParallelDatabaseImporter {
     }
     
     if (!projectJars.isEmpty()) {
-      nullerator = Nullerator.makeNullerator(projectJars, task, "Thread %s now processing: %s");
+      nullerator = Nullerator.createNullerator(projectJars, task, "Thread %s now processing: %s");
       task.start("Performing referential relation import with " + numThreads + " threads");
 
       threads.clear();
@@ -288,7 +288,7 @@ public final class ParallelDatabaseImporter {
     task.finish();
 
     int numThreads = THREAD_COUNT.getValue();
-    Nullerator<ExtractedJavaProject> nullerator = Nullerator.makeNullerator(projects, task, "Thread %s now processing: %s");
+    Nullerator<ExtractedJavaProject> nullerator = Nullerator.createNullerator(projects, task, "Thread %s now processing: %s");
     Collection<Thread> threads = new ArrayList<>(numThreads);
     
     task.start("Performing entity import with " + numThreads + " threads");
@@ -310,7 +310,7 @@ public final class ParallelDatabaseImporter {
     JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.makeJavaLibraryTypeModel(task);
     UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
     
-    nullerator = Nullerator.makeNullerator(projects, task, "Thread %s now processing: %s");
+    nullerator = Nullerator.createNullerator(projects, task, "Thread %s now processing: %s");
     task.start("Performing structural relation import with " + numThreads + " threads");
 
     threads.clear();
@@ -328,7 +328,7 @@ public final class ParallelDatabaseImporter {
     }
     task.finish();
     
-    nullerator = Nullerator.makeNullerator(projects, task, "Thread %s now processing: %s");
+    nullerator = Nullerator.createNullerator(projects, task, "Thread %s now processing: %s");
     task.start("Performing referential relation import with " + numThreads + " threads");
 
     threads.clear();

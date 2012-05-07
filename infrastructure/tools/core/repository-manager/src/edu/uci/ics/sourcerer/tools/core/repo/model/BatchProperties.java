@@ -26,6 +26,7 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  */
 public final class BatchProperties extends AbstractProperties {
   public Property<String> DESCRIPTION = new StringProperty("description", this);
+  public Property<String> SOURCE = new StringProperty("source", this);
   
   public BatchProperties(RepoFile file) {
     super(file.toFile());

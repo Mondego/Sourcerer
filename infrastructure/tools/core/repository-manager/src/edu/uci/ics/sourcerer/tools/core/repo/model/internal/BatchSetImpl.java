@@ -63,7 +63,7 @@ final class BatchSetImpl<Project extends AbstractRepoProject<? extends AbstractR
     return b;
   }
   
-  protected BatchImpl<Project> getBatch(Integer batch) {
+  protected Batch getBatch(Integer batch) {
     return batches.get(batch);
   }
   

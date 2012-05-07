@@ -109,7 +109,11 @@ public class Main {
         DatabaseConnectionFactory.DATABASE_USER, 
         DatabaseConnectionFactory.DATABASE_PASSWORD,
         ComponentVerifier.JACCARD_TABLE,
-        ComponentVerifier.JACCARD_LOG);
+        ComponentVerifier.FRAGMENTED_TABLE,
+        ComponentVerifier.COMBINED_TABLE,
+        ComponentVerifier.FRAGMENTED_AND_COMBINED_TABLE,
+        ComponentVerifier.JACCARD_LOG,
+        ComponentVerifier.IMPERFECT_JACCARD_LOG);
 
   public static final Command ADD_TYPE_POPULARITY =
     new Command("add-type-popularity", "Adds the type popularity to the database.") {

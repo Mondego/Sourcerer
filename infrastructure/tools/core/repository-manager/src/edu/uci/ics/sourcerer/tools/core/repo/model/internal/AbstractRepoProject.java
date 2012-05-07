@@ -43,7 +43,7 @@ public abstract class AbstractRepoProject<Repo extends AbstractRepository<?, ?>,
     propFile = loc.getProjectRoot().getChild(PROJECT_PROPERTIES.getValue());
   }
   
-  public final Repo getRepository() {
+  public final Repo getRepo() {
     return repo;
   }
   

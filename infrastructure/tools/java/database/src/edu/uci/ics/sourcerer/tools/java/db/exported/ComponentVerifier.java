@@ -30,6 +30,7 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.ComponentRelation;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.CollectionUtils;
+import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LogFileWriter;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
@@ -49,81 +50,144 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
  */
 public class ComponentVerifier {
   public static Argument<File> JACCARD_TABLE = new RelativeFileArgument("jaccard-table", "jaccard-table.txt", Arguments.OUTPUT, "Table of jaccard values.");
+  public static Argument<File> FRAGMENTED_TABLE = new RelativeFileArgument("fragmented-table", "fragmented-table.txt", Arguments.OUTPUT, "Table of fragmented jaccard values.");
+  public static Argument<File> COMBINED_TABLE = new RelativeFileArgument("combined-table", "combined-table.txt", Arguments.OUTPUT, "Table of combined jaccard values.");
+  public static Argument<File> FRAGMENTED_AND_COMBINED_TABLE = new RelativeFileArgument("fragmented-and-combined-table", "fragmented-and-combined-table.txt", Arguments.OUTPUT, "Table of fragmented and combined jaccard values.");
   public static Argument<File> JACCARD_LOG = new RelativeFileArgument("jaccard-log", "jaccard-log.txt", Arguments.OUTPUT, "Log of jaccard values.");
+  public static Argument<File> IMPERFECT_JACCARD_LOG = new RelativeFileArgument("imperfect-jaccard-log", "imperfect-jaccard-log.txt", Arguments.OUTPUT, "Log of imperfect jaccard values.");
   
   public static void computeJaccard() {
     new DatabaseRunnable() {
       SelectQuery groupQuery = null;
       ConstantCondition<String> groupEquals = null;
-      {
-        groupQuery = exec.createSelectQuery(ProjectsTable.TABLE);
-        groupQuery.addSelect(ProjectsTable.PROJECT_ID);
-        groupEquals = ProjectsTable.GROUP.compareEquals();
-        groupQuery.andWhere(groupEquals);
-      }
+      ConstantCondition<String> nameEquals = null;
+      
+      Averager<Double> jaccards = Averager.create();
+      Averager<Double> fragmented = Averager.create();
+      Averager<Double> combined = Averager.create();
+      Averager<Double> fragmentedAndCombined = Averager.create();
       
       Set<Integer> ids = new HashSet<>();
-      Set<String> groups = new HashSet<>();
-      
-      private double compute() {
-        Set<Integer> other = new HashSet<>();
-        for (String group : groups) {
-          groupEquals.setValue(group);
-          other.addAll(groupQuery.select().toCollection(ProjectsTable.PROJECT_ID));
+      Set<Pair<String, String>> groups = new HashSet<>();
+
+      private void compute(Integer libraryID, LogFileWriter writer, LogFileWriter imperfectWriter) {
+        if (libraryID != null) {
+          writer.writeAndIndent(Integer.toString(libraryID));
+          Averager<Double> avg = Averager.create();
+          Set<Integer> other = new HashSet<>();
+          boolean superset = true;
+          for (Pair<String, String> group : groups) {
+            // Compute one jaccard for each
+            groupEquals.setValue(group.getFirst());
+            nameEquals.setValue(group.getSecond());
+            other.addAll(groupQuery.select().toCollection(ProjectsTable.PROJECT_ID));
+
+            superset &= ids.containsAll(other);
+            // Jaccard is size of intersection over size of union
+            double jaccard = CollectionUtils.compuateJaccard(ids, other);
+            writer.write(group.getFirst() + "." + group.getSecond() + " " + jaccard);
+            avg.addValue(jaccard);
+          }
+          writer.write("" + avg.getMean());
+          writer.unindent();
+          jaccards.addValue(avg.getMean());
+          if (avg.getMean() < 1.0) {
+            if (groups.size() > 1) {
+              if (superset) {
+                combined.addValue(avg.getMean());
+              } else {
+                fragmentedAndCombined.addValue(avg.getMean());
+              }
+            } else {
+              fragmented.addValue(avg.getMean());
+            }
+            imperfectWriter.write(libraryID + " " + avg.getMean());
+          }
+          ids.clear();
+          groups.clear();
         }
-        // Jaccard is size of intersection over size of union
-        return CollectionUtils.compuateJaccard(ids, other);
       }
       
       @Override
       protected void action() {
         TaskProgressLogger task = TaskProgressLogger.get();
-        Averager<Double> jaccards = Averager.create();
         
-        task.start("Processing libraries", "libraries processed", 500);
+        // Set up the group query 
+        groupQuery = exec.createSelectQuery(ProjectsTable.TABLE);
+        groupQuery.addSelect(ProjectsTable.PROJECT_ID);
+        groupEquals = ProjectsTable.GROUP.compareEquals();
+        nameEquals = ProjectsTable.NAME.compareEquals();
+        groupQuery.andWhere(groupEquals.and(nameEquals));
+        
+        
         // Get all the jars for each library
         QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("a");
         QualifiedTable j2lv = ComponentRelationsTable.TABLE.qualify("b");
         try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(l2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(j2lv)), ComponentRelationsTable.SOURCE_ID.qualify(j2lv).compareEquals(ProjectsTable.PROJECT_ID));
-             LogFileWriter writer = IOUtils.createLogFileWriter(JACCARD_LOG)) {
+             LogFileWriter writer = IOUtils.createLogFileWriter(JACCARD_LOG);
+             LogFileWriter imperfectWriter = IOUtils.createLogFileWriter(IMPERFECT_JACCARD_LOG)) {
           QualifiedColumn<Integer> libraryIDcol = ComponentRelationsTable.SOURCE_ID.qualify(l2lv);
-          query.addSelects(libraryIDcol, ProjectsTable.PROJECT_ID, ProjectsTable.GROUP);
+          query.addSelects(libraryIDcol, ProjectsTable.PROJECT_ID, ProjectsTable.GROUP, ProjectsTable.NAME);
           query.andWhere(ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(j2lv).compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION));
           query.orderBy(libraryIDcol, true);
           
+          task.start("Querying project listing");
           TypedQueryResult result = query.select();
+          task.finish();
+          
           Integer lastLibraryID = null;
           
+          task.start("Processing libraries", "libraries processed", 500);
           while (result.next()) {
             Integer libraryID = result.getResult(libraryIDcol);
             Integer id = result.getResult(ProjectsTable.PROJECT_ID);
             String group = result.getResult(ProjectsTable.GROUP);
+            String name = result.getResult(ProjectsTable.NAME);
             if (!libraryID.equals(lastLibraryID)) {
-              // ID changed, can do the computation
-              double jaccard = compute();
-              writer.write(lastLibraryID + " " + jaccard);
-              jaccards.addValue(jaccard);
-              ids.clear();
-              groups.clear();
+              compute(lastLibraryID, writer, imperfectWriter);
               lastLibraryID = libraryID;
+              task.progress();
             }
             ids.add(id);
-            groups.add(group);
-            task.progress();
+            groups.add(new Pair<>(group, name));
           }
-          // Do the computation
-          double jaccard = compute();
-          writer.write(lastLibraryID + " " + jaccard);
-          jaccards.addValue(jaccard);
+          compute(lastLibraryID, writer, imperfectWriter);
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Exception writing log file", e);
         }
         task.finish();
         
+        task.start("Reporting general statistics");
         task.report("AVG: " + jaccards.getMean() + " +-" + jaccards.getStandardDeviation());
+        task.report("Count: " + jaccards.getCount());
         task.report("MIN: " + jaccards.getMin());
         task.report("MAX: " + jaccards.getMax());
-        jaccards.writeValueMap(JACCARD_TABLE.getValue());
+        jaccards.writeDoubleValueMap(JACCARD_TABLE.getValue(), 1);
+        task.finish();
+        
+        task.start("Reporting fragmented statistics");
+        task.report("AVG: " + fragmented.getMean() + " +-" + fragmented.getStandardDeviation());
+        task.report("Count: " + fragmented.getCount());
+        task.report("MIN: " + fragmented.getMin());
+        task.report("MAX: " + fragmented.getMax());
+        fragmented.writeDoubleValueMap(FRAGMENTED_TABLE.getValue(), 1);
+        task.finish();
+        
+        task.start("Reporting combined statistics");
+        task.report("AVG: " + combined.getMean() + " +-" + combined.getStandardDeviation());
+        task.report("Count: " + combined.getCount());
+        task.report("MIN: " + combined.getMin());
+        task.report("MAX: " + combined.getMax());
+        combined.writeDoubleValueMap(COMBINED_TABLE.getValue(), 1);
+        task.finish();
+        
+        task.start("Reporting fragmented and combined statistics");
+        task.report("AVG: " + fragmentedAndCombined.getMean() + " +-" + fragmentedAndCombined.getStandardDeviation());
+        task.report("Count: " + fragmentedAndCombined.getCount());
+        task.report("MIN: " + fragmentedAndCombined.getMin());
+        task.report("MAX: " + fragmentedAndCombined.getMax());
+        fragmentedAndCombined.writeDoubleValueMap(FRAGMENTED_AND_COMBINED_TABLE.getValue(), 1);
+        task.finish();
       }
     }.run();
   }

@@ -67,7 +67,7 @@ public class ProjectReferentialRelationsImporter extends ReferentialRelationsImp
       ExtractedJavaProject project;
       while ((project = projects.next()) != null) {
         String name = project.getProperties().NAME.getValue();
-        task.start("Importing " + name + "'s referential relations");
+        task.start("Importing " + name + "'s referential relations (" + project.getLocation().toString() + ")");
         
         task.start("Verifying import suitability");
         Integer projectID = null;
@@ -89,7 +89,9 @@ public class ProjectReferentialRelationsImporter extends ReferentialRelationsImp
         }
         task.finish();
         
-        if (projectID != null) {
+        if (projectID == null) {
+          task.report("Unable to locate project... skipping");
+        } else {
           equalsID.setValue(projectID);
           stateValue.setValue(Stage.BEGIN_REFERENTIAL.name());
           updateState.execute();

@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.tools.java.repo.model.internal;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractSourceProject;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ProjectLocationImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.ModifiableJavaProject;
+import edu.uci.ics.sourcerer.tools.java.repo.model.ModifiableJavaRepository;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -29,6 +30,11 @@ public class JavaProjectImpl extends AbstractSourceProject<JavaRepositoryImpl, J
     super(repo, loc);
   }
 
+  @Override
+  public ModifiableJavaRepository getRepository() {
+    return repo;
+  }
+  
   @Override
   protected JavaFileSetImpl makeFileSet() {
     return new JavaFileSetImpl(this);

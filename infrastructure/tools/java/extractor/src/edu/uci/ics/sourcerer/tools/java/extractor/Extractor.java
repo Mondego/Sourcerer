@@ -30,6 +30,7 @@ import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.FileWriter;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.UsedJarWriter;
 import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.tools.java.extractor.missing.MissingTypeResolver;
 import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
@@ -48,14 +49,17 @@ import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
 import edu.uci.ics.sourcerer.util.io.logging.Logging;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
+import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
 
 /**
  * @author Joel Ossher 
  *
  */
-public class Extractor {
+public final class Extractor {
   private Extractor() {}
 
+  public static final Argument<Boolean> FORCE_REDO = new BooleanArgument("force-redo", false, "Redo all extractions, even if already completed.");
+  
   public static enum JarType {
     LIBRARY,
     PROJECT,
@@ -86,7 +90,7 @@ public class Extractor {
     public String toString() {
       return text;
     }
-  }
+  } 
   
   public static void extractJars(JarType jarType, ExtractionMethod method) {
     TaskProgressLogger task = TaskProgressLogger.get();
@@ -120,7 +124,7 @@ public class Extractor {
       task.progress("Extracting " + jar + " (%d of " + jars.size() + ")");
       ModifiableExtractedJarFile extractedJar = extracted.getMatchingJarFile(jar);
       if (Boolean.TRUE.equals(extractedJar.getProperties().EXTRACTED.getValue())) {
-        if (Main.FORCE_REDO.getValue()) {
+        if (FORCE_REDO.getValue()) {
           extractedJar.reset(jar);
         } else {
           task.report("Library already extracted");
@@ -171,6 +175,7 @@ public class Extractor {
     task.finish();
   }
   
+  public static Argument<Boolean> RESOLVE_MISSING_TYPES = new BooleanArgument("resolve-missing-types", false, "Resolve missing types.").setRequiredArguments(DatabaseConnectionFactory.DATABASE_URL, DatabaseConnectionFactory.DATABASE_USER, DatabaseConnectionFactory.DATABASE_PASSWORD);
   public static final Argument<Boolean> INCLUDE_PROJECT_JARS = new BooleanArgument("include-project-jars", true, "Should projects jars be added to the classpath?");
   
   public static void extractProjects() {
@@ -188,12 +193,17 @@ public class Extractor {
     Collection<? extends JavaProject> projects = repo.getProjects();
     task.finish();
     
+    MissingTypeResolver resolver = null;
+    if (RESOLVE_MISSING_TYPES.getValue()) {
+      resolver = MissingTypeResolver.create();
+    }
+    
     task.start("Extracting " + projects.size() + " projects", "projects extracted", 1);
     for (JavaProject project : projects) {
       task.progress("Extracting " + project + " (%d of " + projects.size() + ")");
       ModifiableExtractedJavaProject extractedProject = extracted.getMatchingProject(project);
       if (Boolean.TRUE.equals(extractedProject.getProperties().EXTRACTED.getValue())) {
-        if (Main.FORCE_REDO.getValue()) {
+        if (FORCE_REDO.getValue()) {
           extractedProject.reset(project);
         } else {
           task.report("Project already extracted");
@@ -207,17 +217,27 @@ public class Extractor {
       task.report("Getting project contents");
       JavaFileSet files = project.getContent();
      
-      if (INCLUDE_PROJECT_JARS.getValue()) {
+      Collection<? extends JarFile> jars = null;
+      if (INCLUDE_PROJECT_JARS.getValue() && resolver == null) {
         task.start("Loading " + files.getJarFiles().size() + " jar files into classpath");
         EclipseUtils.initializeProject(files.getJarFiles());
+        jars = files.getJarFiles();
         task.finish();
       } else {
+        jars = Collections.emptySet();
         EclipseUtils.initializeProject(Collections.<JarFile>emptyList());
       }
       
       task.start("Loading " + files.getFilteredJavaFiles().size() + " java files into project");
       Map<JavaFile, IFile> sourceFiles = EclipseUtils.loadFilesIntoProject(files.getFilteredJavaFiles());
       task.finish();
+      
+      if (resolver != null) {
+        task.start("Resolving missing types");
+        jars = resolver.resolveMissingTypes(sourceFiles);
+        EclipseUtils.addJarsToClasspath(jars);
+        task.finish();
+      }
       
       // Set up the writer bundle
       WriterBundle bundle = new WriterBundle(extractedProject.getExtractionDir().toFile());
@@ -226,7 +246,7 @@ public class Extractor {
       // Write out the used jars
       FileWriter fileWriter = bundle.getFileWriter();
       UsedJarWriter jarWriter = bundle.getUsedJarWriter();
-      for (JarFile jar : files.getJarFiles()) {
+      for (JarFile jar : jars) {
         JarProperties props = jar.getProperties();
         fileWriter.writeFile(File.JAR, props.NAME.getValue(), null, props.HASH.getValue());
         jarWriter.writeUsedJar(props.HASH.getValue());

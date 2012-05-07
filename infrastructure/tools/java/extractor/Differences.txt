@@ -1,3 +1,5 @@
+Do something about generated code.
+
 Differences between Eclipse and ASM extractors (primarily caused by bytecode compilation)
 
 Type Erasure

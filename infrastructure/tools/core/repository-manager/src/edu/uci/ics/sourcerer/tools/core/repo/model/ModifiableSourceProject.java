@@ -23,6 +23,9 @@ import java.io.File;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface ModifiableSourceProject extends ModifiableProject, SourceProject {
+  @Override
+  public ModifiableSourceRepository getRepository();
+  
   /**
    * Deletes the project's contents.
    *  

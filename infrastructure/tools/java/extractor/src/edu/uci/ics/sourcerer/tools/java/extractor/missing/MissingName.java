@@ -15,12 +15,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.core.repo.model;
+package edu.uci.ics.sourcerer.tools.java.extractor.missing;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface ModifiableProject extends Project {
-  @Override
-  public ModifiableRepository getRepository();
+public class MissingName {
+  private final String mainPackage;
+  private final String name;
+  private Collection<MissingPackage> potentialOwners;
+  
+  private MissingName(String mainPackage, String name) {
+    this.mainPackage = mainPackage;
+    this.name = name;
+    potentialOwners = Collections.emptySet();
+  }
+  
+  static MissingName create(String mainPackage, String name) {
+    return new MissingName(mainPackage, name);
+  }
+
+  void addPotentialOwner(MissingPackage pkg) {
+    if (potentialOwners.isEmpty()) {
+      potentialOwners = new HashSet<>();
+    }
+    potentialOwners.add(pkg);
+  }
+  
+  public String getName() {
+    return name;
+  }
 }

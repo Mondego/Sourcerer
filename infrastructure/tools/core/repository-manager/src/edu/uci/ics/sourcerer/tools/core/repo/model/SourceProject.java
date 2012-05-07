@@ -28,6 +28,9 @@ public interface SourceProject extends Project {
   public static final Argument<String> PROJECT_CONTENT_ZIP = new StringArgument("project-content-zip-file", "content.zip", "Project contents.").permit();
   
   @Override
+  public SourceRepository getRepository();
+  
+  @Override
   public SourceProjectProperties getProperties();
   
   public FileSet getContent();

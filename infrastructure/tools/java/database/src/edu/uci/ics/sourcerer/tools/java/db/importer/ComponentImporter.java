@@ -81,6 +81,9 @@ public class ComponentImporter extends DatabaseRunnable {
   
   @Override
   protected void action() {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    task.start("Importing component repository to database");
+    
     initializeTables();
     importClusters();
     importClusterVersions();
@@ -90,6 +93,8 @@ public class ComponentImporter extends DatabaseRunnable {
     importLibraries();
     importLibraryVersions();
     importComponentRelations();
+    
+    task.finish();
   }
   
   private void initializeTables() {
@@ -516,6 +521,24 @@ public class ComponentImporter extends DatabaseRunnable {
     for (Map.Entry<LibraryVersion, Integer> entry : libraryVersionMap.entrySet()) {
       for (Jar jar : entry.getKey().getJars()) {
         inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION, jarMap.get(jar), entry.getValue()));
+        task.progress();
+      }
+    }
+    task.finish();
+    
+    task.start("Processing jar to cluster mapping", "mappings processed");
+    for (Map.Entry<Cluster, Integer> entry : clusterMap.entrySet()) {
+      for (Jar jar : entry.getKey().getJars()) {
+        inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.JAR_CONTAINS_CLUSTER, jarMap.get(jar), entry.getValue()));
+        task.progress();
+      }
+    }
+    task.finish();
+    
+    task.start("Processing library to jar mapping", "mappings processed");
+    for (Map.Entry<Library, Integer> entry : libraryMap.entrySet()) {
+      for (Jar jar : entry.getKey().getJars()) {
+        inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.LIBRARY_CONTAINS_JAR, entry.getValue(), jarMap.get(jar)));
         task.progress();
       }
     }

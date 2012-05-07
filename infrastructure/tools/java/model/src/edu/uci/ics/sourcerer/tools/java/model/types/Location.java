@@ -82,6 +82,12 @@ public class Location implements CustomSerializable {
         String path = scanner.next();
         if ("null".equals(path)) {
           path = null;
+        } else {
+          StringBuilder pathBuilder = new StringBuilder(path);          
+          while (scanner.hasNext()) {
+            pathBuilder.append(" ").append(scanner.next());
+          }
+          path = pathBuilder.toString();
         }
         return new Location(classFile, path, offset, length);
       } else {

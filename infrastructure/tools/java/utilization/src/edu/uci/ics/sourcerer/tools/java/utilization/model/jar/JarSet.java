@@ -132,6 +132,10 @@ public class JarSet implements Iterable<Jar> {
     return jars.size();
   }
   
+  public boolean isEmpty() {
+    return jars.isEmpty();
+  }
+  
 //  @Override
 //  public int hashCode() {
 //    return jars.hashCode();

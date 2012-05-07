@@ -95,7 +95,9 @@ public class ArtifactRepositoryBuilder {
       }
     }
 
-    task.start("Creating simple libraries from clusters", "clusters examined", 500);
+    int phantomCount = 0;
+    
+    task.start("Creating simple libraries from clusters", "clusters examined", 10_000);
     while (!sortedClusters.isEmpty()) {
       // Perhaps this needs to be iterated, too?
       Cluster biggest = sortedClusters.poll();
@@ -159,6 +161,10 @@ public class ArtifactRepositoryBuilder {
         }
       }
       
+      if (library.getJars().isEmpty()) {
+        phantomCount++;
+      }
+      
       // Split the jars into versions
       splitLibaryIntoVersions(library);
       
@@ -166,6 +172,8 @@ public class ArtifactRepositoryBuilder {
     }
     task.finish();
     
+    task.report(assignedJars.size() + " jars assigned to " + repo.getLibraries().size() + " libraries, of which " + phantomCount + " are phantom libraries");
+        
     return assignedJars;
   }
   

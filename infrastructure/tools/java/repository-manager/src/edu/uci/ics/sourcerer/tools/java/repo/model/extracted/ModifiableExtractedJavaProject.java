@@ -25,5 +25,8 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.JavaProject;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface ModifiableExtractedJavaProject extends ExtractedJavaProject, ModifiableProject {
+  @Override
+  public ModifiableExtractedJavaRepository getRepository();
+  
   public void reset(JavaProject project);
 }

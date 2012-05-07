@@ -90,6 +90,11 @@ public final class ExtractedJavaRepositoryImpl extends AbstractJavaRepository<Ex
       result = addProject(loc.getBatchNumber(), loc.getCheckoutNumber());
       result.getProperties().copy(project.getProperties());
       result.getProperties().save();
+      
+      // Copy the batch properties
+      ExtractedJavaBatchImpl batch = getBatch(loc);
+      batch.getProperties().copy(cast.getRepository().getBatch(loc).getProperties());
+      batch.getProperties().save();
     }
     return result;
   }

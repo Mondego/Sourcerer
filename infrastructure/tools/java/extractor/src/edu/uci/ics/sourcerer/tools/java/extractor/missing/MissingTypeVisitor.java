@@ -21,6 +21,9 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.SimpleName;
 
 /**
  * Currently implemented forms of identification:
@@ -40,6 +43,12 @@ class MissingTypeVisitor extends ASTVisitor {
     missingTypes = MissingTypeCollection.create();
   }
   
+  @Override
+  public boolean visit(PackageDeclaration node) {
+    missingTypes.setPackage(node.getName().getFullyQualifiedName());
+    return false;
+  }
+
   static MissingTypeVisitor create() {
     return new MissingTypeVisitor();
   }
@@ -60,6 +69,24 @@ class MissingTypeVisitor extends ASTVisitor {
       missingTypes.addMissingImport(node.getName().getFullyQualifiedName(), node.isOnDemand(), node.isStatic());
     } 
     missingTypes.addImport(node.getName().getFullyQualifiedName(), node.isOnDemand(), node.isStatic());
+    return false;
+  }
+
+  @Override
+  public boolean visit(QualifiedName node) {
+    IBinding binding = node.resolveBinding();
+    if (binding == null) {
+      missingTypes.addMissingFQN(node.getFullyQualifiedName());
+    }
+    return false;
+  }
+
+  @Override
+  public boolean visit(SimpleName node) {
+    IBinding binding = node.resolveBinding();
+    if (binding == null) {
+      missingTypes.addMissingName(node.getIdentifier());
+    }
     return false;
   }
 }

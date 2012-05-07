@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -55,7 +54,7 @@ public final class Logging {
   protected static final Argument<Boolean> SUPPRESS_FILE_LOGGING = new BooleanArgument("suppress-file-logging", false, "Suppresses all logging to files.").permit();
   public static final Argument<Boolean> REPORT_TO_CONSOLE = new BooleanArgument("report-to-console", false, "Prints all the logging messages to the console.").permit();
   protected static final Argument<String> ERROR_LOG = new StringArgument("error-log", "error.log", "Filename for error log.").permit();
-  protected static final Argument<String> THREAD_LOG = new StringArgument("thread-log", "thread-%t.log", "Filename for thread log.").permit();
+  protected static final Argument<String> THREAD_LOG = new StringArgument("thread-log", "%t.log", "Filename for thread log.").permit();
   protected static final Argument<String> INFO_LOG = new StringArgument("info-log", "info.log", "Filename for the info log.").permit();
   protected static final Argument<String> RESUME_LOG = new StringArgument("resume-log", "resume.log", "Filename for the resume log.").permit();
   protected static final Argument<Boolean> CLEAR_RESUME_LOG = new BooleanArgument("clear-resume-log", false, "Clears the resume log before beginning.").permit(); 
@@ -133,7 +132,7 @@ public final class Logging {
   }
   
   private static String getFileHandlerPattern(Command command, Argument<String> prop) {
-    return getOutputDir(command) + "/" + prop.getValue().replace("%t", "" + Thread.currentThread().getId());
+    return getOutputDir(command) + "/" + prop.getValue().replace("%t", "" + Thread.currentThread().getName());
   }
   
   public synchronized static Set<String> initializeResumeLogger() {

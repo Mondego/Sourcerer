@@ -33,7 +33,7 @@ class ProjectEntitiesImporter extends EntitiesImporter {
   private Nullerator<ExtractedJavaProject> projects;
   
   protected ProjectEntitiesImporter(Nullerator<ExtractedJavaProject> projects) {
-    super("Importing Jar Entities");
+    super("Importing Project Entities");
     this.projects = projects;
   }
   
@@ -53,7 +53,7 @@ class ProjectEntitiesImporter extends EntitiesImporter {
       ExtractedJavaProject project;
       while ((project = projects.next()) != null) {
         String name = project.getProperties().NAME.getValue();
-        task.start("Importing " + name + "'s entities");
+        task.start("Importing " + name + "'s entities (" + project.getLocation().toString() + ")");
         
         task.start("Verifying import suitability");
         boolean shouldImport = true;

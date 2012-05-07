@@ -197,7 +197,7 @@ public class TaskProgressLogger {
     public int progressInterval;
     
     public TaskInfo(String taskText, String finishedText, int indent, int progressInterval) {
-      this.taskText = taskText.toLowerCase();
+      this.taskText = taskText != null ? taskText.toLowerCase() : null;
       this.finishedText = finishedText;
       this.indent = indent;
       this.startTime = System.currentTimeMillis();

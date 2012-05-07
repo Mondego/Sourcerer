@@ -5,6 +5,7 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -125,6 +126,25 @@ public class Averager <T extends Number> {
     try (BufferedWriter writer = IOUtils.makeBufferedWriter(file)) {
       for (Integer element : sorted.elementSet()) {
         writer.write(element + " " + sorted.count(element));
+        writer.newLine();
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error writing value map", e);
+    }
+  }
+  
+  public void writeDoubleValueMap(File file, int places) {
+    double mult = Math.pow(10, places);
+    Multiset<Integer> counts = HashMultiset.create();
+    for (T value : values) {
+      counts.add((int) (value.doubleValue() * mult));
+    }
+    try (BufferedWriter writer = IOUtils.makeBufferedWriter(file)) {
+      NumberFormat format = NumberFormat.getNumberInstance();
+      format.setMinimumFractionDigits(places);
+      format.setMaximumFractionDigits(places);
+      for (Integer val : counts.elementSet()) {
+        writer.write(format.format(val.doubleValue() / mult) + " " + counts.count(val));
         writer.newLine();
       }
     } catch (IOException e) {

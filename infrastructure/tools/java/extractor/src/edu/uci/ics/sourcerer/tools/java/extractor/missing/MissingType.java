@@ -28,7 +28,9 @@ public class MissingType {
   private final String fqn;
   private final MissingPackage pkg;
   private int missingCount;
-  private Set<String> missingFields;
+  private Set<String> fields;
+  private Set<String> methods;
+  private Set<String> associatedNames;
   private int missingStaticOnDemandCount;
   
   private MissingType(String fqn, MissingPackage pkg) {
@@ -36,7 +38,9 @@ public class MissingType {
     this.pkg = pkg;
     missingCount = 0;
     missingStaticOnDemandCount = 0;
-    missingFields = Collections.emptySet();
+    fields = Collections.emptySet();
+    methods = Collections.emptySet();
+    associatedNames = Collections.emptySet();
     pkg.addMemberType(this);
   }
   
@@ -48,11 +52,25 @@ public class MissingType {
     missingCount++;
   }
 
-  void reportMissingField(String name) {
-    if (missingFields.isEmpty()) {
-      missingFields = new HashSet<>();
+  void reportField(String name) {
+    if (fields.isEmpty()) {
+      fields = new HashSet<>();
     }
-    missingFields.add(name);
+    fields.add(name);
+  }
+  
+  void reportMethod(String name) {
+    if (methods.isEmpty()) {
+      methods = new HashSet<>();
+    }
+    methods.add(name);
+  }
+  
+  void reportAssociatedName(String name) {
+    if (associatedNames.isEmpty()) {
+      associatedNames = new HashSet<>();
+    }
+    associatedNames.add(name);
   }
   
   void reportMissingStaticOnDemand() {
@@ -61,5 +79,9 @@ public class MissingType {
   
   public String getFqn() {
     return fqn;
+  }
+  
+  public MissingPackage getPackage() {
+    return pkg;
   }
 }

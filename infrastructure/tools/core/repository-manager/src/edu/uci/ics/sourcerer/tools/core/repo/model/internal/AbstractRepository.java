@@ -123,6 +123,11 @@ public abstract class AbstractRepository<Project extends AbstractRepoProject<? e
     return batchSet.getBatches();
   }
   
+  public Batch getBatch(ProjectLocation loc) {
+    ProjectLocationImpl impl = (ProjectLocationImpl) loc;
+    return batchSet.getBatch(impl.getBatchNumber());
+  }
+  
   public Project getProject(String path) {
     int slash = path.indexOf('/');
     if (slash == -1) {

@@ -94,6 +94,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
           "<li><a href=\"./clusters\">Cluster Listing</a></li>" +
           "<li><a href=\"./jars\">Jar Listing</a></li>" +
           "<li><a href=\"./fqns\">FQN Listing</a></li>" +
+          "<li><a href=\"./maven\">Maven Listing</a></li>" +
         "</ul>");
   }
   
@@ -671,21 +672,25 @@ public class ArtifactRepoBrowser extends HttpServlet {
         html.append("</ul>");
       }
     }
-    
-    try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
-      query.addSelects(ComponentRelationsTable.TARGET_ID);
-      query.andWhere(ComponentRelationsTable.SOURCE_ID.compareEquals(jarID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_CLUSTER_VERSION));
-      query.orderBy(ComponentRelationsTable.TARGET_ID, true);
-      
-      // Clusters
-      html.append("<h4>Clusters Versions</h4>");
-      html.append("<ul>");
-      TypedQueryResult result = query.select();
-      while (result.next()) {
-        Integer clusterVersionID = result.getResult(ComponentRelationsTable.TARGET_ID);
-        html.append("<li><a href=\"./clusters?clusterVersionID=").append(clusterVersionID).append("\">Cluster Version ").append(clusterVersionID).append("</a></li>");
+    {
+      // Cluster versions
+      QualifiedTable j2cv = ComponentRelationsTable.TABLE.qualify("a");
+      QualifiedTable c2cv = ComponentRelationsTable.TABLE.qualify("b");
+      try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(j2cv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(c2cv)))) {
+        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(c2cv), ComponentRelationsTable.TARGET_ID.qualify(c2cv));
+        query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(j2cv).compareEquals(jarID), ComponentRelationsTable.TYPE.qualify(j2cv).compareEquals(ComponentRelation.JAR_CONTAINS_CLUSTER_VERSION), ComponentRelationsTable.TYPE.qualify(c2cv).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION));
+        query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(c2cv), true);
+        
+        html.append("<h4>Clusters Versions</h4>");
+        html.append("<ul>");
+        TypedQueryResult result = query.select();
+        while (result.next()) {
+          Integer clusterID = result.getResult(ComponentRelationsTable.SOURCE_ID.qualify(c2cv));
+          Integer clusterVersionID = result.getResult(ComponentRelationsTable.TARGET_ID.qualify(c2cv));
+          html.append("<li>Cluster Version <a href=\"./clusters?clusterID=").append(clusterID).append("\">").append(clusterID).append(".").append("<a href=\"./clusters?clusterVersionID=").append(clusterVersionID).append("\">").append(clusterVersionID).append("</a></li>");
+        }
+        html.append("</ul>");
       }
-      html.append("</ul>");
     }
 
     // Fqns
@@ -944,6 +949,94 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
   }
   
+  private void serveMavenArtifactList(StringBuilder html) {
+    html.append("<p><a href=\"./\">main</a></p>");
+
+    QueryExecutor exec = db.get().getExecutor();
+    
+    try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
+      query.addSelects(ProjectsTable.GROUP, ProjectsTable.NAME);
+      query.setDistinct(true);
+      query.andWhere(ProjectsTable.PROJECT_TYPE.compareEquals(Project.MAVEN));
+      query.orderBy(ProjectsTable.GROUP, true);
+      query.orderBy(ProjectsTable.NAME, true);
+      
+      html.append("<ul>");
+      TypedQueryResult result = query.select();
+      while (result.next()) {
+        String group = result.getResult(ProjectsTable.GROUP);
+        String name = result.getResult(ProjectsTable.NAME);
+        html.append("<li><a href=\"?group=").append(group).append("&artifact=").append(name).append("\">").append(group).append(".").append(name).append("</a></li>");
+      }
+      html.append("</ul>");
+    }
+  }
+  
+  private void serveMavenArtifact(String group, String artifact, StringBuilder html) {
+    html.append("<p><a href=\"./\">main</a>/<a href=\"./maven\">maven</a></p>");
+    
+    QueryExecutor exec = db.get().getExecutor();
+    
+    html.append("<h3>").append(group).append(".").append(artifact).append("</h3>");
+    
+    {
+      QualifiedTable j2lv = ComponentRelationsTable.TABLE.qualify("a");
+      QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("b");
+      try (SelectQuery query = exec.createSelectQuery(ProjectsTable.PROJECT_ID.compareEquals(ComponentRelationsTable.SOURCE_ID.qualify(j2lv)), ComponentRelationsTable.TARGET_ID.qualify(j2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
+        query.addSelects(ProjectsTable.VERSION, ProjectsTable.PROJECT_ID, ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+        query.andWhere(ProjectsTable.GROUP.compareEquals(group), ProjectsTable.NAME.compareEquals(artifact), ComponentRelationsTable.TYPE.qualify(j2lv).compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
+        query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);
+        
+        StringBuilder temp = new StringBuilder();
+        int jarCount = 0;
+        Integer previousLibraryID = null;
+        Integer previousLibraryVersionID = null;
+        TypedQueryResult result = query.select();
+        while (result.next()) {
+          Integer libraryID = result.getResult(ComponentRelationsTable.SOURCE_ID.qualify(l2lv));
+          Integer libraryVersionID = result.getResult(ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+          Integer jarID = result.getResult(ProjectsTable.PROJECT_ID);
+          String version = result.getResult(ProjectsTable.VERSION);
+          
+          if (!libraryID.equals(previousLibraryID)) {
+            if (previousLibraryVersionID != null) {
+              temp.append("</ul></li>");
+              previousLibraryVersionID = null;
+            }
+            if (previousLibraryID != null) {
+              temp.append("</ul></li>");
+            }
+            temp.append("<li><a href=\"./libraries?libraryID=").append(libraryID).append("\">").append("Library ").append(libraryID).append("</a><ul>");
+            previousLibraryID = libraryID;
+          }
+          
+          if (!libraryVersionID.equals(previousLibraryVersionID)) {
+            if (previousLibraryVersionID != null) {
+              temp.append("</ul></li>");
+            }
+            temp.append("<li><a href=\"./libraries?libraryVersionID=").append(libraryVersionID).append("\">").append("Library Version ").append(libraryVersionID).append("</a><ul>");
+            previousLibraryVersionID = libraryVersionID;
+          }
+          
+          temp.append("<li><a href=\"./jars?jarID=").append(jarID).append("\">").append(group).append(".").append(artifact).append(" (").append(version).append(")</a></li>");
+          jarCount++;
+        }
+        if (previousLibraryVersionID != null) {
+          temp.append("</ul></li>");
+        }
+         
+        if (previousLibraryID != null) {
+          temp.append("</ul></li>");
+        }
+        
+        html.append("<h4>").append(jarCount).append(" Jars</h4>");
+        html.append("<ul>");
+        html.append(temp.toString());
+        html.append("</ul>");
+      }
+    }
+  }
+  
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     StringBuilder html = new StringBuilder(
@@ -1005,6 +1098,17 @@ public class ArtifactRepoBrowser extends HttpServlet {
             }
           } else {
             serveFqn(fqnID, html);
+          }
+        }
+        break;
+      case "/maven":
+        {
+          String group = request.getParameter("group");
+          String artifact = request.getParameter("artifact");
+          if (group == null || artifact == null) {
+            serveMavenArtifactList(html);
+          } else {
+            serveMavenArtifact(group, artifact, html);
           }
         }
         break;

@@ -43,6 +43,7 @@ public final class ProjectsTable extends DatabaseTable {
    *  | version      | VARCHAR(1024) | Yes   | No     |
    *  | groop        | VARCHAR(1024) | Yes   | Yes    |
    *  | path         | VARCHAR(1024) | Yes   | No     |
+   *  | source       | VARCHAR(1024) | Yes   | Yes    |
    *  | hash         | VARCHAR(32)   | Yes   | Yes    |
    *  | has_source   | BOOLEAN       | No    | Yes    |
    *  +--------------+---------------+-------+--------+
@@ -56,6 +57,7 @@ public final class ProjectsTable extends DatabaseTable {
   public static final Column<String> VERSION = TABLE.addVarcharColumn("version", 1024, true);
   public static final Column<String> GROUP = TABLE.addVarcharColumn("groop", 1024, true).addIndex(48);
   public static final Column<String> PATH = TABLE.addVarcharColumn("path", 1024, true);
+  public static final Column<String> SOURCE = TABLE.addVarcharColumn("source", 1024, true);
   public static final Column<String> HASH = TABLE.addVarcharColumn("hash", 32, true).addIndex();
   public static final Column<Boolean> HAS_SOURCE = TABLE.addBooleanColumn("has_source", false).addIndex();
  
@@ -67,7 +69,7 @@ public final class ProjectsTable extends DatabaseTable {
   public static final String UNKNOWNS_PROJECT = "unknowns";
   
   // ---- INSERT ----
-  private static Insert createRowInsert(Project type, String name, String description, String version, String group, String path, String hash, boolean hasSource) {
+  private static Insert createRowInsert(Project type, String name, String description, String version, String group, String path, String source, String hash, boolean hasSource) {
     return TABLE.createInsert(
         PROJECT_TYPE.to(type),
         NAME.to(name),
@@ -75,6 +77,7 @@ public final class ProjectsTable extends DatabaseTable {
         VERSION.to(version),
         GROUP.to(group),
         PATH.to(path),
+        SOURCE.to(source),
         HASH.to(hash),
         HAS_SOURCE.to(hasSource));
   }
@@ -86,6 +89,7 @@ public final class ProjectsTable extends DatabaseTable {
             null, // no version 
             null, // no group 
             null, // no path
+            null, // no source
             null, // no hash 
             false);
   }
@@ -97,6 +101,7 @@ public final class ProjectsTable extends DatabaseTable {
             null, // no version
             null, // no group
             null, // no path
+            null, // no source
             null, // no hash
             false);
   }
@@ -115,7 +120,8 @@ public final class ProjectsTable extends DatabaseTable {
         null, 
         props.VERSION.getValue(), 
         props.GROUP.getValue(), 
-        "COMPONENT", // no path 
+        "COMPONENT", // no path
+        null, // no source
         props.HASH.getValue(), 
         false); // not sure if it has source
         
@@ -135,6 +141,7 @@ public final class ProjectsTable extends DatabaseTable {
         props.VERSION.getValue(), 
         props.GROUP.getValue(), 
         "BEGIN_ENTITY", // no path 
+        null, // no source
         props.HASH.getValue(), 
         props.HAS_SOURCE.getValue());
   }
@@ -147,7 +154,8 @@ public final class ProjectsTable extends DatabaseTable {
         null, // no description 
         null, // no version
         null, // no group 
-        project.getLocation().toString(), 
+        project.getLocation().toString(),
+        project.getRepository().getBatch(project.getLocation()).getProperties().SOURCE.getValue(),
         "BEGIN_ENTITY", 
         true);
 

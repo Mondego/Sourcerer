@@ -22,27 +22,36 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Multimap;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class MissingTypeCollection {
   private Set<String> imports;
   private Map<String, MissingType> missingTypes;
+  private Multimap<String, MissingName> missingNames;
   private Map<String, MissingPackage> missingPackages;
   
-  private Set<String> currentlyMissing;
-  private Set<String> currentlyMissingStatic;
-  private Set<String> currentlyMissingOnDemand;
-  private Set<String> currentlyMissingStaticOnDemand;
+  private String currentPackage;
+  private Set<String> currentlyMissingFQNs;
+  private Set<String> currentlyMissingNames;
+  private Set<String> currentlyMissingImports;
+  private Set<String> currentlyMissingStaticImports;
+  private Set<String> currentlyMissingOnDemandImports;
+  private Set<String> currentlyMissingStaticOnDemandImports;
   
   private MissingTypeCollection() {
     imports = new HashSet<>();
     missingTypes = new HashMap<>();
     missingPackages = new HashMap<>();
-    currentlyMissing = new HashSet<>();
-    currentlyMissingStatic = new HashSet<>();
-    currentlyMissingOnDemand = new HashSet<>();
-    currentlyMissingStaticOnDemand = new HashSet<>();
+    
+    currentlyMissingFQNs = new HashSet<>();
+    currentlyMissingNames = new HashSet<>();
+    currentlyMissingImports = new HashSet<>();
+    currentlyMissingStaticImports = new HashSet<>();
+    currentlyMissingOnDemandImports = new HashSet<>();
+    currentlyMissingStaticOnDemandImports = new HashSet<>();
   }
   
   static MissingTypeCollection create() {
@@ -70,31 +79,66 @@ public class MissingTypeCollection {
   }
   
   void endFile() {
-    // For each basic import, just add it to the missing types
-    for (String fqn : currentlyMissing) {
+    // Missing FQNs are missing FQNs
+    for (String fqn : currentlyMissingFQNs) {
       getType(fqn).reportMissing();
     }
+    currentlyMissingFQNs.clear();
     
-    // For each on demand import
-    for (String fqn : currentlyMissingOnDemand) {
-      getPackage(fqn).reportMissing();
+    // For each basic import, add it to the missing types
+    for (String fqn : currentlyMissingImports) {
+      getType(fqn).reportMissing();
+      // Remove the missing name if it is accounted for by this import
+      currentlyMissingNames.remove(fqn.substring(fqn.lastIndexOf('.') + 1));
+      
     }
-    
+    currentlyMissingImports.clear();
+
     // For each static import
-    for (String fqn : currentlyMissingStatic) {
+    for (String fqn : currentlyMissingStaticImports) {
       String klass = fqn.substring(0, fqn.lastIndexOf('.'));
-      getType(klass).reportMissingField(fqn.substring(fqn.lastIndexOf('.') + 1));
+      String name = fqn.substring(fqn.lastIndexOf('.') + 1);
+      MissingType classType = getType(klass);
+//      // Does the name match a missing name?
+//      if (currentlyMissingFields.remove(name)) {
+//        // It must be a field
+//        classType.reportField(name);
+//      }
+//      // Does the name match a missing method?
+//      else if (currentlyMissingMethods.remove(name)) {
+//        // It must be a method
+//        classType.reportMethod(name);
+//      } else {
+//        // Unclear what it is, likely an unused import
+        classType.reportAssociatedName(name);
+//      }
     }
+    currentlyMissingStaticImports.clear();
+    
+    // Make MissingNames for every missing name
+    Set<MissingName> names = new HashSet<>();
+    for (String name : currentlyMissingNames) {
+      MissingName missingName = MissingName.create(currentPackage, name);
+      names.add(missingName);
+      missingNames.put(name, missingName);
+    }
+  
+    // For each on demand import
+    for (String fqn : currentlyMissingOnDemandImports) {
+      MissingPackage pkg = getPackage(fqn);
+      pkg.reportMissing();
+      // Add each missing name as a possible type
+      for (MissingName name : names) {
+        pkg.addPotentialName(name);
+      }
+    }
+    currentlyMissingOnDemandImports.clear();
     
     // For each on demand static import
-    for (String fqn : currentlyMissingStaticOnDemand) {
+    for (String fqn : currentlyMissingStaticOnDemandImports) {
       getType(fqn).reportMissingStaticOnDemand();
     }
-    
-    currentlyMissing.clear();
-    currentlyMissingStatic.clear();
-    currentlyMissingOnDemand.clear();
-    currentlyMissingStaticOnDemand.clear();
+    currentlyMissingStaticOnDemandImports.clear();
   }
   
   void addImport(String fqn, boolean onDemand, boolean isStatic) {
@@ -113,20 +157,33 @@ public class MissingTypeCollection {
       }
     }
   }
+  
+  void setPackage(String pkg) {
+    currentPackage = pkg;
+  }
+  
   void addMissingImport(String fqn, boolean onDemand, boolean isStatic) {
     if (isStatic) {
       if (onDemand) {
-        currentlyMissingStaticOnDemand.add(fqn);
+        currentlyMissingStaticOnDemandImports.add(fqn);
       } else {
-        currentlyMissingStatic.add(fqn);
+        currentlyMissingStaticImports.add(fqn);
       }
     } else {
       if (onDemand) {
-        currentlyMissingOnDemand.add(fqn);
+        currentlyMissingOnDemandImports.add(fqn);
       } else {
-        currentlyMissing.add(fqn);
+        currentlyMissingImports.add(fqn);
       }
     }
+  }
+  
+  void addMissingFQN(String fqn) {
+    currentlyMissingFQNs.add(fqn);
+  }
+  
+  void addMissingName(String name) {
+    currentlyMissingNames.add(name);
   }
   
   public boolean hasMissingTypes() {

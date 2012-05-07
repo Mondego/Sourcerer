@@ -23,6 +23,7 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaProject;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProjectProperties;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaProject;
+import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaRepository;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -38,6 +39,11 @@ class ExtractedJavaProjectImpl extends AbstractRepoProject<ExtractedJavaReposito
       loc.getProjectRoot().delete();
     }
     return project;
+  }
+  
+  @Override
+  public ModifiableExtractedJavaRepository getRepository() {
+    return repo;
   }
   
   @Override
