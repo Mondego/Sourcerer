@@ -214,10 +214,15 @@ public class JarCollection implements Iterable<Jar> {
           }
         }
       }
+      // Make sure it's non-empty
+      if (!newJar.getFqns().isEmpty()) {
+        jars.put(jar.getProperties().HASH.getValue(), newJar);
+      }
     } catch (IOException | IllegalArgumentException e) {
+      // If there were errors, just throw the jar out
       logger.log(Level.SEVERE, "Error reading jar file: " + jar, e);
     }
-    jars.put(jar.getProperties().HASH.getValue(), newJar);
+    
   }
   
   public Jar getJar(String hash) {
