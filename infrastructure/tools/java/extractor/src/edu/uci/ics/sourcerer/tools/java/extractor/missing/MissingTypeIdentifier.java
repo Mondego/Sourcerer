@@ -57,6 +57,10 @@ public class MissingTypeIdentifier {
     parser = ASTParser.newParser(AST.JLS4);
   }
   
+  static MissingTypeIdentifier create() {
+    return new MissingTypeIdentifier();
+  }
+  
   public static void identifyExternalTypes() {
     identifyMissingTypes(false);
   }
@@ -138,7 +142,7 @@ public class MissingTypeIdentifier {
     task.finish();
   }
   
-  private MissingTypeCollection identifyMissingTypes(Map<JavaFile, IFile> sourceFiles) {
+  MissingTypeCollection identifyMissingTypes(Map<JavaFile, IFile> sourceFiles) {
     MissingTypeVisitor visitor = MissingTypeVisitor.create();
     for (Map.Entry<JavaFile, IFile> entry : sourceFiles.entrySet()) {
       ICompilationUnit icu = JavaCore.createCompilationUnitFrom(entry.getValue());

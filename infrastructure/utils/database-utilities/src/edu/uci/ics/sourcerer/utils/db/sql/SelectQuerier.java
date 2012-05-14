@@ -17,21 +17,24 @@
  */
 package edu.uci.ics.sourcerer.utils.db.sql;
 
+import java.util.Collection;
+
+import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public interface SelectQuery extends Query {
-  public void setCount(boolean count);
-  public void setDistinct(boolean distinct);
-  public void addSelect(Selectable<?> select);
-  public void addSelects(Selectable<?> ... selects);
-  public void clearSelect();
-  public void andWhere(Condition condition);
-  public void andWhere(Condition ... conditions);
-  public void clearWhere();
-  public void orderBy(Selectable<?> select, boolean ascending);
+public abstract class SelectQuerier <Result, Input> extends Querier<Collection<Result>, Input> {
+  protected SelectQuery query;
+  protected ConstantCondition<Input> cond;
+  protected Selectable<Result> select;
   
-  public TypedQueryResult select();
-  public TypedQueryResult selectStreamed();
+  public SelectQuerier(QueryExecutor exec) {
+    super(exec);
+  }
+
+  public Collection<Result> selectHelper(Input input) {
+    cond.setValue(input);
+    return query.select().toCollection(select);
+  }
 }

@@ -57,4 +57,14 @@ public class CollectionUtils {
     }
     return (double) intersection / (double) union;
   }
+  
+  public static <T> int intersectionSize(Collection<T> one, Collection<T> two) {
+    int intersection = 0;
+    for (T item : one) {
+      if (two.contains(item)) {
+        intersection++;
+      }
+    }
+    return intersection;
+  }
 }

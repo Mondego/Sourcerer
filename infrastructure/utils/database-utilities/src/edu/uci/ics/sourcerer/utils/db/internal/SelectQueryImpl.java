@@ -51,6 +51,7 @@ class SelectQueryImpl implements SelectQuery {
   
   private Table[] tables;
   private ComparisonCondition[] joinConditions;
+  private boolean count;
   private boolean distinct;
   private Map<Selectable<?>, Integer> selects;
   private Condition whereCondition;
@@ -110,6 +111,11 @@ class SelectQueryImpl implements SelectQuery {
     } else {
       throw new IllegalStateException("Cannot set from twice");
     }
+  }
+  
+  @Override
+  public void setCount(boolean count) {
+    this.count = count;
   }
   
   @Override
@@ -177,23 +183,33 @@ class SelectQueryImpl implements SelectQuery {
 
   private ResultSet execute() {
     if (statement == null) {
-      if (selects.isEmpty()) {
+      if (selects.isEmpty() && !count) {
         throw new IllegalStateException("Must have at least one select.");
       } else if (tables == null) {
         throw new IllegalStateException("Must have at least one table.");
       }
       StringBuilder sql = new StringBuilder("SELECT ");
+      if (count) {
+        sql.append("COUNT(");
+      }
       if (distinct) {
         sql.append("DISTINCT ");
       }
-      boolean comma = false;
-      for (Selectable<?> select : selects.keySet()) {
-        if (comma) {
-          sql.append(", ");
-        } else {
-          comma = true;
+      if (selects.isEmpty()) {
+        sql.append("*");
+      } else {
+        boolean comma = false;
+        for (Selectable<?> select : selects.keySet()) {
+          if (comma) {
+            sql.append(", ");
+          } else {
+            comma = true;
+          }
+          select.toSql(sql);
         }
-        select.toSql(sql);
+      }
+      if (count) {
+        sql.append(")");
       }
       
       sql.append(" FROM ");
@@ -295,16 +311,34 @@ class SelectQueryImpl implements SelectQuery {
     }
 
     @Override
-    public <T> T getResult(Selectable<T> selectable) {
-      Integer index = selects.get(selectable);
-      if (index == null) {
-        throw new IllegalArgumentException("Column not in select: " + selectable);
-      } else {
+    public int getCount() {
+      if (SelectQueryImpl.this.count) {
         try {
-          return selectable.from(result.getString(index));
+          return result.getInt(1);
         } catch (SQLException e) {
           logger.log(Level.SEVERE, "Error getting result.", e);
-          return null;
+          return 0;
+        }
+      } else {
+        throw new IllegalStateException("Count not enabled.");
+      }
+    }
+    
+    @Override
+    public <T> T getResult(Selectable<T> selectable) {
+      if (SelectQueryImpl.this.count) {
+        throw new IllegalStateException("Count enabled.");
+      } else {
+        Integer index = selects.get(selectable);
+        if (index == null) {
+          throw new IllegalArgumentException("Column not in select: " + selectable);
+        } else {
+          try {
+            return selectable.from(result.getString(index));
+          } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error getting result.", e);
+            return null;
+          }
         }
       }
     }

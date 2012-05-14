@@ -431,6 +431,19 @@ public class ComponentImporter extends DatabaseRunnable {
     }
     task.finish();
     
+    task.start("Processing cluster to type mapping", "mappings processed");
+    for (Cluster cluster : clusters) {
+      for (VersionedFqnNode fqn : cluster.getCoreFqns()) {
+        inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.CLUSTER_CONTAINS_CORE_TYPE, clusterMap.get(cluster), fqnMap.get(fqn)));
+        task.progress();
+      }
+      for (VersionedFqnNode fqn : cluster.getVersionFqns()) {
+        inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.CLUSTER_CONTAINS_VERSION_TYPE, clusterMap.get(cluster), fqnMap.get(fqn)));
+        task.progress();
+      }
+    }
+    task.finish();
+    
     task.start("Processing cluster version to fqn version mapping", "mappings processed");
     for (Map.Entry<ClusterVersion, Integer> entry : clusterVersionMap.entrySet()) {
       for (FqnVersion fqn : entry.getKey().getFqns()) {

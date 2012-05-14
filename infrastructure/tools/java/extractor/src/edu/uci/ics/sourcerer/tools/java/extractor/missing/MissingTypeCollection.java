@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 /**
@@ -30,12 +31,12 @@ import com.google.common.collect.Multimap;
 public class MissingTypeCollection {
   private Set<String> imports;
   private Map<String, MissingType> missingTypes;
-  private Multimap<String, MissingName> missingNames;
+//  private Multimap<String, MissingName> missingNames;
   private Map<String, MissingPackage> missingPackages;
   
   private String currentPackage;
-  private Set<String> currentlyMissingFQNs;
-  private Set<String> currentlyMissingNames;
+//  private Set<String> currentlyMissingFQNs;
+//  private Set<String> currentlyMissingNames;
   private Set<String> currentlyMissingImports;
   private Set<String> currentlyMissingStaticImports;
   private Set<String> currentlyMissingOnDemandImports;
@@ -44,10 +45,11 @@ public class MissingTypeCollection {
   private MissingTypeCollection() {
     imports = new HashSet<>();
     missingTypes = new HashMap<>();
+//    missingNames = HashMultimap.create();
     missingPackages = new HashMap<>();
     
-    currentlyMissingFQNs = new HashSet<>();
-    currentlyMissingNames = new HashSet<>();
+//    currentlyMissingFQNs = new HashSet<>();
+//    currentlyMissingNames = new HashSet<>();
     currentlyMissingImports = new HashSet<>();
     currentlyMissingStaticImports = new HashSet<>();
     currentlyMissingOnDemandImports = new HashSet<>();
@@ -80,16 +82,16 @@ public class MissingTypeCollection {
   
   void endFile() {
     // Missing FQNs are missing FQNs
-    for (String fqn : currentlyMissingFQNs) {
-      getType(fqn).reportMissing();
-    }
-    currentlyMissingFQNs.clear();
-    
+//    for (String fqn : currentlyMissingFQNs) {
+//      getType(fqn).reportMissing();
+//    }
+//    currentlyMissingFQNs.clear();
+//    
     // For each basic import, add it to the missing types
     for (String fqn : currentlyMissingImports) {
       getType(fqn).reportMissing();
       // Remove the missing name if it is accounted for by this import
-      currentlyMissingNames.remove(fqn.substring(fqn.lastIndexOf('.') + 1));
+//      currentlyMissingNames.remove(fqn.substring(fqn.lastIndexOf('.') + 1));
       
     }
     currentlyMissingImports.clear();
@@ -116,21 +118,21 @@ public class MissingTypeCollection {
     currentlyMissingStaticImports.clear();
     
     // Make MissingNames for every missing name
-    Set<MissingName> names = new HashSet<>();
-    for (String name : currentlyMissingNames) {
-      MissingName missingName = MissingName.create(currentPackage, name);
-      names.add(missingName);
-      missingNames.put(name, missingName);
-    }
+//    Set<MissingName> names = new HashSet<>();
+//    for (String name : currentlyMissingNames) {
+//      MissingName missingName = MissingName.create(currentPackage, name);
+//      names.add(missingName);
+//      missingNames.put(name, missingName);
+//    }
   
     // For each on demand import
     for (String fqn : currentlyMissingOnDemandImports) {
       MissingPackage pkg = getPackage(fqn);
       pkg.reportMissing();
       // Add each missing name as a possible type
-      for (MissingName name : names) {
-        pkg.addPotentialName(name);
-      }
+//      for (MissingName name : names) {
+//        pkg.addPotentialName(name);
+//      }
     }
     currentlyMissingOnDemandImports.clear();
     
@@ -178,13 +180,13 @@ public class MissingTypeCollection {
     }
   }
   
-  void addMissingFQN(String fqn) {
-    currentlyMissingFQNs.add(fqn);
-  }
+//  void addMissingFQN(String fqn) {
+//    currentlyMissingFQNs.add(fqn);
+//  }
   
-  void addMissingName(String name) {
-    currentlyMissingNames.add(name);
-  }
+//  void addMissingName(String name) {
+//    currentlyMissingNames.add(name);
+//  }
   
   public boolean hasMissingTypes() {
     return !(missingTypes.isEmpty() && missingPackages.isEmpty());

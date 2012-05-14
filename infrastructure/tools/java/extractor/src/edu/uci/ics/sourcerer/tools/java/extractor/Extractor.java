@@ -234,7 +234,7 @@ public final class Extractor {
       
       if (resolver != null) {
         task.start("Resolving missing types");
-        jars = resolver.resolveMissingTypes(sourceFiles);
+        jars = resolver.resolveMissingTypes(files.getJarFiles(), sourceFiles);
         EclipseUtils.addJarsToClasspath(jars);
         task.finish();
       }
@@ -266,6 +266,8 @@ public final class Extractor {
       Logging.removeFileLogger(extractedProject.getExtractionDir().toFile());
     }
     task.finish();
+    
+    IOUtils.close(resolver);
     
     task.finish();
   }

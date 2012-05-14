@@ -72,21 +72,21 @@ class MissingTypeVisitor extends ASTVisitor {
     return false;
   }
 
-  @Override
-  public boolean visit(QualifiedName node) {
-    IBinding binding = node.resolveBinding();
-    if (binding == null) {
-      missingTypes.addMissingFQN(node.getFullyQualifiedName());
-    }
-    return false;
-  }
+//  @Override
+//  public boolean visit(QualifiedName node) {
+//    IBinding binding = node.resolveBinding();
+//    if (binding == null) {
+//      missingTypes.addMissingFQN(node.getFullyQualifiedName());
+//    }
+//    return false;
+//  }
 
-  @Override
-  public boolean visit(SimpleName node) {
-    IBinding binding = node.resolveBinding();
-    if (binding == null) {
-      missingTypes.addMissingName(node.getIdentifier());
-    }
-    return false;
-  }
+//  @Override
+//  public boolean visit(SimpleName node) {
+//    IBinding binding = node.resolveBinding();
+//    if (binding == null) {
+//      missingTypes.addMissingName(node.getIdentifier());
+//    }
+//    return false;
+//  }
 }

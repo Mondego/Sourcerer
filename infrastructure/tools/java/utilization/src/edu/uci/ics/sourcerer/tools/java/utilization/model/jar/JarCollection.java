@@ -199,6 +199,7 @@ public class JarCollection implements Iterable<Jar> {
       }
     } catch (IOException | IllegalArgumentException e) {
       logger.log(Level.SEVERE, "Error reading jar file: " + jar, e);
+      return;
     }
     
     try (ZipInputStream zis = new ZipInputStream(new FileInputStream(jar.getFile().toFile()))) {
@@ -221,6 +222,7 @@ public class JarCollection implements Iterable<Jar> {
     } catch (IOException | IllegalArgumentException e) {
       // If there were errors, just throw the jar out
       logger.log(Level.SEVERE, "Error reading jar file: " + jar, e);
+      logger.severe("Would like to remove");
     }
     
   }
