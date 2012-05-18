@@ -127,6 +127,7 @@ public class MissingTypeResolver implements Closeable {
           
           query.setCount(true);
           query.setDistinct(true);
+          query.addSelect(ComponentRelationsTable.TARGET_ID);
           query.andWhere(cond, ComponentRelationsTable.TYPE.compareIn(EnumSet.of(ComponentRelation.CLUSTER_CONTAINS_CORE_TYPE, ComponentRelation.CLUSTER_CONTAINS_VERSION_TYPE)));
           
           return query;
@@ -135,7 +136,7 @@ public class MissingTypeResolver implements Closeable {
         @Override
         public Integer selectHelper(Integer input) {
           cond.setValue(input);
-          return query.select().getCount();
+          return query.select().toCount();
         }
       };
 

@@ -26,6 +26,7 @@ import java.util.Collection;
 public interface TypedQueryResult extends Closeable {
   public boolean next();
   public int getCount();
+  public int toCount();
   public <T> T getResult(Selectable<T> selectable);
   public <T> Collection<T> toCollection(Selectable<T> selectable);
   public <T> Collection<T> toCollection(ResultConstructor<T> constructor);

@@ -257,6 +257,7 @@ class SelectQueryImpl implements SelectQuery {
         }
       }
       sql.append(";");
+      logger.info(sql.toString());
       statement = executor.prepareStatement(sql.toString());
     }
     
@@ -313,14 +314,25 @@ class SelectQueryImpl implements SelectQuery {
     @Override
     public int getCount() {
       if (SelectQueryImpl.this.count) {
-        try {
-          return result.getInt(1);
-        } catch (SQLException e) {
-          logger.log(Level.SEVERE, "Error getting result.", e);
-          return 0;
+        if (result != null) {
+          try {
+            return result.getInt(1);
+          } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error getting result.", e);
+          }
         }
+        return 0;
       } else {
         throw new IllegalStateException("Count not enabled.");
+      }
+    }
+    
+    @Override
+    public int toCount() {
+      if (next()) {
+        return getCount();
+      } else {
+        return 0;
       }
     }
     
@@ -329,17 +341,19 @@ class SelectQueryImpl implements SelectQuery {
       if (SelectQueryImpl.this.count) {
         throw new IllegalStateException("Count enabled.");
       } else {
-        Integer index = selects.get(selectable);
-        if (index == null) {
-          throw new IllegalArgumentException("Column not in select: " + selectable);
-        } else {
-          try {
-            return selectable.from(result.getString(index));
-          } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error getting result.", e);
-            return null;
+        if (result != null) {
+          Integer index = selects.get(selectable);
+          if (index == null) {
+            throw new IllegalArgumentException("Column not in select: " + selectable);
+          } else {
+            try {
+              return selectable.from(result.getString(index));
+            } catch (SQLException e) {
+              logger.log(Level.SEVERE, "Error getting result.", e);
+            }
           }
         }
+        return null;
       }
     }
     
