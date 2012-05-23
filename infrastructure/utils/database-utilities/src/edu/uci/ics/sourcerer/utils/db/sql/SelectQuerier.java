@@ -24,7 +24,7 @@ import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class SelectQuerier <Result, Input> extends Querier<Collection<Result>, Input> {
+public abstract class SelectQuerier <Input, Result> extends Querier<Input, Collection<Result>> {
   protected SelectQuery query;
   protected ConstantCondition<Input> cond;
   protected Selectable<Result> select;

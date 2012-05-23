@@ -27,7 +27,7 @@ import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public abstract class Querier <Result, Input> implements Closeable {
+public abstract class Querier <Input, Result> implements Closeable {
   protected QueryExecutor exec;
   protected Query query;
   private boolean initialized = false;

@@ -17,14 +17,16 @@
  */
 package edu.uci.ics.sourcerer.tools.java.extractor.missing;
 
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
+
 import java.io.Closeable;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,10 +36,12 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentRelationsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.TypesTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.ComponentRelation;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
+import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepository;
 import edu.uci.ics.sourcerer.util.CollectionUtils;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnection;
@@ -56,23 +60,26 @@ import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 public class MissingTypeResolver implements Closeable {
   private final DatabaseConnection conn;
   private final MissingTypeIdentifier identifier;
+  private final JavaRepository repo;
   
-  private Querier<Collection<Integer>, String> findClusterByType;
-  private Querier<Collection<Integer>, Integer> findLibraryVersionByCluster;
-  private Querier<Collection<Integer>, Integer> findClusterByLibraryVersion;
+  private Querier<String, Collection<Integer>> findClusterByType;
+  private Querier<Integer, Collection<Integer>> findLibraryVersionByCluster;
+  private Querier<Integer, Collection<Integer>> findClusterByLibraryVersion;
   private Querier<Integer, Integer> findTypeCountByCluster;
+  private Querier<Integer, Collection<String>> findJarsByLibraryVersion;
   
-  private MissingTypeResolver() {
+  private MissingTypeResolver(JavaRepository repo) {
     identifier = MissingTypeIdentifier.create();
     conn = DatabaseConnectionFactory.INSTANCE.make();
+    this.repo = repo;
   }
   
-  public static MissingTypeResolver create() {
-    MissingTypeResolver resolver = new MissingTypeResolver();
+  public static MissingTypeResolver create(JavaRepository repo) {
+    MissingTypeResolver resolver = new MissingTypeResolver(repo);
     if (resolver.conn.open()) {
       QueryExecutor exec = resolver.conn.getExecutor();
 
-      resolver.findClusterByType = new SelectQuerier<Integer, String>(exec) {
+      resolver.findClusterByType = new SelectQuerier<String, Integer>(exec) {
         @Override
         public Query initialize() {
           query = exec.createSelectQuery(TypesTable.TABLE);
@@ -139,6 +146,21 @@ public class MissingTypeResolver implements Closeable {
           return query.select().toCount();
         }
       };
+      
+      resolver.findJarsByLibraryVersion = new SelectQuerier<Integer, String>(exec) {
+        @Override
+        public Query initialize() {
+          query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID));
+          cond = ComponentRelationsTable.TARGET_ID.compareEquals();
+          select = ProjectsTable.HASH;
+          
+          query.addSelect(select);
+          query.andWhere(cond, ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION));
+          
+          return query;
+        }
+        
+      };
 
       return resolver;
     } else {
@@ -155,18 +177,10 @@ public class MissingTypeResolver implements Closeable {
     task.finish();
     
     Set<Integer> clusters = findMatchingClusters(missingTypes);
-    task.start("Reporting clusters");
-    for (Integer clusterID : clusters) {
-      task.report("" + clusterID);
-    }
-    task.finish();
     Set<Integer> libraryVersions = matchClustersToLibraryVersions(clusters);
-    task.start("Reporting library versions");
-    for (Integer libraryVersion : libraryVersions) {
-      task.report("" + libraryVersion);
-    }
-    task.finish();
-    return Collections.emptySet();
+    Collection<JarFile> jars = matchLibraryVersionsToJarFiles(libraryVersions);
+    
+    return jars;
   }
   
   private Set<Integer> findMatchingClusters(MissingTypeCollection missingTypes) {
@@ -306,6 +320,26 @@ public class MissingTypeResolver implements Closeable {
     task.finish();
     
     return finalLibraryVersions;
+  }
+  
+  private Collection<JarFile> matchLibraryVersionsToJarFiles(Set<Integer> libraryVerions) {
+    Collection<JarFile> jars = new LinkedList<>();
+    
+    for (Integer libraryVersion : libraryVerions) {
+      JarFile jar = null;
+      for (String hash : findJarsByLibraryVersion.select(libraryVersion)) {
+        jar = repo.getJarFile(hash);
+        if (jar != null) {
+          break;
+        }
+      }
+      if (jar == null) {
+        logger.severe("Unable to find jar for library version " + libraryVersion);
+      } else {
+        jars.add(jar);
+      }
+    }
+    return jars;
   }
   
   @Override
