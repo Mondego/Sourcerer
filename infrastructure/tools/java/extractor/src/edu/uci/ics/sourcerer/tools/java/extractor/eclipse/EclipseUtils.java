@@ -328,7 +328,7 @@ public class EclipseUtils {
       }
       
       return classFiles;
-    } catch (JavaModelException e) {
+    } catch (Exception e) {
       logger.log(Level.SEVERE, "Unable to get class files", e);
       return Collections.emptySet();
     }

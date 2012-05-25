@@ -195,7 +195,7 @@ public final class Extractor {
     
     MissingTypeResolver resolver = null;
     if (RESOLVE_MISSING_TYPES.getValue()) {
-      resolver = MissingTypeResolver.create();
+      resolver = MissingTypeResolver.create(repo);
     }
     
     task.start("Extracting " + projects.size() + " projects", "projects extracted", 1);

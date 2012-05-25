@@ -91,9 +91,9 @@ public class ASMExtractor implements Closeable {
   }
   
   public void extractJar(java.io.File file) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    task.start("Extracting class files", "class files extracted", 500);
     try (JarFile jar = new JarFile(file)) {
-      TaskProgressLogger task = TaskProgressLogger.get();
-      task.start("Extracting class files", "class files extracted", 500);
       Enumeration<JarEntry> en = jar.entries();
       while (en.hasMoreElements()) {
         JarEntry entry = en.nextElement();
@@ -102,14 +102,22 @@ public class ASMExtractor implements Closeable {
           location = new Location(pkgFqn, null, null, null);
           int last = pkgFqn.lastIndexOf('.', pkgFqn.lastIndexOf('.') - 1);
           String name = pkgFqn.substring(last + 1);
-          pkgFqn = pkgFqn.substring(0, last);
+          if (last == -1) {
+            logger.severe("No pkg for: " + entry.getName());
+            pkgFqn = "default";
+          } else {
+            pkgFqn = pkgFqn.substring(0, last);
+          }
           
           entityWriter.writeEntity(Entity.PACKAGE, pkgFqn, 0, null, null);
           
           fqnStack.push(pkgFqn, Entity.PACKAGE);
-          
-          ClassReader reader = new ClassReader(jar.getInputStream(entry));
-          reader.accept(classVisitor, 0);
+          try {
+            ClassReader reader = new ClassReader(jar.getInputStream(entry));
+            reader.accept(classVisitor, 0);
+          } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error reading class file: " + entry.getName(), e);
+          }
           
           fileWriter.writeFile(File.CLASS, name, null, location.getClassFile());
           
@@ -118,9 +126,10 @@ public class ASMExtractor implements Closeable {
           task.progress();
         }
       }
-      task.finish();
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.log(Level.SEVERE, "Error reading jar file.", e);
+    } finally {
+      task.finish();
     }
   }
   
@@ -310,7 +319,7 @@ public class ASMExtractor implements Closeable {
   
     @Override
     public void visitAttribute(Attribute attr) {
-      logger.info(attr.type + " : " + attr);
+//      logger.info(attr.type + " : " + attr);
     }
     
     @Override
@@ -467,7 +476,7 @@ public class ASMExtractor implements Closeable {
 
     @Override
     public AnnotationVisitor visitAnnotationDefault() {
-      logger.info("foo");
+//      logger.info("foo");
       return null;
     }
     

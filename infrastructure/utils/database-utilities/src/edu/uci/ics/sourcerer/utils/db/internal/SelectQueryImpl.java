@@ -257,7 +257,6 @@ class SelectQueryImpl implements SelectQuery {
         }
       }
       sql.append(";");
-      logger.info(sql.toString());
       statement = executor.prepareStatement(sql.toString());
     }
     
