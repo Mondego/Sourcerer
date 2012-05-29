@@ -21,6 +21,8 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
@@ -29,62 +31,62 @@ import edu.uci.ics.sourcerer.tools.java.db.resolver.ProjectTypeModel;
 import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.CommentsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ImportsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.CommentEX;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.ImportEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.LocalVariableEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.LocalVariable;
+import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
+import edu.uci.ics.sourcerer.tools.java.model.types.Metrics;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.BatchInserter;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
+import edu.uci.ics.sourcerer.utils.db.sql.Querier;
+import edu.uci.ics.sourcerer.utils.db.sql.Query;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
-import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
+import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class StructuralRelationsImporter extends RelationsImporter {
   protected Collection<Integer> libraryProjects;
-    
-  private SelectQuery localVariablesQuery;
-  private ConstantCondition<Integer> localVariablesQueryProjectID;
+
+  private Querier<Integer, Iterator<Integer>> getLocalVariables;
   
   protected StructuralRelationsImporter(String taskName, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
     super(taskName, javaModel, unknowns);
   }
   
-//  @Override
-//  protected void init() {
-//    super.init();
-//    try (SelectQuery query = exec.makeSelectQuery(ProjectsTable.TABLE)) {
-//      // Get the Java Library projectIDs
-//      query.addSelect(ProjectsTable.PROJECT_ID);
-//      query.andWhere(ProjectsTable.PROJECT_TYPE.compareEquals(Project.JAVA_LIBRARY));
-//      
-//      libraryProjects = query.select().toCollection(ProjectsTable.PROJECT_ID);
-//      
-//      // Get the primitives projectID
-//      query.clearWhere();
-//
-//      query.andWhere(ProjectsTable.NAME.compareEquals(ProjectsTable.PRIMITIVES_PROJECT).and(
-//          ProjectsTable.PROJECT_TYPE.compareEquals(Project.SYSTEM)));
-//      
-//      libraryProjects.add(query.select().toSingleton(ProjectsTable.PROJECT_ID));
-//    }
-//  }
-  
   protected final void initializeQueries() {
-    localVariablesQuery = exec.createSelectQuery(EntitiesTable.TABLE);
-    localVariablesQuery.addSelects(EntitiesTable.ENTITY_ID);
-    localVariablesQueryProjectID = EntitiesTable.PROJECT_ID.compareEquals();
-    localVariablesQuery.andWhere(localVariablesQueryProjectID);
-    localVariablesQuery.andWhere(EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.PARAMETER, Entity.LOCAL_VARIABLE)));
-    localVariablesQuery.orderBy(EntitiesTable.ENTITY_ID, true);
+    getLocalVariables = new Querier<Integer, Iterator<Integer>>(exec) {
+      SelectQuery query;
+      ConstantCondition<Integer> cond;
+      Selectable<Integer> select;
+      @Override
+      public Query initialize() {
+        query = exec.createSelectQuery(EntitiesTable.TABLE);
+        cond = EntitiesTable.PROJECT_ID.compareEquals();
+        select = EntitiesTable.ENTITY_ID;
+        
+        query.addSelect(select);
+        query.andWhere(cond, EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.PARAMETER, Entity.LOCAL_VARIABLE)));
+        query.orderBy(select, true);
+        
+        return query;
+      }
+
+      @Override
+      protected Iterator<Integer> selectHelper(Integer input) {
+        return query.select().toIterable(select).iterator();
+      }};
   }
   
   protected final void insert(ReaderBundle reader, Integer projectID, Collection<Integer> externalProjects) {
@@ -92,6 +94,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
     projectModel = ProjectTypeModel.makeProjectTypeModel(task, exec, projectID, externalProjects, javaModel, unknowns);
     
     insertRemainingEntities(reader, projectID);
+    insertEntityMetrics(reader, projectID);
     insertStructuralRelations(reader, projectID);
     insertImports(reader, projectID);
     insertComments(reader, projectID);
@@ -127,43 +130,69 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
     task.finish();
   }
   
+  private void insertEntityMetrics(ReaderBundle reader, Integer projectID) {
+    task.start("Inserting entity metrics");
+    
+    task.start("Processing entities", "entities processed");
+    BatchInserter inserter = exec.makeInFileInserter(tempDir, EntityMetricsTable.TABLE);
+    
+    for (EntityEX entity : reader.getTransientEntities()) {
+      Integer fileID = getFileID(entity.getLocation());
+      Integer entityID = getLHS(entity.getFqn());
+      if (fileID != null && entityID != null) {
+        Metrics metrics = entity.getMetrics();
+        if (metrics != null) {
+          for (Entry<Metric, Integer> metric : metrics.getMetricValues()) {
+            EntityMetricsTable.createInsert(projectID, fileID, entityID, metric.getKey(), metric.getValue());
+          }
+        }
+      }
+      task.progress();
+    }
+    task.finish();
+    
+    task.start("Performing db insert");
+    inserter.insert();
+    task.finish();
+    
+    task.finish();
+  }
+  
   private void insertStructuralRelations(ReaderBundle reader, Integer projectID) {
     task.start("Inserting relations");
     
     BatchInserter inserter = exec.makeInFileInserter(tempDir, RelationsTable.TABLE);
     
     task.start("Processing local variables & parameters", "variables processed");
-    localVariablesQueryProjectID.setValue(projectID);
-    try (TypedQueryResult result = localVariablesQuery.selectStreamed()) {
-      for (LocalVariableEX var : reader.getTransientLocalVariables()) {
-        if (result.next()) {
-          Integer entityID = result.getResult(EntitiesTable.ENTITY_ID);
-          Integer fileID = getFileID(var.getLocation());
-          
-          if (var.getType() == LocalVariable.PARAM) {
-            projectModel.add(var.getParent() + "#" + var.getPosition(), entityID);
-          }
-          
-          // Add the holds relation
-          ModeledEntity type = projectModel.getEntity(var.getTypeFqn());
-          if (type != null) {
-            if (fileID == null) {
-              inserter.addInsert(RelationsTable.makeInsert(Relation.HOLDS, type.getRelationClass(), entityID, type.getEntityID(), projectID));
-            } else {
-              inserter.addInsert(RelationsTable.makeInsert(Relation.HOLDS, type.getRelationClass(), entityID, type.getEntityID(), projectID, fileID, var.getLocation()));
-            }
-          }
-          
-          // Add the inside relation
-          ModeledEntity parent = projectModel.getEntity(var.getParent());
-          if (parent != null) {
-            inserter.addInsert(RelationsTable.makeInsert(Relation.INSIDE, parent.getRelationClass(), entityID, parent.getEntityID(), projectID, fileID));
-          }
-        } else {
-          logger.log(Level.SEVERE, "Missing db local variable for " + var);
+    Iterator<Integer> localVars = getLocalVariables.select(projectID);
+    for (LocalVariableEX var : reader.getTransientLocalVariables()) {
+      if (localVars.hasNext()) {
+        Integer entityID = localVars.next();
+        Integer fileID = getFileID(var.getLocation());
+        
+        if (var.getType() == LocalVariable.PARAM) {
+          projectModel.add(var.getParent() + "#" + var.getPosition(), entityID);
         }
-        task.progress();
+        
+        // Add the holds relation
+        ModeledEntity type = projectModel.getEntity(var.getTypeFqn());
+        if (type != null) {
+          if (fileID == null) {
+            inserter.addInsert(RelationsTable.makeInsert(Relation.HOLDS, type.getRelationClass(), entityID, type.getEntityID(), projectID));
+          } else {
+            inserter.addInsert(RelationsTable.makeInsert(Relation.HOLDS, type.getRelationClass(), entityID, type.getEntityID(), projectID, fileID, var.getLocation()));
+          }
+        }
+        
+        // Add the inside relation
+        ModeledEntity parent = projectModel.getEntity(var.getParent());
+        if (parent != null) {
+          inserter.addInsert(RelationsTable.makeInsert(Relation.INSIDE, parent.getRelationClass(), entityID, parent.getEntityID(), projectID, fileID));
+        }
+      } else {
+        logger.log(Level.SEVERE, "Missing db local variable for " + var);
       }
+      task.progress();
     }
     task.finish();
           

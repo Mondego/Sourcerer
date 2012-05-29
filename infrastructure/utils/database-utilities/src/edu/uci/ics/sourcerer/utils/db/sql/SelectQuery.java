@@ -33,5 +33,4 @@ public interface SelectQuery extends Query {
   public void orderBy(Selectable<?> select, boolean ascending);
   
   public TypedQueryResult select();
-  public TypedQueryResult selectStreamed();
 }

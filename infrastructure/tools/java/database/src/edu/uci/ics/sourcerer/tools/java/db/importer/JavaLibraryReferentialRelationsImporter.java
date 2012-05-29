@@ -22,6 +22,7 @@ import java.util.Collections;
 import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
 import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable.ProjectState;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
@@ -67,10 +68,10 @@ class JavaLibraryReferentialRelationsImporter extends ReferentialRelationsImport
           equalsName.setValue(name);
           TypedQueryResult result = projectState.select();
           if (result.next()) {
-            Stage state = Stage.parse(result.getResult(ProjectsTable.PATH));
+            ProjectState state = ProjectState.parse(result.getResult(ProjectsTable.PATH));
             if (state == null) {
               task.report("Entity import already completed... skipping");
-            } else if (state == Stage.END_STRUCTURAL) {
+            } else if (state == ProjectState.END_STRUCTURAL) {
               projectID = result.getResult(ProjectsTable.PROJECT_ID);
             } else {
               task.report("Project not in correct state (" + state + ")... skipping");
@@ -83,7 +84,7 @@ class JavaLibraryReferentialRelationsImporter extends ReferentialRelationsImport
         
         if (projectID != null) {
           equalsID.setValue(projectID);
-          stateValue.setValue(Stage.BEGIN_REFERENTIAL.name());
+          stateValue.setValue(ProjectState.BEGIN_REFERENTIAL.name());
           updateState.execute();
           
           ReaderBundle reader = new ReaderBundle(lib.getExtractionDir().toFile());

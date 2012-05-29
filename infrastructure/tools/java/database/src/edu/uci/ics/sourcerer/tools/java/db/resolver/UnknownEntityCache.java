@@ -62,7 +62,7 @@ public class UnknownEntityCache  {
         try (SelectQuery query = exec.createSelectQuery(EntitiesTable.TABLE)) {
           query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.PARAMS);
           query.andWhere(EntitiesTable.PROJECT_ID.compareEquals(cache.unknownsProject));
-          TypedQueryResult result = query.selectStreamed();
+          TypedQueryResult result = query.select();
           while (result.next()) {
             String fqn = result.getResult(EntitiesTable.FQN);
             String params = result.getResult(EntitiesTable.PARAMS);

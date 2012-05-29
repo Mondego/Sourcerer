@@ -77,7 +77,7 @@ public class ProjectTypeModel {
       query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.ENTITY_TYPE, EntitiesTable.PARAMS, EntitiesTable.RAW_PARAMS);
       query.andWhere(EntitiesTable.PROJECT_ID.compareEquals(projectID), EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.PACKAGE, Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION, Entity.CONSTRUCTOR, Entity.METHOD, Entity.ANNOTATION_ELEMENT, Entity.ENUM_CONSTANT, Entity.FIELD, Entity.PACKAGE, Entity.INITIALIZER)));
 
-      TypedQueryResult result = query.selectStreamed();
+      TypedQueryResult result = query.select();
       while (result.next()) {
         Integer entityID = result.getResult(EntitiesTable.ENTITY_ID);
         String fqn = result.getResult(EntitiesTable.FQN);
@@ -111,7 +111,7 @@ public class ProjectTypeModel {
       Map<Integer, Integer> pMapping = new HashMap<>();
       
       task.start("Loading has_base_type relations", "relations loaded");
-      TypedQueryResult result = query.selectStreamed();
+      TypedQueryResult result = query.select();
       while (result.next()) {
         pMapping.put(result.getResult(RelationsTable.LHS_EID), result.getResult(RelationsTable.RHS_EID));
         task.progress();
@@ -122,7 +122,7 @@ public class ProjectTypeModel {
       query.clearWhere();
       query.andWhere(RelationsTable.PROJECT_ID.compareEquals(projectID), RelationsTable.RELATION_TYPE.compareIn(EnumSet.of(Relation.EXTENDS, Relation.IMPLEMENTS)));
       
-      result = query.selectStreamed();
+      result = query.select();
       while (result.next()) {
         Integer lhsEID = result.getResult(RelationsTable.LHS_EID);
         Integer rhsEID = result.getResult(RelationsTable.RHS_EID);

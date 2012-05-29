@@ -65,6 +65,24 @@ public final class ProjectsTable extends DatabaseTable {
     super("projects");
   }
   
+  public static enum ProjectState {
+    COMPONENT,
+    BEGIN_ENTITY,
+    END_ENTITY,
+    BEGIN_STRUCTURAL,
+    END_STRUCTURAL,
+    BEGIN_REFERENTIAL,
+    ;
+    
+    public static ProjectState parse(String value) {
+      if (value == null) {
+        return null;
+      } else {
+        return valueOf(value);
+      }
+    }
+  }
+  
   public static final String PRIMITIVES_PROJECT = "primitives";
   public static final String UNKNOWNS_PROJECT = "unknowns";
   
@@ -120,7 +138,7 @@ public final class ProjectsTable extends DatabaseTable {
         null, 
         props.VERSION.getValue(), 
         props.GROUP.getValue(), 
-        "COMPONENT", // no path
+        ProjectState.COMPONENT.name(), // no path
         null, // no source
         props.HASH.getValue(), 
         false); // not sure if it has source
@@ -140,7 +158,7 @@ public final class ProjectsTable extends DatabaseTable {
         null, 
         props.VERSION.getValue(), 
         props.GROUP.getValue(), 
-        "BEGIN_ENTITY", // no path 
+        ProjectState.BEGIN_ENTITY.name(), // no path 
         null, // no source
         props.HASH.getValue(), 
         props.HAS_SOURCE.getValue());
@@ -156,7 +174,7 @@ public final class ProjectsTable extends DatabaseTable {
         null, // no group 
         project.getLocation().toString(),
         project.getRepository().getBatch(project.getLocation()).getProperties().SOURCE.getValue(),
-        "BEGIN_ENTITY", 
+        ProjectState.BEGIN_ENTITY.name(), // no hash
         true);
 
   }

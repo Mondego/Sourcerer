@@ -21,17 +21,25 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 
+import com.google.common.collect.EnumMultiset;
+import com.google.common.collect.Multiset;
+
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.FileMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProblemsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.FileEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
+import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
+import edu.uci.ics.sourcerer.tools.java.model.types.Metrics;
 import edu.uci.ics.sourcerer.utils.db.BatchInserter;
 
 /**
@@ -46,7 +54,7 @@ public abstract class EntitiesImporter extends DatabaseImporter {
   protected final void insert(ReaderBundle reader, Integer projectID) {
     insertFiles(reader, projectID);
     loadFileMap(projectID);
-    insertFileMetrics(reader, projectID);
+    insertFileAndProjectMetrics(reader, projectID);
     insertProblems(reader, projectID);
     insertEntities(reader, projectID);
     fileMap.clear();
@@ -71,12 +79,39 @@ public abstract class EntitiesImporter extends DatabaseImporter {
     task.finish();
   }
   
-  private void insertFileMetrics(ReaderBundle reader, Integer projectID) {
-//    task.start("Inserting project metrics");
-//    
-//    task.start("Processing project metrics", "projects processed");
-//    BatchInserter inserter = exec.makeInFileInserter(tempDir, ProjectMetricsTable.TABLE);
-//    
+  private void insertFileAndProjectMetrics(ReaderBundle reader, Integer projectID) {
+    task.start("Inserting file metrics");
+    
+    task.start("Processing files", "files processed");
+    BatchInserter inserter = exec.makeInFileInserter(tempDir, FileMetricsTable.TABLE);
+    
+    Multiset<Metric> projectMetrics = EnumMultiset.create(Metric.class);
+    
+    for (FileEX file : reader.getTransientFiles()) {
+      Integer fileID = fileMap.get(file.getPath());
+      if (fileID == null) {
+        task.report(Level.SEVERE, "Unknown file: " + file.getPath());
+      } else {
+        Metrics metrics = file.getMetrics();
+        if (metrics != null) {
+          for (Entry<Metric, Integer> metric : metrics.getMetricValues()) {
+            projectMetrics.add(metric.getKey(), metric.getValue().intValue());
+            inserter.addInsert(FileMetricsTable.createInsert(projectID, fileID, metric.getKey(), metric.getValue()));
+          }
+        }
+      }
+      task.progress();
+    }
+    task.finish();
+    
+    task.start("Performing db insert");
+    inserter.insert();
+    for (Metric metric : projectMetrics.elementSet()) {
+      exec.insert(ProjectMetricsTable.createInsert(projectID, metric, projectMetrics.count(metric)));
+    }
+    task.finish();
+    
+    task.finish();
   }
   
   private void insertProblems(ReaderBundle reader, Integer projectID) {

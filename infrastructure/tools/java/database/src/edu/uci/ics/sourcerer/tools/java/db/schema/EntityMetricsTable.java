@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.tools.java.db.schema;
 
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
+import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
 
@@ -37,7 +38,7 @@ public class EntityMetricsTable extends DatabaseTable {
    *  | value        | INT             | No    | No     | 
    *  +--------------+-----------------+-------+--------+
    */
-  public static final DatabaseTable TABLE = new EntityMetricsTable();
+  public static final EntityMetricsTable TABLE = new EntityMetricsTable();
   
   public static final Column<Integer> PROJECT_ID = TABLE.addIDColumn("project_id", false).addIndex();
   public static final Column<Integer> FILE_ID = TABLE.addIDColumn("file_id", false).addIndex();
@@ -48,12 +49,8 @@ public class EntityMetricsTable extends DatabaseTable {
   private EntityMetricsTable() {
     super("entity_metrics");
   }
-//  public void insert(Integer projectID, Integer fileID, Integer entityID, Metric metric, Integer value) {
-//    inserter.addValue(buildInsertValue(PROJECT_ID.convertToDB(projectID), FILE_ID.convertToDB(fileID), ENTITY_ID.convertToDB(entityID), METRIC_TYPE.convertToDB(metric), VALUE.convertToDB(value)));
-//  }
-//  
-//  //---- DELETE ----
-//  public void deleteByProjectID(Integer projectID) {
-//    executor.delete(table, PROJECT_ID.getEquals(projectID));
-//  }
+  
+  public static Insert createInsert(Integer projectID, Integer fileID, Integer entityID, Metric metric, Integer value) {
+    return TABLE.createInsert(PROJECT_ID.to(projectID), FILE_ID.to(fileID), ENTITY_ID.to(entityID), METRIC_TYPE.to(metric), VALUE.to(value));
+  }
 }

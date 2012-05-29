@@ -264,7 +264,6 @@ class SelectQueryImpl implements SelectQuery {
       if (whereCondition != null) {
         whereCondition.bind(statement, 1);
       }
-      
       statement.execute();
       return statement.getResultSet();
     } catch (SQLException e) {
@@ -275,11 +274,6 @@ class SelectQueryImpl implements SelectQuery {
 
   @Override
   public TypedQueryResult select() {
-    return new QueryResult(execute());
-  }
-  
-  @Override
-  public TypedQueryResult selectStreamed() {
     return new QueryResult(execute());
   }
   

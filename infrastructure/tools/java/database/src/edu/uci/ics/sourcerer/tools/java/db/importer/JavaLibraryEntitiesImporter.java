@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable.ProjectState;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
@@ -48,7 +49,7 @@ class JavaLibraryEntitiesImporter extends EntitiesImporter {
       projectState.andWhere(equalsName.and(ProjectsTable.PROJECT_TYPE.compareEquals(Project.JAVA_LIBRARY)));
       
       SetStatement updateState = exec.createSetStatement(ProjectsTable.TABLE);
-      updateState.addAssignment(ProjectsTable.PATH, Stage.END_ENTITY.name());
+      updateState.addAssignment(ProjectsTable.PATH, ProjectState.END_ENTITY.name());
       ConstantCondition<Integer> equalsID = ProjectsTable.PROJECT_ID.compareEquals();
       updateState.andWhere(equalsID);
       
@@ -57,19 +58,23 @@ class JavaLibraryEntitiesImporter extends EntitiesImporter {
         String name = lib.getProperties().NAME.getValue();
         task.start("Importing " + name + "'s entities");
         
+        Integer projectID = null;
+        
         task.start("Verifying import suitability");
         boolean shouldImport = true;
         if (lib.getProperties().EXTRACTED.getValue()) {
           equalsName.setValue(name);
           TypedQueryResult result = projectState.select();
           if (result.next()) {
-            Stage state = Stage.parse(result.getResult(ProjectsTable.PATH));
-            if (state == null || state == Stage.END_ENTITY || state == Stage.END_STRUCTURAL) {
+            ProjectState state = ProjectState.parse(result.getResult(ProjectsTable.PATH));
+            if (state == null || state == ProjectState.END_ENTITY || state == ProjectState.END_STRUCTURAL) {
               task.report("Entity import already completed... skipping");
               shouldImport = false;
             } else {
+              projectID = result.getResult(ProjectsTable.PROJECT_ID);
               task.start("Deleting incomplete import");
-              deleteProject(result.getResult(ProjectsTable.PROJECT_ID));
+              deleteProjectContents(projectID);
+              task.finish();
             }
           }
         } else {
@@ -79,9 +84,11 @@ class JavaLibraryEntitiesImporter extends EntitiesImporter {
         task.finish();
         
         if (shouldImport) {
-          task.start("Inserting project");
-          Integer projectID = exec.insertWithKey(ProjectsTable.createInsert(lib));
-          task.finish();
+          if (projectID != null) {
+            task.start("Inserting project");
+            projectID = exec.insertWithKey(ProjectsTable.createInsert(lib));
+            task.finish();
+          }
           
           ReaderBundle reader = new ReaderBundle(lib.getExtractionDir().toFile());
           

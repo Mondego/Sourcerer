@@ -47,23 +47,6 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
-  enum Stage {
-    BEGIN_ENTITY,
-    END_ENTITY,
-    BEGIN_STRUCTURAL,
-    END_STRUCTURAL,
-    BEGIN_REFERENTIAL,
-    ;
-    
-    public static Stage parse(String value) {
-      if (value == null) {
-        return null;
-      } else {
-        return valueOf(value);
-      }
-    }
-  }
-  
   private String taskName;
   
   protected File tempDir;
@@ -139,10 +122,8 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
     }
   }
   
-  protected final void deleteProject(Integer projectID) {
-    DeleteStatement delete = exec.createDeleteStatement(ProjectsTable.TABLE);
-    delete.andWhere(ProjectsTable.PROJECT_ID.compareEquals(projectID));
-    delete.execute();
+  protected final void deleteProjectContents(Integer projectID) {
+    DeleteStatement delete = null;
     
     delete = exec.createDeleteStatement(ProjectMetricsTable.TABLE);
     delete.andWhere(ProjectMetricsTable.PROJECT_ID.compareEquals(projectID));

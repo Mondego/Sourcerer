@@ -22,6 +22,7 @@ import java.util.Collections;
 import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
 import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
+import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable.ProjectState;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
@@ -68,10 +69,10 @@ class JavaLibraryStructuralRelationsImporter extends StructuralRelationsImporter
           equalsName.setValue(name);
           TypedQueryResult result = projectState.select();
           if (result.next()) {
-            Stage state = Stage.parse(result.getResult(ProjectsTable.PATH));
-            if (state == null || state == Stage.END_STRUCTURAL) {
+            ProjectState state = ProjectState.parse(result.getResult(ProjectsTable.PATH));
+            if (state == null || state == ProjectState.END_STRUCTURAL) {
               task.report("Entity import already completed... skipping");
-            } else if (state == Stage.END_ENTITY) {
+            } else if (state == ProjectState.END_ENTITY) {
               projectID = result.getResult(ProjectsTable.PROJECT_ID);
             } else {
               task.report("Project not in correct state (" + state + ")... skipping");
@@ -84,13 +85,13 @@ class JavaLibraryStructuralRelationsImporter extends StructuralRelationsImporter
         
         if (projectID != null) {
           equalsID.setValue(projectID);
-          stateValue.setValue(Stage.BEGIN_STRUCTURAL.name());
+          stateValue.setValue(ProjectState.BEGIN_STRUCTURAL.name());
           updateState.execute();
           
           ReaderBundle reader = new ReaderBundle(lib.getExtractionDir().toFile());
           insert(reader, projectID, Collections.<Integer>emptyList());
           
-          stateValue.setValue(Stage.END_STRUCTURAL.name());
+          stateValue.setValue(ProjectState.END_STRUCTURAL.name());
           updateState.execute();
         }
         

@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.tools.java.db.schema;
 
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
+import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
 
@@ -35,7 +36,7 @@ public class ProjectMetricsTable extends DatabaseTable {
    *  | value        | INT             | No    | No     | 
    *  +--------------+-----------------+-------+--------+
    */
-  public static final DatabaseTable TABLE = new ProjectMetricsTable();
+  public static final ProjectMetricsTable TABLE = new ProjectMetricsTable();
 
   public static final Column<Integer> PROJECT_ID = TABLE.addIDColumn("project_id", false).addIndex();
   public static final Column<Metric> METRIC_TYPE = TABLE.addEnumColumn("metric_type", Metric.values(), false);
@@ -44,13 +45,8 @@ public class ProjectMetricsTable extends DatabaseTable {
   private ProjectMetricsTable() {
     super("project_metrics");
   }
-//  
-//  public void insert(Integer projectID, Metric metric, Integer value) {
-//    inserter.addValue(buildInsertValue(PROJECT_ID.convertToDB(projectID), METRIC_TYPE.convertToDB(metric), VALUE.convertToDB(value)));
-//  }
-//  
-//  //---- DELETE ----
-//  public void deleteByProjectID(Integer projectID) {
-//    executor.delete(table, PROJECT_ID.getEquals(projectID));
-//  }
+  
+  public static Insert createInsert(Integer projectID, Metric metric, Integer value) {
+    return TABLE.createInsert(PROJECT_ID.to(projectID), METRIC_TYPE.to(metric));
+  }
 }
