@@ -43,7 +43,17 @@ public class Main {
         DatabaseConnectionFactory.DATABASE_URL, 
         DatabaseConnectionFactory.DATABASE_USER, 
         DatabaseConnectionFactory.DATABASE_PASSWORD);
-  
+    
+  public static final Command CLEAN_EXTRACTION_DATA =
+    new Command("clean-extraction-data", "Clean the extraction data from the db.") {
+      protected void action() {
+        DatabaseInitializer.cleanExtractionData();
+      }
+    }.setProperties(
+        DatabaseConnectionFactory.DATABASE_URL, 
+        DatabaseConnectionFactory.DATABASE_USER, 
+        DatabaseConnectionFactory.DATABASE_PASSWORD);
+
   public static final Command ADD_JAVA_LIBRARIES = 
     new Command("add-libraries", "Adds extracted Java libraries to the database.") {
       protected void action() {

@@ -21,6 +21,7 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 
 import edu.uci.ics.sourcerer.util.io.CustomSerializable;
+import edu.uci.ics.sourcerer.util.io.SerializationUtils;
 
 
 /**
@@ -59,36 +60,14 @@ public class Location implements CustomSerializable {
   public String toString() {
     return classFile + "@" + offset + ":" + length + "@" + path;
   }
-
-  private static Integer getInt(Scanner scanner) {
-    if (scanner.hasNextInt()) {
-      return scanner.nextInt();
-    } else if ("null".equals(scanner.next())) {
-      return null;
-    } else {
-      throw new InputMismatchException();
-    }
-  }
   
   protected static Location deserialize(Scanner scanner) {
     if (scanner.hasNextInt()) {
       if (scanner.nextInt() == 4) {
-        String classFile = scanner.next();
-        if ("null".equals(classFile)) {
-          classFile = null;
-        }
-        Integer offset = getInt(scanner);
-        Integer length = getInt(scanner);
-        String path = scanner.next();
-        if ("null".equals(path)) {
-          path = null;
-        } else {
-          StringBuilder pathBuilder = new StringBuilder(path);          
-          while (scanner.hasNext()) {
-            pathBuilder.append(" ").append(scanner.next());
-          }
-          path = pathBuilder.toString();
-        }
+        String classFile = SerializationUtils.deserializeString(scanner);
+        Integer offset = SerializationUtils.deserializeInteger(scanner);
+        Integer length = SerializationUtils.deserializeInteger(scanner);
+        String path = SerializationUtils.deserializeString(scanner);
         return new Location(classFile, path, offset, length);
       } else {
         throw new InputMismatchException();
@@ -105,6 +84,6 @@ public class Location implements CustomSerializable {
   
   @Override
   public String serialize() {
-    return "4 " + classFile + " " + offset + " " + length + " " + path;
+    return "4 " + SerializationUtils.serializeString(classFile) + " " + offset + " " + length + " " + SerializationUtils.serializeString(path);
   }
 }

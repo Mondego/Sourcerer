@@ -67,7 +67,7 @@ public abstract class EntitiesImporter extends DatabaseImporter {
     BatchInserter inserter = exec.makeInFileInserter(tempDir, FilesTable.TABLE);
     
     for (FileEX file : reader.getTransientFiles()) {
-      inserter.addInsert(FilesTable.makeInsert(file, projectID));
+      inserter.addInsert(FilesTable.createInsert(file, projectID));
       task.progress();
     }
     task.finish();

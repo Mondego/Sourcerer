@@ -269,6 +269,10 @@ public class ProjectTypeModel {
     }
   }
   
+  public ModeledEntity getDeclaredEntity(String fqn) {
+    return entities.get(fqn);
+  }
+  
   public ModeledEntity getEntity(String fqn) {
     ModeledEntity entity = entities.get(fqn);
     if (entity == null && !TypeUtils.isMethod(fqn)) {

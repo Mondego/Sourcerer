@@ -85,6 +85,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
 
       @Override
       protected Iterator<Integer> selectHelper(Integer input) {
+        cond.setValue(input);
         return query.select().toIterable(select).iterator();
       }};
   }
@@ -138,7 +139,11 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
     
     for (EntityEX entity : reader.getTransientEntities()) {
       Integer fileID = getFileID(entity.getLocation());
-      Integer entityID = getLHS(entity.getFqn());
+      String fqn = entity.getFqn();
+      if (entity.getSignature() != null) {
+        fqn += entity.getSignature();
+      }
+      Integer entityID = getDeclaredEntity(fqn);
       if (fileID != null && entityID != null) {
         Metrics metrics = entity.getMetrics();
         if (metrics != null) {

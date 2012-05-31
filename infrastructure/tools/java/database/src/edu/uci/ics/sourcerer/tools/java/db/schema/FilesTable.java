@@ -53,7 +53,7 @@ public final class FilesTable extends DatabaseTable {
     super("files");
   }
   // ---- INSERT ----
-  private static Insert makeInsert(File type, String name, String relativePath, String hash, Integer projectID) {
+  private static Insert createInsert(File type, String name, String relativePath, String hash, Integer projectID) {
     return TABLE.createInsert(
         FILE_TYPE.to(type),
         NAME.to(name),
@@ -62,10 +62,10 @@ public final class FilesTable extends DatabaseTable {
         PROJECT_ID.to(projectID));
   }
   
-  public static Insert makeInsert(FileEX file, Integer projectID) {
+  public static Insert createInsert(FileEX file, Integer projectID) {
     if (file.getType() == File.JAR) {
       return
-          makeInsert(
+          createInsert(
               File.JAR, 
               file.getName(), 
               null, // jars don't have relative paths
@@ -73,7 +73,7 @@ public final class FilesTable extends DatabaseTable {
               projectID);
     } else {
       return
-          makeInsert(
+          createInsert(
               file.getType(), 
               file.getName(), 
               file.getPath(),

@@ -211,7 +211,7 @@ public class FileUtils {
   
   public static File getTempDir() {
     File tempDir = TEMP_DIR.getValue();
-    tempDir = new File(tempDir, "thread-" + Thread.currentThread().getId());
+    tempDir = new File(tempDir, Thread.currentThread().getName());
     if (tempDir.exists() || tempDir.mkdirs()) {
       return tempDir;
     } else {

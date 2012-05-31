@@ -71,17 +71,7 @@ public abstract class ObjectDeserializer<T> {
   private static ObjectDeserializer<?> intDeserializer = new ObjectDeserializer<Integer>() {
     @Override
     public Integer deserialize(Scanner scanner) {
-      if (scanner.hasNextInt()) {
-        return scanner.nextInt();
-      } else {
-        String next = scanner.next();
-        if ("null".equals(next)) {
-          return null;
-        } else {
-          logger.log(Level.SEVERE, "Int expected by deserialization, instead got " + next);
-          return null;
-        }
-      }
+      return SerializationUtils.deserializeInteger(scanner);
     }
   };
   
@@ -122,24 +112,7 @@ public abstract class ObjectDeserializer<T> {
   private static ObjectDeserializer<?> stringDeserializer = new ObjectDeserializer<String>() {
     @Override
     public String deserialize(Scanner scanner) {
-      if (scanner.hasNextInt()) {
-        LineBuilder result = new LineBuilder();
-        for (int i = scanner.nextInt(); i > 0; i--) {
-          if (scanner.hasNext()) {
-            result.append(scanner.next());
-          } else {
-            logger.severe("More input expected for: " + result.toString());
-          }
-        }
-        return result.toString();
-      } else {
-        String next = scanner.next();
-        if ("null".equals(next)) {
-          return null;
-        } else {
-          return next;
-        }
-      }
+      return SerializationUtils.deserializeString(scanner);
     }
   };
   

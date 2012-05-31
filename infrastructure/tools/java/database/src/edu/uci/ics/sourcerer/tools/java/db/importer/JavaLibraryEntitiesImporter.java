@@ -84,7 +84,7 @@ class JavaLibraryEntitiesImporter extends EntitiesImporter {
         task.finish();
         
         if (shouldImport) {
-          if (projectID != null) {
+          if (projectID == null) {
             task.start("Inserting project");
             projectID = exec.insertWithKey(ProjectsTable.createInsert(lib));
             task.finish();

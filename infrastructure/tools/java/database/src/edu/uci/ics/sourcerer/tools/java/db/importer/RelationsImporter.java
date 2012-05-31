@@ -47,4 +47,14 @@ public abstract class RelationsImporter extends DatabaseImporter {
       return entity.getEntityID();
     }
   }
+  
+  protected Integer getDeclaredEntity(String fqn) {
+    ModeledEntity entity = projectModel.getDeclaredEntity(fqn);
+    if (entity == null) {
+      logger.severe("Invalid declared entity: " + fqn);
+      return null;
+    } else {
+      return entity.getEntityID();
+    }
+  }
 }

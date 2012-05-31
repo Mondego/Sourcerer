@@ -25,6 +25,7 @@ import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.io.CustomSerializable;
 import edu.uci.ics.sourcerer.util.io.LineBuilder;
+import edu.uci.ics.sourcerer.util.io.SerializationUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -41,7 +42,7 @@ abstract class ObjectSerializer {
   }
   
   abstract String serialize(Object o);
-  
+
   private static String writeToString(Object o) {
     if (o == null) {
       return "null";
@@ -56,34 +57,7 @@ abstract class ObjectSerializer {
       }
       return result.toString();
     } else if (o instanceof String) {
-      String val = o.toString();
-      if (val.equals("null")) {
-        logger.log(Level.SEVERE, "null collission");
-      }
-      int idx = val.indexOf(' ');
-      if (idx == -1) {
-        return val;
-      } else {
-        LineBuilder result = new LineBuilder();
-        result.append(val.substring(0, idx++));
-        int parts = 1;
-        while (idx > 0) {
-          parts++;
-          int next = val.indexOf(' ', idx);
-          if (next == -1) {
-            result.append(val.substring(idx));
-          } else {
-            result.append(val.substring(idx, next));
-          }
-          idx = next;
-          while (idx > 0 && val.charAt(idx) == ' ') {
-            if (++idx >= val.length()) {
-              idx = -1;
-            }
-          }
-        }
-        return parts + " " + result.toString();
-      }
+      return SerializationUtils.serializeString(o.toString());
     } else if (o instanceof Enum<?>) {
       return ((Enum<?>)o).name();
     } else {
