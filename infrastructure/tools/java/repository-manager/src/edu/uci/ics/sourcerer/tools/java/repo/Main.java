@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.tools.java.repo;
 import edu.uci.ics.sourcerer.tools.java.repo.importers.MavenImporter;
 import edu.uci.ics.sourcerer.tools.java.repo.jars.JarIdentifier;
 import edu.uci.ics.sourcerer.tools.java.repo.misc.JarRepositoryCloner;
+import edu.uci.ics.sourcerer.tools.java.repo.misc.RepositoryCleaner;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.repo.stats.RepositoryStatisticsCalculator;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;
@@ -78,6 +79,14 @@ public class Main {
         JarRepositoryCloner.cloneJarRepositoryFragment();
       }
   }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, JarRepositoryCloner.JAR_FILTER_FILE);
+  
+  public static final Command CLEAN_JAVA_REPOSITORY =
+    new Command("clean-java-repository", "Cleans the non-java files from the repository.") {
+      @Override
+      protected void action() {
+        RepositoryCleaner.cleanNonJavaFiles();
+      }
+  }.setProperties(JavaRepositoryFactory.INPUT_REPO);
   
   public static void main(String[] args) {
     Command.execute(args, Main.class);

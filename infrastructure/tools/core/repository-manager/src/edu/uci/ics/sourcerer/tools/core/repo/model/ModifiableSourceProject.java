@@ -36,7 +36,7 @@ public interface ModifiableSourceProject extends ModifiableProject, SourceProjec
   public void delete(DeletionFilter deleter);
   
   public interface DeletionFilter {
-    public boolean shouldDelete(RepoFile dir);
+    public boolean shouldDelete(RepoFile file);
   }
   
   /**

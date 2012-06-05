@@ -75,7 +75,7 @@ public class Main {
     }.setProperties(
         DatabaseConnectionFactory.DATABASE_URL, 
         DatabaseConnectionFactory.DATABASE_USER, 
-        DatabaseConnectionFactory.DATABASE_PASSWORD, 
+        DatabaseConnectionFactory.DATABASE_PASSWORD,
         JavaRepositoryFactory.INPUT_REPO,
         ParallelDatabaseImporter.THREAD_COUNT,
         FileUtils.TEMP_DIR);

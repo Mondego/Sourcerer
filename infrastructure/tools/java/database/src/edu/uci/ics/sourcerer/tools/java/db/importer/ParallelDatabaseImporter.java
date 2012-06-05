@@ -31,6 +31,7 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProjec
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaRepository;
 import edu.uci.ics.sourcerer.util.Nullerator;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
 import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
@@ -38,6 +39,7 @@ import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public final class ParallelDatabaseImporter {
+  public static Argument<Boolean> STRUCTURAL_ONLY = new BooleanArgument("structural-only", false, "Only import entities and structural relations");
   public static Argument<Integer> THREAD_COUNT = new IntegerArgument("thread-count", 4, "Number of simultaneous threads");
   
   private ParallelDatabaseImporter() {}
@@ -106,25 +108,29 @@ public final class ParallelDatabaseImporter {
     }
     task.finish();
     
-    javaModel = JavaLibraryTypeModel.makeJavaLibraryTypeModel(task);
-    
-    nullerator = Nullerator.createNullerator(libs, task, "Thread %s now processing: %s");
-    task.start("Performing referential relation import with " + numThreads + " threads");
-
-    threads.clear();
-    for (int i = 0; i < numThreads; i++) {
-      JavaLibraryReferentialRelationsImporter importer = new JavaLibraryReferentialRelationsImporter(nullerator, javaModel, unknowns);
-      threads.add(importer.start());
-    }
-    
-    for (Thread t : threads) {
-      try {
-        t.join();
-      } catch (InterruptedException e) {
-        logger.log(Level.SEVERE, "Thread interrupted", e);
+    if (STRUCTURAL_ONLY.getValue()) {
+      task.report("Skipping referential relation import");
+    } else {
+      javaModel = JavaLibraryTypeModel.makeJavaLibraryTypeModel(task);
+      
+      nullerator = Nullerator.createNullerator(libs, task, "Thread %s now processing: %s");
+      task.start("Performing referential relation import with " + numThreads + " threads");
+  
+      threads.clear();
+      for (int i = 0; i < numThreads; i++) {
+        JavaLibraryReferentialRelationsImporter importer = new JavaLibraryReferentialRelationsImporter(nullerator, javaModel, unknowns);
+        threads.add(importer.start());
       }
+      
+      for (Thread t : threads) {
+        try {
+          t.join();
+        } catch (InterruptedException e) {
+          logger.log(Level.SEVERE, "Thread interrupted", e);
+        }
+      }
+      task.finish();
     }
-    task.finish();
     
     task.finish();
   }
@@ -232,44 +238,48 @@ public final class ParallelDatabaseImporter {
       task.finish();
     }
     
-    if (!mavenJars.isEmpty()) {
-      nullerator = Nullerator.createNullerator(mavenJars, task, "Thread %s now processing: %s");
-      task.start("Performing referential relation import with " + numThreads + " threads");
-
-      threads.clear();
-      for (int i = 0; i < numThreads; i++) {
-        JarReferentialRelationsImporter importer = new JarReferentialRelationsImporter(nullerator, javaModel, unknowns);
-        threads.add(importer.start());
-      }
-    
-      for (Thread t : threads) {
-        try {
-          t.join();
-        } catch (InterruptedException e) {
-          logger.log(Level.SEVERE, "Thread interrupted", e);
+    if (STRUCTURAL_ONLY.getValue()) {
+      task.report("Skipping referential relation import");
+    } else {
+      if (!mavenJars.isEmpty()) {
+        nullerator = Nullerator.createNullerator(mavenJars, task, "Thread %s now processing: %s");
+        task.start("Performing referential relation import with " + numThreads + " threads");
+  
+        threads.clear();
+        for (int i = 0; i < numThreads; i++) {
+          JarReferentialRelationsImporter importer = new JarReferentialRelationsImporter(nullerator, javaModel, unknowns);
+          threads.add(importer.start());
         }
-      }
-      task.finish();
-    }
-    
-    if (!projectJars.isEmpty()) {
-      nullerator = Nullerator.createNullerator(projectJars, task, "Thread %s now processing: %s");
-      task.start("Performing referential relation import with " + numThreads + " threads");
-
-      threads.clear();
-      for (int i = 0; i < numThreads; i++) {
-        JarReferentialRelationsImporter importer = new JarReferentialRelationsImporter(nullerator, javaModel, unknowns);
-        threads.add(importer.start());
-      }
-    
-      for (Thread t : threads) {
-        try {
-          t.join();
-        } catch (InterruptedException e) {
-          logger.log(Level.SEVERE, "Thread interrupted", e);
+      
+        for (Thread t : threads) {
+          try {
+            t.join();
+          } catch (InterruptedException e) {
+            logger.log(Level.SEVERE, "Thread interrupted", e);
+          }
         }
+        task.finish();
       }
-      task.finish();
+      
+      if (!projectJars.isEmpty()) {
+        nullerator = Nullerator.createNullerator(projectJars, task, "Thread %s now processing: %s");
+        task.start("Performing referential relation import with " + numThreads + " threads");
+  
+        threads.clear();
+        for (int i = 0; i < numThreads; i++) {
+          JarReferentialRelationsImporter importer = new JarReferentialRelationsImporter(nullerator, javaModel, unknowns);
+          threads.add(importer.start());
+        }
+      
+        for (Thread t : threads) {
+          try {
+            t.join();
+          } catch (InterruptedException e) {
+            logger.log(Level.SEVERE, "Thread interrupted", e);
+          }
+        }
+        task.finish();
+      }
     }
     
     task.finish();
@@ -328,23 +338,27 @@ public final class ParallelDatabaseImporter {
     }
     task.finish();
     
-    nullerator = Nullerator.createNullerator(projects, task, "Thread %s now processing: %s");
-    task.start("Performing referential relation import with " + numThreads + " threads");
-
-    threads.clear();
-    for (int i = 0; i < numThreads; i++) {
-      ProjectReferentialRelationsImporter importer = new ProjectReferentialRelationsImporter(nullerator, javaModel, unknowns);
-      threads.add(importer.start());
-    }
-    
-    for (Thread t : threads) {
-      try {
-        t.join();
-      } catch (InterruptedException e) {
-        logger.log(Level.SEVERE, "Thread interrupted", e);
+    if (STRUCTURAL_ONLY.getValue()) {
+      task.report("Skipping referential relation import");
+    } else {
+      nullerator = Nullerator.createNullerator(projects, task, "Thread %s now processing: %s");
+      task.start("Performing referential relation import with " + numThreads + " threads");
+  
+      threads.clear();
+      for (int i = 0; i < numThreads; i++) {
+        ProjectReferentialRelationsImporter importer = new ProjectReferentialRelationsImporter(nullerator, javaModel, unknowns);
+        threads.add(importer.start());
       }
+      
+      for (Thread t : threads) {
+        try {
+          t.join();
+        } catch (InterruptedException e) {
+          logger.log(Level.SEVERE, "Thread interrupted", e);
+        }
+      }
+      task.finish();
     }
-    task.finish();
     
     task.finish();
   }

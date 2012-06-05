@@ -63,13 +63,18 @@ public abstract class AbstractFileSet implements FileSet {
     boolean deleted = false;
     while (!stack.isEmpty()) {
       RepoFileImpl dir = stack.pop();
-      if (dir.getName().equals(".svn")) {
+      if (filter.shouldDelete(dir)) {
         dir.delete();
         deleted = true;
       } else {
         for (RepoFileImpl child : dir.getChildren()) {
           if (child.isDirectory()) {
             stack.push(child);
+          } else {
+            if (filter.shouldDelete(child)) {
+              child.delete();
+              deleted = true;
+            }
           }
         }
       }

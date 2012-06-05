@@ -170,7 +170,7 @@ public final class RepoBuilder {
     DeletionFilter filter = new DeletionFilter() {
       @Override
       public boolean shouldDelete(RepoFile file) {
-        return file.getName().equals(".svn");
+        return file.isDirectory() && file.getName().equals(".svn");
       }
     };
     
