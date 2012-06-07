@@ -17,9 +17,9 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
+import edu.uci.ics.sourcerer.tools.java.component.identifier.stats.CountingFqnNode;
+import edu.uci.ics.sourcerer.tools.java.component.identifier.stats.PopularityCalculator;
 import edu.uci.ics.sourcerer.tools.java.db.schema.TypesTable;
-import edu.uci.ics.sourcerer.tools.java.utilization.stats.CountingFqnNode;
-import edu.uci.ics.sourcerer.tools.java.utilization.stats.PopularityCalculator;
 import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
 import edu.uci.ics.sourcerer.utils.db.sql.Assignment;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;

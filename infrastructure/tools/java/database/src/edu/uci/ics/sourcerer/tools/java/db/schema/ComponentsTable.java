@@ -17,11 +17,10 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.schema;
 
+import edu.uci.ics.sourcerer.tools.java.component.model.cluster.ClusterVersion;
+import edu.uci.ics.sourcerer.tools.java.component.model.repo.Library;
+import edu.uci.ics.sourcerer.tools.java.component.model.repo.LibraryVersion;
 import edu.uci.ics.sourcerer.tools.java.model.types.Component;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterVersion;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.Library;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.LibraryVersion;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
@@ -56,7 +55,7 @@ public class ComponentsTable extends DatabaseTable {
     return TABLE.createInsert(TYPE.to(type), NAME.to(name));
   }
   
-  public static Insert createInsert(Cluster cluster) {
+  public static Insert createInsert(edu.uci.ics.sourcerer.tools.java.component.model.cluster.Cluster cluster) {
     return createInsert(Component.CLUSTER, null);
   }
   

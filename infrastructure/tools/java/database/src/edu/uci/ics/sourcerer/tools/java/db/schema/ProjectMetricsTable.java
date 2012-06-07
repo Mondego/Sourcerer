@@ -47,6 +47,6 @@ public class ProjectMetricsTable extends DatabaseTable {
   }
   
   public static Insert createInsert(Integer projectID, Metric metric, Integer value) {
-    return TABLE.createInsert(PROJECT_ID.to(projectID), METRIC_TYPE.to(metric));
+    return TABLE.createInsert(PROJECT_ID.to(projectID), METRIC_TYPE.to(metric), VALUE.to(value));
   }
 }

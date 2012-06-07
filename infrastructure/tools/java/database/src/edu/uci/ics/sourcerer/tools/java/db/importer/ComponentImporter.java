@@ -24,6 +24,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.tools.java.component.model.cluster.Cluster;
+import edu.uci.ics.sourcerer.tools.java.component.model.cluster.ClusterCollection;
+import edu.uci.ics.sourcerer.tools.java.component.model.cluster.ClusterVersion;
+import edu.uci.ics.sourcerer.tools.java.component.model.jar.FqnVersion;
+import edu.uci.ics.sourcerer.tools.java.component.model.jar.Jar;
+import edu.uci.ics.sourcerer.tools.java.component.model.jar.JarCollection;
+import edu.uci.ics.sourcerer.tools.java.component.model.jar.VersionedFqnNode;
+import edu.uci.ics.sourcerer.tools.java.component.model.repo.ComponentRepository;
+import edu.uci.ics.sourcerer.tools.java.component.model.repo.Library;
+import edu.uci.ics.sourcerer.tools.java.component.model.repo.LibraryVersion;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentRelationsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
@@ -33,16 +43,6 @@ import edu.uci.ics.sourcerer.tools.java.model.types.Component;
 import edu.uci.ics.sourcerer.tools.java.model.types.ComponentRelation;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.model.types.Type;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.Cluster;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterCollection;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.cluster.ClusterVersion;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.FqnVersion;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Jar;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.JarCollection;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.VersionedFqnNode;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.Library;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.LibraryVersion;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.ArtifactRepository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.BatchInserter;
@@ -56,7 +56,7 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 public class ComponentImporter extends DatabaseRunnable {
   private final JarCollection jars;
   private final ClusterCollection clusters;
-  private final ArtifactRepository repo;
+  private final ComponentRepository repo;
   
   private final File tempDir;
   
@@ -68,14 +68,14 @@ public class ComponentImporter extends DatabaseRunnable {
   private Map<Library, Integer> libraryMap;
   private Map<LibraryVersion, Integer> libraryVersionMap;
   
-  private ComponentImporter(ArtifactRepository repo) {
+  private ComponentImporter(ComponentRepository repo) {
     this.jars = repo.getJars();
     this.clusters = repo.getClusters();
     this.repo = repo;
     tempDir = FileUtils.getTempDir();
   }
   
-  public static void importComponents(ArtifactRepository repo) {
+  public static void importComponents(ComponentRepository repo) {
     new ComponentImporter(repo).run();
   }
   
@@ -130,7 +130,7 @@ public class ComponentImporter extends DatabaseRunnable {
     task.start("Loading cluster mapping", "clusters loaded");
     clusterMap = new HashMap<>();
     try (SelectQuery query = exec.createSelectQuery(ComponentsTable.TABLE)) {
-      query.addSelects(ComponentsTable.COMPONENT_ID);
+      query.addSelect(ComponentsTable.COMPONENT_ID);
       query.andWhere(ComponentsTable.TYPE.compareEquals(Component.CLUSTER));
       query.orderBy(ComponentsTable.COMPONENT_ID, true);
       
@@ -168,7 +168,7 @@ public class ComponentImporter extends DatabaseRunnable {
     task.start("Loading cluster version mapping", "cluster verions loaded");
     clusterVersionMap = new HashMap<>();
     try (SelectQuery query = exec.createSelectQuery(ComponentsTable.TABLE)) {
-      query.addSelects(ComponentsTable.COMPONENT_ID);
+      query.addSelect(ComponentsTable.COMPONENT_ID);
       query.andWhere(ComponentsTable.TYPE.compareEquals(Component.CLUSTER_VERSION));
       query.orderBy(ComponentsTable.COMPONENT_ID, true);
       
@@ -192,7 +192,7 @@ public class ComponentImporter extends DatabaseRunnable {
     task.start("Loading jar mapping", "jars loaded");
     jarMap = new HashMap<>();
     try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
-      query.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.HASH);
+      query.addSelect(ProjectsTable.PROJECT_ID, ProjectsTable.HASH);
       query.andWhere(ProjectsTable.PROJECT_TYPE.compareIn(EnumSet.of(Project.JAR, Project.MAVEN)));
 
       TypedQueryResult result = query.select();
@@ -229,7 +229,7 @@ public class ComponentImporter extends DatabaseRunnable {
       task.start("Reloading jar mapping", "jars loaded");
       jarMap = new HashMap<>();
       try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
-        query.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.HASH);
+        query.addSelect(ProjectsTable.PROJECT_ID, ProjectsTable.HASH);
         query.andWhere(ProjectsTable.PROJECT_TYPE.compareIn(EnumSet.of(Project.JAR, Project.MAVEN)));
 
         TypedQueryResult result = query.select();
@@ -279,7 +279,7 @@ public class ComponentImporter extends DatabaseRunnable {
     task.start("Loading fqn mapping", "fqns loaded");
     fqnMap = new HashMap<>();
     try (SelectQuery query = exec.createSelectQuery(TypesTable.TABLE)) {
-      query.addSelects(TypesTable.TYPE_ID);
+      query.addSelect(TypesTable.TYPE_ID);
       query.orderBy(TypesTable.TYPE_ID, true);
       
       TypedQueryResult result = query.select();
@@ -323,7 +323,7 @@ public class ComponentImporter extends DatabaseRunnable {
     task.start("Loading fqn version mapping", "fqn versions loaded");
     fqnVersionMap = new HashMap<>();
     try (SelectQuery query = exec.createSelectQuery(TypeVersionsTable.TABLE)) {
-      query.addSelects(TypeVersionsTable.TYPE_VERSION_ID);
+      query.addSelect(TypeVersionsTable.TYPE_VERSION_ID);
       query.orderBy(TypeVersionsTable.TYPE_VERSION_ID, true);
       
       TypedQueryResult result = query.select();
@@ -360,7 +360,7 @@ public class ComponentImporter extends DatabaseRunnable {
     task.start("Loading library mapping", "libraries loaded");
     libraryMap = new HashMap<>();
     try (SelectQuery query = exec.createSelectQuery(ComponentsTable.TABLE)) {
-      query.addSelects(ComponentsTable.COMPONENT_ID);
+      query.addSelect(ComponentsTable.COMPONENT_ID);
       query.andWhere(ComponentsTable.TYPE.compareEquals(Component.LIBRARY));
       query.orderBy(ComponentsTable.COMPONENT_ID, true);
       
@@ -398,7 +398,7 @@ public class ComponentImporter extends DatabaseRunnable {
     task.start("Loading library version mapping", "versions loaded");
     libraryVersionMap = new HashMap<>();
     try (SelectQuery query = exec.createSelectQuery(ComponentsTable.TABLE)) {
-      query.addSelects(ComponentsTable.COMPONENT_ID);
+      query.addSelect(ComponentsTable.COMPONENT_ID);
       query.andWhere(ComponentsTable.TYPE.compareEquals(Component.LIBRARY_VERSION));
       query.orderBy(ComponentsTable.COMPONENT_ID, true);
       

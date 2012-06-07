@@ -39,6 +39,9 @@ class InFileInserter implements BatchInserter {
   
   @Override
   public void addInsert(Insert insert) {
+    if (writer == null) {
+      throw new IllegalStateException("Inserter already used");
+    }
     try {
       writer.write(insert.toString());
       writer.write('\n');
@@ -50,6 +53,7 @@ class InFileInserter implements BatchInserter {
   @Override
   public void insert() {
     IOUtils.close(writer);
+    writer = null;
     executor.execute("LOAD DATA CONCURRENT LOCAL INFILE '" + tempFile.getPath().replace('\\', '/') + "' " +
     		"INTO TABLE " + table.getName() + " " +
 				"FIELDS TERMINATED BY ',' " +

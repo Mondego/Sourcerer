@@ -127,7 +127,7 @@ public class ComponentVerifier {
              LogFileWriter writer = IOUtils.createLogFileWriter(JACCARD_LOG);
              LogFileWriter imperfectWriter = IOUtils.createLogFileWriter(IMPERFECT_JACCARD_LOG)) {
           QualifiedColumn<Integer> libraryIDcol = ComponentRelationsTable.SOURCE_ID.qualify(l2lv);
-          query.addSelects(libraryIDcol, ProjectsTable.PROJECT_ID, ProjectsTable.GROUP, ProjectsTable.NAME);
+          query.addSelect(libraryIDcol, ProjectsTable.PROJECT_ID, ProjectsTable.GROUP, ProjectsTable.NAME);
           query.andWhere(ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(j2lv).compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION));
           query.orderBy(libraryIDcol, true);
           

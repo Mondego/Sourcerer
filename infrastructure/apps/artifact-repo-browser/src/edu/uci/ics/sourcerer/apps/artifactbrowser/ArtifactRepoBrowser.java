@@ -131,7 +131,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       query.andWhere(ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.SOURCE_ID.compareEquals(libraryID));
       query.orderBy(ComponentRelationsTable.TARGET_ID, true);
       
-      inner.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION);
+      inner.addSelect(ProjectsTable.PROJECT_ID, ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION);
       ConstantCondition<Integer> innerCond = ComponentRelationsTable.TARGET_ID.compareEquals();
       inner.andWhere(innerCond.and(ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION)));
       
@@ -167,7 +167,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable j2lv = ComponentRelationsTable.TABLE.qualify("b");
       
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(l2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(j2lv)), ComponentRelationsTable.SOURCE_ID.qualify(j2lv).compareEquals(ProjectsTable.PROJECT_ID))) {
-        query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
+        query.addSelect(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
         query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(l2lv).compareEquals(libraryID), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(j2lv).compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION));
         query.orderBy(ProjectsTable.GROUP, true);
         query.orderBy(ProjectsTable.NAME, true);
@@ -242,7 +242,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(l2lv).compareEquals(ComponentRelationsTable.SOURCE_ID.qualify(lv2tv)), ComponentRelationsTable.TARGET_ID.qualify(lv2tv).compareEquals(TypeVersionsTable.TYPE_VERSION_ID), TypeVersionsTable.TYPE_ID.compareEquals(TypesTable.TYPE_ID))) {
         query.setDistinct(true);
-        query.addSelects(TypesTable.FQN, TypesTable.TYPE_ID);
+        query.addSelect(TypesTable.FQN, TypesTable.TYPE_ID);
         query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(l2lv).compareEquals(libraryID), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(lv2tv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_TYPE_VERSION));
         query.orderBy(TypesTable.FQN, true);
         
@@ -273,7 +273,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
 
     // Jars
     try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
-      query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
+      query.addSelect(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
       query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(libraryVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION));
       query.orderBy(ProjectsTable.GROUP, true);
       query.orderBy(ProjectsTable.NAME, true);
@@ -300,7 +300,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable cluster2clusterV = ComponentRelationsTable.TABLE.qualify("b");
       
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(libV2clusterV).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(cluster2clusterV)))) {
-        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(cluster2clusterV), ComponentRelationsTable.TARGET_ID.qualify(cluster2clusterV));
+        query.addSelect(ComponentRelationsTable.SOURCE_ID.qualify(cluster2clusterV), ComponentRelationsTable.TARGET_ID.qualify(cluster2clusterV));
         query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(libV2clusterV).compareEquals(libraryVersionID), ComponentRelationsTable.TYPE.qualify(libV2clusterV).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_CLUSTER_VERSION), ComponentRelationsTable.TYPE.qualify(cluster2clusterV).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(cluster2clusterV), true);
         
@@ -338,7 +338,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("b");
       
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(lv2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
-        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+        query.addSelect(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
         query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(lv2lv).compareEquals(libraryVersionID), ComponentRelationsTable.TYPE.qualify(lv2lv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);   
   
@@ -360,7 +360,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("b");
       
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.qualify(lv2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
-        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+        query.addSelect(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
         query.andWhere(ComponentRelationsTable.TARGET_ID.qualify(lv2lv).compareEquals(libraryVersionID), ComponentRelationsTable.TYPE.qualify(lv2lv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);   
   
@@ -378,7 +378,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
 
     // FQNs
     try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.compareEquals(TypeVersionsTable.TYPE_VERSION_ID), TypeVersionsTable.TYPE_ID.compareEquals(TypesTable.TYPE_ID))) {
-      query.addSelects(TypeVersionsTable.TYPE_VERSION_ID, TypesTable.FQN);
+      query.addSelect(TypeVersionsTable.TYPE_VERSION_ID, TypesTable.FQN);
       query.andWhere(ComponentRelationsTable.SOURCE_ID.compareEquals(libraryVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_TYPE_VERSION));
       query.orderBy(TypesTable.FQN, true);
       
@@ -423,7 +423,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable jar2cv = ComponentRelationsTable.TABLE.qualify("b");
        
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(c2cv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(jar2cv)), ComponentRelationsTable.SOURCE_ID.qualify(jar2cv).compareEquals(ProjectsTable.PROJECT_ID))) {
-        query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
+        query.addSelect(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
         query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(c2cv).compareEquals(clusterID), ComponentRelationsTable.TYPE.qualify(c2cv).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION), ComponentRelationsTable.TYPE.qualify(jar2cv).compareEquals(ComponentRelation.JAR_CONTAINS_CLUSTER_VERSION));
         query.orderBy(ProjectsTable.GROUP, true);
         query.orderBy(ProjectsTable.NAME, true);
@@ -480,7 +480,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
 
     // Libraries
     try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
-      query.addSelects(ComponentRelationsTable.SOURCE_ID);
+      query.addSelect(ComponentRelationsTable.SOURCE_ID);
       query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(clusterID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_CONTAINS_CLUSTER));
       query.orderBy(ComponentRelationsTable.SOURCE_ID, true);
       
@@ -509,7 +509,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
 
     // FQNs
     try (SelectQuery query = exec.createSelectQuery(TypesTable.TABLE)) {
-      query.addSelects(TypesTable.FQN, TypesTable.TYPE_ID);
+      query.addSelect(TypesTable.FQN, TypesTable.TYPE_ID);
       ConstantCondition<Type> typeCond = TypesTable.TYPE.compareEquals();
       query.andWhere(TypesTable.COMPONENT_ID.compareEquals(clusterID).and(typeCond));
       query.orderBy(TypesTable.FQN, true);
@@ -553,7 +553,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
 
     // Jars
     try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
-      query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
+      query.addSelect(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
       query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(clusterVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_CLUSTER_VERSION));
       query.orderBy(ProjectsTable.GROUP, true);
       query.orderBy(ProjectsTable.NAME, true);
@@ -579,7 +579,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("b");
       
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.qualify(lv2cv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
-        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+        query.addSelect(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
         query.andWhere(ComponentRelationsTable.TARGET_ID.qualify(lv2cv).compareEquals(clusterVersionID), ComponentRelationsTable.TYPE.qualify(lv2cv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_CLUSTER_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);
   
@@ -597,7 +597,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
 
     // FQNs
     try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.compareEquals(TypeVersionsTable.TYPE_VERSION_ID), TypeVersionsTable.TYPE_ID.compareEquals(TypesTable.TYPE_ID))) {
-      query.addSelects(TypeVersionsTable.TYPE_VERSION_ID, TypesTable.FQN);
+      query.addSelect(TypeVersionsTable.TYPE_VERSION_ID, TypesTable.FQN);
       query.andWhere(ComponentRelationsTable.SOURCE_ID.compareEquals(clusterVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.CLUSTER_VERSION_CONTAINS_TYPE_VERSION));
       query.orderBy(TypesTable.FQN, true);
 
@@ -618,7 +618,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
-      query.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.NAME);
+      query.addSelect(ProjectsTable.PROJECT_ID, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.NAME);
       query.andWhere(ProjectsTable.PROJECT_TYPE.compareIn(EnumSet.of(Project.JAR, Project.MAVEN)));
       query.orderBy(ProjectsTable.GROUP, true);
       query.orderBy(ProjectsTable.NAME, true);
@@ -641,7 +641,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
-      query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION);
+      query.addSelect(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION);
       query.andWhere(ProjectsTable.PROJECT_ID.compareEquals(jarID));
       
       html.append("<h3>Jar ").append(jarID).append(": ");
@@ -657,7 +657,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("b");
       
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(j2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
-        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+        query.addSelect(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
         query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(j2lv).compareEquals(jarID), ComponentRelationsTable.TYPE.qualify(j2lv).compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);
         
@@ -677,7 +677,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable j2cv = ComponentRelationsTable.TABLE.qualify("a");
       QualifiedTable c2cv = ComponentRelationsTable.TABLE.qualify("b");
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(j2cv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(c2cv)))) {
-        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(c2cv), ComponentRelationsTable.TARGET_ID.qualify(c2cv));
+        query.addSelect(ComponentRelationsTable.SOURCE_ID.qualify(c2cv), ComponentRelationsTable.TARGET_ID.qualify(c2cv));
         query.andWhere(ComponentRelationsTable.SOURCE_ID.qualify(j2cv).compareEquals(jarID), ComponentRelationsTable.TYPE.qualify(j2cv).compareEquals(ComponentRelation.JAR_CONTAINS_CLUSTER_VERSION), ComponentRelationsTable.TYPE.qualify(c2cv).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(c2cv), true);
         
@@ -695,7 +695,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
 
     // Fqns
     try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.compareEquals(TypeVersionsTable.TYPE_VERSION_ID), TypeVersionsTable.TYPE_ID.compareEquals(TypesTable.TYPE_ID))) {
-      query.addSelects(TypeVersionsTable.TYPE_VERSION_ID, TypesTable.FQN);
+      query.addSelect(TypeVersionsTable.TYPE_VERSION_ID, TypesTable.FQN);
       query.andWhere(ComponentRelationsTable.SOURCE_ID.compareEquals(jarID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_TYPE_VERSION));
       query.orderBy(TypesTable.FQN, true);
       
@@ -718,7 +718,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.createSelectQuery(TypesTable.TABLE)) {
-      query.addSelects(TypesTable.TYPE_ID, TypesTable.FQN);
+      query.addSelect(TypesTable.TYPE_ID, TypesTable.FQN);
       query.orderBy(TypesTable.FQN, true);
       
       html.append("<ul>");
@@ -750,11 +750,11 @@ public class ArtifactRepoBrowser extends HttpServlet {
       
       try (SelectQuery query = exec.createSelectQuery(TypeVersionsTable.TYPE_VERSION_ID.compareEquals(ComponentRelationsTable.TARGET_ID.qualify(lv2tv)), ComponentRelationsTable.SOURCE_ID.qualify(lv2tv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)));
            SelectQuery inner = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
-        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+        query.addSelect(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
         query.andWhere(TypeVersionsTable.TYPE_ID.compareEquals(fqnID), ComponentRelationsTable.TYPE.qualify(lv2tv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_TYPE_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);
         
-        inner.addSelects(ProjectsTable.PROJECT_ID, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.NAME);
+        inner.addSelect(ProjectsTable.PROJECT_ID, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.NAME);
         ConstantCondition<Integer> innerCond = ComponentRelationsTable.TARGET_ID.compareEquals();
         inner.andWhere(innerCond.and(ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION)));
         inner.orderBy(ProjectsTable.GROUP, true);
@@ -800,7 +800,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
 
     // Jars
     try (SelectQuery query = exec.createSelectQuery(TypeVersionsTable.TYPE_VERSION_ID.compareEquals(ComponentRelationsTable.TARGET_ID), ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
-      query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
+      query.addSelect(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
       query.andWhere(TypeVersionsTable.TYPE_ID.compareEquals(fqnID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_TYPE_VERSION));
       query.orderBy(ProjectsTable.GROUP, true);
       query.orderBy(ProjectsTable.NAME, true);
@@ -828,7 +828,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       
       try (SelectQuery query = exec.createSelectQuery(TypeVersionsTable.TYPE_VERSION_ID.compareEquals(ComponentRelationsTable.TARGET_ID.qualify(cv2tv)), ComponentRelationsTable.SOURCE_ID.qualify(cv2tv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(c2cv)))) {
         query.setDistinct(true);
-        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(c2cv));
+        query.addSelect(ComponentRelationsTable.SOURCE_ID.qualify(c2cv));
         query.andWhere(TypeVersionsTable.TYPE_ID.compareEquals(fqnID), ComponentRelationsTable.TYPE.qualify(c2cv).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION), ComponentRelationsTable.TYPE.qualify(cv2tv).compareEquals(ComponentRelation.CLUSTER_VERSION_CONTAINS_TYPE_VERSION));
         query.orderBy(ComponentRelationsTable.SOURCE_ID.qualify(c2cv), true);
   
@@ -865,7 +865,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.createSelectQuery(TypeVersionsTable.TYPE_ID.compareEquals(TypesTable.TYPE_ID))) {
-      query.addSelects(TypesTable.FQN, TypesTable.TYPE_ID);
+      query.addSelect(TypesTable.FQN, TypesTable.TYPE_ID);
       query.andWhere(TypeVersionsTable.TYPE_VERSION_ID.compareEquals(fqnVersionID));
       
       TypedQueryResult result = query.select();
@@ -882,7 +882,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable lv2tv = ComponentRelationsTable.TABLE.qualify("b");
       
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.qualify(lv2tv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
-        query.addSelects(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+        query.addSelect(ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
         query.andWhere(ComponentRelationsTable.TARGET_ID.qualify(lv2tv).compareEquals(fqnVersionID), ComponentRelationsTable.TYPE.qualify(lv2tv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_TYPE_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);
         
@@ -900,7 +900,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     }
     
     try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.compareEquals(ProjectsTable.PROJECT_ID))) {
-      query.addSelects(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
+      query.addSelect(ProjectsTable.NAME, ProjectsTable.GROUP, ProjectsTable.VERSION, ProjectsTable.PROJECT_ID);
       query.andWhere(ComponentRelationsTable.TARGET_ID.compareEquals(fqnVersionID), ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.JAR_CONTAINS_TYPE_VERSION));
       query.orderBy(ProjectsTable.GROUP, true);
       query.orderBy(ProjectsTable.NAME, true);
@@ -930,7 +930,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable cv2tv = ComponentRelationsTable.TABLE.qualify("b");
       
       try (SelectQuery query = exec.createSelectQuery(ComponentRelationsTable.SOURCE_ID.qualify(cv2tv).compareEquals(clusterVersionIDcol))) {
-        query.addSelects(clusterIDcol, clusterVersionIDcol);
+        query.addSelect(clusterIDcol, clusterVersionIDcol);
         query.andWhere(ComponentRelationsTable.TARGET_ID.qualify(cv2tv).compareEquals(fqnVersionID), ComponentRelationsTable.TYPE.qualify(cv2tv).compareEquals(ComponentRelation.CLUSTER_VERSION_CONTAINS_TYPE_VERSION), ComponentRelationsTable.TYPE.qualify(c2cv).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION));
         query.orderBy(clusterIDcol, true);
         query.orderBy(clusterVersionIDcol, true);
@@ -955,7 +955,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
     QueryExecutor exec = db.get().getExecutor();
     
     try (SelectQuery query = exec.createSelectQuery(ProjectsTable.TABLE)) {
-      query.addSelects(ProjectsTable.GROUP, ProjectsTable.NAME);
+      query.addSelect(ProjectsTable.GROUP, ProjectsTable.NAME);
       query.setDistinct(true);
       query.andWhere(ProjectsTable.PROJECT_TYPE.compareEquals(Project.MAVEN));
       query.orderBy(ProjectsTable.GROUP, true);
@@ -983,7 +983,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       QualifiedTable j2lv = ComponentRelationsTable.TABLE.qualify("a");
       QualifiedTable l2lv = ComponentRelationsTable.TABLE.qualify("b");
       try (SelectQuery query = exec.createSelectQuery(ProjectsTable.PROJECT_ID.compareEquals(ComponentRelationsTable.SOURCE_ID.qualify(j2lv)), ComponentRelationsTable.TARGET_ID.qualify(j2lv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(l2lv)))) {
-        query.addSelects(ProjectsTable.VERSION, ProjectsTable.PROJECT_ID, ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
+        query.addSelect(ProjectsTable.VERSION, ProjectsTable.PROJECT_ID, ComponentRelationsTable.SOURCE_ID.qualify(l2lv), ComponentRelationsTable.TARGET_ID.qualify(l2lv));
         query.andWhere(ProjectsTable.GROUP.compareEquals(group), ProjectsTable.NAME.compareEquals(artifact), ComponentRelationsTable.TYPE.qualify(j2lv).compareEquals(ComponentRelation.JAR_MATCHES_LIBRARY_VERSION), ComponentRelationsTable.TYPE.qualify(l2lv).compareEquals(ComponentRelation.LIBRARY_CONTAINS_LIBRARY_VERSION));
         query.orderBy(ComponentRelationsTable.TARGET_ID.qualify(l2lv), true);
         

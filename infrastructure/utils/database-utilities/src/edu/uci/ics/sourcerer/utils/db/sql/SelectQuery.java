@@ -24,10 +24,8 @@ package edu.uci.ics.sourcerer.utils.db.sql;
 public interface SelectQuery extends Query {
   public void setCount(boolean count);
   public void setDistinct(boolean distinct);
-  public void addSelect(Selectable<?> select);
-  public void addSelects(Selectable<?> ... selects);
+  public void addSelect(Selectable<?> ... selects);
   public void clearSelect();
-  public void andWhere(Condition condition);
   public void andWhere(Condition ... conditions);
   public void clearWhere();
   public void orderBy(Selectable<?> select, boolean ascending);

@@ -32,7 +32,6 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ImportsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProblemsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
-import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Location;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
@@ -87,7 +86,7 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
     task.start("Populating file map", "files loaded");
     
     try (SelectQuery query = exec.createSelectQuery(FilesTable.TABLE)) {
-      query.addSelects(FilesTable.FILE_ID, FilesTable.PATH);
+      query.addSelect(FilesTable.FILE_ID, FilesTable.PATH);
       query.andWhere(
           FilesTable.FILE_TYPE.compareNotEquals(edu.uci.ics.sourcerer.tools.java.model.types.File.JAR).and(
           FilesTable.PROJECT_ID.compareEquals(projectID)));

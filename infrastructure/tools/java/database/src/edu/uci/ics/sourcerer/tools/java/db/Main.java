@@ -17,15 +17,15 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db;
 
+import edu.uci.ics.sourcerer.tools.java.component.identifier.RepositoryGenerator;
+import edu.uci.ics.sourcerer.tools.java.component.model.jar.Fingerprint;
+import edu.uci.ics.sourcerer.tools.java.component.model.repo.ComponentRepository;
 import edu.uci.ics.sourcerer.tools.java.db.exported.ComponentVerifier;
 import edu.uci.ics.sourcerer.tools.java.db.importer.ComponentImporter;
 import edu.uci.ics.sourcerer.tools.java.db.importer.DatabaseInitializer;
 import edu.uci.ics.sourcerer.tools.java.db.importer.ParallelDatabaseImporter;
 import edu.uci.ics.sourcerer.tools.java.db.importer.TypePopularityImporter;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
-import edu.uci.ics.sourcerer.tools.java.utilization.RepositoryGenerator;
-import edu.uci.ics.sourcerer.tools.java.utilization.model.jar.Fingerprint;
-import edu.uci.ics.sourcerer.tools.java.utilization.repo.ArtifactRepository;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
@@ -96,7 +96,7 @@ public class Main {
   public static final Command ADD_COMPONENTS =
     new Command("add-components", "Identifies and adds components to the database.") {
       protected void action() {
-        ArtifactRepository repo = RepositoryGenerator.generateArtifactRepository();
+        ComponentRepository repo = RepositoryGenerator.generateArtifactRepository();
         ComponentImporter.importComponents(repo);
       }
     }.setProperties(

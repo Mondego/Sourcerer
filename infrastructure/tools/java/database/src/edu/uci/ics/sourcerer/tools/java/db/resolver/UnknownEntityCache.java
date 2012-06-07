@@ -60,7 +60,7 @@ public class UnknownEntityCache  {
         }
         
         try (SelectQuery query = exec.createSelectQuery(EntitiesTable.TABLE)) {
-          query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.PARAMS);
+          query.addSelect(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.PARAMS);
           query.andWhere(EntitiesTable.PROJECT_ID.compareEquals(cache.unknownsProject));
           TypedQueryResult result = query.select();
           while (result.next()) {

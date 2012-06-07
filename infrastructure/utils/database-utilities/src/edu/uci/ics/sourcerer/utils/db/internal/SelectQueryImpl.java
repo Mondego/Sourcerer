@@ -123,8 +123,7 @@ class SelectQueryImpl implements SelectQuery {
     this.distinct = distinct;
   }
   
-  @Override
-  public void addSelect(Selectable<?> select) {
+  private void addSelect(Selectable<?> select) {
     verifyFresh();
     if (ArrayUtils.containsReference(tables, select.getTable())) {
       selects.put(select, Integer.valueOf(selects.size() + 1));
@@ -134,7 +133,7 @@ class SelectQueryImpl implements SelectQuery {
   }
   
   @Override
-  public void addSelects(Selectable<?> ... selects) {
+  public void addSelect(Selectable<?> ... selects) {
     for (Selectable<?> select : selects) {
       addSelect(select);
     }
@@ -146,8 +145,7 @@ class SelectQueryImpl implements SelectQuery {
     selects.clear();
   }
   
-  @Override
-  public void andWhere(Condition condition) {
+  private void andWhere(Condition condition) {
     verifyFresh();
     condition.verifyTables(tables);
     if (whereCondition == null) {

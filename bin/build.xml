@@ -25,7 +25,7 @@
        so that the jars don't contain unneeded files -->
   <property name="build" location="build" />
   <property name="build-link-crawler" location="${build}/link-crawler" />
-  <property name="build-utilization" location="${build}/utilization" />
+  <property name="build-component-identifier" location="${build}/component-identifier" />
   <property name="build-java-repo-tools" location="${build}/java-repo-tools" />
   <property name="build-extractor-lib" location="${build}/extractor-lib" />
   <property name="build-extractor" location="${build}/extractor" />
@@ -58,7 +58,7 @@
   <property name="java-repository-manager" location="../infrastructure/tools/java/repository-manager/src" />
   <property name="model" location="../infrastructure/tools/java/model/src" />
   <property name="extractor" location="../infrastructure/tools/java/extractor" />
-  <property name="utilization" location="../infrastructure/tools/java/utilization/src" />
+  <property name="component-identifier" location="../infrastructure/tools/java/component-identifier/src" />
   <property name="database" location="../infrastructure/tools/java/database/src" />
 
   <!-- Test Repository -->
@@ -188,7 +188,7 @@
       <src path="${core-repository-manager}" />
       <src path="${java-repository-manager}" />
       <src path="${model}" />
-    	<src path="${utilization}" />
+    	<src path="${component-identifier}" />
       <src path="${database}" />
     	<classpath>
         <pathelement path="${classpath}" />
@@ -216,7 +216,7 @@
       <fileset dir="${model}" includes="**/*.java" />
     </copy>
   	<copy todir="${build-database}">
-      <fileset dir="${utilization}" includes="**/*.java" />
+      <fileset dir="${component-identifier}" includes="**/*.java" />
     </copy>
     <copy todir="${build-database}">
       <fileset dir="${database}" includes="**/*.java" />
@@ -234,19 +234,19 @@
     </jar>
   </target>
   
-  <!-- Utilization -->
-  <target name="init-utilization" depends="init">
-    <mkdir dir="${build-utilization}" />
+  <!-- Component Identifier -->
+  <target name="init-component-identifier" depends="init">
+    <mkdir dir="${build-component-identifier}" />
   </target>
       
-  <target name="compile-utilization" depends="init-utilization">
+  <target name="compile-component-identifier" depends="init-component-identifier">
     <!-- Compile everything -->
-    <javac destdir="${build-utilization}" debug="on" includeantruntime="false">
+    <javac destdir="${build-component-identifier}" debug="on" includeantruntime="false">
       <src path="${utilities}" />
       <src path="${core-repository-manager}" />
       <src path="${java-repository-manager}" />
       <src path="${model}" />
-      <src path="${utilization}" />
+      <src path="${component-identifier}" />
     	<classpath>
         <pathelement path="${classpath}" />
 	        <fileset dir="${lib}">
@@ -257,29 +257,29 @@
     </javac>
 
     <!-- Copy the source -->
-    <copy todir="${build-utilization}">
+    <copy todir="${build-component-identifier}">
       <fileset dir="${utilities}" includes="**/*.java" />
     </copy>
-    <copy todir="${build-utilization}">
+    <copy todir="${build-component-identifier}">
       <fileset dir="${core-repository-manager}" includes="**/*.java" />
     </copy>
-    <copy todir="${build-utilization}">
+    <copy todir="${build-component-identifier}">
       <fileset dir="${java-repository-manager}" includes="**/*.java" />
     </copy>
-    <copy todir="${build-utilization}">
+    <copy todir="${build-component-identifier}">
       <fileset dir="${model}" includes="**/*.java" />
     </copy>
-    <copy todir="${build-utilization}">
-      <fileset dir="${utilization}" includes="**/*.java" />
+    <copy todir="${build-component-identifier}">
+      <fileset dir="${component-identifier}" includes="**/*.java" />
     </copy>
-  	<unjar src="${lib}/guava-11.0.1.jar" dest="${build-utilization}" />
-    <unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-utilization}" />
+  	<unjar src="${lib}/guava-11.0.1.jar" dest="${build-component-identifier}" />
+    <unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-component-identifier}" />
   </target>
     
-  <target name="utilization" depends="compile-utilization" description="Build utilization executable jar. (utilization.jar)">
-    <jar destfile="${dist}/utilization.jar" basedir="${build-utilization}">
+  <target name="component-identifier" depends="compile-component-identifier" description="Build component-identifier executable jar. (component-identifier.jar)">
+    <jar destfile="${dist}/component-identifier.jar" basedir="${build-component-identifier}">
       <manifest>
-        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.utilization.Main" />
+        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.component.identifier.Main" />
       </manifest>
     </jar>
   </target>
@@ -296,7 +296,7 @@
       <src path="${core-repository-manager}" />
       <src path="${java-repository-manager}" />
       <src path="${model}" />
-      <src path="${utilization}" />
+      <src path="${component-identifier}" />
     	<src path="${database}" />
       <src path="${database-utilities}" />
       <src path="${artifact-repo-browser}" />
@@ -336,7 +336,7 @@
       <src path="${core-repository-manager}" />
       <src path="${java-repository-manager}" />
       <src path="${model}" />
-      <src path="${utilization}" />
+      <src path="${component-identifier}" />
       <src path="${database}" />
       <src path="${database-utilities}" />
       <src path="${file-server}" />
@@ -376,7 +376,7 @@
       <src path="${core-repository-manager}" />
       <src path="${java-repository-manager}" />
       <src path="${model}" />
-      <src path="${utilization}" />
+      <src path="${component-identifier}" />
       <src path="${database}" />
       <src path="${database-utilities}" />
       <src path="${code-browser}" />
@@ -470,7 +470,7 @@
       <src path="${core-repository-manager}" />
       <src path="${java-repository-manager}" />
       <src path="${model}" />
-      <src path="${utilization}" />
+      <src path="${component-identifier}" />
       <src path="${database}" />
       <src path="${database-utilities}" />
       <classpath>

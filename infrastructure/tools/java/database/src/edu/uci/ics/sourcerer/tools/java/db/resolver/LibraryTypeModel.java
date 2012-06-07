@@ -70,7 +70,7 @@ class LibraryTypeModel {
     task.start("Loading library entities", "entities loaded");
 
     try (SelectQuery query = exec.createSelectQuery(EntitiesTable.TABLE)) {
-      query.addSelects(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.ENTITY_TYPE, EntitiesTable.PARAMS, EntitiesTable.RAW_PARAMS);
+      query.addSelect(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.ENTITY_TYPE, EntitiesTable.PARAMS, EntitiesTable.RAW_PARAMS);
       query.andWhere(
           EntitiesTable.PROJECT_ID.compareIn(libraries),
           EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.PACKAGE, Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION, Entity.CONSTRUCTOR, Entity.METHOD, Entity.ANNOTATION_ELEMENT, Entity.ENUM_CONSTANT, Entity.FIELD)),
@@ -106,7 +106,7 @@ class LibraryTypeModel {
     task.start("Loading library structure");
     
     try (SelectQuery query = exec.createSelectQuery(RelationsTable.TABLE)) {
-      query.addSelects(RelationsTable.LHS_EID, RelationsTable.RHS_EID);
+      query.addSelect(RelationsTable.LHS_EID, RelationsTable.RHS_EID);
       query.andWhere(RelationsTable.PROJECT_ID.compareIn(libraries), RelationsTable.RELATION_TYPE.compareEquals(Relation.HAS_BASE_TYPE));
       
       Map<Integer, Integer> pMapping = new HashMap<>();
