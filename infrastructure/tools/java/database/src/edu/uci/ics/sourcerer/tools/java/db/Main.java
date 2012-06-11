@@ -65,6 +65,7 @@ public class Main {
         DatabaseConnectionFactory.DATABASE_PASSWORD, 
         JavaRepositoryFactory.INPUT_REPO,
         ParallelDatabaseImporter.THREAD_COUNT,
+        ParallelDatabaseImporter.STRUCTURAL_ONLY,
         FileUtils.TEMP_DIR);
   
   public static final Command ADD_JARS = 
@@ -78,6 +79,7 @@ public class Main {
         DatabaseConnectionFactory.DATABASE_PASSWORD,
         JavaRepositoryFactory.INPUT_REPO,
         ParallelDatabaseImporter.THREAD_COUNT,
+        ParallelDatabaseImporter.STRUCTURAL_ONLY,
         FileUtils.TEMP_DIR);
   
   public static final Command ADD_PROJECTS = 
@@ -91,6 +93,7 @@ public class Main {
         DatabaseConnectionFactory.DATABASE_PASSWORD, 
         JavaRepositoryFactory.INPUT_REPO,
         ParallelDatabaseImporter.THREAD_COUNT,
+        ParallelDatabaseImporter.STRUCTURAL_ONLY,
         FileUtils.TEMP_DIR);
   
   public static final Command ADD_COMPONENTS =

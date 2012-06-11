@@ -22,6 +22,8 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.RepoFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.repo.model.ModifiableJavaProject;
 import edu.uci.ics.sourcerer.tools.java.repo.model.ModifiableJavaRepository;
+import edu.uci.ics.sourcerer.util.MemoryStatsReporter;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -30,15 +32,27 @@ public class RepositoryCleaner {
   public static void cleanNonJavaFiles() {
     ModifiableJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadModifiableJavaRepository(JavaRepositoryFactory.INPUT_REPO);
     
-    DeletionFilter filter = new DeletionFilter() {
+    class CustomFilter implements DeletionFilter {
+      long deleted = 0l;
       @Override
       public boolean shouldDelete(RepoFile file) {
-        return !(file.isDirectory() || file.getName().endsWith(".java") || file.getName().endsWith(".jar"));
+        boolean delete = !(file.isDirectory() || file.getName().endsWith(".java") || file.getName().endsWith(".jar"));
+        if (delete) {
+          deleted += file.toFile().length();
+        }
+        return delete;
       }
     };
     
+    CustomFilter filter = new CustomFilter();
+    
+    TaskProgressLogger task = TaskProgressLogger.get();
+    task.start("Cleaning Java repository at " + JavaRepositoryFactory.INPUT_REPO.getValue(), "projects cleaned", 500);
     for (ModifiableJavaProject project : repo.getProjects()) {
       project.delete(filter);
+      task.progress("%d projects cleaned (" + MemoryStatsReporter.formatSize(filter.deleted) + ") in %s");
     }
+    task.report("Cleaned a total of " + MemoryStatsReporter.formatSize(filter.deleted));
+    task.finish();
   }
 }

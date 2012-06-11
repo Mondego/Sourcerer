@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -334,7 +335,7 @@ public class ProjectTypeModel {
         return entity;
       } else {
         ModeledEntity classMethod = null;
-        Collection<ModeledEntity> interfaceMethods = new LinkedList<>();
+        Collection<ModeledEntity> interfaceMethods = new HashSet<>();
         
         Deque<ModeledEntity> stack = new LinkedList<>();
         stack.push(receiver);
@@ -350,7 +351,13 @@ public class ProjectTypeModel {
             } else if (classMethod == null){
               classMethod = method;
             } else {
-              logger.severe("Multiple class methods for: " + fqn);
+              // If one of the class methods belongs to Object, drop it
+              if (method.getFQN().startsWith("java.lang.Object")) {
+              } else if (classMethod.getFQN().startsWith("java.lang.Object")) {
+                method = classMethod;
+              } else {
+                logger.severe("Multiple class methods for: " + fqn + " (" + classMethod.toString() + " and " + method.toString() + ")");
+              }
             }
           }
         }
@@ -362,6 +369,10 @@ public class ProjectTypeModel {
         } else if (classMethod != null) {
           entities.put(fqn, classMethod);
           return classMethod;
+        } else if (interfaceMethods.size() == 1) {
+          entity = interfaceMethods.iterator().next();
+          entities.put(fqn, entity);
+          return entity;
         } else {
           entity = new ModeledEntity();
           for (ModeledEntity method : interfaceMethods) {
@@ -394,14 +405,14 @@ public class ProjectTypeModel {
         entities.put(fqn, entity);
         return entity;
       } else {
-        Collection<ModeledEntity> fields = new LinkedList<>();
+        Collection<ModeledEntity> fields = new HashSet<>();
         
         Deque<ModeledEntity> stack = new LinkedList<>();
         stack.push(receiver);
         while (!stack.isEmpty()) {
           // Get all the parents
           for (ModeledEntity parent : stack.pop().getParents()) {
-            // See if the parent has the method
+            // See if the parent has the field
             ModeledEntity field = getBasicEntity(parent.getFQN() + "." + fieldName);
             if (field == null) {
               stack.add(parent);
@@ -420,13 +431,15 @@ public class ProjectTypeModel {
           entities.put(fqn, entity);
           return entity;
         } else { 
-          logger.severe("Virtual field resolution should never be ambiguous: " + fqn);
-          entity = new ModeledEntity();
-          for (ModeledEntity field : fields) {
-            entity.addVirtualDuplicate(field);
-          }
-          entities.put(fqn, entity);
-          return entity;
+          logger.severe("Virtual field resolution should never be ambiguous: " + fqn + " " + fields.toString());
+//          entity = new ModeledEntity();
+//          for (ModeledEntity field : fields) {
+//            entity.addVirtualDuplicate(field);
+//          }
+//          entities.put(fqn, entity);
+//          return entity;
+          entities.put(fqn,  null);
+          return null;
         }
       }
     }

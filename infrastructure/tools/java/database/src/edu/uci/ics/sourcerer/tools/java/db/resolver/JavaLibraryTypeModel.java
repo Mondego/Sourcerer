@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -202,7 +203,7 @@ public class JavaLibraryTypeModel {
         return null;
       } else {
         ModeledEntity classMethod = null;
-        Collection<ModeledEntity> interfaceMethods = new LinkedList<>();
+        Collection<ModeledEntity> interfaceMethods = new HashSet<>();
         
         Deque<ModeledEntity> stack = new LinkedList<>();
         stack.push(receiver);
@@ -218,7 +219,13 @@ public class JavaLibraryTypeModel {
             } else if (classMethod == null){
               classMethod = method;
             } else {
-              logger.severe("Multiple class methods for: " + fqn);
+              // If one of the class methods belongs to Object, drop it
+              if (method.getFQN().startsWith("java.lang.Object")) {
+              } else if (classMethod.getFQN().startsWith("java.lang.Object")) {
+                method = classMethod;
+              } else {
+                logger.severe("Multiple class methods for: " + fqn + " (" + classMethod.toString() + " and " + method.toString() + ")");
+              }
             }
           }
         }
@@ -229,6 +236,10 @@ public class JavaLibraryTypeModel {
         } else if (classMethod != null) {
           entities.put(fqn, classMethod);
           return classMethod;
+        } else if (interfaceMethods.size() == 1) {
+          ModeledEntity entity = interfaceMethods.iterator().next();
+          entities.put(fqn, entity);
+          return entity;
         } else {
           ModeledEntity entity = new ModeledEntity();
           for (ModeledEntity method : interfaceMethods) {
@@ -255,14 +266,14 @@ public class JavaLibraryTypeModel {
       if (receiver == null) {
         return null;
       } else {
-        Collection<ModeledEntity> fields = new LinkedList<>();
+        Collection<ModeledEntity> fields = new HashSet<>();
         
         Deque<ModeledEntity> stack = new LinkedList<>();
         stack.push(receiver);
         while (!stack.isEmpty()) {
           // Get all the parents
           for (ModeledEntity parent : stack.pop().getParents()) {
-            // See if the parent has the method
+            // See if the parent has the field
             ModeledEntity field = entities.get(parent.getFQN() + "." + fieldName);
             if (field == null) {
               stack.add(parent);
@@ -280,7 +291,7 @@ public class JavaLibraryTypeModel {
           entities.put(fqn, entity);
           return entity;
         } else {
-          logger.severe("Java virtual field resolution should never be ambiguous: " + fqn);
+          logger.severe("Virtual field resolution should never be ambiguous: " + fqn + " " + fields.toString());
           entities.put(fqn, null);
           return null;
         }

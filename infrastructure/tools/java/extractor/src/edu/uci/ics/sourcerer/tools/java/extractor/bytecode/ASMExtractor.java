@@ -20,7 +20,6 @@ package edu.uci.ics.sourcerer.tools.java.extractor.bytecode;
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Enumeration;

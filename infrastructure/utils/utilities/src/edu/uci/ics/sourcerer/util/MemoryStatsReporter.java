@@ -34,7 +34,7 @@ public class MemoryStatsReporter {
   private static final long KB = 1024l;
   private static final long MB = 1024l * KB;
   private static final long GB = 1024l * MB;
-  private static String formatSize(long value) {
+  public static String formatSize(long value) {
     if (value >= GB) {
       return format.format((double) value / GB) + "G";
     } else if (value >= MB) {

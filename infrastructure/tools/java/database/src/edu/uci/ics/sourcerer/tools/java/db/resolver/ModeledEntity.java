@@ -82,6 +82,9 @@ public class ModeledEntity {
         }
       } else if (virtualDuplicates != null) {
         entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.VIRTUAL_DUPLICATE, fqn, projectID));
+        if (virtualDuplicates.size() <= 1) {
+          logger.severe("Single virtual duplicate! " + virtualDuplicates.toString());
+        }
         for (ModeledEntity dup : virtualDuplicates) {
           exec.insert(RelationsTable.makeInsert(Relation.MATCHES, dup.rClass, entityID, dup.entityID, projectID));
         }
