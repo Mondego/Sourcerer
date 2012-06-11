@@ -18,7 +18,7 @@
 package edu.uci.ics.sourcerer.tools.link;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
-import edu.uci.ics.sourcerer.tools.link.crawler.FlossmoleCrawler;
+import edu.uci.ics.sourcerer.tools.link.crawler.flossmole.FlossmoleCrawler;
 import edu.uci.ics.sourcerer.tools.link.downloader.RepoBuilder;
 import edu.uci.ics.sourcerer.tools.link.downloader.Subversion;
 import edu.uci.ics.sourcerer.util.io.arguments.Arguments;

@@ -15,14 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.link.crawler;
+package edu.uci.ics.sourcerer.tools.link.crawler.flossmole;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.IOException;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.tools.link.crawler.flossmole.GoogleCodeProjects;
 import edu.uci.ics.sourcerer.tools.link.model.Project;
 import edu.uci.ics.sourcerer.tools.link.model.Source;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
