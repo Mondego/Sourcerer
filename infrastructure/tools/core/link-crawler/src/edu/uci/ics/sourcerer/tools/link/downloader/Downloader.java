@@ -27,7 +27,9 @@ import java.util.logging.Level;
  */
 public class Downloader {
   public enum Type {
-    SVN;
+    SVN,
+    CVS,
+    ;
   }
   
   public static boolean download(Type type, String url, File file) {

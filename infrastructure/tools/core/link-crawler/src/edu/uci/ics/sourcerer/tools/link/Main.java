@@ -49,7 +49,7 @@ public class Main {
   public static final Command ADD_JAVA_GC_PROJECTS_TO_REPO = new Command("add-java-gc-projects-to-repo", "Adds the Java Google Code projects to the repository.") {
     @Override
     protected void action() {
-      RepoBuilder.addProjectsToRepository(GOOGLE_CODE_JAVA_LIST, "Projects from Google Code Project Hosting");
+      FlossmoleCrawler.addProjectsToRepository(GOOGLE_CODE_JAVA_LIST);
     }
   }.setProperties(Arguments.INPUT, GOOGLE_CODE_JAVA_LIST.asInput(), RepositoryFactory.OUTPUT_REPO);
   

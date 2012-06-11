@@ -26,10 +26,9 @@ import edu.uci.ics.sourcerer.util.io.properties.StringProperty;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class SourceProjectProperties extends ProjectProperties {
-  public Property<String> URL = new StringProperty("url", this);
   public Property<String> PROJECT_URL = new StringProperty("project-url", this);
-  public Property<String> CONTENT_URL = new StringProperty("content-url", this);
   public Property<String> SVN_URL = new StringProperty("svn-url", this);
+  public Property<String> CVS_URL = new StringProperty("cvs-url", this);
   public Property<String> DOWNLOAD_DATE = new StringProperty("download-date", this);
   
   public SourceProjectProperties(RepoFile file) {

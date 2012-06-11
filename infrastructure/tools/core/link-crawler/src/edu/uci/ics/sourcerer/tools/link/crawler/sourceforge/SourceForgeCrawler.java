@@ -17,18 +17,33 @@
  */
 package edu.uci.ics.sourcerer.tools.link.crawler.sourceforge;
 
-import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
+import java.io.File;
+
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceBatch;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceRepository;
+import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
+import edu.uci.ics.sourcerer.util.LetterCounter;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class SourceForgeCrawler {
-  public static final DualFileArgument SOURCEFORGE_LIST = new DualFileArgument("sourceforge-list", "sourceforge-list.txt", "File containing list of SourceForge proejcts.");
+  public static final Argument<File> SOURCEFORGE_LIST = new FileArgument("sourceforge-list", "File containing list of SourceForge proejcts.");
   
   private SourceForgeCrawler() {
   }
   
-  public static void crawlSourceForge() {
+  public static void addProjectsToRepository() {
+    ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.OUTPUT_REPO);
     
+    ModifiableSourceBatch batch = null;
+    LetterCounter counter = new LetterCounter();
+    
+    TaskProgressLogger task = TaskProgressLogger.get();
+    task.start("Adding SourceForge projects from " + SOURCEFORGE_LIST + " to repository", "projects added", 500);
+    task.finish();
   }
 }

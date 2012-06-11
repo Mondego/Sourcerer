@@ -22,12 +22,19 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import java.io.IOException;
 import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceBatch;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceProject;
+import edu.uci.ics.sourcerer.tools.core.repo.model.ModifiableSourceRepository;
+import edu.uci.ics.sourcerer.tools.core.repo.model.RepositoryFactory;
+import edu.uci.ics.sourcerer.tools.core.repo.model.SourceProjectProperties;
 import edu.uci.ics.sourcerer.tools.link.model.Project;
 import edu.uci.ics.sourcerer.tools.link.model.Source;
+import edu.uci.ics.sourcerer.util.LetterCounter;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
@@ -70,5 +77,42 @@ public class FlossmoleCrawler {
         
       }
     }.run();
+  }
+  
+  public static void addProjectsToRepository(DualFileArgument projectList) {
+    ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.OUTPUT_REPO);
+    
+    ModifiableSourceBatch batch = null;
+    LetterCounter counter = new LetterCounter();
+    try {
+      TaskProgressLogger task = TaskProgressLogger.get();
+      task.start("Adding Google Code Project Hosting projects from " + projectList+ " to repository", "projects added", 500);
+      for (Project project : IOUtils.deserialize(Project.class, projectList, true)) {
+        if (batch == null) {
+          batch = repo.createBatch();
+          batch.getProperties().DESCRIPTION.setValue("Projects from Google Code Project Hosting");
+          batch.getProperties().save();
+        } else if (batch.getProjectCount() >= 1000) {
+          if (counter.getCount() == 0) {
+            batch.getProperties().DESCRIPTION.setValue("Projects from Google Code Project Hosting, Part " + counter.getNext());
+            batch.getProperties().save();
+          }
+          batch = repo.createBatch();
+          batch.getProperties().DESCRIPTION.setValue("Projects from Google Code Project Hosting, Part " + counter.getNext());
+          batch.getProperties().save();
+        }
+        ModifiableSourceProject newProject = batch.createProject();
+        SourceProjectProperties props = newProject.getProperties();
+        props.NAME.setValue(project.getName());
+        props.PROJECT_URL.setValue("http://code.google.com/p/" + project.getName() + "/");
+        props.SVN_URL.setValue(project.getUrl());
+        props.SOURCE.setValue(project.getSource().getName());
+        props.save();
+        task.progress();
+      }
+      task.finish();
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error reading project listing.", e);
+    }
   }
 }

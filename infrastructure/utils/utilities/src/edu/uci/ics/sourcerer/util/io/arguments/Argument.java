@@ -107,7 +107,11 @@ public abstract class Argument <T> {
   }
   
   public final String toString() {
-    return name;
+    if (hasValue()) {
+      return name + " (" + getValue() + ")";
+    } else {
+      return name + " (N/A)";
+    }
   }
   
   public final boolean hasValue() {
