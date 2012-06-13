@@ -38,6 +38,7 @@ import edu.uci.ics.sourcerer.tools.java.model.extracted.FileEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.ProblemEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
+import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metrics;
 import edu.uci.ics.sourcerer.utils.db.BatchInserter;
@@ -88,19 +89,21 @@ public abstract class EntitiesImporter extends DatabaseImporter {
     Multiset<Metric> projectMetrics = EnumMultiset.create(Metric.class);
     
     for (FileEX file : reader.getTransientFiles()) {
-      Integer fileID = fileMap.get(file.getPath());
-      if (fileID == null) {
-        task.report(Level.SEVERE, "Unknown file: " + file.getPath());
-      } else {
-        Metrics metrics = file.getMetrics();
-        if (metrics != null) {
-          for (Entry<Metric, Integer> metric : metrics.getMetricValues()) {
-            projectMetrics.add(metric.getKey(), metric.getValue().intValue());
-            inserter.addInsert(FileMetricsTable.createInsert(projectID, fileID, metric.getKey(), metric.getValue()));
+      if (file.getType() == File.SOURCE || file.getType() == File.CLASS) {
+        Integer fileID = fileMap.get(file.getPath());
+        if (fileID == null) {
+          task.report(Level.SEVERE, "Unknown file: " + file.getPath());
+        } else {
+          Metrics metrics = file.getMetrics();
+          if (metrics != null) {
+            for (Entry<Metric, Integer> metric : metrics.getMetricValues()) {
+              projectMetrics.add(metric.getKey(), metric.getValue().intValue());
+              inserter.addInsert(FileMetricsTable.createInsert(projectID, fileID, metric.getKey(), metric.getValue()));
+            }
           }
         }
+        task.progress();
       }
-      task.progress();
     }
     task.finish();
     

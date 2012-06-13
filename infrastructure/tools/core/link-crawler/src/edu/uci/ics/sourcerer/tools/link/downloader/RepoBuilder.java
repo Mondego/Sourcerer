@@ -123,7 +123,7 @@ public final class RepoBuilder {
     task.finish();
   }
   
-  public static void cleanSubversionContent() {
+  public static void cleanVersioningContent() {
     TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Cleaning SVN content");
     ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);

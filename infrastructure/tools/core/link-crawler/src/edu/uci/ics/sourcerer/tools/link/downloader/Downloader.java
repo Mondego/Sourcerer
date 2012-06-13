@@ -17,10 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.link.downloader;
 
-import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
-
 import java.io.File;
-import java.util.logging.Level;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -33,12 +30,10 @@ public class Downloader {
   }
   
   public static boolean download(Type type, String url, File file) {
-    if (type == Type.SVN) {
-//      return Subversion.download(url, file);
-      return Subversion.checkout(url, file);
-    } else {
-      logger.log(Level.SEVERE, "Unable to identify form of url: " + url);
-      return false;
+    switch (type) {
+      case SVN: return Subversion.checkout(url, file);
+      case CVS: return CVS.checkout(url, file);
+      default: return false;
     }
   }
 }

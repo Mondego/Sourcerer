@@ -6,5 +6,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/database-utilities"/>
 	<classpathentry kind="lib" path="/lib/svnkit.jar"/>
 	<classpathentry kind="src" path="/core-repository-manager"/>
+	<classpathentry kind="lib" path="/lib/org-netbeans-lib-cvsclient.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

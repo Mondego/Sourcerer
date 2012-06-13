@@ -31,7 +31,7 @@ public final class LetterCounter {
     StringBuilder result = new StringBuilder();
     int val = count++;
     while (val >= 0) {
-      result.insert(0, 'A' + val % 26);
+      result.insert(0, (char)('A' + val % 26));
       val = val / 26 - 1;
     }
     return result.toString();
