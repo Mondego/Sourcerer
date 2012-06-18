@@ -83,7 +83,7 @@ public abstract class AbstractFileSet implements FileSet {
       init(false, true);
     }
   }
-
+  
   public void init(boolean loadNow, boolean clearCache) {
     if (clearCache) {
       FileUtils.delete(cacheDir);

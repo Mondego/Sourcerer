@@ -34,6 +34,7 @@ import edu.uci.ics.sourcerer.tools.java.component.model.jar.VersionedFqnNode;
 import edu.uci.ics.sourcerer.tools.java.component.model.repo.ComponentRepository;
 import edu.uci.ics.sourcerer.tools.java.component.model.repo.Library;
 import edu.uci.ics.sourcerer.tools.java.component.model.repo.LibraryVersion;
+import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentRelationsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
@@ -100,11 +101,13 @@ public class ComponentImporter extends DatabaseRunnable {
   private void initializeTables() {
     exec.dropTables(
         ComponentRelationsTable.TABLE,
+        ComponentMetricsTable.TABLE,
         ComponentsTable.TABLE,
         TypesTable.TABLE,
         TypeVersionsTable.TABLE);
     exec.createTables(
         ComponentRelationsTable.TABLE,
+        ComponentMetricsTable.TABLE,
         ComponentsTable.TABLE,
         TypesTable.TABLE,
         TypeVersionsTable.TABLE);

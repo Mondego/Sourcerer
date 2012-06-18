@@ -91,6 +91,18 @@ public final class RepoBuilder {
     
     SimpleDateFormat format = new SimpleDateFormat("MMM-dd-yyyy");
 
+    DeletionFilter deleter = new DeletionFilter() {
+      @Override
+      public boolean shouldDelete(RepoFile file) {
+        if (file.isDirectory()) {
+          String name = file.getName();
+          return name.equals("branches") || name.equals("tags") || name.equals(".svn") || name.equals("CVS") || name.equals("CVSROOT");
+        } else {
+          return false;
+        }
+      }
+    };
+    
     for (final ModifiableSourceProject project : repo.getProjects()) {
       if (!project.hasContent() || project.getProperties().DOWNLOAD_DATE.getValue() == null) {
         task.start("Downloading content for " + project.getProperties().NAME.getValue() + " (" + project.getLocation() + ")");
@@ -113,6 +125,10 @@ public final class RepoBuilder {
           }
         };
         if (project.addContent(adder)) {
+          // Delete the extra stuff
+          task.start("Cleaning out extra stuff");
+          project.delete(deleter);
+          task.finish();
           project.getProperties().DOWNLOAD_DATE.setValue(format.format(new Date()).toLowerCase());
           project.getProperties().save();
         }
@@ -125,17 +141,22 @@ public final class RepoBuilder {
   
   public static void cleanVersioningContent() {
     TaskProgressLogger task = TaskProgressLogger.get();
-    task.start("Cleaning SVN content");
+    task.start("Cleaning versioning content");
     ModifiableSourceRepository repo = RepositoryFactory.INSTANCE.loadModifiableSourceRepository(RepositoryFactory.INPUT_REPO);
     
     DeletionFilter filter = new DeletionFilter() {
       @Override
       public boolean shouldDelete(RepoFile file) {
-        return file.isDirectory() && file.getName().equals(".svn");
+        if (file.isDirectory()) {
+          String name = file.getName();
+          return name.equals("branches") || name.equals("tags") || name.equals(".svn") || name.equals("CVS") || name.equals("CVSROOT");
+        } else {
+          return false;
+        }
       }
     };
     
-    task.start("Cleaning projects", "projects cleaned");
+    task.start("Cleaning projects", "projects cleaned", 1);
     for (ModifiableSourceProject project : repo.getProjects()) {
       task.progress("Examining project %d, " + project);
       task.start("Cleaning");
