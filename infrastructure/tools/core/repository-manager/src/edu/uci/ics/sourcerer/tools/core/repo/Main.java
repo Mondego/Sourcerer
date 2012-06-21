@@ -17,9 +17,13 @@
  */
 package edu.uci.ics.sourcerer.tools.core.repo;
 
+import edu.uci.ics.sourcerer.util.io.arguments.Command;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
-
+  public static void main(String[] args) {
+    Command.execute(args, Main.class);
+  }
 }

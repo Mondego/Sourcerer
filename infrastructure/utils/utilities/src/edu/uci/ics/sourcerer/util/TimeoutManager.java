@@ -25,22 +25,24 @@ public class TimeoutManager <T extends Closeable> {
     lastTimeAccessed = System.currentTimeMillis();
     if (instance == null) {
       instance = instantiator.create();
-      Timer timer = new Timer();
-      task = new TimerTask() {
-        @Override
-        public void run() {
-          synchronized (TimeoutManager.this) {
-            if (System.currentTimeMillis() - lastTimeAccessed > TIMEOUT) {
-              logger.info("Timeout manager closing...");
-              IOUtils.close(instance);
-              instance = null;
-              task = null;
-              this.cancel();
+      if (instance != null) {
+        Timer timer = new Timer();
+        task = new TimerTask() {
+          @Override
+          public void run() {
+            synchronized (TimeoutManager.this) {
+              if (System.currentTimeMillis() - lastTimeAccessed > TIMEOUT) {
+                logger.info("Timeout manager closing...");
+                IOUtils.close(instance);
+                instance = null;
+                task = null;
+                this.cancel();
+              }
             }
           }
-        }
-      };
-      timer.schedule(task, TIMEOUT, TIMEOUT);
+        };
+        timer.schedule(task, TIMEOUT, TIMEOUT);
+      }
     }
     return instance;
   }

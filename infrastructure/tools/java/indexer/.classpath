@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/database"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/database-utilities"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/utilities"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/model"/>
+	<classpathentry kind="lib" path="/lib/apache-solr-solrj-3.6.0.jar"/>
+	<classpathentry kind="lib" path="/lib/httpclient-4.2.jar"/>
+	<classpathentry kind="lib" path="/lib/httpcore-4.2.1.jar"/>
+	<classpathentry kind="lib" path="/lib/httpmime-4.2.jar"/>
+	<classpathentry kind="lib" path="/lib/jcl-over-slf4j-1.6.6.jar"/>
+	<classpathentry kind="lib" path="/lib/slf4j-api-1.6.6.jar"/>
+	<classpathentry kind="lib" path="/lib/slf4j-jdk14-1.6.6.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.tools.java.db.importer.TypeUtils;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;

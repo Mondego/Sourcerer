@@ -55,7 +55,7 @@ public class ArtifactRepoBrowser extends HttpServlet {
       new TimeoutManager<DatabaseConnection>(new TimeoutManager.Instantiator<DatabaseConnection>() {
         @Override
         public DatabaseConnection create() {
-          DatabaseConnection conn = DatabaseConnectionFactory.INSTANCE.make();
+          DatabaseConnection conn = DatabaseConnectionFactory.INSTANCE.create();
           if (conn.open()) {
             return conn;
           } else {

@@ -56,6 +56,7 @@ class SelectQueryImpl implements SelectQuery {
   private Map<Selectable<?>, Integer> selects;
   private Condition whereCondition;
   private ArrayList<Pair<Selectable<?>, Boolean>> orderBy;
+  private int limit = 0;
   
   SelectQueryImpl(QueryExecutorImpl executor) {
     this.executor = executor;
@@ -170,7 +171,14 @@ class SelectQueryImpl implements SelectQuery {
   
   @Override
   public void orderBy(Selectable<?> select, boolean ascending) {
+    verifyFresh();
     orderBy.add(new Pair<Selectable<?>, Boolean>(select, ascending));
+  }
+  
+  @Override
+  public void setLimit(int limit) {
+    verifyFresh();
+    this.limit = limit;
   }
   
   private void verifyFresh() {
@@ -179,7 +187,7 @@ class SelectQueryImpl implements SelectQuery {
     }
   }
 
-  private ResultSet execute() {
+  private ResultSet execute(boolean streamed) {
     if (statement == null) {
       if (selects.isEmpty() && !count) {
         throw new IllegalStateException("Must have at least one select.");
@@ -254,6 +262,10 @@ class SelectQueryImpl implements SelectQuery {
           sql.append(pair.getSecond() ? " ASC" : " DESC");
         }
       }
+      
+      if (limit > 0) {
+        sql.append(" LIMIT ").append(limit);
+      }
       sql.append(";");
       statement = executor.prepareStatement(sql.toString());
     }
@@ -261,6 +273,11 @@ class SelectQueryImpl implements SelectQuery {
     try {
       if (whereCondition != null) {
         whereCondition.bind(statement, 1);
+      }
+      if (streamed) {
+        statement.setFetchSize(Integer.MIN_VALUE);
+      } else {
+        statement.setFetchSize(10);
       }
       statement.execute();
       return statement.getResultSet();
@@ -272,7 +289,12 @@ class SelectQueryImpl implements SelectQuery {
 
   @Override
   public TypedQueryResult select() {
-    return new QueryResult(execute());
+    return new QueryResult(execute(false));
+  }
+  
+  @Override
+  public TypedQueryResult selectStreamed() {
+    return new QueryResult(execute(true));
   }
   
   private class QueryResult implements TypedQueryResult {

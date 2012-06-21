@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/database/src/edu/uci/ics/sourcerer/tools/java/db/Main.java"/>
+<listEntry value="/database-importer/src/edu/uci/ics/sourcerer/tools/java/db/Main.java"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="1"/>
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="edu.uci.ics.sourcerer.tools.java.db.Main"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--properties-file ${project_loc:bin}/launch/tutorial/tutorial-db.properties --initialize-db"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="database"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="database-importer"/>
 </launchConfiguration>

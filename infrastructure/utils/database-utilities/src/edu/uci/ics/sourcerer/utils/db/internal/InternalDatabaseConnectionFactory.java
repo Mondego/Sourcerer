@@ -37,7 +37,7 @@ public class InternalDatabaseConnectionFactory extends DatabaseConnectionFactory
   }
   
   @Override
-  public DatabaseConnection make() {
+  public DatabaseConnection create() {
     return new DatabaseConnectionImpl();
   }
 }

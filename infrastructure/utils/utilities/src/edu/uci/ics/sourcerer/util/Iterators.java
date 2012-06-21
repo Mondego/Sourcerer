@@ -25,6 +25,7 @@ import java.util.NoSuchElementException;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Iterators {
+  @SuppressWarnings("unchecked")
   public static <T> Iterable<T> concat(final Iterable<T> ... iterables) {
     return new Iterable<T>() {
       @Override

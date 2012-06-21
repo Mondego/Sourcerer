@@ -28,7 +28,7 @@ public abstract class DatabaseRunnable {
   protected abstract void action();
   
   public final void run() {
-    try (DatabaseConnection conn = DatabaseConnectionFactory.INSTANCE.make()) {
+    try (DatabaseConnection conn = DatabaseConnectionFactory.INSTANCE.create()) {
       if (conn.open()) {
         exec = conn.getExecutor();
         action();

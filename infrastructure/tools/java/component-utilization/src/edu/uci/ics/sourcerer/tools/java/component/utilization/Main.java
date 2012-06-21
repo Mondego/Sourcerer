@@ -17,12 +17,21 @@
  */
 package edu.uci.ics.sourcerer.tools.java.component.utilization;
 
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
+import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
+  public static final Command CALCULATE_COMPONENT_UTILIZATION = new Command("calculate-component-utilization", "Calculates the component utilization metrics.") {
+    @Override
+    protected void action() {
+      UtilizationCalculator.calculateComponentUtilization();
+    }
+  }.setProperties(FileUtils.TEMP_DIR, DatabaseConnectionFactory.DATABASE_USER, DatabaseConnectionFactory.DATABASE_PASSWORD, DatabaseConnectionFactory.DATABASE_URL);
+  
   public static void main(String[] args) {
     Command.execute(args, Main.class);
   }

@@ -31,5 +31,5 @@ public abstract class DatabaseConnectionFactory {
   
   public static final DatabaseConnectionFactory INSTANCE = new InternalDatabaseConnectionFactory();
   
-  public abstract DatabaseConnection make();
+  public abstract DatabaseConnection create();
 }

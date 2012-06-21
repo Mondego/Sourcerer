@@ -1,8 +1,0 @@
-@author Sushil Bajracharya
-@created Sep 14, 2009
-
-This project contains the search components that are needed to run Apache Solr Server
-as a search server for Sourcerer code search service. This projects depends on a patched
-version of the Apache solr project (v 1.3.0), and expects it be present as a project
-imported in the Eclipse workspace. The Apache solr project source should reside in
- Sourcerer/infrastructure/services/solr-1.3-patched.

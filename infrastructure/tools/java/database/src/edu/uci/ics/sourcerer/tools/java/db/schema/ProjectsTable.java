@@ -18,12 +18,6 @@
 package edu.uci.ics.sourcerer.tools.java.db.schema;
 
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
-import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
-import edu.uci.ics.sourcerer.tools.java.repo.model.JarProperties;
-import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
-import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarProperties;
-import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProject;
-import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProjectProperties;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.DatabaseTable;
@@ -87,7 +81,7 @@ public final class ProjectsTable extends DatabaseTable {
   public static final String UNKNOWNS_PROJECT = "unknowns";
   
   // ---- INSERT ----
-  private static Insert createRowInsert(Project type, String name, String description, String version, String group, String path, String source, String hash, boolean hasSource) {
+  public static Insert createRowInsert(Project type, String name, String description, String version, String group, String path, String source, String hash, boolean hasSource) {
     return TABLE.createInsert(
         PROJECT_TYPE.to(type),
         NAME.to(name),
@@ -122,60 +116,5 @@ public final class ProjectsTable extends DatabaseTable {
             null, // no source
             null, // no hash
             false);
-  }
-  
-  public static Insert createInsert(JarFile jar) {
-    JarProperties props = jar.getProperties();
-    Project type = null;
-    switch (props.SOURCE.getValue()) {
-      case JAVA_LIBRARY: type = Project.JAVA_LIBRARY; break;
-      case MAVEN: type = Project.MAVEN; break;
-      case PROJECT: type = Project.JAR; break;
-    }
-    return createRowInsert(
-        type,
-        props.NAME.getValue(), 
-        null, 
-        props.VERSION.getValue(), 
-        props.GROUP.getValue(), 
-        ProjectState.COMPONENT.name(), // no path
-        null, // no source
-        props.HASH.getValue(), 
-        false); // not sure if it has source
-        
-  }
-  public static Insert createInsert(ExtractedJarFile jar) {
-    ExtractedJarProperties props = jar.getProperties();
-    Project type = null;
-    switch (props.SOURCE.getValue()) {
-      case JAVA_LIBRARY: type = Project.JAVA_LIBRARY; break;
-      case MAVEN: type = Project.MAVEN; break;
-      case PROJECT: type = Project.JAR; break;
-    }
-    return createRowInsert(
-        type,
-        props.NAME.getValue(), 
-        null, 
-        props.VERSION.getValue(), 
-        props.GROUP.getValue(), 
-        ProjectState.BEGIN_ENTITY.name(), // no path 
-        null, // no source
-        props.HASH.getValue(), 
-        props.HAS_SOURCE.getValue());
-  }
-  
-  public static Insert createInsert(ExtractedJavaProject project) {
-    ExtractedJavaProjectProperties props = project.getProperties();
-    return createRowInsert(
-        Project.CRAWLED,
-        props.NAME.getValue(), 
-        null, // no description 
-        null, // no version
-        null, // no group 
-        project.getLocation().toString(),
-        project.getRepository().getBatch(project.getLocation()).getProperties().SOURCE.getValue(),
-        ProjectState.BEGIN_ENTITY.name(), // no hash
-        true);
-
   }
 }

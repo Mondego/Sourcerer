@@ -17,9 +17,6 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.schema;
 
-import edu.uci.ics.sourcerer.tools.java.component.model.cluster.ClusterVersion;
-import edu.uci.ics.sourcerer.tools.java.component.model.repo.Library;
-import edu.uci.ics.sourcerer.tools.java.component.model.repo.LibraryVersion;
 import edu.uci.ics.sourcerer.tools.java.model.types.Component;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
@@ -53,21 +50,5 @@ public class ComponentsTable extends DatabaseTable {
   // ---- INSERT ----
   public static Insert createInsert(Component type, String name) {
     return TABLE.createInsert(TYPE.to(type), NAME.to(name));
-  }
-  
-  public static Insert createInsert(edu.uci.ics.sourcerer.tools.java.component.model.cluster.Cluster cluster) {
-    return createInsert(Component.CLUSTER, null);
-  }
-  
-  public static Insert createInsert(ClusterVersion cluster) {
-    return createInsert(Component.CLUSTER_VERSION, null);
-  }
-  
-  public static Insert createInsert(Library library) {
-    return createInsert(Component.LIBRARY, null);
-  }
-  
-  public static Insert createInsert(LibraryVersion library) {
-    return createInsert(Component.LIBRARY_VERSION, null);
   }
 }

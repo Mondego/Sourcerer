@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 
-import edu.uci.ics.sourcerer.tools.java.db.importer.TypeUtils;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;

@@ -70,7 +70,7 @@ public class MissingTypeResolver implements Closeable {
   
   private MissingTypeResolver(JavaRepository repo) {
     identifier = MissingTypeIdentifier.create();
-    conn = DatabaseConnectionFactory.INSTANCE.make();
+    conn = DatabaseConnectionFactory.INSTANCE.create();
     this.repo = repo;
   }
   

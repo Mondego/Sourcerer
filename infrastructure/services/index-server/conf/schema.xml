@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<schema name="example" version="1.1">
+  <types>
+    <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
+    <fieldType name="integer" class="solr.IntField" omitNorms="true"/>
+    <fieldType name="long" class="solr.LongField" omitNorms="true"/>
+
+    <fieldType name="fqn_fragments" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="fqn_contents" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="sname" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="sname_contents" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="params_fqns" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="params_fqns_fragments" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="params_fqns_contents" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="params_snames" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="params_snames_contents" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="return_fqn_fragments" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ArrayFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ArrayFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="return_fqn_contents" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ArrayFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ArrayFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="return_sname" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ArrayFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ArrayFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="return_sname_contents" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ArrayFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ArrayFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+  </types>
+
+
+  <fields>
+    <field name="entity_id" type="long" indexed="true" stored="true" required="true"/>
+
+    <field name="fqn" type="string" indexed="true" stored="true" required="true"/>
+    <field name="fqn_fragments" type="fqn_fragments" indexed="true" stored="false" required="true"/>
+    <field name="fqn_contents" type="fqn_contents" indexed="true" stored="false" required="true"/>
+    
+    <field name="sname" type="sname" indexed="true" stored="false" required="true"/>
+    <field name="sname_contents" type="sname_contents" indexed="true" stored="false" required="true"/>
+    
+    <field name="param_count" type="integer" indexed="true" stored="true" required="true"/>
+    
+    <field name="params" type="string" indexed="true" stored="true" required="true"/>
+    <field name="params_fqns" type="params_fqns" indexed="true" stored="false" required="true"/>
+    <field name="params_fqns_fragments" type="params_fqns_fragments" indexed="true" stored="false" required="true"/>
+    <field name="params_fqns_contents" type="params_fqns_contents" indexed="true" stored="false" required="true"/>
+    <field name="params_snames" type="params_snames" indexed="true" stored="false" required="true"/>
+    <field name="params_snames_contents" type="params_snames_contents" indexed="true" stored="false" required="true"/>
+    
+    <field name="return_fqn" type="string" indexed="true" stored="true" required="true"/>
+    <field name="return_fqn_fragments" type="return_fqn_fragments" indexed="true" stored="false" required="true"/>
+    <field name="return_fqn_contents" type="return_fqn_contents" indexed="true" stored="false" required="true"/>
+    <field name="return_sname" type="return_sname" indexed="true" stored="false" required="true"/>
+    <field name="return_sname_contents" type="return_sname_contents" indexed="true" stored="false" required="true"/> 
+  </fields>
+  
+  <uniqueKey>entity_id</uniqueKey>
+  <defaultSearchField>entity_id</defaultSearchField>
+  <solrQueryParser defaultOperator="AND"/>
+  
+  <copyField source="fqn" dest="fqn_contents"/>
+  <copyField source="fqn" dest="fqn_fragments"/>
+  <copyField source="fqn" dest="sname"/>
+  <copyField source="fqn" dest="sname_contents"/>
+  
+  <copyField source="params" dest="params_fqns"/>
+  <copyField source="params" dest="params_fqns_fragments"/>
+  <copyField source="params" dest="params_fqns_contents"/>
+  <copyField source="params" dest="params_snames"/>
+  <copyField source="params" dest="params_snames_contents"/>
+  
+  <copyField source="return_fqn" dest="return_fqn_contents"/>
+  <copyField source="return_fqn" dest="return_fqn_fragments"/>
+  <copyField source="return_fqn" dest="return_sname"/>
+  <copyField source="return_fqn" dest="return_sname_contents"/>
+</schema>
