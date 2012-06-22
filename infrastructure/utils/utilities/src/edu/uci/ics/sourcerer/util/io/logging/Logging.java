@@ -30,6 +30,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.FileHandler;
@@ -72,10 +73,10 @@ public final class Logging {
   private static String day;
   private static String time;
   
-  private static Map<File, Handler> handlerMap = Helper.newHashMap();
+  private static Map<File, Handler> handlerMap = new HashMap<>();
   
   private static long mainThread;
-  private static Map<Long, Handler> threadHandlerMap = Helper.newHashMap();
+  private static Map<Long, Handler> threadHandlerMap = new HashMap<>();
   private static Command command;
   
   private static class FlushingStreamHandler extends StreamHandler {

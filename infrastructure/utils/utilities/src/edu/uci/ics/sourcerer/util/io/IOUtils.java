@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
-import java.util.Scanner;
 import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;

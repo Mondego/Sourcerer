@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.util;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -31,7 +32,7 @@ public class WeightedAverager <T extends Number> {
   private Collection<Pair<T, Double>> values;
   
   public WeightedAverager() {
-    values = Helper.newArrayList();
+    values = new ArrayList<>();
     sum = 0;
     weightedSum = 0;
   }

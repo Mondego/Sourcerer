@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -155,7 +156,7 @@ public final class Subversion {
     }
     
     // Now try second-level trunks
-    Collection<String> trunks = Helper.newLinkedList();
+    Collection<String> trunks = new LinkedList<>();
     for (SVNDirEntry entry : entries) {
       if (entry.getKind() == SVNNodeKind.DIR) {
         for (SVNDirEntry subEntry : (Collection<SVNDirEntry>)repo.getDir(entry.getName(), -1, null, (Collection<?>)null)) {

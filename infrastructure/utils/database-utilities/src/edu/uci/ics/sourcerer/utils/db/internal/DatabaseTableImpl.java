@@ -18,13 +18,13 @@
 package edu.uci.ics.sourcerer.utils.db.internal;
 
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import edu.uci.ics.sourcerer.util.BitEnumSet;
 import edu.uci.ics.sourcerer.util.BitEnumSetFactory;
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.QualifiedTable;
@@ -41,7 +41,7 @@ public class DatabaseTableImpl implements Table {
   
   protected DatabaseTableImpl(String name) {
     this.name = name;
-    this.columns = Helper.newArrayList();
+    this.columns = new ArrayList<>();
   }
   
   public final StringColumn addVarcharColumn(String name, int size, boolean nullable) {

@@ -28,6 +28,7 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.RelationClass;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
+import edu.uci.ics.sourcerer.util.type.TypeUtils;
 import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;

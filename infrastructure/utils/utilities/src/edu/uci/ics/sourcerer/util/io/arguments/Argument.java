@@ -18,8 +18,7 @@
 package edu.uci.ics.sourcerer.util.io.arguments;
 
 import java.util.Collection;
-
-import edu.uci.ics.sourcerer.util.Helper;
+import java.util.LinkedList;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -56,7 +55,7 @@ public abstract class Argument <T> {
   
   protected final void isRequiredBy(Argument<?> prop) {
     if (requiredBy == null) {
-      requiredBy = Helper.newLinkedList();
+      requiredBy = new LinkedList<>();
     }
     requiredBy.add(prop);
   }

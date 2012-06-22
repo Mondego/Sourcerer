@@ -19,8 +19,8 @@ package edu.uci.ics.sourcerer.util.io.arguments;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.logging.Logging;
 
 
@@ -45,7 +45,7 @@ public abstract class Command {
   
   public Command setConditionalProperties(Argument<?> ... properties) {
     if (conditionalProperties == null) {
-      conditionalProperties = Helper.newLinkedList();
+      conditionalProperties = new LinkedList<>();
     }
     conditionalProperties.add(properties);
     return this;

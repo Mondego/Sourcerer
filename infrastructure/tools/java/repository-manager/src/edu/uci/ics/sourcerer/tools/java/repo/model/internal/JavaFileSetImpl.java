@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -35,7 +36,6 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ContentFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFileSet;
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
@@ -95,14 +95,14 @@ public class JavaFileSetImpl extends AbstractFileSet implements JavaFileSet {
   protected void populateFileSet() {
     super.populateFileSet();
     if (AbstractRepository.CLEAR_CACHES.getValue() || !cache.exists() || !readCache()) {
-      Map<String, Collection<JavaFileImpl>> map = Helper.newHashMap();
+      Map<String, Collection<JavaFileImpl>> map = new HashMap<>();
       for (ContentFileImpl file : javaFiles) {
         String pkg = PackageExtractor.extractPackage(file.getFile().toFile());
         if (pkg != null) {
           String key = pkg + file.getFile().getName();
           Collection<JavaFileImpl> files = map.get(key);
           if (files == null) {
-            files = Helper.newLinkedList();
+            files = new LinkedList<>();
             map.put(key, files);
           }
           files.add(new JavaFileImpl(pkg, file));

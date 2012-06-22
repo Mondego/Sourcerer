@@ -28,12 +28,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.CustomSerializable;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.LineBuilder;
@@ -315,7 +315,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     if (entryReader == null) {
       return Collections.emptyList();
     } else {
-      Collection<T> coll = Helper.newLinkedList();
+      Collection<T> coll = new LinkedList<>();
       for (String line = br.readLine(); !SimpleSerializerImpl.isFinished(line); line = br.readLine()) {
         try {
           coll.add(entryReader.create(line));
@@ -343,7 +343,7 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
     if (entryReader == null) {
       return Collections.emptyList();
     } else {
-      Collection<T> coll = Helper.newLinkedList();
+      Collection<T> coll = new LinkedList<>();
       for (String line = br.readLine(); !SimpleSerializerImpl.isFinished(line); line = br.readLine()) {
         try {
           coll.add(entryReader.create(line));

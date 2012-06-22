@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.index.internal;
+package edu.uci.ics.sourcerer.tools.java.indexer.internal;
 
 import java.io.IOException;
 
@@ -23,7 +23,7 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 
-import edu.uci.ics.sourcerer.tools.java.index.Main;
+import edu.uci.ics.sourcerer.tools.java.indexer.Main;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**

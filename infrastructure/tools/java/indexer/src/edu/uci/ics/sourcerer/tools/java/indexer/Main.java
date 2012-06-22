@@ -15,11 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.index;
+package edu.uci.ics.sourcerer.tools.java.indexer;
 
-import edu.uci.ics.sourcerer.tools.java.index.internal.AbstractIndexBuilder;
-import edu.uci.ics.sourcerer.tools.java.index.internal.ClearIndex;
-import edu.uci.ics.sourcerer.tools.java.index.internal.CodeGenieIndexBuilder;
+import edu.uci.ics.sourcerer.tools.java.indexer.internal.AbstractIndexBuilder;
+import edu.uci.ics.sourcerer.tools.java.indexer.internal.ClearIndex;
+import edu.uci.ics.sourcerer.tools.java.indexer.internal.CodeGenieIndexBuilder;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;

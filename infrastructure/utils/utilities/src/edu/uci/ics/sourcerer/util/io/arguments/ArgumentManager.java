@@ -27,6 +27,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -52,7 +53,7 @@ public class ArgumentManager {
   private Map<String, String> propertyMap;
   
   private ArgumentManager() {
-    propertyMap = Helper.newHashMap();
+    propertyMap = new HashMap<>();
   }
   
   protected synchronized String getValue(String name) {
@@ -62,15 +63,15 @@ public class ArgumentManager {
   static void executeCommand(String[] args, Class<?> klass) {
     Command activeCommand = null;
     Collection<Argument<?>> commandProps = null;
-    Collection<Argument<?>> missingProperties = Helper.newLinkedList();
-    Collection<Argument<?>[]> invalidConditionals = Helper.newLinkedList();
+    Collection<Argument<?>> missingProperties = new LinkedList<>();
+    Collection<Argument<?>[]> invalidConditionals = new LinkedList<>();
     
     synchronized(ArgumentManager.class) {
       initializeProperties(args);
       ArgumentManager properties = getProperties();
       
       // Populate the command list reflectively
-      LinkedList<Command> commands = Helper.newLinkedList();
+      LinkedList<Command> commands = new LinkedList<>();
       for (Field field : klass.getFields()) {
         if (Command.class.isAssignableFrom(field.getType()) && field.getAnnotation(Command.Disable.class) == null) {
           try {
@@ -81,7 +82,7 @@ public class ArgumentManager {
         }
       }
       
-      LinkedList<Command> activeCommands = Helper.newLinkedList();
+      LinkedList<Command> activeCommands = new LinkedList<>();
       for (Command command : commands) {
         if (properties.getValue(command.getName()) != null) {
           activeCommands.add(command);
@@ -115,7 +116,7 @@ public class ArgumentManager {
           stack.add(prop);
         }
       }
-      commandProps = Helper.newLinkedList();
+      commandProps = new LinkedList<>();
       while (!stack.isEmpty()) {
         Argument<?> prop = stack.pop();
         commandProps.add(prop.permit());

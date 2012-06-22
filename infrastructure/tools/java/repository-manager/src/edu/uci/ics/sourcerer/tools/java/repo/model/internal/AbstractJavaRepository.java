@@ -32,7 +32,6 @@ import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractRepoProject;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractRepository;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.BatchImpl;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
@@ -160,7 +159,7 @@ public abstract class AbstractJavaRepository<Project extends AbstractRepoProject
   }
   
   private void createProjectJarIndex() {
-    projectJarIndex = Helper.newHashMap();
+    projectJarIndex = new HashMap<>();
     
     RepoFileImpl projectDir = repoRoot.getChild(JARS_DIRECTORY).getChild(PROJECT_JARS_DIRECTORY);
     for (RepoFileImpl a : projectDir.getChildren()) {
@@ -207,7 +206,7 @@ public abstract class AbstractJavaRepository<Project extends AbstractRepoProject
   }
   
   private void createLibraryJarIndex() {
-    libraryJarIndex = Helper.newHashMap();
+    libraryJarIndex = new HashMap<>();
     
     RepoFileImpl dir = repoRoot.getChild(JARS_DIRECTORY).getChild(LIBRARY_JARS_DIRECTORY);
     for (RepoFileImpl child : dir.getChildren()) {

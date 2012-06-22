@@ -22,11 +22,10 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
-
-import edu.uci.ics.sourcerer.util.Helper;
 
 
 /**
@@ -66,7 +65,7 @@ public abstract class ObjectDeserializer<T> {
   
   public abstract T deserialize(Scanner scanner);
   
-  private static Map<Class<?>, ObjectDeserializer<?>> deserializers = Helper.newHashMap();
+  private static Map<Class<?>, ObjectDeserializer<?>> deserializers = new HashMap<>();
   
   private static ObjectDeserializer<?> intDeserializer = new ObjectDeserializer<Integer>() {
     @Override

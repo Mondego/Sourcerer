@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.index.internal;
+package edu.uci.ics.sourcerer.tools.java.indexer.internal;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common.SolrInputDocument;
 
-import edu.uci.ics.sourcerer.tools.java.index.Main;
+import edu.uci.ics.sourcerer.tools.java.indexer.Main;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.IntegerArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
@@ -36,7 +36,7 @@ import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public abstract class AbstractIndexBuilder extends DatabaseRunnable {
-  public static final Argument<Integer> INDEX_IMPORT_BATCH_SIZE = new IntegerArgument("index-import-batch-size", 1000, "Number of imports to batch");
+  public static final Argument<Integer> INDEX_IMPORT_BATCH_SIZE = new IntegerArgument("index-import-batch-size", 100_000, "Number of imports to batch");
 
   protected final TaskProgressLogger task;
   private final int batchSize;

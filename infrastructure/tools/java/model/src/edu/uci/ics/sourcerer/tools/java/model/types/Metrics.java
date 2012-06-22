@@ -18,11 +18,11 @@
 package edu.uci.ics.sourcerer.tools.java.model.types;
 
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.InputMismatchException;
 import java.util.Map;
 import java.util.Scanner;
 
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.CustomSerializable;
 import edu.uci.ics.sourcerer.util.io.LineBuilder;
 
@@ -33,7 +33,7 @@ public class Metrics implements CustomSerializable {
   private Map<Metric, Integer> metrics;
   
   public Metrics() {
-    this.metrics = Helper.newEnumMap(Metric.class); 
+    this.metrics = new EnumMap<>(Metric.class); 
   }
   
   public void addMetric(Metric metric, int value) {

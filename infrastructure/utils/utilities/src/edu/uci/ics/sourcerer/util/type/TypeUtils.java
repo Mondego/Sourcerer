@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.db.resolver;
+package edu.uci.ics.sourcerer.util.type;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
 
 /**
@@ -259,7 +258,7 @@ public final class TypeUtils {
   }
   
   public static Collection<String> breakParametrizedType(String fqn) {
-    Collection<String> parts = Helper.newLinkedList();
+    Collection<String> parts = new LinkedList<>();
     
     StringBuilder builder = new StringBuilder();
     int depth = 0;
@@ -292,5 +291,27 @@ public final class TypeUtils {
     }
     
     return parts;
+  }
+  
+  public static int countParams(String params) {
+
+    char[] arr = params.toCharArray();
+    if (arr[0] != '(' || arr[arr.length - 1] != ')') {
+      logger.severe("Invalid params: " + params);
+      return 0;
+    } else if (arr.length == 2) {
+      return 0;
+    } else {
+      int count = 1;
+      int depth = 0;
+      for (int i = 1, max = arr.length - 1; i < max; i++) {
+        switch (arr[i]) {
+          case '<': depth++; break;
+          case '>': depth--; break;
+          case ',': if (depth == 0) count++; break;
+        }
+      }
+      return count;
+    }
   }
 }

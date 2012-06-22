@@ -25,7 +25,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Map;
 
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.Pair;
 import edu.uci.ics.sourcerer.util.io.CustomSerializable;
 import edu.uci.ics.sourcerer.util.io.EntryWriter;
@@ -112,7 +111,7 @@ final class SimpleSerializerImpl implements SimpleSerializer {
     } else {
       LineBuilder builder = new LineBuilder();
       Field[] allFields = key.getDeclaredFields();
-      ArrayList<Field> fields = Helper.newArrayList();
+      ArrayList<Field> fields = new ArrayList<>();
       for (Field field : allFields) {
         if (field.getAnnotation(Ignore.class) == null && !Modifier.isStatic(field.getModifiers())) {
           builder.append(field.getName());
@@ -134,7 +133,7 @@ final class SimpleSerializerImpl implements SimpleSerializer {
     } else {
       LineBuilder builder = new LineBuilder();
       Field[] allFields = value.getDeclaredFields();
-      ArrayList<Field> fields = Helper.newArrayList();
+      ArrayList<Field> fields = new ArrayList<>();
       for (Field field : allFields) {
         if (field.getAnnotation(Ignore.class) == null && !Modifier.isStatic(field.getModifiers())) {
           builder.append(field.getName());
@@ -180,7 +179,7 @@ final class SimpleSerializerImpl implements SimpleSerializer {
       if (expectedKlass == null) {
         LineBuilder builder = new LineBuilder();
         Field[] allFields = klass.getDeclaredFields();
-        ArrayList<Field> fields = Helper.newArrayList();
+        ArrayList<Field> fields = new ArrayList<>();
         for (Field field : allFields) {
           if (field.getAnnotation(Ignore.class) == null && !Modifier.isStatic(field.getModifiers())) {
             builder.append(field.getName());

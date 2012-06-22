@@ -19,14 +19,11 @@ package edu.uci.ics.sourcerer.util;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
@@ -37,39 +34,11 @@ import java.util.logging.Level;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Helper {
-  public static <T> ArrayList<T> newArrayList(int initialCapacity) {
-    return new ArrayList<T>(initialCapacity);
-  }
-  
-  public static <T> ArrayList<T> newArrayList(Collection<? extends T> c) {
-    return new ArrayList<T>(c);
-  }
-  
-  public static <T> ArrayList<T> newArrayList() {
-    return new ArrayList<T>();
-  }
-  
-	public static <T> LinkedList<T> newLinkedList() {
-		return new LinkedList<T>();
-	}
-	
-	public static <K extends Enum<K>,V> EnumMap<K,V> newEnumMap(Class<K> klass) {
-	  return new EnumMap<K, V>(klass);
-	}
-	
-	public static <K,V> HashMap<K,V> newHashMap() {
-		return new HashMap<K, V>();
-	}
-	
-	public static <K,V> LinkedHashMap<K,V> newLinkedHashMap() {
-	  return new LinkedHashMap<K, V>();
-	}
-	
-	@SuppressWarnings("unchecked")
+ 	@SuppressWarnings("unchecked")
   public static <A,B,K,V extends Map<A,B>> Map<A,B> getHashMapFromMap(Map<K,V> map, K key) {
 	  Map<A,B> value = map.get(key);
 	  if (value == null) {
-	    value = newHashMap();
+	    value = new HashMap<>();
 	    map.put(key, (V)value);
 	  }
 	  return value;
@@ -79,7 +48,7 @@ public class Helper {
   public static <A,K,V extends Collection<A>> V getLinkedListFromMap(Map<K,V> map, K key) {
     V value = map.get(key);
     if (value == null) {
-      value = (V)newLinkedList();
+      value = (V)new LinkedList<>();
       map.put(key, value);
     }
     return value;
