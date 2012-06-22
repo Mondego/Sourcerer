@@ -20,7 +20,9 @@ package edu.uci.ics.sourcerer.utils.db.internal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.logging.Level;
 
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.internal.ConstantConditionImpl.Type;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.StringColumn;
@@ -29,10 +31,12 @@ import edu.uci.ics.sourcerer.utils.db.sql.StringColumn;
  * @author Joel Ossher (jossher@uci.edu)
  */
 class StringColumnImpl extends ColumnImpl<String> implements StringColumn {
+  private final int maxSize;
   private int indexedCharCount;
   
   StringColumnImpl(DatabaseTableImpl table, String name, int size, boolean nullable) {
     super(table, name, "VARCHAR(" + size + ") BINARY" + (nullable ? "" : " NOT NULL"), nullable, Types.VARCHAR);
+    maxSize = size;
   }
 
   @Override
@@ -52,7 +56,13 @@ class StringColumnImpl extends ColumnImpl<String> implements StringColumn {
   
   @Override
   protected String toHelper(String value) {
-    return "'" + value + "'";
+    if (value.length() > maxSize) {
+      String trunc = value.substring(0, maxSize);
+      TaskProgressLogger.get().report(Level.SEVERE, "Forced to truncate " + toString() + " to " + trunc);
+      return "'" + trunc + "'"; 
+    } else {
+      return "'" + value + "'";
+    }
   }
   
   @Override 
