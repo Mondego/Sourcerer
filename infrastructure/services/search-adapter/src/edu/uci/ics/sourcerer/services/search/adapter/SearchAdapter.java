@@ -15,13 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.search.adapter;
+package edu.uci.ics.sourcerer.services.search.adapter;
+
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class SearchAdapter {
-  public static SearchResult search(String query) {
-    return new SearchResult(query);
+  public static final Argument<String> SEARCH_URL = new StringArgument("search-url", "URL for Sourcerer Solr Search Server");
+  private final String url;
+  
+  private SearchAdapter(String url) {
+    this.url = url;
+  }
+  
+  public static SearchAdapter create() {
+    return new SearchAdapter(SEARCH_URL.getValue());
+  }
+  
+  public static SearchAdapter create(String url) {
+    return new SearchAdapter(url);
+  }
+  
+  public SearchResult search(String query) {
+    return new SearchResult(url, query);
   }
 }

@@ -66,6 +66,9 @@
   <property name="build-index-server" location="${build}/index-server" />
   <property name="assemble-index-server" location="${build}/index-server-assemble" />
 	
+	<property name="search-adapter" location="../infrastructure/services/search-adapter" />
+	<property name="build-search-adapter" location="${build}/search-adapter" />
+	
 	<!-- Applications -->
   <property name="artifact-repo-browser" location="../infrastructure/apps/artifact-repo-browser/src" />
 	<property name="build-artifact-repo-browser" location="${build}/artifact-repo-browser" />
@@ -529,8 +532,6 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
       </classpath>
     </javac>
 
-  	<!-- Make the assembly directory -->
-    <mkdir dir="${assemble-index-server}" />
   	
   	<!-- Assemble the contents of solr.war -->
     <unjar src="${index-server}/solr.war" dest="${assemble-index-server}" />
@@ -548,6 +549,38 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
       </fileset>
     </copy>
     <jar destfile="${dist}/index/solr.war" basedir="${assemble-index-server}" />
+  </target>
+	
+	<!-- Search Adapter -->
+  <target name="search-adapter" description="Builds the Search Adapter (sourcerer-search.jar)">
+    <!-- Make the build directory -->
+    <mkdir dir="${build-search-adapter}" />
+    
+    <!-- Compile everything -->
+    <javac destdir="${build-search-adapter}" debug="on" includeantruntime="false">
+    	<src path="${utilities}" />
+      <src path="${search-adapter}" />
+    	<classpath>
+        <pathelement path="${classpath}" />
+        <fileset dir="${lib}">
+          <include name="**/guava-11.0.1.jar" />
+        </fileset>
+      </classpath>
+    </javac>
+
+  	<!-- Copy the source -->
+    <copy todir="${build-search-adapter}">
+      <fileset dir="${utilities}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-search-adapter}">
+      <fileset dir="${search-adapter}" includes="**/*.java" />
+    </copy>
+  	    
+    <!-- Add the required jars -->
+    <unjar src="${lib}/guava-11.0.1.jar" dest="${build-search-adapter}" />
+  	    
+    <!-- Build the jar -->
+    <jar destfile="${dist}/sourcerer-search.jar" basedir="${build-search-adapter}" />
   </target>
 	
 <!--

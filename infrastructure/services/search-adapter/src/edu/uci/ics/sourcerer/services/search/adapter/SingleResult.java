@@ -15,41 +15,57 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.search.adapter;
+package edu.uci.ics.sourcerer.services.search.adapter;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class SingleResult {
-  private String entityID;
-  private String entityName;
-  private String filePath;
+  private long entityID;
+  private String fqn;
+  private int paramCount;
+  private String params;
+  private String returnFqn;
   
   protected SingleResult() {}
 
-  public String getEntityID() {
+  public Long getEntityID() {
     return entityID;
   }
 
-  public void setEntityID(String entityID) {
+  protected void setEntityID(long entityID) {
     this.entityID = entityID;
   }
 
-  public String getEntityName() {
-    return entityName;
+  public String getFqn() {
+    return fqn;
   }
 
-  public void setEntityName(String entityName) {
-    this.entityName = entityName;
+  protected void setFqn(String fqn) {
+    this.fqn = fqn;
   }
 
-  public String getFilePath() {
-    return filePath;
+  public int getParamCount() {
+    return paramCount;
   }
 
-  public void setFilePath(String filePath) {
-    this.filePath = filePath;
+  protected void setParamCount(int paramCount) {
+    this.paramCount = paramCount;
   }
   
+  public String getParams() {
+    return params;
+  }
   
+  protected void setParams(String params) {
+    this.params = params;
+  }
+  
+  public String getReturnFqn() {
+    return returnFqn;
+  }
+  
+  protected void setReturnFqn(String returnFqn) {
+    this.returnFqn = returnFqn;
+  }
 }
