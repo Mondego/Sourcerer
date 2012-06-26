@@ -23,6 +23,7 @@ import java.io.Closeable;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -609,7 +610,7 @@ public class ASMExtractor implements Closeable {
   }
   
   private class ClassSignatureVisitorImpl extends AbstractSignatureVisitor {
-    private Map<String, Collection<String>> bounds = Helper.newHashMap();
+    private Map<String, Collection<String>> bounds = new HashMap<>();
     private Collection<String> currentBound;
     private Relation currentType;
     
@@ -625,7 +626,7 @@ public class ASMExtractor implements Closeable {
     
     @Override
     public void visitFormalTypeParameter(String name) {
-      currentBound = Helper.newLinkedList();
+      currentBound = new LinkedList<>();
       bounds.put(name, currentBound);
     }
 
@@ -671,11 +672,11 @@ public class ASMExtractor implements Closeable {
     private Entity type;
     private String fqn;
     private StringBuilder signature;
-    private Map<String, Collection<String>> bounds = Helper.newHashMap();
+    private Map<String, Collection<String>> bounds = new HashMap<>();
     private Collection<String> currentBound;
     private Relation currentType;
     
-    private Collection<String> paramTypes = Helper.newLinkedList();
+    private Collection<String> paramTypes = new LinkedList<>();
 
     public MethodSignatureVisitorImpl init() {
       this.type = null;
@@ -736,7 +737,7 @@ public class ASMExtractor implements Closeable {
     
     @Override
     public void visitFormalTypeParameter(String name) {
-      currentBound = Helper.newLinkedList();
+      currentBound = new LinkedList<>();
       bounds.put(name, currentBound);
     }
 

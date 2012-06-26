@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.tools.java.extractor.eclipse;
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -2667,7 +2668,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     
     public String createLocalClassFqn(String name, String uniqueID) {
       if (localClassMap == null) {
-        localClassMap = Helper.newHashMap();
+        localClassMap = new HashMap<>();
       }
       String retval = fqn + "$" + (localClassMap.size() + 1) + name;
       localClassMap.put(uniqueID, retval);
@@ -2676,7 +2677,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     
     public String getLocalClassFqn(String name, String binaryName) {
       if (localClassMap == null) {
-        localClassMap = Helper.newHashMap();
+        localClassMap = new HashMap<>();
       }
       return localClassMap.get(binaryName);
     }

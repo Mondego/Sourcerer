@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -59,7 +60,6 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.repo.model.ModifiableJavaRepository;
-import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.TimeCounter;
 
 /**
@@ -179,7 +179,7 @@ public class EclipseUtils {
       }
       
       IVMInstall vmInstall = JavaRuntime.getDefaultVMInstall();
-      List<IClasspathEntry> entries = Helper.newArrayList();//new IClasspathEntry[locations.length + jarFiles.size() + 1];
+      List<IClasspathEntry> entries = new ArrayList<>();//new IClasspathEntry[locations.length + jarFiles.size() + 1];
       for (LibraryLocation location : JavaRuntime.getLibraryLocations(vmInstall)) {
         entries.add(JavaCore.newLibraryEntry(location.getSystemLibraryPath(), location.getSystemLibrarySourcePath(), null));
       }
@@ -195,7 +195,7 @@ public class EclipseUtils {
   
   public static void addJarsToClasspath(Collection<? extends JarFile> jars) {
     try {
-      List<IClasspathEntry> entries = Helper.newArrayList(Arrays.asList(javaProject.getRawClasspath()));
+      List<IClasspathEntry> entries = new ArrayList<>(Arrays.asList(javaProject.getRawClasspath()));
       for (JarFile jar : jars) {
         entries.add(JavaCore.newLibraryEntry(new Path(jar.getFile().toFile().getAbsolutePath()), null, null));
       }
@@ -299,8 +299,8 @@ public class EclipseUtils {
   
   private static Collection<IClassFile> getClassFiles(IPath path) {
     try {
-      Collection<IClassFile> classFiles = Helper.newLinkedList();
-      Deque<IPackageFragment> fragments = Helper.newStack();
+      Collection<IClassFile> classFiles = new LinkedList<>();
+      Deque<IPackageFragment> fragments = new LinkedList<>();
       
       IPackageFragmentRoot root = javaProject.findPackageFragmentRoot(path);
       if (root == null) {
