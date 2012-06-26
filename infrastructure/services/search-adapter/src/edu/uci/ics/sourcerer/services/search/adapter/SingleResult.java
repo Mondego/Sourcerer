@@ -21,19 +21,37 @@ package edu.uci.ics.sourcerer.services.search.adapter;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class SingleResult {
+  private int rank;
+  private float score;
   private long entityID;
   private String fqn;
   private int paramCount;
   private String params;
   private String returnFqn;
   
-  protected SingleResult() {}
+  SingleResult() {}
 
+  public int getRank() {
+    return rank;
+  }
+  
+  void setRank(int rank) {
+    this.rank = rank;
+  }
+  
+  public float getScore() {
+    return score;
+  }
+  
+  void setScore(float score) {
+    this.score = score;
+  }
+  
   public Long getEntityID() {
     return entityID;
   }
 
-  protected void setEntityID(long entityID) {
+  void setEntityID(long entityID) {
     this.entityID = entityID;
   }
 
@@ -41,7 +59,7 @@ public class SingleResult {
     return fqn;
   }
 
-  protected void setFqn(String fqn) {
+  void setFqn(String fqn) {
     this.fqn = fqn;
   }
 
@@ -49,7 +67,7 @@ public class SingleResult {
     return paramCount;
   }
 
-  protected void setParamCount(int paramCount) {
+  void setParamCount(int paramCount) {
     this.paramCount = paramCount;
   }
   
@@ -57,7 +75,7 @@ public class SingleResult {
     return params;
   }
   
-  protected void setParams(String params) {
+  void setParams(String params) {
     this.params = params;
   }
   
@@ -65,7 +83,7 @@ public class SingleResult {
     return returnFqn;
   }
   
-  protected void setReturnFqn(String returnFqn) {
+  void setReturnFqn(String returnFqn) {
     this.returnFqn = returnFqn;
   }
 }

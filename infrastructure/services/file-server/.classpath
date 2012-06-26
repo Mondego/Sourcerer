@@ -10,5 +10,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/java-repository-manager"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/core-repository-manager"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/servlet-utilities"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/file-adapter"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -30,6 +30,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
 import java.util.Collection;
 import java.util.logging.Level;
 
@@ -163,6 +164,15 @@ public final class IOUtils {
       return null;
     } finally {
       close(is);
+    }
+  }
+  
+  public static byte[] wget(String url) {
+    try {
+      return getInputStreamAsByteArray(new URL(url).openStream(), 32);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error opening url: " + url, e);
+      return null;
     }
   }
 }

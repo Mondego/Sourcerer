@@ -495,6 +495,29 @@ class SelectQueryImpl implements SelectQuery {
     }
     
     @Override
+    public <T> T toSingleton(ResultConstructor<T> constructor, boolean permitMissing) {
+      if (next()) {
+        T val = constructor.constructResult(this);
+        if (next()) {
+          logger.log(Level.WARNING, "More than one result returned for a singleton.");
+          try {
+            result.close();
+          } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error closing result.", e);
+          }
+          result = null;
+        }
+        return val;
+      } else {
+        if (permitMissing) {
+          return null;
+        } else {
+          throw new NoSuchElementException();
+        }
+      }
+    }
+    
+    @Override
     public void close() {
       if (result != null) {
         try {

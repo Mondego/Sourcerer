@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/core-repository-manager"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/database"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/database-utilities"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/java-repository-manager"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/utilities"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/model"/>
+	<classpathentry kind="lib" path="/lib/guava-11.0.1.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/file-adapter"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

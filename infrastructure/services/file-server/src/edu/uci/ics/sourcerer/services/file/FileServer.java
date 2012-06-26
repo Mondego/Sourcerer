@@ -27,8 +27,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import edu.uci.ics.sourcerer.tools.java.db.exported.FileAccessor;
-import edu.uci.ics.sourcerer.tools.java.db.exported.FileAccessor.Result;
+import edu.uci.ics.sourcerer.services.file.adapter.FileAdapter;
+import edu.uci.ics.sourcerer.services.file.adapter.FileAdapter.Result;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.arguments.ArgumentManager;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
@@ -64,27 +64,27 @@ public class FileServer extends HttpServlet {
     // Lookup by projectID
     Integer projectID = ServletUtils.getIntValue(request, "projectID");
     if (projectID != null) {
-      result = FileAccessor.lookupResultByProjectID(projectID);
+      result = FileAdapter.lookupResultByProjectID(projectID);
     } else {
       // Lookup by fileID
       Integer fileID = ServletUtils.getIntValue(request, "fileID");
       if (fileID != null) {
-        result = FileAccessor.lookupResultByFileID(fileID);
+        result = FileAdapter.lookupResultByFileID(fileID);
       } else {
         // Lookup by entityID
         Integer entityID = ServletUtils.getIntValue(request, "entityID");
         if (entityID != null) {
-          result = FileAccessor.lookupResultByEntityID(entityID);
+          result = FileAdapter.lookupResultByEntityID(entityID);
         } else {
           // Lookup by relationID
           Integer relationID = ServletUtils.getIntValue(request, "relationID");
           if (relationID != null) {
-            result = FileAccessor.lookupResultByRelationID(relationID);
+            result = FileAdapter.lookupResultByRelationID(relationID);
           } else {
             // Lookup by commentID
             String commentID = request.getParameter("commentID");
             if (commentID != null) {
-              result = FileAccessor.lookupResultByCommentID(relationID);
+              result = FileAdapter.lookupResultByCommentID(relationID);
             }
           }
         }

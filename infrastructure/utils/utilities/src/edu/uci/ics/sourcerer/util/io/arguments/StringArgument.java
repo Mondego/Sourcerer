@@ -23,7 +23,7 @@ package edu.uci.ics.sourcerer.util.io.arguments;
  */
 public class StringArgument extends Argument<String> {
   public StringArgument(String name, String description) {
-    super(name, null, description);
+    super(name, description);
   }
   
   public StringArgument(String name, String defaultValue, String description) {

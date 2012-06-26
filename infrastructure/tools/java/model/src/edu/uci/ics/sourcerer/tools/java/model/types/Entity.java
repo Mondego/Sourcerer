@@ -149,5 +149,8 @@ public enum Entity {
       }
     }
     
-
+    @Override
+    public String toString() {
+      return name().toLowerCase();
+    }
   }

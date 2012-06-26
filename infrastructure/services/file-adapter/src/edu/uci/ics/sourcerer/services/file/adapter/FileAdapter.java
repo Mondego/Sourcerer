@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.db.exported;
+package edu.uci.ics.sourcerer.services.file.adapter;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
@@ -61,7 +61,7 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FileAccessor {
+public class FileAdapter {
   private static TimeoutManager<FileDatabaseAccessor> accessorManager = 
       new TimeoutManager<FileDatabaseAccessor>(new TimeoutManager.Instantiator<FileDatabaseAccessor>() {
         @Override
@@ -258,7 +258,11 @@ public class FileAccessor {
         return new Result("Entity " + entityID + " has no associated file"); 
       } else {
         TypedQueryResult fileInfo = db.selectByFileID(fileID);
-        return getSourceFile(db, result.getResult(EntitiesTable.PROJECT_ID), fileID, fileInfo.getResult(FilesTable.PATH), result.getResult(EntitiesTable.OFFSET), result.getResult(EntitiesTable.LENGTH));
+        if (fileInfo.next()) {
+          return getSourceFile(db, result.getResult(EntitiesTable.PROJECT_ID), fileID, fileInfo.getResult(FilesTable.PATH), result.getResult(EntitiesTable.OFFSET), result.getResult(EntitiesTable.LENGTH));
+        } else {
+          return new Result("File " + fileID + " does not exist for entity " + entityID);
+        }
       }
     } else {
       return new Result("Entity " + entityID + " does not exist");
@@ -325,19 +329,24 @@ public class FileAccessor {
     if (projectInfo.next()) {
       Project type = projectInfo.getResult(ProjectsTable.PROJECT_TYPE);
       if (type == Project.CRAWLED) {
-        JavaProject project = repo.getProject(projectInfo.getResult(ProjectsTable.PATH));
-        JavaFileSet files = project.getContent();
-        ContentFile file = files.getFile(path);
-        byte[] contents = FileUtils.getFileAsByteArray(file.getFile().toFile());
-        if (contents == null) {
-            return new Result("Unable to find " + path + " for " + fileID);
+        String projectPath = projectInfo.getResult(ProjectsTable.PATH);
+        JavaProject project = repo.getProject(projectPath);
+        if (project == null) {
+          return new Result("Unable to find project path " + projectPath + " for project " + projectID);
         } else {
-          if (offset == null) {
-            return new Result(file.getFile().getName(), fileID, contents);
+          JavaFileSet files = project.getContent();
+          ContentFile file = files.getFile(path);
+          byte[] contents = FileUtils.getFileAsByteArray(file.getFile().toFile());
+          if (contents == null) {
+              return new Result("Unable to find " + path + " for " + fileID);
           } else {
-            String name = file.getFile().getName();
-            name = name.substring(0, name.indexOf('.')) + "-" + offset + "-" + length + ".java";
-            return new Result(name, fileID, contents, offset, length);
+            if (offset == null) {
+              return new Result(file.getFile().getName(), fileID, contents);
+            } else {
+              String name = file.getFile().getName();
+              name = name.substring(0, name.indexOf('.')) + "-" + offset + "-" + length + ".java";
+              return new Result(name, fileID, contents, offset, length);
+            }
           }
         }
       } else if (type == Project.JAR || type == Project.JAVA_LIBRARY || type == Project.MAVEN) {

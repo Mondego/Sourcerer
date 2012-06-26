@@ -51,7 +51,7 @@ public class SearchResult {
   protected SearchResult(String url, String query) {
     try {
       this.query = URLEncoder.encode(query, "UTF-8");
-      this.url = url + "/solr/select/?q=%s&start=%d&rows=%d";
+      this.url = url + "/solr/select/?q=%s&start=%d&rows=%d&fl=score";
       SAXParserFactory fact = SAXParserFactory.newInstance();
       parser = fact.newSAXParser();
     } catch (Exception e) {
@@ -102,6 +102,7 @@ public class SearchResult {
     QUERY_TIME,
     RESULT,
     DOC,
+    DOC_SCORE,
     DOC_ENTITY_ID,
     DOC_FQN,
     DOC_PARAMS,
@@ -149,6 +150,8 @@ public class SearchResult {
             state = State.DOC_ENTITY_ID;
           } else if ("int".equals(qName)) {
             state = State.DOC_PARAM_COUNT;
+          } else if ("float".equals(qName)){
+            state = State.DOC_SCORE;
           } else if ("str".equals(qName)) {
             if ("fqn".equals(name)) {
               state = State.DOC_FQN;
@@ -178,8 +181,14 @@ public class SearchResult {
         case DOC:
           if ("doc".equals(qName)) {
             state = State.RESULT;
+            result.setRank(results.size());
             results.add(result);
             result = null;
+          }
+          break;
+        case DOC_SCORE:
+          if ("float".equals(qName)) {
+            state = State.DOC;
           }
           break;
         case DOC_ENTITY_ID:
@@ -208,8 +217,9 @@ public class SearchResult {
     public void characters(char[] ch, int start, int length) throws SAXException {
       switch (state) {
         case QUERY_TIME: lastQueryTime = Integer.parseInt(new String(ch, start, length)); break;
+        case DOC_SCORE: result.setScore(Float.parseFloat(new String(ch, start, length))); break;
         case DOC_ENTITY_ID: result.setEntityID(Long.parseLong(new String(ch, start, length))); break;
-        case DOC_FQN: result.setParams(new String(ch, start, length)); break; 
+        case DOC_FQN: result.setFqn(new String(ch, start, length)); break; 
         case DOC_PARAM_COUNT: result.setParamCount(Integer.parseInt(new String(ch, start, length))); break;
         case DOC_PARAMS: result.setParams(new String(ch, start, length)); break;
         case DOC_RETURN_FQN: result.setReturnFqn(new String(ch, start, length)); break;

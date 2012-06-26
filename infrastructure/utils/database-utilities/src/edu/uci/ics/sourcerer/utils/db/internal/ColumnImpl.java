@@ -173,7 +173,7 @@ abstract class ColumnImpl<T> implements Column<T> {
   }
   
   @Override
-  public final void toSql(StringBuilder builder) {
+  public void toSql(StringBuilder builder) {
     builder.append(table.getName()).append(".").append(name);
   }
   

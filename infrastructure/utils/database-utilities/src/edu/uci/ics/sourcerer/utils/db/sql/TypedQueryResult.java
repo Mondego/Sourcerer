@@ -33,5 +33,6 @@ public interface TypedQueryResult extends Closeable {
   public <T> Iterable<T> toIterable(Selectable<T> selectable);
   public <T> Iterable<T> toIterable(ResultConstructor<T> constructor);
   public <T> T toSingleton(Selectable<T> selectable, boolean permitMissing);
+  public <T> T toSingleton(ResultConstructor<T> selectable, boolean permitMissing);
   public void close();
 }

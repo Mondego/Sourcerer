@@ -68,7 +68,6 @@
       </analyzer>
       <analyzer type="query">
         <tokenizer class="solr.KeywordTokenizerFactory"/>
-        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
       </analyzer>
     </fieldType>
     
@@ -82,7 +81,6 @@
       </analyzer>
       <analyzer type="query">
         <tokenizer class="solr.KeywordTokenizerFactory"/>
-        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
         <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
         <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
@@ -100,7 +98,6 @@
       </analyzer>
       <analyzer type="query">
         <tokenizer class="solr.KeywordTokenizerFactory"/>
-        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
         <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
         <filter class="edu.uci.ics.sourcerer.services.index.DotSplittingFilterFactory"/>
         <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
@@ -118,7 +115,6 @@
       </analyzer>
       <analyzer type="query">
         <tokenizer class="solr.KeywordTokenizerFactory"/>
-        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
         <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
         <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
@@ -136,10 +132,28 @@
       </analyzer>
       <analyzer type="query">
         <tokenizer class="solr.KeywordTokenizerFactory"/>
-        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
         <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
         <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
         <filter class="edu.uci.ics.sourcerer.services.index.IdentifierSplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    
+    <fieldType name="params_snames_exact" class="solr.TextField">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterUnsplittingFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterSplittingFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.TypeArgumentFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.SimpleNameFilterFactory"/>
+        <filter class="edu.uci.ics.sourcerer.services.index.ParameterUnsplittingFilterFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
       </analyzer>
     </fieldType>
@@ -236,6 +250,7 @@
     <field name="params_fqns_contents" type="params_fqns_contents" indexed="true" stored="false" required="true"/>
     <field name="params_snames" type="params_snames" indexed="true" stored="false" required="true"/>
     <field name="params_snames_contents" type="params_snames_contents" indexed="true" stored="false" required="true"/>
+    <field name="params_snames_exact" type="params_snames_exact" indexed="true" stored="false" required="true"/>
     
     <field name="return_fqn" type="string" indexed="true" stored="true" required="true"/>
     <field name="return_fqn_fragments" type="return_fqn_fragments" indexed="true" stored="false" required="true"/>
@@ -258,6 +273,7 @@
   <copyField source="params" dest="params_fqns_contents"/>
   <copyField source="params" dest="params_snames"/>
   <copyField source="params" dest="params_snames_contents"/>
+  <copyField source="params" dest="params_snames_exact"/>
   
   <copyField source="return_fqn" dest="return_fqn_contents"/>
   <copyField source="return_fqn" dest="return_fqn_fragments"/>

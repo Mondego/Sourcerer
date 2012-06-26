@@ -18,80 +18,91 @@
 <!-- @author Joel Ossher (jossher@uci.edu) -->
 <!-- @author Sushil Bajracharya (bajracharya@gmail.com) -->
 <project name="Sourcerer Infrastructure" basedir=".">
-  <description>
+	<description>
     Build file for the Sourcerer Infrastructure.
   </description>
-  <!-- There should be a different build location for each target,
+	<!-- There should be a different build location for each target,
        so that the jars don't contain unneeded files -->
-  <property name="build" location="build" />
+	<property name="build" location="build" />
 	<property name="dist" location="dist" />
-	
+
 	<!-- Library Project -->
-  <property name="lib" location="../lib" />
-	
-  <!-- Utility Projects -->
-  <property name="utilities" location="../infrastructure/utils/utilities/src" />
-  <property name="database-utilities" location="../infrastructure/utils/database-utilities/src" />
-  <property name="servlet-utilities" location="../infrastructure/utils/servlet-utilities/src" />
-  
-  <!-- Core Tools -->
-  <property name="core-repo-manager" location="../infrastructure/tools/core/repository-manager/src" />
+	<property name="lib" location="../lib" />
+
+	<!-- Utility Projects -->
+	<property name="utilities" location="../infrastructure/utils/utilities/src" />
+	<property name="database-utilities" location="../infrastructure/utils/database-utilities/src" />
+	<property name="servlet-utilities" location="../infrastructure/utils/servlet-utilities/src" />
+
+	<!-- Core Tools -->
+	<property name="core-repo-manager" location="../infrastructure/tools/core/repository-manager/src" />
 	<property name="build-core-repo-manager" location="${build}/core-repo-manager" />
-	
-  <property name="link-crawler" location="../infrastructure/tools/core/link-crawler/src" />
+
+	<property name="link-crawler" location="../infrastructure/tools/core/link-crawler/src" />
 	<property name="build-link-crawler" location="${build}/link-crawler" />
-	
-  <!-- Java Tools -->
-  <property name="model" location="../infrastructure/tools/java/model/src" />
+
+	<!-- Java Tools -->
+	<property name="model" location="../infrastructure/tools/java/model/src" />
 	<property name="database" location="../infrastructure/tools/java/database/src" />
-	
-  <property name="java-repo-manager" location="../infrastructure/tools/java/repository-manager/src" />
+
+	<property name="java-repo-manager" location="../infrastructure/tools/java/repository-manager/src" />
 	<property name="build-java-repo-manager" location="${build}/java-repo-manager" />
-	
+
 	<property name="component-identifier" location="../infrastructure/tools/java/component-identifier/src" />
 	<property name="build-component-identifier" location="${build}/component-identifier" />
 
 	<property name="database-importer" location="../infrastructure/tools/java/database-importer/src" />
 	<property name="build-database-importer" location="${build}/database-importer" />
-	
+
 	<property name="extractor" location="../infrastructure/tools/java/extractor" />
 	<property name="build-extractor-lib" location="${build}/extractor-lib" />
-  <property name="build-extractor" location="${build}/extractor" />
-	
-	<property name="indexer" location="../infrastructure/tools/java/indexer" />
+	<property name="build-extractor" location="${build}/extractor" />
+
+	<property name="indexer" location="../infrastructure/tools/java/indexer/src" />
 	<property name="build-indexer" location="${build}/indexer" />
-  
+
 	<!-- Services -->
 	<property name="index-server" location="../infrastructure/services/index-server" />
-  <property name="build-index-server" location="${build}/index-server" />
-  <property name="assemble-index-server" location="${build}/index-server-assemble" />
-	
-	<property name="search-adapter" location="../infrastructure/services/search-adapter" />
+	<property name="build-index-server" location="${build}/index-server" />
+	<property name="assemble-index-server" location="${build}/index-server-assemble" />
+
+	<property name="search-adapter" location="../infrastructure/services/search-adapter/src" />
 	<property name="build-search-adapter" location="${build}/search-adapter" />
+
+	<property name="file-adapter" location="../infrastructure/services/file-adapter/src" />
+	<property name="build-file-adapter" location="${build}/file-adapter" />
+
+	<property name="file-server" location="../infrastructure/services/file-server/src" />
+	<property name="build-file-server" location="${build}/file-server" />
 	
+	<property name="slicer" location="../infrastructure/services/slicer/src" />
+	
+  <property name="slice-server" location="../infrastructure/services/slice-server/src" />
+  <property name="build-slice-server" location="${build}/slice-server" />
+
 	<!-- Applications -->
-  <property name="artifact-repo-browser" location="../infrastructure/apps/artifact-repo-browser/src" />
+	<property name="artifact-repo-browser" location="../infrastructure/apps/artifact-repo-browser/src" />
 	<property name="build-artifact-repo-browser" location="${build}/artifact-repo-browser" />
-		
-  <!-- Test Repository -->
-  <property name="test-repo" location="../infrastructure/tools/java/extractor/test-repo" />
-	
-  <property name="comparison-test" location="${test-repo}/0/2/content/src" />
+
+	<!-- Test Repository -->
+	<property name="test-repo" location="../infrastructure/tools/java/extractor/test-repo" />
+
+	<property name="comparison-test" location="${test-repo}/0/2/content/src" />
 	<property name="build-comparison-test" location="${build}/comparison-test" />
 
 	<!-- Website -->
 	<property name="website" location="../website" />
 
-  <target name="init">
-    <mkdir dir="${build}" />
-    <mkdir dir="${dist}" />
-  </target>
-	
+	<target name="init">
+		<mkdir dir="${build}" />
+		<mkdir dir="${dist}" />
+	</target>
+
 	<target name="clean" description="Clean the build data">
 		<delete dir="${build}" />
 	</target>
 
-<!--
+	<!--
         CCCCCCCCCCCCC                                                              TTTTTTTTTTTTTTTTTTTTTTT                               lllllll                  
      CCC::::::::::::C                                                              T:::::::::::::::::::::T                               l:::::l                  
    CC:::::::::::::::C                                                              T:::::::::::::::::::::T                               l:::::l                  
@@ -109,87 +120,87 @@ C:::::C              o::::o     o::::o r:::::r            e::::::eeeeeeeeeee    
      CCC::::::::::::C oo:::::::::::oo  r:::::r              ee:::::::::::::e             T:::::::::T    oo:::::::::::oo  oo:::::::::::oo l::::::l s:::::::::::ss  
         CCCCCCCCCCCCC   ooooooooooo    rrrrrrr                eeeeeeeeeeeeee             TTTTTTTTTTT      ooooooooooo      ooooooooooo   llllllll  sssssssssss    
 -->
-  <!-- Core Repository Manager -->
+	<!-- Core Repository Manager -->
 	<target name="core-repo-manager" depends="init" description="Builds the Core Repository Manager tools (core-repo-tools.jar)">
 		<!-- Make the build directory -->
 		<mkdir dir="${build-core-repo-manager}" />
-		
+
 		<!-- Compile the tool -->
 		<javac destdir="${build-core-repo-manager}" debug="on" includeantruntime="false">
 			<classpath>
-  			<fileset dir="${lib}">
-          <include name="**/guava-11.0.1.jar" />
-  			</fileset>
+				<fileset dir="${lib}">
+					<include name="**/guava-11.0.1.jar" />
+				</fileset>
 			</classpath>
 			<src path="${utilities}" />
 			<src path="${core-repo-manager}" />
 		</javac>
-		
+
 		<!-- Copy the source -->
-    <copy todir="${build-core-repo-manager}">
-      <fileset dir="${utilities}" includes="**/*.java" />
-    </copy>
+		<copy todir="${build-core-repo-manager}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
 		<copy todir="${build-core-repo-manager}">
 			<fileset dir="${core-repo-manager}" includes="**/*.java" />
 		</copy>
-		
+
 		<!-- Build the jar -->
-	  <jar destfile="${dist}/core-repo-tools.jar" basedir="${build-core-repo-manager}">
-	    <manifest>
-	      <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.repo.Main" />
-      </manifest>
-    </jar>
-  </target>
+		<jar destfile="${dist}/core-repo-tools.jar" basedir="${build-core-repo-manager}">
+			<manifest>
+				<attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.repo.Main" />
+			</manifest>
+		</jar>
+	</target>
 
-  <!-- Link Crawler -->
-  <target name="link-crawler" depends="init" description="Builds the Link Crawler (link-crawler.jar)">
-    <!-- Make the build directory -->
-   <mkdir dir="${build-link-crawler}" />
-  	
-    <!-- Compile everything -->
-    <javac destdir="${build-link-crawler}" debug="on" includeantruntime="false">
-      <classpath>
-        <pathelement path="${classpath}" />
-        <fileset dir="${lib}">
-          <include name="**/guava-11.0.1.jar" />
-          <include name="**/svnkit.jar" />
-          <include name="**/org-netbeans-lib-cvsclient.jar" />
-        </fileset>
-      </classpath>
-      <src path="${utilities}" />
-      <src path="${database-utilities}" />
-      <src path="${core-repo-manager}" />
-      <src path="${link-crawler}" />
-    </javac>
+	<!-- Link Crawler -->
+	<target name="link-crawler" depends="init" description="Builds the Link Crawler (link-crawler.jar)">
+		<!-- Make the build directory -->
+		<mkdir dir="${build-link-crawler}" />
 
-    <!-- Copy the source -->
-    <copy todir="${build-link-crawler}">
-      <fileset dir="${utilities}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-link-crawler}">
-      <fileset dir="${database-utilities}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-link-crawler}">
-      <fileset dir="${core-repo-manager}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-link-crawler}">
-      <fileset dir="${link-crawler}" includes="**/*.java" />
-    </copy>
-  	
-  	<!-- Add the required jars -->
-    <unjar src="${lib}/guava-11.0.1.jar" dest="${build-link-crawler}" />
-    <unjar src="${lib}/svnkit.jar" dest="${build-link-crawler}" />
-    <unjar src="${lib}/org-netbeans-lib-cvsclient.jar" dest="${build-link-crawler}" />
-    <unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-link-crawler}" />
-  	
-  	<!-- Build the jar -->
-    <jar destfile="${dist}/link-crawler.jar" basedir="${build-link-crawler}">
-      <manifest>
-        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.link.Main" />
-      </manifest>
-    </jar>
-  </target>
-<!--
+		<!-- Compile everything -->
+		<javac destdir="${build-link-crawler}" debug="on" includeantruntime="false">
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/guava-11.0.1.jar" />
+					<include name="**/svnkit.jar" />
+					<include name="**/org-netbeans-lib-cvsclient.jar" />
+				</fileset>
+			</classpath>
+			<src path="${utilities}" />
+			<src path="${database-utilities}" />
+			<src path="${core-repo-manager}" />
+			<src path="${link-crawler}" />
+		</javac>
+
+		<!-- Copy the source -->
+		<copy todir="${build-link-crawler}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-link-crawler}">
+			<fileset dir="${database-utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-link-crawler}">
+			<fileset dir="${core-repo-manager}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-link-crawler}">
+			<fileset dir="${link-crawler}" includes="**/*.java" />
+		</copy>
+
+		<!-- Add the required jars -->
+		<unjar src="${lib}/guava-11.0.1.jar" dest="${build-link-crawler}" />
+		<unjar src="${lib}/svnkit.jar" dest="${build-link-crawler}" />
+		<unjar src="${lib}/org-netbeans-lib-cvsclient.jar" dest="${build-link-crawler}" />
+		<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-link-crawler}" />
+
+		<!-- Build the jar -->
+		<jar destfile="${dist}/link-crawler.jar" basedir="${build-link-crawler}">
+			<manifest>
+				<attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.link.Main" />
+			</manifest>
+		</jar>
+	</target>
+	<!--
           JJJJJJJJJJJ                                                           TTTTTTTTTTTTTTTTTTTTTTT                               lllllll                  
           J:::::::::J                                                           T:::::::::::::::::::::T                               l:::::l                  
           J:::::::::J                                                           T:::::::::::::::::::::T                               l:::::l                  
@@ -206,296 +217,296 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
  JJ:::::::::::::JJ a:::::aaaa::::::a       v:::::v       a:::::aaaa::::::a            T:::::::::T   o:::::::::::::::oo:::::::::::::::ol::::::ls::::::::::::::s 
    JJ:::::::::JJ    a::::::::::aa:::a       v:::v         a::::::::::aa:::a           T:::::::::T    oo:::::::::::oo  oo:::::::::::oo l::::::l s:::::::::::ss  
      JJJJJJJJJ       aaaaaaaaaa  aaaa        vvv           aaaaaaaaaa  aaaa           TTTTTTTTTTT      ooooooooooo      ooooooooooo   llllllll  sssssssssss    
--->  
-	
-  <!-- Java Repository Manager -->
-  <target name="java-repo-manager" depends="init" description="Builds the Java Repository Manager (java-repo-tools.jar)">
-  	<!-- Make the build directory -->
-  	<mkdir dir="${build-java-repo-manager}" />
-  	
-    <!-- Compile everything -->
-    <javac destdir="${build-java-repo-manager}" debug="on" includeantruntime="false">
-      <src path="${utilities}" />
-      <src path="${core-repo-manager}" />
-      <src path="${java-repo-manager}" />
-      <classpath>
-        <pathelement path="${classpath}" />
-          <fileset dir="${lib}">
-            <include name="**/guava-11.0.1.jar" />
-          </fileset>
-      </classpath>
-    </javac>
+-->
 
-    <!-- Copy the source -->
-    <copy todir="${build-java-repo-manager}">
-      <fileset dir="${utilities}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-java-repo-manager}">
-      <fileset dir="${core-repo-manager}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-java-repo-manager}">
-      <fileset dir="${java-repo-manager}" includes="**/*.java" />
-    </copy>
-  	
-  	<!-- Add the required jars -->
-    <unjar src="${lib}/guava-11.0.1.jar" dest="${build-java-repo-manager}" />
-  	
-  	<!-- Build the jar -->
-  	<jar destfile="${dist}/java-repo-tools.jar" basedir="${build-java-repo-manager}">
-      <manifest>
-        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.repo.Main" />
-      </manifest>
-    </jar>
-  </target>
-  
-  <!-- Component Identifier -->
-  <target name="component-identifier" depends="init" description="Builds the Component Identifier (component-identifier.jar)">
-  	<!-- Make the build directory -->
-  	<mkdir dir="${build-component-identifier}" />
-  	
-    <!-- Compile everything -->
-    <javac destdir="${build-component-identifier}" debug="on" includeantruntime="false">
-      <src path="${utilities}" />
-      <src path="${core-repo-manager}" />
-      <src path="${java-repo-manager}" />
-      <src path="${model}" />
-      <src path="${component-identifier}" />
-    	<classpath>
-        <pathelement path="${classpath}" />
-	        <fileset dir="${lib}">
-	        	<include name="**/guava-11.0.1.jar" />
-	          <include name="**/asm-4.0_RC2.jar" />
-	        </fileset>
-      </classpath>
-    </javac>
+	<!-- Java Repository Manager -->
+	<target name="java-repo-manager" depends="init" description="Builds the Java Repository Manager (java-repo-tools.jar)">
+		<!-- Make the build directory -->
+		<mkdir dir="${build-java-repo-manager}" />
 
-    <!-- Copy the source -->
-    <copy todir="${build-component-identifier}">
-      <fileset dir="${utilities}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-component-identifier}">
-      <fileset dir="${core-repo-manager}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-component-identifier}">
-      <fileset dir="${java-repo-manager}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-component-identifier}">
-      <fileset dir="${model}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-component-identifier}">
-      <fileset dir="${component-identifier}" includes="**/*.java" />
-    </copy>
-  	
-  	<!-- Add the required jars -->
-  	<unjar src="${lib}/guava-11.0.1.jar" dest="${build-component-identifier}" />
-    <unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-component-identifier}" />
-  	
-  	<!-- Build the jar -->
-    <jar destfile="${dist}/component-identifier.jar" basedir="${build-component-identifier}">
-      <manifest>
-        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.component.identifier.Main" />
-      </manifest>
-    </jar>
-  </target>
-  
+		<!-- Compile everything -->
+		<javac destdir="${build-java-repo-manager}" debug="on" includeantruntime="false">
+			<src path="${utilities}" />
+			<src path="${core-repo-manager}" />
+			<src path="${java-repo-manager}" />
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/guava-11.0.1.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+
+		<!-- Copy the source -->
+		<copy todir="${build-java-repo-manager}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-java-repo-manager}">
+			<fileset dir="${core-repo-manager}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-java-repo-manager}">
+			<fileset dir="${java-repo-manager}" includes="**/*.java" />
+		</copy>
+
+		<!-- Add the required jars -->
+		<unjar src="${lib}/guava-11.0.1.jar" dest="${build-java-repo-manager}" />
+
+		<!-- Build the jar -->
+		<jar destfile="${dist}/java-repo-tools.jar" basedir="${build-java-repo-manager}">
+			<manifest>
+				<attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.repo.Main" />
+			</manifest>
+		</jar>
+	</target>
+
+	<!-- Component Identifier -->
+	<target name="component-identifier" depends="init" description="Builds the Component Identifier (component-identifier.jar)">
+		<!-- Make the build directory -->
+		<mkdir dir="${build-component-identifier}" />
+
+		<!-- Compile everything -->
+		<javac destdir="${build-component-identifier}" debug="on" includeantruntime="false">
+			<src path="${utilities}" />
+			<src path="${core-repo-manager}" />
+			<src path="${java-repo-manager}" />
+			<src path="${model}" />
+			<src path="${component-identifier}" />
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/guava-11.0.1.jar" />
+					<include name="**/asm-4.0_RC2.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+
+		<!-- Copy the source -->
+		<copy todir="${build-component-identifier}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-component-identifier}">
+			<fileset dir="${core-repo-manager}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-component-identifier}">
+			<fileset dir="${java-repo-manager}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-component-identifier}">
+			<fileset dir="${model}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-component-identifier}">
+			<fileset dir="${component-identifier}" includes="**/*.java" />
+		</copy>
+
+		<!-- Add the required jars -->
+		<unjar src="${lib}/guava-11.0.1.jar" dest="${build-component-identifier}" />
+		<unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-component-identifier}" />
+
+		<!-- Build the jar -->
+		<jar destfile="${dist}/component-identifier.jar" basedir="${build-component-identifier}">
+			<manifest>
+				<attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.component.identifier.Main" />
+			</manifest>
+		</jar>
+	</target>
+
 	<!-- Database Importer -->
-  <target name="database-importer" depends="init" description="Builds the Database tools (db-import.jar)">
-  	<!-- Make the build directory -->
-  	<mkdir dir="${build-database-importer}" />
-  	
-    <!-- Compile everything -->
-    <javac destdir="${build-database-importer}" debug="on" includeantruntime="false">
-      <src path="${utilities}" />
-      <src path="${database-utilities}" />
-      <src path="${core-repo-manager}" />
-      <src path="${java-repo-manager}" />
-      <src path="${model}" />
-      <src path="${component-identifier}" />
-      <src path="${database}" />
-    	<src path="${database-importer}" />
-      <classpath>
-        <pathelement path="${classpath}" />
-          <fileset dir="${lib}">
-            <include name="**/asm-4.0_RC2.jar" />
-            <include name="**/guava-11.0.1.jar" />
-          </fileset>
-      </classpath>
-    </javac>
+	<target name="database-importer" depends="init" description="Builds the Database tools (db-import.jar)">
+		<!-- Make the build directory -->
+		<mkdir dir="${build-database-importer}" />
 
-    <!-- Copy the source -->
-    <copy todir="${build-database-importer}">
-      <fileset dir="${utilities}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-database-importer}">
-      <fileset dir="${database-utilities}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-database-importer}">
-      <fileset dir="${core-repo-manager}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-database-importer}">
-      <fileset dir="${java-repo-manager}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-database-importer}">
-      <fileset dir="${model}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-database-importer}">
-      <fileset dir="${component-identifier}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-database-importer}">
-      <fileset dir="${database}" includes="**/*.java" />
-    </copy>
-  	<copy todir="${build-database-importer}">
-      <fileset dir="${database-importer}" includes="**/*.java" />
-    </copy>
-  	
-  	<!-- Add the required jars -->
-    <unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-database-importer}" />
-    <unjar src="${lib}/guava-11.0.1.jar" dest="${build-database-importer}" />
-    <unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-database-importer}" />
-  	
-  	<!-- Build the jar -->
-  	<jar destfile="${dist}/db-import.jar" basedir="${build-database-importer}">
-      <manifest>
-        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.db.Main" />
-      </manifest>
-    </jar>
-  </target>
-	  
+		<!-- Compile everything -->
+		<javac destdir="${build-database-importer}" debug="on" includeantruntime="false">
+			<src path="${utilities}" />
+			<src path="${database-utilities}" />
+			<src path="${core-repo-manager}" />
+			<src path="${java-repo-manager}" />
+			<src path="${model}" />
+			<src path="${component-identifier}" />
+			<src path="${database}" />
+			<src path="${database-importer}" />
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/asm-4.0_RC2.jar" />
+					<include name="**/guava-11.0.1.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+
+		<!-- Copy the source -->
+		<copy todir="${build-database-importer}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-database-importer}">
+			<fileset dir="${database-utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-database-importer}">
+			<fileset dir="${core-repo-manager}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-database-importer}">
+			<fileset dir="${java-repo-manager}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-database-importer}">
+			<fileset dir="${model}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-database-importer}">
+			<fileset dir="${component-identifier}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-database-importer}">
+			<fileset dir="${database}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-database-importer}">
+			<fileset dir="${database-importer}" includes="**/*.java" />
+		</copy>
+
+		<!-- Add the required jars -->
+		<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-database-importer}" />
+		<unjar src="${lib}/guava-11.0.1.jar" dest="${build-database-importer}" />
+		<unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-database-importer}" />
+
+		<!-- Build the jar -->
+		<jar destfile="${dist}/db-import.jar" basedir="${build-database-importer}">
+			<manifest>
+				<attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.db.Main" />
+			</manifest>
+		</jar>
+	</target>
+
 	<!-- Compile the extractor's required libraries -->
-  <target name="compile-extractor-lib" depends="init">
-  	<!-- Make the build directory -->
-  	<mkdir dir="${build-extractor-lib}" />
-  	
-    <!-- Compile everything -->
-    <javac destdir="${build-extractor-lib}" debug="on" includeantruntime="false">
-      <src path="${utilities}" />
-    	<src path="${database-utilities}" />
-      <src path="${core-repo-manager}" />
-      <src path="${java-repo-manager}" />
-      <src path="${model}" />
-      <src path="${component-identifier}" />
-      <src path="${database}" />
-      <classpath>
-        <pathelement path="${classpath}" />
-          <fileset dir="${lib}">
-            <include name="**/guava-11.0.1.jar" />
-            <include name="**/asm-4.0_RC2.jar" />
-          </fileset>
-      </classpath>
-    </javac>
+	<target name="compile-extractor-lib" depends="init">
+		<!-- Make the build directory -->
+		<mkdir dir="${build-extractor-lib}" />
 
-    <!-- Copy the source -->
-    <copy todir="${build-extractor-lib}">
-      <fileset dir="${utilities}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-extractor-lib}">
-      <fileset dir="${database-utilities}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-extractor-lib}">
-      <fileset dir="${core-repo-manager}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-extractor-lib}">
-      <fileset dir="${java-repo-manager}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-extractor-lib}">
-      <fileset dir="${model}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-extractor-lib}">
-      <fileset dir="${component-identifier}" includes="**/*.java" />
-    </copy>
-  	<copy todir="${build-extractor-lib}">
-      <fileset dir="${database}" includes="**/*.java" />
-    </copy>
-  </target>
-	
+		<!-- Compile everything -->
+		<javac destdir="${build-extractor-lib}" debug="on" includeantruntime="false">
+			<src path="${utilities}" />
+			<src path="${database-utilities}" />
+			<src path="${core-repo-manager}" />
+			<src path="${java-repo-manager}" />
+			<src path="${model}" />
+			<src path="${component-identifier}" />
+			<src path="${database}" />
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/guava-11.0.1.jar" />
+					<include name="**/asm-4.0_RC2.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+
+		<!-- Copy the source -->
+		<copy todir="${build-extractor-lib}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-extractor-lib}">
+			<fileset dir="${database-utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-extractor-lib}">
+			<fileset dir="${core-repo-manager}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-extractor-lib}">
+			<fileset dir="${java-repo-manager}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-extractor-lib}">
+			<fileset dir="${model}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-extractor-lib}">
+			<fileset dir="${component-identifier}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-extractor-lib}">
+			<fileset dir="${database}" includes="**/*.java" />
+		</copy>
+	</target>
+
 	<!-- Populate the extractor's lib directory -->
 	<target name="extractor-lib" depends="compile-extractor-lib" description="Build and populate the necessary libraries for the Extractor">
-  	<!-- Build the jar -->
-    <jar destfile="${extractor}/lib/sourcerer-lib.jar" basedir="${build-extractor-lib}" />
-  	
-  	<!-- Copy the library jars -->
-    <copy file="${lib}/asm-4.0_RC2.jar" todir="${extractor}/lib/" />
-    <copy file="${lib}/guava-11.0.1.jar" todir="${extractor}/lib/" />
-    <copy file="${lib}/mysql-connector-java-5.1.7-bin.jar" todir="${extractor}/lib/" />
-  </target>
-	
-  <!-- Build the extractor plugin - is asynchronous -->
-  <target name="extractor" description="Build the extractor plugin">
-    <pde.exportPlugins destination="${build}" exportSource="true" exportType="directory" plugins="Extractor" useJARFormat="true" />
-  </target>
+		<!-- Build the jar -->
+		<jar destfile="${extractor}/lib/sourcerer-lib.jar" basedir="${build-extractor-lib}" />
 
-  <!-- Repackage the plugin jar file - run after the extractor target -->
-  <target name="repackage-extractor" depends="compile-extractor-lib" description="Repackages the extractor for use">
-    <unjar src="${build}/plugins/Extractor_1.0.0.jar" dest="${build-extractor}" />
-    <copy todir="${build-extractor}">
-      <fileset dir="${build-extractor-lib}" includes="**/*" />
-    </copy>
-    <jar destfile="${dist}/Extractor_1.0.0.jar" basedir="${build-extractor}" />
-  </target>
-	
+		<!-- Copy the library jars -->
+		<copy file="${lib}/asm-4.0_RC2.jar" todir="${extractor}/lib/" />
+		<copy file="${lib}/guava-11.0.1.jar" todir="${extractor}/lib/" />
+		<copy file="${lib}/mysql-connector-java-5.1.7-bin.jar" todir="${extractor}/lib/" />
+	</target>
+
+	<!-- Build the extractor plugin - is asynchronous -->
+	<target name="extractor" description="Build the extractor plugin">
+		<pde.exportPlugins destination="${build}" exportSource="true" exportType="directory" plugins="Extractor" useJARFormat="true" />
+	</target>
+
+	<!-- Repackage the plugin jar file - run after the extractor target -->
+	<target name="repackage-extractor" depends="compile-extractor-lib" description="Repackages the extractor for use">
+		<unjar src="${build}/plugins/Extractor_1.0.0.jar" dest="${build-extractor}" />
+		<copy todir="${build-extractor}">
+			<fileset dir="${build-extractor-lib}" includes="**/*" />
+		</copy>
+		<jar destfile="${dist}/Extractor_1.0.0.jar" basedir="${build-extractor}" />
+	</target>
+
 	<!-- Indexer -->
-  <target name="indexer" depends="init" description="Builds the Indexer (indexer.jar)">
-    <!-- Make the build directory -->
-    <mkdir dir="${build-indexer}" />
-    
-    <!-- Compile everything -->
-    <javac destdir="${build-indexer}" debug="on" includeantruntime="false">
-      <src path="${utilities}" />
-    	<src path="${database-utilities}" />
-      <src path="${model}" />
-    	<src path="${database}" />
-    	<src path="${indexer}" />
-      <classpath>
-        <pathelement path="${classpath}" />
-          <fileset dir="${lib}">
-            <include name="**/guava-11.0.1.jar" />
-          	<include name="**/apache-solr-solrj-3.6.0.jar" />
-          	<include name="**/httpclient-4.2.jar" />
-          	<include name="**/httpcore-4.2.1.jar" />
-          	<include name="**/httpmime-4.2.jar" />
-          	<include name="**/jcl-over-slf4j-1.6.6.jar" />
-          	<include name="**/slf4j-api-1.6.6.jar" />
-          	<include name="**/slf4j-jdk14-1.6.6.jar" />
-          </fileset>
-      </classpath>
-    </javac>
+	<target name="indexer" depends="init" description="Builds the Indexer (indexer.jar)">
+		<!-- Make the build directory -->
+		<mkdir dir="${build-indexer}" />
 
-    <!-- Copy the source -->
-    <copy todir="${build-indexer}">
-      <fileset dir="${utilities}" includes="**/*.java" />
-    </copy>
-  	<copy todir="${build-indexer}">
-      <fileset dir="${database-utilities}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-indexer}">
-      <fileset dir="${model}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-indexer}">
-      <fileset dir="${database}" includes="**/*.java" />
-    </copy>
-  	<copy todir="${build-indexer}">
-      <fileset dir="${indexer}" includes="**/*.java" />
-    </copy>
-    
-    <!-- Add the required jars -->
-    <unjar src="${lib}/guava-11.0.1.jar" dest="${build-indexer}" />
-  	<unjar src="${lib}/apache-solr-solrj-3.6.0.jar" dest="${build-indexer}" />
-  	<unjar src="${lib}/httpclient-4.2.jar" dest="${build-indexer}" />
-  	<unjar src="${lib}/httpcore-4.2.1.jar" dest="${build-indexer}" />
+		<!-- Compile everything -->
+		<javac destdir="${build-indexer}" debug="on" includeantruntime="false">
+			<src path="${utilities}" />
+			<src path="${database-utilities}" />
+			<src path="${model}" />
+			<src path="${database}" />
+			<src path="${indexer}" />
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/guava-11.0.1.jar" />
+					<include name="**/apache-solr-solrj-3.6.0.jar" />
+					<include name="**/httpclient-4.2.jar" />
+					<include name="**/httpcore-4.2.1.jar" />
+					<include name="**/httpmime-4.2.jar" />
+					<include name="**/jcl-over-slf4j-1.6.6.jar" />
+					<include name="**/slf4j-api-1.6.6.jar" />
+					<include name="**/slf4j-jdk14-1.6.6.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+
+		<!-- Copy the source -->
+		<copy todir="${build-indexer}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-indexer}">
+			<fileset dir="${database-utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-indexer}">
+			<fileset dir="${model}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-indexer}">
+			<fileset dir="${database}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-indexer}">
+			<fileset dir="${indexer}" includes="**/*.java" />
+		</copy>
+
+		<!-- Add the required jars -->
+		<unjar src="${lib}/guava-11.0.1.jar" dest="${build-indexer}" />
+		<unjar src="${lib}/apache-solr-solrj-3.6.0.jar" dest="${build-indexer}" />
+		<unjar src="${lib}/httpclient-4.2.jar" dest="${build-indexer}" />
+		<unjar src="${lib}/httpcore-4.2.1.jar" dest="${build-indexer}" />
 		<unjar src="${lib}/httpmime-4.2.jar" dest="${build-indexer}" />
 		<unjar src="${lib}/jcl-over-slf4j-1.6.6.jar" dest="${build-indexer}" />
 		<unjar src="${lib}/slf4j-api-1.6.6.jar" dest="${build-indexer}" />
 		<unjar src="${lib}/slf4j-jdk14-1.6.6.jar" dest="${build-indexer}" />
-  	<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-indexer}" />
-    
-    <!-- Build the jar -->
-    <jar destfile="${dist}/indexer.jar" basedir="${build-indexer}">
-      <manifest>
-        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.indexer.Main" />
-      </manifest>
-    </jar>
-  </target>
-<!--
+		<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-indexer}" />
+
+		<!-- Build the jar -->
+		<jar destfile="${dist}/indexer.jar" basedir="${build-indexer}">
+			<manifest>
+				<attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.indexer.Main" />
+			</manifest>
+		</jar>
+	</target>
+	<!--
 	   SSSSSSSSSSSSSSS                                                                 iiii                                                           
 	 SS:::::::::::::::S                                                               i::::i                                                          
 	S:::::SSSSSS::::::S                                                                iiii                                                           
@@ -515,75 +526,202 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 -->
 
 	<!-- Index Server -->
-  <target name="index-server" description="Builds the solr index server (index/)">
-  	<!-- Make the build directory -->
-    <mkdir dir="${build-index-server}" />
-  	
-  	<!-- Compile everything -->
-    <javac destdir="${build-index-server}" debug="on" includeantruntime="false">
-      <src path="${index-server}" />
+	<target name="index-server" description="Builds the solr index server (index/)">
+		<!-- Make the build directory -->
+		<mkdir dir="${build-index-server}" />
+
+		<!-- Compile everything -->
+		<javac destdir="${build-index-server}" debug="on" includeantruntime="false">
+			<src path="${index-server}" />
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/apache-solr-core-3.6.0.jar" />
+					<include name="**/lucene-core-3.6.0.jar" />
+					<include name="**/lucene-analyzers-3.6.0.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+
+
+		<!-- Assemble the contents of solr.war -->
+		<unjar src="${index-server}/solr.war" dest="${assemble-index-server}" />
+		<jar destfile="${assemble-index-server}/WEB-INF/lib/sourcerer-index.jar" basedir="${build-index-server}" />
+
+		<!-- Assemble dist/index -->
+		<mkdir dir="${dist}/index" />
+		<copy todir="${dist}/index">
+			<fileset dir="${index-server}">
+				<exclude name="bin/" />
+				<exclude name="src/" />
+				<exclude name="solr.war" />
+				<exclude name=".project" />
+				<exclude name=".classpath" />
+			</fileset>
+		</copy>
+		<jar destfile="${dist}/index/solr.war" basedir="${assemble-index-server}" />
+	</target>
+
+	<!-- Search Adapter -->
+	<target name="search-adapter" description="Builds the Search Adapter (sourcerer-search.jar)">
+		<!-- Make the build directory -->
+		<mkdir dir="${build-search-adapter}" />
+
+		<!-- Compile everything -->
+		<javac destdir="${build-search-adapter}" debug="on" includeantruntime="false">
+			<src path="${utilities}" />
+			<src path="${search-adapter}" />
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/guava-11.0.1.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+
+		<!-- Copy the source -->
+		<copy todir="${build-search-adapter}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-search-adapter}">
+			<fileset dir="${search-adapter}" includes="**/*.java" />
+		</copy>
+
+		<!-- Add the required jars -->
+		<unjar src="${lib}/guava-11.0.1.jar" dest="${build-search-adapter}" />
+
+		<!-- Build the jar -->
+		<jar destfile="${dist}/sourcerer-search.jar" basedir="${build-search-adapter}" />
+	</target>
+
+	<!-- File Adapter -->
+	<target name="file-adapter" description="Builds the File Adapter (sourcerer-file.jar)">
+		<!-- Make the build directory -->
+		<mkdir dir="${build-file-adapter}" />
+
+		<!-- Compile everything -->
+		<javac destdir="${build-file-adapter}" debug="on" includeantruntime="false">
+			<src path="${utilities}" />
+			<src path="${database-utilities}" />
+			<src path="${core-repo-manager}" />
+			<src path="${java-repo-manager}" />
+			<src path="${model}" />
+			<src path="${database}" />
+			<src path="${file-adapter}" />
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/guava-11.0.1.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+
+		<!-- Copy the source -->
+		<copy todir="${build-file-adapter}">
+			<fileset dir="${utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-file-adapter}">
+			<fileset dir="${database-utilities}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-file-adapter}">
+			<fileset dir="${core-repo-manager}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-file-adapter}">
+			<fileset dir="${java-repo-manager}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-file-adapter}">
+			<fileset dir="${database}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-file-adapter}">
+			<fileset dir="${model}" includes="**/*.java" />
+		</copy>
+		<copy todir="${build-file-adapter}">
+			<fileset dir="${file-adapter}" includes="**/*.java" />
+		</copy>
+
+		<!-- Add the required jars -->
+		<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-file-adapter}" />
+		<unjar src="${lib}/guava-11.0.1.jar" dest="${build-file-adapter}" />
+
+		<!-- Build the jar -->
+		<jar destfile="${dist}/sourcerer-file.jar" basedir="${build-file-adapter}" />
+	</target>
+
+	<target name="file-server" depends="init" description="Build the File Server (file-server.war)">
+		<!-- Make the build directory -->
+		<mkdir dir="${build-file-server}" />
+
+		<!-- Compile everything -->
+		<javac destdir="${build-file-server}" debug="on" includeantruntime="false">
+			<src path="${utilities}" />
+			<src path="${database-utilities}" />
+			<src path="${servlet-utilities}" />
+			<src path="${core-repo-manager}" />
+			<src path="${java-repo-manager}" />
+			<src path="${model}" />
+			<src path="${database}" />
+			<src path="${file-adapter}" />
+			<src path="${file-server}" />
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/guava-11.0.1.jar" />
+					<include name="**/servlet-api.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+
+		<!-- Add the required jars -->
+		<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-file-server}" />
+		<unjar src="${lib}/guava-11.0.1.jar" dest="${build-file-server}" />
+
+		<!-- Create the war file -->
+		<war destfile="${dist}/file-server.war" webxml="${file-server}/edu/uci/ics/sourcerer/services/file/web.xml">
+			<lib dir="${file-server}/edu/uci/ics/sourcerer/services/file">
+				<include name="*.properties" />
+			</lib>
+			<classes dir="${build-file-server}" />
+		</war>
+	</target>
+	
+  <target name="slice-server" depends="init" description="Build the Slice Server (slice-server.war)">
+    <!-- Make the build directory -->
+    <mkdir dir="${build-slice-server}" />
+
+    <!-- Compile everything -->
+    <javac destdir="${build-slice-server}" debug="on" includeantruntime="false">
+      <src path="${utilities}" />
+      <src path="${database-utilities}" />
+      <src path="${servlet-utilities}" />
+      <src path="${core-repo-manager}" />
+      <src path="${java-repo-manager}" />
+      <src path="${model}" />
+      <src path="${database}" />
+    	<src path="${file-adapter}" />
+      <src path="${slicer}" />
+      <src path="${slice-server}" />
       <classpath>
         <pathelement path="${classpath}" />
         <fileset dir="${lib}">
-          <include name="**/apache-solr-core-3.6.0.jar" />
-          <include name="**/lucene-core-3.6.0.jar" />
-          <include name="**/lucene-analyzers-3.6.0.jar" />
-        </fileset>
-      </classpath>
-    </javac>
-
-  	
-  	<!-- Assemble the contents of solr.war -->
-    <unjar src="${index-server}/solr.war" dest="${assemble-index-server}" />
-    <jar destfile="${assemble-index-server}/WEB-INF/lib/sourcerer-index.jar" basedir="${build-index-server}" />
-    
-  	<!-- Assemble dist/index -->
-    <mkdir dir="${dist}/index" />
-    <copy todir="${dist}/index">
-      <fileset dir="${index-server}">
-        <exclude name="bin/" />
-        <exclude name="src/" />
-        <exclude name="solr.war" />
-        <exclude name=".project" />
-        <exclude name=".classpath" />
-      </fileset>
-    </copy>
-    <jar destfile="${dist}/index/solr.war" basedir="${assemble-index-server}" />
-  </target>
-	
-	<!-- Search Adapter -->
-  <target name="search-adapter" description="Builds the Search Adapter (sourcerer-search.jar)">
-    <!-- Make the build directory -->
-    <mkdir dir="${build-search-adapter}" />
-    
-    <!-- Compile everything -->
-    <javac destdir="${build-search-adapter}" debug="on" includeantruntime="false">
-    	<src path="${utilities}" />
-      <src path="${search-adapter}" />
-    	<classpath>
-        <pathelement path="${classpath}" />
-        <fileset dir="${lib}">
           <include name="**/guava-11.0.1.jar" />
+          <include name="**/servlet-api.jar" />
         </fileset>
       </classpath>
     </javac>
 
-  	<!-- Copy the source -->
-    <copy todir="${build-search-adapter}">
-      <fileset dir="${utilities}" includes="**/*.java" />
-    </copy>
-    <copy todir="${build-search-adapter}">
-      <fileset dir="${search-adapter}" includes="**/*.java" />
-    </copy>
-  	    
     <!-- Add the required jars -->
-    <unjar src="${lib}/guava-11.0.1.jar" dest="${build-search-adapter}" />
-  	    
-    <!-- Build the jar -->
-    <jar destfile="${dist}/sourcerer-search.jar" basedir="${build-search-adapter}" />
+    <unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-slice-server}" />
+    <unjar src="${lib}/guava-11.0.1.jar" dest="${build-slice-server}" />
+
+    <!-- Create the war file -->
+    <war destfile="${dist}/slice-server.war" webxml="${slice-server}/edu/uci/ics/sourcerer/services/slice/web.xml">
+      <lib dir="${slice-server}/edu/uci/ics/sourcerer/services/slice">
+        <include name="*.properties" />
+      </lib>
+      <classes dir="${build-slice-server}" />
+    </war>
   </target>
-	
-<!--
+	<!--
                AAA                                                                       
               A:::A                                                                      
              A:::::A                                                                     
@@ -608,47 +746,47 @@ AAAAAAA                   AAAAAAAp::::::pppppppp     p::::::pppppppp      ssssss
                                 ppppppppp           ppppppppp                            
 -->
 
-  <!-- Artifact Repo Browser -->
-  <target name="artifact-repo-browser" depends="init" description="Build artifact repo browser (artifact-repo-server.war)">
-    <!-- Make the build directory -->
-    <mkdir dir="${build-artifact-repo-browser}" />
-    
-    <!-- Compile everything -->
-    <javac destdir="${build-artifact-repo-browser}" debug="on" includeantruntime="false">
-      <src path="${utilities}" />
-      <src path="${database-utilities}" />
-      <src path="${servlet-utilities}" />
-      <src path="${core-repo-manager}" />
-      <src path="${java-repo-manager}" />
-      <src path="${model}" />
-      <src path="${component-identifier}" />
-      <src path="${database}" />
-      <src path="${artifact-repo-browser}" />
-      <classpath>
-        <pathelement path="${classpath}" />
-        <fileset dir="${lib}">
-          <include name="**/guava-11.0.1.jar" />
-          <include name="**/asm-4.0_RC2.jar" />
-          <include name="**/servlet-api.jar" />
-        </fileset>
-      </classpath>
-    </javac>
-    
-    <!-- Add the required jars -->
-    <unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-artifact-repo-browser}" />
-    <unjar src="${lib}/guava-11.0.1.jar" dest="${build-artifact-repo-browser}" />
-    <unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-artifact-repo-browser}" />
-    
-    <!-- Add the required jars -->
-    <war destfile="${dist}/artifact-repo-browser.war" webxml="${artifact-repo-browser}/edu/uci/ics/sourcerer/apps/artifactbrowser/web.xml">
-      <lib dir="${artifact-repo-browser}/edu/uci/ics/sourcerer/apps/artifactbrowser">
-        <include name="*.properties" />
-      </lib>
-      <classes dir="${build-artifact-repo-browser}" />
-    </war>
-  </target>
+	<!-- Artifact Repo Browser -->
+	<target name="artifact-repo-browser" depends="init" description="Build the Artifact Repo Browser (artifact-repo-browser.war)">
+		<!-- Make the build directory -->
+		<mkdir dir="${build-artifact-repo-browser}" />
 
-<!--
+		<!-- Compile everything -->
+		<javac destdir="${build-artifact-repo-browser}" debug="on" includeantruntime="false">
+			<src path="${utilities}" />
+			<src path="${database-utilities}" />
+			<src path="${servlet-utilities}" />
+			<src path="${core-repo-manager}" />
+			<src path="${java-repo-manager}" />
+			<src path="${model}" />
+			<src path="${component-identifier}" />
+			<src path="${database}" />
+			<src path="${artifact-repo-browser}" />
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${lib}">
+					<include name="**/guava-11.0.1.jar" />
+					<include name="**/asm-4.0_RC2.jar" />
+					<include name="**/servlet-api.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+
+		<!-- Add the required jars -->
+		<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-artifact-repo-browser}" />
+		<unjar src="${lib}/guava-11.0.1.jar" dest="${build-artifact-repo-browser}" />
+		<unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-artifact-repo-browser}" />
+
+		<!-- Create the war file -->
+		<war destfile="${dist}/artifact-repo-browser.war" webxml="${artifact-repo-browser}/edu/uci/ics/sourcerer/apps/artifactbrowser/web.xml">
+			<lib dir="${artifact-repo-browser}/edu/uci/ics/sourcerer/apps/artifactbrowser">
+				<include name="*.properties" />
+			</lib>
+			<classes dir="${build-artifact-repo-browser}" />
+		</war>
+	</target>
+
+	<!--
 TTTTTTTTTTTTTTTTTTTTTTT                                          tttt               RRRRRRRRRRRRRRRRR                                                            
 T:::::::::::::::::::::T                                       ttt:::t               R::::::::::::::::R                                                           
 T:::::::::::::::::::::T                                       t:::::t               R::::::RRRRRR:::::R                                                          
@@ -673,50 +811,50 @@ TTTTTT  T:::::T  TTTTTTeeeeeeeeeeee        ssssssssss   ttttttt:::::ttttttt     
                                                                                                                             ppppppppp                            
 -->
 	<!-- Construct the test repository -->
-  <target name="create-test-repo" depends="compile-extractor-lib, java-repo-manager" description="Construct the test repository.">
-    <!-- Clear 0/1 -->
-    <delete dir="${test-repo}/0/1/content" />
+	<target name="create-test-repo" depends="compile-extractor-lib, java-repo-manager" description="Construct the test repository.">
+		<!-- Clear 0/1 -->
+		<delete dir="${test-repo}/0/1/content" />
 
-    <!-- Setup 0/1 with the extractor -->
-    <copy todir="${test-repo}/0/1/content">
-      <fileset dir="${extractor}" includes="**/*.java" excludes="**/test-repo/**"/>
-    </copy>
-    <copy todir="${test-repo}/0/1/content">
-      <fileset dir="${extractor}/lib" includes="sourcerer-lib.jar" />      
-    </copy>
+		<!-- Setup 0/1 with the extractor -->
+		<copy todir="${test-repo}/0/1/content">
+			<fileset dir="${extractor}" includes="**/*.java" excludes="**/test-repo/**" />
+		</copy>
+		<copy todir="${test-repo}/0/1/content">
+			<fileset dir="${extractor}/lib" includes="sourcerer-lib.jar" />
+		</copy>
 
-    <!-- Build the comparison test jar -->
-    <mkdir dir="${build-comparison-test}" />
-    <javac destdir="${build-comparison-test}" debug="on" includeantruntime="false">
-      <src path="${comparison-test}" />
-    </javac>
-	    
-    <copy todir="${build-comparison-test}">
-      <fileset dir="${comparison-test}" includes="**/*.java" />
-    </copy>
+		<!-- Build the comparison test jar -->
+		<mkdir dir="${build-comparison-test}" />
+		<javac destdir="${build-comparison-test}" debug="on" includeantruntime="false">
+			<src path="${comparison-test}" />
+		</javac>
 
-    <jar destfile="${dist}/comparison-test.jar" basedir="${build-comparison-test}" />
-	    
-    <copy todir="${test-repo}/0/2/content">
-      <fileset dir="${dist}" includes="comparison-test.jar" />
-    </copy>
-	        
-    <!-- Clear the old output -->
-    <delete dir="${test-repo}/output" />
-    <delete dir="${test-repo}/jars" />
-	    
-    <!-- Aggregate the jar repository -->
-    <java jar="${dist}/java-repo-tools.jar" fork="true">
-      <arg value="--aggregate-jar-files" />
-      <arg value="--input-repo" />
-      <arg value="${test-repo}" />
-      <arg value="--output" />
-      <arg value="${test-repo}/output" />
-      <arg value="--clear-caches" />
-    </java>
-  </target>
+		<copy todir="${build-comparison-test}">
+			<fileset dir="${comparison-test}" includes="**/*.java" />
+		</copy>
 
-<!--
+		<jar destfile="${dist}/comparison-test.jar" basedir="${build-comparison-test}" />
+
+		<copy todir="${test-repo}/0/2/content">
+			<fileset dir="${dist}" includes="comparison-test.jar" />
+		</copy>
+
+		<!-- Clear the old output -->
+		<delete dir="${test-repo}/output" />
+		<delete dir="${test-repo}/jars" />
+
+		<!-- Aggregate the jar repository -->
+		<java jar="${dist}/java-repo-tools.jar" fork="true">
+			<arg value="--aggregate-jar-files" />
+			<arg value="--input-repo" />
+			<arg value="${test-repo}" />
+			<arg value="--output" />
+			<arg value="${test-repo}/output" />
+			<arg value="--clear-caches" />
+		</java>
+	</target>
+
+	<!--
 WWWWWWWW                           WWWWWWWW               b::::::b                               iiii          tttt                              
 W::::::W                           W::::::W               b::::::b                              i::::i      ttt:::t                              
 W::::::W                           W::::::W               b::::::b                               iiii       t:::::t                              
@@ -735,11 +873,11 @@ W::::::W                           W::::::W                b:::::b              
             WWW             WWW            eeeeeeeeeeeeee  bbbbbbbbbbbbbbbb     sssssssssss    iiiiiiii         ttttttttttt      eeeeeeeeeeeeee
 -->
 
-  <target name="package-website">
-    <zip destfile="${dist}/website.zip" basedir="${website}" />
-  </target>
-	
-<!--
+	<target name="package-website">
+		<zip destfile="${dist}/website.zip" basedir="${website}" />
+	</target>
+
+	<!--
 DDDDDDDDDDDDD      EEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPP   RRRRRRRRRRRRRRRRR   EEEEEEEEEEEEEEEEEEEEEE       CCCCCCCCCCCCC               AAA         TTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEDDDDDDDDDDDDD        
 D::::::::::::DDD   E::::::::::::::::::::EP::::::::::::::::P  R::::::::::::::::R  E::::::::::::::::::::E    CCC::::::::::::C              A:::A        T:::::::::::::::::::::TE::::::::::::::::::::ED::::::::::::DDD     
 D:::::::::::::::DD E::::::::::::::::::::EP::::::PPPPPP:::::P R::::::RRRRRR:::::R E::::::::::::::::::::E  CC:::::::::::::::C             A:::::A       T:::::::::::::::::::::TE::::::::::::::::::::ED:::::::::::::::DD   
@@ -757,7 +895,7 @@ D:::::::::::::::DD E::::::::::::::::::::EP::::::::P          R::::::R     R:::::
 D::::::::::::DDD   E::::::::::::::::::::EP::::::::P          R::::::R     R:::::RE::::::::::::::::::::E    CCC::::::::::::C A:::::A                 A:::::A T:::::::::T      E::::::::::::::::::::ED::::::::::::DDD     
 DDDDDDDDDDDDD      EEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPP          RRRRRRRR     RRRRRRREEEEEEEEEEEEEEEEEEEEEE       CCCCCCCCCCCCCAAAAAAA                   AAAAAAATTTTTTTTTTT      EEEEEEEEEEEEEEEEEEEEEEDDDDDDDDDDDDD        
 -->
-  <!--
+	<!--
     <property name="build-file-server" location="${build}/file-server" />
   <property name="build-code-browser" location="${build}/code-browser" />
   <property name="build-search-eval" location="${build}/search-eval" />

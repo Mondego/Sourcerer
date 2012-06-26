@@ -68,6 +68,12 @@ class SetColumn<T extends Enum<T>, S extends BitEnumSet<T>> extends ColumnImpl<S
   }
   
   @Override
+  public void toSql(StringBuilder builder) {
+    super.toSql(builder);
+    builder.append("+0");
+  }
+  
+  @Override
   public S fromHelper(String value) {
     return factory.make(Integer.valueOf(value));
   }
