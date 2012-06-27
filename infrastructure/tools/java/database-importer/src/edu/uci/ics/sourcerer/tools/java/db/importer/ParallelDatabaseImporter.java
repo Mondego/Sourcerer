@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.JavaLibraryTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProject;
@@ -87,7 +87,7 @@ public final class ParallelDatabaseImporter {
     }
     task.finish();
     
-    JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.makeJavaLibraryTypeModel(task);
+    JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.createJavaLibraryTypeModel(task);
     UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
     
     nullerator = Nullerator.createNullerator(libs, task, "Thread %s now processing: %s");
@@ -111,7 +111,7 @@ public final class ParallelDatabaseImporter {
     if (STRUCTURAL_ONLY.getValue()) {
       task.report("Skipping referential relation import");
     } else {
-      javaModel = JavaLibraryTypeModel.makeJavaLibraryTypeModel(task);
+      javaModel = JavaLibraryTypeModel.createJavaLibraryTypeModel(task);
       
       nullerator = Nullerator.createNullerator(libs, task, "Thread %s now processing: %s");
       task.start("Performing referential relation import with " + numThreads + " threads");
@@ -195,7 +195,7 @@ public final class ParallelDatabaseImporter {
       task.finish();
     }
     
-    JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.makeJavaLibraryTypeModel(task);
+    JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.createJavaLibraryTypeModel(task);
     UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
     
     if (!mavenJars.isEmpty()) {
@@ -317,7 +317,7 @@ public final class ParallelDatabaseImporter {
     }
     task.finish();
     
-    JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.makeJavaLibraryTypeModel(task);
+    JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.createJavaLibraryTypeModel(task);
     UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
     
     nullerator = Nullerator.createNullerator(projects, task, "Thread %s now processing: %s");

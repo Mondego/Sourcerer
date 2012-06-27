@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.db.resolver;
+package edu.uci.ics.sourcerer.tools.java.db.importer.resolver;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
@@ -155,8 +155,8 @@ public class ProjectTypeModel {
     task.finish();
   }
   
-  public static ProjectTypeModel makeProjectTypeModel(final TaskProgressLogger task, QueryExecutor exec, Integer projectID, Collection<Integer> libraries, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
-    LibraryTypeModel libraryModel = LibraryTypeModel.makeLibraryTypeModel(task, exec, libraries, javaModel);
+  public static ProjectTypeModel createProjectTypeModel(final TaskProgressLogger task, QueryExecutor exec, Integer projectID, Collection<Integer> libraries, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
+    LibraryTypeModel libraryModel = LibraryTypeModel.createLibraryTypeModel(task, exec, libraries, javaModel);
     
     task.start("Building project type model");
     
@@ -168,8 +168,8 @@ public class ProjectTypeModel {
     return model;
   }
   
-  public static ProjectTypeModel makeVirtualProjectTypeModel(final TaskProgressLogger task, QueryExecutor exec, Integer projectID, Collection<Integer> libraries, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
-    LibraryTypeModel libraryModel = LibraryTypeModel.makeVirtualLibraryTypeModel(task, exec, libraries, javaModel);
+  public static ProjectTypeModel createVirtualProjectTypeModel(final TaskProgressLogger task, QueryExecutor exec, Integer projectID, Collection<Integer> libraries, JavaLibraryTypeModel javaModel, UnknownEntityCache unknowns) {
+    LibraryTypeModel libraryModel = LibraryTypeModel.createVirtualLibraryTypeModel(task, exec, libraries, javaModel);
     
     task.start("Building virtual project type model");
     

@@ -19,8 +19,8 @@ package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import java.util.Collections;
 
-import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.JavaLibraryTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable.ProjectState;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;

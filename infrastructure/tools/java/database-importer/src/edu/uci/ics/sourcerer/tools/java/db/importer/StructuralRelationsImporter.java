@@ -25,10 +25,10 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 
-import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.ModeledEntity;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.ProjectTypeModel;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.JavaLibraryTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.ModeledEntity;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.ProjectTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.CommentsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
@@ -92,7 +92,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
   
   protected final void insert(ReaderBundle reader, Integer projectID, Collection<Integer> externalProjects) {
     loadFileMap(projectID);
-    projectModel = ProjectTypeModel.makeProjectTypeModel(task, exec, projectID, externalProjects, javaModel, unknowns);
+    projectModel = ProjectTypeModel.createProjectTypeModel(task, exec, projectID, externalProjects, javaModel, unknowns);
     
     insertRemainingEntities(reader, projectID);
     insertEntityMetrics(reader, projectID);

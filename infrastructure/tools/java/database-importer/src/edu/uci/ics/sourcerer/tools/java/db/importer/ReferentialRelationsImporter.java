@@ -19,10 +19,10 @@ package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import java.util.Collection;
 
-import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.ModeledEntity;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.ProjectTypeModel;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.JavaLibraryTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.ModeledEntity;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.ProjectTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.RelationEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
@@ -39,7 +39,7 @@ public abstract class ReferentialRelationsImporter extends RelationsImporter {
   
   protected final void insert(ReaderBundle reader, Integer projectID, Collection<Integer> externalProjects) {
     loadFileMap(projectID);
-    projectModel = ProjectTypeModel.makeVirtualProjectTypeModel(task, exec, projectID, externalProjects, javaModel, unknowns);
+    projectModel = ProjectTypeModel.createVirtualProjectTypeModel(task, exec, projectID, externalProjects, javaModel, unknowns);
     
     insertReferentialRelations(reader, projectID);
     

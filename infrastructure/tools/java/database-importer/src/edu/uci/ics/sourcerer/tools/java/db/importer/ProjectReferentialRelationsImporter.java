@@ -22,8 +22,8 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import java.util.Collection;
 import java.util.HashSet;
 
-import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.JavaLibraryTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable.ProjectState;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.UsedJarEX;

@@ -18,10 +18,10 @@
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.JavaLibraryTypeModel;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.ModeledEntity;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.ProjectTypeModel;
-import edu.uci.ics.sourcerer.tools.java.db.resolver.UnknownEntityCache;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.JavaLibraryTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.ModeledEntity;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.ProjectTypeModel;
+import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.UnknownEntityCache;
 import edu.uci.ics.sourcerer.tools.java.model.types.RelationClass;
 
 /**

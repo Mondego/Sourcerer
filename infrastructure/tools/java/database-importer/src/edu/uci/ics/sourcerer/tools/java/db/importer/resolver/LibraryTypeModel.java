@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.db.resolver;
+package edu.uci.ics.sourcerer.tools.java.db.importer.resolver;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
@@ -154,7 +154,7 @@ class LibraryTypeModel {
     task.finish();
   }
   
-  static LibraryTypeModel makeLibraryTypeModel(final TaskProgressLogger task, QueryExecutor exec, Collection<Integer> libraries, JavaLibraryTypeModel javaModel) {
+  static LibraryTypeModel createLibraryTypeModel(final TaskProgressLogger task, QueryExecutor exec, Collection<Integer> libraries, JavaLibraryTypeModel javaModel) {
     task.start("Building library type model");
     
     LibraryTypeModel model = new LibraryTypeModel(exec, javaModel);
@@ -167,7 +167,7 @@ class LibraryTypeModel {
     return model;
   }
   
-  static LibraryTypeModel makeVirtualLibraryTypeModel(final TaskProgressLogger task, QueryExecutor exec, final Collection<Integer> libraries, JavaLibraryTypeModel javaModel) {
+  static LibraryTypeModel createVirtualLibraryTypeModel(final TaskProgressLogger task, QueryExecutor exec, final Collection<Integer> libraries, JavaLibraryTypeModel javaModel) {
     task.start("Building virtual library type model");
     
     LibraryTypeModel model = new LibraryTypeModel(exec, javaModel);
