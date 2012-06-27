@@ -410,6 +410,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     }
 
     accept(node.getJavadoc());
+    accept(node.modifiers());
     accept(node.typeParameters());
     accept(node.getSuperclassType());
     accept(node.superInterfaceTypes());

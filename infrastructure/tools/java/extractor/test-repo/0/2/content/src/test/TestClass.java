@@ -22,6 +22,7 @@ import java.util.Iterator;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
+@Deprecated
 public class TestClass {
   @Deprecated
   public void method(@TestAnnotation(blahs = { "foo", "bar" }, value = "snug") String foo) {
