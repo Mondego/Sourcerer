@@ -77,14 +77,37 @@ public class TypeModelFactory {
     
     @Override
     public ModeledEntity constructResult(TypedQueryResult result) {
-//      return new ModeledEntity(
-//              result.getResult(EntitiesTable.ENTITY_ID), 
-//              result.getResult(EntitiesTable.FQN), 
-//              result.getResult(EntitiesTable.ENTITY_TYPE), 
-//              result.getResult(EntitiesTable.PROJECT_ID),
-//              result.getResult(EntitiesTable.PARAMS),
-//              result.getResult(EntitiesTable.RAW_PARAMS));
-      return null;
+      Entity type = result.getResult(EntitiesTable.ENTITY_TYPE);
+      switch (type) {
+        case CLASS:
+        case INTERFACE:
+        case ENUM:
+        case ANNOTATION:
+          return new ModeledType(
+              result.getResult(EntitiesTable.ENTITY_ID), 
+              result.getResult(EntitiesTable.FQN), 
+              type, 
+              result.getResult(EntitiesTable.PROJECT_ID));
+        case METHOD:
+        case ANNOTATION_ELEMENT:
+          return new ModeledMethod(
+              result.getResult(EntitiesTable.ENTITY_ID), 
+              result.getResult(EntitiesTable.FQN), 
+              type, 
+              result.getResult(EntitiesTable.PROJECT_ID),
+              result.getResult(EntitiesTable.PARAMS),
+              result.getResult(EntitiesTable.RAW_PARAMS));
+        case PACKAGE:
+        case FIELD:
+        case ENUM_CONSTANT:
+          return new ModeledEntity(
+              result.getResult(EntitiesTable.ENTITY_ID), 
+              result.getResult(EntitiesTable.FQN), 
+              type, 
+              result.getResult(EntitiesTable.PROJECT_ID));
+        default:
+          return null;
+      }
     }
   };
   

@@ -30,11 +30,13 @@ public class ModeledType extends ModeledEntity {
   private ModeledEntity superclass;
   private Collection<ModeledType> interfaces;
   private Collection<ModeledMethod> methods;
+  private Collection<ModeledEntity> fields;
   
   ModeledType(Integer entityID, String fqn, Entity type, Integer projectID) {
     super(entityID, fqn, type, projectID);
     interfaces = Collections.emptyList();
     methods = Collections.emptyList();
+    fields = Collections.emptyList();
   }
 
   void setSuperclass(ModeledEntity superclass) {
@@ -65,5 +67,12 @@ public class ModeledType extends ModeledEntity {
   
   public Collection<ModeledMethod> getMethods() {
     return methods;
+  }
+  
+  void addField(ModeledEntity field) {
+    if (fields.isEmpty()) {
+      fields = new LinkedList<>();
+    }
+    fields.add(field);
   }
 }
