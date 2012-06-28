@@ -24,7 +24,6 @@ public enum RelationClass {
   JAVA_LIBRARY,
   INTERNAL,
   EXTERNAL,
-  MIXED_EXTERNAL,
   UNKNOWN,
   NOT_APPLICABLE;
 }

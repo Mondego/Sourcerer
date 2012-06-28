@@ -59,7 +59,7 @@ public abstract class ReferentialRelationsImporter extends RelationsImporter {
           relation.getType() == Relation.WRITES) {
         Integer fileID = getFileID(relation.getLocation());
         
-        Integer lhs = getLHS(relation.getLhs());
+        Integer lhs = getLHS(relation.getLhs(), projectID);
         ModeledEntity rhs = projectModel.getVirtualEntity(relation.getRhs());
         
         if (lhs != null && rhs != null) {

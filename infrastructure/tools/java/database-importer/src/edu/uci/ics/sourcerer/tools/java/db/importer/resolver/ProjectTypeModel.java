@@ -200,7 +200,7 @@ public class ProjectTypeModel {
       ModeledEntity component = getEntity(arrayInfo.getFirst());
 
       // Add has elements of relation
-      exec.insert(RelationsTable.makeInsert(Relation.HAS_ELEMENTS_OF, component.getRelationClass(), entityID, component.getEntityID(), projectID));
+      exec.insert(RelationsTable.makeInsert(Relation.HAS_ELEMENTS_OF, component.getRelationClass(), entityID, component.getEntityID(exec, projectID), projectID));
   
       return entity;
     }
@@ -215,9 +215,9 @@ public class ProjectTypeModel {
       if (!TypeUtils.isUnboundedWildcard(fqn)) {
         ModeledEntity bound = getEntity(TypeUtils.getWildcardBound(fqn));
         if (TypeUtils.isLowerBound(fqn)) {
-          exec.insert(RelationsTable.makeInsert(Relation.HAS_LOWER_BOUND, bound.getRelationClass(), entityID, bound.getEntityID(), projectID));
+          exec.insert(RelationsTable.makeInsert(Relation.HAS_LOWER_BOUND, bound.getRelationClass(), entityID, bound.getEntityID(exec, projectID), projectID));
         } else {
-          exec.insert(RelationsTable.makeInsert(Relation.HAS_UPPER_BOUND, bound.getRelationClass(), entityID, bound.getEntityID(), projectID));
+          exec.insert(RelationsTable.makeInsert(Relation.HAS_UPPER_BOUND, bound.getRelationClass(), entityID, bound.getEntityID(exec, projectID), projectID));
         }
       }
       
@@ -233,7 +233,7 @@ public class ProjectTypeModel {
       // Insert the bound relations
       for (String bound : TypeUtils.breakTypeVariable(fqn)) {
         ModeledEntity boundEntity = getEntity(bound);
-        exec.insert(RelationsTable.makeInsert(Relation.HAS_UPPER_BOUND, boundEntity.getRelationClass(), entityID, boundEntity.getEntityID(), projectID));
+        exec.insert(RelationsTable.makeInsert(Relation.HAS_UPPER_BOUND, boundEntity.getRelationClass(), entityID, boundEntity.getEntityID(exec, projectID), projectID));
       }
       
       return entity;
@@ -247,12 +247,12 @@ public class ProjectTypeModel {
       
       // Add the has base type relation
       ModeledEntity baseType = getEntity(TypeUtils.getBaseType(fqn));
-      exec.insert(RelationsTable.makeInsert(Relation.HAS_BASE_TYPE, baseType.getRelationClass(), entityID, baseType.getEntityID(), projectID));
+      exec.insert(RelationsTable.makeInsert(Relation.HAS_BASE_TYPE, baseType.getRelationClass(), entityID, baseType.getEntityID(exec, projectID), projectID));
       
       // Insert the type arguments
       for (String arg : TypeUtils.breakParametrizedType(fqn)) {
         ModeledEntity argEntity = getEntity(arg);
-        exec.insert(RelationsTable.makeInsert(Relation.HAS_TYPE_ARGUMENT, argEntity.getRelationClass(), entityID, argEntity.getEntityID(), projectID));
+        exec.insert(RelationsTable.makeInsert(Relation.HAS_TYPE_ARGUMENT, argEntity.getRelationClass(), entityID, argEntity.getEntityID(exec, projectID), projectID));
       }
       
       return entity; 

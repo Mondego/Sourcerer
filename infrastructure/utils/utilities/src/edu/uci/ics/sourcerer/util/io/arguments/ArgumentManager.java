@@ -121,11 +121,10 @@ public class ArgumentManager {
         Argument<?> prop = stack.pop();
         commandProps.add(prop.permit());
         for (Argument<?> required : prop.getRequiredArguments()) {
-//          if (!Boolean.TRUE.equals(prop.getValue())) {
-//            required.makeOptional();
-//          }
-          required.isRequiredBy(prop);
-          stack.add(required);
+          if (!Boolean.FALSE.equals(prop.getValue()) && (prop.hasValue() || Boolean.TRUE.equals(prop.getValue()))) {
+            required.isRequiredBy(prop);
+            stack.add(required);            
+          }
         }
       }
       

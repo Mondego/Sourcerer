@@ -77,13 +77,14 @@ public class TypeModelFactory {
     
     @Override
     public ModeledEntity constructResult(TypedQueryResult result) {
-      return new ModeledEntity(
-              result.getResult(EntitiesTable.ENTITY_ID), 
-              result.getResult(EntitiesTable.FQN), 
-              result.getResult(EntitiesTable.ENTITY_TYPE), 
-              result.getResult(EntitiesTable.PROJECT_ID),
-              result.getResult(EntitiesTable.PARAMS),
-              result.getResult(EntitiesTable.RAW_PARAMS));
+//      return new ModeledEntity(
+//              result.getResult(EntitiesTable.ENTITY_ID), 
+//              result.getResult(EntitiesTable.FQN), 
+//              result.getResult(EntitiesTable.ENTITY_TYPE), 
+//              result.getResult(EntitiesTable.PROJECT_ID),
+//              result.getResult(EntitiesTable.PARAMS),
+//              result.getResult(EntitiesTable.RAW_PARAMS));
+      return null;
     }
   };
   

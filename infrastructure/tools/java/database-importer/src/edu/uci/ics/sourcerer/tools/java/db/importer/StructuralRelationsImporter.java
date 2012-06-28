@@ -143,7 +143,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
       if (entity.getSignature() != null) {
         fqn += entity.getSignature();
       }
-      Integer entityID = getDeclaredEntity(fqn);
+      Integer entityID = getDeclaredEntity(fqn, projectID);
       if (fileID != null && entityID != null) {
         Metrics metrics = entity.getMetrics();
         if (metrics != null) {
@@ -183,16 +183,16 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
         ModeledEntity type = projectModel.getEntity(var.getTypeFqn());
         if (type != null) {
           if (fileID == null) {
-            inserter.addInsert(RelationsTable.makeInsert(Relation.HOLDS, type.getRelationClass(), entityID, type.getEntityID(), projectID));
+            inserter.addInsert(RelationsTable.makeInsert(Relation.HOLDS, type.getRelationClass(), entityID, type.getEntityID(exec, projectID), projectID));
           } else {
-            inserter.addInsert(RelationsTable.makeInsert(Relation.HOLDS, type.getRelationClass(), entityID, type.getEntityID(), projectID, fileID, var.getLocation()));
+            inserter.addInsert(RelationsTable.makeInsert(Relation.HOLDS, type.getRelationClass(), entityID, type.getEntityID(exec, projectID), projectID, fileID, var.getLocation()));
           }
         }
         
         // Add the inside relation
         ModeledEntity parent = projectModel.getEntity(var.getParent());
         if (parent != null) {
-          inserter.addInsert(RelationsTable.makeInsert(Relation.INSIDE, parent.getRelationClass(), entityID, parent.getEntityID(), projectID, fileID));
+          inserter.addInsert(RelationsTable.makeInsert(Relation.INSIDE, parent.getRelationClass(), entityID, parent.getEntityID(exec, projectID), projectID, fileID));
         }
       } else {
         logger.log(Level.SEVERE, "Missing db local variable for " + var);
@@ -208,14 +208,14 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
           relation.getType() != Relation.WRITES) {
         Integer fileID = getFileID(relation.getLocation());
         
-        Integer lhs = getLHS(relation.getLhs());
+        Integer lhs = getLHS(relation.getLhs(), projectID);
         ModeledEntity rhs = projectModel.getEntity(relation.getRhs());
         
         if (lhs != null && rhs != null) {
           if (fileID == null) {
-            inserter.addInsert(RelationsTable.makeInsert(relation.getType(), rhs.getRelationClass(), lhs, rhs.getEntityID(), projectID));
+            inserter.addInsert(RelationsTable.makeInsert(relation.getType(), rhs.getRelationClass(), lhs, rhs.getEntityID(exec, projectID), projectID));
           } else {
-            inserter.addInsert(RelationsTable.makeInsert(relation.getType(), rhs.getRelationClass(), lhs, rhs.getEntityID(), projectID, fileID, relation.getLocation()));
+            inserter.addInsert(RelationsTable.makeInsert(relation.getType(), rhs.getRelationClass(), lhs, rhs.getEntityID(exec, projectID), projectID, fileID, relation.getLocation()));
           }
           task.progress();
         }
@@ -244,7 +244,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
         if (fileID == null) {
           logger.severe("Missing fileID for: " + imp.getLocation());
         } else {
-          inserter.addInsert(ImportsTable.makeInsert(imp.isStatic(), imp.isOnDemand(), imported.getEntityID(), projectID, fileID, imp.getLocation()));
+          inserter.addInsert(ImportsTable.makeInsert(imp.isStatic(), imp.isOnDemand(), imported.getEntityID(exec, projectID), projectID, fileID, imp.getLocation()));
         }
         task.progress();
       }
@@ -276,7 +276,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
       } else if (owner == null) {
         inserter.addInsert(CommentsTable.makeCommentInsert(comment.getType(), projectID, fileID, comment.getLocation().getOffset(), comment.getLocation().getLength()));
       } else {
-        inserter.addInsert(CommentsTable.makeJavadocInsert(owner.getEntityID(), projectID, fileID, comment.getLocation().getOffset(), comment.getLocation().getLength()));
+        inserter.addInsert(CommentsTable.makeJavadocInsert(owner.getEntityID(exec, projectID), projectID, fileID, comment.getLocation().getOffset(), comment.getLocation().getLength()));
       }
       task.progress();
     }

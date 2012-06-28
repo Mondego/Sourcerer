@@ -38,23 +38,23 @@ public abstract class RelationsImporter extends DatabaseImporter {
     this.unknowns = unknowns;
   }
     
-  protected Integer getLHS(String fqn) {
+  protected Integer getLHS(String fqn, Integer projectID) {
     ModeledEntity entity = projectModel.getEntity(fqn);
     if (entity.getRelationClass() != RelationClass.INTERNAL) {
       logger.severe("Invalid lhs entity: " + entity);
       return null;
     } else {
-      return entity.getEntityID();
+      return entity.getEntityID(exec, projectID);
     }
   }
   
-  protected Integer getDeclaredEntity(String fqn) {
+  protected Integer getDeclaredEntity(String fqn, Integer projectID) {
     ModeledEntity entity = projectModel.getDeclaredEntity(fqn);
     if (entity == null) {
       logger.severe("Invalid declared entity: " + fqn);
       return null;
     } else {
-      return entity.getEntityID();
+      return entity.getEntityID(exec, projectID);
     }
   }
 }

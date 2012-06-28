@@ -65,9 +65,9 @@ public class ModeledEntity {
     return type;
   }
   
-  public Integer getEntityID() {
-    return entityID;
-  }
+//  public Integer getEntityID() {
+//    return entityID;
+//  }
   
   public RelationClass getRelationClass() {
     return rClass;
@@ -95,15 +95,15 @@ public class ModeledEntity {
     return entityID;
   }
   
-  public void addDuplicate(Integer entityID) {
+  public void addDuplicate(ModeledEntity entity) {
     if (duplicates == null) {
       duplicates = new HashSet<>();
       duplicates.add(this.entityID);
       type = Entity.DUPLICATE;
-      rClass = RelationClass.MIXED_EXTERNAL;
+      rClass = RelationClass.NOT_APPLICABLE;
       entityID = null;
     }
-    duplicates.add(entityID);
+    duplicates.add(entity.entityID);
   }
   
   public void addVirtualDuplicate(ModeledEntity entity) {

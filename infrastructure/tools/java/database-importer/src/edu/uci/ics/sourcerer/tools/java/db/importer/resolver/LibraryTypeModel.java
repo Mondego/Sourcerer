@@ -63,7 +63,7 @@ class LibraryTypeModel {
     if (current == null) {
       entities.put(fqn, entity);
     } else {
-      current.addDuplicate(entity.getEntityID());
+      current.addDuplicate(entity);
     }
   }
   
