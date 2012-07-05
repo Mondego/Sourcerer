@@ -348,8 +348,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     
     fqnStack.push(fqn, type);
     
-    // Write the inside relation
-    relationWriter.writeRelation(Relation.INSIDE, fqn, parent, getUnknownLocation());
+    // Write the contains relation
+    relationWriter.writeRelation(Relation.CONTAINS, parent, fqn, getUnknownLocation());
     
     entityWriter.writeEntity(type, fqn, node.getModifiers(), metrics, getLocation(node));
     
@@ -391,8 +391,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
             String constructorFqn = getMethodName(method, true);
             entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, "()", null, method.getModifiers(), MetricsCalculator.computeLinesOfCode(null), getUnknownLocation());
             constructorFqn += "()";
-            // Write the inside relation
-            relationWriter.writeRelation(Relation.INSIDE, constructorFqn, fqn, getUnknownLocation());
+            // Write the contains relation
+            relationWriter.writeRelation(Relation.CONTAINS, fqn, constructorFqn, getUnknownLocation());
             
             // Write the calls relation (implicit superconstructor call)
             if (superFqn == null) {
@@ -469,8 +469,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       // Write the entity
       entityWriter.writeEntity(Entity.CLASS, fqn, 0, MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
     
-      // Write the inside relation
-      relationWriter.writeRelation(Relation.INSIDE, fqn, parentFqn, getUnknownLocation());
+      // Write the contains relation
+      relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fqn, getUnknownLocation());
     
       
       Type superType = parent.getType();
@@ -510,8 +510,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
             }
             
 
-            // Write the inside relation
-            relationWriter.writeRelation(Relation.INSIDE, constructorFqn, fqn, getUnknownLocation());
+            // Write the contains relation
+            relationWriter.writeRelation(Relation.CONTAINS, fqn, constructorFqn, getUnknownLocation());
 
             // Write the instantiates relation
             relationWriter.writeRelation(Relation.INSTANTIATES, parentFqn, fqn, parentLocation);
@@ -554,8 +554,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       // Write the entity
       entityWriter.writeEntity(Entity.CLASS, fqn, 0, MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
     
-      // Write the inside relation
-      relationWriter.writeRelation(Relation.INSIDE, fqn, parentFqn, getUnknownLocation());
+      // Write the contains relation
+      relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fqn, getUnknownLocation());
     
       
       // Write the extends relation
@@ -577,8 +577,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
             }
             
 
-            // Write the inside relation
-            relationWriter.writeRelation(Relation.INSIDE, constructorFqn, fqn, getUnknownLocation());
+            // Write the contains relation
+            relationWriter.writeRelation(Relation.CONTAINS, fqn, constructorFqn, getUnknownLocation());
 
 //            // Write the instantiates relation
 //            relationWriter.writeRelation(Relation.INSTANTIATES, parentFqn, fqn, parentLocation);
@@ -663,8 +663,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     // Write the entity
     entityWriter.writeEntity(Entity.ENUM, fqn, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
     
-    // Write the inside relation
-    relationWriter.writeRelation(Relation.INSIDE, fqn, parent, unknown);
+    // Write the contains relation
+    relationWriter.writeRelation(Relation.CONTAINS, parent, fqn, unknown);
     
     // Write the implements relation
     for (Type superInterfaceType : (List<Type>) node.superInterfaceTypes()) {
@@ -684,8 +684,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
           entityWriter.writeEntity(Entity.CONSTRUCTOR, constructorFqn, "()", null, method.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), unknown);
           constructorFqn += "()";
 
-          // Write the inside relation
-          relationWriter.writeRelation(Relation.INSIDE, constructorFqn, fqn, unknown);
+          // Write the contains relation
+          relationWriter.writeRelation(Relation.CONTAINS, fqn, constructorFqn, unknown);
           
           // Write the calls relation
           relationWriter.writeRelation(Relation.CALLS, constructorFqn, "java.lang.Enum.<init>(java.lang.String,int)", unknown);
@@ -698,7 +698,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       String methodFqn = fqn + ".values";
       entityWriter.writeEntity(Entity.METHOD, methodFqn, "()", null, 9, null, unknown);
       methodFqn += "()";
-      relationWriter.writeRelation(Relation.INSIDE, methodFqn, fqn, unknown);
+      relationWriter.writeRelation(Relation.CONTAINS, fqn, methodFqn, unknown);
       relationWriter.writeRelation(Relation.RETURNS, methodFqn, fqn + "[]", unknown);
     }
 
@@ -707,7 +707,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       String methodFqn = fqn + ".valueOf";
       entityWriter.writeEntity(Entity.METHOD, methodFqn, "(java.lang.String)", null, 9, null, unknown);
       methodFqn += "(java.lang.String)";
-      relationWriter.writeRelation(Relation.INSIDE, methodFqn, fqn, unknown);
+      relationWriter.writeRelation(Relation.CONTAINS, fqn, methodFqn, unknown);
       relationWriter.writeRelation(Relation.RETURNS, methodFqn, fqn, unknown);
       localVariableWriter.writeLocalVariable(LocalVariable.PARAM, "name", 0, "java.lang.String", unknown, methodFqn, 0, unknown);
     }
@@ -748,7 +748,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     entityWriter.writeEntity(Entity.ENUM_CONSTANT, fqn, 0, MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
     
     // Write the inside relation
-    relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), getUnknownLocation());
+    relationWriter.writeRelation(Relation.CONTAINS, fqnStack.getFqn(), fqn, getUnknownLocation());
     
     // Write the holds relation
     relationWriter.writeRelation(Relation.HOLDS, fqn, fqnStack.getFqn(), getUnknownLocation());
@@ -797,7 +797,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     entityWriter.writeEntity(Entity.INITIALIZER, fqn, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
 
     // Write the inside relation
-    relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), getUnknownLocation());
+    relationWriter.writeRelation(Relation.CONTAINS, fqnStack.getFqn(), fqn, getUnknownLocation());
 
     fqnStack.push(fqn, Entity.INITIALIZER);
 
@@ -898,8 +898,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       // Write the entity
       entityWriter.writeEntity(Entity.FIELD, fqn, parent.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
       
-      // Write the inside relation
-      relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), getUnknownLocation());
+      // Write the contains relation
+      relationWriter.writeRelation(Relation.CONTAINS, fqnStack.getFqn(), fqn, getUnknownLocation());
       
       Type type = parent.getType();
       String typeFqn = getTypeFqn(type);
@@ -1022,8 +1022,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       }
     }
     
-    // Write the inside relation
-    relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), getUnknownLocation());
+    // Write the contains relation
+    relationWriter.writeRelation(Relation.CONTAINS, fqnStack.getFqn(), fqn, getUnknownLocation());
 
     // Write the throws relation
     for (Name name : (List<Name>)node.thrownExceptions()) {
@@ -1690,8 +1690,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     // Write the entity
     entityWriter.writeEntity(Entity.ANNOTATION, fqn, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
 
-    // Write the inside relation
-    relationWriter.writeRelation(Relation.INSIDE, fqn, parent, getUnknownLocation());
+    // Write the contains relation
+    relationWriter.writeRelation(Relation.CONTAINS, parent, fqn, getUnknownLocation());
 
     // Write the extends relation
     relationWriter.writeRelation(Relation.EXTENDS, fqn, "java.lang.Object", getUnknownLocation());
@@ -1731,8 +1731,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     entityWriter.writeEntity(Entity.ANNOTATION_ELEMENT, fqn, "()", null, node.getModifiers(), MetricsCalculator.computeLinesOfCode(getSource(node)), getLocation(node));
     fqn += "()";
 
-    // Write the inside relation
-    relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), getUnknownLocation());
+    // Write the contains relation
+    relationWriter.writeRelation(Relation.CONTAINS, fqnStack.getFqn(), fqn, getUnknownLocation());
 
     // Write the returns relation
     Type returnType = node.getType();

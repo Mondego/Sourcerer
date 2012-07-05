@@ -189,10 +189,10 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
           }
         }
         
-        // Add the inside relation
+        // Add the contains relation
         ModeledEntity parent = projectModel.getEntity(var.getParent());
         if (parent != null) {
-          inserter.addInsert(RelationsTable.makeInsert(Relation.INSIDE, parent.getRelationClass(), entityID, parent.getEntityID(exec, projectID), projectID, fileID));
+          inserter.addInsert(RelationsTable.makeInsert(Relation.CONTAINS, parent.getRelationClass(), parent.getEntityID(exec, projectID), entityID, projectID, fileID));
         }
       } else {
         logger.log(Level.SEVERE, "Missing db local variable for " + var);

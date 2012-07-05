@@ -123,9 +123,9 @@ class SlicerDatabaseAccessor implements Closeable {
     getRelationSourcesByTarget.addSelect(RelationsTable.LHS_EID);
     getRelationSourcesByTarget.andWhere(relationType, relationTarget);
     
-    getContained = exec.createSelectQuery(EntitiesTable.ENTITY_ID.compareEquals(RelationsTable.LHS_EID));
+    getContained = exec.createSelectQuery(EntitiesTable.ENTITY_ID.compareEquals(RelationsTable.RHS_EID));
     getContained.addSelect(EntitiesTable.FQN, EntitiesTable.MODIFIERS, EntitiesTable.ENTITY_ID, EntitiesTable.PROJECT_ID, EntitiesTable.ENTITY_TYPE, EntitiesTable.FILE_ID, EntitiesTable.OFFSET, EntitiesTable.LENGTH);
-    getContained.andWhere(entityType, relationTarget, RelationsTable.RELATION_TYPE.compareEquals(Relation.INSIDE), EntitiesTable.ENTITY_TYPE.compareEquals(Entity.INITIALIZER));
+    getContained.andWhere(entityType, relationSource, RelationsTable.RELATION_TYPE.compareEquals(Relation.CONTAINS), EntitiesTable.ENTITY_TYPE.compareEquals(Entity.INITIALIZER));
     
     importFileID = ImportsTable.FILE_ID.compareEquals();
     
@@ -158,7 +158,7 @@ class SlicerDatabaseAccessor implements Closeable {
   
   public Collection<SlicedEntityImpl> getContained(Entity type, Integer entityID) {
     entityType.setValue(type);
-    relationTarget.setValue(entityID);
+    relationSource.setValue(entityID);
     return getContained.select().toCollection(entityConstructor);
   }
   

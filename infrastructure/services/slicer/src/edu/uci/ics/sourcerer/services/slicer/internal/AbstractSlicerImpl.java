@@ -115,7 +115,7 @@ public abstract class AbstractSlicerImpl implements Slicer {
     }
     
     private void addContainingEntity(Integer entityID) {
-      queue.addAll(db.getRelationTargetsBySource(Relation.INSIDE, entityID));
+      queue.addAll(db.getRelationSourcesByTarget(Relation.CONTAINS, entityID));
     }
     
     private void addUsedTypes(Integer entityID) {
@@ -215,7 +215,7 @@ public abstract class AbstractSlicerImpl implements Slicer {
             slice.addProject(entity.getProjectID());
             queue.add(entity);
             slice.add(entity);
-            todo.addAll(db.getRelationSourcesByTarget(Relation.INSIDE, entityID));
+            todo.addAll(db.getRelationTargetsBySource(Relation.CONTAINS, entityID));
           }
         }
       }

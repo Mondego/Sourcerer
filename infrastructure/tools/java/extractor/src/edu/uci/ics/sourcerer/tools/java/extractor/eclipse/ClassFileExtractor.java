@@ -141,9 +141,9 @@ public class ClassFileExtractor {
           if (classFile.getType().isAnonymous()) {
             String fqn = classFile.getType().getFullyQualifiedName();
             String containingFqn = fqn.substring(0, fqn.lastIndexOf('$'));
-            relationWriter.writeRelation(Relation.INSIDE, classFile.getType().getFullyQualifiedName(), containingFqn, new Location(classFile.getType().getFullyQualifiedName(), path, null, null));
+            relationWriter.writeRelation(Relation.CONTAINS, containingFqn, classFile.getType().getFullyQualifiedName(), new Location(classFile.getType().getFullyQualifiedName(), path, null, null));
           } else {
-            relationWriter.writeRelation(Relation.INSIDE, classFile.getType().getFullyQualifiedName(), parent.getElementName(), new Location(classFile.getType().getFullyQualifiedName(), path, null, null));
+            relationWriter.writeRelation(Relation.CONTAINS, parent.getElementName(), classFile.getType().getFullyQualifiedName(), new Location(classFile.getType().getFullyQualifiedName(), path, null, null));
             entityWriter.writeEntity(Entity.PACKAGE, parent.getElementName(), 0, null, null);
           }
         } catch (JavaModelException e) {
@@ -187,7 +187,7 @@ public class ClassFileExtractor {
       }
       
       if (!fqnStack.isEmpty()) {
-        relationWriter.writeRelation(Relation.INSIDE, type.getFullyQualifiedName(), fqnStack.peek(), location);
+        relationWriter.writeRelation(Relation.CONTAINS, fqnStack.peek(), type.getFullyQualifiedName(), location);
       }
       
       fqnStack.push(type.getFullyQualifiedName());
@@ -229,8 +229,8 @@ public class ClassFileExtractor {
         entityWriter.writeEntity(Entity.FIELD, fqn, field.getFlags(), null, location);
       }
       
-      // Write the inside relation
-      relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.peek(), location);
+      // Write the contains relation
+      relationWriter.writeRelation(Relation.CONTAINS, fqnStack.peek(), fqn, location);
       
       // Write the holds relation
       relationWriter.writeRelation(Relation.HOLDS, fqn, typeSignatureToFqn(field.getTypeSignature()), location);
@@ -284,8 +284,8 @@ public class ClassFileExtractor {
         entityWriter.writeEntity(Entity.METHOD, basicFqnBuilder.toString(), params, rawParams, method.getFlags(), null, location);
       }
       
-      // Write the inside relation
-      relationWriter.writeRelation(Relation.INSIDE, referentialFqn, fqnStack.peek(), location);
+      // Write the contains relation
+      relationWriter.writeRelation(Relation.CONTAINS, fqnStack.peek(), referentialFqn, location);
       
       // Write the returns relation
       relationWriter.writeRelation(Relation.RETURNS, referentialFqn, typeSignatureToFqn(method.getReturnType()), location);

@@ -301,7 +301,7 @@ public class ASMExtractor implements Closeable {
         new SignatureReader(desc).accept(methodSignatureVisitor.init(owner, name));
         parentFqn = methodSignatureVisitor.getReferenceFqn();
       }
-      relationWriter.writeRelation(Relation.INSIDE, fqnStack.getFqn(), parentFqn, location);
+      relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fqnStack.getFqn(), location);
       fqnStack.outputInside();
     }
     
@@ -348,7 +348,7 @@ public class ASMExtractor implements Closeable {
       entityWriter.writeEntity(type, fqn, access & FIELD_ACCESS_MASK, null, location);
       
       // Write the inside relation
-      relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), location);
+      relationWriter.writeRelation(Relation.CONTAINS, fqnStack.getFqn(), fqn, location);
       
       // Write the holds relation
       TypeSignatureVisitorImpl visitor = new TypeSignatureVisitorImpl();
@@ -431,7 +431,7 @@ public class ASMExtractor implements Closeable {
               logger.log(Level.SEVERE, "Mismatch between " + parentFqn + " and " + fqnStack.getFqn());
             }
           }
-          relationWriter.writeRelation(Relation.INSIDE, fqn, fqnStack.getFqn(), location);
+          relationWriter.writeRelation(Relation.CONTAINS, fqnStack.getFqn(), fqn, location);
         }
       }
     }
@@ -706,7 +706,7 @@ public class ASMExtractor implements Closeable {
     public void add(String type) {
       if (currentType == null) {
         currentBound.add(type);
-      } else if (currentType == Relation.INSIDE) {
+      } else if (currentType == Relation.CONTAINS) {
         paramTypes.add(type);
         currentType = null;
       } else if (this.type != null) { 
@@ -769,7 +769,7 @@ public class ASMExtractor implements Closeable {
 
     @Override
     public SignatureVisitor visitParameterType() {
-      currentType = Relation.INSIDE;
+      currentType = Relation.CONTAINS;
       return new TypeSignatureVisitorImpl(this);
     }
     
@@ -784,7 +784,7 @@ public class ASMExtractor implements Closeable {
       }
       if (fqn != null) {
         if (type != null) {
-          relationWriter.writeRelation(Relation.INSIDE, getReferenceFqn(), fqnStack.getFqn(), location);
+          relationWriter.writeRelation(Relation.CONTAINS, fqnStack.getFqn(), getReferenceFqn(), location);
           fqnStack.push(getReferenceFqn(), type);
           int i = 0;
           for (String param : paramTypes) {

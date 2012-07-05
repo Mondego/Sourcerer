@@ -21,7 +21,7 @@ package edu.uci.ics.sourcerer.tools.java.model.types;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public enum Relation {
-  INSIDE,
+  CONTAINS,
   EXTENDS,
   IMPLEMENTS,
   HOLDS,
