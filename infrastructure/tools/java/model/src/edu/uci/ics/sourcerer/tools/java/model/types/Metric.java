@@ -22,6 +22,7 @@ package edu.uci.ics.sourcerer.tools.java.model.types;
  */
 public enum Metric {
   LINES_OF_CODE,
-  NON_WHITESPACE_LINES_OF_CODE,
+  NON_WHITESPACE_LOC,
+  NON_COMMENTS_LOC,
   ;
 }
