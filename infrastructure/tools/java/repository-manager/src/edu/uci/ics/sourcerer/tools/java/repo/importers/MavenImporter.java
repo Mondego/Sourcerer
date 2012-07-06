@@ -259,8 +259,10 @@ public class MavenImporter {
                 }
               }
             }
-            handler.versions.clear();
-            continue mainLoop;
+            if (!handler.versions.isEmpty()) {
+              handler.versions.clear();
+              continue mainLoop;
+            }
           }
         }
         for (File child : next.listFiles()) {
