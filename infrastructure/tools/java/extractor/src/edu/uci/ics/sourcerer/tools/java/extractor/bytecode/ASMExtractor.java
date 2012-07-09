@@ -24,8 +24,10 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
@@ -50,6 +52,8 @@ import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.model.types.LocalVariable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Location;
+import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
+import edu.uci.ics.sourcerer.tools.java.model.types.Metrics;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
@@ -232,7 +236,7 @@ public class ASMExtractor implements Closeable {
   private static final int METHOD_ACCESS_MASK = Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL | Opcodes.ACC_SYNCHRONIZED | Opcodes.ACC_NATIVE | Opcodes.ACC_ABSTRACT | Opcodes.ACC_STRICT | Opcodes.ACC_SYNTHETIC;
   private class ClassVisitorImpl extends ClassVisitor {
     private int access;
-    
+   
     private ClassVisitorImpl() {
       super(Opcodes.V1_7);
     }
@@ -402,12 +406,12 @@ public class ASMExtractor implements Closeable {
         new SignatureReader(desc).accept(methodSignatureVisitor.init());
         String rawSig = methodSignatureVisitor.getSignature();
         if (sig.equals(rawSig)) {
-          entityWriter.writeEntity(type, fqn, sig, null, access & METHOD_ACCESS_MASK, null, location);
+          methodVisitor.init(type, fqn, sig, null, access & METHOD_ACCESS_MASK);
         } else {
-          entityWriter.writeEntity(type, fqn, sig, methodSignatureVisitor.getSignature(), access & METHOD_ACCESS_MASK, null, location);
+          methodVisitor.init(type, fqn, sig, rawSig, access & METHOD_ACCESS_MASK);
         }
       }
-
+      
       return methodVisitor;
     }
     
@@ -470,10 +474,29 @@ public class ASMExtractor implements Closeable {
   }
   
   private class MethodVisitorImpl extends MethodVisitor {
+    private Entity type;
+    private String fqn;
+    private String sig;
+    private String rawSig;
+    private int mods;
+    private Set<Integer> offsets = new HashSet<>();
+    private int instructionCount;
+    private int statementCount;
     public MethodVisitorImpl() {
       super(Opcodes.V1_7);
     }
 
+    private void init(Entity type, String fqn, String sig, String rawSig, int mods) {
+      this.type = type;
+      this.fqn = fqn;
+      this.sig = sig;
+      this.rawSig = rawSig;
+      this.mods = mods;
+      offsets.clear();
+      instructionCount = 0;
+      statementCount = 0;
+    }
+    
     @Override
     public AnnotationVisitor visitAnnotationDefault() {
 //      logger.info("foo");
@@ -511,67 +534,102 @@ public class ASMExtractor implements Closeable {
     @Override
     public void visitFieldInsn(int opcode, String owner, String name, String desc) {
 //      if (!name.startsWith("this$") && name.charAt(0) != '$') {
+      instructionCount++;
       if (name.indexOf('$') == -1) {
-        if (opcode == 0xb4 || opcode == 0xb2) {
-          relationWriter.writeRelation(Relation.READS, fqnStack.getFqn(), convertNameToFqn(owner) + "." + name, location);
-        } else if (opcode == 0xb5 || opcode == 0xb3) {
-          relationWriter.writeRelation(Relation.WRITES, fqnStack.getFqn(), convertNameToFqn(owner) + "." + name, location);
+        switch (opcode) {
+          case Opcodes.GETFIELD:
+          case Opcodes.GETSTATIC:
+            relationWriter.writeRelation(Relation.READS, fqnStack.getFqn(), convertNameToFqn(owner) + "." + name, location);
+            break;
+          case Opcodes.PUTFIELD:
+          case Opcodes.PUTSTATIC:
+            relationWriter.writeRelation(Relation.WRITES, fqnStack.getFqn(), convertNameToFqn(owner) + "." + name, location);
+            statementCount++;
+            break;
+          default:
+            logger.severe("Unknown field instruction: " + opcode);
         }
       }
     }
 
     @Override
     public void visitIincInsn(int var, int increment) {
+      instructionCount++;
     }
 
     @Override
     public void visitInsn(int opcode) {
+      instructionCount++;
     }
 
     @Override
     public void visitIntInsn(int opcode, int operand) {
+      instructionCount++;
     }
 
     @Override
     public void visitJumpInsn(int opcode, Label label) {
+      instructionCount++;
+      statementCount++;
+      offsets.add(label.getOffset());
     }
 
     @Override
     public void visitLdcInsn(Object cst) {
+      instructionCount++;
     }
     
     @Override
     public void visitTypeInsn(int opcode, String desc) {
-      if (opcode == 0xc1) {
-        relationWriter.writeRelation(Relation.CHECKS, fqnStack.getFqn(), convertNameToFqn(desc), location);
-      } else if (opcode == 0xc0) {
-        relationWriter.writeRelation(Relation.CASTS, fqnStack.getFqn(), convertNameToFqn(desc), location);
-      } else if (opcode == 0xbb) {
-        relationWriter.writeRelation(Relation.INSTANTIATES, fqnStack.getFqn(), convertNameToFqn(desc), location);
+      instructionCount++;
+      switch (opcode) {
+        case Opcodes.INSTANCEOF:
+          relationWriter.writeRelation(Relation.CHECKS, fqnStack.getFqn(), convertNameToFqn(desc), location);
+          statementCount++;
+          break;
+        case Opcodes.CHECKCAST:
+          relationWriter.writeRelation(Relation.CASTS, fqnStack.getFqn(), convertNameToFqn(desc), location);
+          statementCount++;
+          break;
+        case Opcodes.NEW:
+          relationWriter.writeRelation(Relation.INSTANTIATES, fqnStack.getFqn(), convertNameToFqn(desc), location);
+          break;
+        default:
+          logger.severe("Unknown type instruction: " + opcode);
       }
     }
 
     @Override
     public void visitVarInsn(int opcode, int var) {
+      instructionCount++;
     }
 
     @Override
     public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
+      instructionCount++;
     }
     
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+      instructionCount++;
       new SignatureReader(desc).accept(methodSignatureVisitor.init(owner, name));
       String fqn = methodSignatureVisitor.getReferenceFqn();
       relationWriter.writeRelation(Relation.CALLS, fqnStack.getFqn(), fqn, location);
+      statementCount++;
     }
 
     @Override
     public void visitMultiANewArrayInsn(String desc, int dims) {
+      instructionCount++;
     }
 
     @Override
-    public void visitTableSwitchInsn(int min, int max, Label dflt, Label ... label) {
+    public void visitTableSwitchInsn(int min, int max, Label dflt, Label ... labels) {
+      instructionCount++;
+      for (Label label : labels) {
+        offsets.add(label.getOffset());
+      }
+      statementCount++;
     }
 
     @Override
@@ -597,6 +655,11 @@ public class ASMExtractor implements Closeable {
 
     @Override
     public void visitEnd() {
+      Metrics metrics = new Metrics();
+      metrics.addMetric(Metric.BC_CYCLOMATIC_COMPLEXITY, 1 + offsets.size());
+      metrics.addMetric(Metric.BC_NUMBER_OF_STATEMENTS, statementCount);
+      metrics.addMetric(Metric.BC_NUMBER_OF_INSTRUCTIONS, instructionCount);
+      entityWriter.writeEntity(type, fqn, sig, rawSig, mods, metrics, location);
       fqnStack.pop();
     }
   }
