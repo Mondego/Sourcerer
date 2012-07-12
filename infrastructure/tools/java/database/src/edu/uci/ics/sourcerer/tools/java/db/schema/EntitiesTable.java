@@ -39,7 +39,7 @@ public final class EntitiesTable extends DatabaseTable {
    *  +-------------+-----------------+-------+--------+
    *  | entity_id   | SERIAL          | No    | Yes    |
    *  | entity_type | ENUM(values)    | No    | Yes    |
-   *  | modifiers   | INT UNSIGNED    | Yes   | No     |
+   *  | modifiers   | SET(values)     | Yes   | No     |
    *  | fqn         | VARCHAR(8192)   | Yes   | Yes    |
    *  | params      | VARCHAR(8192)   | Yes   | Yes    |
    *  | raw_params  | VARCHAR(8192)   | Yes   | Yes    |

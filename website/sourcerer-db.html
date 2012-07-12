@@ -35,74 +35,81 @@ table will now be discussed in detail.</p>
 <p>This table contains a listing of all the projects in the repository.</p>
 <table cellspacing="0">
 <tr>
-<th>Name</th>
-<th>Type</th>
-<th>Nullable?</th>
-<th>Indexed?</th>
-<th>Description</th>
+  <th>Name</th>
+  <th>Type</th>
+  <th>Nullable?</th>
+  <th>Indexed?</th>
+  <th>Description</th>
 </tr>
 <tr class="bga">
-<td class="fixed bold">project_id</td>
-<td class="fixed">SERIAL</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>A unique id assigned by the database.</td>
+  <td class="fixed bold">project_id</td>
+  <td class="fixed">SERIAL</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>A unique id assigned by the database.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">project_type</td>
-<td class="fixed">ENUM(values)</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>The type of the project.</td>
+  <td class="fixed bold">project_type</td>
+  <td class="fixed">ENUM(values)</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>The type of the project.</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">name</td>
-<td class="fixed">VARCHAR(1024)</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>The name of the project in the originating repository.</td>
+  <td class="fixed bold">name</td>
+  <td class="fixed">VARCHAR(1024)</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>The name of the project in the originating repository.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">description</td>
-<td class="fixed">VARCHAR(4096)</td>
-<td class="cent">Yes</td>
-<td class="cent">No</td>
-<td>Optional project description.</td>
+  <td class="fixed bold">description</td>
+  <td class="fixed">VARCHAR(4096)</td>
+  <td class="cent">Yes</td>
+  <td class="cent">No</td>
+  <td>Optional project description.</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">version</td>
-<td class="fixed">VARCHAR(1024)</td>
-<td class="cent">Yes</td>
-<td class="cent">No</td>
-<td>Project version number. Only used for MAVEN projects.</td>
+  <td class="fixed bold">version</td>
+  <td class="fixed">VARCHAR(1024)</td>
+  <td class="cent">Yes</td>
+  <td class="cent">No</td>
+  <td>Project version number. Only used for MAVEN projects.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">groop</td>
-<td class="fixed">VARCHAR(1024)</td>
-<td class="cent">Yes</td>
-<td class="cent">Yes</td>
-<td>Project's Maven group. Only used for MAVEN projects.</td>
+  <td class="fixed bold">groop</td>
+  <td class="fixed">VARCHAR(1024)</td>
+  <td class="cent">Yes</td>
+  <td class="cent">Yes</td>
+  <td>Project's Maven group. Only used for MAVEN projects.</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">path</td>
-<td class="fixed">VARCHAR(1024)</td>
-<td class="cent">Yes</td>
-<td class="cent">No</td>
-<td>The relative path of the project within the repository. Only used for JAVA_LIBRARY and CRAWLED projects.</td>
+  <td class="fixed bold">path</td>
+  <td class="fixed">VARCHAR(1024)</td>
+  <td class="cent">Yes</td>
+  <td class="cent">No</td>
+  <td>The relative path of the project within the repository. Only used for JAVA_LIBRARY and CRAWLED projects.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">hash</td>
-<td class="fixed">VARCHAR(32)</td>
-<td class="cent">Yes</td>
-<td class="cent">Yes</td>
-<td>The md5 hash of the project. Only used for JAR and MAVEN projects.</td>
+  <td class="fixed bold">source</td>
+  <td class="fixed">VARCHAR(1024)</td>
+  <td class="cent">Yes</td>
+  <td class="cent">Yes</td>
+  <td>The original source of the project.</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">has_source</td>
-<td class="fixed">BOOLEAN</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>Does the project have source code? Will be false for some jar files.</td>
+  <td class="fixed bold">hash</td>
+  <td class="fixed">VARCHAR(32)</td>
+  <td class="cent">Yes</td>
+  <td class="cent">Yes</td>
+  <td>The md5 hash of the project. Only used for JAR and MAVEN projects.</td>
+</tr>
+<tr class="bgb">
+  <td class="fixed bold">has_source</td>
+  <td class="fixed">BOOLEAN</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>Does the project have source code? Will be false for some jar files.</td>
 </tr>
 </table>
 <p>There are five different type of projects represented in this table:</p>
@@ -132,45 +139,45 @@ system project contains all the unknown entities, which are the result of unreso
 <th>Description</th>
 </tr>
 <tr class="bga">
-<td class="fixed bold">file_id</td>
-<td class="fixed">SERIAL</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>A unique id assigned by the database.</td>
+  <td class="fixed bold">file_id</td>
+  <td class="fixed">SERIAL</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>A unique id assigned by the database.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">file_type</td>
-<td class="fixed">ENUM(valus)</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>The type of the file.</td>
+  <td class="fixed bold">file_type</td>
+  <td class="fixed">ENUM(valus)</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>The type of the file.</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">name</td>
-<td class="fixed">VARCHAR(1024)</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>The name of the file.</td>
+  <td class="fixed bold">name</td>
+  <td class="fixed">VARCHAR(1024)</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>The name of the file.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">path</td>
-<td class="fixed">VARCHAR(1024)</td>
-<td class="cent">Yes</td>
-<td class="cent">No</td>
-<td>The relative path of the file within the project. Only used for SOURCE and CLASS files.</td>
+  <td class="fixed bold">path</td>
+  <td class="fixed">VARCHAR(1024)</td>
+  <td class="cent">Yes</td>
+  <td class="cent">No</td>
+  <td>The relative path of the file within the project. Only used for SOURCE and CLASS files.</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">hash</td>
-<td class="fixed">VARCHAR(32)</td>
-<td class="cent">Yes</td>
-<td class="cent">Yes</td>
-<td>The md5 hash of the file. Only used for JAR files.</td>
+  <td class="fixed bold">hash</td>
+  <td class="fixed">VARCHAR(32)</td>
+  <td class="cent">Yes</td>
+  <td class="cent">Yes</td>
+  <td>The md5 hash of the file. Only used for JAR files.</td>
 <tr class="bgb">
-<td class="fixed bold">project_id</td>
-<td class="fixed">BIGINT UNSIGNED</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>The id of the project containing this file.</td>
+  <td class="fixed bold">project_id</td>
+  <td class="fixed">BIGINT UNSIGNED</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>The id of the project containing this file.</td>
 </tr>
 </table>
 <p>There are three types of files represented in this table:</p>
@@ -199,70 +206,84 @@ md5 hash), while each JAR project is unique.</p>
 <th>Description</th>
 </tr>
 <tr class="bga">
-<td class="fixed bold">entity_id</td>
-<td class="fixed">SERIAL</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>A unique id assigned by the database.</td>
+  <td class="fixed bold">entity_id</td>
+  <td class="fixed">SERIAL</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>A unique id assigned by the database.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">entity_type</td>
-<td class="fixed">ENUM(values)</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>The type of the entity.</td>
+  <td class="fixed bold">entity_type</td>
+  <td class="fixed">ENUM(values)</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>The type of the entity.</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">fqn</td>
-<td class="fixed">VARCHAR(8192)</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>The fully-qualified name (FQN) of the entity.</td>
+  <td class="fixed bold">modifiers</td>
+  <td class="fixed">SET(values)</td>
+  <td class="cent">Yes</td>
+  <td class="cent">No</td>
+  <td>Java modifiers associated with the entity. Only valid for entity types that can have modifiers.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">modifiers</td>
-<td class="fixed">INT UNSIGNED</td>
-<td class="cent">Yes</td>
-<td class="cent">No</td>
-<td>A bitmask of Java modifiers associated with the entity. Only valid for entity types that can have modifiers.</td>
+  <td class="fixed bold">fqn</td>
+  <td class="fixed">VARCHAR(8192)</td>
+  <td class="cent">Yes</td>
+  <td class="cent">Yes</td>
+  <td>The fully-qualified name (FQN) of the entity.</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">multi</td>
-<td class="fixed">INT UNSIGNED</td>
-<td class="cent">Yes</td>
-<td class="cent">No</td>
-<td>A multi-purpose column for storing additional information. Used by certain entity types.</td>
+  <td class="fixed bold">params</td>
+  <td class="fixed">VARCHAR(8192)</td>
+  <td class="cent">Yes</td>
+  <td class="cent">Yes</td>
+  <td>The method parameters.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">project_id</td>
-<td class="fixed">BIGINT UNSIGNED</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>The id of the project that contains this entity.</td>
+  <td class="fixed bold">raw_params</td>
+  <td class="fixed">VARCHAR(8192)</td>
+  <td class="cent">Yes</td>
+  <td class="cent">Yes</td>
+  <td>The raw method parameters (after type erasure).</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">file_id</td>
-<td class="fixed">BIGINT UNSIGNED</td>
-<td class="cent">Yes</td>
-<td class="cent">Yes</td>
-<td>The id of the file that contains this entity. Some entities are not associated with specific files.</td>
+  <td class="fixed bold">multi</td>
+  <td class="fixed">INT UNSIGNED</td>
+  <td class="cent">Yes</td>
+  <td class="cent">No</td>
+  <td>A multi-purpose column for storing additional information. Used by certain entity types.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">offset</td>
-<td class="fixed">INT UNSIGNED</td>
-<td class="cent">Yes</td>
-<td class="cent">No</td>
-<td>The offset to the start of the entity in its originating file.</td>
+  <td class="fixed bold">project_id</td>
+  <td class="fixed">BIGINT UNSIGNED</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>The id of the project that contains this entity.</td>
+</tr>
+<tr class="bga">
+  <td class="fixed bold">file_id</td>
+  <td class="fixed">BIGINT UNSIGNED</td>
+  <td class="cent">Yes</td>
+  <td class="cent">Yes</td>
+  <td>The id of the file that contains this entity. Some entities are not associated with specific files.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">length</td>
-<td class="fixed">INT UNSIGNED</td>
-<td class="cent">Yes</td>
-<td class="cent">No</td>
-<td>The length of the entity in its originating file.</td>
+  <td class="fixed bold">offset</td>
+  <td class="fixed">INT UNSIGNED</td>
+  <td class="cent">Yes</td>
+  <td class="cent">No</td>
+  <td>The offset to the start of the entity in its originating file.</td>
+</tr>
+<tr class="bgb">
+  <td class="fixed bold">length</td>
+  <td class="fixed">INT UNSIGNED</td>
+  <td class="cent">Yes</td>
+  <td class="cent">No</td>
+  <td>The length of the entity in its originating file.</td>
 </tr>
 </table>
-<p>There are twenty different types of entities represented in this table. Each entity
+<p>There are twenty one different types of entities represented in this table. Each entity
 type, unless otherwise specified, may have a location associated with it. If it has a 
 location, then the file_id, offset and length will all be non-null. Any entity 
 derived from a CLASS file will not have a location.</p>
@@ -344,12 +365,16 @@ derived from a CLASS file will not have a location.</p>
 <td>A Java <a href="http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5">parametrized type</a>. Has no modifiers or location.</td>
 </tr>
 <tr class="bga">
-<td class="fixed">DUPLICATE</td>
-<td>An entity created when it is unclear exactly which type was referenced by a relation. Has no modifiers or location.</td>
+  <td class="fixed">DUPLICATE</td>
+  <td>An entity created when it is unclear exactly which type was referenced by a relation. Has no modifiers or location.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed">UNKNOWN</td>
-<td>An entity created when the type referenced by a relation is unknown. Has no modifiers or location.</td>
+  <td class="fixed">VIRTUAL_DUPLICATE</td>
+  <td>An entity created when it is unclear exactly which interface method was referenced by a virtual method call. Has no modifiers or location.</td>
+</tr>
+<tr class="bga">
+  <td class="fixed">UNKNOWN</td>
+  <td>An entity created when the type referenced by a relation is unknown. Has no modifiers or location.</td>
 </tr>
 </table>
 <h3>Relations Table</h3>
@@ -363,68 +388,67 @@ derived from a CLASS file will not have a location.</p>
 <th>Description</th>
 </tr>
 <tr class="bga">
-<td class="fixed bold">relation_id</td>
-<td class="fixed">SERIAL</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>A unique id assigned by the database.</td>
+  <td class="fixed bold">relation_id</td>
+  <td class="fixed">SERIAL</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>A unique id assigned by the database.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">relation_type</td>
-<td class="fixed">ENUM(values)</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>The type of the relation.</td>
+  <td class="fixed bold">relation_type</td>
+  <td class="fixed">ENUM(values)</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>The type of the relation.</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">relation_class</td>
-<td class="fixed">ENUM(values)</td>
-<td class="cent">No</td>
-<td class="cent">No</td>
-<td>The class of the relation.</td>
+  <td class="fixed bold">relation_class</td>
+  <td class="fixed">ENUM(values)</td>
+  <td class="cent">No</td>
+  <td class="cent">No</td>
+  <td>The class of the relation.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">lhs_eid</td>
-<td class="fixed">BIGINT UNSIGNED</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>The id of the source entity of the relation.</td>
+  <td class="fixed bold">lhs_eid</td>
+  <td class="fixed">BIGINT UNSIGNED</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>The id of the source entity of the relation.</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">rhs_eid</td>
-<td class="fixed">BIGINT UNSIGNED</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>The id of the target entity of the relation.</td>
+  <td class="fixed bold">rhs_eid</td>
+  <td class="fixed">BIGINT UNSIGNED</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>The id of the target entity of the relation.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">project_id</td>
-<td class="fixed">BIGINT UNSIGNED</td>
-<td class="cent">No</td>
-<td class="cent">Yes</td>
-<td>The id of the project containing the relation.</td>
+  <td class="fixed bold">project_id</td>
+  <td class="fixed">BIGINT UNSIGNED</td>
+  <td class="cent">No</td>
+  <td class="cent">Yes</td>
+  <td>The id of the project containing the relation.</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">file_id</td>
-<td class="fixed">BIGINT UNSIGNED</td>
-<td class="cent">Yes</td>
-<td class="cent">Yes</td>
-<td>The id of the file containing the relation. 
-Some relations are not associated with specific files.</td>
+  <td class="fixed bold">file_id</td>
+  <td class="fixed">BIGINT UNSIGNED</td>
+  <td class="cent">Yes</td>
+  <td class="cent">Yes</td>
+  <td>The id of the file containing the relation. Some relations are not associated with specific files.</td>
 </tr>
 <tr class="bgb">
-<td class="fixed bold">offset</td>
-<td class="fixed">INT UNSIGNED</td>
-<td class="cent">Yes</td>
-<td class="cent">Yes</td>
-<td>The offset to the start of the relation in its originating file.</td>
+  <td class="fixed bold">offset</td>
+  <td class="fixed">INT UNSIGNED</td>
+  <td class="cent">Yes</td>
+  <td class="cent">Yes</td>
+  <td>The offset to the start of the relation in its originating file.</td>
 </tr>
 <tr class="bga">
-<td class="fixed bold">length</td>
-<td class="fixed">INT UNSIGNED</td>
-<td class="cent">Yes</td>
-<td class="cent">Yes</td>
-<td>The length of the relation in its originating file.</td>
+  <td class="fixed bold">length</td>
+  <td class="fixed">INT UNSIGNED</td>
+  <td class="cent">Yes</td>
+  <td class="cent">Yes</td>
+  <td>The length of the relation in its originating file.</td>
 </tr>
 </table>
 <p>There are twenty-two different types of relations represented in this table. Each
@@ -437,8 +461,8 @@ derived from a CLASS file with not have a location.</p>
 <th>Description</th>
 </tr>
 <tr class="bga">
-<td class="fixed">INSIDE</td>
-<td>Physical containment. For example, a METHOD is INSIDE a CLASS.</td>
+<td class="fixed">CONTAINS</td>
+<td>Physical containment. For example, a CLASS CONTAINS a METHOD.</td>
 </tr>
 <tr class="bgb">
 <td class="fixed">EXTENDS</td>
