@@ -19,14 +19,17 @@ package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 
 import com.google.common.collect.EnumMultiset;
 import com.google.common.collect.Multiset;
+import com.google.common.util.concurrent.AtomicDouble;
 
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.FileMetricsTable;
@@ -128,7 +131,7 @@ public abstract class EntitiesImporter extends DatabaseImporter {
     task.start("Processing files", "files processed");
     BatchInserter inserter = exec.makeInFileInserter(tempDir, FileMetricsTable.TABLE);
     
-    Multiset<Metric> projectMetrics = EnumMultiset.create(Metric.class);
+    Map<Metric, AtomicDouble> projectMetrics = new EnumMap<>(Metric.class);
     
     for (FileEX file : reader.getTransientFiles()) {
       if (file.getType() == File.SOURCE || file.getType() == File.CLASS) {
@@ -138,8 +141,14 @@ public abstract class EntitiesImporter extends DatabaseImporter {
         } else {
           Metrics metrics = file.getMetrics();
           if (metrics != null) {
-            for (Entry<Metric, Integer> metric : metrics.getMetricValues()) {
-              projectMetrics.add(metric.getKey(), metric.getValue().intValue());
+            for (Entry<Metric, Double> metric : metrics.getMetricValues()) {
+              AtomicDouble d = projectMetrics.get(metric.getKey());
+              if (d == null) {
+                d = new AtomicDouble(metric.getValue().doubleValue());
+                projectMetrics.put(metric.getKey(), d);
+              } else {
+                d.addAndGet(metric.getValue().doubleValue());
+              }
               inserter.addInsert(FileMetricsTable.createInsert(projectID, fileID, metric.getKey(), metric.getValue()));
             }
           }
@@ -151,8 +160,8 @@ public abstract class EntitiesImporter extends DatabaseImporter {
     
     task.start("Performing db insert");
     inserter.insert();
-    for (Metric metric : projectMetrics.elementSet()) {
-      exec.insert(ProjectMetricsTable.createInsert(projectID, metric, projectMetrics.count(metric)));
+    for (Map.Entry<Metric, AtomicDouble> entry : projectMetrics.entrySet()) {
+      exec.insert(ProjectMetricsTable.createInsert(projectID, entry.getKey(), entry.getValue().doubleValue()));
     }
     task.finish();
     

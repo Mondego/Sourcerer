@@ -35,7 +35,7 @@ public class EntityMetricsTable extends DatabaseTable {
    *  | file_id      | BIGINT UNISNGED | No    | Yes    |
    *  | entity_id    | BIGINT UNISNGED | No    | Yes    | 
    *  | metric_type  | ENUM(values)    | No    | No     | 
-   *  | value        | INT             | No    | No     | 
+   *  | value        | FLOAT           | No    | No     | 
    *  +--------------+-----------------+-------+--------+
    */
   public static final EntityMetricsTable TABLE = new EntityMetricsTable();
@@ -44,13 +44,13 @@ public class EntityMetricsTable extends DatabaseTable {
   public static final Column<Integer> FILE_ID = TABLE.addIDColumn("file_id", false).addIndex();
   public static final Column<Integer> ENTITY_ID = TABLE.addIDColumn("entity_id", false).addIndex();
   public static final Column<Metric> METRIC_TYPE = TABLE.addEnumColumn("metric_type", Metric.values(), false);
-  public static final Column<Integer> VALUE = TABLE.addIntColumn("value", false, false);
+  public static final Column<Double> VALUE = TABLE.addDoubleColumn("value", 23, 3, false);
   
   private EntityMetricsTable() {
     super("entity_metrics");
   }
   
-  public static Insert createInsert(Integer projectID, Integer fileID, Integer entityID, Metric metric, Integer value) {
+  public static Insert createInsert(Integer projectID, Integer fileID, Integer entityID, Metric metric, Double value) {
     return TABLE.createInsert(PROJECT_ID.to(projectID), FILE_ID.to(fileID), ENTITY_ID.to(entityID), METRIC_TYPE.to(metric), VALUE.to(value));
   }
 }

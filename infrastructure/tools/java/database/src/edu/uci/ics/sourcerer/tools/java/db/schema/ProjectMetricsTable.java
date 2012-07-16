@@ -33,20 +33,20 @@ public class ProjectMetricsTable extends DatabaseTable {
    *  +--------------+-----------------+-------+--------+
    *  | project_id   | BIGINT UNISNGED | No    | Yes    | 
    *  | metric_type  | ENUM(values)    | No    | No     | 
-   *  | value        | INT             | No    | No     | 
+   *  | value        | FLOAT           | No    | No     |
    *  +--------------+-----------------+-------+--------+
    */
   public static final ProjectMetricsTable TABLE = new ProjectMetricsTable();
 
   public static final Column<Integer> PROJECT_ID = TABLE.addIDColumn("project_id", false).addIndex();
   public static final Column<Metric> METRIC_TYPE = TABLE.addEnumColumn("metric_type", Metric.values(), false);
-  public static final Column<Integer> VALUE = TABLE.addIntColumn("value", false, false);
+  public static final Column<Double> VALUE = TABLE.addDoubleColumn("value", 23, 3, false);
   
   private ProjectMetricsTable() {
     super("project_metrics");
   }
   
-  public static Insert createInsert(Integer projectID, Metric metric, Integer value) {
+  public static Insert createInsert(Integer projectID, Metric metric, Double value) {
     return TABLE.createInsert(PROJECT_ID.to(projectID), METRIC_TYPE.to(metric), VALUE.to(value));
   }
 }

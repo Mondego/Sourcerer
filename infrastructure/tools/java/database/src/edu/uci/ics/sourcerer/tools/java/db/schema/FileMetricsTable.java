@@ -34,7 +34,7 @@ public class FileMetricsTable extends DatabaseTable {
    *  | project_id   | BIGINT UNISNGED | No    | Yes    |
    *  | file_id      | BIGINT UNISNGED | No    | Yes    | 
    *  | metric_type  | ENUM(values)    | No    | No     | 
-   *  | value        | INT             | No    | No     | 
+   *  | value        | FLOAT           | No    | No     | 
    *  +--------------+-----------------+-------+--------+
    */
   public static final FileMetricsTable TABLE = new FileMetricsTable(); 
@@ -42,13 +42,13 @@ public class FileMetricsTable extends DatabaseTable {
   public static final Column<Integer> PROJECT_ID = TABLE.addIDColumn("project_id", false).addIndex();
   public static final Column<Integer> FILE_ID = TABLE.addIDColumn("file_id", false).addIndex();
   public static final Column<Metric> METRIC_TYPE = TABLE.addEnumColumn("metric_type", Metric.values(), false);
-  public static final Column<Integer> VALUE = TABLE.addIntColumn("value", false, false);
+  public static final Column<Double> VALUE = TABLE.addDoubleColumn("value", 23, 3, false);
   
   private FileMetricsTable() {
     super("file_metrics");
   }
   
-  public static Insert createInsert(Integer projectID, Integer fileID, Metric metric, Integer value) {
+  public static Insert createInsert(Integer projectID, Integer fileID, Metric metric, Double value) {
     return TABLE.createInsert(PROJECT_ID.to(projectID), FILE_ID.to(fileID), METRIC_TYPE.to(metric), VALUE.to(value));
   }
 }

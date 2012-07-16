@@ -147,7 +147,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
       if (fileID != null && entityID != null) {
         Metrics metrics = entity.getMetrics();
         if (metrics != null) {
-          for (Entry<Metric, Integer> metric : metrics.getMetricValues()) {
+          for (Entry<Metric, Double> metric : metrics.getMetricValues()) {
             EntityMetricsTable.createInsert(projectID, fileID, entityID, metric.getKey(), metric.getValue());
           }
         }

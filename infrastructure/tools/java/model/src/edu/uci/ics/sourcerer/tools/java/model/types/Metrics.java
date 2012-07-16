@@ -30,17 +30,17 @@ import edu.uci.ics.sourcerer.util.io.LineBuilder;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Metrics implements CustomSerializable {
-  private Map<Metric, Integer> metrics;
+  private Map<Metric, Double> metrics;
   
   public Metrics() {
     this.metrics = new EnumMap<>(Metric.class); 
   }
   
-  public void addMetric(Metric metric, int value) {
+  public void addMetric(Metric metric, double value) {
     metrics.put(metric, value);
   }
   
-  public Collection<Map.Entry<Metric, Integer>> getMetricValues() {
+  public Collection<Map.Entry<Metric, Double>> getMetricValues() {
     return metrics.entrySet();
   }
   
@@ -49,7 +49,7 @@ public class Metrics implements CustomSerializable {
       Metrics metrics = new Metrics();
       
       for (int count = scanner.nextInt(); count > 0; count--) {
-        metrics.metrics.put(Metric.valueOf(scanner.next()), scanner.nextInt());
+        metrics.metrics.put(Metric.valueOf(scanner.next()), scanner.nextDouble());
       }
       return metrics;
     } else if (!"null".equals(scanner.next())) {
@@ -63,7 +63,7 @@ public class Metrics implements CustomSerializable {
   public String serialize() {
     LineBuilder builder = new LineBuilder();
     builder.append(metrics.size());
-    for (Map.Entry<Metric, Integer> entry : metrics.entrySet()) {
+    for (Map.Entry<Metric, Double> entry : metrics.entrySet()) {
       builder.append(entry.getKey().name()).append(entry.getValue().toString());
     }
     return builder.toString();

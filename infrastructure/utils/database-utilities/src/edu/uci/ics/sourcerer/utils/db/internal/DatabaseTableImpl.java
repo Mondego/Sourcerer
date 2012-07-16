@@ -73,6 +73,18 @@ public class DatabaseTableImpl implements Table {
     return col;
   }
   
+  public final Column<Double> addDoubleColumn(String name, boolean nullable) {
+    Column<Double> col = new DoubleColumn(this, name, nullable);
+    columns.add(col);
+    return col;
+  }
+  
+  public final Column<Double> addDoubleColumn(String name, int totalDigits, int decimalDigits, boolean nullable) {
+    Column<Double> col = new DoubleColumn(this, name, totalDigits, decimalDigits, nullable);
+    columns.add(col);
+    return col;
+  }
+  
   public final Column<Boolean> addBooleanColumn(String name, boolean nullable) {
     Column<Boolean> col = new BooleanColumn(this, name, nullable);
     columns.add(col);
