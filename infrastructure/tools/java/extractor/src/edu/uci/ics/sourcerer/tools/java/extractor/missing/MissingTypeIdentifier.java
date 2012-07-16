@@ -33,9 +33,9 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import edu.uci.ics.sourcerer.tools.java.extractor.Extractor;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
-import edu.uci.ics.sourcerer.tools.java.extractor.io.ImportWriter;
-import edu.uci.ics.sourcerer.tools.java.extractor.io.MissingTypeWriter;
-import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ImportWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.io.MissingTypeWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFileSet;

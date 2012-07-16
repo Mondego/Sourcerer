@@ -40,7 +40,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.internal.core.BinaryType;
 
 import edu.uci.ics.sourcerer.tools.java.extractor.bytecode.ASMExtractor;
-import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaFile;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;

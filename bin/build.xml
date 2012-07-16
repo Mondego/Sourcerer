@@ -54,6 +54,9 @@
 	<property name="database-importer" location="../infrastructure/tools/java/database-importer/src" />
 	<property name="build-database-importer" location="${build}/database-importer" />
 
+	<property name="bytecode-extractor" location="../infrastructure/tools/java/bytecode-extractor/src" />
+	<property name="build-bytecode-extractor" location="${build}/bytecode-extractor" />
+	
 	<property name="extractor" location="../infrastructure/tools/java/extractor" />
 	<property name="build-extractor-lib" location="${build}/extractor-lib" />
 	<property name="build-extractor" location="${build}/extractor" />
@@ -309,6 +312,56 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 		</jar>
 	</target>
 
+	 <!-- Bytecode Extractor -->
+  <target name="bytecode-extractor" depends="init" description="Builds the Bytecode Extractor (bytecode-extractor.jar)">
+    <!-- Make the build directory -->
+    <mkdir dir="${build-bytecode-extractor}" />
+
+    <!-- Compile everything -->
+    <javac destdir="${build-bytecode-extractor}" debug="on" includeantruntime="false">
+      <src path="${utilities}" />
+      <src path="${core-repo-manager}" />
+      <src path="${java-repo-manager}" />
+      <src path="${model}" />
+      <src path="${bytecode-extractor}" />
+      <classpath>
+        <pathelement path="${classpath}" />
+        <fileset dir="${lib}">
+          <include name="**/guava-11.0.1.jar" />
+          <include name="**/asm-4.0_RC2.jar" />
+        </fileset>
+      </classpath>
+    </javac>
+
+    <!-- Copy the source -->
+    <copy todir="${build-bytecode-extractor}">
+      <fileset dir="${utilities}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-bytecode-extractor}">
+      <fileset dir="${core-repo-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-bytecode-extractor}">
+      <fileset dir="${java-repo-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-bytecode-extractor}">
+      <fileset dir="${model}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-bytecode-extractor}">
+      <fileset dir="${bytecode-extractor}" includes="**/*.java" />
+    </copy>
+
+    <!-- Add the required jars -->
+    <unjar src="${lib}/guava-11.0.1.jar" dest="${build-component-identifier}" />
+    <unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-component-identifier}" />
+
+    <!-- Build the jar -->
+    <jar destfile="${dist}/bytecode-extractor.jar" basedir="${build-bytecode-extractor}">
+      <manifest>
+        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.extractor.bytecode.Main" />
+      </manifest>
+    </jar>
+  </target>
+	
 	<!-- Database Importer -->
 	<target name="database-importer" depends="init" description="Builds the Database tools (db-import.jar)">
 		<!-- Make the build directory -->
@@ -386,6 +439,7 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 			<src path="${model}" />
 			<src path="${component-identifier}" />
 			<src path="${database}" />
+      <src path="${bytecode-extractor}" />
 			<classpath>
 				<pathelement path="${classpath}" />
 				<fileset dir="${lib}">
@@ -417,6 +471,9 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 		<copy todir="${build-extractor-lib}">
 			<fileset dir="${database}" includes="**/*.java" />
 		</copy>
+		<copy todir="${build-extractor-lib}">
+      <fileset dir="${bytecode-extractor}" includes="**/*.java" />
+    </copy>
 	</target>
 
 	<!-- Populate the extractor's lib directory -->

@@ -33,11 +33,11 @@ import org.eclipse.jdt.core.ITypeParameter;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 
-import edu.uci.ics.sourcerer.tools.java.extractor.io.EntityWriter;
-import edu.uci.ics.sourcerer.tools.java.extractor.io.FileWriter;
-import edu.uci.ics.sourcerer.tools.java.extractor.io.LocalVariableWriter;
-import edu.uci.ics.sourcerer.tools.java.extractor.io.RelationWriter;
-import edu.uci.ics.sourcerer.tools.java.extractor.io.WriterBundle;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.io.EntityWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.io.FileWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.io.LocalVariableWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.io.RelationWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.model.types.LocalVariable;
