@@ -43,6 +43,9 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
+import com.sun.org.apache.bcel.internal.generic.IUSHR;
+import com.sun.xml.internal.ws.org.objectweb.asm.Type;
+
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.EntityWriter;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.FileWriter;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.LocalVariableWriter;
@@ -479,9 +482,14 @@ public class ASMExtractor implements Closeable {
     private String sig;
     private String rawSig;
     private int mods;
-    private Set<Integer> offsets = new HashSet<>();
+    
+    // Metric related things
     private int instructionCount;
     private int statementCount;
+    private Set<Integer> offsets = new HashSet<>();
+    private Set<String> operators = new HashSet<>();
+    private Set<String> operands = new HashSet<>();
+    
     public MethodVisitorImpl() {
       super(Opcodes.V1_7);
     }
@@ -492,9 +500,12 @@ public class ASMExtractor implements Closeable {
       this.sig = sig;
       this.rawSig = rawSig;
       this.mods = mods;
-      offsets.clear();
+      
       instructionCount = 0;
       statementCount = 0;
+      offsets.clear();
+      operators.clear();
+      operands.clear();
     }
     
     @Override
@@ -540,11 +551,13 @@ public class ASMExtractor implements Closeable {
           case Opcodes.GETFIELD:
           case Opcodes.GETSTATIC:
             relationWriter.writeRelation(Relation.READS, fqnStack.getFqn(), convertNameToFqn(owner) + "." + name, location);
+            operands.add(owner + name);
             break;
           case Opcodes.PUTFIELD:
           case Opcodes.PUTSTATIC:
             relationWriter.writeRelation(Relation.WRITES, fqnStack.getFqn(), convertNameToFqn(owner) + "." + name, location);
             statementCount++;
+            operands.add(owner + name);
             break;
           default:
             logger.severe("Unknown field instruction: " + opcode);
@@ -555,20 +568,213 @@ public class ASMExtractor implements Closeable {
     @Override
     public void visitIincInsn(int var, int increment) {
       instructionCount++;
+      operators.add("$op84");
+      operands.add("$var" + var);
+      operands.add("$int" + increment);
     }
 
     @Override
     public void visitInsn(int opcode) {
+      switch (opcode) {
+        case Opcodes.ACONST_NULL: operands.add("$null"); break;
+        case Opcodes.ICONST_M1: operands.add("$int-1"); break;
+        case Opcodes.ICONST_0: operands.add("$int0"); break;
+        case Opcodes.ICONST_1: operands.add("$int1"); break;
+        case Opcodes.ICONST_2: operands.add("$int2"); break;
+        case Opcodes.ICONST_3: operands.add("$int3"); break;
+        case Opcodes.ICONST_4: operands.add("$int4"); break;
+        case Opcodes.ICONST_5: operands.add("$int5"); break;
+        case Opcodes.LCONST_0: operands.add("$long0"); break;
+        case Opcodes.LCONST_1: operands.add("$long1"); break;
+        case Opcodes.FCONST_0: operands.add("$float0"); break;
+        case Opcodes.FCONST_1: operands.add("$float1"); break;
+        case Opcodes.FCONST_2: operands.add("$float2"); break;
+        case Opcodes.DCONST_0: operands.add("$double0"); break;
+        case Opcodes.DCONST_1: operands.add("$double1"); break;
+        case Opcodes.IALOAD:
+        case Opcodes.LALOAD:
+        case Opcodes.FALOAD:
+        case Opcodes.DALOAD:
+        case Opcodes.AALOAD:
+        case Opcodes.BALOAD:
+        case Opcodes.CALOAD:
+        case Opcodes.SALOAD:
+        case Opcodes.IASTORE:
+        case Opcodes.LASTORE:
+        case Opcodes.FASTORE:
+        case Opcodes.DASTORE:
+        case Opcodes.AASTORE:
+        case Opcodes.BASTORE:
+        case Opcodes.CASTORE:
+        case Opcodes.SASTORE:
+          operators.add("$arr-deref");
+          break;
+        case Opcodes.IADD:
+        case Opcodes.LADD:
+        case Opcodes.FADD:
+        case Opcodes.DADD:
+          operators.add("$add");
+          break;
+        case Opcodes.ISUB:
+        case Opcodes.LSUB:
+        case Opcodes.FSUB:
+        case Opcodes.DSUB:
+          operators.add("$sub");
+          break;
+        case Opcodes.IMUL:
+        case Opcodes.LMUL:
+        case Opcodes.FMUL:
+        case Opcodes.DMUL:
+          operators.add("$mul");
+          break;
+        case Opcodes.IDIV:
+        case Opcodes.LDIV:
+        case Opcodes.FDIV:
+        case Opcodes.DDIV:
+          operators.add("$div");
+          break;
+        case Opcodes.IREM:
+        case Opcodes.LREM:
+        case Opcodes.FREM:
+        case Opcodes.DREM:
+          operators.add("$rem");
+          break;
+        case Opcodes.INEG:
+        case Opcodes.LNEG:
+        case Opcodes.FNEG:
+        case Opcodes.DNEG:
+          operators.add("$neg");
+          break;
+        case Opcodes.ISHL:
+        case Opcodes.LSHL:
+          operators.add("$shl");
+          break;
+        case Opcodes.ISHR:
+        case Opcodes.LSHR:
+          operators.add("$shr");
+          break;
+        case Opcodes.IUSHR:
+        case Opcodes.LUSHR:
+          operators.add("$ushr");
+          break;
+        case Opcodes.IAND:
+        case Opcodes.LAND:
+          operators.add("$bw-and");
+          break;
+        case Opcodes.IOR:
+        case Opcodes.LOR:
+          operators.add("$bw-or");
+          break;
+        case Opcodes.IXOR:
+        case Opcodes.LXOR:
+          operators.add("$bw-xor");
+          break;
+        case Opcodes.I2L:
+        case Opcodes.F2L:
+        case Opcodes.D2L:
+          operators.add("long");
+          break;
+        case Opcodes.I2F:
+        case Opcodes.L2F:
+        case Opcodes.D2F:
+          operators.add("float");
+          break;
+        case Opcodes.I2D:
+        case Opcodes.L2D:
+        case Opcodes.F2D:
+          operators.add("double");
+          break;
+        case Opcodes.L2I:
+        case Opcodes.F2I:
+        case Opcodes.D2I:
+          operators.add("int");
+          break;
+        case Opcodes.I2B:
+          operators.add("byte");
+          break;
+        case Opcodes.I2C:
+          operators.add("char");
+          break;
+        case Opcodes.I2S:
+          operators.add("short");
+          break;
+        case Opcodes.LCMP:
+        case Opcodes.FCMPL:
+        case Opcodes.FCMPG:
+        case Opcodes.DCMPL:
+        case Opcodes.DCMPG:
+          operators.add("$cmp");
+          break;
+        case Opcodes.IRETURN:
+        case Opcodes.LRETURN:
+        case Opcodes.FRETURN:
+        case Opcodes.DRETURN:
+        case Opcodes.ARETURN:
+        case Opcodes.RETURN:
+          operators.add("$return");
+          break;
+        case Opcodes.ARRAYLENGTH:
+          operators.add("$length");
+          break;
+        case Opcodes.ATHROW:
+          operators.add("throw");
+          break;
+        case Opcodes.MONITORENTER:
+        case Opcodes.MONITOREXIT:
+          operators.add("synchronized");
+          break;
+        default:
+          break;
+      }
       instructionCount++;
     }
 
     @Override
     public void visitIntInsn(int opcode, int operand) {
+      switch (opcode) {
+        case Opcodes.BIPUSH:
+        case Opcodes.SIPUSH:
+          operands.add("$int" + operand);
+          break;
+        case Opcodes.NEWARRAY:
+          operators.add("$new-arr");
+        default:
+          logger.severe("Unknown int instruction: " + opcode);
+          break;
+      }
       instructionCount++;
     }
 
     @Override
     public void visitJumpInsn(int opcode, Label label) {
+      switch (opcode) {
+        case Opcodes.IFEQ:
+        case Opcodes.IFNE:
+        case Opcodes.IFLT:
+        case Opcodes.IFGE:
+        case Opcodes.IFGT:
+        case Opcodes.IFLE:
+        case Opcodes.IF_ICMPEQ:
+        case Opcodes.IF_ICMPNE:
+        case Opcodes.IF_ICMPLT:
+        case Opcodes.IF_ICMPGE:
+        case Opcodes.IF_ICMPGT:
+        case Opcodes.IF_ICMPLE:
+        case Opcodes.IF_ACMPEQ:
+        case Opcodes.IF_ACMPNE:
+        case Opcodes.GOTO:
+        case Opcodes.JSR:
+          operators.add("$op" + opcode);
+          break;
+        case Opcodes.IFNULL:
+        case Opcodes.IFNONNULL:
+          operators.add("$op" + opcode);
+          operands.add("$null");
+          break;
+        default:
+          logger.severe("Unknown jump instruction: " + opcode);
+          break;
+      }
       instructionCount++;
       statementCount++;
       offsets.add(label.getOffset());
@@ -576,6 +782,21 @@ public class ASMExtractor implements Closeable {
 
     @Override
     public void visitLdcInsn(Object cst) {
+      if (cst instanceof Integer) {
+        operands.add("$int" + cst);
+      } else if (cst instanceof Float) {
+        operands.add("$float" + cst);
+      } else if (cst instanceof Long) {
+        operands.add("$long" + cst);
+      } else if (cst instanceof Double) {
+        operands.add("$double" + cst);
+      } else if (cst instanceof String) {
+        operands.add("$string" + cst);
+      } else if (cst instanceof Type) {
+        operands.add("$type" + cst);
+      } else {
+        logger.severe("Unknown constant type: " + cst);
+      }
       instructionCount++;
     }
     
@@ -584,15 +805,23 @@ public class ASMExtractor implements Closeable {
       instructionCount++;
       switch (opcode) {
         case Opcodes.INSTANCEOF:
+          operators.add("$op" + opcode);
+          operands.add(desc);
           relationWriter.writeRelation(Relation.CHECKS, fqnStack.getFqn(), convertNameToFqn(desc), location);
           statementCount++;
           break;
         case Opcodes.CHECKCAST:
+          operators.add("$op" + opcode);
+          operands.add(desc);
           relationWriter.writeRelation(Relation.CASTS, fqnStack.getFqn(), convertNameToFqn(desc), location);
           statementCount++;
           break;
         case Opcodes.NEW:
+          operators.add("$op" + opcode);
           relationWriter.writeRelation(Relation.INSTANTIATES, fqnStack.getFqn(), convertNameToFqn(desc), location);
+          break;
+        case Opcodes.ANEWARRAY:
+          operators.add("$new-arr");
           break;
         default:
           logger.severe("Unknown type instruction: " + opcode);
@@ -601,17 +830,26 @@ public class ASMExtractor implements Closeable {
 
     @Override
     public void visitVarInsn(int opcode, int var) {
+      operands.add("$var" + var);
       instructionCount++;
     }
 
     @Override
     public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
+      operators.add("$opab");
+      for (int key : keys) {
+        operands.add("int" + key);
+      }
+      for (Label label : labels) {
+        offsets.add(label.getOffset());
+      }
       instructionCount++;
     }
     
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
       instructionCount++;
+      operands.add(owner + name + desc);
       new SignatureReader(desc).accept(methodSignatureVisitor.init(owner, name));
       String fqn = methodSignatureVisitor.getReferenceFqn();
       relationWriter.writeRelation(Relation.CALLS, fqnStack.getFqn(), fqn, location);
@@ -621,6 +859,7 @@ public class ASMExtractor implements Closeable {
     @Override
     public void visitMultiANewArrayInsn(String desc, int dims) {
       instructionCount++;
+      operators.add("$new-arr");
     }
 
     @Override
@@ -638,10 +877,13 @@ public class ASMExtractor implements Closeable {
     
     @Override
     public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
+      operators.add("$try");
+      operators.add("$catch");
     }
 
     @Override
     public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+      operands.add(desc);
 //      logger.info("local : " + name + " : " + desc + " : " + signature);
     }
 
@@ -659,6 +901,7 @@ public class ASMExtractor implements Closeable {
       metrics.addMetric(Metric.BC_CYCLOMATIC_COMPLEXITY, 1 + offsets.size());
       metrics.addMetric(Metric.BC_NUMBER_OF_STATEMENTS, statementCount);
       metrics.addMetric(Metric.BC_NUMBER_OF_INSTRUCTIONS, instructionCount);
+      metrics.addMetric(Metric.BC_VOCABULARY_SIZE, operators.size() + operands.size());
       entityWriter.writeEntity(type, fqn, sig, rawSig, mods, metrics, location);
       fqnStack.pop();
     }
