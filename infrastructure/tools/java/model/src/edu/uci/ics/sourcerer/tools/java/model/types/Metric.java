@@ -21,14 +21,19 @@ package edu.uci.ics.sourcerer.tools.java.model.types;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public enum Metric {
+  // Source code metrics
   LINES_OF_CODE,
   NON_WHITESPACE_LOC,
   NON_COMMENTS_LOC,
+  NUMBER_OF_UNCONDITIONAL_JUMPS,
+  
+  // Raw bytecode metrics
   BC_CYCLOMATIC_COMPLEXITY,
   BC_NUMBER_OF_STATEMENTS,
   BC_NUMBER_OF_INSTRUCTIONS,
   BC_VOCABULARY_SIZE,
   
+  // Computed bytecode metrics
   BC_AVERAGE_SIZE_OF_STATEMENTS,
   BC_WEIGHTED_METHODS_PER_CLASS,
   ;

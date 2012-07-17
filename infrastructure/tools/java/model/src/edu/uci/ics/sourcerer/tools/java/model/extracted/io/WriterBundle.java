@@ -59,6 +59,10 @@ public final class WriterBundle implements Closeable {
   
   private final File output;
 
+  public WriterBundle() {
+    output = null;
+  }
+  
   public WriterBundle(File output) {
     this.output = output;
     output.mkdirs();

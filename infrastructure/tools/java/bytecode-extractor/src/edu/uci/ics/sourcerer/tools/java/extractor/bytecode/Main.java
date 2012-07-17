@@ -17,9 +17,24 @@
  */
 package edu.uci.ics.sourcerer.tools.java.extractor.bytecode;
 
+import java.io.File;
+
+import edu.uci.ics.sourcerer.tools.java.model.extracted.io.WriterBundle;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.arguments.Command;
+
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
-
+  public static final Command EXTRACT_FILE = new Command("extract-file", "") {
+    @Override
+    protected void action() {
+      ASMExtractor extractor = new ASMExtractor(new WriterBundle());
+      extractor.extract("default", "Foo", FileUtils.getFileAsByteArray(new File("/home/jossher/research/Sourcerer/Foo.class")));
+    }
+  };
+  public static void main(String[] args) {
+    Command.execute(args, Main.class);
+  }
 }

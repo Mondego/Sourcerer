@@ -486,7 +486,7 @@ public class ASMExtractor implements Closeable {
     // Metric related things
     private int instructionCount;
     private int statementCount;
-    private Set<Integer> offsets = new HashSet<>();
+    private Set<Label> offsets = new HashSet<>();
     private Set<String> operators = new HashSet<>();
     private Set<String> operands = new HashSet<>();
     
@@ -540,6 +540,7 @@ public class ASMExtractor implements Closeable {
     
     @Override
     public void visitFrame(int type, int nLoacl, Object[] local, int nStack, Object[] stack) {
+      logger.info("frame");
     }
 
     @Override
@@ -762,8 +763,10 @@ public class ASMExtractor implements Closeable {
         case Opcodes.IF_ICMPLE:
         case Opcodes.IF_ACMPEQ:
         case Opcodes.IF_ACMPNE:
-        case Opcodes.GOTO:
         case Opcodes.JSR:
+          operators.add("$op" + opcode);
+          break;
+        case Opcodes.GOTO:
           operators.add("$op" + opcode);
           break;
         case Opcodes.IFNULL:
@@ -777,7 +780,6 @@ public class ASMExtractor implements Closeable {
       }
       instructionCount++;
       statementCount++;
-      offsets.add(label.getOffset());
     }
 
     @Override
@@ -840,9 +842,6 @@ public class ASMExtractor implements Closeable {
       for (int key : keys) {
         operands.add("int" + key);
       }
-      for (Label label : labels) {
-        offsets.add(label.getOffset());
-      }
       instructionCount++;
     }
     
@@ -865,14 +864,12 @@ public class ASMExtractor implements Closeable {
     @Override
     public void visitTableSwitchInsn(int min, int max, Label dflt, Label ... labels) {
       instructionCount++;
-      for (Label label : labels) {
-        offsets.add(label.getOffset());
-      }
       statementCount++;
     }
 
     @Override
     public void visitLabel(Label label) {
+      offsets.add(label);
     }
     
     @Override
