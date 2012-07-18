@@ -31,6 +31,7 @@ public class LinesOfCode {
     START,
     IN_LINE_COMMENT,
     IN_BLOCK_COMMENT,
+    IN_JAVADOC_COMMENT,
     IN_STRING_LITERAL,
     IN_CHARACTER_LITERAL,
   }
@@ -39,10 +40,13 @@ public class LinesOfCode {
     if (source != null) {
       int whitespaceLineCount = 0;
       int commentLineCount = 0;
+      int javadocLineCount = 0;
+      int partialLineCount = 0;
       int codeLineCount = 0;
 
       boolean hasContent = false;
       boolean wasComment = false;
+      boolean wasJavadoc = false;
       State state = State.START;
       int i = 0;
       for (boolean cond = true; cond;) {
@@ -61,8 +65,18 @@ public class LinesOfCode {
               int n = source.codePointAt(j);
               if (n == '/') {
                 state = State.IN_LINE_COMMENT;
-              } else if (n == '*') { 
-                state = State.IN_BLOCK_COMMENT;
+              } else if (n == '*') {
+                int k = j + Character.charCount(n);
+                if (k < source.length()) {
+                  int o = source.codePointAt(k);
+                  if (o == '*') {
+                    state = State.IN_JAVADOC_COMMENT;
+                  } else {
+                    state = State.IN_BLOCK_COMMENT;
+                  }
+                } else {
+                  state = State.IN_BLOCK_COMMENT;
+                }
               }
             }
           } else if (c == '"') {
@@ -73,6 +87,9 @@ public class LinesOfCode {
             if (wasComment) {
               if (hasContent) {
                 codeLineCount++;
+                partialLineCount++;
+              } else if (wasJavadoc) {
+                javadocLineCount++;
               } else {
                 commentLineCount++;
               }
@@ -93,24 +110,29 @@ public class LinesOfCode {
             state = State.START;
             if (hasContent) {
               codeLineCount++;
+              partialLineCount++;
               hasContent = false;
             } else {
               commentLineCount++;
             }
             wasComment = false;
           }
-        } else if (state == State.IN_BLOCK_COMMENT) {
+        } else if (state == State.IN_BLOCK_COMMENT || state == State.IN_JAVADOC_COMMENT) {
           if (c == '\n') {
             if (hasContent) {
               codeLineCount++;
+              partialLineCount++;
               hasContent = false;
+            } else if (state == State.IN_JAVADOC_COMMENT) {
+              javadocLineCount++;
             } else {
               commentLineCount++;
             }
           } else if (c == '/') {
             if (source.codePointBefore(i) == '*') {
-              state = State.START;
+              wasJavadoc = state == State.IN_JAVADOC_COMMENT;
               wasComment = true;
+              state = State.START;
             }
           }
         } else if (state == State.IN_STRING_LITERAL) {
@@ -127,9 +149,12 @@ public class LinesOfCode {
         i += Character.charCount(c);
       }
       
-      metrics.addMetric(Metric.LINES_OF_CODE, whitespaceLineCount + commentLineCount + codeLineCount);
-      metrics.addMetric(Metric.NON_WHITESPACE_LOC, commentLineCount + codeLineCount);
-      metrics.addMetric(Metric.NON_COMMENTS_LOC, codeLineCount);
+      metrics.addMetric(Metric.LINES_OF_CODE, whitespaceLineCount + commentLineCount + javadocLineCount + codeLineCount);
+      metrics.addMetric(Metric.COMMENT_LOC, commentLineCount);
+      metrics.addMetric(Metric.CLASS_COMMENT_LOC, javadocLineCount);
+      metrics.addMetric(Metric.PARTIAL_COMMENT_LOC, partialLineCount);
+      metrics.addMetric(Metric.NON_WHITESPACE_LOC, commentLineCount + javadocLineCount + codeLineCount);
+      metrics.addMetric(Metric.NON_COMMENT_LOC, codeLineCount);
     }
   }
 }

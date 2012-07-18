@@ -23,9 +23,18 @@ package edu.uci.ics.sourcerer.tools.java.model.types;
 public enum Metric {
   // Source code metrics
   LINES_OF_CODE,
+  COMMENT_LOC,
+  CLASS_COMMENT_LOC,
+  PARTIAL_COMMENT_LOC,
   NON_WHITESPACE_LOC,
-  NON_COMMENTS_LOC,
+  NON_COMMENT_LOC,
+  
   NUMBER_OF_UNCONDITIONAL_JUMPS,
+  NUMBER_OF_NESTED_LEVELS,
+  
+  // Computed source code metrics
+  COMMENTS_FREQUENCY,
+  CLASS_COMMENTS_FREQUENCY,
   
   // Raw bytecode metrics
   BC_CYCLOMATIC_COMPLEXITY,

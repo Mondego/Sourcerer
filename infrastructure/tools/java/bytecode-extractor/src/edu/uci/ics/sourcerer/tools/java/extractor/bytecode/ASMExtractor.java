@@ -40,11 +40,9 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
-
-import com.sun.org.apache.bcel.internal.generic.IUSHR;
-import com.sun.xml.internal.ws.org.objectweb.asm.Type;
 
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.EntityWriter;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.FileWriter;
@@ -489,7 +487,7 @@ public class ASMExtractor implements Closeable {
     private Set<Label> offsets = new HashSet<>();
     private Set<String> operators = new HashSet<>();
     private Set<String> operands = new HashSet<>();
-    
+
     public MethodVisitorImpl() {
       super(Opcodes.V1_7);
     }
@@ -569,6 +567,7 @@ public class ASMExtractor implements Closeable {
     @Override
     public void visitIincInsn(int var, int increment) {
       instructionCount++;
+      statementCount++;
       operators.add("$op84");
       operands.add("$var" + var);
       operands.add("$int" + increment);
@@ -712,12 +711,14 @@ public class ASMExtractor implements Closeable {
         case Opcodes.DRETURN:
         case Opcodes.ARETURN:
         case Opcodes.RETURN:
+          statementCount++;
           operators.add("$return");
           break;
         case Opcodes.ARRAYLENGTH:
           operators.add("$length");
           break;
         case Opcodes.ATHROW:
+          statementCount++;
           operators.add("throw");
           break;
         case Opcodes.MONITORENTER:
@@ -834,15 +835,30 @@ public class ASMExtractor implements Closeable {
     public void visitVarInsn(int opcode, int var) {
       operands.add("$var" + var);
       instructionCount++;
+      switch (opcode) {
+        case Opcodes.ILOAD:
+        case Opcodes.LLOAD:
+        case Opcodes.FLOAD:
+        case Opcodes.DLOAD:
+        case Opcodes.ALOAD:
+          break;
+        case Opcodes.ISTORE:
+        case Opcodes.LSTORE:
+        case Opcodes.FSTORE:
+        case Opcodes.DSTORE:
+        case Opcodes.ASTORE:
+          statementCount++;
+      }
     }
 
     @Override
     public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
-      operators.add("$opab");
+      operators.add("$switch");
       for (int key : keys) {
         operands.add("int" + key);
       }
       instructionCount++;
+      statementCount++;
     }
     
     @Override
@@ -863,6 +879,7 @@ public class ASMExtractor implements Closeable {
 
     @Override
     public void visitTableSwitchInsn(int min, int max, Label dflt, Label ... labels) {
+      operators.add("$switch");
       instructionCount++;
       statementCount++;
     }
