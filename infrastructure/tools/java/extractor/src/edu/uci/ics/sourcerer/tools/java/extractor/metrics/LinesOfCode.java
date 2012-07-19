@@ -154,7 +154,7 @@ public class LinesOfCode {
       metrics.addMetric(Metric.CLASS_COMMENT_LOC, javadocLineCount);
       metrics.addMetric(Metric.PARTIAL_COMMENT_LOC, partialLineCount);
       metrics.addMetric(Metric.NON_WHITESPACE_LOC, commentLineCount + javadocLineCount + codeLineCount);
-      metrics.addMetric(Metric.NON_COMMENT_LOC, codeLineCount);
+      metrics.addMetric(Metric.CODE_LOC, codeLineCount);
     }
   }
 }

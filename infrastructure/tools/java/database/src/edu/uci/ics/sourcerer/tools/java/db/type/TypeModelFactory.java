@@ -17,29 +17,23 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.type;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Map;
-
+import java.util.Set;
+import java.util.logging.Level;
 
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
-import edu.uci.ics.sourcerer.tools.java.model.types.Modifier;
-import edu.uci.ics.sourcerer.tools.java.model.types.Modifiers;
 import edu.uci.ics.sourcerer.tools.java.model.types.Project;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
-import edu.uci.ics.sourcerer.tools.java.model.types.RelationClass;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnection;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
-import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
-import edu.uci.ics.sourcerer.utils.db.sql.QualifiedTable;
-import edu.uci.ics.sourcerer.utils.db.sql.ResultConstructor;
 import edu.uci.ics.sourcerer.utils.db.sql.ResultConstructor2;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
@@ -51,10 +45,18 @@ public class TypeModelFactory {
   private TypeModelFactory() {}
   
   public static TypeModel createJavaLibraryTypeModel() {
-    return create(new JavaLibraryCreator());
+    return create(new JavaLibraryModelCreator());
   }
   
-  private static TypeModel create(Creator creator) {
+  public static TypeModel createJarTypeModel(Collection<Integer> jarIDs, TypeModel libraryModel) {
+    return create(new JarModelCreator(jarIDs, libraryModel));
+  }
+  
+  public static TypeModel createProjectTypeModel(Integer projectID, TypeModel jarModel) {
+    return create(new ProjectModelCreator(projectID, jarModel));
+  }
+  
+  private static TypeModel create(ModelCreator creator) {
     try (DatabaseConnection conn = DatabaseConnectionFactory.INSTANCE.create()) {
       if (conn.open()) {
         return creator.create(conn.getExecutor());
@@ -63,58 +65,154 @@ public class TypeModelFactory {
     return null;
   }
   
-  private static ResultConstructor2<ModeledEntity> CONSTRUCTOR = new ResultConstructor2<ModeledEntity>() {
-    @Override
-    public void addSelects(SelectQuery query) {
-      query.addSelect(
-          EntitiesTable.ENTITY_ID, 
-          EntitiesTable.FQN, 
-          EntitiesTable.ENTITY_TYPE, 
-          EntitiesTable.PROJECT_ID,
-          EntitiesTable.PARAMS,
-          EntitiesTable.RAW_PARAMS);
+  private static abstract class ModelCreator {
+    protected final TaskProgressLogger task;
+    protected final TypeModel model;
+    protected QueryExecutor exec;
+    
+    protected ModelCreator(TypeModel parentModel) {
+      task = TaskProgressLogger.get();
+      model = new TypeModel(parentModel);
     }
     
-    @Override
-    public ModeledEntity constructResult(TypedQueryResult result) {
-      Entity type = result.getResult(EntitiesTable.ENTITY_TYPE);
-      switch (type) {
-        case CLASS:
-        case INTERFACE:
-        case ENUM:
-        case ANNOTATION:
-          return new ModeledType(
-              result.getResult(EntitiesTable.ENTITY_ID), 
-              result.getResult(EntitiesTable.FQN), 
-              type, 
-              result.getResult(EntitiesTable.PROJECT_ID));
-        case METHOD:
-        case ANNOTATION_ELEMENT:
-          return new ModeledMethod(
-              result.getResult(EntitiesTable.ENTITY_ID), 
-              result.getResult(EntitiesTable.FQN), 
-              type, 
-              result.getResult(EntitiesTable.PROJECT_ID),
-              result.getResult(EntitiesTable.PARAMS),
-              result.getResult(EntitiesTable.RAW_PARAMS));
-        case PACKAGE:
-        case FIELD:
-        case ENUM_CONSTANT:
-          return new ModeledEntity(
-              result.getResult(EntitiesTable.ENTITY_ID), 
-              result.getResult(EntitiesTable.FQN), 
-              type, 
-              result.getResult(EntitiesTable.PROJECT_ID));
-        default:
-          return null;
+    // The ENTITIES
+    protected final Set<Entity> ENTITIES = EnumSet.of(
+        Entity.PACKAGE, 
+        Entity.CLASS, 
+        Entity.INTERFACE, 
+        Entity.ENUM, 
+        Entity.ANNOTATION, 
+        Entity.CONSTRUCTOR, 
+        Entity.METHOD, 
+        Entity.ANNOTATION_ELEMENT, 
+        Entity.ENUM_CONSTANT, 
+        Entity.FIELD,
+        Entity.PARAMETERIZED_TYPE,
+//        Entity.ARRAY,
+        Entity.TYPE_VARIABLE);
+    protected static ResultConstructor2<ModeledEntity> ENTITY_CONSTRUCTOR = new ResultConstructor2<ModeledEntity>() {
+      @Override
+      public void addSelects(SelectQuery query) {
+        query.addSelect(
+            EntitiesTable.ENTITY_ID, 
+            EntitiesTable.FQN, 
+            EntitiesTable.ENTITY_TYPE, 
+            EntitiesTable.PROJECT_ID,
+            EntitiesTable.PARAMS,
+            EntitiesTable.RAW_PARAMS);
+      }
+      
+      @Override
+      public ModeledEntity constructResult(TypedQueryResult result) {
+        Entity type = result.getResult(EntitiesTable.ENTITY_TYPE);
+        Integer entityID = result.getResult(EntitiesTable.ENTITY_ID);
+        String fqn = result.getResult(EntitiesTable.FQN);
+        Integer projectID = result.getResult(EntitiesTable.PROJECT_ID);
+        
+        switch (type) {
+          case CLASS:
+          case INTERFACE:
+          case ENUM:
+          case ANNOTATION:
+            return new ModeledDeclaredType(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, projectID);
+          case METHOD:
+          case ANNOTATION_ELEMENT:
+            return new ModeledMethod(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, projectID,               
+                result.getResult(EntitiesTable.PARAMS),
+                result.getResult(EntitiesTable.RAW_PARAMS));
+          case FIELD:
+            return new ModeledField(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, projectID);
+          case PRIMITIVE:
+          case UNKNOWN:
+          case PACKAGE:
+          case ENUM_CONSTANT:
+          case TYPE_VARIABLE:
+            return new ModeledEntity(entityID, fqn, type, projectID);
+          case PARAMETERIZED_TYPE:
+            return new ModeledParametrizedType(entityID, fqn, type, projectID);
+          default:
+            return null;
+        }
+      }
+    };
+    
+    // The RELATIONS
+    private abstract class RelationProcessor <LHS extends ModeledEntity, RHS extends ModeledEntity> {
+      private final Relation type;
+      private final Class<LHS> lhsType;
+      private final Class<RHS> rhsType;
+      private final boolean noNull;
+      
+      protected RelationProcessor(Relation type, Class<LHS> lhsType, Class<RHS> rhsType, boolean noNull) {
+        this.type = type;
+        this.lhsType = lhsType;
+        this.rhsType = rhsType;
+        this.noNull = noNull;
+      }
+      
+      protected abstract void process(LHS lhs, RHS rhs);
+      
+      public void process(Integer lhsEid, Integer rhsEid) {
+        ModeledEntity lhs = model.get(lhsEid);
+        ModeledEntity rhs = model.get(rhsEid);
+        if (lhs != null && rhs != null) {
+          boolean lhsValid = lhsType.isInstance(lhs);
+          boolean rhsValid = rhsType.isInstance(rhs);
+          if (lhsValid && rhsValid) {
+            process(lhsType.cast(lhs), rhsType.cast(rhs));
+          } else if (lhsValid) {
+            task.report(Level.SEVERE, type.name() + " relation RHS invalid type: " + lhs);
+          } else if (rhsValid) {
+            task.report(Level.SEVERE, type.name() + " relation LHS invalid type: " + lhs);
+          } else {
+            task.report(Level.SEVERE, type.name() + " relation LHS & RHS invalid types: " + lhs);
+          }
+        } else if (noNull) {
+          if (lhs == null && rhs == null) {
+            task.report(Level.SEVERE, type.name() + " relation missing LHS & RHS: " + lhsEid + "->" + rhsEid);
+          } else if (lhs == null) {
+            task.report(Level.SEVERE, type.name() + " relation missing LHS: " + lhsEid + "->" + rhsEid);
+          } else {
+            task.report(Level.SEVERE, type.name() + " relation missing RHS: " + lhsEid + "->" + rhsEid);
+          }
+        }
       }
     }
-  };
-  
-  private static abstract class Creator {
-    protected TaskProgressLogger task = TaskProgressLogger.get();
-    protected QueryExecutor exec;
-    protected TypeModel model = new TypeModel();
+    protected final Map<Relation, RelationProcessor<?, ?>> RELATIONS;
+    {
+      RELATIONS = new EnumMap<>(Relation.class);
+      RELATIONS.put(Relation.CONTAINS, new RelationProcessor<ModeledStructuralEntity, ModeledStructuralEntity>(Relation.CONTAINS, ModeledStructuralEntity.class, ModeledStructuralEntity.class, false) {
+        @Override
+        protected void process(ModeledStructuralEntity lhs, ModeledStructuralEntity rhs) {
+          lhs.setOwner(rhs);
+        }
+      });
+      RELATIONS.put(Relation.EXTENDS, new RelationProcessor<ModeledDeclaredType, ModeledEntity>(Relation.EXTENDS, ModeledDeclaredType.class, ModeledEntity.class, true) {
+        @Override
+        protected void process(ModeledDeclaredType lhs, ModeledEntity rhs) {
+          lhs.setSuperclass(rhs);
+        }
+      });
+      RELATIONS.put(Relation.IMPLEMENTS, new RelationProcessor<ModeledDeclaredType, ModeledEntity>(Relation.IMPLEMENTS, ModeledDeclaredType.class, ModeledEntity.class, true) {
+        @Override
+        protected void process(ModeledDeclaredType lhs, ModeledEntity rhs) {
+          lhs.addInterface(rhs);
+        }
+      });
+      RELATIONS.put(Relation.HAS_BASE_TYPE, new RelationProcessor<ModeledParametrizedType, ModeledDeclaredType>(Relation.HAS_BASE_TYPE, ModeledParametrizedType.class, ModeledDeclaredType.class, true) {
+        @Override
+        protected void process(ModeledParametrizedType lhs, ModeledDeclaredType rhs) {
+          lhs.setBaseType(rhs);
+        }
+      });
+      RELATIONS.put(Relation.HAS_TYPE_ARGUMENT, new RelationProcessor<ModeledParametrizedType, ModeledDeclaredType>(Relation.HAS_BASE_TYPE, ModeledParametrizedType.class, ModeledDeclaredType.class, true) {
+        @Override
+        protected void process(ModeledParametrizedType lhs, ModeledDeclaredType rhs) {
+          lhs.addTypeArgument(rhs);
+        }
+      });
+    }
+    
     
     public TypeModel create(QueryExecutor exec) {
       this.exec = exec;
@@ -133,37 +231,59 @@ public class TypeModelFactory {
     protected abstract void loadEntities();
     
     protected abstract void loadRelations();
+    
+    protected void processRelations(TypedQueryResult result) {
+      while (result.next()) {
+        Integer lhsEid = result.getResult(RelationsTable.LHS_EID);
+        Integer rhsEid = result.getResult(RelationsTable.RHS_EID);
+        Relation type = result.getResult(RelationsTable.RELATION_TYPE);
+        
+        RelationProcessor<?, ?> processor = RELATIONS.get(type);
+        if (processor != null) {
+          processor.process(lhsEid, rhsEid);
+        } else {
+          throw new IllegalStateException("Unexpected relation type: " + type);
+        }
+        task.progress();
+      }
+    }
   }
 
-  private static class JavaLibraryCreator extends Creator {
-    private Collection<Integer> libraries = null;
+  private static class JavaLibraryModelCreator extends ModelCreator {
+    private Collection<Integer> libraries;
+    
+    private JavaLibraryModelCreator() {
+      super(null);
+    }
+    
     @Override
     public void loadEntities() {
-      // Load the primitive types
+      // Load the primitives and unknowns
       try (SelectQuery select = exec.createSelectQuery(EntitiesTable.TABLE)) {
-        CONSTRUCTOR.addSelects(select);
-        select.andWhere(EntitiesTable.ENTITY_TYPE.compareEquals(Entity.PRIMITIVE));
-        for (ModeledEntity entity : select.select().toIterable(CONSTRUCTOR)) {
+        ENTITY_CONSTRUCTOR.addSelects(select);
+        select.andWhere(EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.PRIMITIVE, Entity.UNKNOWN)));
+        for (ModeledEntity entity : select.select().toIterable(ENTITY_CONSTRUCTOR)) {
           model.add(entity);
           task.progress();
         }
       }
       
+      // Get the Java Library projectIDs
       try (SelectQuery select = exec.createSelectQuery(ProjectsTable.TABLE)) {
-        // Get the Java Library projectIDs
         select.addSelect(ProjectsTable.PROJECT_ID);
         select.andWhere(ProjectsTable.PROJECT_TYPE.compareEquals(Project.JAVA_LIBRARY));
         
         libraries = select.select().toCollection(ProjectsTable.PROJECT_ID);
       }
       
+      // Load the entities
       try (SelectQuery select= exec.createSelectQuery(EntitiesTable.TABLE)) {
-        CONSTRUCTOR.addSelects(select);
+        ENTITY_CONSTRUCTOR.addSelects(select);
         select.andWhere(
             EntitiesTable.PROJECT_ID.compareIn(libraries),
-            EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.PACKAGE, Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION, Entity.CONSTRUCTOR, Entity.METHOD, Entity.ANNOTATION_ELEMENT, Entity.ENUM_CONSTANT, Entity.FIELD)));
+            EntitiesTable.ENTITY_TYPE.compareIn(ENTITIES));
 
-        for (ModeledEntity entity : select.select().toIterable(CONSTRUCTOR)) {
+        for (ModeledEntity entity : select.select().toIterable(ENTITY_CONSTRUCTOR)) {
           model.add(entity);
           task.progress();
         }
@@ -172,29 +292,84 @@ public class TypeModelFactory {
 
     @Override
     protected void loadRelations() {
-      Map<Integer, Integer> pMapping = new HashMap<>();
+      // Load relations
       try (SelectQuery query = exec.createSelectQuery(RelationsTable.TABLE)) {
-        query.addSelect(RelationsTable.LHS_EID, RelationsTable.RHS_EID);
-        query.andWhere(RelationsTable.PROJECT_ID.compareIn(libraries), RelationsTable.RELATION_TYPE.compareEquals(Relation.HAS_BASE_TYPE));
+        query.addSelect(RelationsTable.LHS_EID, RelationsTable.RHS_EID, RelationsTable.RELATION_TYPE);
+        query.andWhere(RelationsTable.PROJECT_ID.compareIn(libraries), RelationsTable.RELATION_TYPE.compareIn(RELATIONS.keySet()));
         
-        TypedQueryResult result = query.select();
-        while (result.next()) {
-          pMapping.put(result.getResult(RelationsTable.LHS_EID), result.getResult(RelationsTable.RHS_EID));
+        processRelations(query.select());
+      }
+    }
+  }
+  
+  private static class JarModelCreator extends ModelCreator {
+    private final Collection<Integer> jarIDs;
+    
+    private JarModelCreator(Collection<Integer> jarIDs, TypeModel libraryModel) {
+      super(libraryModel);
+      this.jarIDs = jarIDs;
+    }
+    
+    @Override
+    public void loadEntities() {
+      // Load the entities
+      try (SelectQuery select= exec.createSelectQuery(EntitiesTable.TABLE)) {
+        ENTITY_CONSTRUCTOR.addSelects(select);
+        select.andWhere(
+            EntitiesTable.PROJECT_ID.compareIn(jarIDs),
+            EntitiesTable.ENTITY_TYPE.compareIn(ENTITIES));
+
+        for (ModeledEntity entity : select.select().toIterable(ENTITY_CONSTRUCTOR)) {
+          model.add(entity);
           task.progress();
         }
       }
-      
+    }
+
+    @Override
+    protected void loadRelations() {
+      // Load relations
       try (SelectQuery query = exec.createSelectQuery(RelationsTable.TABLE)) {
-        query.addSelect(RelationsTable.LHS_EID, RelationsTable.RHS_EID);
-        query.andWhere(RelationsTable.PROJECT_ID.compareIn(libraries), RelationsTable.RELATION_TYPE.compareEquals(Relation.HAS_BASE_TYPE));
-        query.andWhere(RelationsTable.PROJECT_ID.compareIn(libraries), RelationsTable.RELATION_TYPE.compareIn(EnumSet.of(Relation.EXTENDS, Relation.IMPLEMENTS)));
+        query.addSelect(RelationsTable.LHS_EID, RelationsTable.RHS_EID, RelationsTable.RELATION_TYPE);
+        query.andWhere(RelationsTable.PROJECT_ID.compareIn(jarIDs), RelationsTable.RELATION_TYPE.compareIn(RELATIONS.keySet()));
         
-        TypedQueryResult result = query.select();
-        while (result.next()) {
-          Integer lhs = result.getResult(RelationsTable.LHS_EID);
-          Integer rhs = result.getResult(RelationsTable.RHS_EID);
+        processRelations(query.select());
+      }
+    }
+  }
+  
+  private static class ProjectModelCreator extends ModelCreator {
+    private final Integer projectID;
+    
+    private ProjectModelCreator(Integer projectID, TypeModel libraryModel) {
+      super(libraryModel);
+      this.projectID = projectID;
+    }
+    
+    @Override
+    public void loadEntities() {
+      // Load the entities
+      try (SelectQuery select= exec.createSelectQuery(EntitiesTable.TABLE)) {
+        ENTITY_CONSTRUCTOR.addSelects(select);
+        select.andWhere(
+            EntitiesTable.PROJECT_ID.compareEquals(projectID),
+            EntitiesTable.ENTITY_TYPE.compareIn(ENTITIES));
+
+        for (ModeledEntity entity : select.select().toIterable(ENTITY_CONSTRUCTOR)) {
+          model.add(entity);
           task.progress();
         }
+      }
+    }
+
+    @Override
+    protected void loadRelations() {
+      // Load relations
+      try (SelectQuery query = exec.createSelectQuery(RelationsTable.TABLE)) {
+        query.addSelect(RelationsTable.LHS_EID, RelationsTable.RHS_EID, RelationsTable.RELATION_TYPE);
+        query.andWhere(RelationsTable.PROJECT_ID.compareEquals(projectID), RelationsTable.RELATION_TYPE.compareIn(RELATIONS.keySet()));
+        
+        processRelations(query.select());
       }
     }
   }

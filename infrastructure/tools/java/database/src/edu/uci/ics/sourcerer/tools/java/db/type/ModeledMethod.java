@@ -18,16 +18,17 @@
 package edu.uci.ics.sourcerer.tools.java.db.type;
 
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
+import edu.uci.ics.sourcerer.tools.java.model.types.Modifiers;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ModeledMethod extends ModeledEntity {
+public class ModeledMethod extends ModeledStructuralEntity {
   private final String params;
   private final String rawParams;
 
-  ModeledMethod(Integer entityID, String fqn, Entity type, Integer projectID, String params, String rawParams) {
-    super(entityID, fqn, type, projectID);
+  ModeledMethod(Integer entityID, Modifiers mods, String fqn, Entity type, Integer projectID, String params, String rawParams) {
+    super(entityID, mods, fqn, type, projectID);
     this.params = params;
     this.rawParams = rawParams;
   }

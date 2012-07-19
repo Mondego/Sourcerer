@@ -24,14 +24,24 @@ import java.util.Map;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class TypeModel {
-  private Map<Integer, ModeledEntity> entities;
-  private TypeModel parentModel;
+  private final Map<Integer, ModeledEntity> entities;
+  private final TypeModel parentModel;
   
-  TypeModel() {
+  TypeModel(TypeModel parentModel) {
     entities = new HashMap<>();
+    this.parentModel = parentModel; 
   }
   
   void add(ModeledEntity entity) {
     entities.put(entity.getEntityID(), entity);
+  }
+  
+  public ModeledEntity get(Integer entityID) {
+    ModeledEntity entity = entities.get(entityID);
+    if (entity == null && parentModel != null) {
+      return parentModel.get(entityID);
+    } else {
+      return entity;
+    }
   }
 }

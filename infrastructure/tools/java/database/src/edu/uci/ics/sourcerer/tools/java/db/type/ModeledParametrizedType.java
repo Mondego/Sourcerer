@@ -17,43 +17,40 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.type;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ModeledEntity {
-  private final Integer entityID;
-  private final String fqn;
-  private final Entity type;
-  private final Integer projectID;
+public class ModeledParametrizedType extends ModeledEntity {
+  private ModeledDeclaredType baseType;
+  private List<ModeledEntity> typeArgs;
   
-  ModeledEntity(Integer entityID, String fqn, Entity type, Integer projectID) {
-    this.entityID = entityID;
-    this.fqn = fqn;
-    this.type = type;
-    this.projectID = projectID;
+  ModeledParametrizedType(Integer entityID, String fqn, Entity type, Integer projectID) {
+    super(entityID, fqn, type, projectID);
+    typeArgs = Collections.emptyList();
   }
   
-  public Integer getEntityID() {
-    return entityID;
+  void setBaseType(ModeledDeclaredType baseType) {
+    this.baseType = baseType;
   }
   
-  public String getFQN() {
-    return fqn;
+  public ModeledDeclaredType getBaseType() {
+    return baseType;
   }
   
-  public Entity getType() {
-    return type;
+  void addTypeArgument(ModeledEntity typeArg) {
+    if (typeArgs.isEmpty()) {
+      typeArgs = new LinkedList<>();
+    }
+    typeArgs.add(typeArg);
   }
   
-  public Integer getProjectID() {
-    return projectID;
-  }
-  
-  @Override
-  public String toString() {
-    return entityID + "(" + type + ")";
-    
+  public List<? extends ModeledEntity> getTypeArgs() {
+    return typeArgs;
   }
 }

@@ -40,6 +40,10 @@ public class Metrics implements CustomSerializable {
     metrics.put(metric, value);
   }
   
+  public Double getValue(Metric metric) {
+    return metrics.get(metric);
+  }
+  
   public Collection<Map.Entry<Metric, Double>> getMetricValues() {
     return metrics.entrySet();
   }

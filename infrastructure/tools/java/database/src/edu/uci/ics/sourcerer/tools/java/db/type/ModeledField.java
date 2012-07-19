@@ -18,42 +18,20 @@
 package edu.uci.ics.sourcerer.tools.java.db.type;
 
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
+import edu.uci.ics.sourcerer.tools.java.model.types.Modifiers;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ModeledEntity {
-  private final Integer entityID;
-  private final String fqn;
-  private final Entity type;
-  private final Integer projectID;
+public class ModeledField extends ModeledEntity {
+  private final Modifiers mods;
   
-  ModeledEntity(Integer entityID, String fqn, Entity type, Integer projectID) {
-    this.entityID = entityID;
-    this.fqn = fqn;
-    this.type = type;
-    this.projectID = projectID;
+  ModeledField(Integer entityID, Modifiers mods, String fqn, Entity type, Integer projectID) {
+    super(entityID, fqn, type, projectID);
+    this.mods = mods;
   }
   
-  public Integer getEntityID() {
-    return entityID;
-  }
-  
-  public String getFQN() {
-    return fqn;
-  }
-  
-  public Entity getType() {
-    return type;
-  }
-  
-  public Integer getProjectID() {
-    return projectID;
-  }
-  
-  @Override
-  public String toString() {
-    return entityID + "(" + type + ")";
-    
+  public Modifiers getModifiers() {
+    return mods;
   }
 }

@@ -27,8 +27,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 
-import com.google.common.collect.EnumMultiset;
-import com.google.common.collect.Multiset;
 import com.google.common.util.concurrent.AtomicDouble;
 
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
@@ -141,6 +139,19 @@ public abstract class EntitiesImporter extends DatabaseImporter {
         } else {
           Metrics metrics = file.getMetrics();
           if (metrics != null) {
+            // Compute additional lines of code metrics
+            {
+              Double commentLoc = metrics.getValue(Metric.COMMENT_LOC);
+              Double classCommentLoc = metrics.getValue(Metric.CLASS_COMMENT_LOC);
+              Double partialCommentLoc= metrics.getValue(Metric.PARTIAL_COMMENT_LOC);
+              Double codeLoc = metrics.getValue(Metric.CODE_LOC);
+              if (commentLoc != null && partialCommentLoc != null && codeLoc != null) {
+                metrics.addMetric(Metric.COMMENT_FREQUENCY, (commentLoc + partialCommentLoc) / codeLoc);
+              }
+              if (classCommentLoc != null && codeLoc != null) {
+                metrics.addMetric(Metric.CLASS_COMMENT_FREQUENCY, classCommentLoc / codeLoc);
+              }
+            }
             for (Entry<Metric, Double> metric : metrics.getMetricValues()) {
               AtomicDouble d = projectMetrics.get(metric.getKey());
               if (d == null) {

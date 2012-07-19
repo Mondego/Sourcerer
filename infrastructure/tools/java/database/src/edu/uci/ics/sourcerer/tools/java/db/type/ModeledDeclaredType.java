@@ -22,23 +22,24 @@ import java.util.Collections;
 import java.util.LinkedList;
 
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
+import edu.uci.ics.sourcerer.tools.java.model.types.Modifiers;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ModeledType extends ModeledEntity {
+public class ModeledDeclaredType extends ModeledStructuralEntity {
   private ModeledEntity superclass;
-  private Collection<ModeledType> interfaces;
+  private Collection<ModeledEntity> interfaces;
   private Collection<ModeledMethod> methods;
   private Collection<ModeledEntity> fields;
   
-  ModeledType(Integer entityID, String fqn, Entity type, Integer projectID) {
-    super(entityID, fqn, type, projectID);
+  ModeledDeclaredType(Integer entityID, Modifiers mods, String fqn, Entity type, Integer projectID) {
+    super(entityID, mods, fqn, type, projectID);
     interfaces = Collections.emptyList();
     methods = Collections.emptyList();
     fields = Collections.emptyList();
   }
-
+  
   void setSuperclass(ModeledEntity superclass) {
     this.superclass = superclass;
   }
@@ -47,14 +48,14 @@ public class ModeledType extends ModeledEntity {
     return superclass;
   }
   
-  void addInterface(ModeledType iface) {
+  void addInterface(ModeledEntity iface) {
     if (interfaces.isEmpty()) {
       interfaces = new LinkedList<>();
     }
     interfaces.add(iface);
   }
   
-  public Collection<ModeledType> getInterfaces() {
+  public Collection<? extends ModeledEntity> getInterfaces() {
     return interfaces;
   }
   
