@@ -294,6 +294,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   @Override
   public boolean visit(TypeDeclaration node) {
     // Get the fqn
+    String parentFqn = null;
     String fqn = null;
     Entity type = null;
     ITypeBinding binding = node.resolveBinding();
@@ -303,19 +304,24 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     if (node.isPackageMemberTypeDeclaration()) {
       EnclosingPackage enc = fqnStack.peek(EnclosingPackage.class);
       fqn = enc.getTypeFqn(node.getName().getIdentifier());
+      parentFqn = enc.getFqn();
     } else if (node.isMemberTypeDeclaration()) {
       if (node.getName().getIdentifier().length() > 0) {
-        fqn = fqnStack.peek(EnclosingDeclaredType.class).getMemberFqn(node.getName().getIdentifier());
+        EnclosingDeclaredType enc = fqnStack.peek(EnclosingDeclaredType.class);
+        fqn = enc.getMemberFqn(node.getName().getIdentifier());
+        parentFqn = enc.getFqn();
       } else {
         throw new IllegalStateException("A type declaration should not declare an annonymous type!");
 //        fqn = fqnStack.getAnonymousClassFqn();
       }
     } else if (node.isLocalTypeDeclaration()) {
+      EnclosingBlock enc = fqnStack.peek(EnclosingBlock.class);
       if (binding == null) {
         fqn = createUnknownFqn(node.getName().getIdentifier());
       } else {
-        fqn = fqnStack.peek(EnclosingBlock.class).getLocalFqn(node.getName().getIdentifier(), binding);
+        fqn = enc.getLocalFqn(node.getName().getIdentifier(), binding);
       }
+      parentFqn = enc.getFqn();
     } else {
       throw new IllegalStateException("Unknown declaration: " + node);
     }
@@ -327,7 +333,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     }
     
     // Push the stack
-    String parentFqn = fqnStack.find(EnclosingDeclaredType.class).getFqn();
+    
     fqnStack.push(fqn, type);
     
     // Visit the children
@@ -1877,12 +1883,14 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       accept(node.getThenStatement());
     }
     // The block will handle the nesting
-    if (node.getElseStatement().getNodeType() == ASTNode.BLOCK) {
-      fqnStack.peek(EnclosingMethod.class).incrementLevel();
-      accept(node.getElseStatement());
-      fqnStack.peek(EnclosingMethod.class).decrementLevel();
-    } else {
-      accept(node.getElseStatement());
+    if (node.getElseStatement() != null) {
+      if (node.getElseStatement().getNodeType() == ASTNode.BLOCK) {
+        fqnStack.peek(EnclosingMethod.class).incrementLevel();
+        accept(node.getElseStatement());
+        fqnStack.peek(EnclosingMethod.class).decrementLevel();
+      } else {
+        accept(node.getElseStatement());
+      }
     }
     return false;
   }
@@ -2040,11 +2048,13 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   }
   
   private Location createLocation(ASTNode node) {
-    return new Location(fqnStack.find(EnclosingDeclaredType.class).getFqn(), compilationUnitPath, node.getStartPosition(), node.getLength());
+    EnclosingDeclaredType enc = fqnStack.find2(EnclosingDeclaredType.class);
+    return new Location(enc == null ? null : enc.getFqn(), compilationUnitPath, node.getStartPosition(), node.getLength());
   }
   
   private Location createUnknownLocation() {
-    return new Location(fqnStack.find(EnclosingDeclaredType.class).getFqn(), compilationUnitPath, null, null);
+    EnclosingDeclaredType enc = fqnStack.find2(EnclosingDeclaredType.class);
+    return new Location(enc == null ? null : enc.getFqn(), compilationUnitPath, null, null);
   }
 
   private Metrics createMetrics(ASTNode node) {
@@ -2473,6 +2483,15 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         }
       }
       throw new NoSuchElementException("No enclosing " + type.getName());
+    }
+    
+    public <T extends Enclosing> T find2(Class<T> type) {
+      for (Enclosing enc : stack) {
+        if (type.isInstance(enc)) {
+          return type.cast(enc);
+        }
+      }
+      return null;
     }
     
     public <T extends Enclosing> T peek(Class<T> type) {
