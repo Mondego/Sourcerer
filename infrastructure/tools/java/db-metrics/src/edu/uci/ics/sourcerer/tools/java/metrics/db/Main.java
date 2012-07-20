@@ -23,6 +23,13 @@ import edu.uci.ics.sourcerer.util.io.arguments.Command;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
+  public static final Command COMPUTE_DB_METRICS = new Command("compute-db-metrics", "Computes metrics using the database.") {
+    @Override
+    protected void action() {
+      MetricsCalculator.calculateMetrics();
+    }
+  };
+  
   public static void main(String[] args) {
     Command.execute(args, Main.class);
   }

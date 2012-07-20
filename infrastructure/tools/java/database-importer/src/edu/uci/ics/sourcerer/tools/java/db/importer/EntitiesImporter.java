@@ -144,12 +144,12 @@ public abstract class EntitiesImporter extends DatabaseImporter {
               Double commentLoc = metrics.getValue(Metric.COMMENT_LOC);
               Double classCommentLoc = metrics.getValue(Metric.CLASS_COMMENT_LOC);
               Double partialCommentLoc= metrics.getValue(Metric.PARTIAL_COMMENT_LOC);
-              Double codeLoc = metrics.getValue(Metric.CODE_LOC);
-              if (commentLoc != null && partialCommentLoc != null && codeLoc != null) {
-                metrics.addMetric(Metric.COMMENT_FREQUENCY, (commentLoc + partialCommentLoc) / codeLoc);
+              Double nonWhitespaceLoc = metrics.getValue(Metric.NON_WHITESPACE_LOC);
+              if (commentLoc != null && partialCommentLoc != null && nonWhitespaceLoc != null) {
+                metrics.addMetric(Metric.COMMENT_FREQUENCY, (commentLoc + partialCommentLoc) / nonWhitespaceLoc);
               }
-              if (classCommentLoc != null && codeLoc != null) {
-                metrics.addMetric(Metric.CLASS_COMMENT_FREQUENCY, classCommentLoc / codeLoc);
+              if (classCommentLoc != null && nonWhitespaceLoc != null) {
+                metrics.addMetric(Metric.CLASS_COMMENT_FREQUENCY, classCommentLoc / nonWhitespaceLoc);
               }
             }
             for (Entry<Metric, Double> metric : metrics.getMetricValues()) {

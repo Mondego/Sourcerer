@@ -39,7 +39,7 @@ public class ModeledEntity {
     return entityID;
   }
   
-  public String getFQN() {
+  public String getFqn() {
     return fqn;
   }
   

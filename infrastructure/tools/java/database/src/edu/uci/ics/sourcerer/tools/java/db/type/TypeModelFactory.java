@@ -96,7 +96,8 @@ public class TypeModelFactory {
         query.addSelect(
             EntitiesTable.ENTITY_ID, 
             EntitiesTable.FQN, 
-            EntitiesTable.ENTITY_TYPE, 
+            EntitiesTable.ENTITY_TYPE,
+            EntitiesTable.FILE_ID,
             EntitiesTable.PROJECT_ID,
             EntitiesTable.PARAMS,
             EntitiesTable.RAW_PARAMS);
@@ -107,6 +108,7 @@ public class TypeModelFactory {
         Entity type = result.getResult(EntitiesTable.ENTITY_TYPE);
         Integer entityID = result.getResult(EntitiesTable.ENTITY_ID);
         String fqn = result.getResult(EntitiesTable.FQN);
+        Integer fileID = result.getResult(EntitiesTable.FILE_ID);
         Integer projectID = result.getResult(EntitiesTable.PROJECT_ID);
         
         switch (type) {
@@ -114,14 +116,14 @@ public class TypeModelFactory {
           case INTERFACE:
           case ENUM:
           case ANNOTATION:
-            return new ModeledDeclaredType(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, projectID);
+            return new ModeledDeclaredType(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, fileID, projectID);
           case METHOD:
           case ANNOTATION_ELEMENT:
-            return new ModeledMethod(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, projectID,               
+            return new ModeledMethod(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, fileID, projectID,               
                 result.getResult(EntitiesTable.PARAMS),
                 result.getResult(EntitiesTable.RAW_PARAMS));
           case FIELD:
-            return new ModeledField(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, projectID);
+            return new ModeledField(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, fileID, projectID);
           case PRIMITIVE:
           case UNKNOWN:
           case PACKAGE:
@@ -184,7 +186,7 @@ public class TypeModelFactory {
       RELATIONS.put(Relation.CONTAINS, new RelationProcessor<ModeledStructuralEntity, ModeledStructuralEntity>(Relation.CONTAINS, ModeledStructuralEntity.class, ModeledStructuralEntity.class, false) {
         @Override
         protected void process(ModeledStructuralEntity lhs, ModeledStructuralEntity rhs) {
-          lhs.setOwner(rhs);
+          lhs.addChild(rhs);
         }
       });
       RELATIONS.put(Relation.EXTENDS, new RelationProcessor<ModeledDeclaredType, ModeledEntity>(Relation.EXTENDS, ModeledDeclaredType.class, ModeledEntity.class, true) {

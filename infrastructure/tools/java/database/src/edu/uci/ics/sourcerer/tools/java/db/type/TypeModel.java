@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.type;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,5 +44,9 @@ public class TypeModel {
     } else {
       return entity;
     }
+  }
+  
+  public Collection<? extends ModeledEntity> getEntities() {
+    return entities.values();
   }
 }

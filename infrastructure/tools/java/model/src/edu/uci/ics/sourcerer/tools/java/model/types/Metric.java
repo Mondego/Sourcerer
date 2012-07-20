@@ -45,5 +45,11 @@ public enum Metric {
   // Computed bytecode metrics
   BC_AVERAGE_SIZE_OF_STATEMENTS,
   BC_WEIGHTED_METHODS_PER_CLASS,
+  
+  // Computed OO Metrics
+  NUMBER_OF_BASE_CLASSES,
+  NUMBER_OF_DERIVED_CLASSES,
+  RATIO_DERIVED_TO_BASE,
+  NUMBER_OF_CHILDREN,
   ;
 }

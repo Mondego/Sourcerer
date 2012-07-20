@@ -33,8 +33,8 @@ public class ModeledDeclaredType extends ModeledStructuralEntity {
   private Collection<ModeledMethod> methods;
   private Collection<ModeledEntity> fields;
   
-  ModeledDeclaredType(Integer entityID, Modifiers mods, String fqn, Entity type, Integer projectID) {
-    super(entityID, mods, fqn, type, projectID);
+  ModeledDeclaredType(Integer entityID, Modifiers mods, String fqn, Entity type, Integer fileID, Integer projectID) {
+    super(entityID, mods, fqn, type, fileID, projectID);
     interfaces = Collections.emptyList();
     methods = Collections.emptyList();
     fields = Collections.emptyList();

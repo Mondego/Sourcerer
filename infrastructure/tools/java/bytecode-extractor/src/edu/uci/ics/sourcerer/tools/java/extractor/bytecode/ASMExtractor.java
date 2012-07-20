@@ -538,7 +538,6 @@ public class ASMExtractor implements Closeable {
     
     @Override
     public void visitFrame(int type, int nLoacl, Object[] local, int nStack, Object[] stack) {
-      logger.info("frame");
     }
 
     @Override
@@ -740,6 +739,7 @@ public class ASMExtractor implements Closeable {
           break;
         case Opcodes.NEWARRAY:
           operators.add("$new-arr");
+          break;
         default:
           logger.severe("Unknown int instruction: " + opcode);
           break;

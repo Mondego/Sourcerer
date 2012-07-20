@@ -17,20 +17,10 @@
  */
 package edu.uci.ics.sourcerer.tools.java.metrics.db;
 
-import edu.uci.ics.sourcerer.utils.db.DatabaseRunnable;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class InheritanceHierarchyDepthCalculator extends DatabaseRunnable {
+class InheritanceHierarchyDepthCalculator extends Calculator {
   private InheritanceHierarchyDepthCalculator() {}
-  
-  public static void calculate() {
-    new InheritanceHierarchyDepthCalculator().run();
-  }
-  
-  @Override
-  protected void action() {
-    
-  }
 }

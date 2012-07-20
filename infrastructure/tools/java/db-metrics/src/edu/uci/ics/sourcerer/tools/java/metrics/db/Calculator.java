@@ -15,16 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.uci.ics.sourcerer.tools.java.db.type;
+package edu.uci.ics.sourcerer.tools.java.metrics.db;
 
-import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
-import edu.uci.ics.sourcerer.tools.java.model.types.Modifiers;
+import edu.uci.ics.sourcerer.tools.java.db.type.TypeModel;
+import edu.uci.ics.sourcerer.tools.java.metrics.db.MetricModelFactory.ProjectMetricModel;
+import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
+
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ModeledField extends ModeledStructuralEntity {
-  ModeledField(Integer entityID, Modifiers mods, String fqn, Entity type, Integer fileID, Integer projectID) {
-    super(entityID, mods, fqn, type, fileID, projectID);
-  }
+public abstract class Calculator {
+  public abstract boolean shouldCalculate(ProjectMetricModel metrics);
+  public abstract void calculate(QueryExecutor exec, Integer projectID, ProjectMetricModel metrics, TypeModel model);
 }

@@ -27,8 +27,8 @@ public class ModeledMethod extends ModeledStructuralEntity {
   private final String params;
   private final String rawParams;
 
-  ModeledMethod(Integer entityID, Modifiers mods, String fqn, Entity type, Integer projectID, String params, String rawParams) {
-    super(entityID, mods, fqn, type, projectID);
+  ModeledMethod(Integer entityID, Modifiers mods, String fqn, Entity type, Integer fileID, Integer projectID, String params, String rawParams) {
+    super(entityID, mods, fqn, type, fileID, projectID);
     this.params = params;
     this.rawParams = rawParams;
   }
