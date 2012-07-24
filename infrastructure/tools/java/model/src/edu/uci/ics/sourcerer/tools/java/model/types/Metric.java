@@ -75,5 +75,7 @@ public enum Metric {
   LACK_OF_COHESION_F,
   LACK_OF_COHESION_FM,
   LACK_OF_COHESION_D,
+  
+  RESPONSE_FOR_CLASS,
   ;
 }

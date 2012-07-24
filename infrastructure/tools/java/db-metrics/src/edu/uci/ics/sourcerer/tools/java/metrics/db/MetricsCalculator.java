@@ -48,6 +48,7 @@ class MetricsCalculator extends DatabaseRunnable {
       new EfferentCouplingCalculator(),
       new AfferentCouplingCalculator(),
       new LackOfCohesionCalculator(),
+      new ResponseForClassCalculator(),
   };
   
   private MetricsCalculator() {
