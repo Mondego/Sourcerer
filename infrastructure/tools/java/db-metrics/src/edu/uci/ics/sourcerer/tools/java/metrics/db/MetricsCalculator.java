@@ -38,7 +38,16 @@ class MetricsCalculator extends DatabaseRunnable {
   private final TypeModel javaLibraryModel;
   private final Calculator[] calculators = {
       new NumberOfBaseClassesCalculator(),
-      new NumberOfChildrenCalculator(),
+      new NumberOfBaseInterfacesCalculator(),
+      new NumberOfClassChildrenCalculator(),
+      new NumberOfInterfaceRelativesCalculator(),
+      new InheritanceHierarchyDepthCalculator(),
+      new AverageSizeOfStatementsCalculator(),
+      new VocabularyFrequencyCalculator(),
+      new WeightedMethodsPerClassCalculator(),
+      new EfferentCouplingCalculator(),
+      new AfferentCouplingCalculator(),
+      new LackOfCohesionCalculator(),
   };
   
   private MetricsCalculator() {

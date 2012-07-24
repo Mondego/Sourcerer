@@ -29,40 +29,37 @@ import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class NumberOfBaseClassesCalculator extends Calculator {
+public class NumberOfBaseInterfacesCalculator extends Calculator {
   @Override
   public boolean shouldCalculate(ProjectMetricModel metrics) {
-    return metrics.missingValue(Metric.NUMBER_OF_BASE_CLASSES, Metric.NUMBER_OF_DERIVED_CLASSES, Metric.RATIO_OF_DERIVED_TO_BASE_CLASSES);
+    return metrics.missingValue(Metric.NUMBER_OF_BASE_INTERFACES, Metric.NUMBER_OF_DERIVED_INTERFACES, Metric.RATIO_OF_DERIVED_TO_BASE_INTERFACES);
   }
 
   @Override
   public void calculate(QueryExecutor exec, Integer projectID, ProjectMetricModel metrics, TypeModel model) {
-    double baseClassCount = 0;
-    double derivedClassCount = 0;
+    double baseInterfaceCount = 0;
+    double derivedInterfaceCount = 0;
     for (ModeledEntity entity : model.getEntities()) {
-      if (entity.getType() == Entity.CLASS) {
+      if (entity.getType() == Entity.INTERFACE) {
         ModeledDeclaredType dec = (ModeledDeclaredType) entity;
-        // Check if it's supertype is Object
-        ModeledEntity sup = dec.getSuperclass();
-        if (sup == null || sup.getFqn().equals("java.lang.Object")) {
-          baseClassCount++;
+        if (dec.getInterfaces().isEmpty()) {
+          baseInterfaceCount++;
         } else {
-          derivedClassCount++;
+          derivedInterfaceCount++;
         }
       }
     }
-    if (metrics.missingValue(Metric.NUMBER_OF_BASE_CLASSES)) {
-      metrics.setValue(Metric.NUMBER_OF_BASE_CLASSES, baseClassCount, null, null, null, null);
-      exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.NUMBER_OF_BASE_CLASSES, baseClassCount, null, null, null, null));
+    if (metrics.missingValue(Metric.NUMBER_OF_BASE_INTERFACES)) {
+      metrics.setValue(Metric.NUMBER_OF_BASE_INTERFACES, baseInterfaceCount, null, null, null, null);
+      exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.NUMBER_OF_BASE_INTERFACES, baseInterfaceCount, null, null, null, null));
     }
-    if (metrics.missingValue(Metric.NUMBER_OF_DERIVED_CLASSES)) {
-      metrics.setValue(Metric.NUMBER_OF_DERIVED_CLASSES, derivedClassCount, null, null, null, null);
-      exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.NUMBER_OF_DERIVED_CLASSES, derivedClassCount, null, null, null, null));
+    if (metrics.missingValue(Metric.NUMBER_OF_DERIVED_INTERFACES)) {
+      metrics.setValue(Metric.NUMBER_OF_DERIVED_INTERFACES, derivedInterfaceCount, null, null, null, null);
+      exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.NUMBER_OF_DERIVED_INTERFACES, derivedInterfaceCount, null, null, null, null));
     }
-    if (metrics.missingValue(Metric.RATIO_OF_DERIVED_TO_BASE_CLASSES)) {
-      Double value = derivedClassCount / baseClassCount;
-      metrics.setValue(Metric.RATIO_OF_DERIVED_TO_BASE_CLASSES, value, null, null, null, null);
-      exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.NUMBER_OF_DERIVED_CLASSES, value, null, null, null, null));
+    if (metrics.missingValue(Metric.RATIO_OF_DERIVED_TO_BASE_INTERFACES)) {
+      metrics.setValue(Metric.RATIO_OF_DERIVED_TO_BASE_INTERFACES, derivedInterfaceCount / baseInterfaceCount, null, null, null, null);
+      exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.NUMBER_OF_DERIVED_INTERFACES, derivedInterfaceCount / baseInterfaceCount, null, null, null, null));
     }
   }
 }

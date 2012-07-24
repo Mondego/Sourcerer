@@ -44,77 +44,85 @@ public enum Entity {
     UNKNOWN,
     ;
     
-    public boolean isDeclaredType() {
-      return this == CLASS || this == INTERFACE || this == ENUM || this == ANNOTATION;
+    public boolean is(Entity ... entities) {
+      for (Entity entity : entities) {
+        if (this == entity) {
+          return true;
+        }
+      }
+      return false;
     }
-    
-    public boolean isInternalMeaningful() {
-      return !(this == PACKAGE || this == ARRAY || this == TYPE_VARIABLE || this == WILDCARD || this == PARAMETERIZED_TYPE || this == UNKNOWN);
-    }
-
-    public boolean isPackage() {
-      return this == PACKAGE;
-    }
-
-    public boolean isAnnotation() {
-      return this == ANNOTATION;
-    }
-
-    public boolean isInitializer() {
-      return this == INITIALIZER;
-    }
-    
-    public boolean isInterface() {
-      return this == INTERFACE;
-    }
-
-    public boolean isEnum() {
-      return this == ENUM;
-    }
-
-    public boolean isClass() {
-      return this == CLASS;
-    }
-
-    public boolean isArray() {
-      return this == ARRAY;
-    }
-
-    public boolean isParametrizedType() {
-      return this == PARAMETERIZED_TYPE;
-    }
-
-    public boolean isCallableType() {
-      return this == METHOD || this == CONSTRUCTOR;
-    }
-
-    public boolean isMethod() {
-      return this == METHOD;
-    }
-
-    public boolean isConstructor() {
-      return this == CONSTRUCTOR;
-    }
-
-    public boolean isUnknown() {
-      return this == UNKNOWN;
-    }
-
-    public boolean isFieldImport() {
-      return this == FIELD || this == ENUM_CONSTANT;
-    }
-
-    public boolean isPrimitive() {
-      return this == PRIMITIVE;
-    }
-
-    public boolean isImportable() {
-      return this != PRIMITIVE && this != UNKNOWN;
-    }
-    
-    public boolean isDuplicate() {
-      return this == DUPLICATE;
-    }
+//    public boolean isDeclaredType() {
+//      return this == CLASS || this == INTERFACE || this == ENUM || this == ANNOTATION;
+//    }
+//    
+//    public boolean isInternalMeaningful() {
+//      return !(this == PACKAGE || this == ARRAY || this == TYPE_VARIABLE || this == WILDCARD || this == PARAMETERIZED_TYPE || this == UNKNOWN);
+//    }
+//
+//    public boolean isPackage() {
+//      return this == PACKAGE;
+//    }
+//
+//    public boolean isAnnotation() {
+//      return this == ANNOTATION;
+//    }
+//
+//    public boolean isInitializer() {
+//      return this == INITIALIZER;
+//    }
+//    
+//    public boolean isInterface() {
+//      return this == INTERFACE;
+//    }
+//
+//    public boolean isEnum() {
+//      return this == ENUM;
+//    }
+//
+//    public boolean isClass() {
+//      return this == CLASS;
+//    }
+//
+//    public boolean isArray() {
+//      return this == ARRAY;
+//    }
+//
+//    public boolean isParametrizedType() {
+//      return this == PARAMETERIZED_TYPE;
+//    }
+//
+//    public boolean isCallableType() {
+//      return this == METHOD || this == CONSTRUCTOR;
+//    }
+//
+//    public boolean isMethod() {
+//      return this == METHOD;
+//    }
+//
+//    public boolean isConstructor() {
+//      return this == CONSTRUCTOR;
+//    }
+//
+//    public boolean isUnknown() {
+//      return this == UNKNOWN;
+//    }
+//
+//    public boolean isFieldImport() {
+//      return this == FIELD || this == ENUM_CONSTANT;
+//    }
+//
+//    public boolean isPrimitive() {
+//      return this == PRIMITIVE;
+//    }
+//
+//    public boolean isImportable() {
+//      return this != PRIMITIVE && this != UNKNOWN;
+//    }
+//    
+//    public boolean isDuplicate() {
+//      return this == DUPLICATE;
+//    }
     
     public static Entity parse(String name) {
       if (name == null) {
@@ -129,25 +137,25 @@ public enum Entity {
       }
     }
     
-    public static String getPossiblePackage(String fqn) {
-      // unmethodify it
-      int index = fqn.indexOf('(');
-      if (index >= 0) {
-        fqn = fqn.substring(0, index);
-      }
-      // unparametrized type it
-      index = fqn.indexOf('<');
-      if (index >= 0) {
-        fqn = fqn.substring(0, index);
-      }
-      // get the potential package name
-      index = fqn.lastIndexOf('.');
-      if (index == -1) {
-        return fqn;
-      } else {
-        return fqn.substring(0, index);
-      }
-    }
+//    public static String getPossiblePackage(String fqn) {
+//      // unmethodify it
+//      int index = fqn.indexOf('(');
+//      if (index >= 0) {
+//        fqn = fqn.substring(0, index);
+//      }
+//      // unparametrized type it
+//      index = fqn.indexOf('<');
+//      if (index >= 0) {
+//        fqn = fqn.substring(0, index);
+//      }
+//      // get the potential package name
+//      index = fqn.lastIndexOf('.');
+//      if (index == -1) {
+//        return fqn;
+//      } else {
+//        return fqn.substring(0, index);
+//      }
+//    }
     
     @Override
     public String toString() {

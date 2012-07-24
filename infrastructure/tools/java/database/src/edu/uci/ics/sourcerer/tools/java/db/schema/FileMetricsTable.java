@@ -42,7 +42,7 @@ public class FileMetricsTable extends DatabaseTable {
   public static final Column<Integer> PROJECT_ID = TABLE.addIDColumn("project_id", false).addIndex();
   public static final Column<Integer> FILE_ID = TABLE.addIDColumn("file_id", false).addIndex();
   public static final Column<Metric> METRIC_TYPE = TABLE.addEnumColumn("metric_type", Metric.values(), false);
-  public static final Column<Double> VALUE = TABLE.addDoubleColumn("value", 23, 3, false);
+  public static final Column<Double> VALUE = TABLE.addDoubleColumn("mean", 23, 3, true);
   
   private FileMetricsTable() {
     super("file_metrics");

@@ -27,8 +27,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 
-import com.google.common.util.concurrent.AtomicDouble;
-
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.FileMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.FilesTable;
@@ -49,6 +47,7 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarProperties;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProject;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProjectProperties;
+import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.utils.db.BatchInserter;
 import edu.uci.ics.sourcerer.utils.db.Insert;
 
@@ -129,7 +128,7 @@ public abstract class EntitiesImporter extends DatabaseImporter {
     task.start("Processing files", "files processed");
     BatchInserter inserter = exec.makeInFileInserter(tempDir, FileMetricsTable.TABLE);
     
-    Map<Metric, AtomicDouble> projectMetrics = new EnumMap<>(Metric.class);
+    Map<Metric, Averager<Double>> projectMetrics = new EnumMap<>(Metric.class);
     
     for (FileEX file : reader.getTransientFiles()) {
       if (file.getType() == File.SOURCE || file.getType() == File.CLASS) {
@@ -153,13 +152,12 @@ public abstract class EntitiesImporter extends DatabaseImporter {
               }
             }
             for (Entry<Metric, Double> metric : metrics.getMetricValues()) {
-              AtomicDouble d = projectMetrics.get(metric.getKey());
-              if (d == null) {
-                d = new AtomicDouble(metric.getValue().doubleValue());
-                projectMetrics.put(metric.getKey(), d);
-              } else {
-                d.addAndGet(metric.getValue().doubleValue());
+              Averager<Double> avg = projectMetrics.get(metric.getKey());
+              if (avg == null) {
+                avg = Averager.create();
+                projectMetrics.put(metric.getKey(), avg);
               }
+              avg.addValue(metric.getValue().doubleValue());
               inserter.addInsert(FileMetricsTable.createInsert(projectID, fileID, metric.getKey(), metric.getValue()));
             }
           }
@@ -171,8 +169,9 @@ public abstract class EntitiesImporter extends DatabaseImporter {
     
     task.start("Performing db insert");
     inserter.insert();
-    for (Map.Entry<Metric, AtomicDouble> entry : projectMetrics.entrySet()) {
-      exec.insert(ProjectMetricsTable.createInsert(projectID, entry.getKey(), entry.getValue().doubleValue()));
+    for (Map.Entry<Metric, Averager<Double>> entry : projectMetrics.entrySet()) {
+      Averager<Double> avg = entry.getValue();
+      exec.insert(ProjectMetricsTable.createInsert(projectID, entry.getKey(), avg.getSum(), avg.getMean(), avg.getMedian(), avg.getMin(), avg.getMax()));
     }
     task.finish();
     

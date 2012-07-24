@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Level;
 
@@ -61,10 +62,27 @@ public class Averager <T extends Number> {
   }
   
   public double getMean() {
-    if (values.size() == 0) {
+    if (values.isEmpty()) {
       return Double.NaN;
     } else {
       return sum / (double) values.size();
+    }
+  }
+  
+  @SuppressWarnings("unchecked")
+  public double getMedian() {
+    if (values.isEmpty()) {
+      return Double.NaN;
+    } else {
+      Object[] arr = values.toArray(); 
+      Arrays.sort(arr);
+      if (arr.length % 2 == 0) {
+        T left = (T) arr[arr.length / 2 - 1];
+        T right = (T) arr[arr.length / 2];
+        return (left.doubleValue() + right.doubleValue()) / 2;
+      } else {
+        return ((T) arr[arr.length / 2]).doubleValue();
+      }
     }
   }
   

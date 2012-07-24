@@ -30,14 +30,10 @@ import edu.uci.ics.sourcerer.tools.java.model.types.Modifiers;
 public class ModeledDeclaredType extends ModeledStructuralEntity {
   private ModeledEntity superclass;
   private Collection<ModeledEntity> interfaces;
-  private Collection<ModeledMethod> methods;
-  private Collection<ModeledEntity> fields;
   
   ModeledDeclaredType(Integer entityID, Modifiers mods, String fqn, Entity type, Integer fileID, Integer projectID) {
     super(entityID, mods, fqn, type, fileID, projectID);
     interfaces = Collections.emptyList();
-    methods = Collections.emptyList();
-    fields = Collections.emptyList();
   }
   
   void setSuperclass(ModeledEntity superclass) {
@@ -57,23 +53,5 @@ public class ModeledDeclaredType extends ModeledStructuralEntity {
   
   public Collection<? extends ModeledEntity> getInterfaces() {
     return interfaces;
-  }
-  
-  void addMethod(ModeledMethod iface) {
-    if (methods.isEmpty()) {
-      methods = new LinkedList<>();
-    }
-    methods.add(iface);
-  }
-  
-  public Collection<ModeledMethod> getMethods() {
-    return methods;
-  }
-  
-  void addField(ModeledEntity field) {
-    if (fields.isEmpty()) {
-      fields = new LinkedList<>();
-    }
-    fields.add(field);
   }
 }

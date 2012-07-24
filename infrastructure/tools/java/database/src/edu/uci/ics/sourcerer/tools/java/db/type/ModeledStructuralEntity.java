@@ -30,7 +30,7 @@ import edu.uci.ics.sourcerer.tools.java.model.types.Modifiers;
 public class ModeledStructuralEntity extends ModeledEntity {
   private final Modifiers mods;
   private final Integer fileID;
-  private ModeledEntity owner;
+  private ModeledStructuralEntity owner;
   private Collection<ModeledStructuralEntity> children;
   
   ModeledStructuralEntity(Integer entityID, Modifiers mods, String fqn, Entity type, Integer fileID, Integer projectID) {
@@ -48,11 +48,11 @@ public class ModeledStructuralEntity extends ModeledEntity {
     return fileID;
   }
   
-  final void setOwner(ModeledEntity owner) {
+  final void setOwner(ModeledStructuralEntity owner) {
     this.owner = owner;
   }
   
-  public final ModeledEntity getOwner() {
+  public final ModeledStructuralEntity getOwner() {
     return owner;
   }
   

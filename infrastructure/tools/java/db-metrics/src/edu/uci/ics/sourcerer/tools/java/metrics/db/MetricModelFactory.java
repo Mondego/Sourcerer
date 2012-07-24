@@ -25,6 +25,7 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.FileMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
+import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
@@ -44,7 +45,7 @@ class MetricModelFactory implements Closeable {
   
   MetricModelFactory(QueryExecutor exec) {
     loadProjectMetrics = exec.createSelectQuery(ProjectMetricsTable.TABLE);
-    loadProjectMetrics.addSelect(ProjectMetricsTable.METRIC_TYPE, ProjectMetricsTable.VALUE);
+    loadProjectMetrics.addSelect(ProjectMetricsTable.METRIC_TYPE, ProjectMetricsTable.SUM, ProjectMetricsTable.MEAN, ProjectMetricsTable.MEDIAN, ProjectMetricsTable.MIN, ProjectMetricsTable.MAX);
     pprojectID = ProjectMetricsTable.PROJECT_ID.compareEquals();
     loadProjectMetrics.andWhere(pprojectID);
     
@@ -66,7 +67,7 @@ class MetricModelFactory implements Closeable {
     pprojectID.setValue(projectID);
     TypedQueryResult result = loadProjectMetrics.select();
     while (result.next()) {
-      model.setValue(result.getResult(ProjectMetricsTable.METRIC_TYPE), result.getResult(ProjectMetricsTable.VALUE));
+      model.setValue(result.getResult(ProjectMetricsTable.METRIC_TYPE), result.getResult(ProjectMetricsTable.SUM), result.getResult(ProjectMetricsTable.MEAN), result.getResult(ProjectMetricsTable.MEDIAN), result.getResult(ProjectMetricsTable.MIN), result.getResult(ProjectMetricsTable.MAX));
     }
     
     // Load the file metrics
@@ -86,19 +87,55 @@ class MetricModelFactory implements Closeable {
     return model;
   }
   
+  public class ProjectMetricValue {
+    Double sum;
+    Double mean;
+    Double median;
+    Double min;
+    Double max;
+    
+    ProjectMetricValue(Averager<Double> avg) {
+      sum = avg.getSum();
+      mean = avg.getMean();
+      median = avg.getMean();
+      min = avg.getMin();
+      max = avg.getMax();
+    }
+    
+    ProjectMetricValue(Double sum, Double mean, Double median, Double min, Double max) {
+      this.sum = sum;
+      this.mean = mean;
+      this.median = median;
+      this.max = max;
+    }
+  }
+  
   class ProjectMetricModel {
-    private EnumMap<Metric, Double> metrics;
+    private EnumMap<Metric, ProjectMetricValue> metrics;
     private Map<Integer, FileMetricModel> fileMetrics;
     private Map<Integer, EntityMetricModel> entityMetrics;
     
     private ProjectMetricModel() {}
     
-    public void setValue(Metric metric, Double value) {
-      metrics.put(metric, value);
+    public void setValue(Metric metric, Averager<Double> avg) {
+      metrics.put(metric, new ProjectMetricValue(avg));
     }
     
-    public Double getValue(Metric metric) {
+    public void setValue(Metric metric, Double sum, Double mean, Double median, Double min, Double max) {
+      metrics.put(metric, new ProjectMetricValue(sum, mean, median, min, max));
+    }
+    
+    public ProjectMetricValue getValue(Metric metric) {
       return metrics.get(metric);
+    }
+    
+    public boolean missingValue(Metric ... metrics) {
+      for (Metric metric : metrics) {
+        if (!this.metrics.containsKey(metric)) {
+          return true;
+        }
+      }
+      return false;
     }
     
     public void setFileValue(Integer fileID, Metric metric, Double value) {
@@ -113,7 +150,7 @@ class MetricModelFactory implements Closeable {
     public Double getFileValue(Integer fileID, Metric metric) {
       FileMetricModel model = fileMetrics.get(fileID);
       if (model != null) {
-        return metrics.get(metric);
+        return model.metrics.get(metric);
       } else {
         return null;
       }
@@ -137,9 +174,18 @@ class MetricModelFactory implements Closeable {
     public Double getEntityValue(Integer entityID, Metric metric) {
       EntityMetricModel model = entityMetrics.get(entityID);
       if (model != null) {
-        return metrics.get(metric);
+        return model.metrics.get(metric);
       } else {
         return null;
+      }
+    }
+    
+    public boolean missingEntityValue(Integer entityID, Metric metric) {
+      EntityMetricModel model = entityMetrics.get(entityID);
+      if (model != null) {
+        return !model.metrics.containsKey(metric);
+      } else {
+        return true;
       }
     }
   }
