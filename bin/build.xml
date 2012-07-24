@@ -498,7 +498,7 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 		<copy todir="${build-extractor}">
 			<fileset dir="${build-extractor-lib}" includes="**/*" />
 		</copy>
-		<jar destfile="${dist}/Extractor_1.0.0.jar" basedir="${build-extractor}" />
+		<jar destfile="${dist}/Extractor_1.0.0.jar" basedir="${build-extractor}" manifest="${build-extractor}/META-INF/MANIFEST.MF" />
 	</target>
 
 	<!-- Indexer -->
