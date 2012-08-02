@@ -82,15 +82,15 @@ public class DatabaseInitializer {
         
         task.start("Adding the primitive types");
         Integer projectID = exec.insertWithKey(ProjectsTable.createPrimitivesInsert());
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "boolean",  projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "char", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "byte", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "short", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "int", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "long", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "float", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "double", projectID));
-        exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "void", projectID));
+        exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "boolean",  projectID));
+        exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "char", projectID));
+        exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "byte", projectID));
+        exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "short", projectID));
+        exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "int", projectID));
+        exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "long", projectID));
+        exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "float", projectID));
+        exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "double", projectID));
+        exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "void", projectID));
         task.finish();
         
         task.start("Adding the unknowns project");
@@ -152,15 +152,15 @@ public class DatabaseInitializer {
           query.addSelect(ProjectsTable.PROJECT_ID);
           query.andWhere(ProjectsTable.NAME.compareEquals(ProjectsTable.PRIMITIVES_PROJECT).and(ProjectsTable.PROJECT_TYPE.compareEquals(Project.SYSTEM)));
           Integer projectID = query.select().toSingleton(ProjectsTable.PROJECT_ID, false); 
-          exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "boolean",  projectID));
-          exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "char", projectID));
-          exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "byte", projectID));
-          exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "short", projectID));
-          exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "int", projectID));
-          exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "long", projectID));
-          exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "float", projectID));
-          exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "double", projectID));
-          exec.insert(EntitiesTable.makeInsert(Entity.PRIMITIVE, "void", projectID));
+          exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "boolean",  projectID));
+          exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "char", projectID));
+          exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "byte", projectID));
+          exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "short", projectID));
+          exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "int", projectID));
+          exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "long", projectID));
+          exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "float", projectID));
+          exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "double", projectID));
+          exec.insert(EntitiesTable.createInsert(Entity.PRIMITIVE, "void", projectID));
         }
         task.finish();
         

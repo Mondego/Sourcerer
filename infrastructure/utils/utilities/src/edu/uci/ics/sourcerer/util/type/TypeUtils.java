@@ -42,6 +42,11 @@ public final class TypeUtils {
     return new Pair<>(fqn.substring(0, dot), fqn.substring(dot + 1));
   }
   
+  public static Pair<String, String> breakParams(String fqn) {
+    int paren = fqn.indexOf('(');
+    return new Pair<>(fqn.substring(0, paren), fqn.substring(paren));
+  }
+  
   public static String getMethodName(String fqn) {
     return fqn.substring(0, fqn.indexOf('('));
   }
@@ -239,7 +244,7 @@ public final class TypeUtils {
   
   public static boolean isParametrizedType(String fqn) {
     int baseIndex = fqn.indexOf('<');
-    return baseIndex > 0 && fqn.indexOf('>') > baseIndex;
+    return baseIndex > 0 && fqn.charAt(fqn.length() - 1) == '>';
   }
   
   public static String getBaseType(String parametrizedType) {
@@ -294,7 +299,6 @@ public final class TypeUtils {
   }
   
   public static int countParams(String params) {
-
     char[] arr = params.toCharArray();
     if (arr[0] != '(' || arr[arr.length - 1] != ')') {
       logger.severe("Invalid params: " + params);

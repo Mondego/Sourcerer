@@ -218,7 +218,12 @@ public abstract class EntitiesImporter extends DatabaseImporter {
         }
       }
       Integer fileID = getFileID(entity.getLocation());
-      inserter.addInsert(EntitiesTable.makeInsert(entity, projectID, fileID));
+      try {
+        inserter.addInsert(EntitiesTable.createInsert(entity, projectID, fileID));
+      } catch (IllegalArgumentException e) {
+        task.report(Level.SEVERE, "Error inserting entity: " + entity);
+        throw e;
+      }
       task.progress();
       
     }

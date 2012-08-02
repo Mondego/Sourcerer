@@ -192,7 +192,7 @@ public class ProjectTypeModel {
       }
       
       // Insert the array entity
-      Integer entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.ARRAY, fqn, arrayInfo.getSecond(), projectID));
+      Integer entityID = exec.insertWithKey(EntitiesTable.createInsert(Entity.ARRAY, fqn, arrayInfo.getSecond(), projectID));
       ModeledEntity entity = new ModeledEntity(fqn, Entity.ARRAY, entityID, RelationClass.NOT_APPLICABLE);
       add(fqn, entity);
       
@@ -207,7 +207,7 @@ public class ProjectTypeModel {
     
     if (TypeUtils.isWildcard(fqn)) {
       // Insert the wildcard entity
-      Integer entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.WILDCARD, fqn, projectID));
+      Integer entityID = exec.insertWithKey(EntitiesTable.createInsert(Entity.WILDCARD, fqn, projectID));
       ModeledEntity entity = new ModeledEntity(fqn, Entity.WILDCARD, entityID, RelationClass.NOT_APPLICABLE);
       add(fqn, entity);
       
@@ -226,7 +226,7 @@ public class ProjectTypeModel {
     
     if (TypeUtils.isTypeVariable(fqn)) {
       // Insert the type variable entity
-      Integer entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.TYPE_VARIABLE, fqn, projectID));
+      Integer entityID = exec.insertWithKey(EntitiesTable.createInsert(Entity.TYPE_VARIABLE, fqn, projectID));
       ModeledEntity entity = new ModeledEntity(fqn, Entity.TYPE_VARIABLE, entityID, RelationClass.NOT_APPLICABLE);
       add(fqn, entity);
       
@@ -241,7 +241,7 @@ public class ProjectTypeModel {
     
     if (TypeUtils.isParametrizedType(fqn)) {
       // Insert the parametrized type entity
-      Integer entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.PARAMETERIZED_TYPE, fqn, projectID));
+      Integer entityID = exec.insertWithKey(EntitiesTable.createInsert(Entity.PARAMETERIZED_TYPE, fqn, projectID));
       ModeledEntity entity = new ModeledEntity(fqn, Entity.PARAMETERIZED_TYPE, entityID, RelationClass.NOT_APPLICABLE);
       add(fqn, entity);
       
@@ -271,13 +271,48 @@ public class ProjectTypeModel {
   }
   
   public ModeledEntity getDeclaredEntity(String fqn) {
-    return entities.get(fqn);
+    ModeledEntity entity = entities.get(fqn);
+    if (entity == null) {
+      // Try truncating
+      String newFqn = null;
+      if (TypeUtils.isMethod(fqn)) {
+        Pair<String, String> pair = TypeUtils.breakParams(fqn);
+        newFqn = EntitiesTable.FQN.truncate(pair.getFirst()) + EntitiesTable.FQN.truncate(pair.getSecond());
+      } else {
+        newFqn = EntitiesTable.FQN.truncate(fqn);
+      }
+      if (!fqn.equals(newFqn)) {
+        entity = entities.get(newFqn);
+        if (entity != null) {
+          entities.put(fqn, entity);
+        }
+      }
+    }
+    return entity;
   }
   
   public ModeledEntity getEntity(String fqn) {
     ModeledEntity entity = entities.get(fqn);
     if (entity == null && !TypeUtils.isMethod(fqn)) {
       entity = getTypeEntity(fqn);
+    }
+    if (entity == null) {
+      // Try truncating
+      String newFqn = null;
+      if (TypeUtils.isMethod(fqn)) {
+        Pair<String, String> pair = TypeUtils.breakParams(fqn);
+        newFqn = EntitiesTable.FQN.truncate(pair.getFirst()) + EntitiesTable.FQN.truncate(pair.getSecond());
+      } else {
+        newFqn = EntitiesTable.FQN.truncate(fqn);
+      }
+      if (!fqn.equals(newFqn)) {
+        entity = entities.get(newFqn);
+        if (entity == null) {
+          fqn = newFqn;
+        } else {
+          entities.put(newFqn, entity);
+        }
+      }
     }
     if (entity == null) {
       entity = libraryModel.getEntity(fqn);
@@ -293,6 +328,24 @@ public class ProjectTypeModel {
     ModeledEntity entity = entities.get(fqn);
     if (entity != null) {
       return entity;
+    }
+    
+    // Try truncating
+    String newFqn = null;
+    if (TypeUtils.isMethod(fqn)) {
+      Pair<String, String> pair = TypeUtils.breakParams(fqn);
+      newFqn = EntitiesTable.FQN.truncate(pair.getFirst()) + EntitiesTable.FQN.truncate(pair.getSecond());
+    } else {
+      newFqn = EntitiesTable.FQN.truncate(fqn);
+    }
+    if (!fqn.equals(newFqn)) {
+      entity = entities.get(newFqn);
+      if (entity != null) {
+        entities.put(fqn, entity);
+        return entity;
+      } else {
+        fqn = newFqn;
+      }
     }
     
     // Try the library model

@@ -113,7 +113,7 @@ public class DatabaseTableImpl implements Table {
     } else if (values.length != columns.size()) {
       throw new IllegalArgumentException("Expected " + columns.size() + " insert values, received " + Arrays.toString(values));
     } else {
-      return InsertImpl.make(this, values);
+      return InsertImpl.create(this, values);
     }
   }
   

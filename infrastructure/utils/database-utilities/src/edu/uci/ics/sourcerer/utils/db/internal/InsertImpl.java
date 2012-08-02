@@ -32,7 +32,7 @@ class InsertImpl implements Insert {
     this.value = value;
   }
   
-  static InsertImpl make(Table table, String ... values) {
+  static InsertImpl create(Table table, String ... values) {
     StringBuilder builder = new StringBuilder("(");
     for (String value : values) {
       builder.append(value).append(',');

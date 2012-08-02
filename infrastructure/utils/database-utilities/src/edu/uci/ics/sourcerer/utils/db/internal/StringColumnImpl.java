@@ -55,11 +55,20 @@ class StringColumnImpl extends ColumnImpl<String> implements StringColumn {
   }
   
   @Override
+  public String truncate(String value) {
+    if (value.length() > maxSize) {
+      return value.substring(0, maxSize);
+    } else {
+      return value;
+    }
+  }
+  
+  @Override
   protected String toHelper(String value) {
     if (value.length() > maxSize) {
       String trunc = value.substring(0, maxSize);
-      TaskProgressLogger.get().report(Level.SEVERE, "Forced to truncate " + toString() + " to " + trunc);
-      return "'" + trunc + "'"; 
+      TaskProgressLogger.get().report(Level.WARNING, "Forced to truncate " + toString() + " to " + trunc);
+      return "'" + truncate(value) + "'"; 
     } else {
       return "'" + value + "'";
     }

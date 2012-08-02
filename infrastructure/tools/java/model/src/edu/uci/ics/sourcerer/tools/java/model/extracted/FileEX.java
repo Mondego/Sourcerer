@@ -78,4 +78,9 @@ public final class FileEX implements SimpleSerializable {
   public Metrics getMetrics() {
     return metrics;
   }
+  
+  @Override
+  public String toString() {
+    return name + " " + hashPath;
+  }
 }

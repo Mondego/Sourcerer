@@ -76,12 +76,12 @@ public class ModeledEntity {
   public Integer getEntityID(QueryExecutor exec, Integer projectID) {
     if (entityID == null) {
       if (duplicates != null) {
-        entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.DUPLICATE, fqn, projectID));
+        entityID = exec.insertWithKey(EntitiesTable.createInsert(Entity.DUPLICATE, fqn, projectID));
         for (Integer dupID : duplicates) {
           exec.insert(RelationsTable.makeInsert(Relation.MATCHES, RelationClass.EXTERNAL, entityID, dupID, projectID));
         }
       } else if (virtualDuplicates != null) {
-        entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.VIRTUAL_DUPLICATE, null, projectID));
+        entityID = exec.insertWithKey(EntitiesTable.createInsert(Entity.VIRTUAL_DUPLICATE, null, projectID));
         if (virtualDuplicates.size() <= 1) {
           logger.severe("Single virtual duplicate! " + virtualDuplicates.toString());
         }

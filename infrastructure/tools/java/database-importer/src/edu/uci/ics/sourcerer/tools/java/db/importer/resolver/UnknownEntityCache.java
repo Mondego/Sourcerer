@@ -88,9 +88,9 @@ public class UnknownEntityCache  {
       Integer entityID = null;
       if (TypeUtils.isMethod(fqn)) {
         String name = TypeUtils.getMethodName(fqn);
-        entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.UNKNOWN, name, fqn.substring(name.length()), unknownsProject));
+        entityID = exec.insertWithKey(EntitiesTable.createInsert(Entity.UNKNOWN, name, fqn.substring(name.length()), unknownsProject));
       } else {
-        entityID = exec.insertWithKey(EntitiesTable.makeInsert(Entity.UNKNOWN, fqn, unknownsProject));
+        entityID = exec.insertWithKey(EntitiesTable.createInsert(Entity.UNKNOWN, fqn, unknownsProject));
       }
       if (entityID == null) {
         logger.log(Level.SEVERE, "Error inserting unknown: " + fqn);

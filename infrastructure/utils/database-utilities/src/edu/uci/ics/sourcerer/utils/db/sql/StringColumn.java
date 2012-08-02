@@ -23,4 +23,5 @@ package edu.uci.ics.sourcerer.utils.db.sql;
 public interface StringColumn extends Column<String> {
   public StringColumn addIndex(int numChars);
   public ConstantCondition<String> compareLike();
+  public String truncate(String value);
 }

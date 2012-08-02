@@ -115,6 +115,10 @@ public abstract class DatabaseImporter extends ParallelDatabaseRunnable {
         Integer fileID = fileMap.get(path);
         if (fileID == null) {
           logger.log(Level.SEVERE, "Unknown file: " + location);
+          logger.severe("File map contains: ");
+          for (String s : fileMap.keySet()) {
+            logger.severe("  " + s);
+          }
         }
         return fileID;
       }

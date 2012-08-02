@@ -18,6 +18,9 @@
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
+
+import java.util.logging.Level;
+
 import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.JavaLibraryTypeModel;
 import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.ModeledEntity;
 import edu.uci.ics.sourcerer.tools.java.db.importer.resolver.ProjectTypeModel;
@@ -39,12 +42,17 @@ public abstract class RelationsImporter extends DatabaseImporter {
   }
     
   protected Integer getLHS(String fqn, Integer projectID) {
-    ModeledEntity entity = projectModel.getEntity(fqn);
-    if (entity.getRelationClass() != RelationClass.INTERNAL) {
-      logger.severe("Invalid lhs entity: " + entity);
+    if (fqn.indexOf('#') >= 0) {
+      task.report(Level.WARNING, "Skipping param: " + fqn);
       return null;
     } else {
-      return entity.getEntityID(exec, projectID);
+      ModeledEntity entity = projectModel.getEntity(fqn);
+      if (entity.getRelationClass() != RelationClass.INTERNAL) {
+        logger.severe("Invalid lhs entity: " + entity);
+        return null;
+      } else {
+        return entity.getEntityID(exec, projectID);
+      }
     }
   }
   

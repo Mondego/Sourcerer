@@ -101,6 +101,10 @@ public final class EntityEX implements SimpleSerializable {
   }
   
   public String toString() {
-    return type.name() + " " + fqn;
+    if (type == null) {
+      return null + " " + fqn;
+    } else {
+      return type.name() + " " + fqn;
+    }
   }
 }

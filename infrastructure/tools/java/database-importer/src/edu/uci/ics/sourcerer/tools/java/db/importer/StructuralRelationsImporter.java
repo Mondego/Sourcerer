@@ -117,7 +117,7 @@ public abstract class StructuralRelationsImporter extends RelationsImporter {
       
       if (fileID != null) {
         // Add the entity
-        inserter.addInsert(EntitiesTable.makeInsert(var, projectID, fileID));
+        inserter.addInsert(EntitiesTable.createInsert(var, projectID, fileID));
         task.progress();
       }
       processTask.progress();

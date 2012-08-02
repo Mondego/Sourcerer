@@ -42,8 +42,7 @@ class JarEntitiesImporter extends EntitiesImporter {
   @Override
   public void doImport() {
     try (SelectQuery projectState = exec.createSelectQuery(ProjectsTable.TABLE)) {
-      projectState.addSelect(ProjectsTable.PATH);
-      projectState.addSelect(ProjectsTable.PROJECT_ID);
+      projectState.addSelect(ProjectsTable.PATH, ProjectsTable.PROJECT_ID);
       ConstantCondition<String> equalsHash = ProjectsTable.HASH.compareEquals();
       projectState.andWhere(equalsHash);
       
@@ -89,8 +88,10 @@ class JarEntitiesImporter extends EntitiesImporter {
           if (projectID == null) {
             task.start("Inserting project");
             projectID = exec.insertWithKey(createInsert(jar));
+            equalsID.setValue(projectID);
             task.finish();
           } else {
+            equalsID.setValue(projectID);
             ass.setValue(ProjectState.BEGIN_ENTITY.name());
             updateState.execute();
           }
@@ -100,7 +101,6 @@ class JarEntitiesImporter extends EntitiesImporter {
           insert(reader, projectID);
           
           ass.setValue(ProjectState.END_ENTITY.name());
-          equalsID.setValue(projectID);
           updateState.execute();
         }
         

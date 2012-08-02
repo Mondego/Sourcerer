@@ -378,6 +378,9 @@ public class ASMExtractor implements Closeable {
       if ((access & (Opcodes.ACC_BRIDGE | Opcodes.ACC_SYNTHETIC)) == (Opcodes.ACC_BRIDGE | Opcodes.ACC_SYNTHETIC)) {
         // ignore bridge method
         return null;
+      } else if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
+        // drop synthetic methods
+        return null;
       } else if ("<clinit>".equals(name)) {
         type = Entity.INITIALIZER;
       } else if ("<init>".equals(name)) {
@@ -398,8 +401,7 @@ public class ASMExtractor implements Closeable {
           }
         }
         
-        // Write the entity
-        entityWriter.writeEntity(type, methodSignatureVisitor.getFqn(), methodSignatureVisitor.getSignature(), null, access & METHOD_ACCESS_MASK, null, location);
+        methodVisitor.init(type, methodSignatureVisitor.getFqn(), methodSignatureVisitor.getSignature(), null, access & METHOD_ACCESS_MASK);
       } else {
         new SignatureReader(signature).accept(methodSignatureVisitor.init(type, name));
         String fqn = methodSignatureVisitor.getFqn();

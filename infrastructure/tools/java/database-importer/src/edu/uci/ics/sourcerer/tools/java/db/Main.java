@@ -120,6 +120,20 @@ public class Main {
         DatabaseConnectionFactory.DATABASE_PASSWORD,
         FileUtils.TEMP_DIR);
     
+  public static final Command ADD_BC_METRICS =
+    new Command("add-bc-metrics", "Adds bytecode metrics to the database.") {
+      protected void action() {
+        ParallelDatabaseImporter.addBytecodeMetrics();
+      }
+  }.setProperties(
+      JavaRepositoryFactory.INPUT_REPO,
+      DatabaseConnectionFactory.DATABASE_URL,
+      DatabaseConnectionFactory.DATABASE_USER,
+      DatabaseConnectionFactory.DATABASE_PASSWORD,
+      ParallelDatabaseImporter.THREAD_COUNT,
+      FileUtils.TEMP_DIR);
+  
+    
   public static final Command COMPUTE_COMPONENT_FIT =
     new Command("compute-component-fit", "Computes how well the identified components match the maven classification.") {
       @Override

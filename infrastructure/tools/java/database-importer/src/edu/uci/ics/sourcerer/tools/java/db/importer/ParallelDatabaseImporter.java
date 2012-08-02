@@ -48,9 +48,7 @@ public final class ParallelDatabaseImporter {
     TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Importing Java libraries");
     
-    task.start("Loading extracted repository");
     ExtractedJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(JavaRepositoryFactory.INPUT_REPO);
-    task.finish();
     
     if (repo == null) {
       task.finish();
@@ -139,10 +137,13 @@ public final class ParallelDatabaseImporter {
     TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Importing jar files");
     
-    task.start("Loading extracted repository");
     ExtractedJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(JavaRepositoryFactory.INPUT_REPO);
-    task.finish();
-       
+
+    if (repo == null) {
+      task.finish();
+      return;
+    }
+    
     task.start("Loading extracted maven jar files");
     Collection<? extends ExtractedJarFile> mavenJars = repo.getMavenJarFiles();
     task.finish();
@@ -289,10 +290,13 @@ public final class ParallelDatabaseImporter {
     TaskProgressLogger task = TaskProgressLogger.get();
     task.start("Importing projects");
     
-    task.start("Loading extracted repository");
     ExtractedJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(JavaRepositoryFactory.INPUT_REPO);
-    task.finish();
-       
+
+    if (repo == null) {
+      task.finish();
+      return;
+    }
+    
     task.start("Loading extracted projects");
     Collection<? extends ExtractedJavaProject> projects = repo.getProjects();
     task.finish();
@@ -347,6 +351,97 @@ public final class ParallelDatabaseImporter {
       threads.clear();
       for (int i = 0; i < numThreads; i++) {
         ProjectReferentialRelationsImporter importer = new ProjectReferentialRelationsImporter(nullerator, javaModel, unknowns);
+        threads.add(importer.start());
+      }
+      
+      for (Thread t : threads) {
+        try {
+          t.join();
+        } catch (InterruptedException e) {
+          logger.log(Level.SEVERE, "Thread interrupted", e);
+        }
+      }
+      task.finish();
+    }
+    
+    task.finish();
+  }
+  
+  public static void addBytecodeMetrics() {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    task.start("Adding bytecode metrics");
+   
+    ExtractedJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+
+    if (repo == null) {
+      task.finish();
+      return;
+    }
+    
+    task.start("Loading extracted Java libraries");
+    Collection<? extends ExtractedJarFile> libs = repo.getLibraryJarFiles();
+    task.finish();
+    
+    int numThreads = THREAD_COUNT.getValue();
+    
+    Nullerator<ExtractedJarFile> nullerator = null;
+    Collection<Thread> threads = new ArrayList<>(numThreads);
+        
+    if (!libs.isEmpty()) {
+      nullerator = Nullerator.createNullerator(libs, task, "Thread %s now processing: %s");
+      task.start("Adding bytecode metrics with " + numThreads + " threads");
+      
+      threads.clear();
+      for (int i = 0; i < numThreads; i++) {
+        BytecodeMetricsImporter importer = new BytecodeMetricsImporter(nullerator);
+        threads.add(importer.start());
+      }
+      
+      for (Thread t : threads) {
+        try {
+          t.join();
+        } catch (InterruptedException e) {
+          logger.log(Level.SEVERE, "Thread interrupted", e);
+        }
+      }
+      task.finish();
+    }
+    
+    task.start("Loading extracted maven jar files");
+    Collection<? extends ExtractedJarFile> mavenJars = repo.getMavenJarFiles();
+    task.finish();
+    
+    if (!mavenJars.isEmpty()) {
+      nullerator = Nullerator.createNullerator(mavenJars, task, "%s now processing: %s");
+      task.start("Adding bytecode metrics with " + numThreads + " threads");
+      
+      threads.clear();
+      for (int i = 0; i < numThreads; i++) {
+        BytecodeMetricsImporter importer = new BytecodeMetricsImporter(nullerator);
+        threads.add(importer.start());
+      }
+      
+      for (Thread t : threads) {
+        try {
+          t.join();
+        } catch (InterruptedException e) {
+          logger.log(Level.SEVERE, "Thread interrupted", e);
+        }
+      }
+      task.finish();
+    }
+    
+    task.start("Loading extracted project jar files");
+    Collection<? extends ExtractedJarFile> projectJars = repo.getProjectJarFiles();
+    task.finish();
+    
+    if (!projectJars.isEmpty()) {
+      nullerator = Nullerator.createNullerator(projectJars, task, "%s now processing: %s");
+      task.start("Adding bytecode metrics with " + numThreads + " threads");
+      
+      threads.clear();
+      for (int i = 0; i < numThreads; i++) {
+        JarEntitiesImporter importer = new JarEntitiesImporter(nullerator);
         threads.add(importer.start());
       }
       

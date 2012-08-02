@@ -55,9 +55,9 @@ public final class EntitiesTable extends DatabaseTable {
   public static final Column<Integer> ENTITY_ID = TABLE.addSerialColumn("entity_id");
   public static final Column<Entity> ENTITY_TYPE = TABLE.addEnumColumn("entity_type", Entity.values(), false).addIndex();
   public static final Column<Modifiers> MODIFIERS = TABLE.addSetColumn("modifiers", Modifier.values(), Modifiers.getFactory(), true);
-  public static final StringColumn FQN = TABLE.addVarcharColumn("fqn", 8192, true).addIndex(48);
-  public static final StringColumn PARAMS = TABLE.addVarcharColumn("params", 8192, true).addIndex(48);
-  public static final StringColumn RAW_PARAMS = TABLE.addVarcharColumn("raw_params", 8192, true).addIndex(48);
+  public static final StringColumn FQN = TABLE.addVarcharColumn("fqn", 2048, true).addIndex(48);
+  public static final StringColumn PARAMS = TABLE.addVarcharColumn("params", 1024, true).addIndex(48);
+  public static final StringColumn RAW_PARAMS = TABLE.addVarcharColumn("raw_params", 1024, true).addIndex(48);
   public static final Column<Integer> MULTI = TABLE.addIntColumn("multi", true, true);
   public static final Column<Integer> PROJECT_ID = TABLE.addIDColumn("project_id", false).addIndex();
   public static final Column<Integer> FILE_ID = TABLE.addIDColumn("file_id", true).addIndex();
@@ -69,7 +69,7 @@ public final class EntitiesTable extends DatabaseTable {
   }
   
   // ---- INSERT ----
-  private static Insert makeInsert(Entity type, String fqn, String signature, String rawSignature, Modifiers modifiers, Integer multi, Integer projectID, Integer fileID, Integer offset, Integer length) {
+  private static Insert createInsert(Entity type, String fqn, String signature, String rawSignature, Modifiers modifiers, Integer multi, Integer projectID, Integer fileID, Integer offset, Integer length) {
     return TABLE.createInsert(
         ENTITY_TYPE.to(type),
         MODIFIERS.to(modifiers),
@@ -83,23 +83,23 @@ public final class EntitiesTable extends DatabaseTable {
         LENGTH.to(length));
   }
   
-  public static Insert makeInsert(Entity type, String fqn, Integer projectID) {
-    return makeInsert(type, fqn, null, null, null, null, projectID, null, null, null);
+  public static Insert createInsert(Entity type, String fqn, Integer projectID) {
+    return createInsert(type, fqn, null, null, null, null, projectID, null, null, null);
   }
   
-  public static Insert makeInsert(Entity type, String fqn, Integer multi, Integer projectID) {
-    return makeInsert(type, fqn, null, null, null, multi, projectID, null, null, null);
+  public static Insert createInsert(Entity type, String fqn, Integer multi, Integer projectID) {
+    return createInsert(type, fqn, null, null, null, multi, projectID, null, null, null);
   }
   
-  public static Insert makeInsert(Entity type, String fqn, String params, Integer projectID) {
-    return makeInsert(type, fqn, params, null, null, null, projectID, null, null, null);
+  public static Insert createInsert(Entity type, String fqn, String params, Integer projectID) {
+    return createInsert(type, fqn, params, null, null, null, projectID, null, null, null);
   }
   
-  public static Insert makeInsert(EntityEX entity, Integer projectID, Integer fileID) {
+  public static Insert createInsert(EntityEX entity, Integer projectID, Integer fileID) {
     if (fileID == null) {
-      return makeInsert(entity.getType(), entity.getFqn(), entity.getSignature(), entity.getRawSignature(), entity.getModifiers(), null, projectID, null, null, null);
+      return createInsert(entity.getType(), entity.getFqn(), entity.getSignature(), entity.getRawSignature(), entity.getModifiers(), null, projectID, null, null, null);
     } else {
-      return makeInsert(entity.getType(), entity.getFqn(), entity.getSignature(), entity.getRawSignature(), entity.getModifiers(), null, projectID, fileID, entity.getLocation().getOffset(), entity.getLocation().getLength());
+      return createInsert(entity.getType(), entity.getFqn(), entity.getSignature(), entity.getRawSignature(), entity.getModifiers(), null, projectID, fileID, entity.getLocation().getOffset(), entity.getLocation().getLength());
     }
   }
 //  private RowInsert makeRowInsert(EntityEX entity, Integer projectID, Integer fileID) {
@@ -126,7 +126,7 @@ public final class EntitiesTable extends DatabaseTable {
 //    inserter.addValue(getInsertValue(Entity.ARRAY, fqn, null, size, projectID, null, null, null));
 //  }
 //  
-  public static Insert makeInsert(LocalVariableEX var, Integer projectID, Integer fileID) {
+  public static Insert createInsert(LocalVariableEX var, Integer projectID, Integer fileID) {
     Entity type = null;
     if (var.getType() == LocalVariable.LOCAL) {
       type = Entity.LOCAL_VARIABLE;
@@ -136,7 +136,7 @@ public final class EntitiesTable extends DatabaseTable {
 //    if (fileID == null) {
 //      return makeInsert(type, var.getName(), var.getModifiers(), var.getPosition(), projectID, null, null, null);
 //    } else {
-      return makeInsert(type, var.getName(), null, null, var.getModifiers(), var.getPosition(), projectID, fileID, var.getLocation().getOffset(), var.getLocation().getLength());
+      return createInsert(type, var.getName(), null, null, var.getModifiers(), var.getPosition(), projectID, fileID, var.getLocation().getOffset(), var.getLocation().getLength());
 //    }
   }
   

@@ -624,7 +624,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     if (node.isPackageMemberTypeDeclaration()) {
       fqn = fqnStack.peek(EnclosingPackage.class).getTypeFqn(node.getName().getIdentifier());
     } else if (node.isMemberTypeDeclaration()) {
-      fqnStack.peek(EnclosingDeclaredType.class).getMemberFqn(node.getName().getIdentifier());
+      fqn = fqnStack.peek(EnclosingDeclaredType.class).getMemberFqn(node.getName().getIdentifier());
     } else if (node.isLocalTypeDeclaration()) {
       throw new IllegalStateException("Can't have local enums!");
     } else {
@@ -1653,7 +1653,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     String fullFqn = fqn + "()";
 
     // Push the stack
-    fqnStack.push(fqn, Entity.ANNOTATION_ELEMENT);
+    fqnStack.push(fullFqn, Entity.ANNOTATION_ELEMENT);
     
     // Visit the children
     accept(node.getJavadoc());
