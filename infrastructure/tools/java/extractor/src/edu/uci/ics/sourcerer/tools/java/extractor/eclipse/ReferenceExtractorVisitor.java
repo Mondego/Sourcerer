@@ -436,12 +436,13 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       ITypeBinding binding = node.resolveBinding();
       
       // Get the fqn
-      String fqn = null;
-      if (binding == null) {
-        fqn = fqnStack.find(EnclosingDeclaredType.class).getAnonymousClassFqn();
-      } else {
-        fqn = getTypeFqn(binding);
-      }
+      String fqn = fqnStack.find(EnclosingDeclaredType.class).getAnonymousClassFqn();
+//      String fqn = null;
+//      if (binding == null) {
+//        fqn = fqnStack.find(EnclosingDeclaredType.class).getAnonymousClassFqn();
+//      } else {
+//        fqn = getTypeFqn(binding);
+//      }
       
       // Push the stack
       String parentFqn = fqnStack.getFqn();
@@ -2256,7 +2257,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       throw new NullPointerException("Attempt to get type fqn of null type!");
     }
     ITypeBinding binding = safeResolve(type);
-    if (binding == null) {
+    if (binding == null || binding.isRecovered()) {
       if (type.isPrimitiveType()) {
         return ((PrimitiveType)type).getPrimitiveTypeCode().toString();
       } else if (type.isSimpleType()) {

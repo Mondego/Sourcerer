@@ -37,7 +37,13 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.util.ClassFormatException;
+import org.eclipse.jdt.core.util.IClassFileReader;
+import org.eclipse.jdt.core.util.IConstantPool;
+import org.eclipse.jdt.core.util.IConstantPoolConstant;
+import org.eclipse.jdt.core.util.IConstantPoolEntry;
 import org.eclipse.jdt.internal.core.BinaryType;
+import org.eclipse.jdt.internal.core.util.ClassFileReader;
 
 import edu.uci.ics.sourcerer.tools.java.extractor.bytecode.ASMExtractor;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.WriterBundle;
@@ -91,6 +97,8 @@ public class EclipseExtractor implements Closeable {
       }
     }
   }
+  
+//  private Map<>
 
   public boolean extractClassFiles(Collection<IClassFile> classFiles) {
     TaskProgressLogger task = TaskProgressLogger.get();
@@ -108,6 +116,18 @@ public class EclipseExtractor implements Closeable {
         if (buffer == null || buffer.getLength() == 0) {
           extractClassFile(classFile);
         } else {
+          // Read the constant pool
+          try {
+            ClassFileReader reader = new ClassFileReader(classFile.getBytes(), IClassFileReader.CONSTANT_POOL);
+            IConstantPool constants = reader.getConstantPool();
+            for (int i = 0, max = constants.getConstantPoolCount(); i < max; i++) {
+//              constants.getEntryKind(i);
+              IConstantPoolEntry constant = constants.decodeEntry(i);
+              System.out.println(constant);
+            }
+          } catch (ClassFormatException e) {
+            logger.
+          }
           IType type = classFile.getType();
           if (type.isMember() || type.isAnonymous() || type.isLocal()) {
             // Shouldn't happen! But weird issues with GSSUtil$1
