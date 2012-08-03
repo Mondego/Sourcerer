@@ -51,7 +51,7 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 public class AfferentCouplingCalculator extends Calculator {
   @Override
   public boolean shouldCalculate(ProjectMetricModel metrics) {
-    return metrics.missingValue(Metric.EFFERENT_COUPLING);
+    return metrics.missingValue(Metric.AFFERENT_COUPLING);
   }
 
   @Override

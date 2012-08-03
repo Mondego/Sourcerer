@@ -277,11 +277,12 @@ public class ProjectTypeModel {
       String newFqn = null;
       if (TypeUtils.isMethod(fqn)) {
         Pair<String, String> pair = TypeUtils.breakParams(fqn);
-        newFqn = EntitiesTable.FQN.truncate(pair.getFirst()) + EntitiesTable.FQN.truncate(pair.getSecond());
+        newFqn = EntitiesTable.FQN.truncate(pair.getFirst()) + EntitiesTable.PARAMS.truncate(pair.getSecond());
       } else {
         newFqn = EntitiesTable.FQN.truncate(fqn);
       }
       if (!fqn.equals(newFqn)) {
+        logger.warning("Truncating: " + newFqn);
         entity = entities.get(newFqn);
         if (entity != null) {
           entities.put(fqn, entity);

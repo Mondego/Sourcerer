@@ -67,6 +67,10 @@ public final class WriterBundle implements Closeable {
     this.output = output;
     output.mkdirs();
   }
+  
+  public File getOutput() {
+    return output;
+  }
 
   public ImportWriter getImportWriter() {
     if (importWriter == null) {

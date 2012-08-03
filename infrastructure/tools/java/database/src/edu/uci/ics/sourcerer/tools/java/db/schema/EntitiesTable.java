@@ -56,7 +56,7 @@ public final class EntitiesTable extends DatabaseTable {
   public static final Column<Entity> ENTITY_TYPE = TABLE.addEnumColumn("entity_type", Entity.values(), false).addIndex();
   public static final Column<Modifiers> MODIFIERS = TABLE.addSetColumn("modifiers", Modifier.values(), Modifiers.getFactory(), true);
   public static final StringColumn FQN = TABLE.addVarcharColumn("fqn", 2048, true).addIndex(48);
-  public static final StringColumn PARAMS = TABLE.addVarcharColumn("params", 1024, true).addIndex(48);
+  public static final StringColumn PARAMS = TABLE.addVarcharColumn("params", 2024, true).addIndex(48);
   public static final StringColumn RAW_PARAMS = TABLE.addVarcharColumn("raw_params", 1024, true).addIndex(48);
   public static final Column<Integer> MULTI = TABLE.addIntColumn("multi", true, true);
   public static final Column<Integer> PROJECT_ID = TABLE.addIDColumn("project_id", false).addIndex();

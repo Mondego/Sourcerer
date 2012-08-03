@@ -20,6 +20,7 @@ package edu.uci.ics.sourcerer.tools.java.extractor.bytecode;
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Enumeration;
@@ -58,12 +59,16 @@ import edu.uci.ics.sourcerer.tools.java.model.types.Metrics;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ASMExtractor implements Closeable {
+  public static Argument<java.io.File> FINDBUGS_JAR = new FileArgument("findbugs-jar", null, "Location of the findbugs jar file");
+  
   private WriterBundle writers;
   
   private FileWriter fileWriter;
@@ -131,10 +136,20 @@ public class ASMExtractor implements Closeable {
           task.progress();
         }
       }
-    } catch (Exception e) {
-      logger.log(Level.SEVERE, "Error reading jar file.", e);
-    } finally {
       task.finish();
+    } catch (Exception e) {
+      task.exception(e);
+    }
+    if (FINDBUGS_JAR.getValue() != null) {
+      task.start("Running FindBugs");
+      java.io.File output = new java.io.File(writers.getOutput(), "findbugs.xml");
+      try {
+        Process process = Runtime.getRuntime().exec("java -jar " + FINDBUGS_JAR.getValue() + " -textui -xml -output " + output.getPath() + " " + file.getPath());
+        process.waitFor();
+        task.finish();
+      } catch (IOException | InterruptedException e) {
+        task.exception(e);
+      }
     }
   }
   
