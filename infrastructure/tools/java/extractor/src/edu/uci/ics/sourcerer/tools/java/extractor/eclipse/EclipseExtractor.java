@@ -37,13 +37,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.util.ClassFormatException;
-import org.eclipse.jdt.core.util.IClassFileReader;
-import org.eclipse.jdt.core.util.IConstantPool;
-import org.eclipse.jdt.core.util.IConstantPoolConstant;
-import org.eclipse.jdt.core.util.IConstantPoolEntry;
 import org.eclipse.jdt.internal.core.BinaryType;
-import org.eclipse.jdt.internal.core.util.ClassFileReader;
 
 import edu.uci.ics.sourcerer.tools.java.extractor.bytecode.ASMExtractor;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.WriterBundle;
@@ -109,94 +103,93 @@ public class EclipseExtractor implements Closeable {
     Map<String, Collection<IClassFile>> memberMap = new HashMap<>();;
     Collection<String> sourceFailed = new LinkedList<>();
     
+    Collection<IClassFile> parentTypes = new LinkedList<>();
     for (IClassFile classFile : classFiles) {
+      IType type = classFile.getType();
+      try {
+        if (type.isMember() || type.isAnonymous() || type.isLocal()) {
+          // Shouldn't happen! But weird issues with GSSUtil$1
+          String key = classFile.getElementName();
+          int dollar = key.indexOf('$');
+          if (dollar == -1) {
+            logger.log(Level.SEVERE, "Should have a dollar: " + key);
+          } else {
+            key = key.substring(0, dollar) + ".class";
+          }
+          Collection<IClassFile> members = memberMap.get(key);
+          if (members == null) {
+            members = new LinkedList<>();
+            memberMap.put(key, members);
+          }
+          members.add(classFile);
+        } else {
+          parentTypes.add(classFile);
+        }
+      } catch (JavaModelException e) {
+        sourceFailed.add(classFile.getElementName());
+        extractClassFile(classFile);
+      }
+    }
+    for (IClassFile classFile : parentTypes) {
       task.progress();
       try {
         IBuffer buffer = classFile.getBuffer();
         if (buffer == null || buffer.getLength() == 0) {
           extractClassFile(classFile);
         } else {
-          // Read the constant pool
-          try {
-            ClassFileReader reader = new ClassFileReader(classFile.getBytes(), IClassFileReader.CONSTANT_POOL);
-            IConstantPool constants = reader.getConstantPool();
-            for (int i = 0, max = constants.getConstantPoolCount(); i < max; i++) {
-//              constants.getEntryKind(i);
-              IConstantPoolEntry constant = constants.decodeEntry(i);
-              System.out.println(constant);
-            }
-          } catch (ClassFormatException e) {
-            logger.
-          }
           IType type = classFile.getType();
-          if (type.isMember() || type.isAnonymous() || type.isLocal()) {
-            // Shouldn't happen! But weird issues with GSSUtil$1
-            String key = classFile.getElementName();
-            int dollar = key.indexOf('$');
-            if (dollar == -1) {
-              logger.log(Level.SEVERE, "Should have a dollar: " + key);
-            } else {
-              key = key.substring(0, dollar) + ".class";
+          // Handle Eclipse issue with GSSUtil
+          if ("sun.security.jgss.GSSUtil".equals(type.getFullyQualifiedName())) {
+            extractClassFile(classFile);
+            sourceFailed.add(classFile.getElementName());
+            continue;
+          }
+          // Handle multiple top-level types
+          {
+            BinaryType bType = (BinaryType) type;
+            String sourceFile = type.getPackageFragment().getElementName() + "." + bType.getSourceFileName(null);
+            String fqn = classFile.getType().getFullyQualifiedName() + ".java";
+            if (!fqn.equals(sourceFile)) {
+              continue;
             }
-            Collection<IClassFile> members = memberMap.get(key);
-            if (members == null) {
-              members = new LinkedList<>();
-              memberMap.put(key, members);
+          }
+          parser.setStatementsRecovery(true);
+          parser.setResolveBindings(true);
+          parser.setBindingsRecovery(true);
+          parser.setSource(classFile);
+              
+          CompilationUnit unit = (CompilationUnit) parser.createAST(null);
+          boolean foundProblem = false;
+          // start by checking for a "public type" error
+          // just skip this unit in if one is found 
+          for (IProblem problem : unit.getProblems()) {
+            if (problem.isError() && problem.getID() == IProblem.PublicClassMustMatchFileName) {
+              foundProblem = true;
             }
-            members.add(classFile);
+          }
+          if (foundProblem) {
+            logger.log(Level.WARNING, "Giving up on " + classFile.getElementName());
+            continue;
+          }
+              
+          boolean trouble = checkForMissingTypes(unit);
+          if (trouble) {
+            sourceFailed.add(classFile.getElementName());
+            extractClassFile(classFile);
           } else {
-            // Handle Eclipse issue with GSSUtil
-            if ("sun.security.jgss.GSSUtil".equals(type.getFullyQualifiedName())) {
-              extractClassFile(classFile);
-              sourceFailed.add(classFile.getElementName());
-              continue;
-            }
-            // Handle multiple top-level types
-            {
-              BinaryType bType = (BinaryType) type;
-              String sourceFile = type.getPackageFragment().getElementName() + "." + bType.getSourceFileName(null);
-              String fqn = classFile.getType().getFullyQualifiedName() + ".java";
-              if (!fqn.equals(sourceFile)) {
-                continue;
-              }
-            }
-            parser.setStatementsRecovery(true);
-            parser.setResolveBindings(true);
-            parser.setBindingsRecovery(true);
-            parser.setSource(classFile);
-              
-            CompilationUnit unit = (CompilationUnit) parser.createAST(null);
-            boolean foundProblem = false;
-            // start by checking for a "public type" error
-            // just skip this unit in if one is found 
-            for (IProblem problem : unit.getProblems()) {
-              if (problem.isError() && problem.getID() == IProblem.PublicClassMustMatchFileName) {
-                foundProblem = true;
-              }
-            }
-            if (foundProblem) {
-              logger.log(Level.WARNING, "Giving up on " + classFile.getElementName());
-              continue;
-            }
-              
-            boolean trouble = checkForMissingTypes(unit);
-            if (trouble) {
-              sourceFailed.add(classFile.getElementName());
-              extractClassFile(classFile);
-            } else {
-              try {
-                unit.accept(visitor);
-                oneWithSource = true;
-              } catch (Exception e) {
-                logger.log(Level.SEVERE, "Error in extracting " + classFile.getElementName(), e);
-                for (IProblem problem : unit.getProblems()) {
-                  if (problem.isError()) {
-                    logger.log(Level.SEVERE, "Error in source for class file (" + classFile.getElementName() + "): " + problem.getMessage());
-                  }
+            try {
+              visitor.setAdvisor(NamingAdvisor.create(classFile, memberMap.get(classFile.getElementName())));
+              unit.accept(visitor);
+              oneWithSource = true;
+            } catch (Exception e) {
+              logger.log(Level.SEVERE, "Error in extracting " + classFile.getElementName(), e);
+              for (IProblem problem : unit.getProblems()) {
+                if (problem.isError()) {
+                  logger.log(Level.SEVERE, "Error in source for class file (" + classFile.getElementName() + "): " + problem.getMessage());
                 }
-                sourceFailed.add(classFile.getElementName());
-                extractClassFile(classFile);
               }
+              sourceFailed.add(classFile.getElementName());
+              extractClassFile(classFile);
             }
           }
         }
@@ -245,6 +238,7 @@ public class EclipseExtractor implements Closeable {
       try {
         visitor.setCompilationUnitSource(icu.getSource());
         visitor.setJavaFile(entry.getKey());
+        visitor.setAdvisor(NamingAdvisor.create());
         unit.accept(visitor);
       } catch (Exception e) {
         logger.log(Level.SEVERE, "Error in extracting " + entry.getKey(), e);

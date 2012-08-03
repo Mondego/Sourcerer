@@ -169,6 +169,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   
   private boolean bindingFree = false;
   
+  private NamingAdvisor advisor;
+  
   private FQNStack fqnStack = new FQNStack();
 
   public ReferenceExtractorVisitor(WriterBundle writers) {
@@ -191,6 +193,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   
   public void setJavaFile(JavaFile file) {
     this.javaFile = file;
+  }
+  
+  public void setAdvisor(NamingAdvisor advisor) {
+    this.advisor = advisor;
   }
   
   /**
@@ -264,6 +270,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   @Override
   public boolean visit(ImportDeclaration node) {
     importWriter.writeImport(node.getName().getFullyQualifiedName(), node.isStatic(), node.isOnDemand(), createLocation(node));
+    if (!node.isStatic() && !node.isOnDemand()) {
+      advisor.addImport(node.getName().getFullyQualifiedName());
+    }
     return false;
   }
 
@@ -1041,7 +1050,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     String fqn = null;
     IMethodBinding binding = node.resolveMethodBinding();
     if (binding == null) {
-      fqn = UNKNOWN + "." + node.getName().getFullyQualifiedName() + getFuzzyMethodArgs(node.arguments());
+      fqn = createUnknownMethodFqn(node);
     } else {
       fqn = getMethodName(binding, false) + getMethodArgs(binding);
     }
@@ -2211,8 +2220,22 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
  
   private static final String BRACKETS = "[][][][][][][][][][][][][][][][][][][][]";
  
+  private String createUnknownMethodFqn(MethodInvocation node) {
+    String fqn = advisor.adviseMethod(node);
+    if (fqn == null) {
+      return UNKNOWN + "." + node.getName().getFullyQualifiedName() + getFuzzyMethodArgs(node.arguments());
+    } else {
+      return fqn;
+    }
+  }
+  
   private String createUnknownFqn(String name) {
-    return UNKNOWN + "." + name;
+    String fqn = advisor.advise(name);
+    if (fqn == null) {
+      return UNKNOWN + "." + name;
+    } else {
+      return fqn;
+    }
   }
   
   private String createUnknownSuperFqn(String name) {
