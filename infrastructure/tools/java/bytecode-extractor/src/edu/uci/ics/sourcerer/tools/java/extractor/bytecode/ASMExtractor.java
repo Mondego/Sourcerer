@@ -470,7 +470,6 @@ public class ASMExtractor implements Closeable {
 
     @Override
     public AnnotationVisitor visitAnnotation(String name, String desc) {
-      logger.info("nested!");
       return null;
     }
 
