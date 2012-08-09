@@ -93,7 +93,9 @@ public class BytecodeMetricsImporter extends DatabaseImporter {
         projectID = projectQuery.select().toSingleton(ProjectsTable.PROJECT_ID, true);
         task.finish();
         
-        if (projectID != null) {
+        if (projectID == null) {
+          task.report("Unable to locate project for: " + jar.getProperties().HASH.getValue());
+        } else {
           Map<String, Integer> fileMap = new HashMap<>();
           {
             task.start("Loading source files", "files loaded");

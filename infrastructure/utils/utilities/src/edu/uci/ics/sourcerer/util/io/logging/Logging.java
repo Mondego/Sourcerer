@@ -114,8 +114,7 @@ public final class Logging {
   private static Set<String> getResumeSet(File resumeFile) {
     if (resumeFile.exists()) {
       Set<String> resumeSet = Helper.newHashSet();
-      try {
-        BufferedReader br = new BufferedReader(new FileReader(resumeFile));
+      try (BufferedReader br = new BufferedReader(new FileReader(resumeFile))) {
         for (String line = br.readLine(); line != null; line = br.readLine()) {
           resumeSet.add(line);
         }

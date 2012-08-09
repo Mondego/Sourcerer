@@ -14,7 +14,7 @@
 <booleanAttribute key="default" value="true"/>
 <booleanAttribute key="includeOptional" value="true"/>
 <stringAttribute key="location" value="${workspace_loc:test-repo/output}/ws"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--extract-jars-asm --input-repo ${workspace_loc:test-repo} --output-repo ${workspace_loc:test-repo}/output/extracted/normal --output ${workspace_loc:test-repo}/output/normal --report-to-console --force-redo --findbugs-jar ${workspace_loc:lib}/find-bugs/lib/findbugs.jar"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--extract-jars-asm --input-repo ${workspace_loc:test-repo} --output-repo ${workspace_loc:test-repo}/output/extracted/normal --output ${workspace_loc:test-repo}/output/normal --report-to-console --force-redo --findbugs-jar ${workspace_loc:lib}/findbugs/lib/findbugs.jar"/>
 <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.pde.ui.workbenchClasspathProvider"/>
 <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xms40m -Xmx256m"/>
 <stringAttribute key="pde.version" value="3.3"/>

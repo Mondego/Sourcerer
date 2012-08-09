@@ -21,6 +21,7 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Enumeration;
@@ -144,7 +145,10 @@ public class ASMExtractor implements Closeable {
       task.start("Running FindBugs");
       java.io.File output = new java.io.File(writers.getOutput(), "findbugs.xml");
       try {
-        Process process = Runtime.getRuntime().exec("java -jar " + FINDBUGS_JAR.getValue() + " -textui -xml -output " + output.getPath() + " " + file.getPath());
+        ProcessBuilder builder = new ProcessBuilder("java", "-jar", FINDBUGS_JAR.getValue().getPath(), "-textui", "-xml", "-output", output.getPath(), file.getPath());
+        builder.inheritIO();
+        builder.directory(writers.getOutput());
+        Process process = builder.start();
         process.waitFor();
         task.finish();
       } catch (IOException | InterruptedException e) {
