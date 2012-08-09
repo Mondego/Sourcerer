@@ -64,11 +64,13 @@ public class JavaLibraryTypeModel {
     }
   }
   
-  public static JavaLibraryTypeModel createJavaLibraryTypeModel(final TaskProgressLogger task) {
+  public static JavaLibraryTypeModel createJavaLibraryTypeModel() {
     final JavaLibraryTypeModel model = new JavaLibraryTypeModel();
     new DatabaseRunnable() {
       @Override
       public void action() {
+        TaskProgressLogger task = TaskProgressLogger.get();
+        
         task.start("Building Java library type model");
         
         task.start("Loading Java library entities", "entities loaded");

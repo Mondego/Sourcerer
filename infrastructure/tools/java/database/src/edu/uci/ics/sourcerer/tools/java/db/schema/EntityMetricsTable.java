@@ -32,7 +32,7 @@ public class EntityMetricsTable extends DatabaseTable {
    *  | Column name  | Type            | Null? | Index? |
    *  +--------------+-----------------+-------+--------+
    *  | project_id   | BIGINT UNISNGED | No    | Yes    |
-   *  | file_id      | BIGINT UNISNGED | No    | Yes    |
+   *  | file_id      | BIGINT UNISNGED | Yes   | Yes    |
    *  | entity_id    | BIGINT UNISNGED | No    | Yes    | 
    *  | metric_type  | ENUM(values)    | No    | No     | 
    *  | value        | FLOAT           | No    | No     | 
@@ -41,7 +41,7 @@ public class EntityMetricsTable extends DatabaseTable {
   public static final EntityMetricsTable TABLE = new EntityMetricsTable();
   
   public static final Column<Integer> PROJECT_ID = TABLE.addIDColumn("project_id", false).addIndex();
-  public static final Column<Integer> FILE_ID = TABLE.addIDColumn("file_id", false).addIndex();
+  public static final Column<Integer> FILE_ID = TABLE.addIDColumn("file_id", true).addIndex();
   public static final Column<Integer> ENTITY_ID = TABLE.addIDColumn("entity_id", false).addIndex();
   public static final Column<Metric> METRIC_TYPE = TABLE.addEnumColumn("metric_type", Metric.values(), false);
   public static final Column<Double> VALUE = TABLE.addDoubleColumn("value", 23, 3, false);

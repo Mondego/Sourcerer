@@ -20,8 +20,6 @@ package edu.uci.ics.sourcerer.tools.java.extractor.bytecode;
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Enumeration;
@@ -48,6 +46,7 @@ import org.objectweb.asm.signature.SignatureVisitor;
 
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.EntityWriter;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.FileWriter;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.io.FindBugsRunner;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.LocalVariableWriter;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.RelationWriter;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.WriterBundle;
@@ -60,16 +59,12 @@ import edu.uci.ics.sourcerer.tools.java.model.types.Metrics;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
-import edu.uci.ics.sourcerer.util.io.arguments.Argument;
-import edu.uci.ics.sourcerer.util.io.arguments.FileArgument;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ASMExtractor implements Closeable {
-  public static Argument<java.io.File> FINDBUGS_JAR = new FileArgument("findbugs-jar", null, "Location of the findbugs jar file");
-  
   private WriterBundle writers;
   
   private FileWriter fileWriter;
@@ -141,20 +136,8 @@ public class ASMExtractor implements Closeable {
     } catch (Exception e) {
       task.exception(e);
     }
-    if (FINDBUGS_JAR.getValue() != null) {
-      task.start("Running FindBugs");
-      java.io.File output = new java.io.File(writers.getOutput(), "findbugs.xml");
-      try {
-        ProcessBuilder builder = new ProcessBuilder("java", "-jar", FINDBUGS_JAR.getValue().getPath(), "-textui", "-xml", "-output", output.getPath(), file.getPath());
-        builder.inheritIO();
-        builder.directory(writers.getOutput());
-        Process process = builder.start();
-        process.waitFor();
-        task.finish();
-      } catch (IOException | InterruptedException e) {
-        task.exception(e);
-      }
-    }
+
+    FindBugsRunner.runFindBugs(file, writers.getOutput());
   }
   
   public void extract(String pkg, String name, byte[] bytes) {

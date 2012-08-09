@@ -22,9 +22,9 @@ import org.eclipse.equinox.app.IApplicationContext;
 
 import edu.uci.ics.sourcerer.tools.java.extractor.Extractor.ExtractionMethod;
 import edu.uci.ics.sourcerer.tools.java.extractor.Extractor.JarType;
-import edu.uci.ics.sourcerer.tools.java.extractor.bytecode.ASMExtractor;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
 import edu.uci.ics.sourcerer.tools.java.extractor.missing.MissingTypeIdentifier;
+import edu.uci.ics.sourcerer.tools.java.model.extracted.io.FindBugsRunner;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.WriterBundle;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.internal.CommentWriterImpl;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.internal.EntityWriterImpl;
@@ -87,14 +87,14 @@ public class Main implements IApplication {
       protected void action() {
         Extractor.extractJars(JarType.LIBRARY, ExtractionMethod.ASM);
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, ASMExtractor.FINDBUGS_JAR);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, FindBugsRunner.FINDBUGS_JAR);
     
   public static final Command EXTRACT_LIBRARIES =
     new ExtractorCommand("extract-libraries", "Extract the libraries using Eclipse and Asm.") {
       protected void action() {
         Extractor.extractJars(JarType.LIBRARY, ExtractionMethod.ASM_ECLIPSE);
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, ASMExtractor.FINDBUGS_JAR);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO);
   
   public static final Command EXTRACT_JARS_ECLIPSE =
     new ExtractorCommand("extract-jars-eclipse", "Extract the jars using Eclipse.") {
@@ -108,14 +108,14 @@ public class Main implements IApplication {
       protected void action() {
         Extractor.extractJars(JarType.PROJECT, ExtractionMethod.ASM);
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, ASMExtractor.FINDBUGS_JAR);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, FindBugsRunner.FINDBUGS_JAR);
   
   public static final Command EXTRACT_JARS =
     new ExtractorCommand("extract-jars", "Extract the jars using Eclipse and Asm.") {
       protected void action() {
         Extractor.extractJars(JarType.PROJECT, ExtractionMethod.ASM_ECLIPSE);
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, ASMExtractor.FINDBUGS_JAR);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO);
     
   public static final Command EXTRACT_PROJECTS = 
     new ExtractorCommand("extract-projects", "Extract the projects.") {

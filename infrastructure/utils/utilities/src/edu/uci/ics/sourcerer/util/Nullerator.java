@@ -30,8 +30,8 @@ public class Nullerator<T> {
   private final String message;
   private Iterator<? extends T> iterator;
   
-  private Nullerator(Iterable<? extends T> iterable, TaskProgressLogger task, String message) {
-    this.task = task;
+  private Nullerator(Iterable<? extends T> iterable, String message) {
+    this.task = TaskProgressLogger.get();
     this.message = message;
     if (iterable != null) {
       iterator = iterable.iterator();
@@ -53,7 +53,7 @@ public class Nullerator<T> {
     }
   }
   
-  public static <T> Nullerator<T> createNullerator(Iterable<? extends T> iterable, TaskProgressLogger task, String message) {
-    return new Nullerator<>(iterable, task, message);
+  public static <T> Nullerator<T> createNullerator(Iterable<? extends T> iterable, String message) {
+    return new Nullerator<>(iterable, message);
   }
 }

@@ -55,79 +55,49 @@ public final class ParallelDatabaseImporter {
       return;
     }
     
-    task.start("Loading extracted Java libraries");
-    Collection<? extends ExtractedJarFile> libs = repo.getLibraryJarFiles();
-    task.finish();
-
-    if (libs.isEmpty()) {
-      task.report("No libraries to import");
-      task.finish();
-      return;
-    }
-    
-    int numThreads = THREAD_COUNT.getValue();
-    
-    Nullerator<ExtractedJarFile> nullerator = Nullerator.createNullerator(libs, task, "Thread %s now processing: %s");
-    
-    task.start("Performing entity import with " + numThreads + " threads");
-    Collection<Thread> threads = new ArrayList<>(numThreads);
-    for (int i = 0; i < numThreads; i++) {
-      JavaLibraryEntitiesImporter importer = new JavaLibraryEntitiesImporter(nullerator);
-      threads.add(importer.start());
-    }
-    
-    for (Thread t : threads) {
-      try {
-        t.join();
-      } catch (InterruptedException e) {
-        logger.log(Level.SEVERE, "Thread interrupted", e);
+    importJavaLibraries(repo, new ImporterFactory<ExtractedJarFile>() {
+      @Override
+      public String message() {
+        return "entity import";
       }
-    }
-    task.finish();
-    
-    JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.createJavaLibraryTypeModel(task);
-    UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
-    
-    nullerator = Nullerator.createNullerator(libs, task, "Thread %s now processing: %s");
-    task.start("Performing structural relation import with " + numThreads + " threads");
-
-    threads.clear();
-    for (int i = 0; i < numThreads; i++) {
-      JavaLibraryStructuralRelationsImporter importer = new JavaLibraryStructuralRelationsImporter(nullerator, javaModel, unknowns);
-      threads.add(importer.start());
-    }
-    
-    for (Thread t : threads) {
-      try {
-        t.join();
-      } catch (InterruptedException e) {
-        logger.log(Level.SEVERE, "Thread interrupted", e);
+      
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+        return new JavaLibraryEntitiesImporter(nullerator);
       }
-    }
-    task.finish();
+    });
+    
+    
+    final UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
+    
+    importJavaLibraries(repo, new ImporterFactory<ExtractedJarFile>() {
+      JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.createJavaLibraryTypeModel();
+      
+      @Override
+      public String message() {
+        return "structural relation";
+      }
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+        return new JavaLibraryStructuralRelationsImporter(nullerator, javaModel, unknowns);
+      }
+    });
     
     if (STRUCTURAL_ONLY.getValue()) {
       task.report("Skipping referential relation import");
     } else {
-      javaModel = JavaLibraryTypeModel.createJavaLibraryTypeModel(task);
-      
-      nullerator = Nullerator.createNullerator(libs, task, "Thread %s now processing: %s");
-      task.start("Performing referential relation import with " + numThreads + " threads");
-  
-      threads.clear();
-      for (int i = 0; i < numThreads; i++) {
-        JavaLibraryReferentialRelationsImporter importer = new JavaLibraryReferentialRelationsImporter(nullerator, javaModel, unknowns);
-        threads.add(importer.start());
-      }
-      
-      for (Thread t : threads) {
-        try {
-          t.join();
-        } catch (InterruptedException e) {
-          logger.log(Level.SEVERE, "Thread interrupted", e);
+      importJavaLibraries(repo, new ImporterFactory<ExtractedJarFile>() {
+        JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.createJavaLibraryTypeModel();
+        
+        @Override
+        public String message() {
+          return "structural relation";
         }
-      }
-      task.finish();
+        @Override
+        public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+          return new JavaLibraryReferentialRelationsImporter(nullerator, javaModel, unknowns);
+        }
+      });
     }
     
     task.finish();
@@ -144,143 +114,84 @@ public final class ParallelDatabaseImporter {
       return;
     }
     
-    task.start("Loading extracted maven jar files");
-    Collection<? extends ExtractedJarFile> mavenJars = repo.getMavenJarFiles();
-    task.finish();
+    importMavenJars(repo, new ImporterFactory<ExtractedJarFile>() {
+      @Override
+      public String message() {
+        return "entity import";
+      }
+      
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+        return new JarEntitiesImporter(nullerator);
+      }
+    });
+    
+    importProjectJars(repo, new ImporterFactory<ExtractedJarFile>() {
+      @Override
+      public String message() {
+        return "entity import";
+      }
+      
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+        return new JarEntitiesImporter(nullerator);
+      }
+    });
+   
 
-    int numThreads = THREAD_COUNT.getValue();
-    Nullerator<ExtractedJarFile> nullerator = null;
-    Collection<Thread> threads = new ArrayList<>(numThreads);
+    final JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.createJavaLibraryTypeModel();
+    final UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
     
-    if (!mavenJars.isEmpty()) {
-      nullerator = Nullerator.createNullerator(mavenJars, task, "%s now processing: %s");
-      task.start("Performing entity import with " + numThreads + " threads");
-      
-      threads.clear();
-      for (int i = 0; i < numThreads; i++) {
-        JarEntitiesImporter importer = new JarEntitiesImporter(nullerator);
-        threads.add(importer.start());
+    importMavenJars(repo, new ImporterFactory<ExtractedJarFile>() {
+      @Override
+      public String message() {
+        return "structural relation import";
       }
       
-      for (Thread t : threads) {
-        try {
-          t.join();
-        } catch (InterruptedException e) {
-          logger.log(Level.SEVERE, "Thread interrupted", e);
-        }
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+        return new JarStructuralRelationsImporter(nullerator, javaModel, unknowns);
       }
-      task.finish();
-    }
+    });
     
-    task.start("Loading extracted project jar files");
-    Collection<? extends ExtractedJarFile> projectJars = repo.getProjectJarFiles();
-    task.finish();
-    
-    if (!projectJars.isEmpty()) {
-      nullerator = Nullerator.createNullerator(projectJars, task, "%s now processing: %s");
-      task.start("Performing entity import with " + numThreads + " threads");
-      
-      threads.clear();
-      for (int i = 0; i < numThreads; i++) {
-        JarEntitiesImporter importer = new JarEntitiesImporter(nullerator);
-        threads.add(importer.start());
+    importProjectJars(repo, new ImporterFactory<ExtractedJarFile>() {
+      @Override
+      public String message() {
+        return "structural relation import";
       }
       
-      for (Thread t : threads) {
-        try {
-          t.join();
-        } catch (InterruptedException e) {
-          logger.log(Level.SEVERE, "Thread interrupted", e);
-        }
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+        return new JarStructuralRelationsImporter(nullerator, javaModel, unknowns);
       }
-      task.finish();
-    }
-    
-    JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.createJavaLibraryTypeModel(task);
-    UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
-    
-    if (!mavenJars.isEmpty()) {
-      nullerator = Nullerator.createNullerator(mavenJars, task, "%s now processing: %s");
-      task.start("Performing structural relation import with " + numThreads + " threads");
-
-      threads.clear();
-      for (int i = 0; i < numThreads; i++) {
-        JarStructuralRelationsImporter importer = new JarStructuralRelationsImporter(nullerator, javaModel, unknowns);
-        threads.add(importer.start());
-      }
-      
-      for (Thread t : threads) {
-        try {
-          t.join();
-        } catch (InterruptedException e) {
-          logger.log(Level.SEVERE, "Thread interrupted", e);
-        }
-      }
-      task.finish();
-    }
-    
-    if (!projectJars.isEmpty()) {
-      nullerator = Nullerator.createNullerator(projectJars, task, "Thread %s now processing: %s");
-      task.start("Performing structural relation import with " + numThreads + " threads");
-
-      threads.clear();
-      for (int i = 0; i < numThreads; i++) {
-        JarStructuralRelationsImporter importer = new JarStructuralRelationsImporter(nullerator, javaModel, unknowns);
-        threads.add(importer.start());
-      }
-      
-      for (Thread t : threads) {
-        try {
-          t.join();
-        } catch (InterruptedException e) {
-          logger.log(Level.SEVERE, "Thread interrupted", e);
-        }
-      }
-      task.finish();
-    }
+    });
     
     if (STRUCTURAL_ONLY.getValue()) {
       task.report("Skipping referential relation import");
     } else {
-      if (!mavenJars.isEmpty()) {
-        nullerator = Nullerator.createNullerator(mavenJars, task, "Thread %s now processing: %s");
-        task.start("Performing referential relation import with " + numThreads + " threads");
-  
-        threads.clear();
-        for (int i = 0; i < numThreads; i++) {
-          JarReferentialRelationsImporter importer = new JarReferentialRelationsImporter(nullerator, javaModel, unknowns);
-          threads.add(importer.start());
+      importMavenJars(repo, new ImporterFactory<ExtractedJarFile>() {
+        @Override
+        public String message() {
+          return "referential relation import";
         }
+        
+        @Override
+        public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+          return new JarReferentialRelationsImporter(nullerator, javaModel, unknowns);
+        }
+      });
       
-        for (Thread t : threads) {
-          try {
-            t.join();
-          } catch (InterruptedException e) {
-            logger.log(Level.SEVERE, "Thread interrupted", e);
-          }
+      importProjectJars(repo, new ImporterFactory<ExtractedJarFile>() {
+        @Override
+        public String message() {
+          return "referential relation import";
         }
-        task.finish();
-      }
-      
-      if (!projectJars.isEmpty()) {
-        nullerator = Nullerator.createNullerator(projectJars, task, "Thread %s now processing: %s");
-        task.start("Performing referential relation import with " + numThreads + " threads");
-  
-        threads.clear();
-        for (int i = 0; i < numThreads; i++) {
-          JarReferentialRelationsImporter importer = new JarReferentialRelationsImporter(nullerator, javaModel, unknowns);
-          threads.add(importer.start());
+        
+        @Override
+        public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+          return new JarReferentialRelationsImporter(nullerator, javaModel, unknowns);
         }
-      
-        for (Thread t : threads) {
-          try {
-            t.join();
-          } catch (InterruptedException e) {
-            logger.log(Level.SEVERE, "Thread interrupted", e);
-          }
-        }
-        task.finish();
-      }
+      });
     }
     
     task.finish();
@@ -297,71 +208,48 @@ public final class ParallelDatabaseImporter {
       return;
     }
     
-    task.start("Loading extracted projects");
-    Collection<? extends ExtractedJavaProject> projects = repo.getProjects();
-    task.finish();
-
-    int numThreads = THREAD_COUNT.getValue();
-    Nullerator<ExtractedJavaProject> nullerator = Nullerator.createNullerator(projects, task, "Thread %s now processing: %s");
-    Collection<Thread> threads = new ArrayList<>(numThreads);
-    
-    task.start("Performing entity import with " + numThreads + " threads");
-    threads.clear();
-    for (int i = 0; i < numThreads; i++) {
-      ProjectEntitiesImporter importer = new ProjectEntitiesImporter(nullerator);
-      threads.add(importer.start());
-    }
-      
-    for (Thread t : threads) {
-      try {
-        t.join();
-      } catch (InterruptedException e) {
-        logger.log(Level.SEVERE, "Thread interrupted", e);
+    importProjects(repo, new ImporterFactory<ExtractedJavaProject>() {
+      @Override
+      public String message() {
+        return "entity import";
       }
-    }
-    task.finish();
-    
-    JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.createJavaLibraryTypeModel(task);
-    UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
-    
-    nullerator = Nullerator.createNullerator(projects, task, "Thread %s now processing: %s");
-    task.start("Performing structural relation import with " + numThreads + " threads");
-
-    threads.clear();
-    for (int i = 0; i < numThreads; i++) {
-      ProjectStructuralRelationsImporter importer = new ProjectStructuralRelationsImporter(nullerator, javaModel, unknowns);
-      threads.add(importer.start());
-    }
       
-    for (Thread t : threads) {
-      try {
-        t.join();
-      } catch (InterruptedException e) {
-        logger.log(Level.SEVERE, "Thread interrupted", e);
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJavaProject> nullerator) {
+        return new ProjectEntitiesImporter(nullerator);
       }
-    }
-    task.finish();
+    });
     
+    
+    final JavaLibraryTypeModel javaModel = JavaLibraryTypeModel.createJavaLibraryTypeModel();
+    final UnknownEntityCache unknowns = UnknownEntityCache.makeUnknownEntityCache(task);
+    
+    importProjects(repo, new ImporterFactory<ExtractedJavaProject>() {
+      @Override
+      public String message() {
+        return "structural relation import";
+      }
+      
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJavaProject> nullerator) {
+        return new ProjectStructuralRelationsImporter(nullerator, javaModel, unknowns);
+      }
+    });
+
     if (STRUCTURAL_ONLY.getValue()) {
       task.report("Skipping referential relation import");
     } else {
-      nullerator = Nullerator.createNullerator(projects, task, "Thread %s now processing: %s");
-      task.start("Performing referential relation import with " + numThreads + " threads");
-  
-      threads.clear();
-      for (int i = 0; i < numThreads; i++) {
-        ProjectReferentialRelationsImporter importer = new ProjectReferentialRelationsImporter(nullerator, javaModel, unknowns);
-        threads.add(importer.start());
-      }
-      
-      for (Thread t : threads) {
-        try {
-          t.join();
-        } catch (InterruptedException e) {
-          logger.log(Level.SEVERE, "Thread interrupted", e);
+      importProjects(repo, new ImporterFactory<ExtractedJavaProject>() {
+        @Override
+        public String message() {
+          return "referential relation import";
         }
-      }
-      task.finish();
+        
+        @Override
+        public DatabaseImporter create(Nullerator<ExtractedJavaProject> nullerator) {
+          return new ProjectReferentialRelationsImporter(nullerator, javaModel, unknowns);
+        }
+      });
     }
     
     task.finish();
@@ -378,83 +266,134 @@ public final class ParallelDatabaseImporter {
       return;
     }
     
-    task.start("Loading extracted Java libraries");
-    Collection<? extends ExtractedJarFile> libs = repo.getLibraryJarFiles();
-    task.finish();
+    importJavaLibraries(repo, new ImporterFactory<ExtractedJarFile>() {
+      @Override
+      public String message() {
+        return "library bytecode metric addition";
+      }
+      
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+        return new BytecodeMetricsImporter(nullerator);
+      }
+    });
     
+    importMavenJars(repo, new ImporterFactory<ExtractedJarFile>() {
+      @Override
+      public String message() {
+        return "maven jar bytecode metric addition";
+      }
+      
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+        return new BytecodeMetricsImporter(nullerator);
+      }
+    });
+    
+    importProjectJars(repo, new ImporterFactory<ExtractedJarFile>() {
+      @Override
+      public String message() {
+        return "project jar bytecode metric addition";
+      }
+      
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+        return new BytecodeMetricsImporter(nullerator);
+      }
+    });
+    
+    task.finish();
+  }
+  
+  public static void addFindBugs() {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    task.start("Adding FindBugs results");
+   
+    ExtractedJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadExtractedJavaRepository(JavaRepositoryFactory.INPUT_REPO);
+
+    if (repo == null) {
+      task.finish();
+      return;
+    }
+    
+    importJavaLibraries(repo, new ImporterFactory<ExtractedJarFile>() {
+      @Override
+      public String message() {
+        return "library FindBugs results addition";
+      }
+      
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+        return new FindBugsImporter(nullerator);
+      }
+    });
+    
+    importMavenJars(repo, new ImporterFactory<ExtractedJarFile>() {
+      @Override
+      public String message() {
+        return "maven jar FindBugs results addition";
+      }
+      
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+        return new FindBugsImporter(nullerator);
+      }
+    });
+    
+    importProjectJars(repo, new ImporterFactory<ExtractedJarFile>() {
+      @Override
+      public String message() {
+        return "project jar FindBugs results addition";
+      }
+      
+      @Override
+      public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
+        return new FindBugsImporter(nullerator);
+      }
+    });
+    
+    task.finish();
+  }
+  
+  private static interface ImporterFactory<T> {
+    public DatabaseImporter create(Nullerator<T> nullerator);
+    public String message();
+  }
+  
+  private static void importJavaLibraries(ExtractedJavaRepository repo, ImporterFactory<ExtractedJarFile> factory) {
+    runThreads(Nullerator.createNullerator(repo.getLibraryJarFiles(), "Thread %s now processing: %s"), factory);
+  }
+  
+  private static void importMavenJars(ExtractedJavaRepository repo, ImporterFactory<ExtractedJarFile> factory) {
+    runThreads(Nullerator.createNullerator(repo.getMavenJarFiles(), "Thread %s now processing: %s"), factory);
+  }
+  
+  private static void importProjectJars(ExtractedJavaRepository repo, ImporterFactory<ExtractedJarFile> factory) {
+    runThreads(Nullerator.createNullerator(repo.getProjectJarFiles(), "Thread %s now processing: %s"), factory);
+  }
+  
+  private static void importProjects(ExtractedJavaRepository repo, ImporterFactory<ExtractedJavaProject> factory) {
+    runThreads(Nullerator.createNullerator(repo.getProjects(), "Thread %s now processing: %s"), factory);
+  }
+  
+  private static <T> void runThreads(Nullerator<T> nullerator, ImporterFactory<T> factory) {
     int numThreads = THREAD_COUNT.getValue();
+    TaskProgressLogger task = TaskProgressLogger.get();
     
-    Nullerator<ExtractedJarFile> nullerator = null;
+    task.start("Performing " + factory.message() + " with " + numThreads + " threads");
     Collection<Thread> threads = new ArrayList<>(numThreads);
-        
-    if (!libs.isEmpty()) {
-      nullerator = Nullerator.createNullerator(libs, task, "Thread %s now processing: %s");
-      task.start("Adding bytecode metrics with " + numThreads + " threads");
-      
-      threads.clear();
-      for (int i = 0; i < numThreads; i++) {
-        BytecodeMetricsImporter importer = new BytecodeMetricsImporter(nullerator);
-        threads.add(importer.start());
-      }
-      
-      for (Thread t : threads) {
-        try {
-          t.join();
-        } catch (InterruptedException e) {
-          logger.log(Level.SEVERE, "Thread interrupted", e);
-        }
-      }
-      task.finish();
+    for (int i = 0; i < numThreads; i++) {
+      DatabaseImporter importer = factory.create(nullerator);
+      threads.add(importer.start());
     }
     
-    task.start("Loading extracted maven jar files");
-    Collection<? extends ExtractedJarFile> mavenJars = repo.getMavenJarFiles();
-    task.finish();
-    
-    if (!mavenJars.isEmpty()) {
-      nullerator = Nullerator.createNullerator(mavenJars, task, "%s now processing: %s");
-      task.start("Adding bytecode metrics with " + numThreads + " threads");
-      
-      threads.clear();
-      for (int i = 0; i < numThreads; i++) {
-        BytecodeMetricsImporter importer = new BytecodeMetricsImporter(nullerator);
-        threads.add(importer.start());
+    for (Thread t : threads) {
+      try {
+        t.join();
+      } catch (InterruptedException e) {
+        logger.log(Level.SEVERE, "Thread interrupted", e);
       }
-      
-      for (Thread t : threads) {
-        try {
-          t.join();
-        } catch (InterruptedException e) {
-          logger.log(Level.SEVERE, "Thread interrupted", e);
-        }
-      }
-      task.finish();
     }
-    
-    task.start("Loading extracted project jar files");
-    Collection<? extends ExtractedJarFile> projectJars = repo.getProjectJarFiles();
-    task.finish();
-    
-    if (!projectJars.isEmpty()) {
-      nullerator = Nullerator.createNullerator(projectJars, task, "%s now processing: %s");
-      task.start("Adding bytecode metrics with " + numThreads + " threads");
-      
-      threads.clear();
-      for (int i = 0; i < numThreads; i++) {
-        JarEntitiesImporter importer = new JarEntitiesImporter(nullerator);
-        threads.add(importer.start());
-      }
-      
-      for (Thread t : threads) {
-        try {
-          t.join();
-        } catch (InterruptedException e) {
-          logger.log(Level.SEVERE, "Thread interrupted", e);
-        }
-      }
-      task.finish();
-    }
-    
     task.finish();
   }
 }

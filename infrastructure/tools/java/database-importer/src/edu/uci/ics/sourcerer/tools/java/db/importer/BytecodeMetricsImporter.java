@@ -58,6 +58,7 @@ public class BytecodeMetricsImporter extends DatabaseImporter {
          SelectQuery filesQuery = exec.createSelectQuery(FilesTable.TABLE);
          SelectQuery fileMetricsQuery = exec.createSelectQuery(FileMetricsTable.TABLE);
          SelectQuery entityQuery = exec.createSelectQuery(EntitiesTable.TABLE);
+         SelectQuery methodQuery = exec.createSelectQuery(EntitiesTable.TABLE);
          SelectQuery entityMetricsQuery = exec.createSelectQuery(EntityMetricsTable.TABLE)) {
       projectQuery.addSelect(ProjectsTable.PROJECT_ID);
       ConstantCondition<String> equalsHash = ProjectsTable.HASH.compareEquals();
@@ -74,8 +75,11 @@ public class BytecodeMetricsImporter extends DatabaseImporter {
       entityQuery.addSelect(EntitiesTable.ENTITY_ID);
       ConstantCondition<Integer> equalsFileID2 = EntitiesTable.FILE_ID.compareEquals();
       ConstantCondition<String> equalsFqn = EntitiesTable.FQN.compareEquals();
-      ConstantCondition<String> equalsParams = EntitiesTable.PARAMS.compareEquals();
       entityQuery.andWhere(equalsFqn, equalsFileID2);
+      
+      methodQuery.addSelect(EntitiesTable.ENTITY_ID);
+      ConstantCondition<String> equalsParams = EntitiesTable.PARAMS.compareEquals();
+      methodQuery.andWhere(equalsFqn, equalsParams, equalsFileID2);
       
       entityMetricsQuery.addSelect(EntityMetricsTable.METRIC_TYPE);
       ConstantCondition<Integer> equalsEntityID = EntityMetricsTable.ENTITY_ID.compareEquals();
@@ -149,20 +153,36 @@ public class BytecodeMetricsImporter extends DatabaseImporter {
                 if (fileID != null) {
                   equalsFileID2.setValue(fileID);
                   equalsFqn.setValue(entity.getFqn());
-                  equalsParams.setValue(entity.getSignature());
-                  Integer entityID = entityQuery.select().toSingleton(EntitiesTable.ENTITY_ID, true);
+                  TypedQueryResult result = null;
+                  if (entity.getSignature() == null) {
+                    result = entityQuery.select();
+                  } else {
+                    equalsParams.setValue(entity.getSignature());
+                    result = methodQuery.select();
+                  }
+                  Integer entityID = null;
+                  if (result.next()) {
+                    entityID = result.getResult(EntitiesTable.ENTITY_ID);
+                    if (result.next()) {
+                      task.report(Level.SEVERE, "Duplicate entity: " + entity);
+                      result.close();
+                    }
+                  }
                   if (entityID == null) {
                     task.report(Level.SEVERE, "Unable to find entity: " + entity);
                   } else {
                     metrics.clear();
                     equalsEntityID.setValue(entityID);
-                    TypedQueryResult result = entityMetricsQuery.select();
+                    result = entityMetricsQuery.select();
                     while (result.next()) {
                       metrics.add(result.getResult(EntityMetricsTable.METRIC_TYPE));
                     }
-                    for (Map.Entry<Metric, Double> entry : entity.getMetrics().getMetricValues()) {
-                      if (!metrics.contains(entry.getKey())) {
-                        inserter.addInsert(EntityMetricsTable.createInsert(projectID, fileID, entityID, entry.getKey(), entry.getValue()));
+                    Metrics mm = entity.getMetrics();
+                    if (mm != null) {
+                      for (Map.Entry<Metric, Double> entry : mm.getMetricValues()) {
+                        if (!metrics.contains(entry.getKey())) {
+                          inserter.addInsert(EntityMetricsTable.createInsert(projectID, fileID, entityID, entry.getKey(), entry.getValue()));
+                        }
                       }
                     }
                   }

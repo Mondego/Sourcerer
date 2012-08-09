@@ -178,6 +178,7 @@ public class EclipseExtractor implements Closeable {
             extractClassFile(classFile);
           } else {
             try {
+              visitor.setCompilationUnitSource(classFile.getSource());
               visitor.setAdvisor(NamingAdvisor.create(classFile, memberMap.get(classFile.getElementName())));
               unit.accept(visitor);
               oneWithSource = true;
