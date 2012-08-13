@@ -162,15 +162,20 @@ class MetricModelFactory implements Closeable {
     }
     
     public void setEntityValue(Integer entityID, Integer fileID, Metric metric, Double value) {
-      FileMetricModel fModel = fileMetrics.get(fileID);
-      if (fModel == null) {
-        fModel = new FileMetricModel();
-        fileMetrics.put(fileID, fModel);
+      FileMetricModel fModel = null; 
+      if (fileID != null) {
+        fModel = fileMetrics.get(fileID);
+        if (fModel == null) {
+          fModel = new FileMetricModel();
+          fileMetrics.put(fileID, fModel);
+        }
       }
-      EntityMetricModel eModel = fModel.entityMetrics.get(entityID);
+      EntityMetricModel eModel = entityMetrics.get(entityID);
       if (eModel == null) {
         eModel = new EntityMetricModel();
-        fModel.entityMetrics.put(entityID, eModel);
+        if (fModel != null) {
+          fModel.entityMetrics.put(entityID, eModel);
+        }
         entityMetrics.put(entityID, eModel);
       }
       eModel.metrics.put(metric, value);

@@ -69,101 +69,127 @@ public class EfferentCouplingCalculator extends Calculator {
       
       task.start("Computing EfferentCoupling");
       Averager<Double> avgCoupling = Averager.create();
-      Map<ModeledStructuralEntity, Set<ModeledStructuralEntity>> pkgCoupling = new HashMap<>();
+      Averager<Double> avgInternalCoupling = Averager.create();
+      Map<ModeledStructuralEntity, Set<ModeledEntity>> pkgCoupling = new HashMap<>();
       
       task.start("Processing entities", "entities processed");
       for (ModeledEntity entity : model.getEntities()) {
         if (projectID.equals(entity.getProjectID()) && entity.getType().is(Entity.CLASS, Entity.ENUM, Entity.INTERFACE) && !anon.matcher(entity.getFqn()).matches()) {
-          ModeledStructuralEntity sEntity = (ModeledStructuralEntity) entity;
+          ModeledDeclaredType dec = (ModeledDeclaredType) entity;
+          Set<ModeledEntity> referencedTypes = new HashSet<>();
           
-          Set<ModeledDeclaredType> used = new HashSet<>();
-          Deque<ModeledStructuralEntity> entities = new LinkedList<>();
-          entities.add(sEntity);
-          while (!entities.isEmpty()) {
-            ModeledStructuralEntity next = entities.pop();
+          Deque<ModeledStructuralEntity> stack = new LinkedList<>();
+          while (!stack.isEmpty()) {
+            ModeledStructuralEntity next = stack.pop();
             if (next.getType().is(Entity.CLASS, Entity.ENUM, Entity.INTERFACE)) {
-              ModeledDeclaredType dec = (ModeledDeclaredType) next;
+              ModeledDeclaredType decNext = (ModeledDeclaredType) next;
               // Add the superclass
-              add(used, dec.getSuperclass());
+              add(referencedTypes, decNext.getSuperclass());
               // Add the interfaces
-              for (ModeledEntity iface : dec.getInterfaces()) {
-                add(used, iface);
+              for (ModeledEntity iface : decNext.getInterfaces()) {
+                add(referencedTypes, iface);
               }
             }
-            // All the referenced things
+            // All the referenced types
             lhsEid.setValue(next.getEntityID());
             TypedQueryResult result = select.select();
             while (result.next()) {
               Integer rhsEid = result.getResult(RelationsTable.RHS_EID);
-              ModeledEntity ent = model.get(rhsEid);
-              if (ent != null) {
-                add(used, entity);
-              } else {
+              ModeledEntity rhs = model.get(rhsEid);
+              if (rhs == null) {
                 logger.severe("Unable to find model element for: " + rhsEid);
+              } else {
+                add(referencedTypes, rhs);
               }
             }
+            
             // Add the children
-            entities.addAll(next.getChildren());
+            stack.addAll(next.getChildren());
           }
-          // Add to the pkg
-          ModeledStructuralEntity owner = sEntity.getOwner();
-          if (owner.getType() == Entity.PACKAGE) {
-            Set<ModeledStructuralEntity> pkg = pkgCoupling.get(owner);
-            if (pkg == null) {
-              pkg = new HashSet<>();
-              pkgCoupling.put(owner, pkg);
-            }
-            pkg.addAll(used);
-          }
-          Double value = (double) used.size();
-          int internalUsed = 0;
-          for (ModeledDeclaredType)
-          if (metrics.missingEntityValue(sEntity.getEntityID(), Metric.EFFERENT_COUPLING)) {
-            metrics.setEntityValue(sEntity.getEntityID(), sEntity.getFileID(), Metric.EFFERENT_COUPLING, value);
-            exec.insert(EntityMetricsTable.createInsert(projectID, sEntity.getFileID(), sEntity.getEntityID(), Metric.EFFERENT_COUPLING, value));
-          }
-          avgCoupling.addValue(value);
           
+          // Add to the pkg
+          ModeledStructuralEntity pkg = dec.getOwner();
+          if (pkg.getType() == Entity.PACKAGE) {
+            Set<ModeledEntity> pkgReferencedTypes = pkgCoupling.get(pkg);
+            if (pkgReferencedTypes == null) {
+              pkgReferencedTypes = new HashSet<>();
+              pkgCoupling.put(pkg, pkgReferencedTypes);
+            }
+            pkgReferencedTypes.addAll(referencedTypes);
+          }
+          
+          int internalReferencedTypes = 0;
+          for (ModeledEntity used : referencedTypes) {
+            if (projectID.equals(used.getProjectID())) {
+              internalReferencedTypes++;
+            }
+          }
+          Double coupling = (double) referencedTypes.size();
+          Double internalCoupling = (double) internalReferencedTypes;
+          
+          if (metrics.missingEntityValue(dec.getEntityID(), Metric.EFFERENT_COUPLING)) {
+            metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.EFFERENT_COUPLING, coupling);
+            exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.EFFERENT_COUPLING, coupling));
+          }
+          if (metrics.missingEntityValue(dec.getEntityID(), Metric.EFFERENT_COUPLING_INTERNAL)) {
+            metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.EFFERENT_COUPLING_INTERNAL, internalCoupling);
+            exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.EFFERENT_COUPLING_INTERNAL, internalCoupling));
+          }
+          avgCoupling.addValue(coupling);
+          avgInternalCoupling.addValue(internalCoupling);
           task.progress();
         }
       }
-
-      for (Map.Entry<ModeledStructuralEntity, Set<ModeledStructuralEntity>> entry : pkgCoupling.entrySet()) {
-        ModeledStructuralEntity entity = entry.getKey();
-        Double value = (double) entry.getValue().size();
-        
-        if (metrics.missingEntityValue(entity.getEntityID(), Metric.EFFERENT_COUPLING)) {
-          metrics.setEntityValue(entity.getEntityID(), entity.getFileID(), Metric.EFFERENT_COUPLING, value);
-          exec.insert(EntityMetricsTable.createInsert(projectID, entity.getFileID(), entity.getEntityID(), Metric.EFFERENT_COUPLING, value));
-        }
-      }
+      task.finish();
+      
       if (metrics.missingValue(Metric.EFFERENT_COUPLING)) {
         metrics.setValue(Metric.EFFERENT_COUPLING, avgCoupling);
         exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.EFFERENT_COUPLING, avgCoupling));
       }
+      if (metrics.missingValue(Metric.EFFERENT_COUPLING_INTERNAL)) {
+        metrics.setValue(Metric.EFFERENT_COUPLING_INTERNAL, avgInternalCoupling);
+        exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.EFFERENT_COUPLING_INTERNAL, avgInternalCoupling));
+      }
+
+      for (Map.Entry<ModeledStructuralEntity, Set<ModeledEntity>> entry : pkgCoupling.entrySet()) {
+        ModeledStructuralEntity pkg = entry.getKey();
+        int internalReferencedTypes = 0;
+        for (ModeledEntity referencedType : entry.getValue()) {
+          if (projectID.equals(referencedType.getEntityID())) {
+            internalReferencedTypes++;
+          }
+        }
+        Double coupling = (double) entry.getValue().size();
+        Double internalCoupling = (double) internalReferencedTypes;
+        
+        if (metrics.missingEntityValue(pkg.getEntityID(), Metric.EFFERENT_COUPLING)) {
+          metrics.setEntityValue(pkg.getEntityID(), null, Metric.EFFERENT_COUPLING, coupling);
+          exec.insert(EntityMetricsTable.createInsert(projectID, null, pkg.getEntityID(), Metric.EFFERENT_COUPLING, coupling));
+        }
+        if (metrics.missingEntityValue(pkg.getEntityID(), Metric.EFFERENT_COUPLING_INTERNAL)) {
+          metrics.setEntityValue(pkg.getEntityID(), null, Metric.EFFERENT_COUPLING_INTERNAL, internalCoupling);
+          exec.insert(EntityMetricsTable.createInsert(projectID, null, pkg.getEntityID(), Metric.EFFERENT_COUPLING_INTERNAL, internalCoupling));
+        }
+      }
+      task.finish();
     }
   }
   
-  
-  
-  private void add(Set<ModeledDeclaredType> set, ModeledEntity entity) {
+  private void add(Set<ModeledEntity> set, ModeledEntity entity) {
     if (entity != null) {
       if (entity.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION)) {
-        set.add((ModeledDeclaredType) entity);
-      } else if (entity.getType().is(Entity.CONSTRUCTOR, Entity.METHOD, Entity.))
-      if (entity instanceof ModeledStructuralEntity) {
-        ModeledStructuralEntity struct = (ModeledStructuralEntity) entity;
-        if (struct.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION)) {
-          
-        } else {
-          add(set, struct.getOwner());
-        } 
-      } else if (entity instanceof ModeledParametrizedType) {
+        set.add(entity);
+      } else if (entity.getType().is(Entity.CONSTRUCTOR, Entity.METHOD, Entity.FIELD, Entity.ENUM_CONSTANT)) {
+        add(set, ((ModeledStructuralEntity) entity).getOwner());
+      } else if (entity.getType() == Entity.PARAMETERIZED_TYPE) {
         ModeledParametrizedType pEntity = (ModeledParametrizedType) entity;
         set.add(pEntity.getBaseType());
         for (ModeledEntity ent : pEntity.getTypeArgs()) {
           add(set, ent);
         }
+      } else if (entity.getType() == Entity.ARRAY) {
+        // May want to add ModeledArray
+//        ModeledEntity
       }
     }
   }
