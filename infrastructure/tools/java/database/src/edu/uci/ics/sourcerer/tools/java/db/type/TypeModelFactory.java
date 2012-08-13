@@ -88,8 +88,9 @@ public class TypeModelFactory {
         Entity.ENUM_CONSTANT, 
         Entity.FIELD,
         Entity.PARAMETERIZED_TYPE,
-//        Entity.ARRAY,
-        Entity.TYPE_VARIABLE);
+        Entity.ARRAY,
+        Entity.TYPE_VARIABLE,
+        Entity.WILDCARD);
     protected static ResultConstructor2<ModeledEntity> ENTITY_CONSTRUCTOR = new ResultConstructor2<ModeledEntity>() {
       @Override
       public void addSelects(SelectQuery query) {
@@ -100,7 +101,8 @@ public class TypeModelFactory {
             EntitiesTable.FILE_ID,
             EntitiesTable.PROJECT_ID,
             EntitiesTable.PARAMS,
-            EntitiesTable.RAW_PARAMS);
+            EntitiesTable.RAW_PARAMS,
+            EntitiesTable.MODIFIERS);
       }
       
       @Override
@@ -117,18 +119,22 @@ public class TypeModelFactory {
           case ENUM:
           case ANNOTATION:
             return new ModeledDeclaredType(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, fileID, projectID);
+          case CONSTRUCTOR:
           case METHOD:
           case ANNOTATION_ELEMENT:
             return new ModeledMethod(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, fileID, projectID,               
                 result.getResult(EntitiesTable.PARAMS),
                 result.getResult(EntitiesTable.RAW_PARAMS));
           case FIELD:
+          case ENUM_CONSTANT:
             return new ModeledField(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, fileID, projectID);
+          case PACKAGE:
+            return new ModeledStructuralEntity(entityID, null, fqn, type, fileID, projectID);
           case PRIMITIVE:
           case UNKNOWN:
-          case PACKAGE:
-          case ENUM_CONSTANT:
+          case WILDCARD:
           case TYPE_VARIABLE:
+          case ARRAY:
             return new ModeledEntity(entityID, fqn, type, projectID);
           case PARAMETERIZED_TYPE:
             return new ModeledParametrizedType(entityID, fqn, type, projectID);
@@ -163,7 +169,7 @@ public class TypeModelFactory {
           if (lhsValid && rhsValid) {
             process(lhsType.cast(lhs), rhsType.cast(rhs));
           } else if (lhsValid) {
-            task.report(Level.SEVERE, type.name() + " relation RHS invalid type: " + lhs);
+            task.report(Level.SEVERE, type.name() + " relation RHS invalid type: " + rhs);
           } else if (rhsValid) {
             task.report(Level.SEVERE, type.name() + " relation LHS invalid type: " + lhs);
           } else {
@@ -207,9 +213,9 @@ public class TypeModelFactory {
           lhs.setBaseType(rhs);
         }
       });
-      RELATIONS.put(Relation.HAS_TYPE_ARGUMENT, new RelationProcessor<ModeledParametrizedType, ModeledDeclaredType>(Relation.HAS_BASE_TYPE, ModeledParametrizedType.class, ModeledDeclaredType.class, true) {
+      RELATIONS.put(Relation.HAS_TYPE_ARGUMENT, new RelationProcessor<ModeledParametrizedType, ModeledEntity>(Relation.HAS_TYPE_ARGUMENT, ModeledParametrizedType.class, ModeledEntity.class, true) {
         @Override
-        protected void process(ModeledParametrizedType lhs, ModeledDeclaredType rhs) {
+        protected void process(ModeledParametrizedType lhs, ModeledEntity rhs) {
           lhs.addTypeArgument(rhs);
         }
       });
@@ -279,7 +285,7 @@ public class TypeModelFactory {
       }
       
       // Load the entities
-      try (SelectQuery select= exec.createSelectQuery(EntitiesTable.TABLE)) {
+      try (SelectQuery select = exec.createSelectQuery(EntitiesTable.TABLE)) {
         ENTITY_CONSTRUCTOR.addSelects(select);
         select.andWhere(
             EntitiesTable.PROJECT_ID.compareIn(libraries),

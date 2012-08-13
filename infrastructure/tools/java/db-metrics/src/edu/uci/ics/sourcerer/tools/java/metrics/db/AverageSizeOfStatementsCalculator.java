@@ -25,6 +25,7 @@ import edu.uci.ics.sourcerer.tools.java.db.type.TypeModel;
 import edu.uci.ics.sourcerer.tools.java.metrics.db.MetricModelFactory.ProjectMetricModel;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
 import edu.uci.ics.sourcerer.util.Averager;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 
 /**
@@ -38,26 +39,37 @@ public class AverageSizeOfStatementsCalculator extends Calculator {
 
   @Override
   public void calculate(QueryExecutor exec, Integer projectID, ProjectMetricModel metrics, TypeModel model) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
+    task.start("Computing AverageSizeOfStatements");
     Averager<Double> avgSos = Averager.create();
+    
+    task.start("Processing entities", "entities processed");
     for (ModeledEntity entity : model.getEntities()) {
-      Double value = metrics.getEntityValue(entity.getEntityID(), Metric.BC_AVERAGE_SIZE_OF_STATEMENTS);
-      if (value != null) {
-        avgSos.addValue(value);
-      } else {
-        Double noi = metrics.getEntityValue(entity.getEntityID(), Metric.BC_NUMBER_OF_INSTRUCTIONS);
-        Double nos = metrics.getEntityValue(entity.getEntityID(), Metric.BC_NUMBER_OF_STATEMENTS);
-        if (noi != null && nos != null) {
-          value = noi / nos;
-          Integer fileID = ((ModeledStructuralEntity) entity).getFileID();
-          metrics.setEntityValue(entity.getEntityID(), fileID, Metric.BC_AVERAGE_SIZE_OF_STATEMENTS, value);
-          exec.insert(EntityMetricsTable.createInsert(projectID, fileID, entity.getEntityID(), Metric.BC_AVERAGE_SIZE_OF_STATEMENTS, value));
+      if (projectID.equals(entity.getProjectID())) {
+        Double value = metrics.getEntityValue(entity.getEntityID(), Metric.BC_AVERAGE_SIZE_OF_STATEMENTS);
+        if (value != null) {
           avgSos.addValue(value);
+        } else {
+          Double noi = metrics.getEntityValue(entity.getEntityID(), Metric.BC_NUMBER_OF_INSTRUCTIONS);
+          Double nos = metrics.getEntityValue(entity.getEntityID(), Metric.BC_NUMBER_OF_STATEMENTS);
+          if (noi != null && nos != null && noi > 0 && nos > 0) {
+            value = noi / nos;
+            Integer fileID = ((ModeledStructuralEntity) entity).getFileID();
+            metrics.setEntityValue(entity.getEntityID(), fileID, Metric.BC_AVERAGE_SIZE_OF_STATEMENTS, value);
+            exec.insert(EntityMetricsTable.createInsert(projectID, fileID, entity.getEntityID(), Metric.BC_AVERAGE_SIZE_OF_STATEMENTS, value));
+            avgSos.addValue(value);
+          }
         }
+        task.progress();
       }
     }
+    task.finish();
+    
     if (metrics.missingValue(Metric.BC_AVERAGE_SIZE_OF_STATEMENTS)) {
       metrics.setValue(Metric.BC_AVERAGE_SIZE_OF_STATEMENTS, avgSos);
       exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.BC_AVERAGE_SIZE_OF_STATEMENTS, avgSos));
     }
+    task.finish();
   }
 }

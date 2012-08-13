@@ -34,6 +34,8 @@ public interface Selectable<T> {
   public ConstantCondition<T> compareNotEquals(T value);
   public InConstantCondition<T> compareIn(Collection<T> values);
   public InConstantCondition<T> compareNotIn(Collection<T> values);
+  public Condition compareNull();
+  public Condition compareNotNull();
   
   public void toSql(StringBuilder builder);
   

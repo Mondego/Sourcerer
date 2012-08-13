@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.tools.java.metrics.db;
 
 import java.io.Closeable;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
@@ -115,7 +116,11 @@ class MetricModelFactory implements Closeable {
     private Map<Integer, FileMetricModel> fileMetrics;
     private Map<Integer, EntityMetricModel> entityMetrics;
     
-    private ProjectMetricModel() {}
+    private ProjectMetricModel() {
+      metrics = new EnumMap<>(Metric.class);
+      fileMetrics = new HashMap<>();
+      entityMetrics = new HashMap<>();
+    }
     
     public void setValue(Metric metric, Averager<Double> avg) {
       metrics.put(metric, new ProjectMetricValue(avg));
@@ -194,13 +199,18 @@ class MetricModelFactory implements Closeable {
     private EnumMap<Metric, Double> metrics;
     private Map<Integer, EntityMetricModel> entityMetrics;
     
-    private FileMetricModel() {}
+    private FileMetricModel() {
+      metrics = new EnumMap<>(Metric.class);
+      entityMetrics = new HashMap<>();
+    }
   }
   
   class EntityMetricModel {
     private EnumMap<Metric, Double> metrics;
     
-    private EntityMetricModel() {}
+    private EntityMetricModel() {
+      metrics = new EnumMap<>(Metric.class);
+    }
   }
   
   @Override

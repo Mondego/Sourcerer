@@ -31,5 +31,7 @@ public interface Column<T> extends Selectable<T> {
   public boolean isIndexed();
   public String getIndex();
   
+  public boolean isNullable();
+  
   public QualifiedColumn<T> qualify(QualifiedTable table);
 }

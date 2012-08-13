@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.tools.java.metrics.db;
 
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
+import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -28,7 +29,7 @@ public class Main {
     protected void action() {
       MetricsCalculator.calculateMetrics();
     }
-  };
+  }.setProperties(DatabaseConnectionFactory.DATABASE_URL, DatabaseConnectionFactory.DATABASE_USER, DatabaseConnectionFactory.DATABASE_PASSWORD);
   
   public static void main(String[] args) {
     Command.execute(args, Main.class);

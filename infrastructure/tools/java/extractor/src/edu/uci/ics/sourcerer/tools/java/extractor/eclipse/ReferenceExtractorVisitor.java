@@ -551,7 +551,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fqn, createUnknownLocation());
       
       // Write the extends relation
-      relationWriter.writeRelation(Relation.EXTENDS, fqn, parentFqn, createUnknownLocation());
+      relationWriter.writeRelation(Relation.EXTENDS, fqn, fqnStack.find(EnclosingDeclaredType.class).getFqn(), createUnknownLocation());
       
       if (binding != null) {
         // Write out the synthesized constructors
@@ -962,15 +962,16 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     String fullFqn = null;
     Entity type = null;
 
+    String parentFqn = fqnStack.getFqn();
     String signature = getMethodParams(node.parameters());
     String rawSignature = getErasedMethodParams(node.parameters());
     if (node.isConstructor()) {
       type = Entity.CONSTRUCTOR;
-      fqn = fqnStack.getFqn() + ".<init>";
+      fqn = parentFqn + ".<init>";
       fullFqn = fqn + signature;
     } else {
       type = Entity.METHOD;
-      fqn = fqnStack.getFqn() + '.' + node.getName().getIdentifier();
+      fqn = parentFqn + '.' + node.getName().getIdentifier();
       fullFqn = fqn + signature;
       
       // Write the returns relation
@@ -1002,7 +1003,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     }
     
     // Write the contains relation
-    relationWriter.writeRelation(Relation.CONTAINS, fqnStack.getFqn(), fullFqn, createUnknownLocation());
+    relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fullFqn, createUnknownLocation());
 
     // Write the throws relation
     for (Name name : (List<Name>)node.thrownExceptions()) {

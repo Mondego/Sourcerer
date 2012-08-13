@@ -17,33 +17,25 @@
  */
 package edu.uci.ics.sourcerer.utils.db.internal;
 
-import java.util.Collection;
-
 import edu.uci.ics.sourcerer.util.ArrayUtils;
-import edu.uci.ics.sourcerer.utils.db.sql.InConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 import edu.uci.ics.sourcerer.utils.db.sql.Table;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-class InConstantConditionImpl<T> extends ConditionImpl implements InConstantCondition<T> {
+class NullCondition<T> extends ConditionImpl {
   enum Type {
-    IN,
-    NOT_IN;
+    NULL,
+    NOT_NULL;
   }
   
   private Selectable<T> sel;
   private Type type;
-  private Collection<T> values;
   
-  InConstantConditionImpl(Selectable<T> sel, Type type, Collection<T> values) {
+  NullCondition(Selectable<T> sel, Type type) {
     this.sel = sel;
     this.type = type;
-    this.values = values;
-    if (values.isEmpty()) {
-      throw new IllegalArgumentException("Has to be in/not in something!");
-    }
   }
   
   @Override 
@@ -54,20 +46,11 @@ class InConstantConditionImpl<T> extends ConditionImpl implements InConstantCond
   }
   
   @Override
-  public Collection<T> getValues() {
-    return values;
-  }
-  
-  @Override
   public void toSql(StringBuilder builder) {
     sel.toSql(builder);
     switch (type) {
-      case IN: builder.append(" IN ("); break;
-      case NOT_IN: builder.append(" NOT IN ("); break;
+      case NULL: builder.append(" IS NULL"); break;
+      case NOT_NULL: builder.append(" IS NOT NULL"); break;
     }
-    for (T value : values) {
-      builder.append(sel.to(value)).append(',');
-    }
-    builder.setCharAt(builder.length() - 1, ')');
   }
 }

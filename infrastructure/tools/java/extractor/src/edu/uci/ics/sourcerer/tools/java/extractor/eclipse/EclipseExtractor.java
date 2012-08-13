@@ -22,8 +22,10 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import java.io.Closeable;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.eclipse.core.resources.IFile;
@@ -101,7 +103,7 @@ public class EclipseExtractor implements Closeable {
     boolean oneWithSource = false;
     
     Map<String, Collection<IClassFile>> memberMap = new HashMap<>();;
-    Collection<String> sourceFailed = new LinkedList<>();
+    Set<String> sourceFailed = new HashSet<>();
     
     Collection<IClassFile> parentTypes = new LinkedList<>();
     for (IClassFile classFile : classFiles) {
@@ -109,12 +111,12 @@ public class EclipseExtractor implements Closeable {
       try {
         if (type.isMember() || type.isAnonymous() || type.isLocal()) {
           // Shouldn't happen! But weird issues with GSSUtil$1
-          String key = classFile.getElementName();
+          String key = classFile.getType().getFullyQualifiedName();
           int dollar = key.indexOf('$');
           if (dollar == -1) {
             logger.log(Level.SEVERE, "Should have a dollar: " + key);
           } else {
-            key = key.substring(0, dollar) + ".class";
+            key = key.substring(0, dollar);
           }
           Collection<IClassFile> members = memberMap.get(key);
           if (members == null) {
@@ -126,22 +128,25 @@ public class EclipseExtractor implements Closeable {
           parentTypes.add(classFile);
         }
       } catch (JavaModelException e) {
-        sourceFailed.add(classFile.getElementName());
+        logger.log(Level.SEVERE, classFile.getType().getFullyQualifiedName(), e);
+        sourceFailed.add(classFile.getType().getFullyQualifiedName());
         extractClassFile(classFile);
       }
     }
+    
     for (IClassFile classFile : parentTypes) {
       task.progress();
       try {
         IBuffer buffer = classFile.getBuffer();
         if (buffer == null || buffer.getLength() == 0) {
           extractClassFile(classFile);
+          sourceFailed.add(classFile.getType().getFullyQualifiedName());
         } else {
           IType type = classFile.getType();
           // Handle Eclipse issue with GSSUtil
           if ("sun.security.jgss.GSSUtil".equals(type.getFullyQualifiedName())) {
             extractClassFile(classFile);
-            sourceFailed.add(classFile.getElementName());
+            sourceFailed.add(classFile.getType().getFullyQualifiedName());
             continue;
           }
           // Handle multiple top-level types
@@ -174,7 +179,7 @@ public class EclipseExtractor implements Closeable {
               
           boolean trouble = checkForMissingTypes(unit);
           if (trouble) {
-            sourceFailed.add(classFile.getElementName());
+            sourceFailed.add(classFile.getType().getFullyQualifiedName());
             extractClassFile(classFile);
           } else {
             try {
@@ -189,13 +194,14 @@ public class EclipseExtractor implements Closeable {
                   logger.log(Level.SEVERE, "Error in source for class file (" + classFile.getElementName() + "): " + problem.getMessage());
                 }
               }
-              sourceFailed.add(classFile.getElementName());
+              sourceFailed.add(classFile.getType().getFullyQualifiedName());
               extractClassFile(classFile);
             }
           }
         }
       } catch (JavaModelException | ClassCastException | IllegalArgumentException e) {
-        sourceFailed.add(classFile.getElementName());
+        logger.log(Level.SEVERE, classFile.getElementName(), e);
+        sourceFailed.add(classFile.getType().getFullyQualifiedName());
         extractClassFile(classFile);
       }
     }

@@ -24,6 +24,7 @@ import java.util.Collection;
 import edu.uci.ics.sourcerer.utils.db.internal.ConstantConditionImpl.Type;
 import edu.uci.ics.sourcerer.utils.db.sql.Column;
 import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
+import edu.uci.ics.sourcerer.utils.db.sql.Condition;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.InConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.QualifiedColumn;
@@ -34,12 +35,12 @@ import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
  * @author Joel Ossher (jossher@uci.edu)
  */
 abstract class ColumnImpl<T> implements Column<T> {
-  private DatabaseTableImpl table;
-  private String name;
-  private String type;
+  private final DatabaseTableImpl table;
+  private final String name;
+  private final String type;
   private boolean nullable;
-  private int sqlType;
   private boolean indexed;
+  private final int sqlType;
   
   ColumnImpl(DatabaseTableImpl table, String name, String type, boolean nullable, int sqlType) {
     this.table = table;
@@ -80,12 +81,17 @@ abstract class ColumnImpl<T> implements Column<T> {
   }
   
   @Override
+  public boolean isNullable() {
+    return nullable;
+  }
+  
+  @Override
   public final void bind(T value, PreparedStatement statement, int index) throws SQLException {
     if (value == null) {
       if (nullable) {
         statement.setNull(index, sqlType);
       } else {
-        throw new IllegalArgumentException(name + " does not accept null values.");
+        throw new IllegalArgumentException(name + " not nullable");
       }
     } else {
       bindHelper(value, statement, index);
@@ -170,6 +176,22 @@ abstract class ColumnImpl<T> implements Column<T> {
   @Override
   public InConstantCondition<T> compareNotIn(Collection<T> values) {
     return new InConstantConditionImpl<>(this, InConstantConditionImpl.Type.NOT_IN, values);
+  }
+  
+  @Override
+  public Condition compareNull() {
+    if (!nullable) {
+      throw new IllegalArgumentException(toString() + " is a non-nullable column");
+    }
+    return new NullCondition<>(this, NullCondition.Type.NULL);
+  }
+  
+  @Override
+  public Condition compareNotNull() {
+    if (!nullable) {
+      throw new IllegalArgumentException(toString() + " is a non-nullable column");
+    }
+    return new NullCondition<>(this, NullCondition.Type.NOT_NULL);
   }
   
   @Override

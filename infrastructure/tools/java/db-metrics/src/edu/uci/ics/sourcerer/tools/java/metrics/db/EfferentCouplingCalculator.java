@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
@@ -40,6 +41,7 @@ import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
 import edu.uci.ics.sourcerer.util.Averager;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
@@ -56,15 +58,22 @@ public class EfferentCouplingCalculator extends Calculator {
 
   @Override
   public void calculate(QueryExecutor exec, Integer projectID, ProjectMetricModel metrics, TypeModel model) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
+    Pattern anon = Pattern.compile(".*\\$\\d+$");
+    
     try (SelectQuery select = exec.createSelectQuery(RelationsTable.TABLE)) {
       select.addSelect(RelationsTable.RHS_EID);
       ConstantCondition<Integer> lhsEid = RelationsTable.LHS_EID.compareEquals();
       select.andWhere(lhsEid, RelationsTable.RELATION_TYPE.compareIn(EnumSet.of(Relation.HOLDS, Relation.RETURNS, Relation.READS, Relation.WRITES, Relation.CALLS, Relation.INSTANTIATES, Relation.CASTS, Relation.CHECKS, Relation.USES)));
       
+      task.start("Computing EfferentCoupling");
       Averager<Double> avgCoupling = Averager.create();
       Map<ModeledStructuralEntity, Set<ModeledStructuralEntity>> pkgCoupling = new HashMap<>();
+      
+      task.start("Processing entities", "entities processed");
       for (ModeledEntity entity : model.getEntities()) {
-        if (entity.getType().is(Entity.CLASS, Entity.ENUM, Entity.INTERFACE)) {
+        if (projectID.equals(entity.getProjectID()) && entity.getType().is(Entity.CLASS, Entity.ENUM, Entity.INTERFACE) && !anon.matcher(entity.getFqn()).matches()) {
           ModeledStructuralEntity sEntity = (ModeledStructuralEntity) entity;
           
           Set<ModeledDeclaredType> used = new HashSet<>();
@@ -107,11 +116,15 @@ public class EfferentCouplingCalculator extends Calculator {
             pkg.addAll(used);
           }
           Double value = (double) used.size();
+          int internalUsed = 0;
+          for (ModeledDeclaredType)
           if (metrics.missingEntityValue(sEntity.getEntityID(), Metric.EFFERENT_COUPLING)) {
             metrics.setEntityValue(sEntity.getEntityID(), sEntity.getFileID(), Metric.EFFERENT_COUPLING, value);
             exec.insert(EntityMetricsTable.createInsert(projectID, sEntity.getFileID(), sEntity.getEntityID(), Metric.EFFERENT_COUPLING, value));
           }
           avgCoupling.addValue(value);
+          
+          task.progress();
         }
       }
 
@@ -135,10 +148,13 @@ public class EfferentCouplingCalculator extends Calculator {
   
   private void add(Set<ModeledDeclaredType> set, ModeledEntity entity) {
     if (entity != null) {
+      if (entity.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION)) {
+        set.add((ModeledDeclaredType) entity);
+      } else if (entity.getType().is(Entity.CONSTRUCTOR, Entity.METHOD, Entity.))
       if (entity instanceof ModeledStructuralEntity) {
         ModeledStructuralEntity struct = (ModeledStructuralEntity) entity;
         if (struct.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION)) {
-          set.add((ModeledDeclaredType) struct);
+          
         } else {
           add(set, struct.getOwner());
         } 

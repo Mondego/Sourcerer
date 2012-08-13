@@ -25,6 +25,7 @@ import edu.uci.ics.sourcerer.tools.java.db.type.TypeModel;
 import edu.uci.ics.sourcerer.tools.java.metrics.db.MetricModelFactory.ProjectMetricModel;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
 import edu.uci.ics.sourcerer.util.Averager;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 
 /**
@@ -39,26 +40,37 @@ public class VocabularyFrequencyCalculator extends Calculator {
 
   @Override
   public void calculate(QueryExecutor exec, Integer projectID, ProjectMetricModel metrics, TypeModel model) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
+    task.start("Computing VocabularyFrequency");
     Averager<Double> avgVf = Averager.create();
+    
+    task.start("Processing entities", "entities processed");
     for (ModeledEntity entity : model.getEntities()) {
-      Double value = metrics.getEntityValue(entity.getEntityID(), Metric.BC_VOCABULARY_FREQUENCY);
-      if (value != null) {
-        avgVf.addValue(value);
-      } else {
-        Double noi = metrics.getEntityValue(entity.getEntityID(), Metric.BC_NUMBER_OF_INSTRUCTIONS);
-        Double vs = metrics.getEntityValue(entity.getEntityID(), Metric.BC_VOCABULARY_SIZE);
-        if (noi != null && vs != null) {
-          value = noi / vs;
-          Integer fileID = ((ModeledStructuralEntity) entity).getFileID();
-          metrics.setEntityValue(entity.getEntityID(), fileID, Metric.BC_VOCABULARY_FREQUENCY, value);
-          exec.insert(EntityMetricsTable.createInsert(projectID, fileID, entity.getEntityID(), Metric.BC_VOCABULARY_FREQUENCY, value));
+      if (projectID.equals(entity.getProjectID())) {
+        Double value = metrics.getEntityValue(entity.getEntityID(), Metric.BC_VOCABULARY_FREQUENCY);
+        if (value != null) {
           avgVf.addValue(value);
+        } else {
+          Double noi = metrics.getEntityValue(entity.getEntityID(), Metric.BC_NUMBER_OF_INSTRUCTIONS);
+          Double vs = metrics.getEntityValue(entity.getEntityID(), Metric.BC_VOCABULARY_SIZE);
+          if (noi != null && vs != null && noi > 0 && vs > 0) {
+            value = noi / vs;
+            Integer fileID = ((ModeledStructuralEntity) entity).getFileID();
+            metrics.setEntityValue(entity.getEntityID(), fileID, Metric.BC_VOCABULARY_FREQUENCY, value);
+            exec.insert(EntityMetricsTable.createInsert(projectID, fileID, entity.getEntityID(), Metric.BC_VOCABULARY_FREQUENCY, value));
+            avgVf.addValue(value);
+          }
         }
+        task.progress();
       }
     }
+    task.finish();
+    
     if (metrics.missingValue(Metric.BC_VOCABULARY_FREQUENCY)) {
       metrics.setValue(Metric.BC_VOCABULARY_FREQUENCY, avgVf);
       exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.BC_VOCABULARY_FREQUENCY, avgVf));
     }
+    task.finish();
   }
 }

@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.metrics.db;
 
+import java.util.regex.Pattern;
+
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.type.ModeledDeclaredType;
@@ -27,6 +29,7 @@ import edu.uci.ics.sourcerer.tools.java.metrics.db.MetricModelFactory.ProjectMet
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
 import edu.uci.ics.sourcerer.util.Averager;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 
 /**
@@ -41,10 +44,17 @@ public class WeightedMethodsPerClassCalculator extends Calculator {
 
   @Override
   public void calculate(QueryExecutor exec, Integer projectID, ProjectMetricModel metrics, TypeModel model) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
+    Pattern anon = Pattern.compile(".*\\$\\d+$");
+    
+    task.start("Computing WeightedMethodsPerClass");
     Averager<Double> avgWmc = Averager.create();
     Averager<Double> avgCyc = Averager.create();
+    
+    task.start("Processing entities", "entities processed");
     for (ModeledEntity entity : model.getEntities()) {
-      if (entity.getType().is(Entity.CLASS, Entity.ENUM)) {
+      if (projectID.equals(entity.getProjectID()) && entity.getType().is(Entity.CLASS, Entity.ENUM) && !anon.matcher(entity.getFqn()).matches()) {
         ModeledDeclaredType dec = (ModeledDeclaredType) entity;
         Double value = metrics.getEntityValue(entity.getEntityID(), Metric.BC_WEIGHTED_METHODS_PER_CLASS);
         if (value != null) {
@@ -76,8 +86,11 @@ public class WeightedMethodsPerClassCalculator extends Calculator {
             avgWmc.addValue(value);
           }
         }
+        task.progress();
       }
     }
+    task.finish();
+    
     if (metrics.missingValue(Metric.BC_WEIGHTED_METHODS_PER_CLASS)) {
       metrics.setValue(Metric.BC_WEIGHTED_METHODS_PER_CLASS, avgWmc);
       exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.BC_WEIGHTED_METHODS_PER_CLASS, avgWmc));
@@ -86,6 +99,7 @@ public class WeightedMethodsPerClassCalculator extends Calculator {
       metrics.setValue(Metric.BC_CYCLOMATIC_COMPLEXITY, avgCyc);
       exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.BC_CYCLOMATIC_COMPLEXITY, avgCyc));
     }
+    task.finish();
   }
 
 }

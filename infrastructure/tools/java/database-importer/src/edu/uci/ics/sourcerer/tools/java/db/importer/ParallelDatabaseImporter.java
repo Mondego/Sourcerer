@@ -75,7 +75,7 @@ public final class ParallelDatabaseImporter {
       
       @Override
       public String message() {
-        return "structural relation";
+        return "structural relation import";
       }
       @Override
       public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {
@@ -91,7 +91,7 @@ public final class ParallelDatabaseImporter {
         
         @Override
         public String message() {
-          return "structural relation";
+          return "referential relation import";
         }
         @Override
         public DatabaseImporter create(Nullerator<ExtractedJarFile> nullerator) {

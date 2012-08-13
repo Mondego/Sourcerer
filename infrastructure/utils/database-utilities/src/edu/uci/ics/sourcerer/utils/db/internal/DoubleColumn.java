@@ -26,11 +26,11 @@ import java.sql.Types;
  */
 class DoubleColumn extends ColumnImpl<Double> {
   DoubleColumn(DatabaseTableImpl table, String name, boolean nullable) {
-    super(table, name, "FLOAT" + (nullable ? "" : " NOT NULL"), nullable, Types.DOUBLE);
+    super(table, name, "FLOAT" + (nullable ? "" : " NOT NULL"), nullable, Types.FLOAT);
   }
   
   DoubleColumn(DatabaseTableImpl table, String name, int totalDigits, int decimalDigits, boolean nullable) {
-    super(table, name, "FLOAT(" + totalDigits + "," + decimalDigits+")" + (nullable ? "" : " NOT NULL"), nullable, Types.FLOAT);
+    super(table, name, "FLOAT(" + totalDigits + "," + decimalDigits+")" + (nullable ? "" : " NOT NULL"), nullable, Types.DOUBLE);
   }
 
   @Override
@@ -45,6 +45,10 @@ class DoubleColumn extends ColumnImpl<Double> {
 
   @Override
   protected String toHelper(Double value) {
-    return value.toString();
+    if (value.isInfinite() || value.isNaN()) {
+      return "" + Double.MAX_VALUE;
+    } else {
+      return value.toString();
+    }
   }
 }

@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import edu.uci.ics.sourcerer.utils.db.internal.ConstantConditionImpl.Type;
 import edu.uci.ics.sourcerer.utils.db.sql.ComparisonCondition;
+import edu.uci.ics.sourcerer.utils.db.sql.Condition;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.InConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.QualifiedColumn;
@@ -87,6 +88,23 @@ final class QualifiedColumnImpl<T> implements QualifiedColumn<T> {
   public InConstantCondition<T> compareNotIn(Collection<T> values) {
     return new InConstantConditionImpl<T>(this, InConstantConditionImpl.Type.NOT_IN, values);
   }
+  
+  @Override
+  public Condition compareNull() {
+    if (!column.isNullable()) {
+      throw new IllegalArgumentException(toString() + " is a non-nullable column");
+    }
+    return new NullCondition<>(this, NullCondition.Type.NULL);
+  }
+  
+  @Override
+  public Condition compareNotNull() {
+    if (!column.isNullable()) {
+      throw new IllegalArgumentException(toString() + " is a non-nullable column");
+    }
+    return new NullCondition<>(this, NullCondition.Type.NOT_NULL);
+  }
+  
 
   @Override
   public void toSql(StringBuilder builder) {

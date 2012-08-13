@@ -53,7 +53,7 @@ public class ModeledEntity {
   
   @Override
   public String toString() {
-    return entityID + "(" + type + ")";
+    return entityID + "(" + fqn + " " + type + ")";
     
   }
 }

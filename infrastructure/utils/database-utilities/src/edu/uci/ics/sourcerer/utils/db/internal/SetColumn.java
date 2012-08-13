@@ -27,7 +27,6 @@ import edu.uci.ics.sourcerer.utils.db.internal.ConstantConditionImpl.Type;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.Selectable;
 
-
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */

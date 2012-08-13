@@ -19,6 +19,8 @@ package edu.uci.ics.sourcerer.tools.java.metrics.db;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
+import java.util.regex.Pattern;
+
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.type.ModeledDeclaredType;
@@ -29,6 +31,7 @@ import edu.uci.ics.sourcerer.tools.java.metrics.db.MetricModelFactory.ProjectMet
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
 import edu.uci.ics.sourcerer.util.Averager;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 
 
@@ -43,20 +46,35 @@ class InheritanceHierarchyDepthCalculator extends Calculator {
 
   @Override
   public void calculate(QueryExecutor exec, Integer projectID, ProjectMetricModel metrics, TypeModel model) {
-    Averager<Double> avgDoitcc = Averager.create();
-    Averager<Double> avgDoitci = Averager.create();
-    Averager<Double> avgDoitii = Averager.create();
+    TaskProgressLogger task = TaskProgressLogger.get();
     
+    Pattern anon = Pattern.compile(".*\\$\\d+$");
+    
+    task.start("Computing InheritanceHierarchyDepth");
+    Averager<Double> avgDoitcc = Averager.create();
+    Averager<Double> avgDoiticc = Averager.create();
+    Averager<Double> avgDoitci = Averager.create();
+    Averager<Double> avgDoitici = Averager.create();
+    Averager<Double> avgDoitii = Averager.create();
+    Averager<Double> avgDoitiii = Averager.create();
+    
+    task.start("Processing declared types", "declared types processed", 0);
     for (ModeledEntity entity : model.getEntities()) {
-      if (entity.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM)) {
+      if (projectID.equals(entity.getProjectID()) && entity.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM) && !anon.matcher(entity.getFqn()).matches()) {
         ModeledDeclaredType ent = (ModeledDeclaredType) entity;
         double interfaceDepth = calculateInterfaceDepth(entity);
+        double internalInterfaceDepth = calculateInternalInterfaceDepth(entity, projectID);
         if (entity.getType() == Entity.INTERFACE) {
           if (metrics.missingEntityValue(ent.getEntityID(), Metric.DEPTH_OF_INHERITANCE_TREE_II)) {
             metrics.setEntityValue(ent.getEntityID(), ent.getFileID(), Metric.DEPTH_OF_INHERITANCE_TREE_II, interfaceDepth);
             exec.insert(EntityMetricsTable.createInsert(ent.getProjectID(), ent.getFileID(), ent.getEntityID(), Metric.DEPTH_OF_INHERITANCE_TREE_II, interfaceDepth));
           }
           avgDoitii.addValue(interfaceDepth);
+          if (metrics.missingEntityValue(ent.getEntityID(), Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_II)) {
+            metrics.setEntityValue(ent.getEntityID(), ent.getFileID(), Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_II, internalInterfaceDepth);
+            exec.insert(EntityMetricsTable.createInsert(ent.getProjectID(), ent.getFileID(), ent.getEntityID(), Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_II, internalInterfaceDepth));
+          }
+          avgDoitiii.addValue(internalInterfaceDepth);
         } else {
           if (metrics.missingEntityValue(ent.getEntityID(), Metric.DEPTH_OF_INHERITANCE_TREE_CI)) {
             metrics.setEntityValue(ent.getEntityID(), ent.getFileID(), Metric.DEPTH_OF_INHERITANCE_TREE_CI, interfaceDepth);
@@ -64,28 +82,55 @@ class InheritanceHierarchyDepthCalculator extends Calculator {
           }
           avgDoitci.addValue(interfaceDepth);
           
+          if (metrics.missingEntityValue(ent.getEntityID(), Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_CI)) {
+            metrics.setEntityValue(ent.getEntityID(), ent.getFileID(), Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_CI, internalInterfaceDepth);
+            exec.insert(EntityMetricsTable.createInsert(ent.getProjectID(), ent.getFileID(), ent.getEntityID(), Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_CI, internalInterfaceDepth));
+          }
+          avgDoitici.addValue(internalInterfaceDepth);
+          
           double classDepth = calculateClassDepth(entity);
+          double internalClassDepth = calculateInternalClassDepth(entity, projectID);
           if (metrics.missingEntityValue(ent.getEntityID(), Metric.DEPTH_OF_INHERITANCE_TREE_CC)) {
             metrics.setEntityValue(ent.getEntityID(), ent.getFileID(), Metric.DEPTH_OF_INHERITANCE_TREE_CC, classDepth);
             exec.insert(EntityMetricsTable.createInsert(ent.getProjectID(), ent.getFileID(), ent.getEntityID(), Metric.DEPTH_OF_INHERITANCE_TREE_CC, classDepth));
           }
+          avgDoiticc.addValue(internalClassDepth);
+          if (metrics.missingEntityValue(ent.getEntityID(), Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_CC)) {
+            metrics.setEntityValue(ent.getEntityID(), ent.getFileID(), Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_CC, internalClassDepth);
+            exec.insert(EntityMetricsTable.createInsert(ent.getProjectID(), ent.getFileID(), ent.getEntityID(), Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_CC, internalClassDepth));
+          }
           avgDoitcc.addValue(classDepth);
         }
+        task.progress();
       }
     }
+    task.finish();
     
     if (metrics.missingValue(Metric.DEPTH_OF_INHERITANCE_TREE_II)) {
       metrics.setValue(Metric.DEPTH_OF_INHERITANCE_TREE_II, avgDoitii);
       exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.DEPTH_OF_INHERITANCE_TREE_II, avgDoitii));
     }
+    if (metrics.missingValue(Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_II)) {
+      metrics.setValue(Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_II, avgDoitiii);
+      exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_II, avgDoitiii));
+    }
     if (metrics.missingValue(Metric.DEPTH_OF_INHERITANCE_TREE_CI)) {
       metrics.setValue(Metric.DEPTH_OF_INHERITANCE_TREE_CI, avgDoitci);
       exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.DEPTH_OF_INHERITANCE_TREE_CI, avgDoitci));
+    }
+    if (metrics.missingValue(Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_CI)) {
+      metrics.setValue(Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_CI, avgDoitici);
+      exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_CI, avgDoitici));
     }
     if (metrics.missingValue(Metric.DEPTH_OF_INHERITANCE_TREE_CC)) {
       metrics.setValue(Metric.DEPTH_OF_INHERITANCE_TREE_CC, avgDoitcc);
       exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.DEPTH_OF_INHERITANCE_TREE_CC, avgDoitcc));
     }
+    if (metrics.missingValue(Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_CC)) {
+      metrics.setValue(Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_CC, avgDoiticc);
+      exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.DEPTH_OF_INHERITANCE_TREE_INTERNAL_CC, avgDoiticc));
+    }
+    task.finish();
   }
   
   private int calculateClassDepth(ModeledEntity entity) {
@@ -97,6 +142,25 @@ class InheritanceHierarchyDepthCalculator extends Calculator {
     }
     if (entity.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM)) {
       return 1 + calculateClassDepth(((ModeledDeclaredType) entity).getSuperclass());
+    } else if (entity.getType() == Entity.UNKNOWN) {
+      return 2; // minimum of 2
+    } else {
+      logger.severe("Invalid entity type: " + entity);
+      return -1;
+    }
+  }
+  
+  private int calculateInternalClassDepth(ModeledEntity entity, Integer projectID) {
+    if (entity == null) {
+      return 0;
+    }
+    if (entity.getType() == Entity.PARAMETERIZED_TYPE) {
+      entity = ((ModeledParametrizedType) entity).getBaseType();
+    }
+    if (!projectID.equals(entity.getProjectID()) || entity.getType() == Entity.UNKNOWN) {
+      return 0;
+    } else if (entity.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM)) {
+      return 1 + calculateInternalClassDepth(((ModeledDeclaredType) entity).getSuperclass(), projectID);
     } else {
       logger.severe("Invalid entity type: " + entity);
       return -1;
@@ -111,9 +175,32 @@ class InheritanceHierarchyDepthCalculator extends Calculator {
       ModeledDeclaredType ent = (ModeledDeclaredType) entity;
       int max = 0;
       for (ModeledEntity iface : ent.getInterfaces()) {
-        max = Math.max(max, calculateInterfaceDepth(iface));
+        max = Math.max(max, 1 + calculateInterfaceDepth(iface));
       }
       return max;
+    } else if (entity.getType() == Entity.UNKNOWN) {
+      return 1; // minimum of 1
+    } else {
+      logger.severe("Invalid entity type: " + entity);
+      return -1;
+    }
+  }
+  
+  private int calculateInternalInterfaceDepth(ModeledEntity entity, Integer projectID) {
+    if (entity.getType() == Entity.PARAMETERIZED_TYPE) {
+      entity = ((ModeledParametrizedType) entity).getBaseType();
+    }
+    if (!projectID.equals(entity.getProjectID()) || entity.getType() == Entity.UNKNOWN) {
+      return 0;
+    } else if (entity.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM)) {
+      ModeledDeclaredType ent = (ModeledDeclaredType) entity;
+      int max = 0;
+      for (ModeledEntity iface : ent.getInterfaces()) {
+        max = Math.max(max, 1 + calculateInternalInterfaceDepth(iface, projectID));
+      }
+      return max;
+    } else if (entity.getType() == Entity.UNKNOWN) {
+      return 1; // minimum of 1
     } else {
       logger.severe("Invalid entity type: " + entity);
       return -1;

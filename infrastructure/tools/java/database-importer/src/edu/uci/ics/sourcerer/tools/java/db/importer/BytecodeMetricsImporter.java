@@ -75,7 +75,7 @@ public class BytecodeMetricsImporter extends DatabaseImporter {
       entityQuery.addSelect(EntitiesTable.ENTITY_ID);
       ConstantCondition<Integer> equalsFileID2 = EntitiesTable.FILE_ID.compareEquals();
       ConstantCondition<String> equalsFqn = EntitiesTable.FQN.compareEquals();
-      entityQuery.andWhere(equalsFqn, equalsFileID2);
+      entityQuery.andWhere(equalsFqn, equalsFileID2, EntitiesTable.PARAMS.compareNull());
       
       methodQuery.addSelect(EntitiesTable.ENTITY_ID);
       ConstantCondition<String> equalsParams = EntitiesTable.PARAMS.compareEquals();

@@ -350,7 +350,8 @@ class QueryExecutorImpl implements QueryExecutor {
   public void insert(Insert insert) {
     StringBuilder sql = new StringBuilder("INSERT INTO ");
     sql.append(insert.getTable().toSql()).append(" VALUES").append(insert.toString());
-    executeUpdate(sql.toString());
+//    executeUpdate(sql.toString());
+    System.out.println(sql.toString());
   }
   
   @Override

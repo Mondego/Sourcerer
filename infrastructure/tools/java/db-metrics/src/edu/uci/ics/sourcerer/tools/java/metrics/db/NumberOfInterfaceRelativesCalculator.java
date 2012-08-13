@@ -18,7 +18,10 @@
 package edu.uci.ics.sourcerer.tools.java.metrics.db;
 
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
@@ -34,6 +37,7 @@ import edu.uci.ics.sourcerer.tools.java.metrics.db.MetricModelFactory.ProjectMet
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
 import edu.uci.ics.sourcerer.util.Averager;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 
 /**
@@ -47,49 +51,64 @@ public class NumberOfInterfaceRelativesCalculator extends Calculator {
   
   @Override
   public void calculate(QueryExecutor exec, Integer projectID, ProjectMetricModel metrics, TypeModel model) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
+    Pattern anon = Pattern.compile(".*\\$\\d+$");
+    
+    task.start("Computing NumberOfInterfaceRelatives");
     Multiset<ModeledStructuralEntity> parents = HashMultiset.create();
     Multiset<ModeledDeclaredType> directParents = HashMultiset.create();
     Averager<Double> avgNoii = Averager.create();
     Averager<Double> avgNosi = Averager.create();
+    task.start("Processing types", "types processed", 0);
     for (ModeledEntity entity : model.getEntities()) {
-      if (entity.getType().is(Entity.CLASS, Entity.ENUM)) {
-        ModeledDeclaredType dec = (ModeledDeclaredType) entity;
-        Double value = (double) dec.getInterfaces().size();
-        if (metrics.missingEntityValue(dec.getEntityID(), Metric.NUMBER_OF_IMPLEMENTED_INTERFACES)) {
-          metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.NUMBER_OF_IMPLEMENTED_INTERFACES, value);
-          exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.NUMBER_OF_IMPLEMENTED_INTERFACES, value));
-        }
-        avgNoii.addValue(value);
-      } 
-      if (entity.getType() == Entity.INTERFACE) {
-        ModeledDeclaredType dec = (ModeledDeclaredType) entity;
-        Double value = (double) dec.getInterfaces().size();
-        if (metrics.missingEntityValue(dec.getEntityID(), Metric.NUMBER_OF_SUPER_INTERFACES)) {
-          metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.NUMBER_OF_SUPER_INTERFACES, value);
-          exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.NUMBER_OF_SUPER_INTERFACES, value));
-        }
-        avgNosi.addValue(value);
-        for (ModeledEntity iface : dec.getInterfaces()) {
-          Deque<ModeledEntity> stack = new LinkedList<>();
-          stack.push(iface);
-          boolean first = true;
-          while (!stack.isEmpty()) {
-            ModeledEntity next = stack.pop();
-            if (iface.getType() == Entity.PARAMETERIZED_TYPE) {
-              stack.push(((ModeledParametrizedType) iface).getBaseType());
-            } else if (projectID.equals(iface.getProjectID())) {
-              ModeledDeclaredType face = (ModeledDeclaredType) next;
-              if (first) {
-                directParents.add(face);
-                first = false;
+      if (projectID.equals(entity.getProjectID())) {
+        if (entity.getType().is(Entity.CLASS, Entity.ENUM) && !anon.matcher(entity.getFqn()).matches()) {
+          ModeledDeclaredType dec = (ModeledDeclaredType) entity;
+          Double value = (double) dec.getInterfaces().size();
+          if (metrics.missingEntityValue(dec.getEntityID(), Metric.NUMBER_OF_IMPLEMENTED_INTERFACES)) {
+            metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.NUMBER_OF_IMPLEMENTED_INTERFACES, value);
+            exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.NUMBER_OF_IMPLEMENTED_INTERFACES, value));
+          }
+          avgNoii.addValue(value);
+          task.progress();
+        } else if (entity.getType() == Entity.INTERFACE) {
+          ModeledDeclaredType dec = (ModeledDeclaredType) entity;
+          Double value = (double) dec.getInterfaces().size();
+          if (metrics.missingEntityValue(dec.getEntityID(), Metric.NUMBER_OF_SUPER_INTERFACES)) {
+            metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.NUMBER_OF_SUPER_INTERFACES, value);
+            exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.NUMBER_OF_SUPER_INTERFACES, value));
+          }
+          avgNosi.addValue(value);
+          Set<ModeledEntity> seen = new HashSet<>();
+          for (ModeledEntity iface : dec.getInterfaces()) {
+            Deque<ModeledEntity> stack = new LinkedList<>();
+            stack.push(iface);
+            boolean first = true;
+            while (!stack.isEmpty()) {
+              ModeledEntity next = stack.pop();
+              if (!seen.contains(next)) {
+                if (next.getType() == Entity.PARAMETERIZED_TYPE) {
+                  stack.push(((ModeledParametrizedType) next).getBaseType());
+                } else if (projectID.equals(next.getProjectID())) {
+                  ModeledDeclaredType face = (ModeledDeclaredType) next;
+                  if (first) {
+                    directParents.add(face);
+                    first = false;
+                  }
+                  seen.add(face);
+                  parents.add(face);
+                  stack.addAll(face.getInterfaces());
+                }
               }
-              parents.add(face);
-              stack.addAll(face.getInterfaces());
             }
           }
+          task.progress();
         }
       }
     }
+    task.finish();
+    
     if (metrics.missingValue(Metric.NUMBER_OF_IMPLEMENTED_INTERFACES)) {
       metrics.setValue(Metric.NUMBER_OF_IMPLEMENTED_INTERFACES, avgNoii);
       exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.NUMBER_OF_IMPLEMENTED_INTERFACES, avgNoii));
@@ -100,20 +119,23 @@ public class NumberOfInterfaceRelativesCalculator extends Calculator {
     }
     Averager<Double> avgNoi = Averager.create();
     Averager<Double> avgDnoi = Averager.create();
-    for (ModeledStructuralEntity entity : parents.elementSet()) {
-      Double value = (double) parents.count(entity);
-      if (metrics.missingEntityValue(entity.getEntityID(), Metric.NUMBER_OF_INTERFACE_CHILDREN)) {
-        metrics.setEntityValue(entity.getEntityID(), entity.getFileID(), Metric.NUMBER_OF_INTERFACE_CHILDREN, value);
-        exec.insert(EntityMetricsTable.createInsert(projectID, entity.getFileID(), entity.getEntityID(), Metric.NUMBER_OF_INTERFACE_CHILDREN, value));
+    for (ModeledEntity entity : model.getEntities()) {
+      if (projectID.equals(entity.getProjectID()) && entity.getType() == Entity.INTERFACE) {
+        ModeledDeclaredType dec = (ModeledDeclaredType) entity;
+        Double value = (double) parents.count(dec);
+        if (metrics.missingEntityValue(dec.getEntityID(), Metric.NUMBER_OF_INTERFACE_CHILDREN)) {
+          metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.NUMBER_OF_INTERFACE_CHILDREN, value);
+          exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.NUMBER_OF_INTERFACE_CHILDREN, value));
+        }
+        avgNoi.addValue(value);
+        
+        value = (double) directParents.count(dec); 
+        if (metrics.missingEntityValue(dec.getEntityID(), Metric.NUMBER_OF_DIRECT_INTERFACE_CHILDREN)) {
+          metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.NUMBER_OF_DIRECT_INTERFACE_CHILDREN, value);
+          exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.NUMBER_OF_DIRECT_INTERFACE_CHILDREN, value));
+        }
+        avgDnoi.addValue(value);
       }
-      avgNoi.addValue(value);
-      
-      value = (double) directParents.count(entity); 
-      if (metrics.missingEntityValue(entity.getEntityID(), Metric.NUMBER_OF_DIRECT_INTERFACE_CHILDREN)) {
-        metrics.setEntityValue(entity.getEntityID(), entity.getFileID(), Metric.NUMBER_OF_DIRECT_INTERFACE_CHILDREN, value);
-        exec.insert(EntityMetricsTable.createInsert(projectID, entity.getFileID(), entity.getEntityID(), Metric.NUMBER_OF_DIRECT_INTERFACE_CHILDREN, value));
-      }
-      avgDnoi.addValue(value);
     }
     if (metrics.missingValue(Metric.NUMBER_OF_INTERFACE_CHILDREN)) {
       metrics.setValue(Metric.NUMBER_OF_INTERFACE_CHILDREN, avgNoi);
@@ -121,7 +143,8 @@ public class NumberOfInterfaceRelativesCalculator extends Calculator {
     }
     if (metrics.missingValue(Metric.NUMBER_OF_DIRECT_INTERFACE_CHILDREN)) {
       metrics.setValue(Metric.NUMBER_OF_DIRECT_INTERFACE_CHILDREN, avgDnoi);
-      exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.NUMBER_OF_INTERFACE_CHILDREN, avgDnoi));
+      exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.NUMBER_OF_DIRECT_INTERFACE_CHILDREN, avgDnoi));
     }
+    task.finish();
   }
 }

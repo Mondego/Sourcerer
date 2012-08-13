@@ -17,6 +17,8 @@
  */
 package edu.uci.ics.sourcerer.tools.java.metrics.db;
 
+import java.util.regex.Pattern;
+
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
@@ -30,6 +32,7 @@ import edu.uci.ics.sourcerer.tools.java.metrics.db.MetricModelFactory.ProjectMet
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
 import edu.uci.ics.sourcerer.util.Averager;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 
 /**
@@ -43,10 +46,17 @@ public class NumberOfClassChildrenCalculator extends Calculator {
   
   @Override
   public void calculate(QueryExecutor exec, Integer projectID, ProjectMetricModel metrics, TypeModel model) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+
+    Pattern anon = Pattern.compile(".*\\$\\d+$");
+    
+    task.start("Computing NumberOfClassChildren");
     Multiset<ModeledDeclaredType> parents = HashMultiset.create();
     Multiset<ModeledDeclaredType> directParents = HashMultiset.create();
+    
+    task.start("Processing classes", "classes processed");
     for (ModeledEntity entity : model.getEntities()) {
-      if (entity.getType() == Entity.CLASS) {
+      if (projectID.equals(entity.getProjectID()) && entity.getType() == Entity.CLASS && !anon.matcher(entity.getFqn()).matches()) {
         ModeledDeclaredType dec = (ModeledDeclaredType) entity;
         ModeledEntity sup = dec.getSuperclass();
         boolean first = true;
@@ -65,26 +75,31 @@ public class NumberOfClassChildrenCalculator extends Calculator {
             sup = null;
           }
         }
+        task.progress();
       }
     }
+    task.finish();
     Averager<Double> avgNoc = Averager.create();
     Averager<Double> avgDnoc = Averager.create();
-    for (ModeledDeclaredType entity : parents.elementSet()) {
-      Double value = metrics.getEntityValue(entity.getEntityID(), Metric.NUMBER_OF_CLASS_CHILDREN);
-      if (value == null) {
-        value = (double) parents.count(entity);
-        metrics.setEntityValue(entity.getEntityID(), entity.getFileID(), Metric.NUMBER_OF_CLASS_CHILDREN, value);
-        exec.insert(EntityMetricsTable.createInsert(projectID, entity.getFileID(), entity.getEntityID(), Metric.NUMBER_OF_CLASS_CHILDREN, value));
+    for (ModeledEntity entity : model.getEntities()) {
+      if (projectID.equals(entity.getProjectID()) && entity.getType() == Entity.CLASS && !anon.matcher(entity.getFqn()).matches()) {
+        ModeledDeclaredType dec = (ModeledDeclaredType) entity;
+        Double value = metrics.getEntityValue(dec.getEntityID(), Metric.NUMBER_OF_CLASS_CHILDREN);
+        if (value == null) {
+          value = (double) parents.count(dec);
+          metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.NUMBER_OF_CLASS_CHILDREN, value);
+          exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.NUMBER_OF_CLASS_CHILDREN, value));
+        }
+        avgNoc.addValue(value);
+        
+        value = metrics.getEntityValue(dec.getEntityID(), Metric.NUMBER_OF_DIRECT_CLASS_CHILDREN);
+        if (value == null) {
+          value = (double) directParents.count(dec);
+          metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.NUMBER_OF_DIRECT_CLASS_CHILDREN, value);
+          exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.NUMBER_OF_DIRECT_CLASS_CHILDREN, value));
+        }
+        avgDnoc.addValue(value);
       }
-      avgNoc.addValue(value);
-      
-      value = metrics.getEntityValue(entity.getEntityID(), Metric.NUMBER_OF_DIRECT_CLASS_CHILDREN);
-      if (value == null) {
-        value = (double) directParents.count(entity);
-        metrics.setEntityValue(entity.getEntityID(), entity.getFileID(), Metric.NUMBER_OF_DIRECT_CLASS_CHILDREN, value);
-        exec.insert(EntityMetricsTable.createInsert(projectID, entity.getFileID(), entity.getEntityID(), Metric.NUMBER_OF_DIRECT_CLASS_CHILDREN, value));
-      }
-      avgDnoc.addValue(value);
     }
     if (metrics.missingValue(Metric.NUMBER_OF_CLASS_CHILDREN)) {
       metrics.setValue(Metric.NUMBER_OF_CLASS_CHILDREN, avgNoc);
@@ -94,6 +109,6 @@ public class NumberOfClassChildrenCalculator extends Calculator {
       metrics.setValue(Metric.NUMBER_OF_DIRECT_CLASS_CHILDREN, avgDnoc);
       exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.NUMBER_OF_DIRECT_CLASS_CHILDREN, avgDnoc));
     }
+    task.finish();
   }
-
 }
