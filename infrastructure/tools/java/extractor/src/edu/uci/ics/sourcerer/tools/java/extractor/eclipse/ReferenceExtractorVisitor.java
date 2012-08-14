@@ -2587,7 +2587,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     }
     
     public String getAnonymousClassFqn() {
-      return fqn + "$anonymous-" + ++anonymousClassCount;
+      return fqn + "$" + ++anonymousClassCount;
     }
     
     public String createLocalClassFqn(String name, String uniqueID) {

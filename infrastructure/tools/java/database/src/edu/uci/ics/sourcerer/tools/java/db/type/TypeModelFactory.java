@@ -87,6 +87,7 @@ public class TypeModelFactory {
         Entity.ANNOTATION_ELEMENT, 
         Entity.ENUM_CONSTANT, 
         Entity.FIELD,
+        Entity.INITIALIZER,
         Entity.PARAMETERIZED_TYPE,
         Entity.ARRAY,
         Entity.TYPE_VARIABLE,
@@ -128,16 +129,19 @@ public class TypeModelFactory {
           case FIELD:
           case ENUM_CONSTANT:
             return new ModeledField(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, fileID, projectID);
+          case INITIALIZER:
+            return new ModeledStructuralEntity(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, fileID, projectID);
           case PACKAGE:
             return new ModeledStructuralEntity(entityID, null, fqn, type, fileID, projectID);
           case PRIMITIVE:
           case UNKNOWN:
           case WILDCARD:
           case TYPE_VARIABLE:
-          case ARRAY:
             return new ModeledEntity(entityID, fqn, type, projectID);
           case PARAMETERIZED_TYPE:
-            return new ModeledParametrizedType(entityID, fqn, type, projectID);
+            return new ModeledParametrizedType(entityID, fqn, projectID);
+          case ARRAY:
+            return new ModeledArrayType(entityID, fqn, projectID);
           default:
             return null;
         }
@@ -217,6 +221,12 @@ public class TypeModelFactory {
         @Override
         protected void process(ModeledParametrizedType lhs, ModeledEntity rhs) {
           lhs.addTypeArgument(rhs);
+        }
+      });
+      RELATIONS.put(Relation.HAS_ELEMENTS_OF, new RelationProcessor<ModeledArrayType, ModeledEntity>(Relation.HAS_ELEMENTS_OF, ModeledArrayType.class, ModeledEntity.class, true) {
+        @Override
+        protected void process(ModeledArrayType lhs, ModeledEntity rhs) {
+          lhs.setElementType(rhs);
         }
       });
     }

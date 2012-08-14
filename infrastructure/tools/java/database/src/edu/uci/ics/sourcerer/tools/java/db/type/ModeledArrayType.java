@@ -17,40 +17,23 @@
  */
 package edu.uci.ics.sourcerer.tools.java.db.type;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class ModeledParametrizedType extends ModeledEntity {
-  private ModeledDeclaredType baseType;
-  private List<ModeledEntity> typeArgs;
+public class ModeledArrayType extends ModeledEntity {
+  private ModeledEntity elementType;
   
-  ModeledParametrizedType(Integer entityID, String fqn, Integer projectID) {
-    super(entityID, fqn, Entity.PARAMETERIZED_TYPE, projectID);
-    typeArgs = Collections.emptyList();
+  public ModeledArrayType(Integer entityID, String fqn, Integer projectID) {
+    super(entityID, fqn, Entity.ARRAY, projectID);
   }
   
-  void setBaseType(ModeledDeclaredType baseType) {
-    this.baseType = baseType;
+  void setElementType(ModeledEntity elementType) {
+    this.elementType = elementType;
   }
   
-  public ModeledDeclaredType getBaseType() {
-    return baseType;
-  }
-  
-  void addTypeArgument(ModeledEntity typeArg) {
-    if (typeArgs.isEmpty()) {
-      typeArgs = new LinkedList<>();
-    }
-    typeArgs.add(typeArg);
-  }
-  
-  public List<? extends ModeledEntity> getTypeArgs() {
-    return typeArgs;
+  public ModeledEntity getElementType() {
+    return elementType;
   }
 }

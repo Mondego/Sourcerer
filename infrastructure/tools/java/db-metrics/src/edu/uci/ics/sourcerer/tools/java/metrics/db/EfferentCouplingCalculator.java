@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
+import edu.uci.ics.sourcerer.tools.java.db.type.ModeledArrayType;
 import edu.uci.ics.sourcerer.tools.java.db.type.ModeledDeclaredType;
 import edu.uci.ics.sourcerer.tools.java.db.type.ModeledEntity;
 import edu.uci.ics.sourcerer.tools.java.db.type.ModeledParametrizedType;
@@ -188,8 +189,8 @@ public class EfferentCouplingCalculator extends Calculator {
           add(set, ent);
         }
       } else if (entity.getType() == Entity.ARRAY) {
-        // May want to add ModeledArray
-//        ModeledEntity
+        ModeledArrayType aEntity = (ModeledArrayType) entity;
+        set.add(aEntity.getElementType());
       }
     }
   }
