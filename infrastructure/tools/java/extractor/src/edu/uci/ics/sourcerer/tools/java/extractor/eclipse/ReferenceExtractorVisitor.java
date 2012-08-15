@@ -2074,7 +2074,11 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     } else {
       Metrics metrics = new Metrics();
       // Add the lines of code metrics
-      LinesOfCode.computeLinesOfCode(compilationUnitSource.substring(node.getStartPosition(), node.getStartPosition() + node.getLength()), metrics);
+      try {
+        LinesOfCode.computeLinesOfCode(compilationUnitSource.substring(node.getStartPosition(), node.getStartPosition() + node.getLength()), metrics);
+      } catch (StringIndexOutOfBoundsException e) {
+        logger.log(Level.SEVERE, "Error in getting node source: " + node, e);
+      }
       
       // Add the block metrics
       EnclosingMethod block = fqnStack.peek2(EnclosingMethod.class);
