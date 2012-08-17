@@ -54,12 +54,12 @@ class InFileInserter implements BatchInserter {
   public void insert() {
     IOUtils.close(writer);
     writer = null;
-//    executor.execute("LOAD DATA CONCURRENT LOCAL INFILE '" + tempFile.getPath().replace('\\', '/') + "' " +
-//    		"INTO TABLE " + table.getName() + " " +
-//				"FIELDS TERMINATED BY ',' " +
-//				"OPTIONALLY ENCLOSED BY '\\\'' " + 
-//				"LINES STARTING BY '(' " +
-//				"TERMINATED BY ')\n'");
+    executor.execute("LOAD DATA CONCURRENT LOCAL INFILE '" + tempFile.getPath().replace('\\', '/') + "' " +
+    		"INTO TABLE " + table.getName() + " " +
+				"FIELDS TERMINATED BY ',' " +
+				"OPTIONALLY ENCLOSED BY '\\\'' " + 
+				"LINES STARTING BY '(' " +
+				"TERMINATED BY ')\n'");
     tempFile.delete();
   }
 }

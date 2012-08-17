@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
@@ -179,10 +180,12 @@ public class JavaLibraryTypeModel {
   }
   
   synchronized ModeledEntity getEntity(String fqn) {
+//    logger.info("JavaLibrary getEntity " + fqn);
     return entities.get(fqn);
   }
   
   synchronized ModeledEntity getVirtualEntity(String fqn) {
+//    logger.info("JavaLibrary getVirtualEntity " + fqn);
     // Try the map
     if (entities.containsKey(fqn)) {
       return entities.get(fqn);
@@ -207,26 +210,30 @@ public class JavaLibraryTypeModel {
         ModeledEntity classMethod = null;
         Collection<ModeledEntity> interfaceMethods = new HashSet<>();
         
+        Set<ModeledEntity> seen = new HashSet<>();
         Deque<ModeledEntity> stack = new LinkedList<>();
         stack.push(receiver);
         while (!stack.isEmpty()) {
           // Get all the parents
           for (ModeledEntity parent : stack.pop().getParents()) {
-            // See if the parent has the method
-            ModeledEntity method = entities.get(parent.getFQN() + "." + parts.getSecond());
-            if (method == null) {
-              stack.add(parent);
-            } else if (parent.getType() == Entity.INTERFACE) {
-              interfaceMethods.add(method);
-            } else if (classMethod == null){
-              classMethod = method;
-            } else {
-              // If one of the class methods belongs to Object, drop it
-              if (method.getFQN().startsWith("java.lang.Object")) {
-              } else if (classMethod.getFQN().startsWith("java.lang.Object")) {
-                method = classMethod;
+            if (!seen.contains(parent)) {
+              seen.add(parent);
+              // See if the parent has the method
+              ModeledEntity method = entities.get(parent.getFQN() + "." + parts.getSecond());
+              if (method == null) {
+                stack.add(parent);
+              } else if (parent.getType() == Entity.INTERFACE) {
+                interfaceMethods.add(method);
+              } else if (classMethod == null){
+                classMethod = method;
               } else {
-                logger.severe("Multiple class methods for: " + fqn + " (" + classMethod.toString() + " and " + method.toString() + ")");
+                // If one of the class methods belongs to Object, drop it
+                if (method.getFQN().startsWith("java.lang.Object")) {
+                } else if (classMethod.getFQN().startsWith("java.lang.Object")) {
+                  method = classMethod;
+                } else {
+                  logger.severe("Multiple class methods for: " + fqn + " (" + classMethod.toString() + " and " + method.toString() + ")");
+                }
               }
             }
           }
@@ -270,17 +277,21 @@ public class JavaLibraryTypeModel {
       } else {
         Collection<ModeledEntity> fields = new HashSet<>();
         
+        Set<ModeledEntity> seen = new HashSet<>();
         Deque<ModeledEntity> stack = new LinkedList<>();
         stack.push(receiver);
         while (!stack.isEmpty()) {
           // Get all the parents
           for (ModeledEntity parent : stack.pop().getParents()) {
-            // See if the parent has the field
-            ModeledEntity field = entities.get(parent.getFQN() + "." + fieldName);
-            if (field == null) {
-              stack.add(parent);
-            } else {
-              fields.add(field);
+            if (!seen.contains(parent)) {
+              seen.add(parent);
+              // See if the parent has the field
+              ModeledEntity field = entities.get(parent.getFQN() + "." + fieldName);
+              if (field == null) {
+                stack.add(parent);
+              } else {
+                fields.add(field);
+              }
             }
           }
         }

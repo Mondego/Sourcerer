@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntitiesTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
@@ -184,6 +185,7 @@ public class ProjectTypeModel {
   }
   
   private ModeledEntity getTypeEntity(String fqn) {
+    logger.info("getTypeEntity: " + fqn);
     if (TypeUtils.isArray(fqn)) {
       Pair<String, Integer> arrayInfo = TypeUtils.breakArray(fqn);
       
@@ -293,6 +295,7 @@ public class ProjectTypeModel {
   }
   
   public ModeledEntity getEntity(String fqn) {
+//    logger.info("Project getEntity " + fqn);
     ModeledEntity entity = entities.get(fqn);
     if (entity == null && !TypeUtils.isMethod(fqn)) {
       entity = getTypeEntity(fqn);
@@ -325,6 +328,7 @@ public class ProjectTypeModel {
   }
   
   public ModeledEntity getVirtualEntity(String fqn) {
+//    logger.info("Project getVirtualEntity " + fqn);
     // Try the map
     ModeledEntity entity = entities.get(fqn);
     if (entity != null) {
@@ -391,26 +395,30 @@ public class ProjectTypeModel {
         ModeledEntity classMethod = null;
         Collection<ModeledEntity> interfaceMethods = new HashSet<>();
         
+        Set<ModeledEntity> seen = new HashSet<>();
         Deque<ModeledEntity> stack = new LinkedList<>();
         stack.push(receiver);
         while (!stack.isEmpty()) {
           // Get all the parents
           for (ModeledEntity parent : stack.pop().getParents()) {
-            // See if the parent has the method
-            ModeledEntity method = getBasicEntity(parent.getFQN() + "." + parts.getSecond());
-            if (method == null) {
-              stack.add(parent);
-            } else if (parent.getType() == Entity.INTERFACE) {
-              interfaceMethods.add(method);
-            } else if (classMethod == null){
-              classMethod = method;
-            } else {
-              // If one of the class methods belongs to Object, drop it
-              if (method.getFQN().startsWith("java.lang.Object")) {
-              } else if (classMethod.getFQN().startsWith("java.lang.Object")) {
-                method = classMethod;
+            if (!seen.contains(parent)) {
+              seen.add(parent);
+              // See if the parent has the method
+              ModeledEntity method = getBasicEntity(parent.getFQN() + "." + parts.getSecond());
+              if (method == null) {
+                stack.add(parent);
+              } else if (parent.getType() == Entity.INTERFACE) {
+                interfaceMethods.add(method);
+              } else if (classMethod == null){
+                classMethod = method;
               } else {
-                logger.severe("Multiple class methods for: " + fqn + " (" + classMethod.toString() + " and " + method.toString() + ")");
+                // If one of the class methods belongs to Object, drop it
+                if (method.getFQN().startsWith("java.lang.Object")) {
+                } else if (classMethod.getFQN().startsWith("java.lang.Object")) {
+                  method = classMethod;
+                } else {
+                  logger.severe("Multiple class methods for: " + fqn + " (" + classMethod.toString() + " and " + method.toString() + ")");
+                }
               }
             }
           }
@@ -461,17 +469,21 @@ public class ProjectTypeModel {
       } else {
         Collection<ModeledEntity> fields = new HashSet<>();
         
+        Set<ModeledEntity> seen = new HashSet<>();
         Deque<ModeledEntity> stack = new LinkedList<>();
         stack.push(receiver);
         while (!stack.isEmpty()) {
           // Get all the parents
           for (ModeledEntity parent : stack.pop().getParents()) {
-            // See if the parent has the field
-            ModeledEntity field = getBasicEntity(parent.getFQN() + "." + fieldName);
-            if (field == null) {
-              stack.add(parent);
-            } else {
-              fields.add(field);
+            if (!seen.contains(parent)) {
+              seen.add(parent);
+              // See if the parent has the field
+              ModeledEntity field = getBasicEntity(parent.getFQN() + "." + fieldName);
+              if (field == null) {
+                stack.add(parent);
+              } else {
+                fields.add(field);
+              }
             }
           }
         }
