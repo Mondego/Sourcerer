@@ -20,6 +20,8 @@ package edu.uci.ics.sourcerer.tools.java.extractor.eclipse;
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,6 +56,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.launching.LibraryLocation;
+import org.mozilla.universalchardet.UniversalDetector;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepoFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
@@ -103,7 +106,7 @@ public class EclipseUtils {
       newNatures[prevNatures.length]= JavaCore.NATURE_ID;
       description.setNatureIds(newNatures);
       project.setDescription(description, null);
-      project.setDefaultCharset("US-ASCII", null);
+//      project.setDefaultCharset("UTF-8", null);
       
       javaProject = JavaCore.create(project);
     } catch (CoreException e) {
@@ -333,114 +336,30 @@ public class EclipseUtils {
       return Collections.emptySet();
     }
   }
+  
+  private static UniversalDetector detector = null;
+  private static byte[] buffer = null;
+  public static void setCharacterSet(IFile file) {
+    if (detector == null) {
+      detector = new UniversalDetector(null);
+      buffer = new byte[4096];
+    } else {
+      detector.reset();
+    }
 
-////  public static CompilationUnit getCompilationUnit(JavaFile file, boolean doPPA) {
-////    return getCompilationUnit(getIFileFromFile(file), doPPA);
-////  }
-//  
-////  public static CompilationUnit getCompilationUnit(IFile file, boolean doPPA) {
-////    if (doPPA) {
-////      return null;
-//////      return PPAUtil.getCU(file, new PPAOptions());
-////    } else {
-////      ICompilationUnit icu = JavaCore.createCompilationUnitFrom(file);
-////      ASTParser parser = ASTParser.newParser(AST.JLS3);
-////      parser.setStatementsRecovery(true);
-////      parser.setResolveBindings(true);
-////      parser.setSource(icu);
-////      ASTNode node = parser.createAST(null);
-////      if (node.getNodeType() == ASTNode.COMPILATION_UNIT) {
-////        return (CompilationUnit) node;
-////      } else {
-////        return null;
-////      }
-////    } 
-////  }
-//  
-////  public static Collection<IFile> getIFilesFromJavaFiles(Iterable<JavaFile> files) {
-////    List<IFile> fileSet = Helper.newLinkedList();
-////    for (JavaFile file : files) {
-////      IFile iFile = getIFileFromFile(file);
-////      if (iFile != null) {
-////        fileSet.add(iFile);
-////      } else {
-////        logger.log(Level.SEVERE, "Unable to get iFile for " + file.getPath());
-////      }
-////    }
-////    return fileSet;
-////  }
-//  
-////  public static ReferenceExtractorASTRequestor getCompilationUnits(Collection<IFile> files, boolean doPPA) {
-////    return new ReferenceExtractorASTRequestor(files, doPPA);
-////    if (doPPA) {
-////      ReferenceExtractorASTRequestor requestor = new ReferenceExtractorASTRequestor(files, doPPA);
-////      
-////      for (IFile file : files) {
-////        CompilationUnit cu = PPAUtil.getCU(file, new PPAOptions());
-////        requestor.acceptAST((ICompilationUnit)cu.getJavaElement(), cu);
-////      }
-////
-////      return requestor;
-////    } else {
-////      ICompilationUnit[] icus = new ICompilationUnit[files.size()];
-////      int index = 0;
-////      for (IFile file : files) {
-////        icus[index++] = JavaCore.createCompilationUnitFrom(file);
-////      }
-////      
-////      ReferenceExtractorASTRequestor requestor = new ReferenceExtractorASTRequestor();
-////      
-////      ASTParser parser = ASTParser.newParser(AST.JLS3);
-////      parser.setStatementsRecovery(true);
-////      parser.setResolveBindings(true);
-////      parser.setBindingsRecovery(true);
-////      parser.setProject(icus[0].getJavaProject());
-////      parser.createASTs(icus, new String[0], requestor, null);
-////      
-////      return requestor;
-////    }
-////  }
-//
-////  public static void cleanAll() {
-////    try {
-////      IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-////      IProject project = root.getProject(projectName);
-////      if (project.exists()) {
-////        project.refreshLocal(IResource.DEPTH_INFINITE, null);
-////        project.delete(true, true, null);
-////      }
-////    } catch (CoreException e) {
-////      logger.log(Level.SEVERE, "Error in project deletion", e);
-////    }
-////  }
-////  
-////  public static void cleanProject() {
-////    try {
-////      IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-////      IProject project = root.getProject(projectName);
-////      if (project.exists()) {
-////        final Set<IResource> resources = Helper.newHashSet();
-////        IFolder folder = project.getFolder("src");
-////        if (folder.exists()) {
-////          project.getFolder("src").accept(new IResourceVisitor() {
-////            @Override
-////            public boolean visit(IResource resource) throws CoreException {
-////              if (resource.getType() == IResource.FILE || resource.getType() == IResource.FOLDER) {
-////                resources.add(resource);
-////                return false;
-////              } else {
-////                return true;
-////              }
-////            }
-////          });
-////          for (IResource resource : resources) {
-////            resource.delete(true, null);
-////          }
-////        }
-//////        srcFolder.create(true, true, null);
-////      }
-////    } catch (CoreException e) {
-////      logger.log(Level.SEVERE, "Error in project cleaning", e);
-////    }
-////  }
+    try (InputStream is = file.getContents()) {
+      int read;
+      while ((read = is.read(buffer)) > 0 && !detector.isDone()) {
+        detector.handleData(buffer, 0, read);
+      }
+      detector.dataEnd();
+      
+      String encoding = detector.getDetectedCharset();
+      if (encoding != null) {
+        file.setCharset(encoding, null);
+      }
+    } catch (IOException | CoreException e) {
+      logger.log(Level.SEVERE, "Unable to detect charset", e);
+    }
+  }
 }

@@ -30,6 +30,7 @@ import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.EntityEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.FileEX;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.ReaderBundle;
+import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.File;
 import edu.uci.ics.sourcerer.tools.java.model.types.Location;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
@@ -168,7 +169,7 @@ public class BytecodeMetricsImporter extends DatabaseImporter {
                       result.close();
                     }
                   }
-                  if (entityID == null) {
+                  if (entityID == null && entity.getType() != Entity.INITIALIZER) {
                     task.report(Level.SEVERE, "Unable to find entity: " + entity);
                   } else {
                     metrics.clear();
@@ -191,6 +192,7 @@ public class BytecodeMetricsImporter extends DatabaseImporter {
               }
             }
             inserter.insert();
+            task.finish();
           }
         }
         task.finish();

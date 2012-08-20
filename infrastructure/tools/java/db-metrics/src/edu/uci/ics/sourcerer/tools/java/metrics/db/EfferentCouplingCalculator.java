@@ -54,7 +54,7 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 public class EfferentCouplingCalculator extends Calculator {
   @Override
   public boolean shouldCalculate(ProjectMetricModel metrics) {
-    return metrics.getValue(Metric.EFFERENT_COUPLING) == null;
+    return metrics.missingValue(Metric.EFFERENT_COUPLING, Metric.EFFERENT_COUPLING_INTERNAL);
   }
 
   @Override
@@ -80,6 +80,7 @@ public class EfferentCouplingCalculator extends Calculator {
           Set<ModeledEntity> referencedTypes = new HashSet<>();
           
           Deque<ModeledStructuralEntity> stack = new LinkedList<>();
+          stack.push(dec);
           while (!stack.isEmpty()) {
             ModeledStructuralEntity next = stack.pop();
             if (next.getType().is(Entity.CLASS, Entity.ENUM, Entity.INTERFACE)) {
@@ -125,6 +126,7 @@ public class EfferentCouplingCalculator extends Calculator {
               internalReferencedTypes++;
             }
           }
+          
           Double coupling = (double) referencedTypes.size();
           Double internalCoupling = (double) internalReferencedTypes;
           
@@ -132,12 +134,14 @@ public class EfferentCouplingCalculator extends Calculator {
             metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.EFFERENT_COUPLING, coupling);
             exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.EFFERENT_COUPLING, coupling));
           }
+          avgCoupling.addValue(coupling);
+          
           if (metrics.missingEntityValue(dec.getEntityID(), Metric.EFFERENT_COUPLING_INTERNAL)) {
             metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.EFFERENT_COUPLING_INTERNAL, internalCoupling);
             exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.EFFERENT_COUPLING_INTERNAL, internalCoupling));
           }
-          avgCoupling.addValue(coupling);
           avgInternalCoupling.addValue(internalCoupling);
+          
           task.progress();
         }
       }

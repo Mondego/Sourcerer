@@ -225,7 +225,10 @@ public class EclipseExtractor implements Closeable {
 
     ReferenceExtractorVisitor visitor = new ReferenceExtractorVisitor(writers);
     for (Map.Entry<JavaFile, IFile> entry : sourceFiles.entrySet()) {
-      ICompilationUnit icu = JavaCore.createCompilationUnitFrom(entry.getValue());
+      IFile file = entry.getValue();
+      // May put this in if there are still problems
+//      EclipseUtils.setCharacterSet(file);
+      ICompilationUnit icu = JavaCore.createCompilationUnitFrom(file);
 
       parser.setStatementsRecovery(true);
       parser.setResolveBindings(true);

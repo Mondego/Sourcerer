@@ -13,4 +13,5 @@ Bundle-ClassPath: .,
  lib/sourcerer-lib.jar,
  lib/asm-4.0_RC2.jar,
  lib/mysql-connector-java-5.1.7-bin.jar,
- lib/guava-11.0.1.jar
+ lib/guava-11.0.1.jar,
+ lib/juniversalchardet-1.0.3.jar
