@@ -153,29 +153,6 @@ class QueryExecutorImpl implements QueryExecutor {
     }
   }
   
-  
-  
-//  @Override
-//  public Integer insertSingleWithKey(String table, String value) {
-//    String val = executeUpdateWithKey("INSERT INTO " + table + " VALUES " + value + ";");
-//    if (val == null) {
-//      return null;
-//    } else {
-//      try {
-//        return Integer.valueOf(val);
-//      } catch (NumberFormatException e) {
-//        logger.log(Level.SEVERE, "Unable to understand key value " + val + " for " + value);
-//        return null;
-//      }
-//    }
-//  }
-  
-//    
-//  @Override
-//  public void deleteRows(ITable table, IWhereClause where) {
-//    executeUpdate("DELETE FROM " + table + " WHERE " + where + ";");
-//  }
-  
   @Override
   public String executeSingle(String sql) {
     verifyOpen();
@@ -230,89 +207,6 @@ class QueryExecutorImpl implements QueryExecutor {
     } 
   }
   
-//  @Override
-//  public int getRowCount(ITable table, IWhereClause where) {
-//    return executeSingleInt("SELECT COUNT(*) FROM " + table + " WHERE " + where + ";");
-//  }
-//  
-//  @Override
-//  public <T> T selectSingle(ITable table, IColumn<T> column, IWhereClause where) {
-//    return column.from(executeSingle("SELECT " + column + " FROM " + table + " WHERE " + where + ";"));
-//  }
-//  
-//  @Override
-//  public <T> Collection<T> select(ITable table, ISelectFromClause from, IWhereClause where) {
-//    return execute("SELECT " + columns + " FROM " + table + " WHERE " + where + ";", translator);
-//  }
-//  
-//  public <T> Collection<T> select(String where, ResultTranslator<T> translator) {
-//    return execute("SELECT " + translator.getSelect() + " FROM " + translator.getTable() + " WHERE " + where + ";", translator);
-//  }
-//  
-//  public <T> Iterable<T> selectStreamed(String where, ResultTranslator<T> translator) {
-//    return executeStreamed("SELECT " + translator.getSelect() + " FROM " + translator.getTable() + (where == null ? "" : (" WHERE " + where)) + ";", translator);
-//  }
-//  
-//  public <T> Iterable<T> selectStreamed(String table, String columns, String where, BasicResultTranslator<T> translator) {
-//    return executeStreamed("SELECT " + columns + " FROM " + table + (where == null ? "" : (" WHERE " + where)) + ";", translator);
-//  }
-//    
-//  public void insertSingle(String table, String value) {
-//    executeUpdate("INSERT INTO " + table + " VALUES " + value + ";");
-//  }
- 
-  
-//  public <T> IterableResult<T> executeStreamed(String sql, BasicResultTranslator<T> translator) {
-//    try {
-//      Statement streamingStatement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-//      streamingStatement.setFetchSize(Integer.MIN_VALUE);
-//      streamingStatement.execute(sql);
-//      return IterableResult.getResultIterable(streamingStatement.getResultSet(), translator);
-//    } catch (SQLException e) {
-//      logger.log(Level.SEVERE, "Error in execute of " + sql, e);
-//      throw new RuntimeException(e);
-//    } 
-//  }
-  
-
-  
-//  public <T> Collection<T> execute(String sql, BasicResultTranslator<T> translator) {
-//    try {
-//      statement.execute(sql);
-//      ResultSet result = statement.getResultSet();
-//      
-//      Collection<T> collection = Helper.newLinkedList();
-//      while (result.next()) {
-//        collection.add(translator.translate(result));
-//      }
-//      return collection;
-//    } catch (SQLException e) {
-//      logger.log(Level.SEVERE, "Error in execute", e);
-//      throw new RuntimeException(e);
-//    } 
-//  }
-//  
-//
-//  
-//  public <T> T executeSingle(String sql, BasicResultTranslator<T> translator) {
-//    try {
-//      statement.execute(sql);
-//      ResultSet result = statement.getResultSet();
-//      if (result.next()) {
-//        T retval = translator.translate(result);
-//        if (result.next()) {
-//          logger.log(Level.SEVERE, "There should not be two results to " + sql);
-//        }
-//        return retval;
-//      } else {
-//        return null;
-//      }
-//    } catch (SQLException e) {
-//      logger.log(Level.SEVERE, "Error in execute: " + sql, e);
-//      throw new RuntimeException(e);
-//    } 
-//  }
-  
   @Override
   public void createTable(DatabaseTable table) {
     StringBuilder sql = new StringBuilder("CREATE TABLE ");
@@ -351,7 +245,6 @@ class QueryExecutorImpl implements QueryExecutor {
     StringBuilder sql = new StringBuilder("INSERT INTO ");
     sql.append(insert.getTable().toSql()).append(" VALUES").append(insert.toString());
     executeUpdate(sql.toString());
-//    System.out.println(sql.toString());
   }
   
   @Override

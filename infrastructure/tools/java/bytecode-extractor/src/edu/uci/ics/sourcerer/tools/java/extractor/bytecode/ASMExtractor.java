@@ -868,9 +868,11 @@ public class ASMExtractor implements Closeable {
     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
       instructionCount++;
       operands.add(owner + name + desc);
-      new SignatureReader(desc).accept(methodSignatureVisitor.init(owner, name));
-      String fqn = methodSignatureVisitor.getReferenceFqn();
-      relationWriter.writeRelation(Relation.CALLS, fqnStack.getFqn(), fqn, location);
+      if (!name.startsWith("access$")) {
+        new SignatureReader(desc).accept(methodSignatureVisitor.init(owner, name));
+        String fqn = methodSignatureVisitor.getReferenceFqn();
+        relationWriter.writeRelation(Relation.CALLS, fqnStack.getFqn(), fqn, location);
+      }
       statementCount++;
     }
 

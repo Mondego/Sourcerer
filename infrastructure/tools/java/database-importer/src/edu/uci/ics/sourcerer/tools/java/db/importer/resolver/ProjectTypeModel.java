@@ -295,7 +295,6 @@ public class ProjectTypeModel {
   }
   
   public ModeledEntity getEntity(String fqn) {
-//    logger.info("Project getEntity " + fqn);
     ModeledEntity entity = entities.get(fqn);
     if (entity == null && !TypeUtils.isMethod(fqn)) {
       entity = getTypeEntity(fqn);
@@ -328,7 +327,6 @@ public class ProjectTypeModel {
   }
   
   public ModeledEntity getVirtualEntity(String fqn) {
-//    logger.info("Project getVirtualEntity " + fqn);
     // Try the map
     ModeledEntity entity = entities.get(fqn);
     if (entity != null) {

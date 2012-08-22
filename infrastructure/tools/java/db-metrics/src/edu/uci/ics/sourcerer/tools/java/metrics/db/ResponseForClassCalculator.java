@@ -17,16 +17,22 @@
  */
 package edu.uci.ics.sourcerer.tools.java.metrics.db;
 
-import java.util.Deque;
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
+
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import edu.uci.ics.sourcerer.tools.java.db.schema.EntityMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectMetricsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.RelationsTable;
 import edu.uci.ics.sourcerer.tools.java.db.type.ModeledDeclaredType;
+import edu.uci.ics.sourcerer.tools.java.db.type.ModeledDuplicate;
 import edu.uci.ics.sourcerer.tools.java.db.type.ModeledEntity;
+import edu.uci.ics.sourcerer.tools.java.db.type.ModeledMethod;
 import edu.uci.ics.sourcerer.tools.java.db.type.ModeledStructuralEntity;
 import edu.uci.ics.sourcerer.tools.java.db.type.TypeModel;
 import edu.uci.ics.sourcerer.tools.java.metrics.db.MetricModelFactory.ProjectMetricModel;
@@ -34,8 +40,9 @@ import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
 import edu.uci.ics.sourcerer.util.Averager;
+import edu.uci.ics.sourcerer.util.UniqueStack;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
-import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
 import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
 
@@ -43,7 +50,6 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ResponseForClassCalculator extends Calculator {
-
   @Override
   public boolean shouldCalculate(ProjectMetricModel metrics) {
     return metrics.missingValue(Metric.RESPONSE_FOR_CLASS);
@@ -51,43 +57,96 @@ public class ResponseForClassCalculator extends Calculator {
 
   @Override
   public void calculate(QueryExecutor exec, Integer projectID, ProjectMetricModel metrics, TypeModel model) {
-    try (SelectQuery getCalls = exec.createSelectQuery(RelationsTable.TABLE)) {
-      getCalls.addSelect(RelationsTable.RHS_EID);
-      ConstantCondition<Integer> lhsEid = RelationsTable.LHS_EID.compareEquals();
-      getCalls.andWhere(lhsEid, RelationsTable.RELATION_TYPE.compareEquals(Relation.CALLS));
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
+    Pattern anon = Pattern.compile(".*\\$\\d+$");
+    
+    task.start("Computing response for a class");
+    Map<ModeledDeclaredType, Set<ModeledMethod>> methodMap = new HashMap<>();
+    
+    try (SelectQuery select = exec.createSelectQuery(RelationsTable.TABLE)) {
+      select.addSelect(RelationsTable.LHS_EID, RelationsTable.RHS_EID);
+      select.andWhere(RelationsTable.PROJECT_ID.compareEquals(projectID), RelationsTable.RELATION_TYPE.compareEquals(Relation.CALLS));
       
-      Averager<Double> avgRfc = Averager.create();
-      for (ModeledEntity entity : model.getEntities()) {
-        if (entity.getType().is(Entity.CLASS, Entity.ENUM)) {
-          ModeledDeclaredType dec = (ModeledDeclaredType) entity;
-          
-          Set<Integer> called = new HashSet<>();
-          Deque<ModeledStructuralEntity> entities = new LinkedList<>();
-          entities.push(dec);
-          while (!entities.isEmpty()) {
-            ModeledStructuralEntity next = entities.pop();
-            
-            lhsEid.setValue(next.getEntityID());
-            TypedQueryResult result = getCalls.select();
-            while (result.next()) {
-              called.add(result.getResult(RelationsTable.RHS_EID));
-            }
-            
-            entities.addAll(next.getChildren());
-          }
-          
-          double value = (double) called.size();
-          if (metrics.missingEntityValue(dec.getEntityID(), Metric.RESPONSE_FOR_CLASS)) {
-            metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.RESPONSE_FOR_CLASS, value);
-            exec.insert(EntityMetricsTable.createInsert(dec.getProjectID(), dec.getFileID(), dec.getEntityID(), Metric.RESPONSE_FOR_CLASS, value));
-          }
-          avgRfc.addValue(value);
+      task.start("Processing relations", "relations processed", 100_000);
+      TypedQueryResult result = select.select();
+      while (result.next()) {
+        Integer lhsEid = result.getResult(RelationsTable.LHS_EID);
+        Integer rhsEid = result.getResult(RelationsTable.RHS_EID);
+        
+        ModeledEntity lhs = model.get(lhsEid);
+        if (lhs == null) {
+          logger.severe("Unable to find model element for: " + lhsEid);
+          continue;
         }
+        ModeledEntity rhs = model.get(rhsEid);
+        if (rhs == null) {
+          logger.severe("Unable to find model element for: " + rhsEid);
+          continue;
+        }
+        
+        UniqueStack<ModeledEntity> stack = UniqueStack.create(true);
+        stack.push(lhs);
+        while (stack.hasItems()) {
+          ModeledEntity next = stack.pop();
+          if (next instanceof ModeledStructuralEntity) {
+            ModeledStructuralEntity struct = (ModeledStructuralEntity) next;
+            if (struct.getType().is(Entity.CLASS, Entity.ENUM)) {
+              ModeledDeclaredType dec = (ModeledDeclaredType) struct;
+              Set<ModeledMethod> methods = methodMap.get(dec);
+              if (methods == null) {
+                methods = new HashSet<>();
+                methodMap.put(dec, methods);
+              }
+              add(methods, rhs);
+            }
+            if (struct.getType() != Entity.PACKAGE) {
+              stack.push(struct.getOwner());
+            }
+          } else {
+            logger.severe("Unexpected lhs: " + next);
+          }
+        }
+        task.progress();
       }
+      task.finish();
+    }
+    
+    task.start("Computing and adding the metrics");
+    Averager<Double> avgRfc = Averager.create();
+    for (ModeledEntity entity : model.getEntities()) {
+      if (projectID.equals(entity.getProjectID()) && entity.getType().is(Entity.CLASS, Entity.ENUM) && !anon.matcher(entity.getFqn()).matches()) {
+        ModeledDeclaredType dec = (ModeledDeclaredType) entity;
+        Set<ModeledMethod> methods = methodMap.get(dec);
+        if (methods == null) {
+          methods = Collections.emptySet();
+        }
+          
+        double value = (double) methods.size();
+        if (metrics.missingEntityValue(dec.getEntityID(), Metric.RESPONSE_FOR_CLASS)) {
+          metrics.setEntityValue(dec.getEntityID(), dec.getFileID(), Metric.RESPONSE_FOR_CLASS, value);
+          exec.insert(EntityMetricsTable.createInsert(dec.getProjectID(), dec.getFileID(), dec.getEntityID(), Metric.RESPONSE_FOR_CLASS, value));
+        }
+        avgRfc.addValue(value);
+      }
+    }
       
-      if (metrics.missingValue(Metric.RESPONSE_FOR_CLASS)) {
-        metrics.setValue(Metric.RESPONSE_FOR_CLASS, avgRfc);
-        exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.RESPONSE_FOR_CLASS, avgRfc));
+    if (metrics.missingValue(Metric.RESPONSE_FOR_CLASS)) {
+      metrics.setValue(Metric.RESPONSE_FOR_CLASS, avgRfc);
+      exec.insert(ProjectMetricsTable.createInsert(projectID, Metric.RESPONSE_FOR_CLASS, avgRfc));
+    }
+    task.finish();
+    
+    task.finish();
+  }
+  
+  private void add(Set<ModeledMethod> methods, ModeledEntity method) {
+    if (method.getType().is(Entity.METHOD, Entity.CONSTRUCTOR)) {
+      methods.add((ModeledMethod) method);
+    } else if (method.getType().is(Entity.DUPLICATE, Entity.VIRTUAL_DUPLICATE)) {
+      ModeledDuplicate dup = (ModeledDuplicate) method;
+      for (ModeledEntity ent : dup.getMatches()) {
+        add(methods, ent);
       }
     }
   }

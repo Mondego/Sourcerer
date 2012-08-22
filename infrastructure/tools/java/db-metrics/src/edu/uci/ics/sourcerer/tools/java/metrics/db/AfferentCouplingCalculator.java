@@ -19,11 +19,9 @@ package edu.uci.ics.sourcerer.tools.java.metrics.db;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
-import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -42,6 +40,8 @@ import edu.uci.ics.sourcerer.tools.java.model.types.Entity;
 import edu.uci.ics.sourcerer.tools.java.model.types.Metric;
 import edu.uci.ics.sourcerer.tools.java.model.types.Relation;
 import edu.uci.ics.sourcerer.util.Averager;
+import edu.uci.ics.sourcerer.util.UniqueChecker;
+import edu.uci.ics.sourcerer.util.UniqueStack;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
@@ -73,16 +73,16 @@ public class AfferentCouplingCalculator extends Calculator {
       Averager<Double> avgInternalCoupling = Averager.create();
       Map<ModeledStructuralEntity, Set<ModeledStructuralEntity>> pkgCoupling = new HashMap<>();
       
-      task.start("Processing entities", "entities processed");
+      task.start("Processing entities", "entities processed", 500);
       for (ModeledEntity entity : model.getEntities()) {
         if (projectID.equals(entity.getProjectID()) && entity.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM) && !anon.matcher(entity.getFqn()).matches()) {
           ModeledDeclaredType dec = (ModeledDeclaredType) entity;
           
           Set<ModeledStructuralEntity> referencingTypes = new HashSet<>();
           {
-            Deque<ModeledStructuralEntity> stack = new LinkedList<>();
+            UniqueStack<ModeledStructuralEntity> stack = UniqueStack.create(true);
             stack.push(dec);
-            while (!stack.isEmpty()) {
+            while (stack.hasItems()) {
               ModeledStructuralEntity next = stack.pop();
               // All the referencing things
               rhsEid.setValue(next.getEntityID());
@@ -93,16 +93,16 @@ public class AfferentCouplingCalculator extends Calculator {
                 if (ent != null) {
                   add(referencingTypes, ent);
                 } else {
-                  logger.severe("Unable to find model element for: " + rhsEid);
+                  logger.severe("Unable to find model element for: " + lhsEid);
                 }
               }
               // Add the children
-              stack.addAll(next.getChildren());
+              stack.pushAll(next.getChildren());
             }
           }
           // Repeat the process for all the parametrized/array types referencing this type
           {
-            Deque<ModeledEntity> stack = new LinkedList<>();
+            UniqueStack<ModeledEntity> stack = UniqueStack.create(true);
             for (ModeledEntity ent : model.getEntities()) {
               if (ent.getType() == Entity.PARAMETERIZED_TYPE) {
                 ModeledParametrizedType ptype = (ModeledParametrizedType) ent;
@@ -124,7 +124,7 @@ public class AfferentCouplingCalculator extends Calculator {
               }
             }
             
-            while (!stack.isEmpty()) {
+            while (stack.hasItems()) {
               ModeledEntity next = stack.pop();
               // All the referencing things
               rhsEid.setValue(next.getEntityID());
@@ -135,7 +135,7 @@ public class AfferentCouplingCalculator extends Calculator {
                 if (ent != null) {
                   add(referencingTypes, ent);
                 } else {
-                  logger.severe("Unable to find model element for: " + rhsEid);
+                  logger.severe("Unable to find model element for: " + lhsEid);
                 }
               }
             }
@@ -172,8 +172,11 @@ public class AfferentCouplingCalculator extends Calculator {
             exec.insert(EntityMetricsTable.createInsert(projectID, dec.getFileID(), dec.getEntityID(), Metric.AFFERENT_COUPLING_INTERNAL, internalCoupling));
           }
           avgInternalCoupling.addValue(internalCoupling);
+          
+          task.progress();
         }
       }
+      task.finish();
 
       if (metrics.missingValue(Metric.AFFERENT_COUPLING)) {
         metrics.setValue(Metric.AFFERENT_COUPLING, avgCoupling);
@@ -216,7 +219,15 @@ public class AfferentCouplingCalculator extends Calculator {
         if (struct.getType().is(Entity.CLASS, Entity.ENUM, Entity.INTERFACE, Entity.ANNOTATION)) {
           set.add((ModeledDeclaredType) struct);
         } else {
-          add(set, struct.getOwner());
+          UniqueChecker<ModeledEntity> checker = UniqueChecker.create(true);
+          while (!struct.getType().is(Entity.CLASS, Entity.ENUM, Entity.INTERFACE, Entity.ANNOTATION)) {
+            if (checker.isUnique(struct)) {
+              struct = struct.getOwner();
+            } else {
+              return;
+            }
+          }
+          add(set, (ModeledDeclaredType) struct);
         } 
       } else {
         logger.severe("Unexpected entity type: " + entity);

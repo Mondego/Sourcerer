@@ -197,7 +197,6 @@ class LibraryTypeModel {
   }
   
   ModeledEntity getEntity(String fqn) {
-//    logger.info("Library getEntity " + fqn);
     ModeledEntity entity = entities.get(fqn);
     if (entity == null) {
       return javaModel.getEntity(fqn);
@@ -207,7 +206,6 @@ class LibraryTypeModel {
   }
   
   ModeledEntity getVirtualEntity(String fqn) {
-//    logger.info("Library getVirtualEntity " + fqn);
     // Try the map
     ModeledEntity entity = entities.get(fqn);
     if (entity != null) {

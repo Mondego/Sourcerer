@@ -49,10 +49,9 @@ class MetricsCalculator extends DatabaseRunnable {
 //      new AverageSizeOfStatementsCalculator(),
 //      new VocabularyFrequencyCalculator(),
 //      new WeightedMethodsPerClassCalculator(),
-//      new EfferentCouplingCalculator(),
-      new AfferentCouplingCalculator(),
+//      new InternalCouplingCalculator(),
 //      new LackOfCohesionCalculator(),
-//      new ResponseForClassCalculator(),
+      new ResponseForClassCalculator(),
   };
   
   private MetricsCalculator() {

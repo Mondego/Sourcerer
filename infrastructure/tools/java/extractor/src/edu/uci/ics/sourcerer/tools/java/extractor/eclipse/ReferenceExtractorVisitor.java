@@ -321,7 +321,6 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         parentFqn = enc.getFqn();
       } else {
         throw new IllegalStateException("A type declaration should not declare an annonymous type!");
-//        fqn = fqnStack.getAnonymousClassFqn();
       }
     } else if (node.isLocalTypeDeclaration()) {
       EnclosingBlock enc = fqnStack.peek(EnclosingBlock.class);
@@ -342,7 +341,6 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     }
     
     // Push the stack
-    
     fqnStack.push(fqn, type);
     
     // Visit the children
@@ -445,7 +443,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       ITypeBinding binding = node.resolveBinding();
       
       // Get the fqn
-      String fqn = fqnStack.find(EnclosingDeclaredType.class).getAnonymousClassFqn();
+      String fqn = fqnStack.find(EnclosingDeclaredType.class).createAnonymousClassFqn(binding);
 //      String fqn = null;
 //      if (binding == null) {
 //        fqn = fqnStack.find(EnclosingDeclaredType.class).getAnonymousClassFqn();
@@ -535,12 +533,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       
       // Get the fqn
       String parentFqn = fqnStack.getFqn();
-      String fqn = null;
-      if (binding == null) {
-        fqn = fqnStack.find(EnclosingDeclaredType.class).getAnonymousClassFqn();
-      } else {
-        fqn = getTypeFqn(binding);
-      }
+      String fqn = fqnStack.find(EnclosingDeclaredType.class).createAnonymousClassFqn(binding);
       
       fqnStack.push(fqn, Entity.CLASS);
       
@@ -774,6 +767,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     // Get the fqn
     String fqn = fqnStack.peek(EnclosingDeclaredType.class).getInitializerFqn();
 
+    String parentFqn = fqnStack.getFqn();
+    
     // Visit the children
     fqnStack.push(fqn, Entity.INITIALIZER);
     accept(node.getJavadoc());
@@ -783,8 +778,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     // Write the entity
     entityWriter.writeEntity(Entity.INITIALIZER, fqn, node.getModifiers(), createMetrics(node), createLocation(node));
 
-    // Write the inside relation
-    relationWriter.writeRelation(Relation.CONTAINS, fqnStack.getFqn(), fqn, createUnknownLocation());
+    // Write the contains relation
+    relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fqn, createUnknownLocation());
     
     fqnStack.pop();
     
@@ -1379,12 +1374,6 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         } else {
           relationWriter.writeRelation(Relation.READS, fqnStack.getFqn(), fqn, createLocation(node));
         }
-//        if (!inFieldDeclaration) {
-//          relationWriter.writeUses(fqnStack.getFqn(), fqn, getLocation(node));
-//        }
-      } else {
-        // Write the uses relation
-//        relationWriter.writeUses(fqnStack.getFqn(), getTypeFqn(getBaseType(varBinding.getType())), getLocation(node));
       }
     } else if (binding instanceof ITypeBinding) {
       ITypeBinding typeBinding = (ITypeBinding) binding;
@@ -2372,16 +2361,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         return getTypeFqn(binding.getElementType()) + BRACKETS.substring(0, 2 * binding.getDimensions());
       }
     } else if (binding.isAnonymous()) {
-      String fqn = binding.getBinaryName();
-      if (fqn == null) {
-        return UNKNOWN;
-      } else {
-//        fqn = fqn.replaceAll("\\$(\\d+)", "\\$anonymous-$1");
-        return fqn;
-      }
+      return fqnStack.findAnonymousFqn(binding);
     } else if (binding.isLocal()) {
       return fqnStack.find(EnclosingBlock.class).getLocalFqn(binding.getName(), binding);
-
     } else if (binding.isParameterizedType()) {
       StringBuilder fqn = new StringBuilder();
       if (binding.getErasure().isParameterizedType()) {
@@ -2545,6 +2527,21 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       }
     }
     
+    public String findAnonymousFqn(ITypeBinding binding) {
+      for (Enclosing enc : stack) {
+        if (enc instanceof EnclosingDeclaredType) {
+          EnclosingDeclaredType dec = (EnclosingDeclaredType) enc;
+          if (dec.anonymousClassMap != null) {
+            String fqn = dec.anonymousClassMap.get(binding);
+            if (fqn != null) {
+              return fqn;
+            }
+          }
+        }
+      }
+      return UNKNOWN;
+    }
+    
     public String getFqn() {
       return stack.peek().getFqn();
     }
@@ -2574,8 +2571,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   
   private class EnclosingDeclaredType extends Enclosing {
     private int initializerCount;
-    private int anonymousClassCount;
     
+    private Map<ITypeBinding, String> anonymousClassMap;
     private Map<String, String> localClassMap;
 
     private EnclosingDeclaredType(String fqn) {
@@ -2590,8 +2587,18 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       return fqn + ".initializer-" + ++initializerCount;
     }
     
-    public String getAnonymousClassFqn() {
-      return fqn + "$" + ++anonymousClassCount;
+    public String createAnonymousClassFqn(ITypeBinding binding) {
+      if (anonymousClassMap == null) {
+        anonymousClassMap = new HashMap<>();
+      }
+      String anonFqn = anonymousClassMap.get(binding);
+      if (anonFqn == null) {
+        anonFqn = fqn + "$" + (anonymousClassMap.size() + 1);
+        anonymousClassMap.put(binding, anonFqn);
+      } else {
+        logger.severe("Attempt to create anonymous class fqn twice: " + binding.getBinaryName());
+      }
+      return anonFqn;
     }
     
     public String createLocalClassFqn(String name, String uniqueID) {

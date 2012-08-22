@@ -88,9 +88,13 @@ public class TypeModelFactory {
         Entity.ENUM_CONSTANT, 
         Entity.FIELD,
         Entity.INITIALIZER,
+        Entity.PARAMETER,
+        Entity.LOCAL_VARIABLE,
         Entity.PARAMETERIZED_TYPE,
         Entity.ARRAY,
         Entity.TYPE_VARIABLE,
+        Entity.DUPLICATE,
+        Entity.VIRTUAL_DUPLICATE,
         Entity.WILDCARD);
     protected static ResultConstructor2<ModeledEntity> ENTITY_CONSTRUCTOR = new ResultConstructor2<ModeledEntity>() {
       @Override
@@ -128,8 +132,9 @@ public class TypeModelFactory {
                 result.getResult(EntitiesTable.RAW_PARAMS));
           case FIELD:
           case ENUM_CONSTANT:
-            return new ModeledField(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, fileID, projectID);
           case INITIALIZER:
+          case PARAMETER:
+          case LOCAL_VARIABLE:
             return new ModeledStructuralEntity(entityID, result.getResult(EntitiesTable.MODIFIERS), fqn, type, fileID, projectID);
           case PACKAGE:
             return new ModeledStructuralEntity(entityID, null, fqn, type, fileID, projectID);
@@ -142,6 +147,9 @@ public class TypeModelFactory {
             return new ModeledParametrizedType(entityID, fqn, projectID);
           case ARRAY:
             return new ModeledArrayType(entityID, fqn, projectID);
+          case DUPLICATE:
+          case VIRTUAL_DUPLICATE:
+            return new ModeledDuplicate(entityID, fqn, type, projectID);
           default:
             return null;
         }
@@ -227,6 +235,12 @@ public class TypeModelFactory {
         @Override
         protected void process(ModeledArrayType lhs, ModeledEntity rhs) {
           lhs.setElementType(rhs);
+        }
+      });
+      RELATIONS.put(Relation.MATCHES, new RelationProcessor<ModeledDuplicate, ModeledEntity>(Relation.MATCHES, ModeledDuplicate.class, ModeledEntity.class, true) {
+        @Override
+        protected void process(ModeledDuplicate lhs, ModeledEntity rhs) {
+          lhs.addMatch(rhs);
         }
       });
     }

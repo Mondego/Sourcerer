@@ -180,12 +180,10 @@ public class JavaLibraryTypeModel {
   }
   
   synchronized ModeledEntity getEntity(String fqn) {
-//    logger.info("JavaLibrary getEntity " + fqn);
     return entities.get(fqn);
   }
   
   synchronized ModeledEntity getVirtualEntity(String fqn) {
-//    logger.info("JavaLibrary getVirtualEntity " + fqn);
     // Try the map
     if (entities.containsKey(fqn)) {
       return entities.get(fqn);
