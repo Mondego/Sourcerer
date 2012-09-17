@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.utils.db.internal;
 
 import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 
+import java.io.UnsupportedEncodingException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -360,8 +361,13 @@ class SelectQueryImpl implements SelectQuery {
             throw new IllegalArgumentException("Column not in select: " + selectable);
           } else {
             try {
-              return selectable.from(result.getString(index));
-            } catch (SQLException e) {
+              byte[] bytes = result.getBytes(index);
+              if (bytes == null) {
+                return selectable.from(null);
+              } else {
+                return selectable.from(new String(bytes, "UTF-8"));
+              }
+            } catch (SQLException | UnsupportedEncodingException e) {
               logger.log(Level.SEVERE, "Error getting result.", e);
             }
           }

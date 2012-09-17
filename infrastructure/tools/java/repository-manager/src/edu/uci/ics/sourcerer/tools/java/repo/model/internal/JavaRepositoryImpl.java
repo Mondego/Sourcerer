@@ -89,6 +89,9 @@ public final class JavaRepositoryImpl extends AbstractJavaRepository<JavaProject
   
   public JarFileImpl getJarFile(ContentFile file) {
     String hash = FileUtils.computeHash(file.getFile().toFile());
+    if (hash == null) {
+      return null;
+    }
     if (mavenJarIndex == null) {
       loadMavenJarIndex();
     }

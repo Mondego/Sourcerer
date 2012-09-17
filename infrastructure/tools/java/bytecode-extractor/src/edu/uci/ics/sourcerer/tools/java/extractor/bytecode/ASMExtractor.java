@@ -104,28 +104,26 @@ public class ASMExtractor implements Closeable {
       while (en.hasMoreElements()) {
         JarEntry entry = en.nextElement();
         if (entry.getName().endsWith(".class")) {
-          String pkgFqn = convertNameToFqn(entry.getName());
-          location = new Location(pkgFqn, null, null, null);
-          int last = pkgFqn.lastIndexOf('.', pkgFqn.lastIndexOf('.') - 1);
-          String name = pkgFqn.substring(last + 1);
-          if (last == -1) {
-            logger.severe("No pkg for: " + entry.getName());
-            pkgFqn = "default";
-          } else {
-            pkgFqn = pkgFqn.substring(0, last);
-          }
+//          String pkgFqn = convertNameToFqn(entry.getName());
+//          location = new Location(pkgFqn, null, null, null);
+//          int last = pkgFqn.lastIndexOf('.', pkgFqn.lastIndexOf('.') - 1);
+//          String name = pkgFqn.substring(last + 1);
+//          if (last == -1) {
+//            logger.severe("No pkg for: " + entry.getName());
+//            pkgFqn = "default";
+//          } else {
+//            pkgFqn = pkgFqn.substring(0, last);
+//          }
           
-          entityWriter.writeEntity(Entity.PACKAGE, pkgFqn, 0, null, null);
+//          entityWriter.writeEntity(Entity.PACKAGE, pkgFqn, 0, null, null);
           
-          fqnStack.push(pkgFqn, Entity.PACKAGE);
+//          fqnStack.push(pkgFqn, Entity.PACKAGE);
           try {
             ClassReader reader = new ClassReader(jar.getInputStream(entry));
             reader.accept(classVisitor, 0);
           } catch (Exception e) {
             logger.log(Level.SEVERE, "Error reading class file: " + entry.getName(), e);
           }
-          
-          fileWriter.writeFile(File.CLASS, name, null, location.getClassFile());
           
           fqnStack.pop();
           location = null;
@@ -140,16 +138,17 @@ public class ASMExtractor implements Closeable {
     FindBugsRunner.runFindBugs(file, writers.getOutput());
   }
   
-  public void extract(String pkg, String name, byte[] bytes) {
-    location = new Location(pkg + "." + name, null, null, null);
-    entityWriter.writeEntity(Entity.PACKAGE, pkg, 0, null, null);
+  public void extract(byte[] bytes) {
+//    location = new Location(pkg + "." + name, null, null, null);
+//    entityWriter.writeEntity(Entity.PACKAGE, pkg, 0, null, null);
     
-    fqnStack.push(pkg, Entity.PACKAGE);
+//    fqnStack.push(pkg, Entity.PACKAGE);
     
     ClassReader reader = new ClassReader(bytes);
     reader.accept(classVisitor, 0);
     
-    fileWriter.writeFile(File.CLASS, name, null, location.getClassFile());
+//    fileWriter.writeFile(File.CLASS, name, null, location.getClassFile());
+    location = null;
     
     fqnStack.pop();
   }
@@ -246,6 +245,26 @@ public class ASMExtractor implements Closeable {
     
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+      // Make sure location is initialized
+      if (location == null) {
+        String fileName = null;
+        String classFile = name.replace('/', '.') + ".class";
+        location = new Location(classFile, null, null, null);
+        
+        int idx = name.lastIndexOf('/');
+        if (idx >= 0) {
+          fileName = name.substring(idx + 1) + ".class";
+          String pkg = classFile.substring(0, idx);
+          entityWriter.writeEntity(Entity.PACKAGE, pkg, 0, null, null);
+          fqnStack.push(pkg, Entity.PACKAGE);
+        } else {
+          fileName = name + ".class";
+          entityWriter.writeEntity(Entity.PACKAGE, "default", 0, null, null);
+          fqnStack.push("default", Entity.PACKAGE);
+        }
+        
+        fileWriter.writeFile(File.CLASS, fileName, null, location.getClassFile());
+      }
       // Get the type
       Entity type = null;
       if (access == 0x1600) {
@@ -354,7 +373,7 @@ public class ASMExtractor implements Closeable {
       // Write the entity
       entityWriter.writeEntity(type, fqn, access & FIELD_ACCESS_MASK, null, location);
       
-      // Write the inside relation
+      // Write the contains relation
       relationWriter.writeRelation(Relation.CONTAINS, fqnStack.getFqn(), fqn, location);
       
       // Write the holds relation

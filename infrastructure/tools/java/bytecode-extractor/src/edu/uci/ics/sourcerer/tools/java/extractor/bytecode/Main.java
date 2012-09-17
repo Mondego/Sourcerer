@@ -31,7 +31,7 @@ public class Main {
     @Override
     protected void action() {
       ASMExtractor extractor = new ASMExtractor(new WriterBundle());
-      extractor.extract("default", "Foo", FileUtils.getFileAsByteArray(new File("/home/jossher/research/Sourcerer/Foo.class")));
+      extractor.extract(FileUtils.getFileAsByteArray(new File("/home/jossher/research/Sourcerer/Foo.class")));
     }
   };
   public static void main(String[] args) {

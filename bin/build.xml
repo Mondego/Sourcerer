@@ -932,7 +932,7 @@ W::::::W                           W::::::W                b:::::b              
             WWW             WWW            eeeeeeeeeeeeee  bbbbbbbbbbbbbbbb     sssssssssss    iiiiiiii         ttttttttttt      eeeeeeeeeeeeee
 -->
 
-	<target name="package-website">
+	<target name="package-website" description="Package the website">
 		<zip destfile="${dist}/website.zip" basedir="${website}" />
 	</target>
 

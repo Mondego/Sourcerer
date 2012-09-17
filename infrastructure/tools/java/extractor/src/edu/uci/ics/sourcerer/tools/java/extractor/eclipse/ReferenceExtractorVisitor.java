@@ -2572,6 +2572,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   private class EnclosingDeclaredType extends Enclosing {
     private int initializerCount;
     
+    private int nullAnonymousClassCount = 0;
     private Map<ITypeBinding, String> anonymousClassMap;
     private Map<String, String> localClassMap;
 
@@ -2588,17 +2589,21 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     }
     
     public String createAnonymousClassFqn(ITypeBinding binding) {
-      if (anonymousClassMap == null) {
-        anonymousClassMap = new HashMap<>();
-      }
-      String anonFqn = anonymousClassMap.get(binding);
-      if (anonFqn == null) {
-        anonFqn = fqn + "$" + (anonymousClassMap.size() + 1);
-        anonymousClassMap.put(binding, anonFqn);
+      if (binding == null) {
+        return fqn + "$" + --nullAnonymousClassCount;
       } else {
-        logger.severe("Attempt to create anonymous class fqn twice: " + binding.getBinaryName());
+        if (anonymousClassMap == null) {
+          anonymousClassMap = new HashMap<>();
+        }
+        String anonFqn = anonymousClassMap.get(binding);
+        if (anonFqn == null) {
+          anonFqn = fqn + "$" + (anonymousClassMap.size() + 1);
+          anonymousClassMap.put(binding, anonFqn);
+        } else {
+          logger.severe("Attempt to create anonymous class fqn twice: " + binding.getBinaryName());
+        }
+        return anonFqn;
       }
-      return anonFqn;
     }
     
     public String createLocalClassFqn(String name, String uniqueID) {

@@ -117,7 +117,7 @@ public final class ParallelDatabaseImporter {
     importMavenJars(repo, new ImporterFactory<ExtractedJarFile>() {
       @Override
       public String message() {
-        return "entity import";
+        return "maven entity import";
       }
       
       @Override
@@ -129,7 +129,7 @@ public final class ParallelDatabaseImporter {
     importProjectJars(repo, new ImporterFactory<ExtractedJarFile>() {
       @Override
       public String message() {
-        return "entity import";
+        return "project entity import";
       }
       
       @Override
@@ -145,7 +145,7 @@ public final class ParallelDatabaseImporter {
     importMavenJars(repo, new ImporterFactory<ExtractedJarFile>() {
       @Override
       public String message() {
-        return "structural relation import";
+        return "maven structural relation import";
       }
       
       @Override
@@ -157,7 +157,7 @@ public final class ParallelDatabaseImporter {
     importProjectJars(repo, new ImporterFactory<ExtractedJarFile>() {
       @Override
       public String message() {
-        return "structural relation import";
+        return "project structural relation import";
       }
       
       @Override

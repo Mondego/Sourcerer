@@ -185,7 +185,6 @@ public class ProjectTypeModel {
   }
   
   private ModeledEntity getTypeEntity(String fqn) {
-    logger.info("getTypeEntity: " + fqn);
     if (TypeUtils.isArray(fqn)) {
       Pair<String, Integer> arrayInfo = TypeUtils.breakArray(fqn);
       
