@@ -37,73 +37,61 @@ import edu.uci.ics.sourcerer.tools.java.model.extracted.UsedJarEX;
 import edu.uci.ics.sourcerer.util.CachedReference;
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializable;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ReaderBundle {
   private final File input;
+  private final File zip;
   
-  private CachedReference<Collection<EntityEX>> entities = new CachedReference<Collection<EntityEX>>() {
-    @Override
-    protected Collection<EntityEX> create() {
-      return ReaderBundle.this.get(EntityEX.class, new File(input, EntityEX.ENTITY_FILE.getValue()));
+  private class ReaderReference<T extends SimpleSerializable> extends CachedReference<Collection<T>> {
+    private final Class<T> klass;
+    private final String entryName;
+    
+    private ReaderReference(Class<T> klass, Argument<String> entry) {
+      this.klass = klass;
+      this.entryName = entry.getValue();
     }
-  };
-  private CachedReference<Collection<FileEX>> files = new CachedReference<Collection<FileEX>>() {
+    
     @Override
-    protected Collection<FileEX> create() {
-      return ReaderBundle.this.get(FileEX.class, new File(input, FileEX.FILE_FILE.getValue()));
+    protected Collection<T> create() {
+      return ReaderBundle.this.get(klass, entryName);
     }
-  };
-  private CachedReference<Collection<LocalVariableEX>> localVariables = new CachedReference<Collection<LocalVariableEX>>() {
-    @Override
-    protected Collection<LocalVariableEX> create() {
-      return ReaderBundle.this.get(LocalVariableEX.class, new File(input, LocalVariableEX.LOCAL_VARIABLE_FILE.getValue()));
+    
+    protected Iterable<T> getTransient() {
+      Collection<T> result = getIfCached();
+      if (result == null) {
+        return ReaderBundle.this.getTransient(klass, entryName);
+      } else {
+        return result;
+      }
     }
-  };
-  private CachedReference<Collection<RelationEX>> relations = new CachedReference<Collection<RelationEX>>() {
-    @Override
-    protected Collection<RelationEX> create() {
-      return ReaderBundle.this.get(RelationEX.class, new File(input, RelationEX.RELATION_FILE.getValue()));
-    }
-  };
-  private CachedReference<Collection<ProblemEX>> problems = new CachedReference<Collection<ProblemEX>>() {
-    @Override
-    protected Collection<ProblemEX> create() {
-      return ReaderBundle.this.get(ProblemEX.class, new File(input, ProblemEX.PROBLEM_FILE.getValue()));
-    }
-  };
-  private CachedReference<Collection<ImportEX>> imports = new CachedReference<Collection<ImportEX>>() {
-    @Override
-    protected Collection<ImportEX> create() {
-      return ReaderBundle.this.get(ImportEX.class, new File(input, ImportEX.IMPORT_FILE.getValue()));
-    }
-  };
-  private CachedReference<Collection<CommentEX>> comments = new CachedReference<Collection<CommentEX>>() {
-    @Override
-    protected Collection<CommentEX> create() {
-      return ReaderBundle.this.get(CommentEX.class, new File(input, CommentEX.COMMENT_FILE.getValue()));
-    }
-  };
-  private CachedReference<Collection<UsedJarEX>> usedJars = new CachedReference<Collection<UsedJarEX>>() {
-    @Override
-    protected Collection<UsedJarEX> create() {
-      return ReaderBundle.this.get(UsedJarEX.class, new File(input, UsedJarEX.USED_JAR_FILE.getValue()));
-    }
-  };
-  private CachedReference<Collection<MissingTypeEX>> missingTypes = new CachedReference<Collection<MissingTypeEX>>() {
-    @Override
-    protected Collection<MissingTypeEX> create() {
-      return ReaderBundle.this.get(MissingTypeEX.class, new File(input, MissingTypeEX.MISSING_TYPE_FILE.getValue()));
-    }
-  };
-  
-  public ReaderBundle(File input) {
-    this.input = input;
   }
   
-  private <T extends SimpleSerializable> Collection<T> get(Class<T> klass, File file) {
+  private ReaderReference<EntityEX> entities = new ReaderReference<EntityEX>(EntityEX.class, EntityEX.ENTITY_FILE);
+  private ReaderReference<FileEX> files = new ReaderReference<FileEX>(FileEX.class, FileEX.FILE_FILE);
+  private ReaderReference<LocalVariableEX> localVariables = new ReaderReference<LocalVariableEX>(LocalVariableEX.class, LocalVariableEX.LOCAL_VARIABLE_FILE);
+  private ReaderReference<RelationEX> relations = new ReaderReference<RelationEX>(RelationEX.class, RelationEX.RELATION_FILE);
+  private ReaderReference<ProblemEX> problems = new ReaderReference<ProblemEX>(ProblemEX.class, ProblemEX.PROBLEM_FILE);
+  private ReaderReference<ImportEX> imports = new ReaderReference<ImportEX>(ImportEX.class, ImportEX.IMPORT_FILE);
+  private ReaderReference<CommentEX> comments = new ReaderReference<CommentEX>(CommentEX.class, CommentEX.COMMENT_FILE);
+  private ReaderReference<UsedJarEX> usedJars = new ReaderReference<UsedJarEX>(UsedJarEX.class, UsedJarEX.USED_JAR_FILE);
+  private ReaderReference<MissingTypeEX> missingTypes = new ReaderReference<MissingTypeEX>(MissingTypeEX.class, MissingTypeEX.MISSING_TYPE_FILE);
+  
+  private ReaderBundle(File input, File zip) {
+    this.input = input;
+    this.zip = zip;
+  }
+  
+  public static ReaderBundle create(File input, File zip) {
+    return new ReaderBundle(input, zip); 
+  }
+  
+  private <T extends SimpleSerializable> Collection<T> get(Class<T> klass, String fileName) {
+    // Check for the uncompressed file
+    File file = new File(input, fileName);
     if (file.exists()) {
       try {
         return IOUtils.deserialize(klass, file);
@@ -112,11 +100,23 @@ public class ReaderBundle {
         return Collections.emptyList();
       }
     } else {
-      return Collections.emptyList();
+      // Check for the compressed file
+      if (zip.exists()) {
+        try {
+          return IOUtils.deserialize(klass, file, fileName);
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Error reading extracted file.", e);
+          return Collections.emptyList();
+        }
+      } else {
+        return Collections.emptyList();
+      }
     }
   }
   
-  private <T extends SimpleSerializable> Iterable<T> getTransient(Class<T> klass, File file) {
+  private <T extends SimpleSerializable> Iterable<T> getTransient(Class<T> klass, String fileName) {
+    // Check for the uncompressed file
+    File file = new File(input, fileName);
     if (file.exists()) {
       try {
         return IOUtils.deserialize(klass, file, true);
@@ -125,7 +125,17 @@ public class ReaderBundle {
         return Collections.emptyList();
       }
     } else {
-      return Collections.emptyList();
+      // Check for the compressed file (not transient)
+      if (zip.exists()) {
+        try {
+          return IOUtils.deserialize(klass, file, fileName);
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Error reading extracted file.", e);
+          return Collections.emptyList();
+        }
+      } else {
+        return Collections.emptyList();
+      }
     }
   }
   
@@ -134,11 +144,7 @@ public class ReaderBundle {
   }
   
   public Iterable<EntityEX> getTransientEntities() {
-    Iterable<EntityEX> result = entities.getIfCached();
-    if (result == null) {
-      result = getTransient(EntityEX.class, new File(input, EntityEX.ENTITY_FILE.getValue()));
-    }
-    return result;
+    return entities.getTransient();
   }
   
   public Collection<FileEX> getFiles() {
@@ -146,11 +152,7 @@ public class ReaderBundle {
   }
   
   public Iterable<FileEX> getTransientFiles() {
-    Iterable<FileEX> result = files.getIfCached();
-    if (result == null) {
-      result = getTransient(FileEX.class, new File(input, FileEX.FILE_FILE.getValue()));
-    }
-    return result;
+    return files.getTransient();
   }
   
   public Collection<LocalVariableEX> getLocalVariables() {
@@ -158,11 +160,7 @@ public class ReaderBundle {
   }
   
   public Iterable<LocalVariableEX> getTransientLocalVariables() {
-    Iterable<LocalVariableEX> result = localVariables.getIfCached();
-    if (result == null) {
-      result = getTransient(LocalVariableEX.class, new File(input, LocalVariableEX.LOCAL_VARIABLE_FILE.getValue()));
-    }
-    return result;
+    return localVariables.getTransient();
   }
   
   public Collection<RelationEX> getRelations() {
@@ -170,11 +168,7 @@ public class ReaderBundle {
   }
   
   public Iterable<RelationEX> getTransientRelations() {
-    Iterable<RelationEX> result = relations.getIfCached();
-    if (result == null) {
-      result = getTransient(RelationEX.class, new File(input, RelationEX.RELATION_FILE.getValue()));
-    }
-    return result;
+    return relations.getTransient();
   }
   
   public Collection<ProblemEX> getProblems() {
@@ -182,11 +176,7 @@ public class ReaderBundle {
   }
   
   public Iterable<ProblemEX> getTransientProblems() {
-    Iterable<ProblemEX> result = problems.getIfCached();
-    if (result == null) {
-      result = getTransient(ProblemEX.class, new File(input, ProblemEX.PROBLEM_FILE.getValue()));
-    }
-    return result;
+    return problems.getTransient();
   }
   
   public Collection<ImportEX> getImports() {
@@ -194,11 +184,7 @@ public class ReaderBundle {
   }
   
   public Iterable<ImportEX> getTransientImports() {
-    Iterable<ImportEX> result = imports.getIfCached();
-    if (result == null) {
-      result = getTransient(ImportEX.class, new File(input, ImportEX.IMPORT_FILE.getValue()));
-    }
-    return result;
+    return imports.getTransient();
   }
   
   public Collection<CommentEX> getComments() {
@@ -206,11 +192,7 @@ public class ReaderBundle {
   }
   
   public Iterable<CommentEX> getTransientComments() {
-    Iterable<CommentEX> result = comments.getIfCached();
-    if (result == null) {
-      result = getTransient(CommentEX.class, new File(input, CommentEX.COMMENT_FILE.getValue()));
-    }
-    return result;
+    return comments.getTransient();
   }
   
   public Collection<UsedJarEX> getUsedJars() {
@@ -218,11 +200,7 @@ public class ReaderBundle {
   }
   
   public Iterable<UsedJarEX> getTransientUsedJars() {
-    Iterable<UsedJarEX> result = usedJars.getIfCached();
-    if (result == null) {
-      result = getTransient(UsedJarEX.class, new File(input, UsedJarEX.USED_JAR_FILE.getValue()));
-    }
-    return result;
+    return usedJars.getTransient();
   }
   
   public Collection<MissingTypeEX> getMissingTypes() {
@@ -230,10 +208,6 @@ public class ReaderBundle {
   }
   
   public Iterable<MissingTypeEX> getTransientMissingTypes() {
-    Iterable<MissingTypeEX> result = missingTypes.getIfCached();
-    if (result == null) {
-      result = getTransient(MissingTypeEX.class, new File(input, MissingTypeEX.MISSING_TYPE_FILE.getValue()));
-    }
-    return result;
+    return missingTypes.getTransient();
   }
 }

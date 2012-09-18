@@ -189,8 +189,8 @@ public class CoverageCalculator {
         String loc = externalProject.getLocation().toString();
         ExtractedJavaProject missingProject = missingRepo.getProject(externalProject.getLocation());
         
-        ReaderBundle externalBundle = new ReaderBundle(externalProject.getExtractionDir().toFile());
-        ReaderBundle missingBundle = new ReaderBundle(missingProject.getExtractionDir().toFile());
+        ReaderBundle externalBundle = ReaderBundle.create(externalProject.getExtractionDir().toFile(), externalProject.getCompressedFile().toFile());
+        ReaderBundle missingBundle = ReaderBundle.create(missingProject.getExtractionDir().toFile(), missingProject.getCompressedFile().toFile());
         
         int externalCount = 0;
         int missingCount = 0;

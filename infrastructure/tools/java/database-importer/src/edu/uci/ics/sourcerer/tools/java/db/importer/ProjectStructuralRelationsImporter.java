@@ -98,7 +98,7 @@ class ProjectStructuralRelationsImporter extends StructuralRelationsImporter {
           stateValue.setValue(ProjectState.BEGIN_STRUCTURAL.name());
           updateState.execute();
           
-          ReaderBundle reader = new ReaderBundle(project.getExtractionDir().toFile());
+          ReaderBundle reader = ReaderBundle.create(project.getExtractionDir().toFile(), project.getCompressedFile().toFile());
           
           Collection<Integer> usedJars = new HashSet<>();
           for (UsedJarEX used : reader.getTransientUsedJars()) {

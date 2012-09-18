@@ -86,7 +86,7 @@ class JarReferentialRelationsImporter extends ReferentialRelationsImporter {
           stateValue.setValue(ProjectState.BEGIN_REFERENTIAL.name());
           updateState.execute();
           
-          ReaderBundle reader = new ReaderBundle(jar.getExtractionDir().toFile());
+          ReaderBundle reader = ReaderBundle.create(jar.getExtractionDir().toFile(), jar.getCompressedFile().toFile());
           insert(reader, projectID, Collections.<Integer>emptySet());
           
           stateValue.setValue(null);

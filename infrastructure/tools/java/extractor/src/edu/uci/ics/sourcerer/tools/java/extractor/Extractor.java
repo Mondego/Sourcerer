@@ -59,6 +59,7 @@ public final class Extractor {
   private Extractor() {}
 
   public static final Argument<Boolean> FORCE_REDO = new BooleanArgument("force-redo", false, "Redo all extractions, even if already completed.");
+  public static final Argument<Boolean> COMPRESS_OUTPUT = new BooleanArgument("compress-output", false, "Compress the output of the extractor.");
   
   public static enum JarType {
     LIBRARY,
@@ -128,6 +129,11 @@ public final class Extractor {
           extractedJar.reset(jar);
         } else {
           task.report("Library already extracted");
+          if (COMPRESS_OUTPUT.getValue() && !extractedJar.isCompressed()) {
+            task.start("Compressing output");
+            extractedJar.compress();
+            task.finish();
+          }
           continue;
         }
       } 
@@ -162,15 +168,20 @@ public final class Extractor {
         asmExtractor.extractJar(jar.getFile().toFile());
       }
       IOUtils.close(asmExtractor);
-        
+
+      // End the error logging
+      Logging.removeFileLogger(extractedJar.getExtractionDir().toFile());
+      
+      // Compress the output
+      if (COMPRESS_OUTPUT.getValue()) {
+        extractedJar.compress();
+      }
+      
       // Write the properties files
       ExtractedJarProperties properties = extractedJar.getProperties();
       properties.EXTRACTED.setValue(true);
       properties.HAS_SOURCE.setValue(hasSource);
       properties.save(); 
-
-      // End the error logging
-      Logging.removeFileLogger(extractedJar.getExtractionDir().toFile());
     }
     task.finish();
   }
@@ -207,6 +218,11 @@ public final class Extractor {
           extractedProject.reset(project);
         } else {
           task.report("Project already extracted");
+          if (COMPRESS_OUTPUT.getValue() && !extractedProject.isCompressed()) {
+            task.start("Compressing output");
+            extractedProject.compress();
+            task.finish();
+          }
           continue;
         }
       }
@@ -256,14 +272,20 @@ public final class Extractor {
       try (EclipseExtractor extractor = new EclipseExtractor(bundle)) {
         extractor.extractSourceFiles(sourceFiles);
       }
+
+      // End the error logging
+      Logging.removeFileLogger(extractedProject.getExtractionDir().toFile());
+
+      // Compress the output
+      if (COMPRESS_OUTPUT.getValue()) {
+        extractedProject.compress();
+      }
       
       // Write the properties files
       ExtractedJavaProjectProperties properties = extractedProject.getProperties();
       properties.EXTRACTED.setValue(true);
       properties.save();
       
-      // End the error logging
-      Logging.removeFileLogger(extractedProject.getExtractionDir().toFile());
     }
     task.finish();
     

@@ -87,7 +87,7 @@ class JarStructuralRelationsImporter extends StructuralRelationsImporter {
           stateValue.setValue(ProjectState.BEGIN_STRUCTURAL.name());
           updateState.execute();
           
-          ReaderBundle reader = new ReaderBundle(jar.getExtractionDir().toFile());
+          ReaderBundle reader = ReaderBundle.create(jar.getExtractionDir().toFile(), jar.getCompressedFile().toFile());
           insert(reader, projectID, Collections.<Integer>emptyList());
           
           stateValue.setValue(ProjectState.END_STRUCTURAL.name());

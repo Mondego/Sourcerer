@@ -55,7 +55,7 @@ public class PopularityCalculator {
     task.start("Processing projects for imports", "projects processed", 500);
     CountingFqnNode root = CountingFqnNode.createRoot();
     for (ExtractedJavaProject project : repo.getProjects()) {
-      ReaderBundle bundle = new ReaderBundle(project.getExtractionDir().toFile());
+      ReaderBundle bundle = ReaderBundle.create(project.getExtractionDir().toFile(), project.getCompressedFile().toFile());
       for (ImportEX imp : bundle.getTransientImports()) {
         root.add(imp.getImported(), project.getLocation().toString());
       }
@@ -140,7 +140,7 @@ public class PopularityCalculator {
     CountingFqnNode root = CountingFqnNode.createRoot();
     for (ExtractedJavaProject project : repo.getProjects()) {
       task.progress();
-      ReaderBundle bundle = new ReaderBundle(project.getExtractionDir().toFile());
+      ReaderBundle bundle = ReaderBundle.create(project.getExtractionDir().toFile(), project.getCompressedFile().toFile());
       for (MissingTypeEX missing : bundle.getTransientMissingTypes()) {
         count++;
         root.add(missing.getFqn(), project.getLocation().toString());

@@ -88,7 +88,7 @@ class ProjectEntitiesImporter extends EntitiesImporter {
             task.finish();
           }
           
-          ReaderBundle reader = new ReaderBundle(project.getExtractionDir().toFile());
+          ReaderBundle reader = ReaderBundle.create(project.getExtractionDir().toFile(), project.getCompressedFile().toFile());
           
           insert(reader, projectID);
           

@@ -18,10 +18,18 @@
 package edu.uci.ics.sourcerer.tools.java.repo.model.extracted;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.RepoFile;
+import edu.uci.ics.sourcerer.util.io.arguments.Argument;
+import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface Extracted {
+  public static Argument<String> COMPRESSED_OUTPUT = new StringArgument("compressed-output", "output.zip", "File containing the compressed output").permit();
+  
+  public boolean isCompressed();
+ 
+  public RepoFile getCompressedFile();
+  
   public RepoFile getExtractionDir();
 }

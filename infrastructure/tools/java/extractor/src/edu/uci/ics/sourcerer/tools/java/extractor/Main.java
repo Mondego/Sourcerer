@@ -80,49 +80,49 @@ public class Main implements IApplication {
       protected void action() {
         Extractor.extractJars(JarType.LIBRARY, ExtractionMethod.ECLIPSE);
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);
     
   public static final Command EXTRACT_LIBRARIES_ASM =
     new ExtractorCommand("extract-libraries-asm", "Extract the libraries using Asm.") {
       protected void action() {
         Extractor.extractJars(JarType.LIBRARY, ExtractionMethod.ASM);
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, FindBugsRunner.FINDBUGS_JAR);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT, FindBugsRunner.FINDBUGS_JAR);
     
   public static final Command EXTRACT_LIBRARIES =
     new ExtractorCommand("extract-libraries", "Extract the libraries using Eclipse and Asm.") {
       protected void action() {
         Extractor.extractJars(JarType.LIBRARY, ExtractionMethod.ASM_ECLIPSE);
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);
   
   public static final Command EXTRACT_JARS_ECLIPSE =
     new ExtractorCommand("extract-jars-eclipse", "Extract the jars using Eclipse.") {
       protected void action() {
         Extractor.extractJars(JarType.PROJECT, ExtractionMethod.ECLIPSE);
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);
     
   public static final Command EXTRACT_JARS_ASM =
     new ExtractorCommand("extract-jars-asm", "Extract the jars using Asm.") {
       protected void action() {
         Extractor.extractJars(JarType.PROJECT, ExtractionMethod.ASM);
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, FindBugsRunner.FINDBUGS_JAR);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT, FindBugsRunner.FINDBUGS_JAR);
   
   public static final Command EXTRACT_JARS =
     new ExtractorCommand("extract-jars", "Extract the jars using Eclipse and Asm.") {
       protected void action() {
         Extractor.extractJars(JarType.PROJECT, ExtractionMethod.ASM_ECLIPSE);
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);
     
   public static final Command EXTRACT_PROJECTS = 
     new ExtractorCommand("extract-projects", "Extract the projects.") {
       protected void action() {
         Extractor.extractProjects();
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.INCLUDE_PROJECT_JARS, Extractor.RESOLVE_MISSING_TYPES);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT, Extractor.INCLUDE_PROJECT_JARS, Extractor.RESOLVE_MISSING_TYPES);
     
   public static final Command IDENTIFY_EXTERNAL_TYPES =
     new Command("identify-external-types", "Identified the external types") {
@@ -131,7 +131,7 @@ public class Main implements IApplication {
         WriterBundle.IMPORT_WRITER.setValue(ImportWriterImpl.class);
         MissingTypeIdentifier.identifyExternalTypes();
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO);
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);
     
   public static final Command IDENTIFY_MISSING_TYPES =
     new Command("identify-missing-types", "Identified the missing types") {
@@ -140,7 +140,7 @@ public class Main implements IApplication {
         WriterBundle.IMPORT_WRITER.setValue(ImportWriterImpl.class);
         MissingTypeIdentifier.identifyMissingTypes();
       }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO);       
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);       
   		  
   @Override
   public Object start(IApplicationContext context) throws Exception {

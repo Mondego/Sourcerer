@@ -17,6 +17,17 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.model.extracted.internal;
 
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.AbstractRepoProject;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.ProjectLocationImpl;
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
@@ -24,13 +35,17 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.JavaProject;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJavaProjectProperties;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaProject;
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJavaRepository;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 class ExtractedJavaProjectImpl extends AbstractRepoProject<ExtractedJavaRepositoryImpl, ExtractedJavaProjectProperties> implements ModifiableExtractedJavaProject {
+  private final RepoFileImpl zip;
+  
   private ExtractedJavaProjectImpl(ExtractedJavaRepositoryImpl repo, ProjectLocationImpl loc) {
     super(repo, loc);
+    zip = loc.getProjectRoot().getChild(COMPRESSED_OUTPUT.getValue());
   }
 
   static ExtractedJavaProjectImpl make(ExtractedJavaRepositoryImpl repo, ProjectLocationImpl loc) {
@@ -44,6 +59,47 @@ class ExtractedJavaProjectImpl extends AbstractRepoProject<ExtractedJavaReposito
   @Override
   public ModifiableExtractedJavaRepository getRepository() {
     return repo;
+  }
+  
+  @Override
+  public void compress() {
+    Collection<File> compressed = new LinkedList<>();
+    
+    try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zip.toFile()))) {
+      zos.setMethod(ZipOutputStream.DEFLATED);
+      zos.setLevel(9);
+      
+      // Look at the files in the directory, and only compress those that end in .txt or .xml
+      for (File file : loc.getProjectRoot().toFile().listFiles()) {
+        if (file.isFile() && (file.getName().endsWith(".txt") || file.getName().endsWith(".xml"))) {
+          ZipEntry entry = new ZipEntry(file.getName());
+          zos.putNextEntry(entry);
+          FileUtils.writeFileToStream(file, zos);
+          zos.closeEntry();
+          compressed.add(file);
+        }
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error compressing output.", e);
+      return;
+    }
+    
+    // Delete the compressed files
+    for (File file : compressed) {
+      if (!file.delete()) {
+        logger.severe("Unable to delete: " + file.getPath());
+      }
+    }
+  }
+  
+  @Override
+  public RepoFileImpl getCompressedFile() {
+    return zip;
+  }
+  
+  @Override
+  public boolean isCompressed() {
+    return zip.exists();
   }
   
   @Override

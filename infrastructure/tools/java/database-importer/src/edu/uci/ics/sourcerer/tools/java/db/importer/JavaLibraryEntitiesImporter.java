@@ -90,7 +90,7 @@ class JavaLibraryEntitiesImporter extends EntitiesImporter {
             task.finish();
           }
           
-          ReaderBundle reader = new ReaderBundle(lib.getExtractionDir().toFile());
+          ReaderBundle reader = ReaderBundle.create(lib.getExtractionDir().toFile(), lib.getCompressedFile().toFile());
           
           insert(reader, projectID);
           

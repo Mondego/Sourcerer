@@ -137,7 +137,7 @@ public class EclipseExtractor implements Closeable {
         } else {
           parentTypes.add(classFile);
         }
-      } catch (JavaModelException | IllegalArgumentException e) {
+      } catch (Exception e) {
         logger.log(Level.SEVERE, classFile.getType().getFullyQualifiedName(), e);
         sourceFailed.add(classFile.getType().getFullyQualifiedName());
         extractClassFile(classFile);

@@ -117,7 +117,7 @@ public class BytecodeMetricsImporter extends DatabaseImporter {
           
           if (fileMap.size() > 0) {
             BatchInserter inserter = exec.makeInFileInserter(tempDir, FileMetricsTable.TABLE);
-            ReaderBundle reader = new ReaderBundle(jar.getExtractionDir().toFile());
+            ReaderBundle reader = ReaderBundle.create(jar.getExtractionDir().toFile(), jar.getCompressedFile().toFile());
             
             task.start("Adding bytecode metrics for " + fileMap.size() + " class files", "files processed");
             EnumSet<Metric> metrics = EnumSet.noneOf(Metric.class);

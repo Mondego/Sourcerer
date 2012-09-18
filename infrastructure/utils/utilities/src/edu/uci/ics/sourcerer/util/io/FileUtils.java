@@ -26,6 +26,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -317,6 +318,19 @@ public class FileUtils {
       return null;
     } finally {
       IOUtils.close(is);
+    }
+  }
+  
+  public static void writeFileToStream(File file, OutputStream os) throws IOException {
+    if (file == null) {
+      return;
+    }
+    try (InputStream is = new FileInputStream(file)) {
+      byte[] buff = new byte[1024];
+      int read = 0;
+      while ((read = is.read(buff)) != -1) {
+        os.write(buff, 0, read);
+      }
     }
   }
   

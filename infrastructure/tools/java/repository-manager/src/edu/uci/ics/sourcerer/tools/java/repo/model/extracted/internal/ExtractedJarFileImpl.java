@@ -17,7 +17,16 @@
  */
 package edu.uci.ics.sourcerer.tools.java.repo.model.extracted.internal;
 
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.internal.RepoFileImpl;
 import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
@@ -26,29 +35,32 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarPropert
 import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtractedJarFile;
 import edu.uci.ics.sourcerer.tools.java.repo.model.internal.IJar;
 import edu.uci.ics.sourcerer.tools.java.repo.model.internal.JarFileImpl;
+import edu.uci.ics.sourcerer.util.io.FileUtils;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class ExtractedJarFileImpl implements ModifiableExtractedJarFile, IJar {
-  private RepoFileImpl dir;
+  private final RepoFileImpl dir;
+  private final RepoFileImpl zip;
   
   private ExtractedJarProperties properties;
   
   private ExtractedJarFileImpl(RepoFileImpl dir) {
     this.dir = dir;
+    this.zip = dir.getChild(COMPRESSED_OUTPUT.getValue());
     this.properties = new ExtractedJarProperties(dir.getChild(JarFileImpl.JAR_PROPERTIES));
   }
   
-  static ExtractedJarFileImpl make(RepoFileImpl dir, JarProperties properties) {
+  static ExtractedJarFileImpl create(RepoFileImpl dir, JarProperties properties) {
     ExtractedJarFileImpl jar = new ExtractedJarFileImpl(dir);
     jar.properties.copy(properties);
     jar.properties.save();
     return jar;
   }
   
-  static ExtractedJarFileImpl make(RepoFileImpl dir) {
+  static ExtractedJarFileImpl create(RepoFileImpl dir) {
     ExtractedJarFileImpl jar = new ExtractedJarFileImpl(dir);
     if (Boolean.TRUE.equals(jar.properties.EXTRACTED.getValue())) {
       return jar;
@@ -56,6 +68,47 @@ public class ExtractedJarFileImpl implements ModifiableExtractedJarFile, IJar {
       dir.delete();
       return null;
     }
+  }
+  
+  @Override
+  public void compress() {
+    Collection<File> compressed = new LinkedList<>();
+    
+    try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zip.toFile()))) {
+      zos.setMethod(ZipOutputStream.DEFLATED);
+      zos.setLevel(9);
+      
+      // Look at the files in the directory, and only compress those that end in .txt
+      for (File file : dir.toFile().listFiles()) {
+        if (file.isFile() && (file.getName().endsWith(".txt") || file.getName().endsWith(".xml"))) {
+          ZipEntry entry = new ZipEntry(file.getName());
+          zos.putNextEntry(entry);
+          FileUtils.writeFileToStream(file, zos);
+          zos.closeEntry();
+          compressed.add(file);
+        }
+      }
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, "Error compressing output.", e);
+      return;
+    }
+    
+    // Delete the compressed files
+    for (File file : compressed) {
+      if (!file.delete()) {
+        logger.severe("Unable to delete: " + file.getPath());
+      }
+    }
+  }
+  
+  @Override
+  public RepoFileImpl getCompressedFile() {
+    return zip;
+  }
+  
+  @Override
+  public boolean isCompressed() {
+    return zip.exists();
   }
   
   @Override
@@ -94,7 +147,7 @@ public class ExtractedJarFileImpl implements ModifiableExtractedJarFile, IJar {
     return new ObjectDeserializer<ExtractedJarFileImpl>() {
       @Override
       public ExtractedJarFileImpl deserialize(Scanner scanner) {
-        return make(dirDeserializer.deserialize(scanner));
+        return create(dirDeserializer.deserialize(scanner));
       }
     };
   }

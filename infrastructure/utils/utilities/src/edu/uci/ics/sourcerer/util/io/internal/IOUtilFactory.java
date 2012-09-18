@@ -19,6 +19,7 @@ package edu.uci.ics.sourcerer.util.io.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
@@ -46,5 +47,9 @@ public final class IOUtilFactory {
   
   public static SimpleDeserializer makeSimpleDeserializer(File file) throws IOException {
     return SimpleDeserializerImpl.create(file);
+  }
+  
+  public static SimpleDeserializer createSimpleDeserializer(InputStream is) throws IOException {
+    return SimpleDeserializerImpl.create(is);
   }
 }

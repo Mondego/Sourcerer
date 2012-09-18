@@ -88,7 +88,7 @@ class JavaLibraryStructuralRelationsImporter extends StructuralRelationsImporter
           stateValue.setValue(ProjectState.BEGIN_STRUCTURAL.name());
           updateState.execute();
           
-          ReaderBundle reader = new ReaderBundle(lib.getExtractionDir().toFile());
+          ReaderBundle reader = ReaderBundle.create(lib.getExtractionDir().toFile(), lib.getCompressedFile().toFile());
           insert(reader, projectID, Collections.<Integer>emptyList());
           
           stateValue.setValue(ProjectState.END_STRUCTURAL.name());

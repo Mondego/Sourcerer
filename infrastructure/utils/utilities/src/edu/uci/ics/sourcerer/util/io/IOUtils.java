@@ -24,6 +24,7 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -32,7 +33,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
@@ -134,6 +138,19 @@ public final class IOUtils {
   
   public static <T extends SimpleSerializable> Collection<T> deserialize(Class<T> klass, File file) throws IOException {
     return makeSimpleDeserializer(file).deserializeToCollection(klass);
+  }
+  
+  public static <T extends SimpleSerializable> Collection<T> deserialize(Class<T> klass, File zip, String entryName) throws IOException {
+    try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zip))) {
+      ZipEntry entry = null;
+      while ((entry = zis.getNextEntry()) != null) {
+        if (entryName.equals(entry.getName())) {
+          return IOUtilFactory.createSimpleDeserializer(zis).deserializeToCollection(klass);
+        }
+      }
+      logger.severe("Unable to locate entry " + entryName + " in " + zip.getPath());
+      return Collections.emptyList();
+    }
   }
   
   /**

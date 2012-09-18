@@ -22,6 +22,8 @@ import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -55,6 +57,10 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
   
   static SimpleDeserializerImpl create(File file) throws IOException {
     return new SimpleDeserializerImpl(file, IOUtils.createBufferedReader(file));
+  }
+  
+  static SimpleDeserializer create(InputStream is) throws IOException {
+    return new SimpleDeserializerImpl(new File("/InputStream"), new BufferedReader(new InputStreamReader(is)));
   }
   
   private <T extends CustomSerializable> EntryReader<T> positionForNext(ObjectDeserializer<T> deserializer) throws IOException {

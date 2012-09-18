@@ -54,7 +54,7 @@ public class ExternalAndMissingComparator {
       Set<String> missingExternalImports = new HashSet<>();
       
       {
-        ReaderBundle bundle = new ReaderBundle(externalProject.getExtractionDir().toFile());
+        ReaderBundle bundle = ReaderBundle.create(externalProject.getExtractionDir().toFile(), externalProject.getCompressedFile().toFile());
         for (ImportEX imp : bundle.getTransientImports()) {
           externalImports.add(imp.getImported());
         }
@@ -67,7 +67,7 @@ public class ExternalAndMissingComparator {
       
       ExtractedJavaProject missingProject = missing.getProject(externalProject.getLocation());
       {
-        ReaderBundle bundle = new ReaderBundle(missingProject.getExtractionDir().toFile());
+        ReaderBundle bundle = ReaderBundle.create(missingProject.getExtractionDir().toFile(), missingProject.getCompressedFile().toFile());
         for (ImportEX imp : bundle.getTransientImports()) {
           missingImports.add(imp.getImported());
         }

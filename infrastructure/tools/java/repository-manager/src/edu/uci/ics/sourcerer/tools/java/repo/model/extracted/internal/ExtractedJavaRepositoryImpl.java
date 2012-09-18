@@ -67,7 +67,7 @@ public final class ExtractedJavaRepositoryImpl extends AbstractJavaRepository<Ex
   
   @Override
   protected ExtractedJarFileImpl loadJar(RepoFileImpl dir) {
-    return ExtractedJarFileImpl.make(dir);
+    return ExtractedJarFileImpl.create(dir);
   }
   
   @Override
@@ -105,7 +105,7 @@ public final class ExtractedJavaRepositoryImpl extends AbstractJavaRepository<Ex
     ExtractedJarFileImpl result = getJarFile(jar.getProperties().HASH.getValue());
     if (result == null) {
       RepoFileImpl output = cast.getFile().getRoot().reroot(repoRoot);
-      result = ExtractedJarFileImpl.make(output, jar.getProperties());
+      result = ExtractedJarFileImpl.create(output, jar.getProperties());
       switch (result.getProperties().SOURCE.getValue()) {
         case JAVA_LIBRARY:
           libraryJarIndex.put(result.getProperties().HASH.getValue(), result);

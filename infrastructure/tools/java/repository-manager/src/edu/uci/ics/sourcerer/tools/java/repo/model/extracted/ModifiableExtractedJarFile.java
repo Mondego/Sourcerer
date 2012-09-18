@@ -23,5 +23,7 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.JarFile;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public interface ModifiableExtractedJarFile extends ExtractedJarFile {
+  public void compress();
+  
   public void reset(JarFile jar);
 }

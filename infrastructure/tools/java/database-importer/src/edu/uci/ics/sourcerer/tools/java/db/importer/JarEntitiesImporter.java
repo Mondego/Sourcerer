@@ -96,7 +96,7 @@ class JarEntitiesImporter extends EntitiesImporter {
             updateState.execute();
           }
           
-          ReaderBundle reader = new ReaderBundle(jar.getExtractionDir().toFile());
+          ReaderBundle reader = ReaderBundle.create(jar.getExtractionDir().toFile(), jar.getCompressedFile().toFile());
           
           insert(reader, projectID);
           
