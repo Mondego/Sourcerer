@@ -96,27 +96,47 @@ public class Main implements IApplication {
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);
   
-  public static final Command EXTRACT_JARS_ECLIPSE =
-    new ExtractorCommand("extract-jars-eclipse", "Extract the jars using Eclipse.") {
+  public static final Command EXTRACT_PROJECT_JARS_ECLIPSE =
+    new ExtractorCommand("extract-project-jars-eclipse", "Extract the jars using Eclipse.") {
       protected void action() {
         Extractor.extractJars(JarType.PROJECT, ExtractionMethod.ECLIPSE);
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);
     
-  public static final Command EXTRACT_JARS_ASM =
-    new ExtractorCommand("extract-jars-asm", "Extract the jars using Asm.") {
+  public static final Command EXTRACT_PROJECT_JARS_ASM =
+    new ExtractorCommand("extract-project-jars-asm", "Extract the jars using Asm.") {
       protected void action() {
         Extractor.extractJars(JarType.PROJECT, ExtractionMethod.ASM);
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT, FindBugsRunner.FINDBUGS_JAR);
   
-  public static final Command EXTRACT_JARS =
-    new ExtractorCommand("extract-jars", "Extract the jars using Eclipse and Asm.") {
+  public static final Command EXTRACT_PROJECT_JARS =
+    new ExtractorCommand("extract-project-jars", "Extract the jars using Eclipse and Asm.") {
       protected void action() {
         Extractor.extractJars(JarType.PROJECT, ExtractionMethod.ASM_ECLIPSE);
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);
     
+  public static final Command EXTRACT_MAVEN_JARS_ECLIPSE =
+    new ExtractorCommand("extract-maven-jars-eclipse", "Extract the jars using Eclipse.") {
+      protected void action() {
+        Extractor.extractJars(JarType.MAVEN, ExtractionMethod.ECLIPSE);
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);
+    
+  public static final Command EXTRACT_MAVEN_JARS_ASM =
+    new ExtractorCommand("extract-maven-jars-asm", "Extract the jars using Asm.") {
+      protected void action() {
+        Extractor.extractJars(JarType.MAVEN, ExtractionMethod.ASM);
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT, FindBugsRunner.FINDBUGS_JAR);
+  
+  public static final Command EXTRACT_MAVEN_JARS =
+    new ExtractorCommand("extract-maven-jars", "Extract the jars using Eclipse and Asm.") {
+      protected void action() {
+        Extractor.extractJars(JarType.MAVEN, ExtractionMethod.ASM_ECLIPSE);
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);
   public static final Command EXTRACT_PROJECTS = 
     new ExtractorCommand("extract-projects", "Extract the projects.") {
       protected void action() {

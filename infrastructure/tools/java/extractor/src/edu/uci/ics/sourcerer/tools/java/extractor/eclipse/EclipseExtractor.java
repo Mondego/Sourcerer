@@ -209,7 +209,7 @@ public class EclipseExtractor implements Closeable {
             }
           }
         }
-      } catch (JavaModelException | ClassCastException | IllegalArgumentException e) {
+      } catch (JavaModelException | ClassCastException | IllegalArgumentException | NullPointerException e) {
         logger.log(Level.SEVERE, classFile.getElementName(), e);
         sourceFailed.add(classFile.getType().getFullyQualifiedName());
         extractClassFile(classFile);

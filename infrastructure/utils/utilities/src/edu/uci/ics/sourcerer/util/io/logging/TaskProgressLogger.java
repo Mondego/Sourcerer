@@ -124,7 +124,11 @@ public class TaskProgressLogger {
         if (message == null) {
           logger.info(getSpaces(info.indent + 1) + info.count + " " + info.finishedText + " in " + formatTime(info.startTime));
         } else {
-          logger.info(getSpaces(info.indent + 1) + String.format(message, info.count, formatTime(info.startTime)));
+          try {
+            logger.info(getSpaces(info.indent + 1) + String.format(message, info.count, formatTime(info.startTime)));
+          } catch (Exception e) {
+            logger.info(getSpaces(info.indent + 1) + message + " " + info.count + " " + formatTime(info.startTime));
+          }
         }
       }
     }
