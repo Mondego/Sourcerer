@@ -65,7 +65,7 @@ public class ExtractedJarFileImpl implements ModifiableExtractedJarFile, IJar {
     if (Boolean.TRUE.equals(jar.properties.EXTRACTED.getValue())) {
       return jar;
     } else {
-      dir.delete();
+//      dir.delete(); this was messing up maven!
       return null;
     }
   }
@@ -113,6 +113,7 @@ public class ExtractedJarFileImpl implements ModifiableExtractedJarFile, IJar {
   
   @Override
   public void reset(JarFile jar) {
+    // TODO this is dangerous for nested maven jars
     dir.delete();
     dir.makeDirs();
     properties.clear();

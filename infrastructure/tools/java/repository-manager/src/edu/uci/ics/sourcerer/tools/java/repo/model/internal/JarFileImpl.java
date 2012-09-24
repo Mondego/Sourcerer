@@ -123,7 +123,7 @@ public final class JarFileImpl implements JarFile, IJar {
     } else {
       StringBuilder builder = new StringBuilder();
       if (group != null) {
-        builder.append(group);
+        builder.append(group).append('.');
       }
       builder.append(name);
       if (version != null) {

@@ -115,14 +115,13 @@ public abstract class AbstractJavaRepository<Project extends AbstractRepoProject
     while (!stack.isEmpty()) {
       RepoFileImpl dir = stack.pop();
       Jar jar = loadJar(dir);
-      if (jar == null) {
-        for (RepoFileImpl child : dir.getChildren()) {
-          if (child.isDirectory()) {
-            stack.add(child);
-          }
-        }
-      } else {
+      if (jar != null) {
         mavenJarIndex.put(jar.getProperties().HASH.getValue(), jar);
+      }
+      for (RepoFileImpl child : dir.getChildren()) {
+        if (child.isDirectory()) {
+          stack.add(child);
+        }
       }
     }
     

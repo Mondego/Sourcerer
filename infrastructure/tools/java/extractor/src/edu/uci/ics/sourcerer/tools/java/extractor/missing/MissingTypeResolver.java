@@ -17,8 +17,6 @@
  */
 package edu.uci.ics.sourcerer.tools.java.extractor.missing;
 
-import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
-
 import java.io.Closeable;
 import java.util.Arrays;
 import java.util.Collection;
@@ -323,6 +321,9 @@ public class MissingTypeResolver implements Closeable {
   }
   
   private Collection<JarFile> matchLibraryVersionsToJarFiles(Set<Integer> libraryVerions) {
+    TaskProgressLogger task = TaskProgressLogger.get();
+    
+    task.start("Matching library versions to jar files");
     Collection<JarFile> jars = new LinkedList<>();
     
     for (Integer libraryVersion : libraryVerions) {
@@ -334,11 +335,13 @@ public class MissingTypeResolver implements Closeable {
         }
       }
       if (jar == null) {
-        logger.severe("Unable to find jar for library version " + libraryVersion);
+        task.report("Unable to find jar for library version " + libraryVersion);
       } else {
         jars.add(jar);
       }
     }
+    task.report(jars.size() + " library versions matched to jars.");
+    task.finish();
     return jars;
   }
   

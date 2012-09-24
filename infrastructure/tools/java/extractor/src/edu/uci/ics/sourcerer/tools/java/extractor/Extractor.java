@@ -251,6 +251,8 @@ public final class Extractor {
       if (resolver != null) {
         task.start("Resolving missing types");
         jars = resolver.resolveMissingTypes(files.getJarFiles(), sourceFiles);
+        task.finish();
+        task.start("Loading " + jars.size() + " jars files into classpath");
         EclipseUtils.addJarsToClasspath(jars);
         task.finish();
       }
