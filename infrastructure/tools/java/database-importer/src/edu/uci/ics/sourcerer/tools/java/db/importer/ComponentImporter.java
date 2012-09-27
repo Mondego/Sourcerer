@@ -532,6 +532,15 @@ public class ComponentImporter extends DatabaseRunnable {
     }
     task.finish();
     
+    task.start("Processing library version to cluster mapping", "mappings processed");
+    for (Map.Entry<LibraryVersion, Integer> entry : libraryVersionMap.entrySet()) {
+      for (ClusterVersion clusterVersion : entry.getKey().getClusters()) {
+        inserter.addInsert(ComponentRelationsTable.createInsert(ComponentRelation.LIBRARY_VERSION_CONTAINS_CLUSTER, entry.getValue(), clusterMap.get(clusterVersion.getCluster())));
+        task.progress();
+      }
+    }
+    task.finish();
+    
     task.start("Processing jar to cluster version mapping", "mappings processed");
     for (Map.Entry<ClusterVersion, Integer> entry : clusterVersionMap.entrySet()) {
       for (Jar jar : entry.getKey().getJars()) {

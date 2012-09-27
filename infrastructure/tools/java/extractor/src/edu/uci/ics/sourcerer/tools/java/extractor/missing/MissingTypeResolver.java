@@ -46,7 +46,6 @@ import edu.uci.ics.sourcerer.utils.db.DatabaseConnection;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
 import edu.uci.ics.sourcerer.utils.db.QueryExecutor;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
-import edu.uci.ics.sourcerer.utils.db.sql.QualifiedTable;
 import edu.uci.ics.sourcerer.utils.db.sql.Querier;
 import edu.uci.ics.sourcerer.utils.db.sql.Query;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuerier;
@@ -93,15 +92,13 @@ public class MissingTypeResolver implements Closeable {
       resolver.findLibraryVersionByCluster = new SelectQuerier<Integer, Integer>(exec) {
         @Override
         public Query initialize() {
-          QualifiedTable c2cv = ComponentRelationsTable.TABLE.qualify("a");
-          QualifiedTable lv2cv = ComponentRelationsTable.TABLE.qualify("b");
-          
-          query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(c2cv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(lv2cv)));
-          cond = ComponentRelationsTable.SOURCE_ID.qualify(c2cv).compareEquals();
-          select = ComponentRelationsTable.SOURCE_ID.qualify(lv2cv);
+          query = exec.createSelectQuery(ComponentRelationsTable.TABLE);
+          cond = ComponentRelationsTable.SOURCE_ID.compareEquals();
+          select = ComponentRelationsTable.TARGET_ID;
           
           query.addSelect(select);
-          query.andWhere(cond, ComponentRelationsTable.TYPE.qualify(c2cv).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION), ComponentRelationsTable.TYPE.qualify(lv2cv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_CLUSTER_VERSION));
+          query.andWhere(cond, ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_CLUSTER));
+          
           return query;
         }
       };
@@ -109,15 +106,13 @@ public class MissingTypeResolver implements Closeable {
       resolver.findClusterByLibraryVersion = new SelectQuerier<Integer, Integer>(exec) {
         @Override
         public Query initialize() {
-          QualifiedTable c2cv = ComponentRelationsTable.TABLE.qualify("a");
-          QualifiedTable lv2cv = ComponentRelationsTable.TABLE.qualify("b");
-          
-          query = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.qualify(c2cv).compareEquals(ComponentRelationsTable.TARGET_ID.qualify(lv2cv)));
-          cond = ComponentRelationsTable.SOURCE_ID.qualify(lv2cv).compareEquals();
-          select = ComponentRelationsTable.SOURCE_ID.qualify(c2cv);
+          query = exec.createSelectQuery(ComponentRelationsTable.TABLE);
+          cond = ComponentRelationsTable.TARGET_ID.compareEquals();
+          select = ComponentRelationsTable.SOURCE_ID;
           
           query.addSelect(select);
-          query.andWhere(cond, ComponentRelationsTable.TYPE.qualify(c2cv).compareEquals(ComponentRelation.CLUSTER_CONTAINS_CLUSTER_VERSION), ComponentRelationsTable.TYPE.qualify(lv2cv).compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_CLUSTER_VERSION));
+          query.andWhere(cond, ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_CLUSTER));
+          
           return query;
         }
       };
@@ -206,26 +201,29 @@ public class MissingTypeResolver implements Closeable {
     final Map<Integer, Integer> clusterSizes = new HashMap<>();
 
     // Build the maps
+    task.start("Build the maps"); 
     for (Integer cluster : clusters) {
       for (Integer libraryVersion : findLibraryVersionByCluster.select(cluster)) {
         c2lv.put(cluster, libraryVersion);
-        if (!lv2c.containsKey(libraryVersion)) {
-          for (Integer cid : findClusterByLibraryVersion.select(libraryVersion)) {
-            lv2c.put(libraryVersion, cid);
-          }
+        for (Integer clus : findClusterByLibraryVersion.select(libraryVersion)) {
+          lv2c.put(libraryVersion, clus);
         }
       }
     }
+    task.report("Library versions by cluster: " + c2lv.keySet().size() + " keys, " + c2lv.size() + " entries");
+    task.report("Cluster by library version: " + lv2c.keySet().size() + " keys, " + lv2c.size() + " entries");
     for (Integer clusterID : lv2c.values()) {
       if (!clusterSizes.containsKey(clusterID)) {
         clusterSizes.put(clusterID, findTypeCountByCluster.select(clusterID));
       }
     }
+    task.finish();
     
     Set<Integer> coreLibraryVersions = new HashSet<>();
     Set<Integer> coveredClusters = new HashSet<>();
     
     // Start by picking all the library versions that don't contain extra clusters
+    task.start("Checking for core library versions");
     for (Integer libraryVersionID : lv2c.keySet()) {
       boolean noExtra = true;
       for (Integer clusterID : lv2c.get(libraryVersionID)) {
@@ -238,19 +236,25 @@ public class MissingTypeResolver implements Closeable {
         coveredClusters.addAll(lv2c.get(libraryVersionID));
       }
     }
-    coveredClusters.retainAll(clusters);
+    if (coveredClusters.retainAll(clusters)) {
+      task.report("Retaining should have done nothing");
+    }
+    task.report(coveredClusters.size() + " of " + clusters.size() + " covered");
+    task.finish();
     
     Set<Integer> finalLibraryVersions = new HashSet<>();
     Set<Integer> clustersToBeCovered = new HashSet<>(clusters);
     
     // If we covered all the clusters, skip this step
     if (coveredClusters.size() < clusters.size()) {
+      task.start("Checking for additional library versions");
       final Set<Integer> missingClusters = new HashSet<>();
       for (Integer clusterID : clusters) {
         if (!coveredClusters.contains(clusterID)) {
           missingClusters.add(clusterID);
         }
       }
+      task.report(missingClusters.size() + " missing clusters");
       Set<Integer> additionalLibraryVersions = new HashSet<>();
       // Find each library that can provide missing clusters, 
       // and measure their "cost per cluster" (number of extra clusters - number of clusters provided)
@@ -277,6 +281,8 @@ public class MissingTypeResolver implements Closeable {
         }
         additionalLibraryVersions.add(bestLibraryVersionID);
       }
+      task.report(additionalLibraryVersions.size() + " additional library versions identified");
+      task.start("Sorting additional library versions");
       // Sort the additional library versions by the number of additional types they contain
       Integer[] arr = additionalLibraryVersions.toArray(new Integer[additionalLibraryVersions.size()]);
       Arrays.sort(arr, new Comparator<Integer>() {
@@ -285,6 +291,8 @@ public class MissingTypeResolver implements Closeable {
           return -Integer.compare(CollectionUtils.intersectionSize(lv2c.get(o1), missingClusters), CollectionUtils.intersectionSize(lv2c.get(o2), missingClusters));
         }
       });
+      task.finish();
+      task.start("Picking additional library versions");
       // Pick the libraries to actually add
       for (Integer libraryVersionID : arr) {
         Collection<Integer> clus = lv2c.get(libraryVersionID);
@@ -294,8 +302,12 @@ public class MissingTypeResolver implements Closeable {
           clustersToBeCovered.removeAll(clus);
         }
       }
+      task.report("Added " + finalLibraryVersions.size() + " library versions");
+      task.finish();
+      task.finish();
     }
     
+    task.start("Sorting core library versions");
     // Now order the core libraries by the number of clusters they contain
     Integer[] arr = coreLibraryVersions.toArray(new Integer[coreLibraryVersions.size()]);
     Arrays.sort(arr, new Comparator<Integer>() {
@@ -304,7 +316,9 @@ public class MissingTypeResolver implements Closeable {
         return -Integer.compare(lv2c.get(o1).size(), lv2c.get(o2).size());
       }
     });
+    task.finish();
     
+    task.start("Picking core library versions");
     // Pick the core libraries to actually add
     for (Integer libraryVersionID : arr) {
       Collection<Integer> clus = lv2c.get(libraryVersionID);
@@ -313,6 +327,7 @@ public class MissingTypeResolver implements Closeable {
         clustersToBeCovered.removeAll(clus);
       }
     }
+    task.finish();
     
     task.report(finalLibraryVersions.size() + " library versions matched.");
     task.finish();

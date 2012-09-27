@@ -19,7 +19,6 @@ package edu.uci.ics.sourcerer.tools.java.repo.stats;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.TreeMap;
 
 import edu.uci.ics.sourcerer.tools.core.repo.model.ContentFile;
 import edu.uci.ics.sourcerer.tools.core.repo.model.FileSet;
@@ -42,57 +41,73 @@ public class RepositoryStatisticsCalculator {
   public static void calculateRepositoryStatistics() {
     JavaRepository repo = JavaRepositoryFactory.INSTANCE.loadJavaRepository(JavaRepositoryFactory.INPUT_REPO);
     
-    int projects = 0;
-    int projectsWithFiles = 0;
-    int filteredFiles = 0;
+    class Stats {
+      int projects = 0;
+      int projectsWithFiles = 0;
+      int filteredFiles = 0;
+      SizeCounter totalSize = new SizeCounter();
+      CreationistMap<String, SizeCounter> fileSizes = new CreationistMap<>(SizeCounter.class);
+    }
+    
+    CreationistMap<String, Stats> statsBySource = new CreationistMap<>(Stats.class);
     
     TaskProgressLogger task = TaskProgressLogger.get();
     
     task.start("Analyzing projects", "projects analyzed", 100);
     
-    SizeCounter total = new SizeCounter();
-    CreationistMap<String, SizeCounter> files = new CreationistMap<>(SizeCounter.class);
-    
+    Stats totalStats = new Stats();
     for (JavaProject project : repo.getProjects()) {
-      projects++;
-      if (!project.getContent().getFiles().isEmpty()) {
-        projectsWithFiles++;
-        filteredFiles += project.getContent().getFilteredJavaFiles().size();
-      }
+      Stats stats = statsBySource.get(project.getProperties().SOURCE.getValue());
       
-      for (ContentFile file : project.getContent().getFiles()) {
-        RepoFile rFile = file.getFile();
-        long length = rFile.toFile().length();
+      // Count the project
+      stats.projects++;
+      totalStats.projects++;
+      
+      Collection<? extends ContentFile> files = project.getContent().getFiles();
+      int filteredFiles = project.getContent().getFilteredJavaFiles().size();;
+      if (!files.isEmpty()) {
+        stats.projectsWithFiles++;
+        totalStats.projectsWithFiles++;
+
+        stats.filteredFiles += filteredFiles;
+        totalStats.filteredFiles += filteredFiles;
         
-        total.add(length);
-        
-        String extension = rFile.getName();
-        int idx = extension.lastIndexOf('.');
-        if (idx == -1) {
-          extension = "No Extension";
-        } else {
-          extension = extension.substring(idx);
+        for (ContentFile file : files) {
+          RepoFile rFile = file.getFile();
+          long length = rFile.toFile().length();
+          
+          stats.totalSize.add(length);
+          totalStats.totalSize.add(length);
+          
+          String extension = rFile.getName();
+          int idx = extension.lastIndexOf('.');
+          if (idx == -1) {
+            extension = "No Extension";
+          } else {
+            extension = extension.substring(idx);
+          }
+          stats.fileSizes.get(extension).add(length);
+          totalStats.fileSizes.get(extension).add(length);
         }
-        files.get(extension).add(length);
       }
-      task.progress("%d projects analyzed, " + files.entrySet().size() + " extensions, and "+ SizeCounter.formatSize(Runtime.getRuntime().freeMemory()) + " of " + SizeCounter.formatSize(Runtime.getRuntime().totalMemory()) + " free");
+      task.progress("%d projects analyzed");
     }
     task.finish();
     
-    TreeMap<SizeCounter, String> sortedFiles = new TreeMap<>();
-    for (Map.Entry<String, SizeCounter> entry : files.entrySet()) {
-      sortedFiles.put(entry.getValue(), entry.getKey());
-    }
+//    TreeMap<SizeCounter, String> sortedFiles = new TreeMap<>();
+//    for (Map.Entry<String, SizeCounter> entry : files.entrySet()) {
+//      sortedFiles.put(entry.getValue(), entry.getKey());
+//    }
     
     try (TablePrettyPrinter printer = TablePrettyPrinter.getLoggerPrettyPrinter()) {
       printer.beginTable(2);
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Projects");
-      printer.addCell(projects);
+      printer.addCell(totalStats.projects);
       printer.beginRow();
-      printer.addCell("Projects with Content");
-      printer.addCell(projectsWithFiles);
+      printer.addCell("Projects with Files");
+      printer.addCell(totalStats.projectsWithFiles);
       printer.addDividerRow();
       printer.endTable();
       
@@ -102,22 +117,60 @@ public class RepositoryStatisticsCalculator {
       printer.addDividerRow();
       printer.beginRow();
       printer.addCell("Files");
-      printer.addCell(total.getCountString(), Alignment.RIGHT);
-      printer.addCell(total.getSizeString(), Alignment.RIGHT);
+      printer.addCell(totalStats.totalSize.getCountString(), Alignment.RIGHT);
+      printer.addCell(totalStats.totalSize.getSizeString(), Alignment.RIGHT);
       printer.beginRow();
-      printer.addCell("Filtered files");
-      printer.addCell(Integer.toString(filteredFiles), Alignment.RIGHT);
-      printer.addCell("");
+      printer.addCell("Filtered Files");
+      printer.addCell(totalStats.filteredFiles);
+      printer.addCell("N/A");
       printer.addDividerRow();
-      for (Map.Entry<SizeCounter, String> entry : sortedFiles.descendingMap().entrySet()) {
+      for (Map.Entry<String, SizeCounter> entry : totalStats.fileSizes.entrySet()) {
         printer.beginRow();
-        printer.addCell(entry.getValue() + " files");
-        printer.addCell(entry.getKey().getCountString(), Alignment.RIGHT);
-        printer.addCell(entry.getKey().getSizeString(), Alignment.RIGHT);
-        
+        printer.addCell(entry.getKey() + " files");
+        printer.addCell(entry.getValue().getCountString(), Alignment.RIGHT);
+        printer.addCell(entry.getValue().getSizeString(), Alignment.RIGHT);
       }
       printer.addDividerRow();
       printer.endTable();
+      
+      for (Map.Entry<String, Stats> entry : statsBySource.entrySet()) {
+        Stats stats = entry.getValue();
+        printer.beginTable(2);
+        printer.addDividerRow();
+        printer.beginRow();
+        printer.addCell("Source");
+        printer.addCell(entry.getKey());
+        printer.beginRow();
+        printer.addCell("Projects");
+        printer.addCell(stats.projects);
+        printer.beginRow();
+        printer.addCell("Projects with Files");
+        printer.addCell(stats.projectsWithFiles);
+        printer.addDividerRow();
+        printer.endTable();
+        
+        printer.beginTable(3);
+        printer.addDividerRow();
+        printer.addRow("", "Count", "Size");
+        printer.addDividerRow();
+        printer.beginRow();
+        printer.addCell("Files");
+        printer.addCell(stats.totalSize.getCountString(), Alignment.RIGHT);
+        printer.addCell(stats.totalSize.getSizeString(), Alignment.RIGHT);
+        printer.beginRow();
+        printer.addCell("Filtered Files");
+        printer.addCell(stats.filteredFiles);
+        printer.addCell("N/A");
+        printer.addDividerRow();
+        for (Map.Entry<String, SizeCounter> innerEntry : stats.fileSizes.entrySet()) {
+          printer.beginRow();
+          printer.addCell(innerEntry.getKey() + " files");
+          printer.addCell(innerEntry.getValue().getCountString(), Alignment.RIGHT);
+          printer.addCell(innerEntry.getValue().getSizeString(), Alignment.RIGHT);
+        }
+        printer.addDividerRow();
+        printer.endTable();
+      }
     }
   }
   
