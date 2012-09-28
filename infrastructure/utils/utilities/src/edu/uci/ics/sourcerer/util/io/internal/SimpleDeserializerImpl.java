@@ -42,6 +42,7 @@ import edu.uci.ics.sourcerer.util.io.LineBuilder;
 import edu.uci.ics.sourcerer.util.io.ObjectDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializable;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -612,9 +613,13 @@ final class SimpleDeserializerImpl implements SimpleDeserializer {
   
   private <K, V> Map<K, V> buildMap(MapBuilder<K, V> builder) throws IOException {
     if (builder != null) {
+      TaskProgressLogger task = TaskProgressLogger.get();
+      task.start("Reading lines", "lines read", 500);
       for (String line = br.readLine(); !SimpleSerializerImpl.isFinished(line); line = br.readLine()) {
         builder.add(line);
+        task.progress();
       }
+      task.finish();
       return builder.getMap();
     } else {
       return Collections.emptyMap();

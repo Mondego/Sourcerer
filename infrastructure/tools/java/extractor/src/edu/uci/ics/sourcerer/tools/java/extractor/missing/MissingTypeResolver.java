@@ -93,8 +93,8 @@ public class MissingTypeResolver implements Closeable {
         @Override
         public Query initialize() {
           query = exec.createSelectQuery(ComponentRelationsTable.TABLE);
-          cond = ComponentRelationsTable.SOURCE_ID.compareEquals();
-          select = ComponentRelationsTable.TARGET_ID;
+          cond = ComponentRelationsTable.TARGET_ID.compareEquals();
+          select = ComponentRelationsTable.SOURCE_ID;
           
           query.addSelect(select);
           query.andWhere(cond, ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_CLUSTER));
@@ -107,8 +107,8 @@ public class MissingTypeResolver implements Closeable {
         @Override
         public Query initialize() {
           query = exec.createSelectQuery(ComponentRelationsTable.TABLE);
-          cond = ComponentRelationsTable.TARGET_ID.compareEquals();
-          select = ComponentRelationsTable.SOURCE_ID;
+          cond = ComponentRelationsTable.SOURCE_ID.compareEquals();
+          select = ComponentRelationsTable.TARGET_ID;
           
           query.addSelect(select);
           query.andWhere(cond, ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_VERSION_CONTAINS_CLUSTER));
@@ -201,7 +201,7 @@ public class MissingTypeResolver implements Closeable {
     final Map<Integer, Integer> clusterSizes = new HashMap<>();
 
     // Build the maps
-    task.start("Build the maps"); 
+    task.start("Building the maps"); 
     for (Integer cluster : clusters) {
       for (Integer libraryVersion : findLibraryVersionByCluster.select(cluster)) {
         c2lv.put(cluster, libraryVersion);
@@ -338,13 +338,16 @@ public class MissingTypeResolver implements Closeable {
   private Collection<JarFile> matchLibraryVersionsToJarFiles(Set<Integer> libraryVerions) {
     TaskProgressLogger task = TaskProgressLogger.get();
     
-    task.start("Matching library versions to jar files");
+    task.start("Matching library versions to jar files", "libraries versions processed", 1);
     Collection<JarFile> jars = new LinkedList<>();
     
     for (Integer libraryVersion : libraryVerions) {
       JarFile jar = null;
+      task.report("Looking up jars for library version " + libraryVersion);
       for (String hash : findJarsByLibraryVersion.select(libraryVersion)) {
+        task.report("getting jar file for hash: " + hash);
         jar = repo.getJarFile(hash);
+        task.report("found jar file! " + jar);
         if (jar != null) {
           break;
         }
@@ -354,8 +357,9 @@ public class MissingTypeResolver implements Closeable {
       } else {
         jars.add(jar);
       }
+      task.progress();
     }
-    task.report(jars.size() + " library versions matched to jars.");
+//    task.report(jars.size() + " library versions matched to jars.");
     task.finish();
     return jars;
   }

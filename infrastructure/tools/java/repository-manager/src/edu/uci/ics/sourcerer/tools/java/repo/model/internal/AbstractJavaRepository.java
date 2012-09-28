@@ -38,6 +38,7 @@ import edu.uci.ics.sourcerer.util.io.SimpleDeserializer;
 import edu.uci.ics.sourcerer.util.io.SimpleSerializer;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.StringArgument;
+import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
@@ -91,16 +92,15 @@ public abstract class AbstractJavaRepository<Project extends AbstractRepoProject
   }
   
   protected void loadMavenJarIndex() {
+    TaskProgressLogger task = TaskProgressLogger.get();
     if (mavenJarIndexFile.exists() && !CLEAR_CACHES.getValue()) {
-      SimpleDeserializer deserializer = null;
-      try {
-        deserializer = IOUtils.makeSimpleDeserializer(mavenJarIndexFile.toFile());
+      try (SimpleDeserializer deserializer = IOUtils.makeSimpleDeserializer(mavenJarIndexFile.toFile())) {
+        task.start("Deserializing maven index");
         mavenJarIndex = deserializer.deserializeMap(String.class, makeDeserializer(), false);
+        task.finish();
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Error loading jar index.", e);
         createMavenJarIndex();
-      } finally {
-        IOUtils.close(deserializer);
       }
     } else {
       createMavenJarIndex();
@@ -233,18 +233,25 @@ public abstract class AbstractJavaRepository<Project extends AbstractRepoProject
   }
   
   public Jar getJarFile(String hash) {
+    TaskProgressLogger task = TaskProgressLogger.get();
     if (libraryJarIndex == null) {
+      task.start("Loading library index");
       loadLibraryJarIndex();
+      task.finish();
     }
     Jar jar = libraryJarIndex.get(hash);
     if (jar == null) {
       if (mavenJarIndex == null) {
+        task.start("Loading maven index");
         loadMavenJarIndex();
+        task.finish();
       }
       jar = mavenJarIndex.get(hash);
       if (jar == null) {
         if (projectJarIndex == null) {
+          task.start("Loading project index");
           loadProjectJarIndex();
+          task.finish();
         }
         jar = projectJarIndex.get(hash);
       }
