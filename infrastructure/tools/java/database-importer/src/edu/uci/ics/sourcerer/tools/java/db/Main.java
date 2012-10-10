@@ -91,6 +91,21 @@ public class Main {
         ParallelDatabaseImporter.STRUCTURAL_ONLY,
         FileUtils.TEMP_DIR);
   
+  public static final Command ADD_FILTER_JARS = 
+      new Command("add-filter-jars", "Adds extracted jars to the database.") {
+        protected void action() {
+          ParallelDatabaseImporter.importFilterJarFiles();
+        }
+      }.setProperties(
+          DatabaseConnectionFactory.DATABASE_URL, 
+          DatabaseConnectionFactory.DATABASE_USER, 
+          DatabaseConnectionFactory.DATABASE_PASSWORD,
+          JavaRepositoryFactory.INPUT_REPO,
+          ParallelDatabaseImporter.THREAD_COUNT,
+          ParallelDatabaseImporter.STRUCTURAL_ONLY,
+          ParallelDatabaseImporter.JAR_FILTER,
+          FileUtils.TEMP_DIR);
+  
   public static final Command ADD_PROJECTS = 
     new Command("add-projects", "Adds extracted projects to the database.") {
       protected void action() {

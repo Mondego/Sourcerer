@@ -67,8 +67,11 @@ public class ComponentVerifier {
       Averager<Double> combined = Averager.create();
       Averager<Double> fragmentedAndCombined = Averager.create();
       
+      Averager<Integer> groupCount = Averager.create();
+
       Set<Integer> ids = new HashSet<>();
       Set<Pair<String, String>> groups = new HashSet<>();
+      
 
       private void compute(Integer libraryID, LogFileWriter writer, LogFileWriter imperfectWriter) {
         if (libraryID != null) {
@@ -98,6 +101,7 @@ public class ComponentVerifier {
               } else {
                 fragmentedAndCombined.addValue(avg.getMean());
               }
+              groupCount.addValue(groups.size());
             } else {
               fragmented.addValue(avg.getMean());
             }
@@ -187,6 +191,13 @@ public class ComponentVerifier {
         task.report("MIN: " + fragmentedAndCombined.getMin());
         task.report("MAX: " + fragmentedAndCombined.getMax());
         fragmentedAndCombined.writeDoubleValueMap(FRAGMENTED_AND_COMBINED_TABLE.getValue(), 1);
+        task.finish();
+        
+        task.start("Reporting group size statistics");
+        task.report("AVG: " + groupCount.getMean() + " +-" + groupCount.getStandardDeviation());
+        task.report("Count: " + groupCount.getCount());
+        task.report("MIN: " + groupCount.getMin());
+        task.report("MAX: " + groupCount.getMax());
         task.finish();
       }
     }.run();

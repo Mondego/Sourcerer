@@ -45,6 +45,7 @@ public enum Entity {
     ;
     
     public boolean is(Entity ... entities) {
+
       for (Entity entity : entities) {
         if (this == entity) {
           return true;
