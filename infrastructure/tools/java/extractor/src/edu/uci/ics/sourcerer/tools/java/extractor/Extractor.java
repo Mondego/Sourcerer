@@ -17,8 +17,11 @@
  */
 package edu.uci.ics.sourcerer.tools.java.extractor;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
@@ -47,6 +50,7 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ModifiableExtracted
 import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.util.io.arguments.Argument;
 import edu.uci.ics.sourcerer.util.io.arguments.BooleanArgument;
+import edu.uci.ics.sourcerer.util.io.arguments.DualFileArgument;
 import edu.uci.ics.sourcerer.util.io.logging.Logging;
 import edu.uci.ics.sourcerer.util.io.logging.TaskProgressLogger;
 import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
@@ -60,11 +64,13 @@ public final class Extractor {
 
   public static final Argument<Boolean> FORCE_REDO = new BooleanArgument("force-redo", false, "Redo all extractions, even if already completed.");
   public static final Argument<Boolean> COMPRESS_OUTPUT = new BooleanArgument("compress-output", false, "Compress the output of the extractor.");
+  public static final DualFileArgument JAR_FILTER = new DualFileArgument("jar-filter-file", "jar-filter.txt", "Jar filter file for extraction.");
   
   public static enum JarType {
     LIBRARY,
     PROJECT,
-    MAVEN;
+    MAVEN,
+    FILTER;
     
     @Override
     public String toString() {
@@ -109,6 +115,24 @@ public final class Extractor {
       case LIBRARY: jars = repo.getLibraryJarFiles(); break;
       case MAVEN:   jars = repo.getMavenJarFiles(); break;
       case PROJECT: jars = repo.getProjectJarFiles(); break;
+      case FILTER:
+      {
+        try (BufferedReader br = IOUtils.makeBufferedReader(JAR_FILTER);) {
+          Collection<JarFile> temp = new LinkedList<JarFile>();
+          for (String line = br.readLine(); line != null; line = br.readLine()) {
+            JarFile jar = repo.getJarFile(line);
+            if (jar == null) {
+              task.report("Unable to find jar: " + line);
+            } else {
+              temp.add(jar);
+            }
+          }
+          jars = temp;
+        } catch (IOException e) {
+          task.reportException(e);
+          jars = Collections.emptyList();
+        }
+      }
     }
     task.finish();
     

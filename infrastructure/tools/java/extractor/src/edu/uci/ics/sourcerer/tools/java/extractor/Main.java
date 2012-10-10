@@ -23,6 +23,7 @@ import org.eclipse.equinox.app.IApplicationContext;
 import edu.uci.ics.sourcerer.tools.java.extractor.Extractor.ExtractionMethod;
 import edu.uci.ics.sourcerer.tools.java.extractor.Extractor.JarType;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
+import edu.uci.ics.sourcerer.tools.java.extractor.misc.ExtractedRepositoryAnalyzer;
 import edu.uci.ics.sourcerer.tools.java.extractor.missing.MissingTypeIdentifier;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.FindBugsRunner;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.WriterBundle;
@@ -137,6 +138,21 @@ public class Main implements IApplication {
         Extractor.extractJars(JarType.MAVEN, ExtractionMethod.ASM_ECLIPSE);
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);
+  
+  public static final Command EXTRACT_FILTER_JARS_ASM =
+    new ExtractorCommand("extract-filter-jars-asm", "Extract the jars using Asm.") {
+      protected void action() {
+        Extractor.extractJars(JarType.FILTER, ExtractionMethod.ASM);
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT, Extractor.JAR_FILTER.asInput(), FindBugsRunner.FINDBUGS_JAR);
+    
+  public static final Command EXTRACT_FILTER_JARS =
+    new ExtractorCommand("extract-filter-jars", "Extract the jars using Eclipse and Asm.") {
+      protected void action() {
+        Extractor.extractJars(JarType.FILTER, ExtractionMethod.ASM_ECLIPSE);
+      }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT, Extractor.JAR_FILTER.asInput());
+    
   public static final Command EXTRACT_PROJECTS = 
     new ExtractorCommand("extract-projects", "Extract the projects.") {
       protected void action() {
@@ -162,6 +178,13 @@ public class Main implements IApplication {
       }
     }.setProperties(JavaRepositoryFactory.INPUT_REPO, JavaRepositoryFactory.OUTPUT_REPO, Extractor.FORCE_REDO, Extractor.COMPRESS_OUTPUT);       
   		  
+  public static final Command CREATE_JAR_FILTER =
+      new Command("create-jar-filter", "Create jar filter") {
+        protected void action() {
+          ExtractedRepositoryAnalyzer.createUsedJarFilter();
+        }
+    }.setProperties(JavaRepositoryFactory.INPUT_REPO, Extractor.JAR_FILTER.asOutput());
+    
   @Override
   public Object start(IApplicationContext context) throws Exception {
     String[] args = (String[]) context.getArguments().get(IApplicationContext.APPLICATION_ARGS);

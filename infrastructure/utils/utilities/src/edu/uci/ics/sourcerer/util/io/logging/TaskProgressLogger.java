@@ -138,6 +138,15 @@ public class TaskProgressLogger {
     progress(null);
   }
   
+  public void reportException(Exception e) {
+    if (tasks.isEmpty()) {
+      throw new IllegalStateException("Cannot finish a non-existant task.", e);
+    } else {
+      TaskInfo info = tasks.peek();
+      logger.log(Level.SEVERE, "Exception while " + info.taskText, e);
+    }
+  }
+  
   public void exception(Exception e) {
     if (tasks.isEmpty()) {
       throw new IllegalStateException("Cannot finish a non-existant task.", e);

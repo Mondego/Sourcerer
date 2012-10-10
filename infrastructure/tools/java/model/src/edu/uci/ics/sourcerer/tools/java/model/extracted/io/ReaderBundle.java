@@ -103,7 +103,7 @@ public class ReaderBundle {
       // Check for the compressed file
       if (zip.exists()) {
         try {
-          return IOUtils.deserialize(klass, file, fileName);
+          return IOUtils.deserialize(klass, zip, fileName);
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Error reading extracted file.", e);
           return Collections.emptyList();
@@ -128,7 +128,7 @@ public class ReaderBundle {
       // Check for the compressed file (not transient)
       if (zip.exists()) {
         try {
-          return IOUtils.deserialize(klass, file, fileName);
+          return IOUtils.deserialize(klass, zip, fileName);
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Error reading extracted file.", e);
           return Collections.emptyList();
