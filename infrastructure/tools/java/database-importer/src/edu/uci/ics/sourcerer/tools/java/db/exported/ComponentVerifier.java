@@ -25,6 +25,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+
 import edu.uci.ics.sourcerer.tools.java.db.schema.ComponentRelationsTable;
 import edu.uci.ics.sourcerer.tools.java.db.schema.ProjectsTable;
 import edu.uci.ics.sourcerer.tools.java.model.types.ComponentRelation;
@@ -68,6 +71,9 @@ public class ComponentVerifier {
       Averager<Double> fragmentedAndCombined = Averager.create();
       
       Averager<Integer> groupCount = Averager.create();
+      Multiset<String> fragmentedLibs= HashMultiset.create();
+      Set<String> combinedLibs = new HashSet<>();
+      Set<String> perfectLibs = new HashSet<>();
 
       Set<Integer> ids = new HashSet<>();
       Set<Pair<String, String>> groups = new HashSet<>();
@@ -83,6 +89,11 @@ public class ComponentVerifier {
             // Compute one jaccard for each
             groupEquals.setValue(group.getFirst());
             nameEquals.setValue(group.getSecond());
+            String lib = group.getFirst() + "." + group.getSecond();
+            fragmentedLibs.add(lib);
+            if (lib.equals("patterntesting.patterntesting-aspectj")) {
+              logger.info("wtf");
+            }
             other.addAll(groupQuery.select().toCollection(ProjectsTable.PROJECT_ID));
 
             superset &= ids.containsAll(other);
@@ -90,12 +101,16 @@ public class ComponentVerifier {
             double jaccard = CollectionUtils.compuateJaccard(ids, other);
             writer.write(group.getFirst() + "." + group.getSecond() + " " + jaccard);
             avg.addValue(jaccard);
+            other.clear();
           }
           writer.write("" + avg.getMean());
           writer.unindent();
           jaccards.addValue(avg.getMean());
           if (avg.getMean() < 1.0) {
             if (groups.size() > 1) {
+              for (Pair<String, String> group : groups) {
+                combinedLibs.add(group.getFirst() + "." + group.getSecond());
+              }
               if (superset) {
                 combined.addValue(avg.getMean());
               } else {
@@ -106,6 +121,10 @@ public class ComponentVerifier {
               fragmented.addValue(avg.getMean());
             }
             imperfectWriter.write(libraryID + " " + avg.getMean());
+          } else {
+            for (Pair<String, String> group : groups) {
+              perfectLibs.add(group.getFirst() + "." + group.getSecond());
+            }
           }
           ids.clear();
           groups.clear();
@@ -198,6 +217,51 @@ public class ComponentVerifier {
         task.report("Count: " + groupCount.getCount());
         task.report("MIN: " + groupCount.getMin());
         task.report("MAX: " + groupCount.getMax());
+        task.finish();
+
+        for (String lib : perfectLibs) {
+          if (fragmentedLibs.count(lib) > 1) {
+            task.report(lib + " should be perfect but is fragmented");
+          }
+          if (combinedLibs.contains(lib)) {
+            task.report(lib + " should be perfect but is combined");
+          }
+        }
+        int perfect = 0;
+        int fragAndCombined = 0;
+        Averager<Integer> frag = Averager.create();
+        for (String lib : fragmentedLibs.elementSet()) {
+          int count = fragmentedLibs.count(lib);
+          if (count > 1) {
+            frag.addValue(count);
+            if (combinedLibs.contains(lib)) {
+              fragAndCombined++;
+            }
+          } else if (!combinedLibs.contains(lib)) {
+            perfect++;
+          }
+        }
+        task.start("Reporting stats from maven pov");
+
+        task.start("Reporting perfect match statistics");
+        task.report("Count: " + perfect);
+        task.finish();
+        
+        task.start("Reporting fragmentation statistics");
+        task.report("AVG: " + frag.getMean() + " +-" + frag.getStandardDeviation());
+        task.report("Count: " + frag.getCount());
+        task.report("MIN: " + frag.getMin());
+        task.report("MAX: " + frag.getMax());
+        task.finish();
+        
+        task.start("Reporting combination statistics");
+        task.report("Count: " + combinedLibs.size());
+        task.finish();
+        
+        task.start("Reporting fragmented & combined statistics");
+        task.report("Count: " + fragAndCombined);
+        task.finish();
+        
         task.finish();
       }
     }.run();
