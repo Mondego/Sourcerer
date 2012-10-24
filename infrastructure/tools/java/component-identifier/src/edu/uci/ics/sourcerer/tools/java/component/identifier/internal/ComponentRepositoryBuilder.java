@@ -99,15 +99,13 @@ public class ComponentRepositoryBuilder {
     }
 
     int phantomCount = 0;
-    
-    Set<Set<Cluster>> usedPackagings = new HashSet<>();
-    
     task.start("Creating simple libraries from clusters", "clusters examined", 10_000);
     while (!sortedClusters.isEmpty()) {
       // Perhaps this needs to be iterated, too?
       Cluster biggest = sortedClusters.poll();
       
       Library library = Library.create(biggest);
+      repo.addLibrary(library);
       {
         Set<VersionedFqnNode> globalPotentials = new HashSet<>();
         Set<VersionedFqnNode> globalPartials = new HashSet<>();
@@ -155,35 +153,30 @@ public class ComponentRepositoryBuilder {
       packaging.add(library.getCoreCluster());
       packaging.addAll(library.getSecondaryClusters());
       
-      if (!usedPackagings.contains(packaging)) {
-        usedPackagings.add(packaging);
-        repo.addLibrary(library);
-        
-        // Add the jars to the library
-        for (Jar jar : biggest.getJars()) {
-          boolean addMe = true;
-          for (Cluster cluster : jarsToClusters.get(jar)) {
-            if (cluster != biggest && !library.getSecondaryClusters().contains(cluster)) {
-              addMe = false;
-              break;
-            }
-          }
-          if (addMe) {
-            library.addJar(jar);
-            assignedJars = assignedJars.add(jar);
+      // Add the jars to the library
+      for (Jar jar : biggest.getJars()) {
+        boolean addMe = true;
+        for (Cluster cluster : jarsToClusters.get(jar)) {
+          if (cluster != biggest && !library.getSecondaryClusters().contains(cluster)) {
+            addMe = false;
+            break;
           }
         }
-        
-        if (library.getJars().isEmpty()) {
-          phantomCount++;
+        if (addMe && !assignedJars.contains(jar)) {
+          library.addJar(jar);
+          assignedJars = assignedJars.add(jar);
         }
-        
-        // Split the jars into versions
-        splitLibaryIntoVersions(library);
       }
       
-      task.progress();
+      if (library.getJars().isEmpty()) {
+        phantomCount++;
+      }
+      // Split the jars into versions
+      splitLibaryIntoVersions(library);
     }
+    
+    task.progress();
+    
     task.finish();
     
     task.report(assignedJars.size() + " jars assigned to " + repo.getLibraries().size() + " libraries, of which " + phantomCount + " are phantom libraries");
