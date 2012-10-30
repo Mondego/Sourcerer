@@ -62,8 +62,18 @@ class InheritanceHierarchyDepthCalculator extends Calculator {
     for (ModeledEntity entity : model.getEntities()) {
       if (projectID.equals(entity.getProjectID()) && entity.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM) && !anon.matcher(entity.getFqn()).matches()) {
         ModeledDeclaredType ent = (ModeledDeclaredType) entity;
-        double interfaceDepth = calculateInterfaceDepth(entity);
-        double internalInterfaceDepth = calculateInternalInterfaceDepth(entity, projectID);
+        double interfaceDepth = 0;
+        try {
+          interfaceDepth = calculateInterfaceDepth(entity);
+        } catch (StackOverflowError e) {
+          logger.severe("Infinite stack for: " + entity);
+        }
+        double internalInterfaceDepth = 0;
+        try {
+          internalInterfaceDepth = calculateInternalInterfaceDepth(entity, projectID);
+        } catch (StackOverflowError e) {
+          logger.severe("Infinite stack for: " + entity);
+        }
         if (entity.getType() == Entity.INTERFACE) {
           if (metrics.missingEntityValue(ent.getEntityID(), Metric.DEPTH_OF_INHERITANCE_TREE_II)) {
             metrics.setEntityValue(ent.getEntityID(), ent.getFileID(), Metric.DEPTH_OF_INHERITANCE_TREE_II, interfaceDepth);
@@ -138,7 +148,13 @@ class InheritanceHierarchyDepthCalculator extends Calculator {
       return 0;
     }
     if (entity.getType() == Entity.PARAMETERIZED_TYPE) {
-      entity = ((ModeledParametrizedType) entity).getBaseType();
+      ModeledEntity base = ((ModeledParametrizedType) entity).getBaseType();
+      if (base == null) {
+        logger.severe("Null base type: " + entity);
+        return 0;
+      } else {
+        entity = base;
+      }
     }
     if (entity.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM)) {
       return 1 + calculateClassDepth(((ModeledDeclaredType) entity).getSuperclass());
@@ -146,7 +162,7 @@ class InheritanceHierarchyDepthCalculator extends Calculator {
       return 2; // minimum of 2
     } else {
       logger.severe("Invalid entity type: " + entity);
-      return -1;
+      return 0;
     }
   }
   
@@ -155,7 +171,13 @@ class InheritanceHierarchyDepthCalculator extends Calculator {
       return 0;
     }
     if (entity.getType() == Entity.PARAMETERIZED_TYPE) {
-      entity = ((ModeledParametrizedType) entity).getBaseType();
+      ModeledEntity base = ((ModeledParametrizedType) entity).getBaseType();
+      if (base == null) {
+        logger.severe("Null base type: " + entity);
+        return 0;
+      } else {
+        entity = base;
+      }
     }
     if (!projectID.equals(entity.getProjectID()) || entity.getType() == Entity.UNKNOWN) {
       return 0;
@@ -163,13 +185,19 @@ class InheritanceHierarchyDepthCalculator extends Calculator {
       return 1 + calculateInternalClassDepth(((ModeledDeclaredType) entity).getSuperclass(), projectID);
     } else {
       logger.severe("Invalid entity type: " + entity);
-      return -1;
+      return 0;
     }
   }
   
   private int calculateInterfaceDepth(ModeledEntity entity) {
     if (entity.getType() == Entity.PARAMETERIZED_TYPE) {
-      entity = ((ModeledParametrizedType) entity).getBaseType();
+      ModeledEntity base = ((ModeledParametrizedType) entity).getBaseType();
+      if (base == null) {
+        logger.severe("Null base type: " + entity);
+        return 0;
+      } else {
+        entity = base;
+      }
     }
     if (entity.getType().is(Entity.CLASS, Entity.INTERFACE, Entity.ENUM)) {
       ModeledDeclaredType ent = (ModeledDeclaredType) entity;
@@ -182,13 +210,19 @@ class InheritanceHierarchyDepthCalculator extends Calculator {
       return 1; // minimum of 1
     } else {
       logger.severe("Invalid entity type: " + entity);
-      return -1;
+      return 0;
     }
   }
   
   private int calculateInternalInterfaceDepth(ModeledEntity entity, Integer projectID) {
     if (entity.getType() == Entity.PARAMETERIZED_TYPE) {
-      entity = ((ModeledParametrizedType) entity).getBaseType();
+      ModeledEntity base = ((ModeledParametrizedType) entity).getBaseType();
+      if (base == null) {
+        logger.severe("Null base type: " + entity);
+        return 0;
+      } else {
+        entity = base;
+      }
     }
     if (!projectID.equals(entity.getProjectID()) || entity.getType() == Entity.UNKNOWN) {
       return 0;
@@ -203,7 +237,7 @@ class InheritanceHierarchyDepthCalculator extends Calculator {
       return 1; // minimum of 1
     } else {
       logger.severe("Invalid entity type: " + entity);
-      return -1;
+      return 0;
     }
   }
 }

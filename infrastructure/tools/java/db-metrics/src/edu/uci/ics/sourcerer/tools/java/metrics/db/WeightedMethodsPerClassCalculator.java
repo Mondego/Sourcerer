@@ -61,7 +61,7 @@ public class WeightedMethodsPerClassCalculator extends Calculator {
           avgWmc.addValue(value);
           for (ModeledStructuralEntity child : dec.getChildren()) {
             if (child.getType() == Entity.METHOD) {
-              metrics.getEntityValue(child.getEntityID(), Metric.BC_CYCLOMATIC_COMPLEXITY);
+              value = metrics.getEntityValue(child.getEntityID(), Metric.BC_CYCLOMATIC_COMPLEXITY);
               if (value != null) {
                 avgCyc.addValue(value);
               }

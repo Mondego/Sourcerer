@@ -41,16 +41,16 @@ class MetricsCalculator extends DatabaseRunnable {
   private final TaskProgressLogger task;
   private final TypeModel javaLibraryModel;
   private final Calculator[] calculators = {
-//      new NumberOfBaseClassesCalculator(),
-//      new NumberOfBaseInterfacesCalculator(),
-//      new NumberOfClassChildrenCalculator(),
-//      new NumberOfInterfaceRelativesCalculator(),
-//      new InheritanceHierarchyDepthCalculator(),
-//      new AverageSizeOfStatementsCalculator(),
-//      new VocabularyFrequencyCalculator(),
-//      new WeightedMethodsPerClassCalculator(),
-//      new InternalCouplingCalculator(),
-//      new LackOfCohesionCalculator(),
+      new NumberOfBaseClassesCalculator(),
+      new NumberOfBaseInterfacesCalculator(),
+      new NumberOfClassChildrenCalculator(),
+      new NumberOfInterfaceRelativesCalculator(),
+      new InheritanceHierarchyDepthCalculator(),
+      new AverageSizeOfStatementsCalculator(),
+      new VocabularyFrequencyCalculator(),
+      new WeightedMethodsPerClassCalculator(),
+      new InternalCouplingCalculator(),
+      new LackOfCohesionCalculator(),
       new ResponseForClassCalculator(),
   };
   

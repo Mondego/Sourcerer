@@ -89,7 +89,10 @@ public class NumberOfInterfaceRelativesCalculator extends Calculator {
               ModeledEntity next = stack.pop();
               if (!seen.contains(next)) {
                 if (next.getType() == Entity.PARAMETERIZED_TYPE) {
-                  stack.push(((ModeledParametrizedType) next).getBaseType());
+                  ModeledEntity base =((ModeledParametrizedType) next).getBaseType();
+                  if (base != null) {
+                    stack.push(base);
+                  }
                 } else if (projectID.equals(next.getProjectID())) {
                   ModeledDeclaredType face = (ModeledDeclaredType) next;
                   if (first) {

@@ -17,6 +17,7 @@
  */
 package edu.uci.ics.sourcerer.tools.java.metrics.db;
 
+import static edu.uci.ics.sourcerer.util.io.logging.Logging.logger;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.HashMultiset;
@@ -64,13 +65,18 @@ public class NumberOfClassChildrenCalculator extends Calculator {
           if (sup.getType() == Entity.PARAMETERIZED_TYPE) {
             sup = ((ModeledParametrizedType) sup).getBaseType();
           } else if (projectID.equals(sup.getProjectID())) {
-            ModeledDeclaredType ssup = (ModeledDeclaredType) sup;
-            if (first) {
-              directParents.add(ssup);
-              first = false;
+            if (sup instanceof ModeledDeclaredType) {
+              ModeledDeclaredType ssup = (ModeledDeclaredType) sup;
+              if (first) {
+                directParents.add(ssup);
+                first = false;
+              }
+              parents.add(ssup);
+              sup = ssup.getSuperclass();
+            } else {
+              logger.severe("Declared type expected: " + sup);
+              sup = null;
             }
-            parents.add(ssup);
-            sup = ssup.getSuperclass();
           } else {
             sup = null;
           }

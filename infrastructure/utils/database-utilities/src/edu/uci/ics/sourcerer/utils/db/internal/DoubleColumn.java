@@ -20,17 +20,22 @@ package edu.uci.ics.sourcerer.utils.db.internal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.text.DecimalFormat;
+
+import edu.uci.ics.sourcerer.util.Strings;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
 class DoubleColumn extends ColumnImpl<Double> {
+  private DecimalFormat format;
   DoubleColumn(DatabaseTableImpl table, String name, boolean nullable) {
     super(table, name, "FLOAT" + (nullable ? "" : " NOT NULL"), nullable, Types.FLOAT);
   }
   
   DoubleColumn(DatabaseTableImpl table, String name, int totalDigits, int decimalDigits, boolean nullable) {
     super(table, name, "FLOAT(" + totalDigits + "," + decimalDigits+")" + (nullable ? "" : " NOT NULL"), nullable, Types.DOUBLE);
+    format = new DecimalFormat(Strings.create('#', totalDigits - decimalDigits) + "." + Strings.create('#', decimalDigits));
   }
 
   @Override
@@ -46,7 +51,13 @@ class DoubleColumn extends ColumnImpl<Double> {
   @Override
   protected String toHelper(Double value) {
     if (value.isInfinite() || value.isNaN()) {
-      return "" + Double.MAX_VALUE;
+      if (isNullable()) {
+        return "NULL";
+      } else {
+        return "0";
+      }
+    } else if (format != null) {
+      return format.format(value.doubleValue());
     } else {
       return value.toString();
     }
