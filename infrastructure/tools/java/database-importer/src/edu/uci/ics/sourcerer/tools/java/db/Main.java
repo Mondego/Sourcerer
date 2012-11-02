@@ -148,6 +148,18 @@ public class Main {
       ParallelDatabaseImporter.THREAD_COUNT,
       FileUtils.TEMP_DIR);
   
+  public static final Command ADD_FB_METRICS =
+      new Command("add-fb-metrics", "Adds findbugs metrics to the database.") {
+        protected void action() {
+          ParallelDatabaseImporter.addFindBugs();
+        }
+    }.setProperties(
+        JavaRepositoryFactory.INPUT_REPO,
+        DatabaseConnectionFactory.DATABASE_URL,
+        DatabaseConnectionFactory.DATABASE_USER,
+        DatabaseConnectionFactory.DATABASE_PASSWORD,
+        ParallelDatabaseImporter.THREAD_COUNT,
+        FileUtils.TEMP_DIR);
     
   public static final Command COMPUTE_COMPONENT_FIT =
     new Command("compute-component-fit", "Computes how well the identified components match the maven classification.") {

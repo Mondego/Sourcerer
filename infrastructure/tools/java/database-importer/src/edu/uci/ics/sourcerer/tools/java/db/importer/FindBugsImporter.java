@@ -18,10 +18,14 @@
 package edu.uci.ics.sourcerer.tools.java.db.importer;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -44,6 +48,7 @@ import edu.uci.ics.sourcerer.tools.java.repo.model.extracted.ExtractedJarFile;
 import edu.uci.ics.sourcerer.util.Averager;
 import edu.uci.ics.sourcerer.util.Nullerator;
 import edu.uci.ics.sourcerer.util.io.FileUtils;
+import edu.uci.ics.sourcerer.util.io.IOUtils;
 import edu.uci.ics.sourcerer.utils.db.BatchInserter;
 import edu.uci.ics.sourcerer.utils.db.sql.ConstantCondition;
 import edu.uci.ics.sourcerer.utils.db.sql.SelectQuery;
@@ -54,7 +59,6 @@ import edu.uci.ics.sourcerer.utils.db.sql.TypedQueryResult;
  */
 public class FindBugsImporter extends DatabaseImporter {
   private Nullerator<ExtractedJarFile> jars;
-  
   
   protected FindBugsImporter(Nullerator<ExtractedJarFile> jars) {
     super("Adding findbugs metrics");
@@ -88,7 +92,7 @@ public class FindBugsImporter extends DatabaseImporter {
     private Double readAtt(Attributes attributes, String name) {
       String att = attributes.getValue(name);
       if (att == null) {
-        task.report(Level.SEVERE, "Missing " + name);
+//        task.report(Level.SEVERE, "Missing " + name);
         return null;
       } else {
         return Integer.valueOf(att).doubleValue();
@@ -232,7 +236,7 @@ public class FindBugsImporter extends DatabaseImporter {
           while (result.next()) {
             Integer entityID = result.getResult(EntitiesTable.ENTITY_ID);
             String fqn = result.getResult(EntitiesTable.FQN);
-            fileMap.put(fqn, entityID);
+            packageMap.put(fqn, entityID);
             task.progress();
           }
           task.finish();
@@ -253,13 +257,37 @@ public class FindBugsImporter extends DatabaseImporter {
         }
 
         task.start("Parsing results file");
-        File findbugsFile = new File(jar.getExtractionDir().toFile(), FindBugsRunner.FINDBUGS_FILE_NAME.getValue());
+        InputStream is = null;
         Handler handler = new Handler(projectID, packageMap, fileMap);
         try {
-          parser.parse(findbugsFile, handler);
+          // Check for the uncompressed file
+          File findbugsFile = new File(jar.getExtractionDir().toFile(), FindBugsRunner.FINDBUGS_FILE_NAME.getValue());
+          if (findbugsFile.exists()) {
+            is = new FileInputStream(findbugsFile);
+          } else {
+            // Check for the compressed file
+            if (jar.getCompressedFile().exists()) {
+              String entryName = FindBugsRunner.FINDBUGS_FILE_NAME.getValue();
+              ZipInputStream zis = new ZipInputStream(new FileInputStream(jar.getCompressedFile().toFile()));
+              ZipEntry entry = null;
+              while ((entry = zis.getNextEntry()) != null) {
+                if (entryName.equals(entry.getName())) {
+                  is = zis;
+                }
+              }
+            }
+          }
+          
+          if (is == null) {
+            task.report("Unable to find FindBugs file for: " + jar);
+          } else {
+            parser.parse(is, handler);
+          }
           task.finish();
         } catch (SAXException | IOException e) {
           task.exception(e);
+        } finally {
+          IOUtils.close(is);
         }
         
         task.finish();
