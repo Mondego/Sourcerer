@@ -65,6 +65,7 @@ class StringColumnImpl extends ColumnImpl<String> implements StringColumn {
   
   @Override
   protected String toHelper(String value) {
+    value = value.replace("\\", "\\\\").replace("'", "\\'");
     if (value.length() > maxSize) {
       String trunc = value.substring(0, maxSize);
       TaskProgressLogger.get().report(Level.WARNING, "Forced to truncate " + toString() + " to " + trunc);

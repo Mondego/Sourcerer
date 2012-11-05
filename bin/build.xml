@@ -56,6 +56,9 @@
 
   <property name="db-metrics" location="../infrastructure/tools/java/db-metrics/src" />
   <property name="build-db-metrics" location="${build}/db-metrics" />
+  
+  <property name="component-utilization" location="../infrastructure/tools/java/component-utilization/src" />
+  <property name="build-component-utilization" location="${build}/component-utilization" />
     
 	<property name="bytecode-extractor" location="../infrastructure/tools/java/bytecode-extractor/src" />
 	<property name="build-bytecode-extractor" location="${build}/bytecode-extractor" />
@@ -473,6 +476,68 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
     <jar destfile="${dist}/db-metrics.jar" basedir="${build-db-metrics}">
       <manifest>
         <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.metrics.db.Main" />
+      </manifest>
+    </jar>
+  </target>
+  
+  <!-- DB Metrics -->
+  <target name="component-utilization" depends="init" description="Builds the component utilization calculator tools (component-utilization.jar)">
+    <!-- Make the build directory -->
+    <mkdir dir="${build-component-utilization}" />
+
+    <!-- Compile everything -->
+    <javac destdir="${build-component-utilization}" debug="on" includeantruntime="false">
+      <src path="${utilities}" />
+      <src path="${database-utilities}" />
+      <src path="${model}" />
+      <src path="${database}" />
+      <src path="${java-repo-manager}" />
+      <src path="${core-repo-manager}" />
+      <src path="${component-identifier}" />
+      <src path="${component-utilization}" />
+      <classpath>
+        <pathelement path="${classpath}" />
+        <fileset dir="${lib}">
+          <include name="**/guava-11.0.1.jar" />
+          <include name="**/asm-4.0_RC2.jar" />
+        </fileset>
+      </classpath>
+    </javac>
+
+    <!-- Copy the source -->
+    <copy todir="${build-component-utilization}">
+      <fileset dir="${utilities}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-component-utilization}">
+      <fileset dir="${database-utilities}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-component-utilization}">
+      <fileset dir="${model}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-component-utilization}">
+      <fileset dir="${database}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-component-utilization}">
+      <fileset dir="${java-repo-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-component-utilization}">
+      <fileset dir="${core-repo-manager}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-component-utilization}">
+      <fileset dir="${component-identifier}" includes="**/*.java" />
+    </copy>
+    <copy todir="${build-component-utilization}">
+      <fileset dir="${component-utilization}" includes="**/*.java" />
+    </copy>
+
+    <!-- Add the required jars -->
+    <unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-component-utilization}" />
+    <unjar src="${lib}/guava-11.0.1.jar" dest="${build-component-utilization}" />
+
+    <!-- Build the jar -->
+    <jar destfile="${dist}/component-utilization.jar" basedir="${build-component-utilization}">
+      <manifest>
+        <attribute name="Main-Class" value="edu.uci.ics.sourcerer.tools.java.component.utilization.Main" />
       </manifest>
     </jar>
   </target>

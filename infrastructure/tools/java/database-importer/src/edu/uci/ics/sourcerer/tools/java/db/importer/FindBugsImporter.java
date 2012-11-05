@@ -224,6 +224,7 @@ public class FindBugsImporter extends DatabaseImporter {
         if (projectID == null) {
           task.report("Unable to locate project for: " + jar.getProperties().HASH.getValue());
           task.finish();
+          task.finish();
           continue;
         }
         task.finish();
@@ -273,6 +274,7 @@ public class FindBugsImporter extends DatabaseImporter {
               while ((entry = zis.getNextEntry()) != null) {
                 if (entryName.equals(entry.getName())) {
                   is = zis;
+                  break;
                 }
               }
             }
