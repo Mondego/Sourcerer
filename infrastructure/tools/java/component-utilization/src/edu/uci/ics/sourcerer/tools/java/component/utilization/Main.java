@@ -25,10 +25,17 @@ import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class Main {
-  public static final Command CALCULATE_COMPONENT_UTILIZATION = new Command("calculate-component-utilization", "Calculates the component utilization metrics.") {
+  public static final Command CALCULATE_BASIC_COMPONENT_UTILIZATION = new Command("calculate-basic-component-utilization", "Calculates the component utilization metrics.") {
     @Override
     protected void action() {
-      UtilizationCalculator.calculateComponentUtilization();
+      BasicUtilizationCalculator.calculateComponentUtilization();
+    }
+  }.setProperties(FileUtils.TEMP_DIR, DatabaseConnectionFactory.DATABASE_USER, DatabaseConnectionFactory.DATABASE_PASSWORD, DatabaseConnectionFactory.DATABASE_URL);
+  
+  public static final Command CALCULATE_FQN_COMPONENT_UTILIZATION = new Command("calculate-fqn-component-utilization", "Calculates the component utilization metrics.") {
+    @Override
+    protected void action() {
+      FqnUtilizationCalculator.calculateComponentUtilization();
     }
   }.setProperties(FileUtils.TEMP_DIR, DatabaseConnectionFactory.DATABASE_USER, DatabaseConnectionFactory.DATABASE_PASSWORD, DatabaseConnectionFactory.DATABASE_URL);
   

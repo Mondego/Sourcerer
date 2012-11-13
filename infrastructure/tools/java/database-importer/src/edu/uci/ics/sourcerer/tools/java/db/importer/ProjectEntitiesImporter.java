@@ -60,7 +60,7 @@ class ProjectEntitiesImporter extends EntitiesImporter {
         
         task.start("Verifying import suitability");
         boolean shouldImport = true;
-        if (project.getProperties().EXTRACTED.getValue()) {
+        if (project.getProperties().EXTRACTED.getValue() != null && project.getProperties().EXTRACTED.getValue()) {
           equalsPath.setValue(project.getLocation().toString());
           TypedQueryResult result = projectState.select();
           if (result.next()) {
@@ -74,6 +74,10 @@ class ProjectEntitiesImporter extends EntitiesImporter {
               deleteProjectContents(projectID);
               task.finish();
             }
+          } else if (project.getProperties().NAME.getValue() == null) {
+              // Verify that it has a name
+              task.report("Null name... skipping");
+              shouldImport = false;
           }
         } else {
           task.report("Extraction not completed... skipping");

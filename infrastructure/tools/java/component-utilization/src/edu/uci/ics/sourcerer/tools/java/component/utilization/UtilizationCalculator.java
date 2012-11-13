@@ -147,22 +147,24 @@ public class UtilizationCalculator extends DatabaseRunnable {
       Map<Integer, Set<Integer>> clusterFileUtilization = new HashMap<>();
       Map<Integer, Integer> clusterUses = new HashMap<>();
       
-      task.start("Computing metric for clusters", "clusters processed", 1);
+      task.start("Computing metric for clusters", "clusters processed", 5);
       try (SelectQuery getFQN = exec.createSelectQuery(ComponentRelationsTable.TARGET_ID.compareEquals(TypesTable.TYPE_ID));
            SelectQuery getFqnUtilization = exec.createSelectQuery(RelationsTable.RHS_EID.compareEquals(EntitiesTable.ENTITY_ID))) {
         getFQN.addSelect(TypesTable.FQN);
-        getFQN.andWhere(ComponentRelationsTable.TYPE.compareIn(EnumSet.of(ComponentRelation.CLUSTER_CONTAINS_CORE_TYPE, ComponentRelation.CLUSTER_CONTAINS_VERSION_TYPE)));
+        ConstantCondition<Integer> matchCluster = ComponentRelationsTable.SOURCE_ID.compareEquals();
+        getFQN.andWhere(matchCluster, ComponentRelationsTable.TYPE.compareIn(EnumSet.of(ComponentRelation.CLUSTER_CONTAINS_CORE_TYPE, ComponentRelation.CLUSTER_CONTAINS_VERSION_TYPE)));
         
         getFqnUtilization.addSelect(RelationsTable.FILE_ID, RelationsTable.PROJECT_ID);
         ConstantCondition<String> matchFQN = EntitiesTable.FQN.compareEquals();
         getFqnUtilization.andWhere(matchFQN, RelationsTable.RELATION_TYPE.compareIn(EnumSet.of(Relation.USES, Relation.CALLS)));
-        
         
         // For each cluster
         for (Integer clusterID : getComponents.select(Component.CLUSTER)) {
           Set<Integer> projects = new HashSet<>();
           Set<Integer> files = new HashSet<>();
           int uses = 0;
+          
+          matchCluster.setValue(clusterID);
           
           // For each type FQN
           for (String fqn : getFQN.select().toCollection(TypesTable.FQN)) {
@@ -189,6 +191,35 @@ public class UtilizationCalculator extends DatabaseRunnable {
           clusterProjectUtilization.put(clusterID, projects);
           clusterFileUtilization.put(clusterID, files);
           clusterUses.put(clusterID, uses);
+        }
+      }
+      task.finish();
+      
+      task.start("Computing metric for libraries", "libraries processed", 5);
+      try (SelectQuery getClusters = exec.createSelectQuery(ComponentRelationsTable.TABLE)) {
+        getClusters.addSelect(ComponentRelationsTable.TARGET_ID);
+        ConstantCondition<Integer> condLibraryID = ComponentRelationsTable.TARGET_ID.compareEquals();
+        getClusters.andWhere(condLibraryID, ComponentRelationsTable.TYPE.compareEquals(ComponentRelation.LIBRARY_CONTAINS_CLUSTER));
+        
+        // For each library
+        for (Integer libraryID : getComponents.select(Component.LIBRARY)) {
+          Set<Integer> projects = new HashSet<>();
+          Set<Integer> files = new HashSet<>();
+          int uses = 0;
+          
+          // For every cluster in the library
+          condLibraryID.setValue(libraryID);
+          for (Integer clusterID : getClusters.select().toIterable(ComponentRelationsTable.TARGET_ID)) {
+            projects.addAll(clusterProjectUtilization.get(clusterID));
+            files.addAll(clusterFileUtilization.get(clusterID));
+            uses += clusterUses.get(clusterID);
+          }
+          
+          // Add the utilization metric to the database
+          inserter.addInsert(ComponentMetricsTable.createInsert(libraryID, ComponentMetric.PROJECTS_USING_FQN, projects.size()));
+          inserter.addInsert(ComponentMetricsTable.createInsert(libraryID, ComponentMetric.FILES_USING_FQN, files.size()));
+          inserter.addInsert(ComponentMetricsTable.createInsert(libraryID, ComponentMetric.FQN_USES, uses));
+          task.progress();
         }
       }
       task.finish();

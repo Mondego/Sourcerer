@@ -72,7 +72,7 @@ public class ProjectReferentialRelationsImporter extends ReferentialRelationsImp
         
         task.start("Verifying import suitability");
         Integer projectID = null;
-        if (project.getProperties().EXTRACTED.getValue()) {
+        if (project.getProperties().EXTRACTED.getValue() != null && project.getProperties().EXTRACTED.getValue()) {
           equalsPath.setValue(project.getLocation().toString());
           TypedQueryResult result = projectState.select();
           if (result.next()) {

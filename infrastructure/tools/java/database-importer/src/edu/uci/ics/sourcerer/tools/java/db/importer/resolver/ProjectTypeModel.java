@@ -326,6 +326,9 @@ public class ProjectTypeModel {
   }
   
   public ModeledEntity getVirtualEntity(String fqn) {
+    if (fqn == null) {
+      return null;
+    }
     // Try the map
     ModeledEntity entity = entities.get(fqn);
     if (entity != null) {
