@@ -113,7 +113,7 @@ public class InternalCouplingCalculator extends Calculator {
                   referencedTypes = new HashSet<>();
                   effMap.put(dec, referencedTypes);
                 }
-                addEff(referencedTypes, projectID, lhs);
+                addEff(referencedTypes, projectID, rhs);
                 stack.push(dec.getOwner());
               } else {
                 stack.push(((ModeledStructuralEntity) next).getOwner());

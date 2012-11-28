@@ -24,6 +24,7 @@ import edu.uci.ics.sourcerer.tools.java.extractor.Extractor.ExtractionMethod;
 import edu.uci.ics.sourcerer.tools.java.extractor.Extractor.JarType;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
 import edu.uci.ics.sourcerer.tools.java.extractor.misc.ExtractedRepositoryAnalyzer;
+import edu.uci.ics.sourcerer.tools.java.extractor.misc.UtilizationFilter;
 import edu.uci.ics.sourcerer.tools.java.extractor.missing.MissingTypeIdentifier;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.FindBugsRunner;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.WriterBundle;
@@ -39,6 +40,7 @@ import edu.uci.ics.sourcerer.tools.java.model.extracted.io.internal.UsedJarWrite
 import edu.uci.ics.sourcerer.tools.java.repo.model.JavaRepositoryFactory;
 import edu.uci.ics.sourcerer.util.io.arguments.Command;
 import edu.uci.ics.sourcerer.util.io.logging.Logging;
+import edu.uci.ics.sourcerer.utils.db.DatabaseConnectionFactory;
 
 
 /**
@@ -181,9 +183,10 @@ public class Main implements IApplication {
   public static final Command CREATE_JAR_FILTER =
       new Command("create-jar-filter", "Create jar filter") {
         protected void action() {
-          ExtractedRepositoryAnalyzer.createUsedJarFilter();
+//          ExtractedRepositoryAnalyzer.createUsedJarFilter();
+          UtilizationFilter.createUtilizationJarFilter();
         }
-    }.setProperties(JavaRepositoryFactory.INPUT_REPO, Extractor.JAR_FILTER.asOutput());
+    }.setProperties(Extractor.JAR_FILTER.asOutput(), DatabaseConnectionFactory.DATABASE_URL, DatabaseConnectionFactory.DATABASE_USER, DatabaseConnectionFactory.DATABASE_PASSWORD);
     
   @Override
   public Object start(IApplicationContext context) throws Exception {
