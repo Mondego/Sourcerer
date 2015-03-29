@@ -1,0 +1,5 @@
+{
+    "host": "<database location>",
+    "user": "<username>",
+    "passwd":  "<password>"
+}

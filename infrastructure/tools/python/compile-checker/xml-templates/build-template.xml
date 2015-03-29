@@ -1,0 +1,33 @@
+<project name="{0}" default="compile" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+  <description>
+    {1}
+  </description>
+  <!-- set global properties for this build -->
+  <property name="src" location="."/>
+  <property name="build" location="build"/>
+
+  <target name="init">
+    <!-- Create the time stamp -->
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="{3}"/>
+  </target>
+  
+  <target name="resolve" depends="init" description="resolve dependencies with ivy">
+    <ivy:resolve />
+    <ivy:cachepath pathid="default.classpath" />
+  </target>
+  
+  <target name="compile" depends="resolve"
+        description="compile the source " >
+    <!-- Compile the java code from src into build -->
+    <javac srcdir="{4}" destdir="{3}">
+{2}
+    </javac>
+  </target>
+
+  <target name="clean"
+        description="clean up" >
+    <delete dir="{3}"/>
+  </target>
+</project>

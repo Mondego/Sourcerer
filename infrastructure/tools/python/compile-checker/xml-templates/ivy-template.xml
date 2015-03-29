@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ivy-module version="2.0"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+ <info organisation="org.sourcerer.rebuilt" module="{0}" status="internal">
+ </info>
+ <dependencies>
+  {1}
+ </dependencies>
+</ivy-module>
