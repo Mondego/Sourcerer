@@ -21,7 +21,7 @@
   <target name="compile" depends="resolve"
         description="compile the source " >
     <!-- Compile the java code from src into build -->
-    <javac srcdir="{4}" destdir="{3}">
+    <javac srcdir="{4}" destdir="{3}" encoding="{5}">
 {2}
     </javac>
   </target>
@@ -31,3 +31,4 @@
     <delete dir="{3}"/>
   </target>
 </project>
+

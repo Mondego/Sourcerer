@@ -3,8 +3,8 @@ from threading import Thread, Lock
 from subprocess import check_output, call, CalledProcessError, STDOUT
 
 MOUNTLOCATION = "/home/sourcerer/repo"
-PROJECTMAP = "project_map_compile_ready.json"
-SUCCESSMAP = "project_compile_checked.json"
+SUCCESSMAP = "project_successmap_no_depends.json"
+PROJECTMAP = "compile_list_no_depends.json"
 PARTMAP = "project_compile_temp{0}.shelve"
 THREADCOUNT = 24
 
@@ -33,7 +33,7 @@ def makebuildfile(path, data, srcdir):
   mavendepends = set([d for d in depends if d[3]])
   mavenline = "\n  ".join([d[4] for d in mavendepends])
   jardepends = depends - mavendepends
-  jarline = "\n        ".join(["<pathelement path=\"{0}\" />".format(os.path.join(path, d[4])) for d in jardepends])
+  jarline = "\n        ".join(["<pathelement path=\"{0}\" />".format(os.path.join(path, d[4], "jar.jar")) for d in jardepends])
   classpath = ""
   if jarline or mavenline:
     if mavenline:
@@ -43,7 +43,7 @@ def makebuildfile(path, data, srcdir):
 
   desc = data["description"] if data["description"] else ""
   ivyfile = open("xml-templates/ivy-template.xml", "r").read().format(data["name"], mavenline)
-  buildfile = open("xml-templates/build-template.xml", "r").read().format(data["name"], desc, classpath, "${build}", "${src}")
+  buildfile = open("xml-templates/build-template.xml", "r").read().format(data["name"], desc, classpath, "${build}", "${src}", data["encoding"] if "encoding" in data else "utf8")
   open(os.path.join(srcdir, "ivy.xml"), "w").write(ivyfile)
   open(os.path.join(srcdir, "build.xml"), "w").write(buildfile)
   return ivyfile, buildfile
@@ -71,10 +71,12 @@ def clean(srcdir):
 
 def createProjectAndCompile(path, srcdir, namelist, projectmap, shelveobj):
   i = 0
+  #print path, len(namelist)
   for id in namelist:
     id = str(id)
-    if id in shelveobj:
+    if id in shelveobj or id == "323242":
       continue
+    #print id
     ivyfile = ""
     buildfile = ""
     succ = False
@@ -97,7 +99,7 @@ def createProjectAndCompile(path, srcdir, namelist, projectmap, shelveobj):
     shelveobj.sync()
     cleanup(srcdir)
     i += 1
-    if i%10 == 0:
+    if i%100 == 0:
       print srcdir, i, "/", len(namelist)
   clean(srcdir)
 
@@ -150,3 +152,4 @@ def main(threadcount, mountloc, projectmap, successmaploc = None):
 if __name__ == "__main__":
   projectmap = json.load(open(PROJECTMAP, "r"))
   main(THREADCOUNT, MOUNTLOCATION, projectmap, SUCCESSMAP)
+
