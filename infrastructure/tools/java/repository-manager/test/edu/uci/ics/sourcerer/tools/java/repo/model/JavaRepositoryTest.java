@@ -18,6 +18,7 @@
 package edu.uci.ics.sourcerer.tools.java.repo.model;
 
 import java.io.File;
+import java.io.IOException;
 
 import junit.framework.Assert;
 
@@ -50,8 +51,13 @@ public class JavaRepositoryTest {
   
   @Test
   public void testJavaRepository() {
-    JavaRepositoryFactory.INPUT_REPO.setValue(folder.newFolder("repo"));
-    
+	  try {
+		  JavaRepositoryFactory.INPUT_REPO.setValue(folder.newFolder("repo"));
+	  }
+	  catch (IOException e)
+	  {
+	  }
+	  
     {
       // Create the repository
       ModifiableJavaRepository repo = JavaRepositoryFactory.INSTANCE.loadModifiableJavaRepository(JavaRepositoryFactory.INPUT_REPO);
