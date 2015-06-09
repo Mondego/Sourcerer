@@ -7,6 +7,7 @@ ant bytecode-extractor     #Builds the Bytecode Extractor (bytecode-extractor.ja
 ant component-identifier   #Builds the Component Identifier (component-identifier.jar)
 ant component-utilization  #Builds the component utilization calculator tools (component-utilization.jar)
 ant core-repo-manager      #Builds the Core Repository Manager tools (core-repo-tools.jar)
+ant extractor-lib          #Build and populate the necessary libraries for the Extractor. This is necessary for create-test-repo
 ant create-test-repo       #Construct the test repository (../infrastructure/tools/java/extractor/test-repo/)
 ant database-importer      #Builds the Database tools (db-import.jar)
 ant db-metrics             #Builds the database metrics calculator tools (db-metrics.jar)
