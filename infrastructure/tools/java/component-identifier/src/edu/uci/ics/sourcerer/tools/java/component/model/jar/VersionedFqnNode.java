@@ -135,10 +135,12 @@ public class VersionedFqnNode extends AbstractFqnNode<VersionedFqnNode> {
           while (jarScanner.hasNext()) {
             Jar jar = jarMapping[jarScanner.nextInt()];
             if (jar == null) {
+              jarScanner.close();
               throw new InvalidFileFormatException("Missing jar!");
             }
             jar.addFqn(node.getVersion(fingerprint));
           }
+          jarScanner.close();
         }
       }
     };

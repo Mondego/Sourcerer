@@ -277,6 +277,7 @@ public class FindBugsImporter extends DatabaseImporter {
                   break;
                 }
               }
+            zis.close();  
             }
           }
           
