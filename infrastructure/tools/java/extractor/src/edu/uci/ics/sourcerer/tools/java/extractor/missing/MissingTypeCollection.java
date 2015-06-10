@@ -204,4 +204,8 @@ public class MissingTypeCollection {
   public Iterable<MissingType> getMissingTypes() {
     return missingTypes.values();
   }
+
+public String getCurrentPackage() {
+	return currentPackage;
+}
 }
