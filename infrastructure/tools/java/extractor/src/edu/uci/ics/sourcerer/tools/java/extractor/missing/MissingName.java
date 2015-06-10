@@ -25,12 +25,10 @@ import java.util.HashSet;
  * @author Joel Ossher (jossher@uci.edu)
  */
 public class MissingName {
-  private final String mainPackage;
   private final String name;
   private Collection<MissingPackage> potentialOwners;
   
   private MissingName(String mainPackage, String name) {
-    this.mainPackage = mainPackage;
     this.name = name;
     potentialOwners = Collections.emptySet();
   }

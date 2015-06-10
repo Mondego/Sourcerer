@@ -20,7 +20,6 @@ package edu.uci.ics.sourcerer.tools.java.extractor.missing;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.Set;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -63,4 +62,12 @@ public class MissingPackage {
   void reportMissing() {
     onDemandCount++;
   }
+
+public String getFqn() {
+	return fqn;
+}
+
+public int getOnDemandCount() {
+	return onDemandCount;
+}
 }

@@ -27,17 +27,12 @@ import java.util.Set;
 public class MissingType {
   private final String fqn;
   private final MissingPackage pkg;
-  private int missingCount;
   private Set<String> fields;
   private Set<String> methods;
   private Set<String> associatedNames;
-  private int missingStaticOnDemandCount;
-  
   private MissingType(String fqn, MissingPackage pkg) {
     this.fqn = fqn;
     this.pkg = pkg;
-    missingCount = 0;
-    missingStaticOnDemandCount = 0;
     fields = Collections.emptySet();
     methods = Collections.emptySet();
     associatedNames = Collections.emptySet();
@@ -49,7 +44,6 @@ public class MissingType {
   }
   
   void reportMissing() {
-    missingCount++;
   }
 
   void reportField(String name) {
@@ -74,7 +68,6 @@ public class MissingType {
   }
   
   void reportMissingStaticOnDemand() {
-    missingStaticOnDemandCount++;
   }
   
   public String getFqn() {

@@ -22,9 +22,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */

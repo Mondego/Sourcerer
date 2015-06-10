@@ -23,7 +23,6 @@ import org.eclipse.equinox.app.IApplicationContext;
 import edu.uci.ics.sourcerer.tools.java.extractor.Extractor.ExtractionMethod;
 import edu.uci.ics.sourcerer.tools.java.extractor.Extractor.JarType;
 import edu.uci.ics.sourcerer.tools.java.extractor.eclipse.EclipseUtils;
-import edu.uci.ics.sourcerer.tools.java.extractor.misc.ExtractedRepositoryAnalyzer;
 import edu.uci.ics.sourcerer.tools.java.extractor.misc.UtilizationFilter;
 import edu.uci.ics.sourcerer.tools.java.extractor.missing.MissingTypeIdentifier;
 import edu.uci.ics.sourcerer.tools.java.model.extracted.io.FindBugsRunner;
