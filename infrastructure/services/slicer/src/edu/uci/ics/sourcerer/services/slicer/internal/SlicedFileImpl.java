@@ -21,9 +21,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.TreeSet;
 
-import edu.uci.ics.sourcerer.services.slicer.model.SlicedEntity;
 import edu.uci.ics.sourcerer.services.slicer.model.SlicedFile;
-import edu.uci.ics.sourcerer.services.slicer.model.SlicedImport;
 
 /**
  * @author Joel Ossher (jossher@uci.edu)

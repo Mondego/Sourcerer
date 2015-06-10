@@ -82,6 +82,8 @@ public abstract class AbstractSlicerImpl implements Slicer {
             case ANNOTATION:
             case ANNOTATION_ELEMENT:
               break;
+		default: System.err.println("Switch statement with unclosed clauses.");
+			break;
           }
         }
       }
@@ -188,7 +190,7 @@ public abstract class AbstractSlicerImpl implements Slicer {
       }
     }
     
-    private void addTypeHierarchy(ModeledTypeImpl type) {
+/*    private void addTypeHierarchy(ModeledTypeImpl type) {
       if (type != null) {
         queue.add(type.getEntityID());
         // Add my superclass to the slice
@@ -200,7 +202,7 @@ public abstract class AbstractSlicerImpl implements Slicer {
         }
       }
     }
-    
+    */
     private class NovelQueue {
       private Deque<SlicedEntityImpl> queue;
       
