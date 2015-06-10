@@ -29,9 +29,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import edu.uci.ics.sourcerer.tools.java.db.exported.FileAccessor;
-import edu.uci.ics.sourcerer.tools.java.db.exported.FileAccessor.Link;
-import edu.uci.ics.sourcerer.tools.java.db.exported.FileAccessor.Result;
+import edu.uci.ics.sourcerer.apps.codebrowser.FileAccessor.*;
 import edu.uci.ics.sourcerer.tools.java.highlighter.TagInfo;
 import edu.uci.ics.sourcerer.tools.java.highlighter.TagType;
 import edu.uci.ics.sourcerer.tools.java.highlighter.SyntaxHighlighter;
