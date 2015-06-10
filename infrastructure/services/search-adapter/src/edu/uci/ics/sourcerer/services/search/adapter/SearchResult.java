@@ -162,6 +162,8 @@ public class SearchResult {
             }
           }
         }
+	default: System.err.println("Switch clause with unmatched clauses");
+		break;
       }
     }
     
@@ -208,6 +210,8 @@ public class SearchResult {
             state = State.DOC;
           }
           break;
+	default: System.err.println("Switch clause with unmatched clauses");
+		break;
       }
     }
 
@@ -223,6 +227,8 @@ public class SearchResult {
         case DOC_PARAM_COUNT: result.setParamCount(Integer.parseInt(new String(ch, start, length))); break;
         case DOC_PARAMS: result.setParams(new String(ch, start, length)); break;
         case DOC_RETURN_FQN: result.setReturnFqn(new String(ch, start, length)); break;
+	default: System.err.println("Switch clause with unmatched clauses");
+		break;
       }
     }
   };
