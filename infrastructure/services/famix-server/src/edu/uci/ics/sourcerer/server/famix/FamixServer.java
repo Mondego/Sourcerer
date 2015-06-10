@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package edu.uci.ics.sourcerer.server.famix;
-
+/*
 import static edu.uci.ics.sourcerer.util.io.Logging.logger;
 
 import java.io.IOException;
@@ -35,11 +35,13 @@ import edu.uci.ics.sourcerer.model.metrics.Metric;
 import edu.uci.ics.sourcerer.util.Helper;
 import edu.uci.ics.sourcerer.util.io.PropertyManager;
 import edu.uci.ics.sourcerer.util.server.ServletUtils;
-
+*/
 /**
  * @author Joel Ossher (jossher@uci.edu)
  */
-public class FamixServer extends HttpServlet {
+@Deprecated
+public class FamixServer /*extends HttpServlet*/ {
+/*
   @Override
   public void init() throws ServletException {
     PropertyManager.PROPERTIES_STREAM.setValue(getServletContext().getResourceAsStream("/WEB-INF/lib/famix-server.properties"));
@@ -94,4 +96,5 @@ public class FamixServer extends HttpServlet {
       ServletUtils.writeByteArray(response, projectID.toString() + ".mse", FamixExporter.getFamixModel(projectID));
     }
   }
+  */
 }
