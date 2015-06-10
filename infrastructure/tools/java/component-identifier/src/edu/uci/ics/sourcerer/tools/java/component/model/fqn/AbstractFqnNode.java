@@ -364,11 +364,13 @@ public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> implements C
           if ("null".equals(next)) {
             node = (T) AbstractFqnNode.this;
           } else {
+            lineScanner.close();
             throw new InvalidFileFormatException("Expected null for root name, received " + name);
           }
           // Check the parent info
           next = lineScanner.next();
           if (!"null".equals(next)) {
+        	lineScanner.close();
             throw new InvalidFileFormatException("Expected null for root parent, received " + name);
           }
         } else {
@@ -377,6 +379,7 @@ public abstract class AbstractFqnNode<T extends AbstractFqnNode<T>> implements C
           if (lineScanner.hasNextInt()) {
             parent = nodes.get(lineScanner.nextInt());
           } else {
+        	lineScanner.close();
             throw new InvalidFileFormatException("Expected number for node parent, received " + lineScanner.next());
           }
           node = create(name, parent);
