@@ -1,3 +1,4 @@
+<!-- WARNING: This only runs successfully are running the bin/launch/test-repo/Test Repo.launch -->
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.ant.AntLaunchConfigurationType">
 <booleanAttribute key="org.eclipse.ant.ui.DEFAULT_VM_INSTALL" value="false"/>
