@@ -32,6 +32,7 @@ public class Main {
     protected void action() {
       ASMExtractor extractor = new ASMExtractor(new WriterBundle());
       extractor.extract(FileUtils.getFileAsByteArray(new File("/home/jossher/research/Sourcerer/Foo.class")));
+      extractor.close();
     }
   };
   public static void main(String[] args) {
