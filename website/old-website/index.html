@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+<title>Sourcerer Project: Overview</title>
+<link rel="stylesheet" href="css/sourcerer.css" type="text/css" />
+</head>
+
+<body>
+<div id="container">
+<div id="header">
+<div id="a1"></div>
+<div id="a2"></div>
+<div id="a3"></div>
+<div id="a4"></div>
+<div id="a5"></div>
+The Sourcerer Project
+</div>
+<div id="content">
+<div id="main">
+<h1>Welcome to the homepage of the Sourcerer Project!</h1>
+
+<p><span class="emph">Sourcerer</span> is an ongoing research project at the <a href="www.uci.edu">University of California, Irvine</a> aimed 
+at exploring the open source phenomenon through the use of code analysis. The open source movement has generated an extremely large body of code,
+which presents a tremendous opportunity to software engineering researchers. Not only do we leverage this code for our own research, but we
+provide the open source <span class="emph">Sourcerer Infrastructure</span> for other researchers to use.</p>
+
+<h2>Sourcerer Infrastructure</h2>
+<p>The Sourcerer Infrastructure is composed of a number of layers.</p>
+
+<h3><a href="infrastructure.html">Core Infrastructure</a></h3>
+<p class="sub">At the lowest layer, the <a href="infrastructure.html">core infrastructure</a> is a set of Java tools for crawling, 
+downloading, processing and indexing open source Java projects. It is available on 
+<a href="http://github.com/sourcerer/Sourcerer/">GitHub</a> under a GNU GPL license. 
+</p>
+
+
+<h3><a href="repository.html">Repository</a></h3>
+<p class="sub">While the core infrastructure allows one to automatically crawl and download open source projects,
+we also provide our current repository to anyone interested. More information can be found on the
+<a href="repository.html">repository</a> page.
+
+<h3><a href="sourcerer-db.html">Sourcerer DB</a></h3>
+<p class="sub">Once Sourcerer's repository is constructed, we populate <a href="sourcerer-db.html">Sourcerer DB</a>,
+a relational database, with structure and reference information extracted from the project source code.
+The services that the Sourcerer Infrastructure provides, including the code search service, are all built on
+top of Sourcerer DB. We provide direct read-only access to Sourcerer DB to those that are interested.</p>
+
+<h3><a href="services.html">Services</a></h3>
+<p class="sub">The Sourcerer Infrastructure provides a number of higher-level services that researchers or 
+application designers can leverage to create rich next-generation search applications. These services
+include repository exploration, code search and dependency slicing.
+
+<h3><a href="code-search-engine.html">Code Search Engine</a></h3>
+<p class="sub">The first application we built using the Sourcerer Infrastructure was a code search engine. A running
+version of the search engine can be found <a href="http://sourcerer.ics.uci.edu/sourcerer/search/index.jsp">here</a>.</p>
+
+<!--<h3><a href="code-genie.html">CodeGenie</a></h3>
+<p>CodeGenie, an Eclipse plug-in for test-driven code search, was also constructed using the Sourcerer
+Infrastructure.</p> -->
+
+<!--<h2>Funding</h2>
+<p>Funding for the <span class="emph">Sourcerer Project</span> has been provided by...</p> -->
+</div>
+</div>
+<div id="navbar">
+  <div><a class="sel" href="index.html">Overview</a></div>
+  <div><a href="infrastructure.html">Core Infrastructure</a></div>
+  <div><a href="repository.html">Repository</a></div>
+  <div><a href="sourcerer-db.html">SourcererDB</a></div>
+  <div><a href="services.html">Services</a></div>
+  <div><a href="code-search-engine.html">Code Search Engine</a></div>
+  <!--<div><a href="code-genie.html">CodeGenie</a></div> -->
+  <div><a href="tutorial.html">Tutorial</a></div>
+  <div><a href="people.html">People</a></div>
+  <div><a href="publications.html">Publications</a></div>
+</div>
+</div>
+</body>
+</html>
