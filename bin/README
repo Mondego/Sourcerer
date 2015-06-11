@@ -7,12 +7,15 @@ the command line. The exception is the Jar for the Java program responsible for
 extracting information from projects into an intermediate repository used to
 import information into a database. This must be build in Eclipse.
 
-The scripts 'build-add.sh' and 'build-add.bat' can be used to quickly build everything
-(again, except the extractor that must be built using Eclipse) in UNIX or in Windows,
-respectively.
+The script 'build-add.sh' can be used to quickly build everything
+(again, except the extractor that must be built using Eclipse) in UNIX and in Windows.
 
 A detailed tutorial can be found in http://sourcerer.ics.uci.edu, which is a mirror
 of the website present in the folder /website, in the root of this repository.
 
 A jar file for the Extractor can also be download from http://sourcerer.ics.uci.edu,
 or found on /website, in case the user does not want to use Eclipse just to build this.
+
+** Requisites:
+- Apache Ant: http://ant.apache.org/
+- Java SE Development Kit: http://www.oracle.com/technetwork/java/javase/downloads/index.html

@@ -8,7 +8,6 @@ ant component-identifier   #Builds the Component Identifier (component-identifie
 ant component-utilization  #Builds the component utilization calculator tools (component-utilization.jar)
 ant core-repo-manager      #Builds the Core Repository Manager tools (core-repo-tools.jar)
 ant extractor-lib          #Build and populate the necessary libraries for the Extractor. This is necessary for create-test-repo
-ant create-test-repo       #Construct the test repository (../infrastructure/tools/java/extractor/test-repo/)
 ant database-importer      #Builds the Database tools (db-import.jar)
 ant db-metrics             #Builds the database metrics calculator tools (db-metrics.jar)
 ant file-adapter           #Builds the File Adapter (sourcerer-file.jar)
@@ -21,6 +20,6 @@ ant package-website        #Package the website (website.zip)
 ant search-adapter         #Builds the Search Adapter (sourcerer-search.jar)
 ant slice-server           #Build the Slice Server (slice-server.war)
 
-#ant extractor-lib         #Build and populate the necessary libraries for the Extractor
+# Building the extractor must be done in Eclipse
 #ant extractor             #Build the extractor plugin
 #ant repackage-extractor   #Repackages the extractor for use

@@ -93,12 +93,6 @@
 	<property name="artifact-repo-browser" location="../infrastructure/apps/artifact-repo-browser/src" />
 	<property name="build-artifact-repo-browser" location="${build}/artifact-repo-browser" />
 
-	<!-- Test Repository -->
-	<property name="test-repo" location="../infrastructure/tools/java/extractor/test-repo" />
-
-	<property name="comparison-test" location="${test-repo}/0/2/content/src" />
-	<property name="build-comparison-test" location="${build}/comparison-test" />
-
 	<!-- Website -->
 	<property name="website" location="../website" />
 
@@ -960,74 +954,6 @@ AAAAAAA                   AAAAAAAp::::::pppppppp     p::::::pppppppp      ssssss
 			</lib>
 			<classes dir="${build-artifact-repo-browser}" />
 		</war>
-	</target>
-
-	<!--
-TTTTTTTTTTTTTTTTTTTTTTT                                          tttt               RRRRRRRRRRRRRRRRR                                                            
-T:::::::::::::::::::::T                                       ttt:::t               R::::::::::::::::R                                                           
-T:::::::::::::::::::::T                                       t:::::t               R::::::RRRRRR:::::R                                                          
-T:::::TT:::::::TT:::::T                                       t:::::t               RR:::::R     R:::::R                                                         
-TTTTTT  T:::::T  TTTTTTeeeeeeeeeeee        ssssssssss   ttttttt:::::ttttttt           R::::R     R:::::R    eeeeeeeeeeee    ppppp   ppppppppp      ooooooooooo   
-        T:::::T      ee::::::::::::ee    ss::::::::::s  t:::::::::::::::::t           R::::R     R:::::R  ee::::::::::::ee  p::::ppp:::::::::p   oo:::::::::::oo 
-        T:::::T     e::::::eeeee:::::eess:::::::::::::s t:::::::::::::::::t           R::::RRRRRR:::::R  e::::::eeeee:::::eep:::::::::::::::::p o:::::::::::::::o
-        T:::::T    e::::::e     e:::::es::::::ssss:::::stttttt:::::::tttttt           R:::::::::::::RR  e::::::e     e:::::epp::::::ppppp::::::po:::::ooooo:::::o
-        T:::::T    e:::::::eeeee::::::e s:::::s  ssssss       t:::::t                 R::::RRRRRR:::::R e:::::::eeeee::::::e p:::::p     p:::::po::::o     o::::o
-        T:::::T    e:::::::::::::::::e    s::::::s            t:::::t                 R::::R     R:::::Re:::::::::::::::::e  p:::::p     p:::::po::::o     o::::o
-        T:::::T    e::::::eeeeeeeeeee        s::::::s         t:::::t                 R::::R     R:::::Re::::::eeeeeeeeeee   p:::::p     p:::::po::::o     o::::o
-        T:::::T    e:::::::e           ssssss   s:::::s       t:::::t    tttttt       R::::R     R:::::Re:::::::e            p:::::p    p::::::po::::o     o::::o
-      TT:::::::TT  e::::::::e          s:::::ssss::::::s      t::::::tttt:::::t     RR:::::R     R:::::Re::::::::e           p:::::ppppp:::::::po:::::ooooo:::::o
-      T:::::::::T   e::::::::eeeeeeee  s::::::::::::::s       tt::::::::::::::t     R::::::R     R:::::R e::::::::eeeeeeee   p::::::::::::::::p o:::::::::::::::o
-      T:::::::::T    ee:::::::::::::e   s:::::::::::ss          tt:::::::::::tt     R::::::R     R:::::R  ee:::::::::::::e   p::::::::::::::pp   oo:::::::::::oo 
-      TTTTTTTTTTT      eeeeeeeeeeeeee    sssssssssss              ttttttttttt       RRRRRRRR     RRRRRRR    eeeeeeeeeeeeee   p::::::pppppppp       ooooooooooo   
-                                                                                                                             p:::::p                             
-                                                                                                                             p:::::p                             
-                                                                                                                            p:::::::p                            
-                                                                                                                            p:::::::p                            
-                                                                                                                            p:::::::p                            
-                                                                                                                            ppppppppp                            
--->
-	<!-- Construct the test repository -->
-	<target name="create-test-repo" depends="compile-extractor-lib, java-repo-manager" description="Construct the test repository.">
-		<!-- Clear 0/1 -->
-		<delete dir="${test-repo}/0/1/content" />
-
-		<!-- Setup 0/1 with the extractor -->
-		<copy todir="${test-repo}/0/1/content">
-			<fileset dir="${extractor}" includes="**/*.java" excludes="**/test-repo/**" />
-		</copy>
-		<copy todir="${test-repo}/0/1/content">
-			<fileset dir="${extractor}/lib" includes="sourcerer-lib.jar" />
-		</copy>
-
-		<!-- Build the comparison test jar -->
-		<mkdir dir="${build-comparison-test}" />
-		<javac destdir="${build-comparison-test}" debug="on" includeantruntime="false">
-			<src path="${comparison-test}" />
-		</javac>
-
-		<copy todir="${build-comparison-test}">
-			<fileset dir="${comparison-test}" includes="**/*.java" />
-		</copy>
-
-		<jar destfile="${dist}/comparison-test.jar" basedir="${build-comparison-test}" />
-
-		<copy todir="${test-repo}/0/2/content">
-			<fileset dir="${dist}" includes="comparison-test.jar" />
-		</copy>
-
-		<!-- Clear the old output -->
-		<delete dir="${test-repo}/output" />
-		<delete dir="${test-repo}/jars" />
-
-		<!-- Aggregate the jar repository -->
-		<java jar="${dist}/java-repo-tools.jar" fork="true">
-			<arg value="--aggregate-jar-files" />
-			<arg value="--input-repo" />
-			<arg value="${test-repo}" />
-			<arg value="--output" />
-			<arg value="${test-repo}/output" />
-			<arg value="--clear-caches" />
-		</java>
 	</target>
 
 	<!--
