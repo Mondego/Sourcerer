@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry excluding="edu/uci/ics/sourcerer/extractor/test/missing/MissingTypes.java" kind="src" path="0/0/content/src"/>
-	<classpathentry kind="src" path="0/2/content/src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="output" path="bin"/>
-</classpath>
