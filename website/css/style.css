@@ -535,3 +535,15 @@ ul ul span.sf-arrow {
   right: 12px;
   top: 15px;
 }
+
+.command-line {
+  background-color: black;
+  color: white;
+  font-size: 90%;
+  font-family: "Lucida Console";
+  margin-left: 20px;
+  margin-right:20px;
+  border-radius: 3px;
+  padding: 7px;
+  line-height: 120%;
+}
