@@ -72,7 +72,7 @@ h5, h6 {
 a, a:hover { 
   outline: none;
   text-decoration: underline;
-  color: #03D1FD;
+  color: #009999;
 }
 
 a:hover { 
@@ -536,14 +536,24 @@ ul ul span.sf-arrow {
   top: 15px;
 }
 
-.command-line {
+.command-line-block {
   background-color: black;
   color: white;
   font-size: 90%;
   font-family: "Lucida Console";
   margin-left: 20px;
   margin-right:20px;
+  margin-bottom: 20px;
   border-radius: 3px;
   padding: 7px;
   line-height: 120%;
+}
+
+.command-line-text {
+  background-color: black;
+  color: white;
+  font-size: 90%;
+  font-family: "Lucida Console";
+  border-radius: 3px;
+  padding: 2px;
 }
