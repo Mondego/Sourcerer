@@ -1,0 +1,36 @@
+// dot 2.36.0 on Mac OS X 10.10.3
+// SchemaSpy rev 590
+digraph "imports" {
+  graph [
+    rankdir="RL"
+    bgcolor="#f7f7f7"
+    nodesep="0.18"
+    ranksep="0.46"
+    fontname="Helvetica"
+    fontsize="11"
+  ];
+  node [
+    fontname="Helvetica"
+    fontsize="11"
+    shape="plaintext"
+  ];
+  edge [
+    arrowsize="0.8"
+  ];
+  "imports" [
+    label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">imports</TD></TR>
+      <TR><TD PORT="static" COLSPAN="3" ALIGN="LEFT">static</TD></TR>
+      <TR><TD PORT="on_demand" COLSPAN="3" ALIGN="LEFT">on_demand</TD></TR>
+      <TR><TD PORT="eid" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">eid</TD></TR>
+      <TR><TD PORT="project_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">project_id</TD></TR>
+      <TR><TD PORT="file_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">file_id</TD></TR>
+      <TR><TD PORT="offset" COLSPAN="3" ALIGN="LEFT">offset</TD></TR>
+      <TR><TD PORT="length" COLSPAN="3" ALIGN="LEFT">length</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">  </TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">40.732.837 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
+    </TABLE>>
+    URL="tables/imports.html"
+    tooltip="imports"
+  ];
+}

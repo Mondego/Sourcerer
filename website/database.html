@@ -9,12 +9,44 @@
           	<li><strong>User:</strong> visitor</li>
           	<li><strong>Password:</strong> sourcerer-visitor-135</li>
           </ul>
-          MySql Workbench is an example of a great, free tool to use this database. You can find more information <a href="https://www.mysql.com/products/workbench/" target="_blank">here</a>.
+          <p>MySql Workbench is an example of a great, free tool to use this database. You can find more information <a href="https://www.mysql.com/products/workbench/" target="_blank">here</a>.</p>
+
+        <h1>Datasets and Schemas</h1>
+          <p>The sourcerer relational database is composed by 4 schemas, where 3 represent subsets and the last one represents their aggregation:</p>
+          <ul>
+            <li><strong>apache:</strong> A subset of sourcerer representing Apache projects (<a href="schema_apache_HTML/index.html" target="_blank">schema</a>)</li>
+            <li><strong>google:</strong> A subset of sourcerer representing projects from Google Code (<a href="schema_google_HTML/index.html" target="_blank">schema</a>)</li>
+            <li><strong>jdk:</strong> A subset of sourcerer representing projects from Java OpenJDK (<a href="schema_jdk_HTML/index.html" target="_blank">schema</a>)</li>
+            <li><strong>utilization:</strong> A subset of sourcerer representing the three subsets above (<a href="schema_utilization_HTML/index.html" target="_blank">schema</a>)</li>
+            <li><strong>sourcerer:</strong> deprecated database
+          </ul>
+          The schemas presented here were extracted using the tool <a href="http://schemaspy.sourceforge.net/" target="_blank">SchemaSpy</a>.
+
+          <h2>Examples of Queries</h2>
+          <p>Source Lines of Code (SLOC) per project:</p>
+          <p class="command-line-block" >select * from project_metrics WHERE metric_type='CODE_LOC';</p>
+          <p>Number of classes per project:</p>
+          <p class="command-line-block" >select p.project_id, IFNULL(count(distinct entity_id),0) from entities as e right join projects as p on p.project_id=e.project_id where e.entity_type='CLASS' and p.project_type='CRAWLED' group by p.project_id;</p>
+          <p>Number of interfaces per project:</p>
+          <p class="command-line-block" >select p.project_id, IFNULL(count(distinct entity_id),0) from entities as e right join projects as p on p.project_id=e.project_id where e.entity_type='INTERFACE' and p.project_type='CRAWLED' group by p.project_id;</p>
+          <p>Number of methods per project:</p>
+          <p class="command-line-block" >select p.project_id, IFNULL(count(distinct entity_id),0) from entities as e right join projects as p on p.project_id=e.project_id where e.entity_type='METHOD' and p.project_type='CRAWLED' group by p.project_id;</p>
+          <p>Number of class methods per project:</p>
+          <p class="command-line-block" >select p.project_id, IFNULL(count(distinct m.entity_id),0) from entities as m inner join relations as r on m.entity_id=r.rhs_eid inner join entities as c on c.entity_id=r.lhs_eid right join projects as p on p.project_id=m.project_id where m.entity_type='METHOD' and r.relation_type='CONTAINS' and c.entity_type='CLASS' and p.project_type='CRAWLED' group by p.project_id;</p>
+          <p>Number of method calls per project:</p>
+          <p class="command-line-block" >select p.project_id, IFNULL(count(distinct relation_id),0) from relations as r right join projects as p on p.project_id=r.project_id where r.relation_type='CALLS' and p.project_type='CRAWLED' group by p.project_id;</p>
+          <p>Number of instanceof statements:</p>
+          <p class="command-line-block" >select p.project_id, IFNULL(count(distinct relation_id),0) from relations as r right join projects as p on p.project_id=r.project_id where r.relation_type='CHECKS' and p.project_type='CRAWLED' group by p.project_id;</p>
+          <p>Number of casts:</p>
+          <p class="command-line-block" >select p.project_id, IFNULL(count(distinct relation_id),0) from relations as r right join projects as p on p.project_id=r.project_id where r.relation_type='CASTS' and p.project_type='CRAWLED' group by p.project_id;</p>
+          <p>How many classes in each project extend a class? (that's not Object):</p>
+          <p class="command-line-block" >select p.project_id, ifnull(count(distinct child.entity_id),0) from entities as child inner join relations as r on r.lhs_eid=child.entity_id and r.rhs_eid != (select entity_id from entities where fqn='java.lang.Object') right join projects as p on p.project_id=r.project_id where child.entity_type='CLASS' and r.relation_type='EXTENDS' and p.project_type='CRAWLED' group by p.project_id;</p>
+
         </div>
       </div>
 
       <div class="content">
-        <h1>Schema</h1>
+        <h1>Database Schema - A Quick Tutorial</h1>
           <div class="content_item">
            <p>The SourcererDB schema is a direct manifestation of the metamodel used by the
            extractor. At its core, the metamodel represents entities in the code (such as

@@ -556,6 +556,21 @@ ul ul span.sf-arrow {
   font-family: "Lucida Console";
   border-radius: 3px;
   padding: 2px;
-  font-family: "Lucida Console";
   font-weight: lighter;
+}
+
+.warning {
+  background-color: red;
+  color: white;
+  margin-left: 20px;
+  margin-right:20px;
+  margin-bottom: 20px;
+  border-radius: 3px;
+  padding: 7px;
+  line-height: 120%;
+}
+
+span.reverse {
+  unicode-bidi: bidi-override;
+  direction: rtl;
 }

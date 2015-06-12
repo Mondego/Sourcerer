@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<database name="apache" type="MySQL - 5.5.28-0ubuntu0.12.04.3">
+   <tables>
+      <table name="entities" numRows="5373729" remarks="" type="TABLE">
+         <column autoUpdated="false" defaultValue="0" digits="0" id="0" name="entity_id" nullable="false" remarks="" size="20" type="BIGINT UNSIGNED"/>
+         <column autoUpdated="false" digits="0" id="1" name="entity_type" nullable="true" remarks="" size="18" type="ENUM"/>
+         <column autoUpdated="false" digits="0" id="2" name="fqn" nullable="true" remarks="" size="2048" type="VARCHAR"/>
+         <column autoUpdated="false" digits="0" id="3" name="project_id" nullable="false" remarks="" size="20" type="BIGINT UNSIGNED">
+            <parent column="project_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" table="projects"/>
+         </column>
+         <primaryKey column="entity_id" sequenceNumberInPK="1"/>
+         <index name="PRIMARY" unique="true">
+            <column ascending="true" name="entity_id"/>
+         </index>
+         <index name="entity_type" unique="false">
+            <column ascending="true" name="entity_type"/>
+         </index>
+         <index name="project_id" unique="false">
+            <column ascending="true" name="project_id"/>
+         </index>
+      </table>
+      <table name="projects" numRows="133" remarks="" type="TABLE">
+         <column autoUpdated="false" defaultValue="0" digits="0" id="0" name="project_id" nullable="false" remarks="" size="20" type="BIGINT UNSIGNED">
+            <child column="project_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" table="entities"/>
+            <child column="project_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" table="relations"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="project_type" nullable="true" remarks="" size="12" type="ENUM"/>
+         <column autoUpdated="false" digits="0" id="2" name="name" nullable="false" remarks="" size="1024" type="VARCHAR"/>
+         <column autoUpdated="false" digits="0" id="3" name="description" nullable="true" remarks="" size="4096" type="VARCHAR"/>
+         <column autoUpdated="false" digits="0" id="4" name="version" nullable="true" remarks="" size="1024" type="VARCHAR"/>
+         <column autoUpdated="false" digits="0" id="5" name="groop" nullable="true" remarks="" size="1024" type="VARCHAR"/>
+         <column autoUpdated="false" digits="0" id="6" name="path" nullable="true" remarks="" size="1024" type="VARCHAR"/>
+         <column autoUpdated="false" digits="0" id="7" name="source" nullable="true" remarks="" size="1024" type="VARCHAR"/>
+         <column autoUpdated="false" digits="0" id="8" name="hash" nullable="true" remarks="" size="32" type="VARCHAR"/>
+         <column autoUpdated="false" digits="0" id="9" name="has_source" nullable="false" remarks="" size="0" type="BIT"/>
+         <column autoUpdated="false" digits="0" id="10" name="SLOC" nullable="true" remarks="" size="19" type="BIGINT"/>
+         <primaryKey column="project_id" sequenceNumberInPK="1"/>
+         <index name="PRIMARY" unique="true">
+            <column ascending="true" name="project_id"/>
+         </index>
+      </table>
+      <table name="relations" numRows="37640786" remarks="" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="lhs_eid" nullable="false" remarks="" size="20" type="BIGINT UNSIGNED"/>
+         <column autoUpdated="false" digits="0" id="1" name="project_id" nullable="false" remarks="" size="20" type="BIGINT UNSIGNED">
+            <parent column="project_id" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" table="projects"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="relation_type" nullable="true" remarks="" size="17" type="ENUM"/>
+         <column autoUpdated="false" digits="0" id="3" name="relation_class" nullable="true" remarks="" size="14" type="ENUM"/>
+         <column autoUpdated="false" defaultValue="0" digits="0" id="4" name="relation_id" nullable="false" remarks="" size="20" type="BIGINT UNSIGNED"/>
+         <column autoUpdated="false" digits="0" id="5" name="rhs_eid" nullable="false" remarks="" size="20" type="BIGINT UNSIGNED"/>
+         <primaryKey column="relation_id" sequenceNumberInPK="1"/>
+         <index name="PRIMARY" unique="true">
+            <column ascending="true" name="relation_id"/>
+         </index>
+         <index name="project_id" unique="false">
+            <column ascending="true" name="project_id"/>
+            <column ascending="true" name="relation_type"/>
+            <column ascending="true" name="lhs_eid"/>
+            <column ascending="true" name="rhs_eid"/>
+         </index>
+      </table>
+   </tables>
+</database>

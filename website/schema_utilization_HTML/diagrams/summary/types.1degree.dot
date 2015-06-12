@@ -1,0 +1,33 @@
+// dot 2.36.0 on Mac OS X 10.10.3
+// SchemaSpy rev 590
+digraph "types" {
+  graph [
+    rankdir="RL"
+    bgcolor="#f7f7f7"
+    nodesep="0.18"
+    ranksep="0.46"
+    fontname="Helvetica"
+    fontsize="11"
+  ];
+  node [
+    fontname="Helvetica"
+    fontsize="11"
+    shape="plaintext"
+  ];
+  edge [
+    arrowsize="0.8"
+  ];
+  "types" [
+    label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD COLSPAN="3" BGCOLOR="#9bab96" ALIGN="CENTER">types</TD></TR>
+      <TR><TD PORT="type_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">type_id</TD></TR>
+      <TR><TD PORT="type" COLSPAN="3" ALIGN="LEFT">type</TD></TR>
+      <TR><TD PORT="fqn" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">fqn</TD></TR>
+      <TR><TD PORT="component_id" COLSPAN="3" BGCOLOR="#f4f7da" ALIGN="LEFT">component_id</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#f7f7f7">  </TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">5.400.366 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#f7f7f7">  </TD></TR>
+    </TABLE>>
+    URL="tables/types.html"
+    tooltip="types"
+  ];
+}

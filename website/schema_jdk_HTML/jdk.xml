@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<database name="jdk" type="MySQL - 5.5.28-0ubuntu0.12.04.3">
+   <tables>
+      <table name="entities" numRows="481768" remarks="" type="TABLE">
+         <column autoUpdated="false" defaultValue="0" digits="0" id="0" name="entity_id" nullable="false" remarks="" size="20" type="BIGINT UNSIGNED"/>
+         <column autoUpdated="false" digits="0" id="1" name="entity_type" nullable="true" remarks="" size="18" type="ENUM"/>
+         <column autoUpdated="false" digits="0" id="2" name="fqn" nullable="true" remarks="" size="2048" type="VARCHAR"/>
+         <column autoUpdated="false" digits="0" id="3" name="project_id" nullable="false" remarks="" size="20" type="BIGINT UNSIGNED"/>
+         <primaryKey column="entity_id" sequenceNumberInPK="1"/>
+         <index name="PRIMARY" unique="true">
+            <column ascending="true" name="entity_id"/>
+         </index>
+      </table>
+   </tables>
+</database>

@@ -1,0 +1,15 @@
+r_uses
+r_interface_extends
+r_instanceof
+r_has_base_type
+r_contains
+r_class_implements
+r_class_extends
+r_casts
+r_calls
+projects
+e_parameterized_types
+e_methods
+e_interfaces
+e_constructors
+e_classes
