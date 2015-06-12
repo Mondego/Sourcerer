@@ -30,11 +30,17 @@
         $("#database").click(function(){
           $("#main-body").load("database.html");
           $("li").removeClass("current");
-          $(this).parent().addClass("current")
+          $(this).parent().addClass("current");
           });
-        $("#tutorials").click(function(){
+        $("#tutorial-command").click(function(){
+          $("#main-body").load("tutorial-command.html");
           $("li").removeClass("current");
-          $(this).parent().addClass("current")
+          $("#tutorials").parent().addClass("current");
+          });
+        $("#tutorial-eclipse").click(function(){
+          $("#main-body").load("tutorial-eclipse.html");
+          $("li").removeClass("current");
+          $("#tutorials").parent().addClass("current");
           });
         $("#publications").click(function(){
           $("#main-body").load("publications.html");
@@ -76,8 +82,8 @@
           <li><a id="database"  href="#">Database</a></li>
           <li><a id="tutorials" href="#">Tutorials</a>
               <ul>
-              <li><a href="#">Command line</a></li>
-              <li><a href="#">Eclipse</a>
+              <li><a id="tutorial-command" href="#">Command line</a></li>
+              <li><a id="tutorial-eclipse" href="#">Eclipse</a>
               </ul>
           </li>
           <li><a id="publications" href="#">Publications</a></li>
