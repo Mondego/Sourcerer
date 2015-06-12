@@ -1,6 +1,50 @@
       <div class="content">
-        <h1>Datasets</h1>
+        <h1>Datasets Overview</h1>
         <div class="content_item">
-          Talk about datasets, give BTSync hash's.
+          We provide the complete datasets obtained from the Sourcerer. The datasets as very large file sizes, are publicly available, and can be downloaded/accessed by the public. They can be easily downloaded with <a href="https://www.getsync.com/" target="_blank">BTSync</a>, for which we provide a public hash key.
+          </br>
+          The repositories represent the same information in different formats, after different phases of preprocessing. Under <strong>Tutorials</strong> you can learn how to replicate this phases. In total we represent 18,000 Java projects downloaded from Apache, Java.net, Google Code and Sourceforge as of Summer 2001. Here is a brief description of them:
+          </br>
+          <table style="width:100%; border-spacing:0;">
+            <tr><th>Origin</th><th>Projects</th><th>Non-empty Projects</th><th>Files</th><th>Non-empty Files</th></tr>
+            <tr><td>Apache</td><td>84</td><td>83</td><td>559,140</td><td>50,222</td></tr>
+            <tr><td>Java.net</td><td>3,412</td><td>1,893</td><td>286,310</td><td>273,813</td></tr>
+            <tr><td>Google Code</td><td>5,361</td><td>4,663</td><td>402,070</td><td>368,136</td></tr>
+            <tr><td>SourceForge</td><td>9,969</td><td>6,632</td><td>1,983,044</td><td>1,167,112</td></tr>
+            <tr><td><strong>Total</strong></td><td><strong>18,826</strong></td><td><strong>13,241</strong></td><td><strong>3,230,564</strong></td><td><strong>1,859,293</strong></td></tr>
+          </table>
+          A project is considered non-empty if it contains at least one .java file. The filtered files column contains the number of files that are actually used by Sourcerer's feature extractor when performing the analysis. The discrepancy between this column and the files column is primarily caused by files duplicated due to our automated download process.
+        </div>
+      </div>
+
+      <div class="content">
+        <h1>The raw dataset</h1>
+        <div class="content_item">
+          This dataset, called <strong>sourcerer_repo_2011</strong>, takes 368Gb compressed or 433Gb uncompressed, and is a collection of 74,351 Java projects and assorted jar files collected from Google Code, SourceForge and Apache as of Summer 2011. It is also integrated in an infrastructure being built by the DARPA MUSE program, which will hopefully be available for other researchers sometime in the future.
+          <ul>
+            <li><strong>BTSync hash:</strong> BLSPQKT7JO6S37ZFKA5VX6LF6ACNPFQJF</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="content">
+        <h1>The extracted dataset</h1>
+        <div class="content_item">
+          This extracted repository, called <strong>sourcerer_repo_2011_extracted</strong>, takes 84Gb compressed or 92Gb uncompressed, and is an
+          intermediary artifact produced from the raw dataset <strong>sourcerer_repo_2011</strong>, which contains facts (fully qualified names, metrics, etc.) about each file of each project.
+          We also provide a server serving this data. Please refer to <strong>Database</strong> to know more.
+          <ul>
+            <li><strong>BTSync hash:</strong> BU6XBJ3BSB56AAMU5UVMH5JD5HCZ7VQPV</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="content">
+        <h1>The relational database</h1>
+        <div class="content_item">
+          This database, called <strong>sourcerer_repo_2011_database</strong>, takes 24Gb as a compressed MySQL dump or 448Gb when restored, and is an artifact built from the extracted facts (<strong>sourcerer_repo_2011_extracted</strong>). This database contains the output of parsing and decomposing the source code into code entities and their relations, and it is provided to facilitate static analysis.
+          <ul>
+            <li><strong>BTSync hash:</strong> BRX4URA35D2CHSV3EJXBZB65Z6PX23HOP</li>
+          </ul>
         </div>
       </div>
