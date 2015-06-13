@@ -539,7 +539,7 @@ ul ul span.sf-arrow {
 .command-line-block {
   background-color: black;
   color: white;
-  font-size: 90%;
+  font-size: 110%;
   font-family: "Lucida Console";
   margin-left: 20px;
   margin-right:20px;
@@ -552,7 +552,7 @@ ul ul span.sf-arrow {
 .command-line-text {
   background-color: black;
   color: white;
-  font-size: 90%;
+  font-size: 110%;
   font-family: "Lucida Console";
   border-radius: 3px;
   padding: 2px;
