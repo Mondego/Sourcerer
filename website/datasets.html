@@ -2,18 +2,34 @@
 
         <h1>Datasets</h1>
         <div class="content_item">
-          We provide the complete datasets obtained from the Sourcerer. The datasets as very large file sizes, are publicly available, and can be downloaded/accessed by the public. They can be easily downloaded with <a href="https://www.getsync.com/" target="_blank">BTSync</a>, for which we provide a public hash key.
-          </br>
-          The repositories represent the same information in different formats, after different phases of preprocessing. Under <strong>Tutorials</strong> you can learn how to replicate these phases.
-          <ul></ul>
+          <p>We provide the complete datasets obtained from the Sourcerer. The datasets as very large file sizes, are publicly available, and can be downloaded/accessed by the public. They can be easily downloaded with <a href="https://www.getsync.com/" target="_blank">BTSync</a>, for which we provide a public hash key.</p>
+          
+          <p>The repositories represent the same information in different formats, after different phases of preprocessing. Under <strong>Tutorials</strong> you can learn how to replicate these phases.</p>
 
-        <h2>The raw dataset</h2>
+          <div class="warning">
+            <p>TERMS OF USAGE</p>
+            By downloading and using the Sourcerer repository, you agree to abide by the following terms of usage:
+            <ul>
+              <li>The source code contained in the tarball are collected from various open source projects and you should adhere to the respective licenses that come with the projects.</li>
+              <li>You will use the file strictly for non-commercial and non-profit work (eg; research or personal use). Any commercial use of this file is prohibited.</li>
+            </ul>
+        </div>
+
+        <h1>Before downloading</h1>
+        <h2>The information you are about to download, and that we make available completely free, represents years of research and the colaboration of multiple individual persons. Please take your time to answer this simple form and help us keep track of it's usage.
+        </h2>
+
+        <p>
+        <iframe src="https://docs.google.com/forms/d/12PpQsBfukBbPDIN2cb9-mQZ5xxqj4_skdL1YOTYy0U8/viewform?embedded=true" width="700" height="750" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
+        </p>
+
+        <h1>The raw dataset</h1>
           This dataset, called <strong>sourcerer_repo_2011</strong>, takes 368Gb compressed or 433Gb uncompressed, and is a collection of 74,351 Java projects and assorted jar files collected from Google Code, SourceForge and Apache as of Summer 2011. It is also integrated in an infrastructure being built by the DARPA MUSE program, which will hopefully be available for other researchers sometime in the future.
           <ul>
             <li><strong>BTSync hash:</strong> BLSPQKT7JO6S37ZFKA5VX6LF6ACNPFQJF</li>
           </ul>
 
-        <h2>The extracted dataset</h2>
+        <h1>The extracted dataset</h1>
           This extracted repository, called <strong>sourcerer_repo_2011_extracted</strong>, takes 84Gb compressed or 92Gb uncompressed, and is an
           intermediary artifact produced from the raw dataset <strong>sourcerer_repo_2011</strong>, which contains facts (fully qualified names, metrics, etc.) about each file of each project.
           We also provide a server serving this data. Please refer to <strong>Database</strong> to know more.
@@ -21,11 +37,14 @@
             <li><strong>BTSync hash:</strong> BU6XBJ3BSB56AAMU5UVMH5JD5HCZ7VQPV</li>
           </ul>
 
-        <h2>The relational database</h2>
+        <h1>The relational database</h1>
           This database, called <strong>sourcerer_repo_2011_database</strong>, takes 24Gb as a compressed MySQL dump or 448Gb when restored, and is an artifact built from the extracted facts (<strong>sourcerer_repo_2011_extracted</strong>). This database contains the output of parsing and decomposing the source code into code entities and their relations, and it is provided to facilitate static analysis.
           <ul>
             <li><strong>BTSync hash:</strong> BRX4URA35D2CHSV3EJXBZB65Z6PX23HOP</li>
           </ul>
+
+        <h1>CWI's dataset</h1>
+        <p>See CWI's version of this corpus and additional artifacts produced from it, including complete ASTs, <a href="http://homepages.cwi.nl/~landman/icsme2014/" target="_blank">here</a>.
 
         </div>
 
