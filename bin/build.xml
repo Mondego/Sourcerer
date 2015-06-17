@@ -601,7 +601,7 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 
 	<!-- Build the extractor plugin - is asynchronous -->
 	<target name="extractor" description="Build the extractor plugin">
-		<pde.exportPlugins destination="${build}" exportSource="true" exportType="directory" plugins="Extractor" useJARFormat="true" />
+		<pde.exportPlugins destination="${build}" exportSource="true" exportType="directory" plugins="Extractor" useJARFormat="true"/>
 	</target>
 
 	<!-- Repackage the plugin jar file - run after the extractor target -->
