@@ -562,6 +562,7 @@ ul ul span.sf-arrow {
 .warning {
   background-color: red;
   color: white;
+  font-size: 110%;
   margin-left: 20px;
   margin-right:20px;
   margin-bottom: 20px;
