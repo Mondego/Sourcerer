@@ -1,7 +1,7 @@
-Tools, services and applications for source code analysis and search
+Go to this url:
 http://sourcerer.ics.uci.edu/
 
-See http://wiki.github.com/Mondego/Sourcerer/workflow
-See bin/README for tools that you can use
-
-Available datasets: see https://github.com/Mondego/Sourcerer-Datasets
+or open the folder Sourcerer/website/
+for information on how to compile and use the infrastructure.
+** The file index.html in Sourcerer/website/ must be open with
+** Firefox to work properly
