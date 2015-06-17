@@ -987,7 +987,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     accept(node.getReturnType2());
     accept(node.getName());
     accept(node.parameters());
-    accept(node.thrownExceptions());
+    accept(node.thrownExceptionTypes());
     accept(node.getBody());
     
     // Write the entity
@@ -1001,7 +1001,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fullFqn, createUnknownLocation());
 
     // Write the throws relation
-    for (Name name : (List<Name>)node.thrownExceptions()) {
+    for (Name name : (List<Name>)node.thrownExceptionTypes()) {
       ITypeBinding exceptionBinding = name.resolveTypeBinding();
       if (exceptionBinding == null) {
         relationWriter.writeRelation(Relation.THROWS, fullFqn, createUnknownFqn(name.getFullyQualifiedName()), createLocation(node));

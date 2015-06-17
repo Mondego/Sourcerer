@@ -54,7 +54,7 @@ public class MissingTypeIdentifier {
   private final ASTParser parser;
   
   private MissingTypeIdentifier() {
-    parser = ASTParser.newParser(AST.JLS4);
+    parser = ASTParser.newParser(AST.JLS8);
   }
   
   static MissingTypeIdentifier create() {

@@ -64,7 +64,7 @@ public class EclipseExtractor implements Closeable {
   
   public EclipseExtractor(WriterBundle writers, ASMExtractor asmExtractor) {
     this.writers = writers;
-    parser = ASTParser.newParser(AST.JLS4);
+    parser = ASTParser.newParser(AST.JLS8);
     visitor = new ReferenceExtractorVisitor(writers);
     if (asmExtractor == null) {
       this.asmExtractor = null;
