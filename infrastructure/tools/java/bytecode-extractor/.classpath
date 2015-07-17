@@ -6,6 +6,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/utilities"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/core-repository-manager"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/java-repository-manager"/>
-	<classpathentry kind="lib" path="/lib/asm-4.0_RC2.jar" sourcepath="/lib/asm-4.0_RC2.zip"/>
+	<classpathentry kind="lib" path="/lib/asm-5.0.4.jar" sourcepath="/lib/asm-5.0.4-bin.zip"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

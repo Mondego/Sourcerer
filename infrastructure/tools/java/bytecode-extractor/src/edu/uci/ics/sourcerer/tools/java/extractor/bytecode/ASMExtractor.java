@@ -236,11 +236,12 @@ public class ASMExtractor implements Closeable {
   private static final int CLASS_ACCESS_MASK = Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL | Opcodes.ACC_ABSTRACT | Opcodes.ACC_SYNTHETIC;
   private static final int FIELD_ACCESS_MASK = Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL | Opcodes.ACC_VOLATILE | Opcodes.ACC_TRANSIENT | Opcodes.ACC_SYNTHETIC;
   private static final int METHOD_ACCESS_MASK = Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL | Opcodes.ACC_SYNCHRONIZED | Opcodes.ACC_NATIVE | Opcodes.ACC_ABSTRACT | Opcodes.ACC_STRICT | Opcodes.ACC_SYNTHETIC;
+  
   private class ClassVisitorImpl extends ClassVisitor {
     private int access;
    
     private ClassVisitorImpl() {
-      super(Opcodes.V1_7);
+      super(Opcodes.ASM5);
     }
     
     @Override
@@ -467,7 +468,7 @@ public class ASMExtractor implements Closeable {
   
   private class AnnotationVisitorImpl extends AnnotationVisitor {
     public AnnotationVisitorImpl() {
-      super(Opcodes.V1_7);
+      super(Opcodes.ASM5);
     }
 
     @Override
@@ -511,7 +512,7 @@ public class ASMExtractor implements Closeable {
     private Set<String> operands = new HashSet<>();
 
     public MethodVisitorImpl() {
-      super(Opcodes.V1_7);
+      super(Opcodes.ASM5);
     }
 
     private void init(Entity type, String fqn, String sig, String rawSig, int mods) {
@@ -820,7 +821,11 @@ public class ASMExtractor implements Closeable {
       } else if (cst instanceof Type) {
         operands.add("$type" + cst);
       } else {
-        logger.severe("Unknown constant type: " + cst);
+    	// I am commenting this line because, when we are upgrading
+    	// the infrastructure to JAVA8 and ASM5 it seems this functions
+    	// is receiving more types than it used to making it crash, and
+    	// it appears these types are (for now), unnecessary
+        //logger.severe("Unknown constant type: " + cst);
       }
       instructionCount++;
     }
@@ -947,7 +952,7 @@ public class ASMExtractor implements Closeable {
   
   private abstract class AbstractSignatureVisitor extends SignatureVisitor {
     public AbstractSignatureVisitor() {
-      super(Opcodes.V1_7);
+      super(Opcodes.ASM5);
     }
     
     public abstract void add(String type);

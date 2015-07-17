@@ -278,7 +278,7 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 				<pathelement path="${classpath}" />
 				<fileset dir="${lib}">
 					<include name="**/guava-11.0.1.jar" />
-					<include name="**/asm-4.0_RC2.jar" />
+					<include name="**/asm-5.0.4.jar" />
 				</fileset>
 			</classpath>
 		</javac>
@@ -302,7 +302,7 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 
 		<!-- Add the required jars -->
 		<unjar src="${lib}/guava-11.0.1.jar" dest="${build-component-identifier}" />
-		<unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-component-identifier}" />
+		<unjar src="${lib}/asm-5.0.4.jar" dest="${build-component-identifier}" />
 
 		<!-- Build the jar -->
 		<jar destfile="${dist}/component-identifier.jar" basedir="${build-component-identifier}">
@@ -328,7 +328,7 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
         <pathelement path="${classpath}" />
         <fileset dir="${lib}">
           <include name="**/guava-11.0.1.jar" />
-          <include name="**/asm-4.0_RC2.jar" />
+          <include name="**/asm-5.0.4.jar" />
         </fileset>
       </classpath>
     </javac>
@@ -352,7 +352,7 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 
     <!-- Add the required jars -->
     <unjar src="${lib}/guava-11.0.1.jar" dest="${build-component-identifier}" />
-    <unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-component-identifier}" />
+    <unjar src="${lib}/asm-5.0.4.jar" dest="${build-component-identifier}" />
 
     <!-- Build the jar -->
     <jar destfile="${dist}/bytecode-extractor.jar" basedir="${build-bytecode-extractor}">
@@ -380,7 +380,7 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 			<classpath>
 				<pathelement path="${classpath}" />
 				<fileset dir="${lib}">
-					<include name="**/asm-4.0_RC2.jar" />
+					<include name="**/asm-5.0.4.jar" />
 					<include name="**/guava-11.0.1.jar" />
 				</fileset>
 			</classpath>
@@ -415,7 +415,7 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 		<!-- Add the required jars -->
 		<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-database-importer}" />
 		<unjar src="${lib}/guava-11.0.1.jar" dest="${build-database-importer}" />
-		<unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-database-importer}" />
+		<unjar src="${lib}/asm-5.0.4.jar" dest="${build-database-importer}" />
 
 		<!-- Build the jar -->
 		<jar destfile="${dist}/db-import.jar" basedir="${build-database-importer}">
@@ -493,7 +493,7 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
         <pathelement path="${classpath}" />
         <fileset dir="${lib}">
           <include name="**/guava-11.0.1.jar" />
-          <include name="**/asm-4.0_RC2.jar" />
+          <include name="**/asm-5.0.4.jar" />
         </fileset>
       </classpath>
     </javac>
@@ -555,7 +555,7 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 				<pathelement path="${classpath}" />
 				<fileset dir="${lib}">
 					<include name="**/guava-11.0.1.jar" />
-					<include name="**/asm-4.0_RC2.jar" />
+					<include name="**/asm-5.0.4.jar" />
 				</fileset>
 			</classpath>
 		</javac>
@@ -593,7 +593,7 @@ J:::::::JJJ:::::::Ja::::a    a:::::a      v:::::::v      a::::a    a:::::a      
 		<jar destfile="${extractor}/lib/sourcerer-lib.jar" basedir="${build-extractor-lib}" />
 
 		<!-- Copy the library jars -->
-		<copy file="${lib}/asm-4.0_RC2.jar" todir="${extractor}/lib/" />
+		<copy file="${lib}/asm-5.0.4.jar" todir="${extractor}/lib/" />
 		<copy file="${lib}/guava-11.0.1.jar" todir="${extractor}/lib/" />
 		<copy file="${lib}/mysql-connector-java-5.1.7-bin.jar" todir="${extractor}/lib/" />
     <copy file="${lib}/juniversalchardet-1.0.3.jar" todir="${extractor}/lib/" />
@@ -936,7 +936,7 @@ AAAAAAA                   AAAAAAAp::::::pppppppp     p::::::pppppppp      ssssss
 				<pathelement path="${classpath}" />
 				<fileset dir="${lib}">
 					<include name="**/guava-11.0.1.jar" />
-					<include name="**/asm-4.0_RC2.jar" />
+					<include name="**/asm-5.0.4.jar" />
 					<include name="**/servlet-api.jar" />
 				</fileset>
 			</classpath>
@@ -945,7 +945,7 @@ AAAAAAA                   AAAAAAAp::::::pppppppp     p::::::pppppppp      ssssss
 		<!-- Add the required jars -->
 		<unjar src="${lib}/mysql-connector-java-5.1.7-bin.jar" dest="${build-artifact-repo-browser}" />
 		<unjar src="${lib}/guava-11.0.1.jar" dest="${build-artifact-repo-browser}" />
-		<unjar src="${lib}/asm-4.0_RC2.jar" dest="${build-artifact-repo-browser}" />
+		<unjar src="${lib}/asm-5.0.4.jar" dest="${build-artifact-repo-browser}" />
 
 		<!-- Create the war file -->
 		<war destfile="${dist}/artifact-repo-browser.war" webxml="${artifact-repo-browser}/edu/uci/ics/sourcerer/apps/artifactbrowser/web.xml">

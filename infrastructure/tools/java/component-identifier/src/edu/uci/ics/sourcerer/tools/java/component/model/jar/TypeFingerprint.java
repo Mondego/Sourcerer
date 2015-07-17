@@ -59,7 +59,7 @@ public class TypeFingerprint extends Fingerprint {
     private Set<String> referencedTypes;
     private Set<String> calledMethods;
     private MessageDigest md5;
-    private MethodVisitor methodVisitor = new MethodVisitor(Opcodes.V1_7) {
+    private MethodVisitor methodVisitor = new MethodVisitor(Opcodes.V1_8) {
       @Override
       public void visitTypeInsn(int opcode, String desc) {
         referencedTypes.add(desc);
@@ -72,7 +72,7 @@ public class TypeFingerprint extends Fingerprint {
     };
     
     private FingerprintClassVisitor() {
-      super(Opcodes.V1_7);
+      super(Opcodes.V1_8);
       try {
         md5 = MessageDigest.getInstance("MD5");
       } catch (NoSuchAlgorithmException e) {

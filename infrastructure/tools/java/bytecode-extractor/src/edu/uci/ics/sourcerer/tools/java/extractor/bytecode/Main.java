@@ -36,6 +36,8 @@ public class Main {
     }
   };
   public static void main(String[] args) {
-    Command.execute(args, Main.class);
+    //Command.execute(args, Main.class);
+	String[] aux = {"--extract-file"};
+	Command.execute(aux, Main.class);
   }
 }

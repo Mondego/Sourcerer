@@ -57,7 +57,7 @@ public class NameFingerprint extends Fingerprint {
 
     
     private FingerprintClassVisitor() {
-      super(Opcodes.V1_7);
+      super(Opcodes.V1_8);
     }
     
     @Override
