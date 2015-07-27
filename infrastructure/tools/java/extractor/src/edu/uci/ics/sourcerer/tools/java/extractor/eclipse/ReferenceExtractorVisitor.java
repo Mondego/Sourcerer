@@ -74,6 +74,7 @@ import org.eclipse.jdt.core.dom.Initializer;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.Javadoc;
 import org.eclipse.jdt.core.dom.LabeledStatement;
+import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.LineComment;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MemberRef;
@@ -83,7 +84,6 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.MethodRef;
 import org.eclipse.jdt.core.dom.MethodRefParameter;
 import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NormalAnnotation;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.NumberLiteral;
@@ -904,8 +904,17 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       
       // Write the local variable
       localVariableWriter.writeLocalVariable(LocalVariable.LOCAL, node.getName().getIdentifier(), parent.getModifiers(), typeFqn, createLocation(type), fqnStack.getFqn(), null, createLocation(node));
+    } else if (node.getParent().getNodeType() == ASTNode.LAMBDA_EXPRESSION) {
+      LambdaExpression parent = (LambdaExpression) node.getParent();
+
+      System.err.println("LALALA - "+parent.getParent().getType());
+      //Type type = parent.getType();
+      //String typeFqn = getTypeFqn(type);
+      
+      // Write the local variable
+      //localVariableWriter.writeLocalVariable(LocalVariable.LOCAL, node.getName().getIdentifier(), parent.getModifiers(), typeFqn, createLocation(type), fqnStack.getFqn(), null, createLocation(node));
     } else {
-      throw new IllegalStateException("Unknown parent for variable declaration fragment.");
+      throw new IllegalStateException("Unknown parent for variable declaration fragment (code "+node.getParent().getNodeType()+").");
     }
     
     if (node.getInitializer() != null) {
@@ -1001,10 +1010,10 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fullFqn, createUnknownLocation());
 
     // Write the throws relation
-    for (Name name : (List<Name>)node.thrownExceptionTypes()) {
-      ITypeBinding exceptionBinding = name.resolveTypeBinding();
+    for (SimpleType name : (List<SimpleType>) node.thrownExceptionTypes()) {
+      ITypeBinding exceptionBinding = name.getName().resolveTypeBinding();
       if (exceptionBinding == null) {
-        relationWriter.writeRelation(Relation.THROWS, fullFqn, createUnknownFqn(name.getFullyQualifiedName()), createLocation(node));
+        relationWriter.writeRelation(Relation.THROWS, fullFqn, createUnknownFqn(name.getName().getFullyQualifiedName()), createLocation(node));
       } else {
         relationWriter.writeRelation(Relation.THROWS, fullFqn, getTypeFqn(exceptionBinding), createLocation(name));
       }
@@ -1790,9 +1799,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
 
   @Override
   public boolean visit(Block node) {
-    fqnStack.peek(EnclosingMethod.class).incrementLevel();
-    accept(node.statements());
-    fqnStack.peek(EnclosingMethod.class).decrementLevel();
+	fqnStack.peek(EnclosingMethod.class).incrementLevel();
+   	accept(node.statements());
+   	fqnStack.peek(EnclosingMethod.class).decrementLevel();
     return false;
   }
 
@@ -2713,8 +2722,8 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   }
   
   private void accept(ASTNode child) {
-    if (child != null) {
-      child.accept(this);
+    if (child != null){
+       child.accept(this);
     }
   }
   
@@ -2730,7 +2739,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   @SuppressWarnings("unchecked")
   private void accept(List<?> children) {
     for (ASTNode child : (List<? extends ASTNode>)children) {
-      child.accept(this);
+    	child.accept(this);
     }
   }
 }

@@ -42,6 +42,7 @@ public enum Entity {
     DUPLICATE,
     VIRTUAL_DUPLICATE,
     UNKNOWN,
+    LAMBDA,
     ;
     
     public boolean is(Entity ... entities) {
