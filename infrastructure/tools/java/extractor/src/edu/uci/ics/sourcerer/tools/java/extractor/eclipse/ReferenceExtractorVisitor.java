@@ -917,17 +917,26 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       //accept(parent.getBody());
       
       //writeEntity(Entity type, String fqn, String signature, String rawSignature, int modifiers, Metrics metrics, Location location);
-      @SuppressWarnings("unchecked")
-	  List<VariableDeclaration> params = parent.parameters();
+      
+      /*
+      List<VariableDeclaration> params = parent.parameters();
+
       String parameters = "(";
       for(VariableDeclaration v : params)
     	  parameters = parameters + v.toString() + ",";
       // substring is just to remove the extra ','
       parameters = parameters.substring(0, parameters.length()-1) + ")";
+      */
       
+      String parentFqn = fqnStack.getFqn().substring(0, fqnStack.getFqn().length()-2);
+      String fullFqn = parentFqn+"$lambda1";
+      
+      fqnStack.push(fullFqn,Entity.LAMBDA);
       accept(parent.getBody());
-      
-      entityWriter.writeEntity(Entity.LAMBDA, null, parameters, null, 0, createMetrics(parent), createLocation(parent));
+      fqnStack.pop();
+            
+      entityWriter.writeEntity(Entity.LAMBDA, fullFqn, null, null, 0, createMetrics(parent), createLocation(parent));
+      relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fullFqn, createUnknownLocation());
 
     } else {
       throw new IllegalStateException("Unknown parent for variable declaration fragment (code "+node.getNodeType()+").");
