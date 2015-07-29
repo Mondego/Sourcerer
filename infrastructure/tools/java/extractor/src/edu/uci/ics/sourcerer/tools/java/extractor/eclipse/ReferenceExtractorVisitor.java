@@ -118,6 +118,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 import org.eclipse.jdt.core.dom.TypeLiteral;
 import org.eclipse.jdt.core.dom.TypeParameter;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
@@ -906,15 +907,30 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       localVariableWriter.writeLocalVariable(LocalVariable.LOCAL, node.getName().getIdentifier(), parent.getModifiers(), typeFqn, createLocation(type), fqnStack.getFqn(), null, createLocation(node));
     } else if (node.getParent().getNodeType() == ASTNode.LAMBDA_EXPRESSION) {
       LambdaExpression parent = (LambdaExpression) node.getParent();
-
-      System.err.println("LALALA - "+parent.getParent().getType());
-      //Type type = parent.getType();
-      //String typeFqn = getTypeFqn(type);
       
-      // Write the local variable
-      //localVariableWriter.writeLocalVariable(LocalVariable.LOCAL, node.getName().getIdentifier(), parent.getModifiers(), typeFqn, createLocation(type), fqnStack.getFqn(), null, createLocation(node));
+      //String fqn = fqnStack.getFqn();
+      //System.err.println("LAMBDA EXPRESSION FOUND - type: "+parent.getNodeType()+" fqnStack= "+fqn);
+      //System.err.println(parent.toString());
+      //System.err.println(parent.parameters());
+      //System.err.println(parent.getBody().toString());
+      
+      //accept(parent.getBody());
+      
+      //writeEntity(Entity type, String fqn, String signature, String rawSignature, int modifiers, Metrics metrics, Location location);
+      @SuppressWarnings("unchecked")
+	  List<VariableDeclaration> params = parent.parameters();
+      String parameters = "(";
+      for(VariableDeclaration v : params)
+    	  parameters = parameters + v.toString() + ",";
+      // substring is just to remove the extra ','
+      parameters = parameters.substring(0, parameters.length()-1) + ")";
+      
+      accept(parent.getBody());
+      
+      entityWriter.writeEntity(Entity.LAMBDA, null, parameters, null, 0, createMetrics(parent), createLocation(parent));
+
     } else {
-      throw new IllegalStateException("Unknown parent for variable declaration fragment (code "+node.getParent().getNodeType()+").");
+      throw new IllegalStateException("Unknown parent for variable declaration fragment (code "+node.getNodeType()+").");
     }
     
     if (node.getInitializer() != null) {
@@ -2477,6 +2493,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
           next = new EnclosingConstructor(fqn);
           break;
         case METHOD:
+        case LAMBDA:
         case ANNOTATION_ELEMENT:
         case INITIALIZER:
           next = new EnclosingMethod(fqn);
