@@ -118,7 +118,6 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 import org.eclipse.jdt.core.dom.TypeLiteral;
 import org.eclipse.jdt.core.dom.TypeParameter;
-import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
@@ -843,7 +842,39 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       return true;
     }
   }
-
+  
+  @Override
+  public boolean visit(LambdaExpression node){
+	  // Build the fqn and type
+	  String fqn = null;
+	  String fullFqn = null;
+	  Entity type = null;
+      
+	  String parentFqn = fqnStack.getFqn();
+	  String signature = "()";
+  
+	  //System.err.println(parentFqn);
+	  //System.err.println(signature);
+	  //System.err.println(rawSignature);
+	  
+	  type = Entity.LAMBDA; 
+	  
+      fqn = parentFqn + '.' + "lambda";
+      fullFqn = fqn + signature;
+      
+	  //System.err.println(fqn);
+	  //System.err.println(fullFqn);
+	  
+	  fqnStack.push(fullFqn, type);
+	  accept(node.getBody());
+	  
+	  entityWriter.writeEntity(type, fqn, signature, null, 0, createMetrics(node), createLocation(node));
+	  relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fullFqn, createUnknownLocation());
+	  
+	  fqnStack.pop();	  
+	  return false;
+  }
+  
   /**
    * This method writes:
    * <ul>
@@ -865,7 +896,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   public boolean visit(VariableDeclarationFragment node) {
     if (node.getParent().getNodeType() == ASTNode.FIELD_DECLARATION) {
       FieldDeclaration parent = (FieldDeclaration) node.getParent();
-      
+            
       // Get the fqn
       String fqn = fqnStack.peek(EnclosingDeclaredType.class).getFieldFqn(node.getName().getIdentifier());
       
@@ -906,38 +937,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       // Write the local variable
       localVariableWriter.writeLocalVariable(LocalVariable.LOCAL, node.getName().getIdentifier(), parent.getModifiers(), typeFqn, createLocation(type), fqnStack.getFqn(), null, createLocation(node));
     } else if (node.getParent().getNodeType() == ASTNode.LAMBDA_EXPRESSION) {
-      LambdaExpression parent = (LambdaExpression) node.getParent();
-      
-      //String fqn = fqnStack.getFqn();
-      //System.err.println("LAMBDA EXPRESSION FOUND - type: "+parent.getNodeType()+" fqnStack= "+fqn);
-      //System.err.println(parent.toString());
-      //System.err.println(parent.parameters());
-      //System.err.println(parent.getBody().toString());
-      
-      //accept(parent.getBody());
-      
-      //writeEntity(Entity type, String fqn, String signature, String rawSignature, int modifiers, Metrics metrics, Location location);
-      
-      /*
-      List<VariableDeclaration> params = parent.parameters();
-
-      String parameters = "(";
-      for(VariableDeclaration v : params)
-    	  parameters = parameters + v.toString() + ",";
-      // substring is just to remove the extra ','
-      parameters = parameters.substring(0, parameters.length()-1) + ")";
-      */
-      
-      String parentFqn = fqnStack.getFqn().substring(0, fqnStack.getFqn().length()-2);
-      String fullFqn = parentFqn+"$lambda1";
-      
-      fqnStack.push(fullFqn,Entity.LAMBDA);
-      accept(parent.getBody());
-      fqnStack.pop();
-            
-      entityWriter.writeEntity(Entity.LAMBDA, fullFqn, null, null, 0, createMetrics(parent), createLocation(parent));
-      relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fullFqn, createUnknownLocation());
-
+    			; //TODO: This captures variables that are arguments of lambdas. It can later be a relation of the type lambda contains variable.
     } else {
       throw new IllegalStateException("Unknown parent for variable declaration fragment (code "+node.getNodeType()+").");
     }
