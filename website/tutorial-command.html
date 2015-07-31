@@ -19,29 +19,33 @@
           <p>You will need to create three folders, as seen below:</p>
           <p class="command-line-block" > ~$ mkdir crawled-projects </br> ~$ mkdir extracted-projects </br> ~$ mkdir db-import-output </p>
           <p>We created these folders in the home directory. This means, for example, that the folder <strong>crawled-projects</strong> is accessed by typing <strong class="cd command-line-text">cd ~/crawled-projects/</strong>. We will follow this path, but there is no restriction where you create these folders, just be sure to adjust this tutorial accordingly.</p>
-          <p>The folder <strong class="cd command-line-text">~/crawled-projects/</strong> should contain Java projects. To start, you can download our test repository (above) and move the contents to this folder.</p>
-          <p> Follow the instructions <a href="https://dev.mysql.com/doc/refman/5.7/en/index.html" target="_blank">here</a> to set-up mysql and create a database. Create a user for the database and give it writing permissions. Save the <strong>DATABASE-URL</strong> (for ex.: localhost if the server is running in your machine), <strong>DATABASE-NAME</strong>, the <strong>DATABASE-USER</strong> and <strong>DATABASE-PASSWORD</strong>.</p>
+          <p>The folder <strong class="cd command-line-text">~/crawled-projects/</strong> should contain Java projects. To start, you can download our <a href="downloads/test-repo.zip" target="_blank">test repository</a> and move the contents to this folder.</p>
+          <p> Follow the instructions <a href="https://dev.mysql.com/doc/refman/5.7/en/index.html" target="_blank">here</a> to set-up mysql and create a database. Create a user for the database and give it writing permissions. Save the <strong>DATABASE-URL</strong> (for ex.: 127.0.0.1 if the server is running in your machine), <strong>DATABASE-NAME</strong>, the <strong>DATABASE-USER</strong> and <strong>DATABASE-PASSWORD</strong>.</p>
 
         <h1>Compiling Everything</h1>
 
-        <p>Go to <strong class="command-line-text">[sourcerer-path]/bin/</strong>, and you will see a script <strong>build-add.sh</strong>. Run this script, and you will build all the tools available. We will not need all of them for this tutorial, but the process is relatvely fast and it does not hurt to do so.</p>
+        <p>Go to <strong class="command-line-text">[sourcerer-path]/bin/</strong>, and you will see a script <strong>build-add.sh</strong>. Run this script, and you will build all the tools available. We will not need all of them for this tutorial, but the process is relatively fast and it does not hurt to do so.</p>
 
         <h2>Want to know more?</h2>
         <p>The script <strong>build-add.sh</strong> should run on Windows and UNIX systems. You can take a look inside, it just calls a series of <strong>ant</strong> tasks to create executable <strong>Jar</strong> files. You can individually run these to create only the tools you need.</p>
 
         <h1>Extracting Information</h1>
 
-          <p>We star by extracting information from <strong class="cd command-line-text">~/crawled-projects/</strong> into the intermediate folder <strong class="cd command-line-text">~/extracted-projects/</strong>, which contains information like fully qualified names and metrics about each project.</p>
+          <p>We start by extracting information from <strong class="cd command-line-text">~/crawled-projects/</strong> into the intermediate folder <strong class="cd command-line-text">~/extracted-projects/</strong>, which contains information like fully qualified names and metrics about each project.</p>
           <p>The first step is to aggregate the jar files found in <strong class="cd command-line-text">~/crawled-projects/</strong>:</p>
-          <p class="command-line-block" > $ cd [sourcerer-path]\bin\dist\ </br> $ java -jar java-repo-tools --aggregate-jar-files --input-repo ~/crawled-projects</p>
+          <p class="command-line-block" > $ cd [sourcerer-path]/bin/dist/ </br> $ java -jar java-repo-tools --aggregate-jar-files --input-repo ~/crawled-projects</p>
           <p>Note that there is now a new folder <strong class="cd command-line-text">~/crawled-projects/Jars/</strong>.</p>
 
-          <p>The extractor is an Eclipse plugin, so to run it the file must be moved into the eclipse workspace. Assuming <strong class="cd command-line-text">[eclipse]</strong> is the directory where eclipse was installed, move <strong class="cd command-line-text">Extractor_1.0.0.jar</strong> (remember, you can download it with the link above) into the folder <strong class="cd command-line-text">[eclipse]/plugins/</strong>.
+          <p>The extractor is an Eclipse plugin, so to run it the file must be moved into the eclipse workspace. Assuming 
+          <strong >[eclipse]</strong> is the directory where eclipse was installed, 
+          move <strong >Extractor_1.0.0.jar</strong> (remember, you can download it with the link above) 
+          into the folder <strong >[eclipse]/plugins/ </strong>:
+          <p class="command-line-block">$ cp [sourcerer-path]/bin/dist/Extractor_1.0.0.jar [eclipse]/plugins/</p>
 
           <p>To run the extractor, which is a plugin, you need to use Eclipse's launcher. It can be found in <strong class="cd command-line-text">[eclipse]/plugins/</strong> (that is right, the folder you moved the Extractor to).</p>
 
           <p>To test the extractor, run</p>
-          <p class="command-line-block" > $ java -jar [eclipse]/plugins/org.eclipse.equinox.launcher_[VERSION].dist.jar -consolelog -application Extractor.Extractor</p>
+          <p class="command-line-block" > $ java -jar [eclipse]/plugins/org.eclipse.equinox.launcher_[VERSION].jar -consolelog -application Extractor.Extractor</p>
           where <strong class="cd command-line-text">[VERSION]</strong> is the version of Eclipse you have installed. You should see a list of parameters for the extractor.
 
           <p>The next steps are to prepare the target repository to receive the libraries, and extract the libraries, the Jars and the projects.</p>
@@ -66,9 +70,9 @@
 
           <p>The final step is to create a relational database from the information extracted to <strong class="cd command-line-text">~/extracted-projects/</strong>.</p>
 
-          <p class="warning" >The tasks are slow. Please be patience and be sure each task finishes before starting the next one.</p>
+          <p class="warning" >The tasks may be slow, depending on how much data you have. Please be patient and be sure each task finishes before starting the next one.</p>
 
-          <p>Initialize the dabatase:</p>
+          <p>Initialize the database:</p>
           <p class="command-line-block" > $ java -jar db-import.jar --database-url jdbc:mysql://[DATABASE-URL]/[DATABASE-NAME] --database-user [DATABASE-USER] --database-password [DATABASE-PASSWORD] --initialize-db</p>
           <p>Import the extracted libraries into the database:</p>
           <p class="command-line-block" > $ java -jar db-import.jar --database-url jdbc:mysql://[DATABASE-URL]/[DATABASE-NAME] --database-user [DATABASE-USER] --database-password [DATABASE-PASSWORD] --add-libraries --input-repo ~/extracted-projects --output ../db-import-output/</p>
@@ -82,7 +86,7 @@
           <h2>Want to know more?</h2>
           <p>The creation of the database shows the steps we took when creating the <strong>Database</strong> of Sourcerer. In particular, the raw dataset extracted dataset <strong>sourcerer_repo_2011_extracted</strong> contains the same type of information that we find in <strong class="cd command-line-text">~/extracted-projects/</strong>, and the database we generated has the same schema and the same type of information found in the Sourcerer database.</p>
 
-          <p class="warning" >Did you have any problem running this tutorial? Do you have a sugestion or a comment? </br> Please reach us on: <span class="reverse">ude.icu@oriebirp</span>.</p>
+          <p class="warning" >Did you have any problem running this tutorial? Do you have a suggestion or a comment? </br> Please reach us on: <span class="reverse">ude.icu@oriebirp</span>.</p>
 
         </div>
       </div>
