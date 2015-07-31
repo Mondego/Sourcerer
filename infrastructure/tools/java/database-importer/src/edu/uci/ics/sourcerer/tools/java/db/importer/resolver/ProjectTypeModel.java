@@ -61,9 +61,7 @@ public class ProjectTypeModel {
     this.entities = new HashMap<>();
   }
   
-  private void add(String fqn, ModeledEntity entity) {
-	System.err.println("fqn - "+fqn);
-		
+  private void add(String fqn, ModeledEntity entity) {		
     if (entities.containsKey(fqn)) {
       logger.severe("Duplicate FQN: " + fqn);
     } else {
@@ -72,8 +70,6 @@ public class ProjectTypeModel {
   }
   
   public void add(String fqn, Integer entityID) {
-	System.err.println("fqn - "+fqn);
-
     add(fqn, new ModeledEntity(fqn, null, entityID, RelationClass.INTERNAL));
   }
 
@@ -300,15 +296,7 @@ public class ProjectTypeModel {
   
   public ModeledEntity getEntity(String fqn) {
     ModeledEntity entity = entities.get(fqn);
-    /*
-    if(fqn.contains("lambda") || fqn.contains("LIXO")){
-    	System.err.println("-- begin call on getEntity -- ");
-    	System.err.println("fqn - "+fqn);
-    	System.err.println("entity - "+entity);
-    	System.err.println(entities.toString());
-    //System.err.println("-- end call on getEntity -- ");
-    }
-*/
+
     if (entity == null && !TypeUtils.isMethod(fqn)) {
       entity = getTypeEntity(fqn);
     }
