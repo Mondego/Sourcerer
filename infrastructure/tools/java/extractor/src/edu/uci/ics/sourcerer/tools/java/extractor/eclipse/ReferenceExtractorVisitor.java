@@ -847,11 +847,9 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   public boolean visit(LambdaExpression node){
 	  // Build the fqn and type
 	  String fqn = null;
-	  String fullFqn = null;
 	  Entity type = null;
       
 	  String parentFqn = fqnStack.getFqn();
-	  String signature = "()";
   
 	  //System.err.println(parentFqn);
 	  //System.err.println(signature);
@@ -859,17 +857,15 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
 	  
 	  type = Entity.LAMBDA; 
 	  
-      fqn = parentFqn + '.' + "lambda";
-      fullFqn = fqn + signature;
+      fqn = parentFqn.substring(0, parentFqn.length()-2) + '$' + "lambda";
       
-	  //System.err.println(fqn);
-	  //System.err.println(fullFqn);
+	  //System.err.println("fqn - "+fqn);
 	  
-	  fqnStack.push(fullFqn, type);
+	  fqnStack.push(fqn, type);
 	  accept(node.getBody());
 	  
-	  entityWriter.writeEntity(type, fqn, signature, null, 0, createMetrics(node), createLocation(node));
-	  relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fullFqn, createUnknownLocation());
+	  entityWriter.writeEntity(type, fqn, null, null, 0, createMetrics(node), createLocation(node));
+	  relationWriter.writeRelation(Relation.CONTAINS, parentFqn, fqn, createUnknownLocation());
 	  
 	  fqnStack.pop();	  
 	  return false;

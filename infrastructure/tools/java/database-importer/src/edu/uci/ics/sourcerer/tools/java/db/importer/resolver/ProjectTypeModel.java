@@ -62,6 +62,8 @@ public class ProjectTypeModel {
   }
   
   private void add(String fqn, ModeledEntity entity) {
+	System.err.println("fqn - "+fqn);
+		
     if (entities.containsKey(fqn)) {
       logger.severe("Duplicate FQN: " + fqn);
     } else {
@@ -70,6 +72,8 @@ public class ProjectTypeModel {
   }
   
   public void add(String fqn, Integer entityID) {
+	System.err.println("fqn - "+fqn);
+
     add(fqn, new ModeledEntity(fqn, null, entityID, RelationClass.INTERNAL));
   }
 
@@ -77,9 +81,10 @@ public class ProjectTypeModel {
     task.start("Loading library entities", "entities loaded");
     try (SelectQuery query = exec.createSelectQuery(EntitiesTable.TABLE)) {
       query.addSelect(EntitiesTable.ENTITY_ID, EntitiesTable.FQN, EntitiesTable.ENTITY_TYPE, EntitiesTable.PARAMS, EntitiesTable.RAW_PARAMS);
-      query.andWhere(EntitiesTable.PROJECT_ID.compareEquals(projectID), EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.PACKAGE, Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION, Entity.CONSTRUCTOR, Entity.METHOD, Entity.ANNOTATION_ELEMENT, Entity.ENUM_CONSTANT, Entity.FIELD, Entity.PACKAGE, Entity.INITIALIZER)));
+      query.andWhere(EntitiesTable.PROJECT_ID.compareEquals(projectID), EntitiesTable.ENTITY_TYPE.compareIn(EnumSet.of(Entity.PACKAGE, Entity.CLASS, Entity.INTERFACE, Entity.ENUM, Entity.ANNOTATION, Entity.CONSTRUCTOR, Entity.METHOD, Entity.ANNOTATION_ELEMENT, Entity.ENUM_CONSTANT, Entity.FIELD, Entity.PACKAGE, Entity.INITIALIZER, Entity.LAMBDA)));
 
       TypedQueryResult result = query.select();
+            
       while (result.next()) {
         Integer entityID = result.getResult(EntitiesTable.ENTITY_ID);
         String fqn = result.getResult(EntitiesTable.FQN);
@@ -295,6 +300,15 @@ public class ProjectTypeModel {
   
   public ModeledEntity getEntity(String fqn) {
     ModeledEntity entity = entities.get(fqn);
+    /*
+    if(fqn.contains("lambda") || fqn.contains("LIXO")){
+    	System.err.println("-- begin call on getEntity -- ");
+    	System.err.println("fqn - "+fqn);
+    	System.err.println("entity - "+entity);
+    	System.err.println(entities.toString());
+    //System.err.println("-- end call on getEntity -- ");
+    }
+*/
     if (entity == null && !TypeUtils.isMethod(fqn)) {
       entity = getTypeEntity(fqn);
     }
