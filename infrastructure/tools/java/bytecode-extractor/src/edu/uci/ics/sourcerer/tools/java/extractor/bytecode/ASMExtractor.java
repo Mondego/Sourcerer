@@ -889,7 +889,7 @@ public class ASMExtractor implements Closeable {
     }
     
     @Override
-    public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+    public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
       instructionCount++;
       operands.add(owner + name + desc);
       if (!name.startsWith("access$")) {
