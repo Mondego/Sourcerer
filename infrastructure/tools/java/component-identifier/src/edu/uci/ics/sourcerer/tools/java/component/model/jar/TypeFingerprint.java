@@ -66,7 +66,7 @@ public class TypeFingerprint extends Fingerprint {
       }
       
       @Override
-      public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+      public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
         calledMethods.add(desc);
       }
     };
