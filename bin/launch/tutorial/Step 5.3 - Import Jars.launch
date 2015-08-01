@@ -7,6 +7,6 @@
 <listEntry value="1"/>
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="edu.uci.ics.sourcerer.tools.java.db.Main"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--properties-file ${project_loc:bin}/launch/tutorial/tutorial-db.properties.example --add-jars"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--properties-file ${project_loc:bin}/launch/tutorial/tutorial-db.properties --add-jars"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="database-importer"/>
 </launchConfiguration>
