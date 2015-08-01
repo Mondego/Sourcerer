@@ -123,6 +123,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.jdt.core.dom.WildcardType;
+import org.eclipse.jdt.internal.core.util.EnclosingMethodAttribute;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -444,6 +445,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       
       // Get the fqn
       String fqn = fqnStack.find(EnclosingDeclaredType.class).createAnonymousClassFqn(binding);
+      
 //      String fqn = null;
 //      if (binding == null) {
 //        fqn = fqnStack.find(EnclosingDeclaredType.class).getAnonymousClassFqn();
@@ -843,24 +845,39 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     }
   }
   
+  /*
+  * Anonymous class fully qualified names (FQNs) adhere to the following format:<br> 
+  * parent fqn + $lambda- + incrementing counter
+  * 
+  * This is similar to Anonymous Classes
+  */
+  
   @Override
   public boolean visit(LambdaExpression node){
 	  // Build the fqn and type
 	  String fqn = null;
-	  Entity type = null;
+	  Entity type = Entity.LAMBDA;
       
 	  String parentFqn = fqnStack.getFqn();
-  
-	  //System.err.println(parentFqn);
-	  //System.err.println(signature);
-	  //System.err.println(rawSignature);
-	  
-	  type = Entity.LAMBDA; 
-	  
-      fqn = parentFqn.substring(0, parentFqn.length()-2) + '$' + "lambda";
-      
-	  //System.err.println("fqn - "+fqn);
-	  
+	  	  	  
+	  // fqn's for methods are of the type default.CSVProcessor.main(java.lang.String[])
+	  // so we want to remove the parenthesis and the type info inside.	  
+	  EnclosingMethod encM = fqnStack.find2(EnclosingMethod.class);
+	  if(encM != null){
+		  // Lambda expression is within a method
+		  if(parentFqn.contains("("))
+		  	  fqn = parentFqn.substring(0, parentFqn.lastIndexOf("(")) + encM.createLambdaExpressionFqn();
+		  else
+			  fqn = parentFqn + encM.createLambdaExpressionFqn();
+	  }
+	  else{
+		  EnclosingBlock encB = fqnStack.find2(EnclosingBlock.class);
+		  if(parentFqn.contains("("))
+		  	  fqn = parentFqn.substring(0, parentFqn.lastIndexOf("(")) + encB.createLambdaExpressionFqn();
+		  else
+			  fqn = parentFqn + encB.createLambdaExpressionFqn();
+	  }
+                  
 	  fqnStack.push(fqn, type);
 	  accept(node.getBody());
 	  
@@ -2604,6 +2621,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
     private int initializerCount;
     
     private int nullAnonymousClassCount = 0;
+    
     private Map<ITypeBinding, String> anonymousClassMap;
     private Map<String, String> localClassMap;
 
@@ -2659,8 +2677,16 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
   }
   
   private class EnclosingBlock extends Enclosing {
+    private int lambdaExpressionCount = 1;
+
     private EnclosingBlock(String fqn) {
       super(fqn);
+    }
+        
+    public String createLambdaExpressionFqn(){
+    	String res = "$lambda-"+lambdaExpressionCount;
+    	lambdaExpressionCount +=1;
+    	return res;   	
     }
     
     public String getLocalFqn(String identifier, ITypeBinding binding) {
@@ -2691,15 +2717,22 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
       throw new IllegalStateException("Cannot have local declaration with no declared types on stack.");
     }
   }
-  
+    
   private class EnclosingMethod extends EnclosingBlock {
     private int parameterCount;
     private int unconditionalJumps;
     private int nesting = -1; // This accounts for the initial block
     private int maxNesting;
+    private int lambdaExpressionCount = 1;
     
     private EnclosingMethod(String fqn) {
       super(fqn);
+    }
+    
+    public String createLambdaExpressionFqn(){
+    	String res = "$lambda-"+lambdaExpressionCount;
+    	lambdaExpressionCount +=1;
+    	return res;   	
     }
     
     public int getNextParameterPos() {
