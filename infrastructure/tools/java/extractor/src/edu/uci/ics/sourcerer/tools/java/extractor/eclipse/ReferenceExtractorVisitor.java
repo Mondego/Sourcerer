@@ -72,6 +72,7 @@ import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.Initializer;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
+import org.eclipse.jdt.core.dom.IntersectionType;
 import org.eclipse.jdt.core.dom.Javadoc;
 import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.LambdaExpression;
@@ -123,7 +124,6 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.jdt.core.dom.WildcardType;
-import org.eclipse.jdt.internal.core.util.EnclosingMethodAttribute;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -2306,7 +2306,7 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
         ParameterizedType pType = (ParameterizedType)type;
         return getErasedTypeFqn(pType.getType());
       } else {
-        logger.log(Level.SEVERE, "Unexpected node type for unresolved type!" + type.toString());
+        logger.log(Level.SEVERE, "1 - Unexpected node type for unresolved type!" + type.toString());
         return UNKNOWN;
       }
     } else {
@@ -2363,8 +2363,22 @@ public class ReferenceExtractorVisitor extends ASTVisitor {
           return "<?" + (wType.isUpperBound() ? "+" : "-") + getTypeFqn(bound) + ">";
         }
       } else {
-        logger.log(Level.SEVERE, "Unexpected node type for unresolved type!" + type.toString());
-        return UNKNOWN;
+    	  if(type.isIntersectionType()){
+    		  IntersectionType iType = (IntersectionType)type;
+    		  
+    		  List<Type> list_types = iType.types();   		
+    		  String res = "";
+    		  for(Type tt : list_types){
+    			  res += getTypeFqn(tt)+"&";
+    		  }
+    		  
+    		  res = res.substring(0,res.length()-1);
+    		  return res;
+    	  }
+    	  else{
+    		  logger.log(Level.SEVERE, "2 - Unexpected node type for unresolved type!" + type.toString());
+    		  return UNKNOWN;
+    	  }
       }
     } else {
       return getTypeFqn(binding);
