@@ -1,46 +1,118 @@
       <div class="content">
 
-        <h1>Datasets</h1>
-        <div class="content_item">
-          <p>We provide the complete datasets obtained from the Sourcerer. The datasets as very large file sizes, are publicly available, and can be downloaded/accessed by the public. They can be easily downloaded with <a href="https://www.getsync.com/" target="_blank">BTSync</a>, for which we provide a public hash key.</p>
-          
-          <p>The repositories represent the same information in different formats, after different phases of preprocessing. Under <strong>Tutorials</strong> you can learn how to replicate these phases.</p>
-
-          <div class="warning">
-            <p>TERMS OF USAGE</p>
-            By downloading and using the Sourcerer repository, you agree to abide by the following terms of usage:
-            <ul>
-              <li>The source code contained in these datasets was collected from various open source projects and you should adhere to the respective licenses that come with the projects.</li>
-              <li>You will use the file strictly for non-commercial and non-profit work (eg; research or personal use). Any commercial use of this file is prohibited.</li>
-            </ul>
-        </div>
-
-        <h2>The Raw Dataset</h2>
-          <p>
-          This dataset, called <strong>sourcerer_repo_2011</strong>, takes 368Gb compressed or 433Gb uncompressed, and is a collection of 74,351 Java projects and assorted jar files collected from Google Code, SourceForge and Apache as of Summer 2011. It is also integrated in an infrastructure being built by the DARPA MUSE program, which will hopefully be available for other researchers sometime in the future.
-          </p>
-
-        <h2>The Extracted Dataset</h2>
-          <p>
-          This extracted repository, called <strong>sourcerer_repo_2011_extracted</strong>, takes 84Gb compressed or 92Gb uncompressed, and is an
-          intermediary artifact produced from the raw dataset <strong>sourcerer_repo_2011</strong>, which contains facts (fully qualified names, metrics, etc.) about each file of each project.
-          We also provide a server serving this data. Please refer to <strong>Database</strong> to know more.
-          </p>
-
-        <h2>The Relational Database</h2>
-          <p>
-          This database, called <strong>sourcerer_repo_2011_database</strong>, takes 24Gb as a compressed MySQL dump or 448Gb when restored, and is an artifact built from the extracted facts (<strong>sourcerer_repo_2011_extracted</strong>). This database contains the output of parsing and decomposing the source code into code entities and their relations, and it is provided to facilitate static analysis. For more information about this database please check the tab <strong>Database</strong>.
-          </p>
+<table border="0" width="740" cellpadding="0" cellspacing="0" style="background-color: #ffffff;">
+<tr>
+<td align="center">
 
 
-        <h1>Download Instructions</h1>
-        <h2>The information you are about to download, and that we make available completely free, represents years of research and the collaboration of multiple individuals. Please answer this simple form and help us keep track of its usage. You will see the download instructions after successfully submitting it.
-        </h2>
+    <!-- SKB: To add new quick links, just insert a new 'div' with class 'topBox' as below -->
+<div class='topBox'>
+<h1> UCI Sourcerer Datasets </h1>
 
-        <p>
-        <iframe src="https://docs.google.com/forms/d/12PpQsBfukBbPDIN2cb9-mQZ5xxqj4_skdL1YOTYy0U8/viewform?embedded=true" width="700" height="900" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
-        </p>
+</div>  
+</td>
+</tr>
 
-        </div>
+<!-- Begin post-quick-links -->
 
+<tr>
+<td>
+
+
+
+<div style=" align:center; padding: 24px; background: #ffffff">
+
+
+<h3>Welcome to the UCI Sourcerer Datasets</h3>
+
+<p>
+This page is a repository of various datasets
+we have collected and curated in our research in large scale analysis of source code. 
+These datasets are available for other researchers and individuals to
+use. Please refer to the terms of usage that come with each dataset
+for any restrictions in usage. Download instructions are provided in each dataset page.
+
+</p>
+<p>
+Currently available datasets:
+</p>
+
+<ul>
+<li> 
+ [08-04-2015] <b>Sourcerer Repo 2011</b> 
+ is a collection of artifacts based on over 70,000 Java projects and almost 100,000 jars collected
+ from Apache, Google Code and Sourceforge in 2011. Besides the raw source code and jars, we also
+ provide a repository of static analysis facts extracted from the code/jars and a relational DB with
+ all that information imported for querying.
+</li>
+<li>
+[11-14-2013] <b>sourcerer-maven-aug12</b>
+is a compressed tarball (.tar.gz) containing 2,232 projects from the
+Maven Central repository (~80GB).
+</li>
+</li>
+<li> 
+ [04-22-2010] <b>Sourcerer Repo 2010</b> 
+ is a tarball of Sourcerer Code Repository archived on 04-22-2010. It contains 18,000 
+ java projects (~390GB).
+</li>
+<li>
+[04-04-2010] <b>Koders-log-2007</b>
+is a compressed file (in 7z format) containing a Microsoft SQL Server
+database backup storing a yearlong usage data of Koders.com, an
+Internet-scale code search engine. (~188MB).
+</ul>
+
+</p>
+
+<h4>
+Questions, Issues and More Information
+</h4>
+
+<p>
+Please use the <a href="https://github.com/Mondego/Sourcerer-Datasets/issues">issue tracker</a> in github.
+</p>
+
+<h4>
+Citation Policy
+</h4>
+<p>
+
+If you publish material based on data sets obtained from this repository, then, 
+in your acknowledgments, please note the assistance you received by using this 
+repository. This will help others to obtain the same data sets and replicate 
+your experiments. 
+We suggest the following pseudo-APA reference format for referring to this repository:
+</p>
+
+<p>
+    C. Lopes, S. Bajracharya, J. Ossher, P. Baldi (2010). UCI Source Code Data Sets [http://www.ics.uci.edu/~lopes/datasets]. Irvine, CA: University of California, Bren School of Information and Computer Sciences.
+</p>
+<p>
+Here is a BiBTeX citation as well:
+<pre>
+    @misc{Lopes+Bajracharya+Ossher+Baldi:2010 ,
+    author = "C. Lopes and S. Bajracharya and J. Ossher and P. Baldi",
+    year = "2010",
+    title = "{UCI} Source Code Data Sets",
+    url = "http://www.ics.uci.edu/$\sim$lopes/datasets/",
+    institution = "University of California, Irvine, 
+       Bren School of Information and Computer Sciences" }
+</pre>
+
+</p>
+
+<hr/>
+</div>
+
+
+</td>
+</tr>
+
+<tr>
+  <td> <img src="images/nsf1.jpg" width="100"/>
+  This work has been partially supported by the <a href="http://nsf.goc"> National Science Foundation</a>.</td>
+</tr>
+
+</table>
       </div>  

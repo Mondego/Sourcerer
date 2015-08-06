@@ -22,11 +22,31 @@
           $("li").removeClass("current");
           $(this).parent().addClass("current");
           });
-        $("#datasets").click(function(){
+        $("#ds-all").click(function(){
           $("#main-body").load("datasets.html");
           $("li").removeClass("current");
-          $(this).parent().addClass("current");
+          $("#datasets").parent().addClass("current");
           });
+        $("#ds-maven-aug12").click(function(){
+          $("#main-body").load("datasets/ds_sourcerer-maven-aug12.html");
+          $("li").removeClass("current");
+          $("#datasets").parent().addClass("current");
+          });
+        $("#ds-sourcerer-2011").click(function(){
+            $("#main-body").load("datasets/ds_repo_2011.html");
+            $("li").removeClass("current");
+            $("#datasets").parent().addClass("current");
+            });
+        $("#ds-sourcerer-2010").click(function(){
+            $("#main-body").load("datasets/ds_SDS_source-repo-18k.html");
+            $("li").removeClass("current");
+            $("#datasets").parent().addClass("current");
+            });
+        $("#ds-koders").click(function(){
+            $("#main-body").load("datasets/ds_Koders-log-2007.html");
+            $("li").removeClass("current");
+            $("#datasets").parent().addClass("current");
+            });
         $("#database").click(function(){
           $("#main-body").load("database.html");
           $("li").removeClass("current");
@@ -78,7 +98,15 @@
       <nav>
         <ul class="sf-menu" id="nav">
           <li><a id="home"      href="#">Home</a> </li>
-          <li><a id="datasets"  href="#">Datasets</a></li>
+          <li><a id="datasets"  href="#">Datasets</a>
+              <ul>
+              <li><a id="ds-all" href="#">Overview</a></li>
+              <li><a id="ds-sourcerer-2011" href="#">Sourcerer 2011</a>
+              <li><a id="ds-maven-aug12" href="#">Maven 2012</a>
+              <li><a id="ds-sourcerer-2010" href="#">Sourcerer 2010</a>
+              <li><a id="ds-koders" href="#">Koders 2007</a>
+              </ul>
+          </li>
           <li><a id="database"  href="#">Database</a></li>
           <li><a id="tutorials" href="#">Tutorials</a>
               <ul>
@@ -119,7 +147,7 @@
           <div class="sidebar_item">
             <h4>Java 8</h4>
             <h5>July 31, 2015</h5>
-            <p>The Sourcerer tools can now handle full Java 8.</p>
+            <p>The Sourcerer tools can now handle Java 8's lambda.</p>
           </div>
           <div class="sidebar_item">
             <h4>New Website</h4>
